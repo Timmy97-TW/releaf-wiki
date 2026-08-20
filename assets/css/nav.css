@@ -1,0 +1,292 @@
+/* =============================================================================
+   ReLeaf: site navigation
+   -----------------------------------------------------------------------------
+   A full-width drop panel. It borrows the idea from iGEM Marburg 2024 and then
+   goes its own way:
+
+   · Marburg floods the whole row with solid purple on hover and uses filled
+     circular glyph badges. We use line art in a soft square tile, a pale leaf
+     wash on the row, and a green bar that grows down the left edge.
+   · Each panel opens with a title rail carrying the team's own artwork, so a
+     tab reads as a chapter instead of three anonymous columns of links.
+   · One accent family only: four steps of leaf green.
+   ========================================================================== */
+
+:root {
+  --nv-h:       68px;
+  --nv-max:     1280px;
+  --nv-900:     #14402b;
+  --nv-700:     #23684a;
+  --nv-500:     #4f9c6f;
+  --nv-200:     #cfe4d8;
+  --nv-100:     #e9f3ed;
+  --nv-50:      #f4f9f6;
+  --nv-ink:     #171717;
+  --nv-muted:   #6b7280;
+  --nv-line:    #e5e5e5;
+}
+
+.sitenav {
+  position: fixed;
+  top: 0; left: 0; right: 0;
+  z-index: 40;
+  font-family: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto,
+               Helvetica, Arial, sans-serif;
+}
+
+/* ---- bar ----------------------------------------------------------------- */
+
+.sitenav__bar {
+  background: rgb(255 255 255 / .96);
+  backdrop-filter: blur(10px);
+  border-bottom: 1px solid var(--nv-line);
+  transition: border-color .25s;
+}
+.sitenav.has-panel .sitenav__bar { border-bottom-color: transparent; }
+
+.sitenav__inner {
+  max-width: var(--nv-max);
+  margin: 0 auto;
+  padding: 0 1.25rem;
+  height: var(--nv-h);
+  display: flex; align-items: center; justify-content: space-between;
+  gap: 1rem;
+}
+@media (min-width: 640px) { .sitenav__inner { padding: 0 2rem; } }
+
+.sitenav__brand {
+  display: flex; align-items: center; gap: .6rem;
+  text-decoration: none; color: var(--nv-ink);
+  flex: none;
+}
+.sitenav__logo {
+  width: 50px; height: 50px;
+  border-radius: 50%;
+  display: block;
+  box-shadow: 0 0 0 1px rgb(23 23 23 / .08);
+}
+.sitenav__word {
+  font-size: 1.4rem; font-weight: 700; letter-spacing: -.015em;
+}
+
+/* ---- tabs ---------------------------------------------------------------- */
+
+.sitenav__tabs { display: none; align-items: stretch; height: var(--nv-h); }
+@media (min-width: 940px) { .sitenav__tabs { display: flex; } }
+
+.sitenav__tab {
+  position: relative;
+  display: flex; align-items: center; gap: .4rem;
+  height: var(--nv-h);
+  padding: 0 1.15rem;
+  font: inherit;
+  font-size: .95rem; font-weight: 600;
+  color: #3f3f46;
+  background: none; border: 0;
+  cursor: pointer;
+  transition: color .25s;
+}
+.sitenav__tab:hover, .sitenav__tab.is-open { color: var(--nv-900); }
+
+/* the tab you are currently inside keeps a permanent mark */
+.sitenav__tab.is-section { color: var(--nv-700); }
+.sitenav__tab.is-section::before {
+  content: "";
+  position: absolute; left: 1.15rem; right: 1.15rem; bottom: 0;
+  height: 2px; background: var(--nv-500);
+  border-radius: 2px 2px 0 0;
+}
+.sitenav__tab.is-open::after {
+  content: "";
+  position: absolute; left: .8rem; right: .8rem; bottom: 0;
+  height: 3px; background: var(--nv-700);
+  border-radius: 3px 3px 0 0;
+}
+
+/* chevron drawn in CSS, no icon font */
+.sitenav__chev {
+  width: 7px; height: 7px;
+  border-right: 1.8px solid currentColor;
+  border-bottom: 1.8px solid currentColor;
+  transform: translateY(-2px) rotate(45deg);
+  opacity: .55;
+  transition: transform .3s, opacity .25s;
+}
+.sitenav__tab.is-open .sitenav__chev,
+.sitenav__grouptop[aria-expanded="true"] .sitenav__chev {
+  transform: translateY(1px) rotate(-135deg);
+  opacity: 1;
+}
+
+/* ---- panel --------------------------------------------------------------- */
+
+.sitenav__panels { position: relative; }
+
+.sitenav__panel {
+  position: absolute; top: 0; left: 0; right: 0;
+  display: none;
+  background: var(--white, #fff);
+  border-top: 1px solid var(--nv-line);
+  box-shadow: 0 24px 48px -28px rgb(20 64 43 / .55);
+}
+.sitenav__panel.is-open { display: block; animation: nv-in .22s cubic-bezier(.2,.7,.3,1); }
+@keyframes nv-in { from { opacity: 0; transform: translateY(-6px); } }
+
+/* a thread of green across the top of the open panel, the page's signature */
+.sitenav__panel::before {
+  content: "";
+  position: absolute; inset: -1px 0 auto 0;
+  height: 3px;
+  background: linear-gradient(90deg, var(--nv-900), var(--nv-500) 55%, var(--nv-100));
+}
+
+.sitenav__panelinner {
+  max-width: var(--nv-max);
+  margin: 0 auto;
+  padding: 2rem;
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 1.5rem;
+}
+@media (min-width: 1040px) {
+  .sitenav__panelinner { grid-template-columns: 244px 1fr; gap: 2.5rem; padding: 2.25rem 2rem 2.5rem; }
+}
+
+/* left rail, the part Marburg does not have */
+.sitenav__rail { position: relative; padding-right: 1.5rem; }
+@media (min-width: 1040px) {
+  .sitenav__rail { border-right: 1px solid var(--nv-line); }
+}
+/* student artwork sits above the title; absent files remove themselves */
+.sitenav__railart {
+  display: block;
+  width: 56px; height: 56px;
+  object-fit: contain;
+  margin: 0 0 .85rem;
+}
+.sitenav__railtitle {
+  margin: 0 0 .5rem;
+  font-size: 1.75rem; font-weight: 700;
+  letter-spacing: -.025em; line-height: 1.1;
+  color: var(--nv-900);
+}
+.sitenav__railblurb {
+  margin: 0;
+  font-size: .84rem; line-height: 1.55;
+  color: var(--nv-muted);
+  max-width: 22rem;
+}
+
+/* ---- entries ------------------------------------------------------------- */
+
+.sitenav__list {
+  display: grid;
+  grid-template-columns: repeat(1, minmax(0, 1fr));
+  gap: .25rem .75rem;
+  align-content: start;
+}
+@media (min-width: 700px)  { .sitenav__list { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+@media (min-width: 1160px) { .sitenav__list[data-count="5"],
+                             .sitenav__list[data-count="6"],
+                             .sitenav__list[data-count="7"] { grid-template-columns: repeat(3, minmax(0, 1fr)); } }
+
+.sitenav__entry {
+  position: relative;
+  display: grid;
+  grid-template-columns: 38px 1fr;
+  align-items: start;
+  gap: .8rem;
+  padding: .7rem .8rem;
+  border-radius: 10px;
+  text-decoration: none;
+  transition: background .22s;
+}
+.sitenav__entry::before {          /* accent grows down the left edge */
+  content: "";
+  position: absolute; left: 0; top: 50%; bottom: 50%;
+  width: 3px; border-radius: 3px;
+  background: var(--nv-500);
+  transition: top .25s cubic-bezier(.2,.7,.3,1), bottom .25s cubic-bezier(.2,.7,.3,1);
+}
+.sitenav__entry:hover { background: var(--nv-50); }
+.sitenav__entry:hover::before,
+.sitenav__entry.is-current::before { top: 18%; bottom: 18%; }
+
+.sitenav__tile {
+  width: 38px; height: 38px;
+  display: grid; place-items: center;
+  border-radius: 10px;
+  background: var(--nv-100);
+  color: var(--nv-700);
+  transition: background .22s, color .22s;
+}
+.sitenav__tile svg {
+  width: 20px; height: 20px;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.7;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+.sitenav__entry:hover .sitenav__tile { background: var(--nv-700); color: #fff; }
+
+.sitenav__entrytext { display: grid; gap: .1rem; min-width: 0; }
+.sitenav__entrytitle {
+  font-size: .925rem; font-weight: 650;
+  color: var(--nv-ink);
+  letter-spacing: -.005em;
+}
+.sitenav__entrycap {
+  font-size: .775rem; line-height: 1.45;
+  color: var(--nv-muted);
+}
+
+.sitenav__entry.is-current { background: var(--nv-50); }
+.sitenav__entry.is-current .sitenav__tile { background: var(--nv-700); color: #fff; }
+.sitenav__entry.is-current .sitenav__entrytitle { color: var(--nv-900); }
+
+/* ---- mobile -------------------------------------------------------------- */
+
+.sitenav__burger {
+  display: flex; flex-direction: column; align-items: center; justify-content: center;
+  width: 2.5rem; height: 2.5rem;
+  background: none; border: 0; cursor: pointer;
+}
+@media (min-width: 940px) { .sitenav__burger { display: none; } }
+.sitenav__burger span { width: 1.45rem; height: 2px; background: #3f3f46; transition: all .3s; }
+.sitenav__burger span + span { margin-top: .34rem; }
+.sitenav__burger[aria-expanded="true"] span:nth-child(1) { transform: translateY(6px) rotate(-45deg); }
+.sitenav__burger[aria-expanded="true"] span:nth-child(2) { width: 0; }
+.sitenav__burger[aria-expanded="true"] span:nth-child(3) { transform: translateY(-6px) rotate(45deg); }
+
+.sitenav__drawer {
+  display: none;
+  max-height: calc(100dvh - var(--nv-h));
+  overflow-y: auto;
+  background: #fff;
+  border-top: 1px solid var(--nv-line);
+  box-shadow: 0 24px 48px -28px rgb(20 64 43 / .55);
+  padding: .5rem 1.25rem 1.5rem;
+}
+.sitenav.drawer-open .sitenav__drawer { display: block; }
+@media (min-width: 940px) { .sitenav.drawer-open .sitenav__drawer { display: none; } }
+
+.sitenav__grouptop {
+  width: 100%;
+  display: flex; align-items: center; justify-content: space-between;
+  padding: .95rem .25rem;
+  font: inherit; font-size: 1rem; font-weight: 700;
+  color: var(--nv-900);
+  background: none; border: 0; border-bottom: 1px solid var(--nv-line);
+  cursor: pointer;
+}
+.sitenav__groupbody { display: none; padding: .5rem 0 1rem; }
+.sitenav__group.is-open .sitenav__groupbody { display: grid; gap: .2rem; }
+
+/* ---- page offset --------------------------------------------------------- */
+
+.sitenav-spacer { height: var(--nv-h); }
+
+@media (prefers-reduced-motion: reduce) {
+  .sitenav *, .sitenav *::before { transition: none !important; animation: none !important; }
+}

@@ -1,0 +1,514 @@
+/* =============================================================================
+   ReLeaf: the standard sub-page
+   -----------------------------------------------------------------------------
+   Every page under Project, Wet Lab, Dry Lab and Engagement is this file plus a
+   body of sections. Home, Members and Attribution have their own stylesheets.
+
+   The shape follows iGEM Brno 2025's sub-pages, which are the clearest of the
+   recent wikis at the one job these pages have, which is letting a judge find a
+   specific claim in under a minute:
+
+     · a header band that names the section, the page and the argument
+     · one column of prose at a fixed measure, never full-bleed
+     · a table of contents that stays on screen and tracks position
+     · every heading numbered, so a judge can say "2.3" and be understood
+     · figures, callouts and tables as bordered blocks with a green left edge
+     · a references list at the foot, with [n] linking both ways
+
+   Where we depart from Brno: their body text is justified, which opens rivers
+   at this measure; ours is ragged right. Their cards are shadowed; ours use a
+   hairline, because thirty pages of drop shadow reads as a slide deck.
+   ========================================================================== */
+
+*, *::before, *::after { box-sizing: border-box; }
+
+html {
+  scroll-behavior: smooth;
+  scroll-padding-top: calc(var(--nav-h) + 1.5rem);
+  -webkit-text-size-adjust: 100%;
+}
+@media (prefers-reduced-motion: reduce) { html { scroll-behavior: auto; } }
+
+body {
+  margin: 0;
+  font-family: var(--font-body);
+  font-size: var(--text-base);
+  line-height: 1.68;
+  color: var(--black);
+  background: var(--white);
+  -webkit-font-smoothing: antialiased;
+}
+
+img { display: block; max-width: 100%; }
+a { color: var(--leaf-700); text-underline-offset: .18em; text-decoration-thickness: 1px; }
+a:hover { color: var(--leaf-900); }
+
+:focus-visible { outline: 2px solid var(--leaf-700); outline-offset: 3px; border-radius: 2px; }
+
+.visually-hidden {
+  position: absolute; width: 1px; height: 1px; margin: -1px;
+  padding: 0; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; border: 0;
+}
+
+.sitenav-spacer { height: var(--nav-h); }
+
+/* ======================================================== HEADER BAND ====== */
+
+.pagehead {
+  background: linear-gradient(180deg, var(--leaf-50), var(--white) 78%);
+  border-bottom: 1px solid var(--gray-200);
+}
+.pagehead__inner {
+  max-width: var(--max);
+  margin: 0 auto;
+  padding: var(--sp-8) var(--sp-5) var(--sp-7);
+}
+@media (min-width: 640px) { .pagehead__inner { padding-left: var(--sp-6); padding-right: var(--sp-6); } }
+
+/* breadcrumb: which tab this page hangs under */
+.pagehead__eyebrow {
+  display: flex; align-items: center; gap: .5rem;
+  margin: 0 0 var(--sp-4);
+  font-size: var(--text-xs);
+  font-weight: 600;
+  letter-spacing: .09em;
+  text-transform: uppercase;
+  color: var(--leaf-700);
+}
+.pagehead__eyebrow a { color: inherit; text-decoration: none; }
+.pagehead__eyebrow a:hover { text-decoration: underline; }
+.pagehead__eyebrow i { font-style: normal; color: var(--gray-400); }
+
+.pagehead__title {
+  margin: 0;
+  font-family: var(--font-display);
+  font-size: var(--text-h1);
+  font-weight: 700;
+  line-height: 1.08;
+  letter-spacing: -.022em;
+  color: var(--leaf-900);
+  max-width: 20ch;
+}
+
+/* the one-sentence answer to "what is this page for" */
+.pagehead__lede {
+  margin: var(--sp-5) 0 0;
+  max-width: 58ch;
+  font-size: var(--text-lede);
+  line-height: 1.52;
+  color: var(--gray-600);
+}
+
+/* a rail of small facts: last edited, who owns the page, medal criterion */
+.pagehead__meta {
+  display: flex; flex-wrap: wrap; gap: var(--sp-2) var(--sp-5);
+  margin: var(--sp-6) 0 0;
+  padding: var(--sp-4) 0 0;
+  border-top: 1px solid var(--leaf-200);
+  list-style: none;
+  font-size: var(--text-xs);
+  color: var(--gray-500);
+}
+.pagehead__meta b {
+  display: block;
+  font-weight: 600;
+  letter-spacing: .07em;
+  text-transform: uppercase;
+  color: var(--gray-400);
+  font-size: .6875rem;
+}
+.pagehead__meta span { color: var(--gray-700); font-size: var(--text-sm); }
+
+/* ============================================================= LAYOUT ====== */
+
+.pagewrap {
+  max-width: var(--max);
+  margin: 0 auto;
+  padding: var(--sp-7) var(--sp-5) var(--sp-8);
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: var(--sp-7);
+}
+@media (min-width: 640px) { .pagewrap { padding-left: var(--sp-6); padding-right: var(--sp-6); } }
+@media (min-width: 1040px) {
+  .pagewrap { grid-template-columns: 15rem minmax(0, 1fr); gap: var(--sp-8); align-items: start; }
+}
+
+.pagebody { max-width: var(--measure); min-width: 0; }
+.pagebody > * + * { margin-top: var(--sp-5); }
+
+/* ================================================ TABLE OF CONTENTS ======== */
+
+.toc {
+  position: sticky;
+  top: calc(var(--nav-h) + var(--sp-5));
+  align-self: start;
+  font-size: var(--text-sm);
+  order: -1;
+}
+.toc__title {
+  margin: 0 0 var(--sp-3);
+  font-size: .6875rem;
+  font-weight: 700;
+  letter-spacing: .1em;
+  text-transform: uppercase;
+  color: var(--gray-400);
+}
+.toc__list { margin: 0; padding: 0; list-style: none; border-left: 2px solid var(--gray-200); }
+.toc__list a {
+  display: block;
+  padding: .3rem 0 .3rem .8rem;
+  margin-left: -2px;
+  border-left: 2px solid transparent;
+  color: var(--gray-600);
+  text-decoration: none;
+  line-height: 1.35;
+}
+.toc__list a:hover { color: var(--leaf-900); background: var(--leaf-50); }
+.toc__list a.is-active { color: var(--leaf-900); font-weight: 600; border-left-color: var(--leaf-700); }
+.toc__list .is-sub a { padding-left: 1.7rem; font-size: var(--text-xs); color: var(--gray-500); }
+
+/* on narrow screens the rail becomes a closed summary above the prose */
+@media (max-width: 1039px) {
+  .toc {
+    position: static;
+    border: 1px solid var(--gray-200);
+    border-radius: var(--radius);
+    background: var(--gray-50);
+    padding: 0;
+  }
+  .toc > summary {
+    cursor: pointer;
+    padding: var(--sp-3) var(--sp-4);
+    font-size: .6875rem; font-weight: 700; letter-spacing: .1em;
+    text-transform: uppercase; color: var(--gray-600);
+  }
+  .toc__inner { padding: 0 var(--sp-4) var(--sp-4); }
+  .toc__title { display: none; }
+}
+@media (min-width: 1040px) {
+  .toc > summary { display: none; }
+  .toc[open] .toc__inner, .toc .toc__inner { display: block; }
+}
+
+/* =========================================================== SECTIONS ====== */
+
+.sec { scroll-margin-top: calc(var(--nav-h) + 1.5rem); }
+.sec + .sec { margin-top: var(--sp-7); }
+
+.sec h2 {
+  margin: 0 0 var(--sp-4);
+  padding-bottom: var(--sp-3);
+  border-bottom: 1px solid var(--gray-200);
+  font-family: var(--font-display);
+  font-size: var(--text-h2);
+  font-weight: 700;
+  line-height: 1.18;
+  letter-spacing: -.015em;
+  color: var(--leaf-900);
+}
+.sec h3 {
+  margin: var(--sp-6) 0 var(--sp-3);
+  font-family: var(--font-display);
+  font-size: var(--text-h3);
+  font-weight: 650;
+  line-height: 1.3;
+  color: var(--gray-700);
+}
+.sec h4 {
+  margin: var(--sp-5) 0 var(--sp-2);
+  font-size: var(--text-base);
+  font-weight: 650;
+  color: var(--gray-700);
+}
+
+/* the number a judge can quote back at you */
+.sec__no {
+  display: inline-block;
+  min-width: 2.1ch;
+  margin-right: .55em;
+  font-variant-numeric: tabular-nums;
+  font-weight: 600;
+  color: var(--leaf-500);
+}
+.sec h3 .sec__no { color: var(--gray-400); font-size: .9em; }
+
+.sec p { margin: 0 0 var(--sp-4); }
+.sec p:last-child { margin-bottom: 0; }
+.sec ul, .sec ol { margin: 0 0 var(--sp-4); padding-left: 1.4em; }
+.sec li + li { margin-top: var(--sp-2); }
+.sec li::marker { color: var(--leaf-500); }
+
+.lede { font-size: var(--text-lede); line-height: 1.55; color: var(--gray-600); }
+
+/* a heading you can link to: the ¶ appears on hover */
+.anchor {
+  margin-left: .4em;
+  opacity: 0;
+  font-weight: 400;
+  color: var(--gray-400);
+  text-decoration: none;
+  transition: opacity .15s;
+}
+h2:hover .anchor, h3:hover .anchor, .anchor:focus-visible { opacity: 1; }
+
+/* =========================================================== CALLOUTS ====== */
+/* Left edge carries the meaning; the fill is barely there so a page with four
+   of them still reads as one page.                                            */
+
+.callout {
+  margin: var(--sp-5) 0;
+  padding: var(--sp-4) var(--sp-5);
+  border: 1px solid var(--gray-200);
+  border-left: 4px solid var(--leaf-700);
+  border-radius: var(--radius-sm);
+  background: var(--leaf-50);
+  font-size: var(--text-sm);
+}
+.callout > :first-child { margin-top: 0; }
+.callout > :last-child { margin-bottom: 0; }
+.callout__label {
+  display: block;
+  margin-bottom: var(--sp-2);
+  font-size: .6875rem; font-weight: 700; letter-spacing: .09em;
+  text-transform: uppercase; color: var(--leaf-700);
+}
+
+/* what iGEM asks this page to prove */
+.callout--medal { border-left-color: var(--amber-700); background: var(--amber-100); }
+.callout--medal .callout__label { color: var(--amber-700); }
+
+/* a claim we have not earned yet. The brief requires these to sit next to the
+   claim they limit, at the same size, never in a footnote.                    */
+.callout--unproven { border-left-color: var(--rust-700); background: var(--rust-100); }
+.callout--unproven .callout__label { color: var(--rust-700); }
+
+/* a number or a method taken from somebody else's paper */
+.callout--borrowed { border-left-color: var(--slate-700); background: var(--slate-100); }
+.callout--borrowed .callout__label { color: var(--slate-700); }
+
+/* ============================================================= FIGURES ===== */
+
+.fig { margin: var(--sp-6) 0; }
+.fig img, .fig video, .fig svg {
+  width: 100%;
+  border: 1px solid var(--gray-200);
+  border-radius: var(--radius-sm);
+  background: var(--gray-50);
+}
+.fig img { cursor: zoom-in; }
+.fig figcaption {
+  margin-top: var(--sp-3);
+  padding-left: var(--sp-3);
+  border-left: 2px solid var(--leaf-200);
+  font-size: var(--text-sm);
+  line-height: 1.5;
+  color: var(--gray-600);
+}
+.fig figcaption b { color: var(--leaf-700); font-weight: 650; }
+
+/* a figure that has not been shot or drawn yet */
+.fig--pending img, .fig--pending .fig__slot {
+  display: grid; place-items: center;
+  aspect-ratio: 16 / 9;
+  border: 1px dashed var(--gray-300);
+  background: repeating-linear-gradient(45deg, var(--gray-50), var(--gray-50) 10px, var(--white) 10px, var(--white) 20px);
+  color: var(--gray-400);
+  font-size: var(--text-sm);
+  text-align: center;
+  padding: var(--sp-5);
+  cursor: default;
+}
+
+/* click a figure and it fills the window */
+.lightbox {
+  position: fixed; inset: 0; z-index: 60;
+  display: none; place-items: center;
+  padding: var(--sp-5);
+  background: rgb(10 20 15 / .88);
+}
+.lightbox.is-open { display: grid; }
+.lightbox img { max-width: 100%; max-height: 86vh; border-radius: var(--radius-sm); }
+.lightbox figcaption { margin-top: var(--sp-4); max-width: 60ch; color: var(--gray-200); font-size: var(--text-sm); }
+.lightbox__close {
+  position: absolute; top: var(--sp-4); right: var(--sp-4);
+  width: 2.5rem; height: 2.5rem;
+  border: 0; border-radius: 50%;
+  background: rgb(255 255 255 / .12); color: var(--white);
+  font-size: 1.4rem; line-height: 1; cursor: pointer;
+}
+.lightbox__close:hover { background: rgb(255 255 255 / .22); }
+
+/* =============================================================== CARDS ===== */
+
+.grid { display: grid; gap: var(--sp-4); grid-template-columns: repeat(auto-fit, minmax(15rem, 1fr)); margin: var(--sp-5) 0; }
+.card2 {
+  padding: var(--sp-5);
+  border: 1px solid var(--gray-200);
+  border-radius: var(--radius);
+  background: var(--white);
+}
+.card2 h4 { margin-top: 0; color: var(--leaf-900); }
+.card2 p:last-child { margin-bottom: 0; }
+.card2 .num {
+  display: block;
+  font-family: var(--font-display);
+  font-size: 2rem; font-weight: 700; line-height: 1;
+  color: var(--leaf-700);
+  font-variant-numeric: tabular-nums;
+}
+
+/* ============================================================== TABLES ===== */
+
+.tablewrap { overflow-x: auto; margin: var(--sp-5) 0; border: 1px solid var(--gray-200); border-radius: var(--radius-sm); }
+table.data { width: 100%; border-collapse: collapse; font-size: var(--text-sm); }
+table.data th, table.data td { padding: .6rem .85rem; text-align: left; vertical-align: top; }
+table.data thead th {
+  background: var(--leaf-50);
+  border-bottom: 1px solid var(--leaf-200);
+  font-size: var(--text-xs); font-weight: 700; letter-spacing: .05em; text-transform: uppercase;
+  color: var(--leaf-900); white-space: nowrap;
+}
+table.data tbody tr + tr { border-top: 1px solid var(--gray-200); }
+table.data tbody tr:hover { background: var(--gray-50); }
+table.data td.num { text-align: right; font-variant-numeric: tabular-nums; }
+
+/* ================================================================ TABS ===== */
+/* Plants runs three growth systems on one page. Same page, same URL, three
+   panels, so a judge landing on /plant sees all three exist.                  */
+
+.tabs { margin: var(--sp-6) 0; }
+.tabs__strip {
+  display: flex; flex-wrap: wrap; gap: var(--sp-1);
+  border-bottom: 1px solid var(--gray-200);
+}
+.tabs__btn {
+  appearance: none;
+  padding: .6rem 1.1rem;
+  border: 0; border-bottom: 3px solid transparent;
+  background: none;
+  font: inherit; font-size: var(--text-sm); font-weight: 600;
+  color: var(--gray-500); cursor: pointer;
+}
+.tabs__btn:hover { color: var(--leaf-900); background: var(--leaf-50); }
+.tabs__btn[aria-selected="true"] { color: var(--leaf-900); border-bottom-color: var(--leaf-700); }
+.tabs__panel { padding-top: var(--sp-5); }
+.tabs__panel[hidden] { display: none; }
+
+/* =========================================================== REFERENCES ==== */
+
+.refs { margin-top: var(--sp-8); padding-top: var(--sp-5); border-top: 1px solid var(--gray-200); }
+.refs h2 { border: 0; padding: 0; font-size: var(--text-h3); }
+.refs ol { margin: 0; padding-left: 2.1em; font-size: var(--text-sm); color: var(--gray-600); }
+.refs li { margin-bottom: var(--sp-3); scroll-margin-top: calc(var(--nav-h) + 2rem); }
+.refs li:target { background: var(--leaf-100); border-radius: 3px; box-shadow: 0 0 0 .4rem var(--leaf-100); }
+.refs a { word-break: break-word; }
+
+/* the [3] in running text */
+a.cite {
+  font-size: .84em; font-weight: 600; vertical-align: .25em;
+  text-decoration: none; color: var(--leaf-700);
+  padding: 0 .1em;
+}
+a.cite:hover { text-decoration: underline; }
+
+/* ========================================================= PAGE STATUS ===== */
+/* Delete the whole block when a page is written. It exists so nobody mistakes
+   a scaffold for a draft, and so the team can see at a glance what is left.   */
+
+.status {
+  margin: var(--sp-6) 0 0;
+  padding: var(--sp-4) var(--sp-5);
+  border: 1px dashed var(--gray-300);
+  border-radius: var(--radius-sm);
+  background: var(--gray-50);
+  font-size: var(--text-sm);
+  color: var(--gray-600);
+}
+.status b { display: block; color: var(--gray-700); margin-bottom: var(--sp-1); }
+.status code { font-family: var(--font-mono); font-size: .9em; background: var(--gray-200); padding: .1em .35em; border-radius: 3px; }
+
+.todo {
+  display: inline-block;
+  padding: .1em .5em;
+  border-radius: 3px;
+  background: var(--amber-100);
+  border: 1px solid #e8cf95;
+  color: var(--amber-700);
+  font-size: var(--text-xs); font-weight: 650;
+  letter-spacing: .03em;
+}
+
+/* ============================================================ PAGE NAV ===== */
+
+.pagenav {
+  max-width: var(--max);
+  margin: 0 auto;
+  padding: 0 var(--sp-5) var(--sp-8);
+  display: grid; gap: var(--sp-4);
+  grid-template-columns: repeat(auto-fit, minmax(16rem, 1fr));
+}
+@media (min-width: 640px) { .pagenav { padding-left: var(--sp-6); padding-right: var(--sp-6); } }
+.pagenav a {
+  display: block;
+  padding: var(--sp-4) var(--sp-5);
+  border: 1px solid var(--gray-200);
+  border-radius: var(--radius);
+  text-decoration: none;
+  transition: border-color .18s, background .18s;
+}
+.pagenav a:hover { border-color: var(--leaf-500); background: var(--leaf-50); }
+.pagenav b { display: block; font-size: .6875rem; font-weight: 700; letter-spacing: .09em; text-transform: uppercase; color: var(--gray-400); margin-bottom: .3rem; }
+.pagenav span { font-size: var(--text-base); font-weight: 600; color: var(--leaf-900); }
+.pagenav .is-next { text-align: right; }
+
+/* ============================================================== FOOTER ===== */
+
+.footer2 {
+  border-top: 1px solid var(--gray-200);
+  background: var(--gray-50);
+}
+.footer2__inner {
+  max-width: var(--max);
+  margin: 0 auto;
+  padding: var(--sp-7) var(--sp-5);
+  display: grid; gap: var(--sp-6);
+  grid-template-columns: repeat(auto-fit, minmax(13rem, 1fr));
+  font-size: var(--text-sm);
+  color: var(--gray-600);
+}
+@media (min-width: 640px) { .footer2__inner { padding-left: var(--sp-6); padding-right: var(--sp-6); } }
+.footer2 h3 { margin: 0 0 var(--sp-3); font-size: .6875rem; font-weight: 700; letter-spacing: .1em; text-transform: uppercase; color: var(--gray-400); }
+.footer2 ul { margin: 0; padding: 0; list-style: none; }
+.footer2 li + li { margin-top: .35rem; }
+.footer2 a { color: var(--gray-700); text-decoration: none; }
+.footer2 a:hover { color: var(--leaf-700); text-decoration: underline; }
+.footer2__legal { grid-column: 1 / -1; padding-top: var(--sp-5); border-top: 1px solid var(--gray-200); font-size: var(--text-xs); color: var(--gray-500); }
+.footer2__legal p { margin: 0 0 var(--sp-2); }
+
+@media print {
+  .sitenav, .toc, .pagenav, .sitenav-spacer { display: none !important; }
+  .pagewrap { display: block; }
+}
+
+/* =========================================================== SCAFFOLD ====== */
+/* A note left in place of the prose that has not been written. Every one of
+   these is meant to be deleted, and the page is not finished while one is
+   still on it. They are visibly not prose: grey, italic, and marked.          */
+
+p.scaffold {
+  margin: 0 0 var(--sp-4);
+  padding-left: var(--sp-4);
+  border-left: 2px dashed var(--gray-300);
+  color: var(--gray-500);
+  font-style: italic;
+  font-size: var(--text-sm);
+}
+p.scaffold::before {
+  content: "To write";
+  display: block;
+  font-style: normal;
+  font-size: .625rem; font-weight: 700; letter-spacing: .1em;
+  text-transform: uppercase; color: var(--gray-400);
+  margin-bottom: .15rem;
+}

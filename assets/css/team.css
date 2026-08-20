@@ -1,0 +1,650 @@
+/* =============================================================================
+   ReLeaf: the team page
+   Layout & type system after iGEM Marburg 2024; label pills after Unicamp-Brazil.
+
+   Project-flavoured touches, all subtle:
+   · cards "light up" on hover (optogenetic activation, the photo warms, a green
+     ring switches on), see .card:hover
+   · a leaf mark grows out of every section rule
+   · lead vs. vice lead differ only by a filled badge + a green top edge
+   ========================================================================== */
+
+/* ---- Fonts ---------------------------------------------------------------
+   Self-hosted from assets/fonts, so nothing is fetched from another server.
+   Before the wiki freeze this can move to your own static.igem.wiki slot; keep
+   it in step with the identical @font-face in tokens.css.                     */
+@font-face {
+  font-family: "Inter";
+  font-style: normal;
+  font-weight: 100 900;
+  font-display: swap;
+  src: url("../fonts/inter-variable.ttf") format("truetype");
+}
+
+:root {
+  /* neutrals (Tailwind `neutral`, as Marburg uses) */
+  --white:      #ffffff;
+  --gray-100:   #f5f5f5;
+  --gray-200:   #e5e5e5;
+  --gray-300:   #d4d4d4;
+  --gray-500:   #737373;
+  --gray-600:   #525252;
+  --gray-700:   #404040;
+  --black:      #171717;
+
+  /* ReLeaf accents, pulled from the team hoodie */
+  --leaf-900:   #14402b;
+  --leaf-700:   #23684a;
+  --leaf-500:   #4f9c6f;
+  --leaf-100:   #e3f0e8;
+
+  --card-bg:    #f4f4f2;       /* card body, a shade lighter than Marburg's gray-200 */
+  --nav-h:      68px;          /* matches --nv-h in nav.css */
+  --max:        1280px;        /* max-w-7xl */
+  --radius:     0.5rem;        /* rounded-lg */
+  --shadow-md:  0 4px 6px -1px rgb(0 0 0 / .1), 0 2px 4px -2px rgb(0 0 0 / .1);
+  --shadow-lg:  0 10px 15px -3px rgb(0 0 0 / .1), 0 4px 6px -4px rgb(0 0 0 / .1);
+}
+
+*, *::before, *::after { box-sizing: border-box; }
+
+html { scroll-behavior: smooth; scroll-padding-top: calc(var(--nav-h) + 60px); }
+
+body {
+  margin: 0;
+  font-family: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto,
+               Helvetica, Arial, sans-serif;
+  font-size: 16px;
+  line-height: 1.6;
+  color: var(--black);
+  background: var(--white);
+  -webkit-font-smoothing: antialiased;
+}
+
+img { display: block; max-width: 100%; }
+
+/* ============================================================ GROUP SHOT ==== */
+
+.hero { position: relative; }
+
+.hero__img {
+  width: 100%;
+  aspect-ratio: 12 / 5;
+  object-fit: cover;
+  object-position: center 58%;   /* trims the ceiling without clipping heads */
+  background: var(--leaf-100);
+}
+@media (max-width: 820px) { .hero__img { aspect-ratio: 4 / 3; } }
+
+/* a hairline of leaf green closes the photo off from the toolbar */
+.hero__edge {
+  height: 3px;
+  background: linear-gradient(90deg, var(--leaf-900), var(--leaf-500) 55%, var(--leaf-100));
+}
+
+/* ========================================================= SECTION NAV ===== */
+
+.toolbar {
+  position: sticky;
+  top: var(--nav-h);
+  z-index: 20;
+  background: rgb(255 255 255 / .94);
+  backdrop-filter: blur(10px);
+  border-bottom: 1px solid var(--gray-200);
+}
+
+/* five equal segments spanning the full row, hairline-separated */
+.toolbar__jump {
+  max-width: var(--max);
+  margin: 0 auto;
+  padding: 0 1.5rem;
+  display: grid;
+  grid-auto-flow: column;
+  grid-auto-columns: 1fr;
+}
+@media (min-width: 640px) { .toolbar__jump { padding: 0 2rem; } }
+
+.toolbar__jump a {
+  position: relative;
+  display: flex; align-items: center; justify-content: center;
+  gap: .45rem;
+  min-height: 54px;
+  padding: .55rem .4rem;
+  font-size: .715rem; font-weight: 600;
+  letter-spacing: .07em; text-transform: uppercase;
+  color: var(--gray-500);
+  text-align: center;
+  text-decoration: none;
+  transition: color .25s, background .25s;
+}
+
+/* one glyph per category, tinted with the link colour */
+.jump__icon {
+  width: 16px; height: 16px; flex: none;
+  background: currentColor;
+  -webkit-mask: var(--icon) center / contain no-repeat;
+          mask: var(--icon) center / contain no-repeat;
+  opacity: .85;
+}
+.toolbar__jump a:hover .jump__icon,
+.toolbar__jump a.is-current .jump__icon { opacity: 1; }
+.toolbar__jump a + a::before {           /* hairline between segments */
+  content: "";
+  position: absolute; left: 0; top: 26%; bottom: 26%;
+  width: 1px; background: var(--gray-200);
+}
+.toolbar__jump a::after {                /* underline grows from the centre */
+  content: "";
+  position: absolute; left: 50%; right: 50%; bottom: 0;
+  height: 2px; background: var(--leaf-700);
+  transition: left .28s cubic-bezier(.2,.7,.3,1), right .28s cubic-bezier(.2,.7,.3,1);
+}
+.toolbar__jump a:hover { color: var(--leaf-900); background: rgb(227 240 232 / .55); }
+.toolbar__jump a:hover::after { left: 18%; right: 18%; }
+
+.toolbar__jump a.is-current { color: var(--leaf-900); }
+.toolbar__jump a.is-current::after { left: 0; right: 0; }
+
+/* the first segment carries the weight, Project Leads */
+.toolbar__jump a:first-child {
+  font-weight: 800;
+  font-size: .75rem;
+  letter-spacing: .09em;
+  color: var(--leaf-900);
+}
+.toolbar__jump a:first-child .jump__icon { width: 18px; height: 18px; opacity: 1; }
+
+/* below the grid breakpoint the segments scroll sideways instead of squashing */
+@media (max-width: 780px) {
+  .toolbar__jump {
+    grid-auto-columns: max-content;
+    overflow-x: auto;
+    -ms-overflow-style: none; scrollbar-width: none;
+  }
+  .toolbar__jump::-webkit-scrollbar { display: none; }
+  .toolbar__jump a { padding: .55rem .95rem; min-height: 46px; letter-spacing: .06em; }
+}
+
+/* ---- owner / member key ------------------------------------------------- */
+.legend {
+  max-width: var(--max);
+  width: calc(100% - 4rem);
+  margin: 2.5rem auto 0;
+  padding: 1.35rem 1.5rem 1.15rem;
+  background: #fbfbf9;
+  border: 1px solid rgb(23 23 23 / .06);
+  border-radius: 12px;
+}
+@media (max-width: 639px) { .legend { width: calc(100% - 3rem); padding: 1.15rem 1.15rem 1rem; } }
+
+.legend__title {
+  margin: 0 0 1rem;
+  font-size: .66rem; font-weight: 800;
+  letter-spacing: .15em; text-transform: uppercase;
+  color: var(--leaf-700);
+}
+
+/* three quiet columns, hairline between */
+.legend__tracks {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 1.1rem;
+}
+@media (min-width: 880px) {
+  .legend__tracks { grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 0; }
+  .legend__track { padding: 0 1.5rem; }
+  .legend__track:first-child { padding-left: 0; }
+  .legend__track:last-child  { padding-right: 0; }
+  .legend__track + .legend__track { border-left: 1px solid rgb(23 23 23 / .08); }
+}
+
+.legend__track { display: grid; gap: .5rem; align-content: start; justify-items: start; }
+
+.legend__def {
+  margin: 0;
+  font-size: .775rem; line-height: 1.6;
+  color: var(--gray-600);
+}
+
+/* the task key rides underneath on one hairline */
+.legend__tasks {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: .5rem 2.25rem;
+  margin-top: 1.15rem;
+  padding-top: .95rem;
+  border-top: 1px solid rgb(23 23 23 / .08);
+}
+@media (min-width: 880px) { .legend__tasks { grid-template-columns: 1.85fr 1fr; } }
+
+.legend__task {
+  margin: 0;
+  display: grid;
+  grid-template-columns: max-content max-content 1fr;
+  align-items: baseline;
+  gap: .45rem;
+  font-size: .775rem; line-height: 1.55;
+  color: var(--gray-600);
+}
+.legend__task .tag { align-self: center; }
+.legend__term { color: var(--black); font-weight: 700; white-space: nowrap; }
+.legend__term::after { content: ""; }
+
+.key__own { background: var(--gray-600); }
+.key__mem { background: rgb(82 82 82 / .13); color: var(--gray-600); }
+
+/* ================================================================ GRID ===== */
+
+main { padding-bottom: 5rem; }
+
+.section { max-width: var(--max); margin: 0 auto; padding: 0 1.5rem; }
+@media (min-width: 640px) { .section { padding: 0 2rem; } }
+
+.section__title {
+  font-size: clamp(1.8rem, 3.2vw, 2.25rem);   /* text-4xl at full width */
+  font-weight: 700;
+  letter-spacing: -.025em;
+  line-height: 1.1;
+  margin: 4rem 0 1rem;
+  scroll-margin-top: calc(var(--nav-h) + 60px);
+}
+.section:first-of-type .section__title { margin-top: 3rem; }
+
+
+/* headings stand on their own, no rule, no ornament */
+:root {
+  --leaf-mask: url("data:image/svg+xml;charset=utf-8,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath d='M6.05 8.05c-2.73 2.73-2.73 7.15-.02 9.88 1.47-3.4 4.09-6.24 7.36-7.93-2.77 2.34-4.71 5.61-5.59 9.28 2.6 1.23 5.8.78 7.95-1.37C19.43 14.47 20 4 20 4S9.53 4.57 6.05 8.05z'/%3E%3C/svg%3E");
+}
+
+.section__note { color: var(--gray-600); margin: 0 0 .55rem; }
+.section__note:last-of-type { margin-bottom: 1.9rem; }
+
+/* 4 across (Marburg ships 3, widened per request) */
+.grid {
+  display: grid;
+  grid-template-columns: repeat(1, minmax(0, 1fr));
+  gap: 1.25rem;
+  align-items: stretch;
+}
+@media (min-width: 560px)  { .grid { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+@media (min-width: 900px)  { .grid { grid-template-columns: repeat(3, minmax(0, 1fr)); } }
+@media (min-width: 1120px) { .grid { grid-template-columns: repeat(4, minmax(0, 1fr)); } }
+
+/* named, not carded: the quiet line under a grid */
+.section__after {
+  max-width: 62rem;
+  margin: 1.7rem 0 0;
+  padding-top: 1.15rem;
+  border-top: 1px solid rgb(23 23 23 / .08);
+  font-size: .84rem;
+  line-height: 1.65;
+  color: var(--gray-600);
+}
+.section__afternames { color: var(--black); font-weight: 600; }
+
+.empty {
+  border: 1px dashed var(--gray-300);
+  border-radius: var(--radius);
+  padding: 2rem;
+  text-align: center;
+  color: var(--gray-500);
+  background: var(--gray-100);
+}
+
+/* ================================================================ CARD ===== */
+
+.card {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  border-radius: var(--radius);
+  overflow: hidden;
+  background: var(--card-bg);
+  box-shadow: 0 0 0 1px rgb(23 23 23 / .06), 0 1px 2px rgb(23 23 23 / .04),
+              0 10px 24px -16px rgb(23 23 23 / .45);
+  cursor: pointer;
+  transition: transform .3s cubic-bezier(.2,.7,.3,1), box-shadow .3s, opacity .3s;
+}
+
+/* optogenetic activation: the portrait warms and a green ring switches on */
+.card:hover,
+.card:focus-visible {
+  transform: translateY(-4px);
+  box-shadow: 0 0 0 2px var(--leaf-500), 0 12px 28px -14px rgb(20 64 43 / .55),
+              0 0 26px -6px rgb(79 156 111 / .5);
+  outline: none;
+}
+.card:hover .card__media img { filter: saturate(1.08) brightness(1.03); }
+
+/* ---- an unclaimed project lead seat --------------------------------------
+   Leads are boxed in flat green. This one runs a slow gradient through leaf
+   green into gold, so an open seat outranks a held one on sight.            */
+.card--open {
+  cursor: default;
+  padding: 4px;
+  background: linear-gradient(115deg,
+    var(--leaf-900) 0%,  var(--leaf-700) 10%, #dfbd63 22%, var(--leaf-500) 33%,
+    var(--leaf-900) 46%, var(--leaf-700) 58%, #dfbd63 72%, var(--leaf-500) 84%,
+    var(--leaf-900) 100%);
+  background-size: 210% 210%;
+  animation: seat-sweep 9s ease-in-out infinite;
+  box-shadow: 0 0 0 1px rgb(20 64 43 / .12), 0 14px 30px -18px rgb(20 64 43 / .7);
+}
+@keyframes seat-sweep {
+  0%, 100% { background-position: 0% 50%; }
+  50%      { background-position: 100% 50%; }
+}
+.card--open:hover { transform: translateY(-4px); box-shadow: 0 0 0 1px rgb(20 64 43 / .18), 0 18px 34px -18px rgb(20 64 43 / .75); }
+
+.card--open .card__media,
+.card--open .card__body { background: #fff; }
+.card--open .card__media { border-radius: 5px 5px 0 0; padding-top: 105%; border-bottom: 0; }
+.card--open .card__body  { border-radius: 0 0 5px 5px; padding: .85rem 1rem .9rem; }
+.card--open .card__badges { margin-bottom: 0; }
+
+.card__media--open {
+  display: grid; place-items: center;
+  background:
+    radial-gradient(120% 90% at 50% 0%, var(--leaf-100) 0%, #fff 70%);
+}
+.open__mark {
+  position: absolute; inset: 0;
+  display: grid; place-items: center;
+  font-size: 5.2rem; font-weight: 800;
+  line-height: 1;
+  color: var(--leaf-700);
+  opacity: .34;
+}
+.card--open:hover .open__mark { opacity: .48; }
+.card__media--open::after {
+  content: "";
+  position: absolute; inset: 14px;
+  border: 2px dashed rgb(35 104 74 / .28);
+  border-radius: 6px;
+}
+
+.card__role--open {
+  background: var(--leaf-900);
+  color: #fff;
+  border-color: var(--leaf-900);
+}
+.card__name--open { color: var(--leaf-900); }
+
+/* rank reads off the card's frame: a lead is boxed on all four sides, a vice
+   lead carries the top edge only, a member carries nothing */
+.card--lead::after {
+  content: "";
+  position: absolute; inset: 0;
+  border: 3px solid var(--leaf-700);
+  border-radius: var(--radius);
+  pointer-events: none;
+  z-index: 2;
+}
+.card--vice::after {
+  content: "";
+  position: absolute; top: 0; left: 0; right: 0;
+  height: 3px;
+  background: var(--leaf-500);
+  z-index: 2;
+}
+
+.card__media {
+  position: relative;
+  width: 100%; padding-top: 125%;
+  background: var(--leaf-100);
+  border-bottom: 1px solid rgb(23 23 23 / .07);
+}
+.card__media img {
+  position: absolute; inset: 0;
+  width: 100%; height: 100%;
+  object-fit: cover;
+  transition: opacity .3s, filter .3s;
+}
+.card__media .card__fun { opacity: 0; }
+.card:hover .card__fun { opacity: 1; }
+
+.card__body {
+  display: flex; flex-direction: column;
+  flex: 1;
+  padding: .9rem 1rem 1.05rem;
+}
+
+/* three tiers of badge: green role, neutral subteam track, coloured task pill */
+.card__badges {
+  display: flex; flex-wrap: nowrap; align-items: center;
+  gap: .26rem;
+  margin-bottom: .5rem;
+  min-width: 0;
+}
+
+.card__track {
+  font-size: .565rem; font-weight: 600;
+  letter-spacing: .05em; text-transform: uppercase;
+  border-radius: 50rem;
+  padding: .17rem .48rem;
+  border: 1px solid transparent;
+  white-space: nowrap;
+}
+.card__track--major {
+  background: #eceae5;
+  color: #55534c;
+  border-color: #dedbd3;
+}
+.card__track--minor {
+  background: transparent;
+  color: #8b8981;
+  border-color: #d9d7d0;
+}
+
+.card__role {
+  align-self: flex-start;
+  font-size: .585rem; font-weight: 800;
+  letter-spacing: .05em; text-transform: uppercase;
+  border-radius: 50rem;
+  padding: .17rem .58rem;
+  border: 1.5px solid transparent;
+  white-space: nowrap;
+}
+.card__role--lead       { background: var(--leaf-700); color: #fff; border-color: var(--leaf-700); }
+.card__role--vice       { background: transparent; color: var(--leaf-700); border-color: var(--leaf-500); }
+.card__role--advisor    { background: #fdf1da; color: #7a4c12; border-color: #f0d5a4; }
+.card__role--instructor { background: #ece7f6; color: #4b3a75; border-color: #d5cbea; }
+
+.card__name {
+  font-size: 1.06rem; font-weight: 700;
+  letter-spacing: -.012em; line-height: 1.25;
+  margin: 0;
+}
+
+.card__meta {
+  font-size: .715rem; font-weight: 600;
+  letter-spacing: .045em; text-transform: uppercase;
+  color: var(--gray-500);
+  margin: .22rem 0 0;
+}
+
+/* task pills sit directly under the school line */
+.card__tags {
+  display: flex; flex-wrap: wrap; gap: .3rem;
+  margin: .65rem 0 0;
+  padding-bottom: .8rem;
+  border-bottom: 1px solid rgb(23 23 23 / .07);
+}
+
+/* no bio below? then the rule under the pills has nothing to separate */
+.card__tags:last-child { border-bottom: 0; padding-bottom: 0; }
+
+.card__bio {
+  font-size: .815rem;
+  line-height: 1.62;
+  color: var(--gray-600);
+  margin: .75rem 0 0;
+  text-wrap: pretty;
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 4;         /* the ellipsis is added by the browser */
+  overflow: hidden;
+}
+
+.card__more {
+  margin: .55rem 0 0;
+  font-size: .715rem; font-weight: 700;
+  letter-spacing: .05em; text-transform: uppercase;
+  color: var(--leaf-700);
+  display: inline-flex; align-items: center; gap: .3rem;
+}
+.card__more::after { content: "\2192"; transition: transform .25s; }
+.card:hover .card__more::after { transform: translateX(3px); }
+/* no pills? the bio still needs its own breathing room */
+.card__meta + .card__bio { margin-top: .65rem; }
+
+.tag {
+  display: inline-flex; align-items: center; gap: .3rem;
+  font-size: .695rem; line-height: 1.55;
+  white-space: nowrap;
+  border-radius: 50rem;
+  padding: .08rem .55rem;
+}
+/* owner, saturated fill, white text, a lead dot */
+.tag--own {
+  color: #fff;
+  font-weight: 700;
+  letter-spacing: .005em;
+  padding-left: .45rem;
+  box-shadow: 0 1px 2px rgb(23 23 23 / .18);
+}
+.tag__dot {
+  width: .34rem; height: .34rem;
+  border-radius: 50%;
+  background: rgb(255 255 255 / .85);
+  flex: none;
+}
+/* member, the same hue, washed right back */
+.tag--mem { font-weight: 600; }
+
+/* =============================================================== MODAL ===== */
+
+.modal {
+  position: fixed; inset: 0; z-index: 50;
+  display: none;
+  align-items: center; justify-content: center;
+  padding: 1.5rem;
+  background: rgb(6 20 13 / .88);
+  backdrop-filter: blur(5px);
+}
+.modal.is-open { display: flex; }
+
+/* the frame is built per person from their own task colours */
+.modal__frame {
+  position: relative;
+  width: 100%; max-width: 940px;
+  max-height: 90vh;
+  padding: 9px;
+  border-radius: 18px;
+  background: var(--frame, linear-gradient(135deg, #14402b, #4f9c6f));
+  box-shadow: 0 30px 70px -30px rgb(0 0 0 / .8), 0 0 0 1px rgb(255 255 255 / .12);
+  overflow: hidden;
+}
+
+.modal__panel {
+  position: relative;
+  max-height: calc(90vh - 14px);
+  overflow: auto;
+  background: var(--white);
+  border-radius: 10px;
+  display: grid;
+  grid-template-columns: 1fr;
+}
+@media (min-width: 700px) { .modal__panel { grid-template-columns: 340px 1fr; } }
+
+.modal__media {
+  width: 100%; height: 100%;
+  min-height: 320px; max-height: 560px;
+  object-fit: cover; object-position: center 22%;
+  background: var(--leaf-100);
+}
+
+.modal__body { position: relative; padding: 2rem 2.1rem 2.1rem; }
+
+/* a sprig of leaves, one leaf per task, watermarked behind the text */
+.modal__sprig {
+  position: absolute; right: 14px; bottom: 10px;
+  height: 240px; width: auto;
+  opacity: .26;
+  pointer-events: none;
+}
+.modal__sprig svg { height: 100%; width: auto; display: block; }
+@media (max-width: 700px) { .modal__sprig { height: 150px; opacity: .18; } }
+.modal__role {
+  position: relative;
+  font-size: .68rem; font-weight: 800; letter-spacing: .07em; text-transform: uppercase;
+  color: var(--leaf-700); margin: 0 0 .25rem;
+}
+.modal__name {
+  position: relative;
+  font-size: 2rem; font-weight: 700;
+  letter-spacing: -.025em; line-height: 1.15;
+  margin: 0;
+}
+.modal__meta {
+  position: relative;
+  color: var(--gray-500); font-size: .74rem; font-weight: 600;
+  letter-spacing: .07em; text-transform: uppercase;
+  margin: .4rem 0 1.15rem;
+}
+.modal__text { position: relative; margin: 0; color: var(--gray-700); font-size: 1rem; line-height: 1.7; text-wrap: pretty; }
+.modal__tags {
+  position: relative;
+  margin: 1.35rem 0 0;
+  padding: .9rem 0 0;
+  border-bottom: 0;
+  border-top: 1px solid rgb(23 23 23 / .09);
+}
+
+.modal__close {
+  position: absolute; top: .6rem; right: .7rem;
+  z-index: 3;
+  width: 2.1rem; height: 2.1rem;
+  background: rgb(255 255 255 / .92); border: 0; border-radius: 50%;
+  box-shadow: 0 2px 8px rgb(0 0 0 / .18);
+  cursor: pointer;
+  font-size: 1.35rem; line-height: 1; color: var(--gray-600);
+}
+.modal__close:hover { color: var(--black); }
+
+/* ============================================================== FOOTER ===== */
+
+.footer {
+  border-top: 1px solid var(--gray-200);
+  background: var(--gray-100);
+  padding: 2.75rem 1.5rem;
+  text-align: center;
+  color: var(--gray-500);
+  font-size: .82rem;
+  letter-spacing: .02em;
+}
+.footer p { margin: 0; }
+.footer::before {
+  content: "";
+  display: block;
+  width: 20px; height: 20px;
+  margin: 0 auto .85rem;
+  background: var(--leaf-500);
+  -webkit-mask: var(--leaf-mask) center / contain no-repeat;
+          mask: var(--leaf-mask) center / contain no-repeat;
+  opacity: .55;
+}
+
+/* ============================================================= UTILITY ===== */
+
+.visually-hidden {
+  position: absolute; width: 1px; height: 1px;
+  padding: 0; margin: -1px; overflow: hidden;
+  clip: rect(0 0 0 0); white-space: nowrap; border: 0;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { transition: none !important; animation: none !important; }
+  html { scroll-behavior: auto; }
+  .card:hover { transform: none; }
+}
