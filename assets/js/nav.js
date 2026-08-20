@@ -206,6 +206,20 @@
     document.addEventListener("keydown", (e) => { if (e.key === "Escape") hide(); });
     document.addEventListener("click", (e) => { if (!root.contains(e.target)) hide(); });
 
+    /* The dark bar over a hero is transparent until the page moves, so it needs
+       to know. Cheap enough to run everywhere; only nav-dark.css styles it. */
+    let ticking = false;
+    const mark = () => {
+      root.classList.toggle("is-scrolled", window.scrollY > 40);
+      ticking = false;
+    };
+    window.addEventListener("scroll", () => {
+      if (ticking) return;
+      ticking = true;
+      requestAnimationFrame(mark);
+    }, { passive: true });
+    mark();
+
     const burger = root.querySelector(".sitenav__burger");
     burger.addEventListener("click", () => {
       const open = root.classList.toggle("drawer-open");

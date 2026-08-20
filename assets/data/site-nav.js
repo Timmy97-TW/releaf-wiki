@@ -68,7 +68,7 @@ const NAV = [
       { title: "Bioreactor Calculations", slug: "bioreactor-calculations", icon: "bioreactor",
         caption: "Sizing, flow and mass transfer for the vessel." },
       { title: "Hardware",                slug: "hardware",                icon: "hardware",
-        caption: "Enclosure, optics and electronics." },
+        caption: "Three instruments, taken apart. Plus the build notebook." },
       { title: "Software",                slug: "software",                icon: "software",
         caption: "Control code, analysis and tooling." },
       { title: "Peptide Design",          slug: "peptide-design",          icon: "peptide",

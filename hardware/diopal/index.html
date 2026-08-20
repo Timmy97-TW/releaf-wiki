@@ -1,0 +1,619 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>DiOPAL — Anatomy</title>
+<meta name="description" content="An interactive teardown of DiOPAL, the GEMS-Taiwan dual-wavelength optogenetic LED array." />
+<link rel="stylesheet" href="css/style.css" />
+<link rel="stylesheet" href="../css/polish.css" />
+<link rel="stylesheet" href="../../assets/css/nav.css" />
+<link rel="stylesheet" href="../../assets/css/nav-dark.css" />
+<script>document.documentElement.className+=' js'</script>
+</head>
+<body data-instrument="diopal">
+<a class="skip-link" href="#main">Skip to content</a>
+
+<div class="bg-glow"></div>
+<div class="grid-lines"></div>
+<div class="grain"></div>
+<div class="vignette"></div>
+<div class="scanline" aria-hidden="true"></div>
+
+<div class="progress"><div class="progress-bar" id="bar"></div></div>
+
+<!-- The wiki navigation, dark variant. This replaced the section's own
+     topbar so the hardware pages sit in one URL space and one menu with
+     the rest of the wiki, which is route 1 in notes/hardware-handoff.md. -->
+<div id="site-nav" class="sitenav--dark" data-base="../../" data-tab="drylab" data-page="hardware"></div>
+
+<nav class="hwnav" aria-label="Hardware section">
+  <b>Hardware</b>
+  <a href="../">Overview</a>
+  <a href="../photometer/">V4 Photometer</a>
+  <a href="../diopal/" aria-current="page">DiOPAL</a>
+  <a href="../bioreactor/">Bioreactor</a>
+  <a href="../notebook/">Notebook</a>
+</nav>
+
+<!-- intro -->
+<main id="main">
+<section class="intro">
+  <div class="eyebrow">Dual-wavelength optogenetic array</div>
+  <h1>Six ways to ask<br />a cell <span>one question</span></h1>
+  <p>
+    Green light switches protectant production on. Red switches it off. DiOPAL
+    holds twenty-four cultures under six defined light conditions at once, so the
+    answer arrives in a single run.
+  </p>
+
+  <dl class="stats">
+    <div><dt>LEDs</dt><dd>24</dd></div>
+    <div><dt>Conditions</dt><dd>6</dd></div>
+    <div><dt>Replicates each</dt><dd>4</dd></div>
+    <div><dt>Wavelengths</dt><dd>2</dd></div>
+  </dl>
+
+  <div class="scroll-cue">Scroll</div>
+</section>
+
+<!-- scroll-driven 3D showcase -->
+<div class="track" id="track">
+  <div class="stage" id="stage">
+    <canvas id="gl"></canvas>
+    <div class="hud">
+
+      <div class="card" id="hero-card">
+        <div class="eyebrow">The complete instrument</div>
+        <h2>DiOPAL</h2>
+        <p>
+          Eight parts around a 6 × 4 grid of LEDs. Scroll to take it apart.
+        </p>
+      </div>
+
+      <div class="panel panel-l" id="panel-l"></div>
+      <div class="panel panel-r" id="panel-r"></div>
+
+      <div class="build" id="build-step"></div>
+
+      <div class="card" id="finale">
+        <div class="eyebrow">Assembled</div>
+        <h2>One run, six conditions</h2>
+        <p>
+          Two wavelengths across three intensity tiers, four matched LEDs to a
+          column — every condition under identical surroundings.
+        </p>
+      </div>
+
+      <div class="counter" id="counter"></div>
+      <div class="rail" id="rail"></div>
+    </div>
+
+    <div class="loader" id="loader">
+      <span>Loading geometry</span>
+      <b id="load-pct">0%</b>
+    </div>
+  </div>
+</div>
+
+<section class="outro">
+  <div class="eyebrow">Three iterations</div>
+  <p class="outro-lead">
+    From a dual-LED breadboard to an enclosed, light-shielded instrument with
+    calibrated <strong>low</strong>, <strong>medium</strong> and <strong>high</strong>
+    tiers on both channels.
+  </p>
+</section>
+
+<!-- ══════════════════ technical record ══════════════════ -->
+<div class="doc-wrap">
+<aside class="doc-nav" id="doc-nav">
+  <div class="doc-nav-label">Contents</div>
+  <ol>
+    <li><a href="#overview"><b>01</b> Overview</a></li>
+    <li><a href="#materials"><b>02</b> Materials</a></li>
+    <li><a href="#iterations"><b>03</b> Iterations</a></li>
+    <li><a href="#matching"><b>04</b> LED Matching</a></li>
+    <li><a href="#control"><b>05</b> Control</a></li>
+    <li><a href="#summary"><b>06</b> Summary &amp; Role</a></li>
+  </ol>
+</aside>
+
+<article class="doc">
+
+  <header class="doc-head">
+    <div class="eyebrow">Technical record</div>
+    <h1>DiOPAL</h1>
+    <p class="standfirst">
+      Dual-wavelength Optogenetic Programmable Array of LEDs — a dedicated testing
+      apparatus, not a component of the bioreactor control loop. It characterizes
+      how light wavelength and intensity affect protectant expression in engineered
+      <i>Bacillus subtilis</i> 168.
+    </p>
+    <p class="doc-aim">
+      The strain carries a CcaS/CcaR light-responsive expression system in which
+      green light induces protectant production and red light halts it. DiOPAL
+      provides a controlled, repeatable way to expose cultures to defined
+      wavelengths and intensities so the effect can be measured directly.
+    </p>
+    <div class="status">
+      <span class="status-dot"></span>
+      <span class="pending"></span>
+      <span class="status-label">await measured values. The structure and method are complete; only the numbers remain.</span>
+    </div>
+  </header>
+
+  <!-- ─────────── OVERVIEW ─────────── -->
+  <section class="part" id="overview" data-n="1">
+    <div class="part-mark"><span>Section</span><b>01</b></div>
+    <h2>Overview</h2>
+  </section>
+
+  <section class="sec">
+    <p>
+      The array is a <b>4 × 6 grid</b> organized around two wavelengths and three
+      intensity levels. For each of the three intensity tiers there is a green
+      channel and a red channel, and each channel is formed from four
+      internal-resistance-matched LEDs. This layout allows a single run to compare
+      low, medium and high intensities at both wavelengths simultaneously, under
+      identical external conditions.
+    </p>
+
+    <div class="matrix" id="matrix"></div>
+
+      <figure class="frame hero">
+        <div class="frame-img"><img src="photos/iter3-a.jpg" alt="DiOPAL in use" loading="lazy"></div>
+        <figcaption><b>The instrument</b> Twenty-four tubes over twenty-four LEDs, in a light-tight box.</figcaption>
+      </figure>
+
+    <aside class="keynote">
+      <div class="keynote-fig">24<em>LEDs</em></div>
+      <p>
+        Six conditions, four replicates each — every one of them exposed at the same
+        time, in the same box, at the same temperature.
+      </p>
+    </aside>
+
+    <p>
+      Intensity is set by pulse-width modulation from an Arduino through a MOSFET,
+      and each intensity level is held constant throughout a given test. DiOPAL
+      applies a fixed light dose for the duration of an experiment rather than
+      adjusting output dynamically: it is a characterization tool, not a feedback
+      controller.
+    </p>
+  </section>
+
+  <!-- ─────────── MATERIALS ─────────── -->
+  <section class="part" id="materials" data-n="2">
+    <div class="part-mark"><span>Section</span><b>02</b></div>
+    <h2>Materials and Equipment</h2>
+  </section>
+
+  <section class="sec">
+    <div class="table-scroll">
+      <table class="bom">
+        <caption>Bill of materials</caption>
+        <thead>
+          <tr><th>Component</th><th>Part number / spec</th><th class="num">Qty</th><th class="num">Unit</th><th class="num">Total</th><th>Supplier</th></tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>Green LED</td>
+            <td><span class="pending"></span>, peak <span class="pending s"></span> nm, FWHM <span class="pending s"></span> nm, V<sub>f</sub> <span class="pending s"></span> V, I<sub>f</sub> <span class="pending s"></span> mA, viewing angle <span class="pending s"></span>°</td>
+            <td class="num">12</td><td class="num"><span class="pending s"></span></td><td class="num"><span class="pending s"></span></td><td><span class="pending s"></span></td>
+          </tr>
+          <tr>
+            <td>Red LED</td>
+            <td><span class="pending"></span>, peak <span class="pending s"></span> nm, FWHM <span class="pending s"></span> nm, V<sub>f</sub> <span class="pending s"></span> V, I<sub>f</sub> <span class="pending s"></span> mA, viewing angle <span class="pending s"></span>°</td>
+            <td class="num">12</td><td class="num"><span class="pending s"></span></td><td class="num"><span class="pending s"></span></td><td><span class="pending s"></span></td>
+          </tr>
+          <tr>
+            <td>Microcontroller</td><td><b>Arduino Uno R4 WiFi</b></td>
+            <td class="num">1</td><td class="num"><span class="pending s"></span></td><td class="num"><span class="pending s"></span></td><td><span class="pending s"></span></td>
+          </tr>
+          <tr>
+            <td>Perf board</td><td><span class="pending"></span></td>
+            <td class="num">1</td><td class="num"><span class="pending s"></span></td><td class="num"><span class="pending s"></span></td><td><span class="pending s"></span></td>
+          </tr>
+          <tr>
+            <td>Power supply</td><td><span class="pending"></span>, 5 V, <span class="pending s"></span> A</td>
+            <td class="num">1</td><td class="num"><span class="pending s"></span></td><td class="num"><span class="pending s"></span></td><td><span class="pending s"></span></td>
+          </tr>
+          <tr>
+            <td>Hook-up wire</td><td><span class="pending s"></span> AWG</td>
+            <td class="num"><span class="pending s"></span></td><td class="num"><span class="pending s"></span></td><td class="num"><span class="pending s"></span></td><td><span class="pending s"></span></td>
+          </tr>
+          <tr>
+            <td>Solder</td><td><span class="pending"></span></td>
+            <td class="num"><span class="pending s"></span></td><td class="num"><span class="pending s"></span></td><td class="num"><span class="pending s"></span></td><td><span class="pending s"></span></td>
+          </tr>
+          <tr>
+            <td>Heat-set inserts</td><td><span class="pending"></span>, M<span class="pending s"></span> × <span class="pending s"></span> mm</td>
+            <td class="num"><span class="pending s"></span></td><td class="num"><span class="pending s"></span></td><td class="num"><span class="pending s"></span></td><td><span class="pending s"></span></td>
+          </tr>
+          <tr>
+            <td>Screws</td><td><span class="pending"></span>, M<span class="pending s"></span> × <span class="pending s"></span> mm</td>
+            <td class="num"><span class="pending s"></span></td><td class="num"><span class="pending s"></span></td><td class="num"><span class="pending s"></span></td><td><span class="pending s"></span></td>
+          </tr>
+          <tr>
+            <td>Filament, PLA</td><td>Bambu Lab PLA Basic, 1.75 mm, 1 kg spool</td>
+            <td class="num">1</td><td class="num">355.99</td><td class="num"><span class="pending s"></span></td><td><span class="pending s"></span></td>
+          </tr>
+        </tbody>
+        <tfoot>
+          <tr><td colspan="4">Total</td><td class="num"><span class="pending s"></span></td><td>TWD</td></tr>
+        </tfoot>
+      </table>
+    </div>
+
+    <h3 class="minor">Printed parts</h3>
+    <div class="table-scroll">
+      <table class="bom">
+        <caption>Print settings for the fabricated parts</caption>
+        <thead><tr><th>Part</th><th>Material</th><th class="num">Filament</th><th class="num">Infill</th></tr></thead>
+        <tbody>
+          <tr><td>LPA_Box</td><td><span class="swatch black"></span>Black PLA</td><td class="num"><span class="pending s"></span> g</td><td class="num"><span class="pending s"></span></td></tr>
+          <tr><td>Bottom_Plate</td><td><span class="swatch grey"></span>Grey PLA</td><td class="num"><span class="pending s"></span> g</td><td class="num"><span class="pending s"></span></td></tr>
+          <tr><td>Tube_Holder</td><td><span class="swatch white"></span>White PLA</td><td class="num"><span class="pending s"></span> g</td><td class="num"><span class="pending s"></span></td></tr>
+          <tr><td>LED_Holder</td><td><span class="swatch black"></span>Black PLA</td><td class="num"><span class="pending s"></span> g</td><td class="num"><span class="pending s"></span></td></tr>
+          <tr><td>Left_C</td><td><span class="swatch grey"></span>Grey PLA</td><td class="num"><span class="pending s"></span> g</td><td class="num"><span class="pending s"></span></td></tr>
+          <tr><td>Right_C</td><td><span class="swatch grey"></span>Grey PLA</td><td class="num"><span class="pending s"></span> g</td><td class="num"><span class="pending s"></span></td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <h3 class="minor">Equipment</h3>
+    <p>
+      Lux meter <span class="pending s"></span> (model and resolution), 3D printer,
+      soldering iron, calipers, printed sensor fixture.
+    </p>
+  </section>
+
+  <!-- ─────────── ITERATIONS ─────────── -->
+  <section class="part" id="iterations" data-n="3">
+    <div class="part-mark"><span>Section</span><b>03</b></div>
+    <h2>Iteration History</h2>
+  </section>
+
+  <section class="sec">
+    <ol class="iters">
+      <li>
+        <div class="iter-n">01</div>
+        <div class="iter-body">
+          <h3 class="minor">Dual LED per column</h3>
+          <p>
+            A dual-LED-per-column layout, allowing quick switching between green and
+            red output to exercise the on/off control of <i>B. subtilis</i> protectant
+            production. Wire-management prints were introduced to keep the growing
+            harness organized.
+          </p>
+      <div class="frames">
+        <figure class="frame"><div class="frame-img"><img src="photos/iter1-a.jpg" alt="Iteration 1 Bare stack on the bench — LED holder and tube holder, driven straight from a breadboard." loading="lazy"></div>
+          <figcaption><b>Iteration 1</b> Bare stack on the bench — LED holder and tube holder, driven straight from a breadboard.</figcaption></figure>
+        <figure class="frame"><div class="frame-img"><img src="photos/iter1-b.jpg" alt="Iteration 1 Only a few channels wired; no enclosure and no light shielding yet." loading="lazy"></div>
+          <figcaption><b>Iteration 1</b> Only a few channels wired; no enclosure and no light shielding yet.</figcaption></figure>
+      </div>
+
+          <p class="iter-cause">
+            <b>Gap.</b> Established the dual-wavelength concept, but did not yet
+            control for output consistency between LEDs or for interference from
+            external light.
+          </p>
+        </div>
+      </li>
+      <li>
+        <div class="iter-n">02</div>
+        <div class="iter-body">
+          <h3 class="minor">Three calibrated tiers, and a lid</h3>
+          <p>
+            Consistent LED output for each column, with low, medium and high
+            calibration outputs so protectant production could be tested across a
+            range of intensities. Coverage was added to block external light sources.
+          </p>
+      <div class="frames">
+        <figure class="frame"><div class="frame-img"><img src="photos/iter2-a.jpg" alt="Iteration 2 All 24 channels wired and lit, with every lead tagged — the measurement pass that produced the matched groups." loading="lazy"></div>
+          <figcaption><b>Iteration 2</b> All 24 channels wired and lit, with every lead tagged — the measurement pass that produced the matched groups.</figcaption></figure>
+        <figure class="frame"><div class="frame-img"><img src="photos/iter2-b.jpg" alt="Iteration 2 Columns driven together through MOSFETs on the breadboard." loading="lazy"></div>
+          <figcaption><b>Iteration 2</b> Columns driven together through MOSFETs on the breadboard.</figcaption></figure>
+      </div>
+
+          <p class="iter-cause">
+            This introduced the three-intensity structure that defines the array, and
+            the shielding needed to make an intensity comparison meaningful — ambient
+            light would otherwise confound the low-intensity conditions.
+          </p>
+        </div>
+      </li>
+      <li>
+        <div class="iter-n">03</div>
+        <div class="iter-body">
+          <h3 class="minor">A self-contained instrument</h3>
+          <p>As iteration 2, plus:</p>
+          <ul class="tight">
+            <li>an outer frame print housing the wiring and Arduino,</li>
+            <li>computer-controlled light-intensity variance, via code,</li>
+            <li>slider prints for easy assembly and disassembly, and</li>
+            <li>a tall print to house test tubes.</li>
+          </ul>
+      <div class="frames">
+        <figure class="frame"><div class="frame-img"><img src="photos/iter3-a.jpg" alt="Iteration 3 The finished instrument — enclosed housing, sliders, and the tube holder seated on top." loading="lazy"></div>
+          <figcaption><b>Iteration 3</b> The finished instrument — enclosed housing, sliders, and the tube holder seated on top.</figcaption></figure>
+        <figure class="frame"><div class="frame-img"><img src="photos/iter3-b.jpg" alt="Iteration 3 The array under the tube holder, columns alternating green and red." loading="lazy"></div>
+          <figcaption><b>Iteration 3</b> The array under the tube holder, columns alternating green and red.</figcaption></figure>
+      </div>
+
+          <p class="iter-cause">
+            The third iteration turned the array from a bench breadboard into a
+            serviceable instrument: enclosed electronics, software intensity control,
+            tool-free assembly and integrated sample holding.
+          </p>
+        </div>
+      </li>
+    </ol>
+
+      <div class="wipe" data-shots='[{"src": "photos/iter1-a.jpg", "cap": "01 \u2014 Single LED"}, {"src": "photos/iter2-a.jpg", "cap": "02 \u2014 Dual LED"}, {"src": "photos/iter3-a.jpg", "cap": "03 \u2014 Final"}]'></div>
+      <p class="wipe-note">Drag to compare any two builds in the same frame and at the same scale.</p>
+
+  </section>
+
+  <!-- ─────────── MATCHING ─────────── -->
+  <section class="part" id="matching" data-n="4">
+    <div class="part-mark"><span>Section</span><b>04</b></div>
+    <h2>LED Matching &amp; Measurement <em>(I²)</em></h2>
+  </section>
+
+  <section class="sec">
+    <p>
+      Internal-resistance variance is a common problem in cheap, single-bulb LEDs:
+      nominally identical parts draw different currents and emit different intensities
+      at the same drive level. Left uncorrected, this would make the low/medium/high
+      tiers unreliable and the wavelength comparison unfair.
+    </p>
+    <p>
+      By individually measuring the output of each LED we identify units with similar
+      — and therefore matching — internal resistance. From the matched units we form
+      three groups of four per wavelength, one group per intensity tier, arranged as
+      columns within the array. Because the LEDs in a column are resistance-matched,
+      their outputs can be recalibrated together through straightforward mathematical
+      adjustment so that all columns of a given tier match one another.
+    </p>
+
+    <figure class="fig">
+      <div id="i2-chart"></div>
+      <figcaption>
+        Every LED measured at 5 V, before matching. Forty were bought; the
+        twenty-four that fell into tight groups of four were selected and became the
+        six channels. The eight rejects per wavelength are shown faint.
+      </figcaption>
+    </figure>
+
+    <div class="frames">
+      <figure class="frame"><div class="frame-img"><img src="photos/iter2-a.jpg" alt="Tagged LEDs during measurement" loading="lazy"></div>
+        <figcaption><b>Measuring</b> Each lead tagged with its reading so matched units could be grouped.</figcaption></figure>
+      <figure class="frame empty"><div class="frame-img" data-label="Lux meter + printed sensor fixture"></div>
+        <figcaption>The measurement rig — one LED at a time at 5 V, in a fixed geometry.</figcaption></figure>
+    </div>
+
+    <div class="spec-card">
+      <div class="spec-card-title">Channel assignment</div>
+      <dl>
+        <div><dt>Green channel</dt><dd>~535 nm <span class="pending s"></span></dd></div>
+        <div><dt>Red channel</dt><dd>~670 nm <span class="pending s"></span></dd></div>
+        <div><dt>LEDs per column</dt><dd>4, resistance-matched</dd></div>
+        <div><dt>Intensity tiers</dt><dd>3 per wavelength</dd></div>
+      </dl>
+      <p class="spec-note">
+        Wavelengths are the classic CcaS/CcaR values, assumed pending measurement.
+      </p>
+    </div>
+
+    <div class="openitem">
+      <span class="openitem-tag">Needs</span>
+      <p>
+        Measured peak wavelength and FWHM for each channel, exact LED part numbers,
+        and the lumen values used to form the matched groups.
+      </p>
+    </div>
+  </section>
+
+  <!-- ─────────── CONTROL ─────────── -->
+  <section class="part" id="control" data-n="5">
+    <div class="part-mark"><span>Section</span><b>05</b></div>
+    <h2>Control and Electronics</h2>
+  </section>
+
+  <section class="sec">
+    <p>
+      Light intensity is controlled by PWM signals generated by the Arduino, each
+      driving a MOSFET that switches the corresponding LED group. Software sets the
+      duty cycle for each intensity tier, and the selected intensities are held
+      constant for the duration of a test so cultures receive a fixed, well-defined
+      dose. Three calibrated tiers, combined with two wavelengths, give
+      <b>six defined light conditions per run</b>.
+    </p>
+
+    <div class="filter-steps">
+      <div><b>1</b><p>Software sets a duty cycle per tier</p></div>
+      <div><b>2</b><p>Arduino PWM drives one MOSFET per group</p></div>
+      <div><b>3</b><p>Each MOSFET switches its column of four</p></div>
+      <div><b>4</b><p>Held constant for the whole test</p></div>
+    </div>
+
+    <figure class="autodraw" aria-labelledby="drive-cap">
+      <svg viewBox="0 0 660 380" role="img" aria-label="Drive chain. Software sets a duty cycle per tier; the Arduino carries one PWM pin per group along a bus to six MOSFETs; each MOSFET switches one column of four internal-resistance-matched LEDs. The six columns are a green and a red channel at each of three intensity tiers, which is where the six light conditions come from.">
+        <rect class="part" data-step="1" x="24" y="120" width="94" height="44" rx="3"/>
+        <line class="beam" data-step="2" x1="118" y1="142" x2="150" y2="142"/>
+        <rect class="part" data-step="3" x="150" y="120" width="94" height="44" rx="3"/>
+        <line class="beam" data-step="4" x1="244" y1="142" x2="296" y2="142"/>
+        <line class="beam" data-step="5" x1="296" y1="40"  x2="296" y2="280"/>
+
+        <!-- six groups: green and red at each of three tiers -->
+        <line class="beam" data-step="6" x1="296" y1="40" x2="330" y2="40"/>
+        <rect class="part" data-step="6" x="330" y="27" width="46" height="26" rx="2"/>
+        <line class="beam" data-step="6" x1="376" y1="40" x2="412" y2="40"/>
+        <circle class="part g static fade" data-step="6" cx="432" cy="40" r="10"/>
+        <circle class="part g static fade" data-step="6" cx="468" cy="40" r="10"/>
+        <circle class="part g static fade" data-step="6" cx="504" cy="40" r="10"/>
+        <circle class="part g static fade" data-step="6" cx="540" cy="40" r="10"/>
+
+        <line class="beam" data-step="7" x1="296" y1="88" x2="330" y2="88"/>
+        <rect class="part" data-step="7" x="330" y="75" width="46" height="26" rx="2"/>
+        <line class="beam" data-step="7" x1="376" y1="88" x2="412" y2="88"/>
+        <circle class="part r static fade" data-step="7" cx="432" cy="88" r="10"/>
+        <circle class="part r static fade" data-step="7" cx="468" cy="88" r="10"/>
+        <circle class="part r static fade" data-step="7" cx="504" cy="88" r="10"/>
+        <circle class="part r static fade" data-step="7" cx="540" cy="88" r="10"/>
+
+        <line class="beam" data-step="8" x1="296" y1="136" x2="330" y2="136"/>
+        <rect class="part" data-step="8" x="330" y="123" width="46" height="26" rx="2"/>
+        <line class="beam" data-step="8" x1="376" y1="136" x2="412" y2="136"/>
+        <circle class="part g static fade" data-step="8" cx="432" cy="136" r="10"/>
+        <circle class="part g static fade" data-step="8" cx="468" cy="136" r="10"/>
+        <circle class="part g static fade" data-step="8" cx="504" cy="136" r="10"/>
+        <circle class="part g static fade" data-step="8" cx="540" cy="136" r="10"/>
+
+        <line class="beam" data-step="9" x1="296" y1="184" x2="330" y2="184"/>
+        <rect class="part" data-step="9" x="330" y="171" width="46" height="26" rx="2"/>
+        <line class="beam" data-step="9" x1="376" y1="184" x2="412" y2="184"/>
+        <circle class="part r static fade" data-step="9" cx="432" cy="184" r="10"/>
+        <circle class="part r static fade" data-step="9" cx="468" cy="184" r="10"/>
+        <circle class="part r static fade" data-step="9" cx="504" cy="184" r="10"/>
+        <circle class="part r static fade" data-step="9" cx="540" cy="184" r="10"/>
+
+        <line class="beam" data-step="10" x1="296" y1="232" x2="330" y2="232"/>
+        <rect class="part" data-step="10" x="330" y="219" width="46" height="26" rx="2"/>
+        <line class="beam" data-step="10" x1="376" y1="232" x2="412" y2="232"/>
+        <circle class="part g static fade" data-step="10" cx="432" cy="232" r="10"/>
+        <circle class="part g static fade" data-step="10" cx="468" cy="232" r="10"/>
+        <circle class="part g static fade" data-step="10" cx="504" cy="232" r="10"/>
+        <circle class="part g static fade" data-step="10" cx="540" cy="232" r="10"/>
+
+        <line class="beam" data-step="11" x1="296" y1="280" x2="330" y2="280"/>
+        <rect class="part" data-step="11" x="330" y="267" width="46" height="26" rx="2"/>
+        <line class="beam" data-step="11" x1="376" y1="280" x2="412" y2="280"/>
+        <circle class="part r static fade" data-step="11" cx="432" cy="280" r="10"/>
+        <circle class="part r static fade" data-step="11" cx="468" cy="280" r="10"/>
+        <circle class="part r static fade" data-step="11" cx="504" cy="280" r="10"/>
+        <circle class="part r static fade" data-step="11" cx="540" cy="280" r="10"/>
+
+        <!-- tier brackets: the pairing is what turns six columns into three tiers -->
+        <line class="part thin" data-step="12" x1="586" y1="30" x2="586" y2="98"/>
+        <line class="part thin" data-step="12" x1="586" y1="126" x2="586" y2="194"/>
+        <line class="part thin" data-step="12" x1="586" y1="222" x2="586" y2="290"/>
+
+        <text class="lbl"     data-step="1"  x="24"  y="112">Software</text>
+        <text class="lbl dim" data-step="1"  x="24"  y="182">duty cycle</text>
+        <text class="lbl"     data-step="3"  x="150" y="112">Arduino</text>
+        <text class="lbl dim" data-step="3"  x="150" y="182">one pin per group</text>
+        <text class="lbl"     data-step="6"  x="326" y="16">MOSFET ×6</text>
+        <text class="lbl"     data-step="6"  x="424" y="16">4 matched LEDs</text>
+        <text class="lbl dim" data-step="12" x="596" y="68">low</text>
+        <text class="lbl dim" data-step="12" x="596" y="164">med</text>
+        <text class="lbl dim" data-step="12" x="596" y="260">high</text>
+        <text class="lbl dim" data-step="12" x="24"  y="330">535 nm induces · 670 nm halts</text>
+        <text class="lbl big" data-step="12" x="24"  y="362">6 conditions</text>
+      </svg>
+      <figcaption id="drive-cap">
+        <b>Drive chain</b> Nothing in the light path is adjusted during a run. The duty cycle
+        is fixed per tier before the test starts, so every tube sees a dose that can be
+        stated as a number rather than reconstructed from a log.
+      </figcaption>
+    </figure>
+
+    <div class="frames">
+      <figure class="frame empty"><div class="frame-img" data-label="MOSFET driver stage on the perf board"></div>
+        <figcaption>One MOSFET per column, switched by an Arduino PWM pin.</figcaption></figure>
+      <figure class="frame empty"><div class="frame-img" data-label="Arduino Uno R4 WiFi wired in"></div>
+        <figcaption>The controller, mounted inside the housing.</figcaption></figure>
+    </div>
+
+    <div class="openitem">
+      <span class="openitem-tag">Needs</span>
+      <ul>
+        <li>MOSFET part number</li>
+        <li>PWM frequency, and the duty-cycle values used for low / medium / high</li>
+        <li>Power supply specification</li>
+      </ul>
+    </div>
+  </section>
+
+  <!-- ─────────── SUMMARY ─────────── -->
+  <section class="part" id="summary" data-n="6">
+    <div class="part-mark"><span>Section</span><b>06</b></div>
+    <h2>Specification &amp; Role</h2>
+  </section>
+
+  <section class="sec">
+    <h3>Final configuration</h3>
+    <div class="limits">
+      <div><h4>Array layout</h4><p>4 × 6 grid — 2 wavelengths × 3 intensity tiers, 4 matched LEDs per column.</p></div>
+      <div><h4>Wavelengths</h4><p>Green ~535 nm induces protectant expression; red ~670 nm halts it. <span class="tag">confirm</span></p></div>
+      <div><h4>Intensity tiers</h4><p>Low, medium and high — resistance-matched and mathematically recalibrated to match across columns.</p></div>
+      <div><h4>Control</h4><p>Arduino PWM via MOSFET, held constant per test.</p></div>
+      <div><h4>Shielding</h4><p>External-light coverage isolates the culture from ambient light.</p></div>
+      <div><h4>Housing</h4><p>Enclosed frame for wiring and Arduino; slider prints for assembly and disassembly.</p></div>
+      <div><h4>Sample holding</h4><p>Tall print sized to house test tubes.</p></div>
+    </div>
+    <div class="openitem">
+      <span class="openitem-tag">Needs</span>
+      <p>Overall dimensions, power supply, and per-tier PWM duty-cycle values.</p>
+    </div>
+
+    <h3>Role in the project</h3>
+    <blockquote class="pull">
+      How does the wavelength and intensity of applied light affect protectant
+      development in engineered <b>B. subtilis 168</b>?
+    </blockquote>
+    <p>
+      DiOPAL exists to answer that specific biological question. By holding defined
+      green and red intensities constant across a run, and shielding cultures from
+      external light, it isolates the light variable so its effect on protectant
+      production can be measured cleanly. The resulting characterization data support
+      the project's protectant-expression work and inform how the CcaS/CcaR switch
+      behaves under different lighting conditions.
+    </p>
+    <figure class="frame wide empty">
+      <div class="frame-img" data-label="Cultures after a run — six conditions side by side"></div>
+      <figcaption>The output that matters: protectant expression against wavelength and intensity.</figcaption>
+    </figure>
+
+    <div class="openitem">
+      <span class="openitem-tag">Needs</span>
+      <p>Links to the biology, results and measurement pages where DiOPAL data are reported.</p>
+    </div>
+  </section>
+
+  <footer class="doc-foot">
+    <div class="outro-meta">GEMS-Taiwan · iGEM 2026 · Biomanufacturing</div>
+    <!-- Required on every page for judging: license notice + repository link. -->
+    <div class="legal">
+      <p>&copy; 2026 &middot; Content on this site is licensed under a
+        <a href="https://creativecommons.org/licenses/by/4.0/" rel="license">Creative
+        Commons Attribution 4.0 International license</a>.</p>
+      <p>The repository used to create this website is available at
+        <a href="https://gitlab.igem.org/2026/gems-taiwan">gitlab.igem.org/2026/gems-taiwan</a>.</p>
+    </div>
+  </footer>
+
+</article>
+</div>
+</main>
+
+<script src="../../assets/data/site-nav.js"></script>
+<script src="../../assets/js/nav.js"></script>
+<script src="../js/vendor/three.min.js"></script>
+<script src="../js/vendor/STLLoader.js"></script>
+<script src="../js/render-quality.js"></script>
+<script src="js/parts.js"></script>
+<script src="js/scene.js"></script>
+<script src="js/doc.js"></script>
+<script src="../js/annot.js"></script>
+<script src="../js/toc.js"></script>
+<script src="../js/figures.js"></script>
+<script src="../js/chrome.js"></script>
+<script src="../js/atmos.js"></script>
+<script src="../js/wipe.js"></script>
+<script src="../js/autodraw.js"></script>
+<script src="../js/polish.js"></script>
+</body>
+</html>

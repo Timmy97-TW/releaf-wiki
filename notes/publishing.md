@@ -51,3 +51,31 @@ have to change:
 - [ ] Nothing loads from a server outside iGEM: open each page with the network
       panel open and check every request
 - [ ] Nobody appears in a photograph without having agreed to it
+
+## The hardware section, before the freeze
+
+Its own list, because it is the largest single body of content on the wiki and
+none of it is covered by the generator's scaffold markers.
+
+- [ ] **151 pending chips filled or removed.** 51 photometer, 74 DiOPAL, 26
+      bioreactor. The class comes in three forms, so match the word, not the
+      attribute: `grep -rno 'pending' hardware/*/index.html | wc -l`
+- [ ] **15 empty photo slots** filled or removed, 6 photometer, 4 DiOPAL, 5
+      bioreactor: `grep -rn 'frame[a-z ]*empty' hardware/*/index.html`
+- [ ] **44 open items** resolved, 18 photometer, 8 DiOPAL, 18 bioreactor:
+      `grep -rn 'openitem' hardware/*/index.html`
+- [ ] **3 unwritten sections** on the photometer page: `grep -n 'blank-slot'
+      hardware/photometer/index.html`
+- [ ] Photometer §3.1 and §3.6 written; §3.1 has an empty heading as well as an
+      empty body
+- [ ] The open contradictions settled: 8% against 7.7% accuracy, 10° against
+      8.1° tilt, and the run-duration figures in `notes/structure.md`
+- [ ] Every photograph under `hardware/*/photos/` and `hardware/img/` re-hosted
+      on `static.igem.wiki` and its `src` swapped. They are already JPEG at
+      1400px long edge, so they are sized for the upload tool
+- [ ] The 62 notebook page scans re-hosted the same way
+- [ ] three.js still vendored at `hardware/js/vendor/`, not a CDN
+- [ ] The licence notice and repository link still on every page. They are
+      required for judging, and the shared footer now carries them too
+- [ ] STL downloads still reachable. They are the section's strongest
+      differentiator and nothing else in the survey publishes per-part CAD

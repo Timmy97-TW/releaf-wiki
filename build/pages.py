@@ -518,47 +518,17 @@ PAGES = [
               [["", "", "", ""] for _ in range(5)])},
  ]},
 
-{
- "slug": "hardware", "tab": "drylab", "title": "Hardware",
- "lede": "Three instruments built from nothing: a perfusion reactor, an "
-         "in-line photometer and a dual-wavelength LED array.",
- "owner": "Dry lab, hardware",
- "award": ("special", "Best Hardware",
-           "Hardware in iGEM should make synthetic biology based on standard "
-           "parts easier, faster, better or more accessible. Strong "
-           "competitors will demonstrate utility, user testing, and easy "
-           "reproducibility.",
-           "https://competition.igem.org/judging/awards/special"),
- "sections": [
-   {"h": "What we built and why we had to",
-    "note": "Lead with the gap: what could not be bought, or could not be "
-            "bought at a price a school can pay."},
-   {"h": "Perfusion reactor",
-    "subs": [{"h": "Design", "note": ""}, {"h": "Build", "note": ""},
-             {"h": "How it performs", "note": ""}],
-    "figs": ["The reactor, assembled and on the bench."]},
-   {"h": "In-line photometer",
-    "note": "The instrument that caught the pump failure. Optics, electronics, "
-            "firmware, enclosure.",
-    "figs": ["Photometer boards and optical path."]},
-   {"h": "Dual-wavelength LED array",
-    "note": "Wavelengths, drive current, uniformity across the vessel, thermal "
-            "management.",
-    "figs": ["LED array and the light field it produces."]},
-   {"h": "Bill of materials",
-    "note": "There is no BOM total yet, so no page may say cheap, low-cost or "
-            "affordable. Publish the list and let the reader add it up.",
-    "table": (["Part", "Spec", "Qty", "Supplier", "Unit cost"],
-              [["", "", "", "", ""] for _ in range(6)])},
-   {"h": "Build it yourself",
-    "note": "Step by step, with the tools assumed. Reproducibility is what "
-            "this award is scored on."},
-   {"h": "User testing",
-    "note": "Somebody outside the hardware sub-team building or running it, "
-            "and what broke when they did."},
-   {"h": "Limits and the next revision",
-    "note": ""},
- ]},
+# NOT GENERATED: hardware.
+#
+# /hardware is the students' own build — a hub, three scroll-driven 3D teardowns
+# assembled from the real STLs, and the 62-page scanned notebook. It arrived as
+# a standalone site and now lives at wiki/hardware/, keeping the standard URL
+# that Best Hardware is judged from.
+#
+# generate.py would skip it anyway, because the page carries no generated
+# marker, but leaving a scaffold spec here would invite somebody to run
+# `generate.py hardware --force` and destroy it. The section's own
+# documentation is hardware/README.md and notes/hardware-handoff.md.
 
 {
  "slug": "software", "tab": "drylab", "title": "Software",

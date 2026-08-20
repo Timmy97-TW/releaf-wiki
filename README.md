@@ -12,6 +12,8 @@ and it works.
 ```
 index.html                the homepage
 <slug>/index.html         one folder per page, so the URL is /<slug>
+hardware/                 the hardware section: hub, three 3D teardowns,
+                          the build notebook, and its own css/ js/ models/
 assets/
   css/   tokens.css       colours, type and spacing, read by everything else
          nav.css          the five-tab navigation
@@ -28,7 +30,8 @@ assets/
 build/
   pages.py                the section outline of every standard page
   generate.py             turns pages.py into HTML
-notes/                    structure.md, publishing.md
+  hardware/               the notebook build pipeline and CAD scratch scripts
+notes/                    structure.md, publishing.md, hardware-handoff.md
 ```
 
 Four kinds of file, four folders: content in `assets/data`, appearance in
@@ -48,6 +51,14 @@ outline and the note telling whoever writes it what belongs in each section.
 | `index.html` | The homepage. Claim, refusals, system, ledger, doors. |
 | `team/` | Forty-seven people, built from `assets/data/roster.js`. |
 | `attributions/` | iGEM allows the nav, the footer and the embedded form on this page and nothing else. |
+
+**The hardware section** is its own thing again: `hardware/` is a hub plus three
+scroll-driven 3D teardowns built from the real STL files, plus the 62-page
+scanned build notebook. It is dark where the rest of the wiki is light, on
+purpose, and it has its own CSS, its own JavaScript and its own README. See
+[notes/hardware-handoff.md](notes/hardware-handoff.md) before changing anything
+in it. It carries the wiki navigation in a dark variant
+(`assets/css/nav-dark.css`) and a section strip of its own.
 
 ## Writing a page
 

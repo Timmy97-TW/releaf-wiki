@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html><head><meta charset="utf-8"><title>shading test</title>
+<style>html,body{margin:0;background:#0b0e13}canvas{display:block}</style></head>
+<body><canvas id="gl"></canvas>
+<script src="../js/vendor/three.min.js"></script>
+<script src="../js/vendor/STLLoader.js"></script>
+<script>
+// Does STL's lack of shared vertices explain why our CAD looks faceted?
+// STLLoader returns non-indexed geometry, so computeVertexNormals() can only
+// give each triangle its own face normal — every curved surface renders as
+// flat panels. Welding coincident vertices first lets normals average across
+// a surface, but welding everything would round off genuine hard edges too,
+// so vertices only merge when their face normals agree within a threshold.
+function weld(geo, angleDeg) {
+  const pos = geo.attributes.position.array;
+  const n = pos.length / 9;                       // triangles
+  const cos = Math.cos(angleDeg * Math.PI / 180);
+  // face normals
+  const fn = new Float32Array(n * 3);
+  for (let i = 0; i < n; i++) {
+    const o = i * 9;
+    const ax=pos[o+3]-pos[o], ay=pos[o+4]-pos[o+1], az=pos[o+5]-pos[o+2];
+    const bx=pos[o+6]-pos[o], by=pos[o+7]-pos[o+1], bz=pos[o+8]-pos[o+2];
+    let x=ay*bz-az*by, y=az*bx-ax*bz, z=ax*by-ay*bx;
+    const l=Math.hypot(x,y,z)||1; fn[i*3]=x/l; fn[i*3+1]=y/l; fn[i*3+2]=z/l;
+  }
+  // bucket vertices by quantised position
+  const Q = 1e4, map = new Map();
+  const key = (x,y,z) => `${Math.round(x*Q)},${Math.round(y*Q)},${Math.round(z*Q)}`;
+  for (let i = 0; i < n * 3; i++) {
+    const k = key(pos[i*3], pos[i*3+1], pos[i*3+2]);
+    (map.get(k) || map.set(k, []).get(k)).push(i);
+  }
+  const out = new Float32Array(n * 9);
+  for (const [, verts] of map) {
+    for (const v of verts) {
+      const f = (v / 3) | 0;
+      let x=0,y=0,z=0;
+      for (const w of verts) {                    // average only agreeing faces
+        const g = (w / 3) | 0;
+        const d = fn[f*3]*fn[g*3] + fn[f*3+1]*fn[g*3+1] + fn[f*3+2]*fn[g*3+2];
+        if (d >= cos) { x+=fn[g*3]; y+=fn[g*3+1]; z+=fn[g*3+2]; }
+      }
+      const l = Math.hypot(x,y,z) || 1;
+      out[v*3]=x/l; out[v*3+1]=y/l; out[v*3+2]=z/l;
+    }
+  }
+  geo.setAttribute('normal', new THREE.BufferAttribute(out, 3));
+  return geo;
+}
+
+const canvas=document.getElementById('gl');
+const renderer=new THREE.WebGLRenderer({canvas,antialias:true});
+renderer.outputEncoding=THREE.sRGBEncoding;
+renderer.toneMapping=THREE.ACESFilmicToneMapping;
+renderer.toneMappingExposure=1.0;
+const scene=new THREE.Scene();
+const camera=new THREE.PerspectiveCamera(30,1,.1,1e5);
+
+function env(){
+  const c=document.createElement('canvas');c.width=512;c.height=256;
+  const g=c.getContext('2d');
+  const sky=g.createLinearGradient(0,0,0,256);
+  sky.addColorStop(0,'#6e7987');sky.addColorStop(.45,'#3d444f');sky.addColorStop(1,'#1b1f26');
+  g.fillStyle=sky;g.fillRect(0,0,512,256);
+  function blob(x,y,r,col,a){const rg=g.createRadialGradient(x,y,0,x,y,r);
+    rg.addColorStop(0,col);rg.addColorStop(1,'rgba(0,0,0,0)');
+    g.globalAlpha=a;g.fillStyle=rg;g.fillRect(x-r,y-r,r*2,r*2);g.globalAlpha=1;}
+  blob(150,60,130,'#fff',.85);blob(400,90,100,'#dfe8f4',.5);blob(256,230,220,'#2c3038',.8);
+  const t=new THREE.CanvasTexture(c);t.mapping=THREE.EquirectangularReflectionMapping;
+  const p=new THREE.PMREMGenerator(renderer);p.compileEquirectangularShader();
+  const e=p.fromEquirectangular(t).texture;p.dispose();t.dispose();return e;
+}
+scene.environment=env();
+const k=new THREE.DirectionalLight(0xfff6ec,.45);k.position.set(300,500,600);scene.add(k);
+const r2=new THREE.DirectionalLight(0xbcd0e6,.30);r2.position.set(-500,200,-550);scene.add(r2);
+
+const mat=new THREE.MeshStandardMaterial({color:0x9aa2ab,metalness:.30,roughness:.48,envMapIntensity:.9});
+const loader=new THREE.STLLoader();
+window.__t={geos:{},done:0,need:0};
+const FILES=['../photometer/models/part7.stl','../diopal/models/led-holder.stl','../bioreactor/models/membrane-shell.stl'];
+window.__t.need=FILES.length;
+FILES.forEach(f=>{
+  loader.load(f,g=>{
+    const flat=g.clone(); flat.computeVertexNormals();
+    const smooth=weld(g.clone(),38);
+    const nm=f.split('/').pop().replace('.stl','');
+    window.__t.geos['flat|'+nm]=flat;
+    window.__t.geos['smooth|'+nm]=smooth;
+    window.__t.done++;
+  });
+});
+window.__shot=function(key,w,h){
+  const g=window.__t.geos[key];
+  renderer.setPixelRatio(1);renderer.setSize(w,h,false);
+  camera.aspect=w/h;camera.updateProjectionMatrix();
+  while(scene.children.length>2)scene.remove(scene.children[2]);
+  const m=new THREE.Mesh(g,mat);scene.add(m);
+  const b=new THREE.Box3().setFromObject(m),c=new THREE.Vector3(),s=new THREE.Vector3();
+  b.getCenter(c);b.getSize(s);
+  const d=Math.max(s.x,s.y,s.z)*1.75;
+  camera.position.set(c.x+d*.62,c.y+d*.5,c.z+d*.72);camera.lookAt(c);
+  renderer.render(scene,camera);
+  return canvas.toDataURL('image/png');
+};
+</script></body></html>

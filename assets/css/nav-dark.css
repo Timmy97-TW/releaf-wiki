@@ -1,0 +1,181 @@
+/* =============================================================================
+   ReLeaf: the navigation, on a dark page
+   -----------------------------------------------------------------------------
+   The hardware section is a dark, full-bleed surface with three.js teardowns on
+   it. Its lighting and its glass materials are tuned against a near-black
+   background, so re-theming those pages to the wiki's paper white would break
+   the renders, not just the mood. The pages stay dark and the navigation comes
+   to them instead.
+
+   Almost all of this is variable substitution: nav.css draws from --nv-*, so
+   redefining those on .sitenav--dark re-themes the bar, the panels, the tiles
+   and the drawer in one go. Only the handful of colours nav.css hard-codes are
+   restated below, and each is marked.
+
+   Two behaviours differ from the light bar:
+     · over a hero the bar is transparent, so the constellation canvas and the
+       headline are not cut off by a slab. It fills in once the page scrolls
+       (.is-scrolled) or a panel opens (.has-panel).
+     · z-index climbs above the hardware pages' grain and vignette overlays,
+       which sit at 44 and 45 and would otherwise wash the bar out.
+   ========================================================================== */
+
+.sitenav--dark {
+  /* the hardware palette, from hardware/css/hub.css */
+  --nv-900: #ffffff;
+  --nv-700: #7fe0ab;
+  --nv-500: #3ddc8b;      /* the DiOPAL green, which is already this section's accent */
+  --nv-200: rgba(255, 255, 255, .22);
+  --nv-100: rgba(255, 255, 255, .08);
+  --nv-50:  rgba(255, 255, 255, .06);
+  --nv-ink: #f4f7fa;
+  --nv-muted: #99a2af;
+  --nv-line: rgba(255, 255, 255, .1);
+
+  z-index: 50;            /* over .grain (45) and .vignette (44) */
+}
+
+/* ---- bar ------------------------------------------------------------------
+   The instrument pages are a sticky, full-height 3D stage. A solid bar filling
+   in on scroll would cut 112px off the top of that stage and sit as a slab
+   across the model, which is why the section's own topbar never filled in at
+   all. But transparent chrome over a lit render is unreadable.
+
+   So: a scrim rather than a fill. A gradient that is nearly opaque at the very
+   top and gone by the bottom of the sub-nav strip, painted on a pseudo-element
+   behind the bar's contents so the labels stay crisp. The stage keeps its full
+   height and reads through the fade.
+
+   Solid fill is kept for one case only, an open nav panel, where the panel
+   needs a real surface to sit on.
+   -------------------------------------------------------------------------- */
+
+.sitenav--dark .sitenav__bar {
+  position: relative;
+  background: transparent;
+  backdrop-filter: none;
+  border-bottom-color: transparent;
+  transition: background .35s, border-color .35s;
+}
+.sitenav--dark .sitenav__bar::before {
+  content: "";
+  position: absolute; left: 0; right: 0; top: 0;
+  height: calc(var(--nv-h) + 96px);      /* bar, plus the .hwnav strip, plus fade */
+  background: linear-gradient(180deg,
+              rgb(5 6 10 / .94) 0%,
+              rgb(5 6 10 / .78) 38%,
+              rgb(5 6 10 / .38) 70%,
+              rgb(5 6 10 / 0) 100%);
+  opacity: 0;
+  transition: opacity .35s;
+  pointer-events: none;
+}
+.sitenav--dark.is-scrolled .sitenav__bar::before { opacity: 1; }
+
+/* the scrim is a sibling of the bar's contents, so lift the contents over it */
+.sitenav--dark .sitenav__inner { position: relative; z-index: 1; }
+
+/* an open panel needs a surface, not a fade */
+.sitenav--dark.has-panel .sitenav__bar {
+  background: rgb(5 6 10 / .97);
+  backdrop-filter: blur(14px);
+}
+.sitenav--dark.has-panel .sitenav__bar::before { opacity: 0; }
+
+.sitenav--dark .sitenav__logo { box-shadow: 0 0 0 1px rgb(255 255 255 / .14); }
+
+/* hard-coded in nav.css: the resting tab colour */
+.sitenav--dark .sitenav__tab { color: #b6bec9; }
+.sitenav--dark .sitenav__tab:hover,
+.sitenav--dark .sitenav__tab.is-open { color: #ffffff; }
+
+/* ---- panel ----------------------------------------------------------------
+   nav.css sets `background: var(--white, #fff)` on the panel, and --white is
+   defined globally in tokens.css, so the fallback never fires. Restated.     */
+
+.sitenav--dark .sitenav__panel {
+  background: #0a0c12;
+  border-top-color: rgba(255, 255, 255, .1);
+  box-shadow: 0 30px 60px -30px rgb(0 0 0 / .9);
+}
+.sitenav--dark .sitenav__rail { border-right-color: rgba(255, 255, 255, .1); }
+
+.sitenav--dark .sitenav__entry:hover .sitenav__tile,
+.sitenav--dark .sitenav__entry.is-current .sitenav__tile {
+  background: var(--nv-500);
+  color: #05060a;                 /* hard-coded #fff in nav.css: unreadable on green */
+}
+
+/* ---- mobile --------------------------------------------------------------- */
+
+.sitenav--dark .sitenav__burger span { background: #d3dae3; }
+.sitenav--dark .sitenav__drawer {
+  background: #0a0c12;
+  border-top-color: rgba(255, 255, 255, .1);
+}
+
+/* =============================================================== SUB-NAV ==== */
+/* The hardware section has five pages of its own and the wiki nav only carries
+   one entry for the lot, so switching instruments meant going back to the hub
+   every time. This strip sits under the bar on those five pages and does that
+   job. It is plain markup in each page rather than generated, so a student can
+   add an instrument by copying a line.                                        */
+
+.hwnav {
+  position: fixed;
+  top: var(--nv-h, 68px);
+  left: 0; right: 0;
+  z-index: 49;
+  display: flex;
+  align-items: center;
+  gap: clamp(.5rem, 2vw, 1.6rem);
+  overflow-x: auto;
+  scrollbar-width: none;
+  padding: 0 clamp(18px, 3.4vw, 40px);
+  height: 44px;
+  font-family: ui-monospace, "SFMono-Regular", Menlo, Consolas, monospace;
+  font-size: .625rem;
+  letter-spacing: .2em;
+  text-transform: uppercase;
+  background: transparent;   /* the bar's scrim covers this strip too */
+  transition: opacity .3s;
+}
+.hwnav::-webkit-scrollbar { display: none; }
+
+/* an open nav panel covers this strip; fade it rather than let it show through */
+.sitenav--dark.has-panel ~ .hwnav { opacity: 0; pointer-events: none; }
+
+.hwnav a {
+  flex: none;
+  color: #78818f;
+  text-decoration: none;
+  padding: .35rem 0;
+  border-bottom: 1px solid transparent;
+  transition: color .2s, border-color .2s;
+  white-space: nowrap;
+}
+.hwnav a:hover { color: #f4f7fa; }
+.hwnav a[aria-current="page"] { color: #f4f7fa; border-bottom-color: #3ddc8b; }
+
+.hwnav b {
+  flex: none;
+  margin-right: .4rem;
+  color: #363c45;
+  font-weight: 500;
+}
+
+@media (max-width: 939px) { .hwnav { height: 40px; } }
+
+/* ---- room for the strip ---------------------------------------------------
+   The instrument heroes are deliberately full-bleed with the chrome floating
+   over them, so they are not pushed down by a spacer. But they centre their
+   content inside `min-height: 100vh`, and the section's old topbar was 64px
+   where ours is 112px, which is enough for a long eyebrow or headline to run
+   up under the strip. The bioreactor's did.
+
+   Adding top padding to a centred grid moves the content down by half of what
+   is added, so this buys about 56px of clearance. Bottom padding is untouched,
+   which keeps the scroll cue where it was.                                   */
+.sitenav--dark ~ main .intro {
+  padding-top: calc(6rem + var(--nv-h, 68px) + 44px);
+}

@@ -1,0 +1,1063 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>V4 Photometer — Anatomy</title>
+<meta name="description" content="An interactive teardown of the GEMS-Taiwan V4 ratiometric photometer." />
+<link rel="stylesheet" href="css/style.css" />
+<link rel="stylesheet" href="../css/polish.css" />
+<link rel="stylesheet" href="../../assets/css/nav.css" />
+<link rel="stylesheet" href="../../assets/css/nav-dark.css" />
+<script>document.documentElement.className+=' js'</script>
+</head>
+<body data-instrument="photometer">
+<a class="skip-link" href="#main">Skip to content</a>
+
+<div class="bg-glow"></div>
+<div class="grid-lines"></div>
+<div class="grain"></div>
+<div class="vignette"></div>
+<div class="scanline" aria-hidden="true"></div>
+
+<div class="progress"><div class="progress-bar" id="bar"></div></div>
+
+<!-- The wiki navigation, dark variant. This replaced the section's own
+     topbar so the hardware pages sit in one URL space and one menu with
+     the rest of the wiki, which is route 1 in notes/hardware-handoff.md. -->
+<div id="site-nav" class="sitenav--dark" data-base="../../" data-tab="drylab" data-page="hardware"></div>
+
+<nav class="hwnav" aria-label="Hardware section">
+  <b>Hardware</b>
+  <a href="../">Overview</a>
+  <a href="../photometer/" aria-current="page">V4 Photometer</a>
+  <a href="../diopal/">DiOPAL</a>
+  <a href="../bioreactor/">Bioreactor</a>
+  <a href="../notebook/">Notebook</a>
+</nav>
+
+<!-- intro -->
+<main id="main">
+<section class="intro">
+  <div class="eyebrow">Ratiometric optical density sensor</div>
+  <h1>Reading life,<br />one <span>beam</span> at a time</h1>
+  <p>
+    A field instrument that measures bacterial density in real time — eight
+    printed parts, one amber LED, and a beam split two ways.
+  </p>
+
+  <dl class="stats">
+    <div><dt>Components</dt><dd>15</dd></div>
+    <div><dt>Accuracy vs Bio&#8209;Drop</dt><dd>8<em>%</em></div>
+    <div><dt>Continuous run</dt><dd>14<em>d</em></dd></div>
+    <div><dt>Iterations</dt><dd>4</dd></div>
+  </dl>
+
+  <div class="scroll-cue">Scroll</div>
+</section>
+
+<!-- scroll-driven 3D showcase -->
+<div class="track" id="track">
+  <div class="stage" id="stage">
+    <canvas id="gl"></canvas>
+    <div class="hud">
+
+      <div class="card" id="hero-card">
+        <div class="eyebrow">The complete instrument</div>
+        <h2>V4 Photometer</h2>
+        <p>
+          Fifteen components on a tilted column — the amber beam running the
+          length of it. Scroll to take it apart.
+        </p>
+      </div>
+
+      <div class="panel panel-l" id="panel-l"></div>
+      <div class="panel panel-r" id="panel-r"></div>
+
+      <div class="card" id="finale">
+        <div class="eyebrow">Back together</div>
+        <h2>Fifteen parts, one instrument</h2>
+        <p>
+          A beam split two ways, read by two sensors — optical density straight
+          from the flowing culture.
+        </p>
+      </div>
+
+      <div class="counter" id="counter"></div>
+      <div class="rail" id="rail"></div>
+    </div>
+
+    <div class="loader" id="loader">
+      <span>Loading geometry</span>
+      <b id="load-pct">0%</b>
+    </div>
+  </div>
+</div>
+
+<section class="outro">
+  <div class="eyebrow">Four iterations</div>
+  <p class="outro-lead">
+    From a bubbling horizontal rig at roughly <strong>20%</strong> error to a
+    tilted, light&#8209;sealed column reading within <strong>8%</strong> of a lab
+    Bio&#8209;Drop.
+  </p>
+</section>
+
+<!-- ══════════════════ technical record ══════════════════ -->
+<div class="doc-wrap">
+<aside class="doc-nav" id="doc-nav">
+  <div class="doc-nav-label">Contents</div>
+  <ol>
+    <li><a href="#part1"><b>1</b> Materials &amp; Equipment</a></li>
+    <li><a href="#part2"><b>2</b> Methods</a></li>
+    <li><a href="#part3"><b>3</b> Results</a></li>
+    <li><a href="#part4"><b>4</b> Discussion</a></li>
+  </ol>
+</aside>
+
+<article class="doc">
+
+  <header class="doc-head">
+    <div class="eyebrow">Technical record</div>
+    <h1>ReLeaf In&#8209;Line<br />Flow&#8209;Cell Photometer</h1>
+    <p class="standfirst">
+      A subsystem of the ReLeaf bioreactor. It draws culture continuously from the
+      hollow&#8209;fiber lumen loop and passes it through a short&#8209;path flow
+      cuvette in line, so optical density is recorded without withdrawing a single
+      sample and without interrupting the culture.
+    </p>
+    <p class="doc-aim">
+      This document reports the device to the standard of strict reproducibility: a
+      team in another country, with no contact with us, should be able to rebuild it
+      from what follows. Where a specific number, part, or statement must be supplied
+      before publication, it is marked explicitly rather than invented.
+    </p>
+    <div class="status">
+      <span class="status-dot"></span>
+      <span class="pending"></span>
+      <span class="status-label">await measured values from the calibration session. The structure, method and validation logic are complete.</span>
+    </div>
+  </header>
+
+  <!-- ─────────── PART 1 ─────────── -->
+  <section class="part" id="part1" data-n="1">
+    <div class="part-mark"><span>Part</span><b>1</b></div>
+    <h2>Materials and Equipment</h2>
+  </section>
+
+  <section class="sec">
+    <h3><i>1.1</i> Optical and Electronic Components</h3>
+    <p>
+      ReLeaf is a single-wavelength transmission photometer built around an amber LED,
+      a beamsplitter, a short-path flow cuvette, and two light sensors. Light travels
+      downward from the LED, through a paralleling lens, through a slit, and into a
+      beamsplitter positioned above the cuvette. The beamsplitter diverts a fraction of
+      the beam to a reference sensor before the light reaches the sample; the remaining
+      beam passes through the flow cuvette and lands on the sample sensor.
+    </p>
+
+    <aside class="keynote">
+      <div class="keynote-fig">0.2<em>mm</em></div>
+      <p>
+        The cuvette path length — the central design choice of the instrument, and the
+        reason it can read at cell densities where a standard 10 mm cuvette saturates.
+      </p>
+    </aside>
+
+    <figure class="autodraw" aria-labelledby="optdiag-cap">
+      <svg viewBox="0 0 620 430" role="img" aria-label="Optical path: light from the amber LED passes a paralleling lens and slit, reaches a beamsplitter that diverts part of the beam to the reference sensor, and the remainder passes through the 0.2 mm flow cuvette to the sample sensor.">
+        <!-- optical axis, drawn segment by segment in the order light travels -->
+        <line class="beam" data-step="1" x1="180" y1="58"  x2="180" y2="102"/>
+        <ellipse class="part" data-step="2" cx="180" cy="112" rx="34" ry="9"/>
+        <line class="beam" data-step="3" x1="180" y1="122" x2="180" y2="150"/>
+        <rect class="part" data-step="4" x="166" y="150" width="28" height="10" rx="2"/>
+        <line class="beam" data-step="5" x1="180" y1="160" x2="180" y2="200"/>
+        <line class="part hot" data-step="6" x1="152" y1="232" x2="208" y2="200"/>
+        <line class="beam ref" data-step="7" x1="180" y1="216" x2="322" y2="216"/>
+        <rect class="part" data-step="8" x="326" y="198" width="58" height="36" rx="3"/>
+        <line class="beam" data-step="9" x1="180" y1="216" x2="180" y2="286"/>
+        <rect class="part" data-step="10" x="138" y="286" width="84" height="24" rx="3"/>
+        <line class="beam thin" data-step="11" x1="180" y1="292" x2="180" y2="304"/>
+        <line class="beam" data-step="12" x1="180" y1="310" x2="180" y2="352"/>
+        <rect class="part" data-step="13" x="151" y="352" width="58" height="36" rx="3"/>
+        <rect class="part led" data-step="0" x="160" y="30" width="40" height="28" rx="3"/>
+
+        <text class="lbl" data-step="0"  x="232" y="49">Amber LED</text>
+        <text class="lbl" data-step="2"  x="232" y="117">Paralleling lens</text>
+        <text class="lbl" data-step="4"  x="232" y="161">Slit</text>
+        <text class="lbl" data-step="6"  x="224" y="196">Beamsplitter</text>
+        <text class="lbl dim" data-step="6" x="232" y="212">nominal 90:10</text>
+        <text class="lbl" data-step="8"  x="396" y="214">Reference sensor</text>
+        <text class="lbl dim" data-step="8" x="396" y="230">reads before the sample</text>
+        <text class="lbl" data-step="10" x="232" y="292">Flow cuvette</text>
+        <text class="lbl big" data-step="10" x="232" y="320">0.2 mm</text>
+        <text class="lbl" data-step="13" x="232" y="374">Sample sensor</text>
+        <text class="lbl dim" data-step="13" x="232" y="390">reads after the sample</text>
+      </svg>
+      <figcaption id="optdiag-cap"><b>Optical path</b> The reference is split off <em>before</em> the
+        sample, so any drift in the LED appears in both readings and divides out of the ratio.</figcaption>
+    </figure>
+
+
+    <p>
+      The full bill of materials is given below, itemized to the individual component
+      with part numbers and unit costs. We follow the granularity used by Bertaux and
+      colleagues in their ClampOD design, whose essential-parts cost of roughly 13 USD
+      is listed part by part rather than as a total. A summary figure alone would not
+      let anyone rebuild the device.
+    </p>
+
+    <div class="table-scroll">
+      <table class="bom">
+        <caption>Bill of materials — essential parts</caption>
+        <thead>
+          <tr><th>Component</th><th>Part number / spec</th><th class="num">Qty</th><th class="num">Unit cost</th><th class="num">Total</th></tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>Amber LED</td>
+            <td><span class="pending"></span> — peak wavelength <span class="pending s"></span> nm, FWHM <span class="pending s"></span> nm</td>
+            <td class="num"><span class="pending s"></span></td>
+            <td class="num"><span class="pending s"></span></td>
+            <td class="num"><span class="pending s"></span></td>
+          </tr>
+          <tr>
+            <td>Jumper wires</td>
+            <td><span class="pending"></span></td>
+            <td class="num"><span class="pending s"></span></td>
+            <td class="num"><span class="pending s"></span></td>
+            <td class="num"><span class="pending s"></span></td>
+          </tr>
+          <tr>
+            <td>Reference light sensor</td>
+            <td><span class="pending"></span></td>
+            <td class="num">1</td>
+            <td class="num"><span class="pending s"></span></td>
+            <td class="num"><span class="pending s"></span></td>
+          </tr>
+          <tr>
+            <td>Sample light sensor</td>
+            <td><span class="pending"></span></td>
+            <td class="num">1</td>
+            <td class="num"><span class="pending s"></span></td>
+            <td class="num"><span class="pending s"></span></td>
+          </tr>
+          <tr>
+            <td>Beamsplitter</td>
+            <td><span class="pending"></span> — nominal split ratio 90:10</td>
+            <td class="num">1</td>
+            <td class="num"><span class="pending s"></span></td>
+            <td class="num"><span class="pending s"></span></td>
+          </tr>
+          <tr>
+            <td>Flow cuvette</td>
+            <td><span class="pending"></span> — 0.2 mm path length</td>
+            <td class="num">1</td>
+            <td class="num"><span class="pending s"></span></td>
+            <td class="num"><span class="pending s"></span></td>
+          </tr>
+          <tr>
+            <td>Focusing lens</td>
+            <td><span class="pending"></span></td>
+            <td class="num">1</td>
+            <td class="num"><span class="pending s"></span></td>
+            <td class="num"><span class="pending s"></span></td>
+          </tr>
+          <tr>
+            <td>Microcontroller</td>
+            <td><b>Arduino UNO Q</b></td>
+            <td class="num">1</td>
+            <td class="num"><span class="pending s"></span></td>
+            <td class="num"><span class="pending s"></span></td>
+          </tr>
+          <tr>
+            <td>Passives (resistors, etc.)</td>
+            <td><span class="pending"></span> — itemized to individual resistor</td>
+            <td class="num"><span class="pending s"></span></td>
+            <td class="num"><span class="pending s"></span></td>
+            <td class="num"><span class="pending s"></span></td>
+          </tr>
+          <tr>
+            <td>3D prints</td>
+            <td>All printed components, including the angled stand and TPU lining for close-fitted sensors without any freedom</td>
+            <td class="num">8</td>
+            <td class="num"><span class="pending s"></span></td>
+            <td class="num"><span class="pending s"></span></td>
+          </tr>
+        </tbody>
+        <tfoot>
+          <tr><td colspan="4">Total essential-parts cost</td><td class="num"><span class="pending s"></span></td></tr>
+        </tfoot>
+      </table>
+    </div>
+
+    <p>
+      The microcontroller is an <b>Arduino UNO Q</b>. Both sensors (GY&#8209;302) report
+      in lux, and the firmware reads them over separate addresses to differentiate
+      sample from reference.
+    </p>
+  </section>
+
+  <section class="sec">
+    <h3><i>1.2</i> Fabrication Materials and Tools</h3>
+    <p>
+      The optical bench is a single 3D-printed mount that holds every component in a
+      fixed relationship. Earlier versions allowed each element to be positioned
+      independently along a rail, which was useful during alignment but introduced drift
+      between runs. In the final build, component positions are fixed at their default
+      alignment.
+    </p>
+    <p>
+      Each mount surface that contacts glass is lined with TPU. This serves two purposes:
+      it grips the cuvette and lens firmly enough that they do not shift under handling,
+      and it prevents the rigid printed material from scratching the optical surfaces.
+      Scratches on a 0.2 mm cuvette window are not cosmetic, because scattering from a
+      damaged surface creates the same imprecise data as scattering from cells,
+      compromising the information in our data.
+    </p>
+    <p>
+      The light path is enclosed by snap-in covers that follow its full length from LED
+      to sample sensor. These block ambient light from reaching either detector. The
+      function is the same as the O-ring shield used in the ClampOD design, and it exists
+      for the same reason: a photometer that responds to room lighting, or to outdoor
+      day and night, is not measuring the sample.
+    </p>
+    <p>
+      The whole assembly is mounted on an angled stand with added structural support. The
+      tilt is functional rather than incidental, and is explained in
+      <a href="#sec21">Section&nbsp;2.1</a>.
+    </p>
+
+    <div class="spec-card">
+      <div class="spec-card-title">Print settings</div>
+      <dl>
+        <div><dt>Printer</dt><dd>Bambu X1C</dd></div>
+        <div><dt>Material</dt><dd>Black PLA, 95A TPU inner lining</dd></div>
+        <div><dt>Layer height</dt><dd>0.2 mm</dd></div>
+        <div><dt>Infill</dt><dd>15% gyroid</dd></div>
+        <div><dt>Top surface</dt><dd>0.25 mm</dd></div>
+        <div><dt>Slit width</dt><dd>2 mm</dd></div>
+      </dl>
+      <p class="spec-note">
+        Every other setting left at default. The 2 mm slit is wide enough to entirely
+        encompass the sensors while reducing reflected light that could blur the
+        distinction between the sample and reference environments.
+      </p>
+    </div>
+  </section>
+
+  <section class="sec">
+    <h3><i>1.3</i> Equipment Used for Data Acquisition</h3>
+    <p>
+      Readings leave the microcontroller and are served to a live web dashboard on the
+      local network, reachable at port 7000 on the device's address. The dashboard
+      displays current OD600, elapsed run time, raw sample and reference readings in lux,
+      the sample-to-reference ratio, the bubble-and-outlier rejection rate, and a running
+      count of logged data points. It plots OD600 against elapsed time in hours and
+      updates continuously without interrupting the run.
+    </p>
+    <figure class="frame wide empty">
+      <div class="frame-img" data-label="Live OD600 dashboard at port 7000"></div>
+      <figcaption>The dashboard: current OD600, elapsed time, raw sample and reference lux, their ratio, the rejection rate and the running point count.</figcaption>
+    </figure>
+
+    <p>
+      The acquisition interval was set to <b>10 minutes</b> and can run for
+      <b>300+ hours</b> continuously without failure. The interval can be changed during
+      a test, and a reading can be taken instantaneously at the click of a button. The
+      software rejects points that fall outside the accepted spread; the method for
+      determining that spread is described in
+      <a href="#sec221">Section&nbsp;2.2.1</a>.
+    </p>
+  </section>
+
+  <!-- ─────────── PART 2 ─────────── -->
+  <section class="part" id="part2" data-n="2">
+    <div class="part-mark"><span>Part</span><b>2</b></div>
+    <h2>Methods</h2>
+  </section>
+
+  <section class="sec" id="sec21">
+    <h3><i>2.1</i> Assembly of the ReLeaf Photometer</h3>
+    <p>
+      The instrument was built in four iterations, and each change was made in response
+      to a specific failure. We report the sequence because the reasoning is the useful
+      part.
+    </p>
+
+    <ol class="iters">
+      <li>
+        <div class="iter-n">01</div>
+        <div class="iter-body">
+          <h4>Horizontal, fully adjustable</h4>
+          <p>
+            The first build placed the optical path horizontally, with each component
+            independently adjustable on a rail. Readings fluctuated severely.
+          </p>
+          <p class="iter-cause">
+            <b>Cause.</b> Gas bubbles accumulating inside the flow cuvette and passing
+            through the beam; and lens and beamsplitter mounts loose enough that
+            alignment shifted during handling.
+          </p>
+          <div class="frames">
+          <figure class="frame "><div class="frame-img"><img src="photos/iter1-horizontal.jpg" alt="Iteration 1 The horizontal rig — every optic independently adjustable on a rail, and bubbles collecting in the flow cuvette." loading="lazy"></div>
+            <figcaption><b>Iteration 1</b> The horizontal rig — every optic independently adjustable on a rail, and bubbles collecting in the flow cuvette.</figcaption></figure>
+          </div>
+        </div>
+      </li>
+      <li>
+        <div class="iter-n">02</div>
+        <div class="iter-body">
+          <h4>Vertical, tightened tolerances</h4>
+          <p>
+            The structure was rotated to vertical so bubbles would rise out of the cuvette
+            rather than lodge in the beam path, and component tolerances were tightened.
+            Bubble handling was further improved with a pair of luer valves and syringes
+            that allow gas to be bled from the line directly.
+          </p>
+          <p class="iter-cause">
+            This iteration also corrected a procedural error identified during
+            calibration, described in <a href="#sec23">Section&nbsp;2.3</a>.
+          </p>
+          <div class="frames">
+          <figure class="frame "><div class="frame-img"><img src="photos/iter2-vertical.jpg" alt="Iteration 2 Rotated vertical, inside a light-blocking box so bubbles rise clear of the beam." loading="lazy"></div>
+            <figcaption><b>Iteration 2</b> Rotated vertical, inside a light-blocking box so bubbles rise clear of the beam.</figcaption></figure>
+          <figure class="frame empty "><div class="frame-img" data-label="Luer valve + syringe bubble extraction"></div>
+            <figcaption>Bleeding gas from the line with the dual luer valve and syringe.</figcaption></figure>
+          </div>
+        </div>
+      </li>
+      <li>
+        <div class="iter-n">03</div>
+        <div class="iter-body">
+          <h4>Tilted 10°</h4>
+          <p>
+            A vertical channel lets bubbles rise, but a tilted one actively directs them
+            toward the outlet rather than letting them hang against the cuvette wall.
+          </p>
+          <div class="delta">
+            <div><span>Before</span><b>≈20%</b></div>
+            <div class="delta-arrow">→</div>
+            <div><span>After</span><b class="good">8%</b></div>
+            <p>
+              Percent difference against the Bio-Drop reference on a paired reading —
+              ReLeaf 0.431, Bio-Drop 0.467.
+            </p>
+          </div>
+          <p class="iter-cause">
+            <b>Remaining fault.</b> The LED was not shooting straight. This was fixed in
+            the next build by ensuring the circle of light formed on the 2 mm slit face
+            was centred.
+          </p>
+          <div class="frames">
+          <figure class="frame "><div class="frame-img"><img src="photos/iter3-tilted.jpg" alt="Iteration 3 Tilted on its stand so bubbles are driven toward the outlet rather than hanging on the cuvette wall." loading="lazy"></div>
+            <figcaption><b>Iteration 3</b> Tilted on its stand so bubbles are driven toward the outlet rather than hanging on the cuvette wall.</figcaption></figure>
+          <figure class="frame empty "><div class="frame-img" data-label="Paired reading — ReLeaf beside the Bio-Drop"></div>
+            <figcaption>The paired reading against the Bio-Drop that gave the 8% figure.</figcaption></figure>
+          </div>
+        </div>
+      </li>
+      <li>
+        <div class="iter-n">04</div>
+        <div class="iter-body">
+          <h4>Locked, lined and sealed</h4>
+          <p>
+            The final build locked component positions at their aligned defaults, lined
+            the mounts with TPU, and enclosed the light path in snap-in covers. Distances
+            were chosen from the sliding mechanisms of previous iterations, selecting the
+            most consistent and easily reproduced arrangement. Structural support was
+            added to the angled stand so the tilt angle would not change under the weight
+            of attached tubing.
+          </p>
+          <div class="frames">
+          <figure class="frame "><div class="frame-img"><img src="photos/iter4-cad.jpg" alt="Iteration 4 The final CAD — locked positions, TPU-lined mounts and snap-in covers along the full light path." loading="lazy"></div>
+            <figcaption><b>Iteration 4</b> The final CAD — locked positions, TPU-lined mounts and snap-in covers along the full light path.</figcaption></figure>
+          <figure class="frame empty "><div class="frame-img" data-label="Final build — covers fitted"></div>
+            <figcaption>The built instrument, covers on, running in the loop.</figcaption></figure>
+          </div>
+          <p class="iter-cause"><b>Blank ratio</b> at this build: 9.12×.</p>
+        </div>
+      </li>
+    </ol>
+
+      <div class="wipe" data-shots='[{"src": "photos/iter1-horizontal.jpg", "cap": "01 \u2014 Horizontal"}, {"src": "photos/iter2-vertical.jpg", "cap": "02 \u2014 Vertical"}, {"src": "photos/iter3-tilted.jpg", "cap": "03 \u2014 Tilted"}, {"src": "photos/iter4-cad.jpg", "cap": "04 \u2014 Final"}]'></div>
+      <p class="wipe-note">Drag to compare any two builds in the same frame and at the same scale.</p>
+
+
+    <aside class="callout">
+      <h4>Why the reference is split off <em>above</em> the cuvette</h4>
+      <p>
+        The reference beam is split before the light reaches the sample. This placement is
+        deliberate: a reference taken after the sample would carry the sample's own
+        attenuation, and could not report variability in source intensity independently.
+      </p>
+    </aside>
+  </section>
+
+  <section class="sec">
+    <h3><i>2.2</i> Data Acquisition and Optical-Density Conversion</h3>
+    <p>
+      Each sensor returns an illuminance value in lux. The sample sensor reports light
+      transmitted through the culture; the reference sensor reports light diverted before
+      the sample. Reported OD600 is derived from the sample-to-reference ratio, which
+      normalizes each reading against source intensity and thereby corrects for drift in
+      the LED output over the course of a multi-week run.
+    </p>
+    <p>
+      The conversion from raw sample-to-reference ratio to reported OD600 was established
+      by calibration against the reference instrument
+      (<a href="#sec24">Section&nbsp;2.4</a>) rather than assumed from first principles.
+      Paired ReLeaf and Bio-Drop readings across a dilution ladder were used to fit the
+      transform, and the resulting relationship was applied to convert live ratio readings
+      into OD600. The fitted transform takes the form:
+    </p>
+
+    <div class="equation">
+      <span class="eq-lhs">OD<sub>600</sub></span>
+      <span class="eq-eq">=</span>
+      <span class="pending eq"></span>
+    </div>
+    <div class="openitem">
+      <span class="openitem-tag">Needs</span>
+      <p>
+        The fitted equation, including the coefficient(s) and any polynomial or
+        path-length correction term, as determined from the calibration in Section 2.4.
+      </p>
+    </div>
+
+    <p>
+      A bubble-and-outlier rejection filter operates on the incoming stream, and the
+      dashboard reports the rejection rate live.
+    </p>
+  </section>
+
+  <section class="sec" id="sec221">
+    <h3><i>2.2.1</i> Rejection Filter</h3>
+    <p>
+      We determine the spread by taking <b>14 lux readings in a short burst</b>. If a
+      bubble drifts past, one or two readings will be far higher than they should be. We
+      cannot use the mean of those 14 readings — it would be dragged upward — so we use
+      the <b>median</b>, which rarely moves. That makes the median a bubble-proof estimate
+      of the true value.
+    </p>
+    <p>
+      After determining the median, we take the 13 distances of the remaining points from
+      it. The median of those distances tells us how much clean readings wobble: the
+      <abbr title="Median absolute deviation">MAD</abbr>. If readings are tight, the MAD
+      is low, and the reverse holds. The trick is the same in both cases — taking a median
+      means one giant bubble cannot inflate the spread.
+    </p>
+
+    <div class="filter-steps">
+      <div><b>1</b><p>Take 14 lux readings in a burst</p></div>
+      <div><b>2</b><p>Median of the 14 — bubble-proof centre</p></div>
+      <div><b>3</b><p>Median of the 13 distances — the MAD</p></div>
+      <div><b>4</b><p>Reject beyond median ± 3·MAD</p></div>
+    </div>
+
+    <p>
+      Rejected points are removed from the OD measurements, keeping the data clean. We
+      report what fraction of readings are thrown out as the rejection percentage.
+    </p>
+    <aside class="callout warn">
+      <h4>Excess-bubble alarm</h4>
+      <p>
+        If the rejection percentage exceeds <b>50%</b> of total readings, the software
+        shows the figure in red and tells the user there are excessive bubbles that need
+        to be fixed within the bioreactor.
+      </p>
+    </aside>
+  </section>
+
+  <section class="sec" id="sec23">
+    <h3><i>2.3</i> Preparation of the Calibration Standard</h3>
+    <p>
+      <b>The blank is distilled water.</b> This was not what we began with, and the
+      correction matters enough to state plainly. In early work we blanked against growth
+      medium, which produced an offset of roughly 20% against our reference instrument.
+      But the Bio-Drop we validate against is itself calibrated on distilled water.
+      Blanking on medium meant the two instruments were reporting absorbance relative to
+      different baselines, and the disagreement we were attributing to our optics was
+      largely a procedural artifact. Switching to distilled water aligned the baselines.
+    </p>
+
+    <h4><i>2.3.1</i> Full calibration-standard protocol</h4>
+    <ol class="protocol">
+      <li>
+        <h5>Blank</h5>
+        <p>
+          The blank is distilled water, prepared identically for both instruments. Using
+          distilled water as a common blank aligns both instruments to the same zero, so
+          that any residual difference reflects instrument response rather than a baseline
+          mismatch. The blank was re-read on each instrument at the start of every
+          calibration session.
+        </p>
+      </li>
+      <li>
+        <h5>Pairing and timing</h5>
+        <p>
+          For each ladder point, the ReLeaf reading and the Bio-Drop reading were taken
+          back-to-back <b>within 30 seconds</b> on the same mixed sample. This interval is
+          short enough that culture settling and growth between the two readings are
+          negligible, so each paired point compares the two instruments on effectively
+          identical sample states without requiring chemical fixation.
+        </p>
+      </li>
+      <li>
+        <h5>Calibration</h5>
+        <p>To the commercial photometer, as described in <a href="#sec24">Section&nbsp;2.4</a>.</p>
+      </li>
+    </ol>
+  </section>
+
+  <section class="sec" id="sec24">
+    <h3><i>2.4</i> Calibration and Comparison to a Commercial Photometer</h3>
+    <p>
+      ReLeaf is validated against a <b>Bio-Drop</b> cuvette spectrophotometer, which serves
+      as the reference instrument throughout this wiki. Calibration was performed under the
+      same flow-cell geometry used during live measurement, so vessel and path-length
+      differences do not bias the fit — the device is calibrated in the exact configuration
+      in which it measures.
+    </p>
+
+    <h4>Reading acquisition</h4>
+    <p>
+      At each ladder point, the ReLeaf sample and reference sensor outputs (in lux) were
+      recorded, and raw absorbance was computed directly from these as
+      −log₁₀(sample / reference). The −log₁₀ transform is applied <b>once</b>, to the raw
+      lux ratio, so the calibration operates on a true single-transformed absorbance rather
+      than a value that has been log-transformed twice. The paired Bio-Drop OD600 was
+      recorded within the 30-second window described in 2.3.
+    </p>
+
+    <h4>Fitting</h4>
+    <p>
+      The calibration maps ReLeaf raw absorbance (<i>x</i>) to Bio-Drop OD600 (<i>y</i>)
+      across an <b>11-point ladder</b>. The ladder is a set of points taken on the growth
+      curve of our bacteria as measured by the photometer, with samples extracted for
+      testing on the Bio-Drop. Rather than assume a constant ratio between the instruments,
+      we fit a continuous function so non-constant differences across the range are absorbed
+      by the calibration. Candidate fits were evaluated in order of increasing complexity —
+      linear, then second-order polynomial — and the simplest form whose residuals showed no
+      remaining structure was selected. The chosen calibration function is:
+    </p>
+
+    <div class="equation">
+      <span class="eq-lhs"><i>y</i></span>
+      <span class="eq-eq">=</span>
+      <span class="pending eq"></span>
+    </div>
+    <p class="eq-range">
+      fit over the range OD600 <span class="pending s"></span> to
+      <span class="pending s"></span>, with <span class="pending s"></span> points.
+    </p>
+
+    <h4>Goodness of fit</h4>
+    <div class="metrics">
+      <div><span>R²</span><b><span class="pending s"></span></b></div>
+      <div><span>RMSE</span><b><span class="pending s"></span></b><em>OD600</em></div>
+    </div>
+    <p>
+      Residuals were plotted against <i>x</i> and showed no systematic curvature,
+      indicating the selected function form captures the relationship rather than masking a
+      remaining nonlinearity. Percent difference, where reported, is computed relative to
+      the Bio-Drop value.
+    </p>
+    <div class="openitem">
+      <span class="openitem-tag">Confirm</span>
+      <p>Check the residual claim against the actual residual plot before publishing.</p>
+    </div>
+
+    <h4>Validation on held-out data</h4>
+    <p>
+      To confirm the calibration generalizes to readings it was not fit to — the property
+      that actually matters for live monitoring — the function was validated against an
+      independent set of paired measurements not included in the fit. A separate set of
+      <span class="pending s"></span> paired ReLeaf / Bio-Drop readings was collected across
+      the working range and used only for testing. Applying the calibration function fit on
+      the training ladder to these held-out readings reproduced the corresponding Bio-Drop
+      OD600 values with RMSE = <span class="pending s"></span> OD600 and
+      R² = <span class="pending s"></span>, comparable to the fit on the training data.
+      Because accuracy did not degrade on data excluded from fitting, the calibration is not
+      overfit to the training ladder and can be applied to future readings.
+    </p>
+
+    <h4>Application</h4>
+    <p>
+      The validated calibration function is applied to every subsequent ReLeaf reading to
+      convert raw absorbance to reported OD600, including all values shown in the continuous
+      growth curve.
+    </p>
+
+    <h4><i>2.4.1</i> Comparison to a commercial cuvette spectrophotometer</h4>
+    <figure class="fig">
+      <div class="fig-slot"><span>Figure <span class="pending s"></span></span></div>
+      <figcaption>
+        Calibration curve of ReLeaf raw absorbance against Bio-Drop OD600 across the
+        11-point dilution ladder. The fitted function is drawn over the paired points, with
+        training points and held-out validation points distinguished.
+      </figcaption>
+    </figure>
+    <p>
+      Across the calibrated range OD600 <span class="pending s"></span> to
+      <span class="pending s"></span>, the calibrated ReLeaf output agrees with the Bio-Drop
+      with RMSE = <span class="pending s"></span> OD600 (R² = <span class="pending s"></span>).
+      On the independent held-out set, agreement was RMSE = <span class="pending s"></span>
+      OD600, confirming the calibration holds on data outside the training ladder.
+    </p>
+    <p>
+      The early single paired reading collected before the full ladder existed — ReLeaf
+      0.431 against Bio-Drop 0.467, a <b>7.7%</b> difference relative to the Bio-Drop value —
+      is consistent with the calibrated agreement, and is reported here only as the initial
+      observation that motivated the full calibration.
+    </p>
+  </section>
+
+  <section class="sec">
+    <h3><i>2.7</i> Growth Curve Procedure <em>(B. subtilis)</em></h3>
+    <p>
+      The continuous growth run was performed on a simplified circulation loop rather than
+      the full bioreactor. Culture was held in a stirred reservoir and pumped through tubing
+      to the ReLeaf flow cell and back, giving the path
+      <span class="flow">reservoir <i>→</i> pump <i>→</i> flow cell <i>→</i> reservoir</span>.
+      No hollow-fiber module was present in this loop, so the record in Part 3 reflects the
+      photometer measuring a circulating culture, not the integrated bioreactor.
+    </p>
+    <p>
+      Aeration was passive. A single port in the reservoir, fitted with a circular plate and
+      membrane, exchanged gas with room air; no sparging or active gas supply was used. The
+      run was held at approximately 23 °C, and both the stirrer and pump were set to maximum
+      for its full duration.
+    </p>
+    <div class="frames">
+      <figure class="frame empty"><div class="frame-img" data-label="The circulation loop — reservoir, pump, flow cell"></div>
+        <figcaption>Reservoir → pump → flow cell → reservoir, with passive aeration through a membrane port.</figcaption></figure>
+      <figure class="frame empty"><div class="frame-img" data-label="Flow cell in line with the tubing"></div>
+        <figcaption>The 0.2 mm cuvette, plumbed in line.</figcaption></figure>
+    </div>
+
+    <div class="openitem">
+      <span class="openitem-tag">Needs</span>
+      <ul>
+        <li>Aeration component part number and membrane specification</li>
+        <li>Confirmation of 23 °C, and whether controlled or ambient</li>
+        <li>Stir rate in rpm and pump flow rate in mL/min, with make and model of each</li>
+        <li>Growth medium, working volume, and inoculum density at <i>t</i> = 0</li>
+      </ul>
+    </div>
+  </section>
+
+  <!-- ─────────── PART 3 ─────────── -->
+  <section class="part" id="part3" data-n="3">
+    <div class="part-mark"><span>Part</span><b>3</b></div>
+    <h2>Results</h2>
+  </section>
+
+  <section class="sec">
+    <p class="lead-note">
+      Results follow the three-panel logic used in the reference literature: raw signal over
+      time, then calibration against the reference instrument, then the converted growth
+      curve.
+    </p>
+
+    <h3><i>3.1</i> Raw Signal Over Time</h3>
+    <div class="blank-slot" data-label="Section 3.1 — raw sample and reference traces"></div>
+  </section>
+
+  <section class="sec">
+    <h3><i>3.2</i> Other Parameters to Consider</h3>
+    <p>
+      This section documents artifacts and instrument behaviour observed during the
+      continuous run. Several remain open, and we report them as findings rather than
+      omitting them.
+    </p>
+
+    <div class="params">
+      <article class="param prio">
+        <div class="param-head"><h4>Fouling</h4><span class="tag hot">Highest priority</span></div>
+        <p>
+          No fouling measurement has yet been made. Given a 0.2 mm channel and a run
+          exceeding seven days, this is a significant and deliberately acknowledged gap.
+          The planned measurement is a flush-and-reblank: flush the cell with distilled
+          water at the end of a run, re-read the blank, and report the drift in OD units.
+          This must be done before a run is torn down, as it cannot be recovered afterward.
+        </p>
+        <p class="param-note">
+          No comparable measurement exists in prior iGEM hardware work, so this is both the
+          largest hole in our validation and the largest available contribution.
+        </p>
+        <div class="openitem tight"><span class="openitem-tag">Needs</span><p>Measurement.</p></div>
+      </article>
+
+      <article class="param">
+        <div class="param-head"><h4>Temperature</h4><span class="tag">Open</span></div>
+        <p>
+          No thermal characterization has been performed. Well-built photometers of this
+          class show measurable blank drift and require acclimation before readings are
+          trusted.
+        </p>
+        <div class="openitem tight"><span class="openitem-tag">Needs</span><p>A statement of our thermal control or the explicit absence of it, and a thermal-drift measurement if warranted.</p></div>
+      </article>
+
+      <article class="param">
+        <div class="param-head"><h4>Linearity across the full range</h4><span class="tag">Open</span></div>
+        <p>
+          Signal is tight below roughly OD 0.4 and becomes visibly ragged above roughly 0.8.
+          The upper portion of the reported range may therefore lie outside the linear
+          regime; this is examined once the full dilution ladder in 3.1 is complete.
+        </p>
+        <div class="openitem tight"><span class="openitem-tag">Needs</span><p>The linear range as a number, from 3.1.</p></div>
+      </article>
+
+      <article class="param">
+        <div class="param-head"><h4>Continuous illumination</h4><span class="tag">Note</span></div>
+        <p>
+          The LED is on throughout the run. This is noted for completeness; the amber
+          wavelength lies outside the actuation range of the light-responsive systems used
+          elsewhere in the project.
+        </p>
+        <div class="openitem tight"><span class="openitem-tag">Confirm</span><p>That continuous amber illumination does not interact with any optogenetic system present.</p></div>
+      </article>
+    </div>
+  </section>
+
+  <section class="sec">
+    <h3><i>3.5</i> Continuous Growth Curve <em>(B. subtilis 168, ~400 h)</em></h3>
+
+    <div class="headline-stats">
+      <div><b>400<em>h</em></b><span>Continuous record</span></div>
+      <div><b>2500</b><span>Logged points</span></div>
+      <div><b>0</b><span>Samples withdrawn</span></div>
+      <div><b>16<em>h</em></b><span>Longest prior in iGEM</span></div>
+    </div>
+
+    <p>
+      A continuous in-line record spanning more than 400 hours and 2500 logged points,
+      captured without removing a single sample. The longest previously reported continuous
+      OD record in iGEM hardware work, to our knowledge, is 16 hours.
+    </p>
+
+    <div class="od-wrap">
+      <div id="od-chart"></div>
+      <p class="od-note">
+        Traced from the live dashboard record at 14 d 0 h 11 m (2132 points). The band is the
+        raw scatter, the line its median. Traced endpoint OD600 1.392 against 1.3864 shown on
+        screen — a 0.4% check on the trace.
+      </p>
+    </div>
+
+    <div class="frames">
+      <figure class="frame land"><div class="frame-img"><img src="photos/od-early.jpg" alt="The dashboard at 1 d 6 h, 291 points" loading="lazy"></div>
+        <figcaption><b>Hour 30</b> 291 points in. Reference already steady at 26.67 lx while the sample falls — the ratio is doing the work.</figcaption></figure>
+      <figure class="frame land"><div class="frame-img"><img src="photos/od-day10.jpg" alt="The dashboard at 10 d 4 h, 1574 points" loading="lazy"></div>
+        <figcaption><b>Day 10</b> Through the dip and climbing again, unattended throughout.</figcaption></figure>
+    </div>
+
+    <p>
+      The dip is the interesting part. Contamination entering the system would explain both
+      it and the missing exponential phase after lag — the culture recovers and overshoots
+      its earlier peak by hour 210. Optical density alone cannot separate that from lysis,
+      sporulation or settling, so it is reported as an observed decline, not a death phase.
+    </p>
+
+    <h4><i>3.5.1</i> Learnings</h4>
+    <p>
+      The aim of this run was to test the ability of <i>B. subtilis</i> to grow within the
+      constraints of our system — the compatibility of our bacteria with the rate of our
+      stirring mechanism, pump, medium, and dissolved oxygen. To isolate that test, we
+      avoided sampling any bacteria from the solution for Bio-Drop measurement. That choice
+      also prevented us from projecting our measured data points onto real optical density,
+      which we must do to ensure accuracy, since past measurements ran around 8% off
+      reality.
+    </p>
+    <p>
+      We planned to extract data points on the downward decline, assuming a repeating cycle
+      of growth and death. The data on the way back down was not entirely smooth, which
+      forced another <i>B. subtilis</i> growth test to give us more accurate values.
+    </p>
+  </section>
+
+  <section class="sec">
+    <h3><i>3.6</i> Growth-Curve Calibration Series <em>(B. subtilis 168, 11 points)</em></h3>
+    <p>
+      To determine accurate values for our photometer readings, we designed the following
+      experiment to sample <b>11 different data points</b> along the growth curve of
+      <i>B. subtilis</i> inside our bioreactor system. This allows us to project our measured
+      values onto reality in order to improve accuracy.
+    </p>
+    <div class="blank-slot" data-label="Section 3.6"></div>
+
+    <h4><i>3.6.1</i> Learnings</h4>
+    <div class="blank-slot" data-label="Section 3.6.1"></div>
+
+    <div class="openitem">
+      <span class="openitem-tag">Needs</span>
+      <p>
+        A grab sample — Bio-Drop reading, wet mount, and plate count — taken at the culture
+        state corresponding to the decline, to establish what the culture is doing and anchor
+        the later portion of the curve against an independent measurement. The decline should
+        be presented as an <em>observed decline in optical density</em> with candidate
+        explanations (lysis, sporulation, settling, drift) rather than labelled a death or
+        degradation phase from optical density alone, since OD cannot distinguish these and
+        sporulation is a live possibility for <i>B. subtilis</i> at that stage.
+      </p>
+    </div>
+  </section>
+
+  <!-- ─────────── PART 4 ─────────── -->
+  <section class="part" id="part4" data-n="4">
+    <div class="part-mark"><span>Part</span><b>4</b></div>
+    <h2>Discussion and Future Implications</h2>
+  </section>
+
+  <section class="sec">
+    <h3><i>4.1</i> What the Device Does Well</h3>
+    <p>
+      Our photometer delivers continuous in-line optical-density measurement from the lumen
+      loop of a running bioreactor, with no sampling event and no disturbance to the culture.
+      It is built from an amber-LED transmission design intended for the 600 nm region, a
+      0.2 mm flow path chosen specifically to extend the high-density working range, and a
+      dual-beam reference arrangement that corrects for source drift. This hardware is an
+      implementation of exactly that stated solution, at a cost accessible to a student team.
+    </p>
+    <p>
+      The defensible headline claims on current evidence are a continuous in-line
+      optical-density record of roughly 400 hours, substantially exceeding prior iGEM work,
+      and a full growth curve tracked through lag, exponential and plateau phases with a
+      trace shape consistent with expected culture behaviour.
+    </p>
+  </section>
+
+  <section class="sec">
+    <h3><i>4.2</i> Limitations and Sources of Error</h3>
+    <div class="limits">
+      <div>
+        <h4>Fouling</h4>
+        <p>
+          Unmeasured, and the geometry makes it a live risk. A 0.2 mm channel offers a high
+          surface-to-volume ratio, and a <i>B. subtilis</i> culture over seven days is a
+          realistic biofilm scenario. This is a limitation now, and becomes a finding once
+          the flush test is done.
+        </p>
+      </div>
+      <div>
+        <h4>Thermal sensitivity</h4>
+        <p>
+          Uncharacterized. Even well-built photometers of this class drift and require
+          thermal acclimation.
+        </p>
+      </div>
+      <div>
+        <h4>Physics of the measurement</h4>
+        <p>
+          Beer–Lambert linearity degrades at high scattering density regardless of instrument
+          quality. ReLeaf inherits this constraint; a short path extends the usable range but
+          does not remove it.
+        </p>
+      </div>
+    </div>
+    <p class="fineprint">
+      Each limitation is stated with its magnitude or mitigation where known, and each maps to
+      a specific item in Future Work.
+    </p>
+  </section>
+
+  <section class="sec">
+    <h3><i>4.3</i> Comparison to Existing Approaches</h3>
+    <div class="table-scroll">
+      <table class="compare">
+        <caption>How continuous in-line absorbance compares with the alternatives</caption>
+        <thead><tr><th>Approach</th><th>Strength</th><th>Limitation</th></tr></thead>
+        <tbody>
+          <tr>
+            <td>Benchtop cuvette spectrophotometry</td>
+            <td>The accuracy reference, and what we calibrate against</td>
+            <td>Operational rather than optical — every reading removes material from the culture: disruptive, discontinuous, impractical overnight</td>
+          </tr>
+          <tr>
+            <td>Immersed probes</td>
+            <td>Continuous readings without withdrawal</td>
+            <td>Occupy vessel volume, complicate sterilization, generally expensive</td>
+          </tr>
+          <tr>
+            <td>Clamp-on external sensors <em>(ClampOD)</em></td>
+            <td>Attach to existing tubing; simple and cheap</td>
+            <td>Path length fixed by whatever tubing is already present — precisely the constraint that limits high-density accuracy</td>
+          </tr>
+          <tr>
+            <td>Commercial in-line monitors</td>
+            <td>Solve the problem well</td>
+            <td>Priced out of reach for most student teams</td>
+          </tr>
+          <tr class="ours">
+            <td><b>ReLeaf</b></td>
+            <td>Continuous in-line measurement at a short, <em>chosen</em> 0.2 mm path length, at student-project cost</td>
+            <td>Does not replace a benchtop reference; calibrated against one, and bounded by the same scattering physics</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <section class="sec">
+    <h3><i>4.5</i> Broader Implications</h3>
+    <blockquote class="pull">
+      Manual sampling produces a handful of points across a working day. ReLeaf produced
+      <b>1244</b> across roughly eight days, without anyone present.
+    </blockquote>
+    <p>
+      A photometer that reads continuously, sits in line with a running culture, and costs
+      what a student team can afford changes what kind of experiment is possible outside a
+      well-funded lab. The difference is not resolution alone — it is the ability to observe
+      phases of culture behaviour that occur overnight, over weekends, and across the
+      multi-day timescales where slow processes actually happen.
+    </p>
+    <p>
+      The wider value depends on release. We publish the bill of materials, the CAD files and
+      the firmware, along with this validation record — including the parts that remain
+      unresolved. A device that cannot be rebuilt is a demonstration rather than a
+      contribution, and a validation record that reports only its successes is not a
+      validation record.
+    </p>
+    <div class="openitem">
+      <span class="openitem-tag">Confirm</span>
+      <p>That CAD, BOM and code are actually published, with links. This paragraph is not earned otherwise.</p>
+    </div>
+  </section>
+
+  <footer class="doc-foot">
+    <div class="outro-meta">GEMS-Taiwan · iGEM 2026 · Biomanufacturing</div>
+    <!-- Required on every page for judging: license notice + repository link. -->
+    <div class="legal">
+      <p>&copy; 2026 &middot; Content on this site is licensed under a
+        <a href="https://creativecommons.org/licenses/by/4.0/" rel="license">Creative
+        Commons Attribution 4.0 International license</a>.</p>
+      <p>The repository used to create this website is available at
+        <a href="https://gitlab.igem.org/2026/gems-taiwan">gitlab.igem.org/2026/gems-taiwan</a>.</p>
+    </div>
+  </footer>
+
+</article>
+</div>
+</main>
+
+<script src="../../assets/data/site-nav.js"></script>
+<script src="../../assets/js/nav.js"></script>
+<script src="../js/vendor/three.min.js"></script>
+<script src="../js/vendor/STLLoader.js"></script>
+<script src="../js/render-quality.js"></script>
+<script src="js/parts.js"></script>
+<script src="js/scene.js"></script>
+<script src="js/od600-run.js"></script>
+<script src="js/od600.js"></script>
+<script src="js/doc.js"></script>
+<script src="../js/annot.js"></script>
+<script src="../js/toc.js"></script>
+<script src="../js/figures.js"></script>
+<script src="../js/chrome.js"></script>
+<script src="../js/atmos.js"></script>
+<script src="../js/wipe.js"></script>
+<script src="../js/autodraw.js"></script>
+<script src="../js/polish.js"></script>
+</body>
+</html>
