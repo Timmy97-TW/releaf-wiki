@@ -304,6 +304,26 @@
       "contributed to this task."));
     wrap.appendChild(tasks);
 
+    /* Every task on the board, in its own colour. The two pills above explain
+       what owning and being on a task mean; this says what the tasks ARE, so a
+       reader can match a colour on a card to a name without hunting for
+       somebody who happens to own it. Built from LABELS, so a task added to
+       the roster appears here on its own. */
+    const all = el("div", "legend__all");
+    all.appendChild(el("p", "legend__all-title", "The tasks"));
+    const row = el("div", "legend__row");
+    Object.keys(LABELS).forEach((name) => {
+      const pill = el("span", "tag tag--own legend__chip");
+      const grad = (typeof LABEL_GRADIENTS !== "undefined") && LABEL_GRADIENTS[name];
+      if (grad) pill.style.backgroundImage = grad;
+      else pill.style.background = LABELS[name];
+      pill.appendChild(el("i", "tag__dot"));
+      pill.appendChild(document.createTextNode(name));
+      row.appendChild(pill);
+    });
+    all.appendChild(row);
+    wrap.appendChild(all);
+
     return wrap;
   }
 
