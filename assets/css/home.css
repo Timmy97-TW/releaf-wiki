@@ -1,29 +1,34 @@
 /* =============================================================================
    ReLeaf: the homepage
    -----------------------------------------------------------------------------
-   The homepage does not use the sub-page template, because it is not making an
-   argument in sections. It is doing three things in order:
+   The page is one argument told in nine beats, in this order:
 
-     1. state the claim, once, over a photograph that supports it
-     2. say what the project is not, then what it is
-     3. put the evidence and the missing evidence side by side, then hand the
-        reader to the section they came for
+     1  first visual   two photographs, one farm and one reactor, and the
+                       sentence that names the gap between them
+     2  problem        the protectant pathway drawn end to end, so its length
+                       is the argument rather than an adjective about it
+     3  solution       the dark act: light, then the machine, then the name
+     4  system         the same machine, held still, with its parts named
+     5  synbio         four modules from stress signal to secreted protein
+     6  iHP            the people who changed the design
+     7  product        five properties arranged around the schematic
+     8  vision         where this goes next, in the systems farmers already run
+     9  explore        a map of the wiki, drawn as relationships
 
-   Structure notes worth keeping if this gets redesigned again:
+   Rules that survived the redesign and should survive the next one:
 
-   · THE CLAIM IS "who is permitted to manufacture", not climate, not margins,
-     not hunger. The refusals band exists so a reader cannot mistake the project
-     for one of those three, which is what every reader did with the earlier
-     drafts.
-   · THE HERO PHOTOGRAPH is a breadboard on a classroom table, not a farmer
-     facing camera. Institutional imagery argues against this project: a
-     cleanroom says you need a facility. Ordinary and hand-built says you do
-     not. Do not swap it for something tidier.
-   · THE LEDGER puts what is true and what is not true in the same band at the
-     same size. That is the project's main credibility asset and it should cost
-     the reader nothing to find.
-   · No numbers, quotes or results appear here that are not also on a sub-page
-     with their evidence.
+   · NOTHING HERE IS A NUMBER, QUOTE, DATE OR RESULT that is not also on a
+     sub-page with its evidence attached. The homepage is a door, not a source.
+   · THE PROBLEM IS THE PATHWAY, not the climate. Climate is the reason the
+     pathway is running out of slack. Section 2 has to keep those apart or the
+     project reads as one more climate poster.
+   · THE PHOTOGRAPHS ARE ORDINARY on purpose. A cleanroom argues that you need
+     a facility; a folding table argues that you do not.
+   · THE DARK ACT (3 and 4) shares ONE WebGL stage between its beats. Do not
+     add a second canvas — the reactor is 55 STL files and they are parsed once.
+   · EVERY SCROLL-DRIVEN EFFECT has a resting state that is correct with no
+     JavaScript and no motion. Check with prefers-reduced-motion before
+     shipping any change to .stagewrap.
    ========================================================================== */
 
 *, *::before, *::after { box-sizing: border-box; }
@@ -39,6 +44,7 @@ body {
   color: var(--black);
   background: var(--white);
   -webkit-font-smoothing: antialiased;
+  overflow-x: hidden;
 }
 img { display: block; max-width: 100%; }
 a { color: var(--leaf-700); text-underline-offset: .18em; }
@@ -50,11 +56,22 @@ a { color: var(--leaf-700); text-underline-offset: .18em; }
 }
 .sitenav-spacer { height: var(--nav-h); }
 
+/* homepage-only tokens: the dark act, and the one accent that is allowed to
+   glow. --sig-green is the 520 nm the reactor actually runs on. */
+:root {
+  --ink:        #070b09;
+  --ink-2:      #0d1512;
+  --sig-green:  #35e08a;
+  --sig-dim:    #1b7f4d;
+}
+
+/* ---------------------------------------------------------------- bands --- */
+
 .band { padding: var(--sp-8) 0; }
 .band__inner { max-width: var(--max); margin: 0 auto; padding: 0 var(--sp-5); }
 @media (min-width: 640px) { .band__inner { padding: 0 var(--sp-6); } }
 .band--tint { background: var(--leaf-50); border-block: 1px solid var(--leaf-200); }
-.band--dark { background: var(--leaf-900); color: var(--leaf-100); }
+.band--dark { background: var(--ink); color: var(--leaf-100); }
 .band--dark a { color: var(--leaf-200); }
 
 .kicker {
@@ -62,7 +79,7 @@ a { color: var(--leaf-700); text-underline-offset: .18em; }
   font-size: .6875rem; font-weight: 700; letter-spacing: .12em;
   text-transform: uppercase; color: var(--leaf-700);
 }
-.band--dark .kicker { color: var(--leaf-500); }
+.band--dark .kicker { color: var(--sig-green); }
 
 h2.band__title {
   margin: 0 0 var(--sp-5);
@@ -70,212 +87,565 @@ h2.band__title {
   font-size: var(--text-h2);
   font-weight: 700; line-height: 1.14; letter-spacing: -.018em;
   color: var(--leaf-900);
-  max-width: 22ch;
+  max-width: 26ch;
 }
 .band--dark h2.band__title { color: var(--white); }
 
-/* ================================================================ HERO ===== */
+.lede { max-width: 62ch; font-size: var(--text-lede); line-height: 1.55; color: var(--gray-600); }
+.band--dark .lede { color: var(--leaf-200); }
 
-.hero2 { position: relative; background: var(--leaf-900); color: var(--white); }
-.hero2__media { position: absolute; inset: 0; }
-.hero2__media img { width: 100%; height: 100%; object-fit: cover; object-position: 50% 55%; }
-/* the wash is what keeps 92px of white type legible over a busy photograph */
-.hero2__media::after {
-  content: ""; position: absolute; inset: 0;
+/* a small utility the page uses in four places: fade-and-rise once, on entry */
+.rise { opacity: 0; transform: translateY(18px); transition: opacity .7s ease, transform .7s ease; }
+.rise.in { opacity: 1; transform: none; }
+@media (prefers-reduced-motion: reduce) { .rise { opacity: 1; transform: none; transition: none; } }
+
+/* ============================================================= 1  HERO ==== */
+/* Two photographs meeting in a wash. Left is a farm at work, right is the
+   reactor at work, and the fade between them is the distance the project is
+   trying to close. On narrow screens the split turns vertical, because a
+   two-up at 380px is two thumbnails and reads as neither. */
+
+.hero { position: relative; background: var(--ink); color: var(--white); isolation: isolate; }
+
+/* The farm photograph is the base layer and spans the whole frame. The reactor
+   sits in a column of its own on the right, so each photograph is cropped to
+   the shape it is actually seen in and object-position means what it says. The
+   reactor's left edge is masked, so the seam is a fade onto the farm rather
+   than a cut. */
+.hero__frames { position: absolute; inset: 0; display: grid; grid-template-columns: 45% 55%; }
+.hero__frame { grid-row: 1; position: relative; overflow: hidden; }
+.hero__frame img { width: 100%; height: 100%; object-fit: cover; }
+
+.hero__frame--farm { grid-column: 1 / -1; }
+.hero__frame--farm img { object-position: 20% 58%; }
+
+.hero__frame--reactor { grid-column: 2; }
+.hero__frame--reactor img { object-position: 30% 66%; }
+.hero__frame--reactor {
+  -webkit-mask-image: linear-gradient(90deg, transparent 0%, #000 30%);
+          mask-image: linear-gradient(90deg, transparent 0%, #000 30%);
+}
+
+/* the wash: enough to hold white type over both photographs at once */
+.hero__frames::after {
+  content: ""; position: absolute; inset: 0; z-index: 2;
   background:
-    linear-gradient(180deg, rgb(20 64 43 / .82) 0%, rgb(20 64 43 / .55) 45%, rgb(20 64 43 / .88) 100%),
-    linear-gradient(90deg, rgb(20 64 43 / .55), transparent 65%);
+    linear-gradient(180deg, rgb(7 11 9 / .62) 0%, rgb(7 11 9 / .12) 30%, rgb(7 11 9 / .55) 62%, rgb(7 11 9 / .94) 100%),
+    linear-gradient(90deg, rgb(7 11 9 / .34) 0%, rgb(7 11 9 / .04) 44%, rgb(7 11 9 / .30) 100%);
 }
-.hero2__inner {
-  position: relative;
-  max-width: var(--max);
-  margin: 0 auto;
-  padding: clamp(4rem, 9vw, 8rem) var(--sp-5) clamp(3rem, 6vw, 5.5rem);
-  min-height: min(78vh, 640px);
-  display: flex; flex-direction: column; justify-content: flex-end;
-}
-@media (min-width: 640px) { .hero2__inner { padding-left: var(--sp-6); padding-right: var(--sp-6); } }
 
-.hero2__eyebrow {
-  margin: 0 0 var(--sp-5);
+.hero__inner {
+  position: relative; z-index: 3;
+  max-width: var(--max); margin: 0 auto;
+  padding: clamp(3.5rem, 8vw, 6.5rem) var(--sp-5) clamp(2.5rem, 5vw, 4rem);
+  min-height: min(88vh, 780px);
+  display: flex; flex-direction: column; justify-content: space-between; gap: var(--sp-7);
+}
+@media (min-width: 640px) { .hero__inner { padding-left: var(--sp-6); padding-right: var(--sp-6); } }
+
+.hero__eyebrow {
+  margin: 0;
   font-size: .75rem; font-weight: 600; letter-spacing: .14em;
   text-transform: uppercase; color: var(--leaf-200);
 }
-.hero2__claim {
-  margin: 0;
-  max-width: 16ch;
-  font-family: var(--font-display);
-  font-size: clamp(2.5rem, 7.2vw, 5.25rem);
-  font-weight: 800; line-height: .98; letter-spacing: -.032em;
-  color: var(--white);
-}
-/* the sentence that stops the claim being read as a slogan about ownership */
-.hero2__reconcile {
-  margin: var(--sp-5) 0 0;
-  max-width: 46ch;
-  font-size: var(--text-lede);
-  line-height: 1.5;
-  color: var(--leaf-100);
-}
-.hero2__actions { display: flex; flex-wrap: wrap; gap: var(--sp-3); margin-top: var(--sp-6); }
-.btn {
-  display: inline-block;
-  padding: .7rem 1.35rem;
-  border-radius: 999px;
-  font-size: var(--text-sm); font-weight: 650;
-  text-decoration: none;
-  transition: background .18s, border-color .18s, color .18s;
-}
-.btn--solid { background: var(--white); color: var(--leaf-900); }
-.btn--solid:hover { background: var(--leaf-100); color: var(--leaf-900); }
-.btn--ghost { border: 1px solid rgb(255 255 255 / .45); color: var(--white); }
-.btn--ghost:hover { border-color: var(--white); background: rgb(255 255 255 / .1); color: var(--white); }
 
-.hero2__credit {
-  position: absolute; right: var(--sp-5); bottom: var(--sp-3);
-  font-size: .6875rem; color: rgb(255 255 255 / .55);
-}
-
-/* ============================================================ REFUSALS ===== */
-/* Three things the project is not, struck through, and the one thing it is. */
-
-.refusals { display: grid; gap: var(--sp-4); grid-template-columns: repeat(auto-fit, minmax(14rem, 1fr)); }
-.refusal {
+/* the note over the farm half. It is a paraphrase and says so: the person it
+   describes has not signed off on a verbatim line, and inventing one to fill
+   a quotation mark would be the worst thing on this page. */
+.hero__note {
+  max-width: 27rem;
   padding: var(--sp-5);
-  border: 1px solid var(--gray-200);
-  border-radius: var(--radius);
-  background: var(--white);
+  border-left: 3px solid var(--sig-green);
+  border-radius: 0 var(--radius) var(--radius) 0;
+  background: rgb(7 11 9 / .55);
+  backdrop-filter: blur(7px);
+  -webkit-backdrop-filter: blur(7px);
 }
-.refusal b {
-  display: block;
-  margin-bottom: var(--sp-2);
-  font-family: var(--font-display);
-  font-size: var(--text-h3); font-weight: 700;
-  color: var(--gray-400);
-  text-decoration: line-through;
-  text-decoration-thickness: 2px;
-  text-decoration-color: var(--rust-700);
+.hero__note b { display: block; font-size: var(--text-base); color: var(--white); }
+.hero__note p { margin: var(--sp-2) 0 0; font-size: var(--text-sm); line-height: 1.55; color: var(--leaf-100); }
+.hero__note em {
+  display: block; margin-top: var(--sp-3); font-style: normal;
+  font-size: var(--text-xs); letter-spacing: .06em; color: rgb(255 255 255 / .55);
 }
-.refusal p { margin: 0; font-size: var(--text-sm); color: var(--gray-600); }
 
-.stake {
-  margin-top: var(--sp-6);
-  padding: var(--sp-6);
-  border-left: 4px solid var(--leaf-700);
-  background: var(--white);
-  border-radius: var(--radius-sm);
-}
-.stake p {
+.hero__claim {
   margin: 0;
+  max-width: 22ch;
   font-family: var(--font-display);
-  font-size: var(--text-h3);
-  font-weight: 650; line-height: 1.35;
-  color: var(--leaf-900);
-  max-width: 34ch;
+  font-size: clamp(1.9rem, 4.4vw, 3.35rem);
+  font-weight: 750; line-height: 1.1; letter-spacing: -.028em;
+  color: var(--white);
+  text-wrap: balance;
+}
+.hero__foot { display: grid; gap: var(--sp-5); }
+.hero__scroll {
+  display: inline-flex; align-items: center; gap: .6rem;
+  font-size: var(--text-xs); letter-spacing: .16em; text-transform: uppercase;
+  color: rgb(255 255 255 / .6); text-decoration: none;
+}
+.hero__scroll::after {
+  content: ""; width: 1px; height: 22px;
+  background: linear-gradient(180deg, rgb(255 255 255 / .6), transparent);
+}
+.hero__scroll:hover { color: var(--white); }
+
+.hero__credits {
+  position: absolute; z-index: 3; right: var(--sp-5); bottom: var(--sp-3);
+  margin: 0; font-size: .625rem; line-height: 1.6; text-align: right;
+  color: rgb(255 255 255 / .42);
 }
 
-/* ============================================================== SYSTEM ===== */
+@media (max-width: 800px) {
+  .hero__frames { grid-template-columns: 1fr; grid-template-rows: 46% 54%; }
+  .hero__frame--farm { grid-column: 1; grid-row: 1 / -1; }
+  .hero__frame--farm img { object-position: 30% 40%; }
+  .hero__frame--reactor { grid-column: 1; grid-row: 2; }
+  .hero__frame--reactor {
+    -webkit-mask-image: linear-gradient(180deg, transparent 0%, #000 26%);
+            mask-image: linear-gradient(180deg, transparent 0%, #000 26%);
+  }
+  .hero__inner { min-height: min(92vh, 720px); }
+  .hero__credits { display: none; }
+}
 
-.split { display: grid; gap: var(--sp-7); align-items: start; }
-@media (min-width: 900px) { .split { grid-template-columns: 1fr 1fr; gap: var(--sp-8); } }
-.split__text > p { max-width: 52ch; }
-.split figure { margin: 0; }
-.split figure img { border-radius: var(--radius); border: 1px solid var(--gray-200); }
-.split figcaption { margin-top: var(--sp-3); font-size: var(--text-sm); color: var(--gray-500); }
+/* ========================================================== 2  PROBLEM ==== */
+/* One continuous pathway, drawn once. Its length is the whole point, so it is
+   not summarised into three tidy cards. */
 
-.parts { margin: var(--sp-5) 0 0; padding: 0; list-style: none; counter-reset: part; }
-.parts li {
-  counter-increment: part;
+.pathway { margin: var(--sp-7) 0 0; position: relative; }
+.pathway__scroll { overflow-x: auto; overflow-y: hidden; padding-bottom: var(--sp-3); }
+
+.pathway__rail {
   position: relative;
-  padding: var(--sp-4) 0 var(--sp-4) 3rem;
-  border-top: 1px solid var(--gray-200);
+  list-style: none; margin: 0; padding: 0;
+  display: grid;
+  grid-auto-flow: column;
+  grid-auto-columns: 1fr;
+  align-items: start;
+  min-width: 60rem;
 }
-.parts li::before {
-  content: counter(part, decimal-leading-zero);
-  position: absolute; left: 0; top: var(--sp-4);
-  font-family: var(--font-mono);
-  font-size: var(--text-sm); font-weight: 700;
-  color: var(--leaf-500);
+
+/* the line runs from the first dot's centre to the last dot's centre. With
+   nine equal columns those sit at 100/18 % in from each end, so the two
+   numbers below are the column count and nothing else. Change the number of
+   steps and change them with it. */
+.pathway__rail::before {
+  content: ""; position: absolute; left: 5.55%; right: 5.55%; top: .47rem; height: 2px;
+  background: linear-gradient(90deg, var(--gray-300) 0 62%, var(--leaf-500) 66%, var(--leaf-700));
+  transform-origin: left center; transform: scaleX(0);
+  transition: transform 1.6s cubic-bezier(.2,.7,.2,1);
 }
-.parts b { display: block; color: var(--leaf-900); }
-.parts span { font-size: var(--text-sm); color: var(--gray-600); }
+.pathway.in .pathway__rail::before { transform: scaleX(1); }
 
-/* ============================================================== LEDGER ===== */
-/* Two columns, equal weight: what we have, and what we do not. */
+.step { position: relative; padding: 0 var(--sp-2); text-align: center; }
+.step__dot {
+  display: block; width: 1rem; height: 1rem; margin: 0 auto;
+  border-radius: 50%;
+  background: var(--white);
+  border: 2px solid var(--gray-400);
+  position: relative; z-index: 1;
+  transform: scale(.3); opacity: 0;
+  transition: transform .5s cubic-bezier(.2,1.5,.4,1), opacity .4s ease;
+}
+.pathway.in .step__dot { transform: scale(1); opacity: 1; }
+/* each dot arrives after the line has reached it */
+.step:nth-child(1) .step__dot { transition-delay: .05s; }
+.step:nth-child(2) .step__dot { transition-delay: .20s; }
+.step:nth-child(3) .step__dot { transition-delay: .35s; }
+.step:nth-child(4) .step__dot { transition-delay: .50s; }
+.step:nth-child(5) .step__dot { transition-delay: .65s; }
+.step:nth-child(6) .step__dot { transition-delay: .80s; }
+.step:nth-child(7) .step__dot { transition-delay: .95s; }
+.step:nth-child(8) .step__dot { transition-delay: 1.10s; }
+.step:nth-child(9) .step__dot { transition-delay: 1.25s; }
 
-.ledger { display: grid; gap: var(--sp-6); }
-@media (min-width: 860px) { .ledger { grid-template-columns: 1fr 1fr; gap: var(--sp-8); } }
-.ledger h3 {
-  margin: 0 0 var(--sp-4);
-  padding-bottom: var(--sp-3);
-  border-bottom: 1px solid rgb(255 255 255 / .18);
+.step b {
+  display: block; margin-top: var(--sp-4);
+  font-size: var(--text-sm); font-weight: 650; line-height: 1.3; color: var(--leaf-900);
+}
+.step span { display: block; margin-top: .25rem; font-size: var(--text-xs); line-height: 1.4; color: var(--gray-500); }
+
+/* the last three steps are the farmer's own, marked so the reader can see how
+   little of the chain that is */
+.step--farm .step__dot { border-color: var(--leaf-700); background: var(--leaf-700); }
+.step--farm b { color: var(--leaf-700); }
+
+.pathway__zones {
+  display: grid; grid-template-columns: 6fr 3fr; gap: var(--sp-3);
+  min-width: 60rem; margin-top: var(--sp-5);
+}
+.zone {
+  margin: 0; padding: var(--sp-3) var(--sp-4);
+  border-radius: var(--radius-sm);
+  font-size: var(--text-xs); letter-spacing: .08em; text-transform: uppercase; font-weight: 700;
+}
+.zone--off { background: var(--gray-100); color: var(--gray-500); }
+.zone--on  { background: var(--leaf-100); color: var(--leaf-900); }
+
+@media (prefers-reduced-motion: reduce) {
+  .pathway__rail::before { transform: scaleX(1); transition: none; }
+  .step__dot { transform: scale(1); opacity: 1; transition: none; }
+}
+
+.pathway__hint {
+  margin: var(--sp-3) 0 0; font-size: var(--text-xs); color: var(--gray-500);
+}
+@media (min-width: 1100px) { .pathway__hint { display: none; } }
+
+.pressure {
+  margin-top: var(--sp-7);
+  display: grid; gap: var(--sp-5);
+  padding: var(--sp-6);
+  border: 1px solid var(--amber-100);
+  border-left: 4px solid var(--amber-700);
+  border-radius: var(--radius-sm);
+  background: var(--amber-100);
+}
+@media (min-width: 860px) { .pressure { grid-template-columns: auto 1fr; align-items: start; gap: var(--sp-6); } }
+.pressure h3 {
+  margin: 0; font-family: var(--font-display); font-size: var(--text-h3);
+  font-weight: 700; color: var(--amber-700); max-width: 14ch;
+}
+.pressure p { margin: 0; max-width: 60ch; color: var(--gray-700); }
+.pressure p + p { margin-top: var(--sp-4); }
+
+/* ================================================= 3 + 4  THE DARK ACT ==== */
+/* One sticky stage, four beats, one WebGL scene. The wrapper is tall; the
+   stage inside it is one screen and never moves. Beats are ordinary blocks
+   that scroll past and hand progress to home.js. */
+
+.stagewrap {
+  position: relative; background: var(--ink); color: var(--white);
+  /* THE RESTING STATE IS THE FINISHED FRAME. home.js overwrites these as
+     inline styles once it takes control; with no JavaScript the reader gets
+     the reactor, the name and the slogan, lit and centred. */
+  --dark: 0; --spark: 0; --sparkOn: 0;
+  --rxIn: 1; --rxShift: 1; --nameIn: 1; --sloganIn: 1;
+}
+.stagewrap::before {
+  /* the act opens black and warms to ink as the light comes up */
+  content: ""; position: absolute; inset: 0; background: #000;
+  opacity: var(--dark); pointer-events: none; z-index: 0;
+}
+
+/* Every layer in the stage is absolutely positioned. A grid with centred items
+   looks tidier in source but sizes the row to the tallest child, and the
+   poster image is 1600px tall, which silently turned the "one screen" stage
+   into a three-screen one. */
+.stage {
+  position: sticky; top: 0; height: 100vh; height: 100svh;
+  overflow: hidden; z-index: 1;
+}
+.stage > * { position: absolute; }
+
+/* the single green light, and the glow it grows into */
+.stage__spark {
+  inset: 0;
+  background:
+    radial-gradient(circle at 50% 52%,
+      rgb(53 224 138 / .95) 0,
+      rgb(53 224 138 / .55) calc(var(--spark) * 1.4%),
+      rgb(27 127 77 / .28) calc(var(--spark) * 6%),
+      transparent calc(18% + var(--spark) * 34%));
+  opacity: var(--sparkOn);
+  pointer-events: none;
+}
+
+.stage__canvas { position: absolute; inset: 0; }
+.stage__canvas canvas { width: 100%; height: 100%; display: block; touch-action: pan-y; }
+
+/* the reactor group: fades in, then slides left to make room for the name */
+.stage__reactor {
+  inset: 0;
+  opacity: var(--rxIn);
+  transform: translateX(calc(var(--rxShift) * -19%)) scale(calc(1 - var(--rxShift) * .06));
+  will-change: opacity, transform;
+}
+.stage__reactor picture { position: absolute; inset: 0; }
+.stage__poster {
+  width: 100%; height: 100%; object-fit: contain; padding: 8vh 5vw;
+  opacity: 0; transition: opacity .5s;
+}
+.stage__reactor.no-gl .stage__poster { opacity: 1; }
+.stage__reactor.no-gl .stage__canvas { display: none; }
+
+.stage__loading {
+  position: absolute; left: 50%; bottom: 12%; transform: translateX(-50%);
+  font-size: var(--text-xs); letter-spacing: .22em; text-transform: uppercase;
+  color: rgb(255 255 255 / .35);
+}
+.stage__loading[hidden] { display: none; }
+
+/* the name card, entering from the right */
+.stage__name {
+  right: clamp(1rem, 6vw, 6rem); top: 50%;
+  width: min(42%, 30rem);
+  text-align: center;
+  opacity: var(--nameIn);
+  transform: translateY(-50%) translateX(calc((1 - var(--nameIn)) * 40px));
+  pointer-events: none;
+}
+.stage__name img { width: min(15rem, 46%); margin: 0 auto var(--sp-5); filter: drop-shadow(0 8px 30px rgb(0 0 0 / .5)); }
+.stage__name h2 {
+  margin: 0;
   font-family: var(--font-display);
-  font-size: var(--text-h3); font-weight: 700;
+  font-size: clamp(2.4rem, 5.4vw, 4.25rem);
+  font-weight: 800; letter-spacing: -.03em; line-height: 1;
   color: var(--white);
 }
-.ledger ul { margin: 0; padding: 0; list-style: none; }
-/* number in its own column so the sentence beside it wraps as a block rather
-   than running back underneath the figure */
-.ledger li {
-  display: flex; gap: var(--sp-4); align-items: baseline;
-  padding: var(--sp-3) 0;
-  border-bottom: 1px solid rgb(255 255 255 / .1);
-  font-size: var(--text-sm);
-}
-.ledger .n {
-  flex: 0 0 4.25rem;
+.stage__slogan {
+  margin: var(--sp-4) 0 0;
   font-family: var(--font-display);
-  font-size: 1.5rem; font-weight: 800; line-height: 1.1;
-  color: var(--leaf-500);
-  font-variant-numeric: tabular-nums;
+  font-size: clamp(1.05rem, 1.9vw, 1.5rem);
+  font-weight: 600; line-height: 1.3; letter-spacing: -.012em;
+  color: var(--sig-green);
+  opacity: var(--sloganIn);
+  transform: translateY(calc((1 - var(--sloganIn)) * 14px));
 }
-.ledger--not li { color: var(--leaf-200); align-items: flex-start; }
-.ledger--not li::before {
-  content: "—";
-  flex: 0 0 auto;
-  color: var(--leaf-500); font-weight: 700;
+.stage__gloss {
+  margin: var(--sp-4) 0 0; font-size: var(--text-sm); line-height: 1.55;
+  color: rgb(255 255 255 / .62);
+  opacity: var(--sloganIn);
 }
-.ledger__note { margin: var(--sp-5) 0 0; font-size: var(--text-xs); color: var(--leaf-200); max-width: 60ch; }
 
-/* =============================================================== PEOPLE ==== */
+/* the beats. Each is one screen of scroll; only the last carries visible copy
+   beside the stage. */
+.beat { position: relative; z-index: 2; height: 100vh; height: 100svh; pointer-events: none; }
+.beat--short { height: 65vh; height: 65svh; }
+.beat--tail { height: 45vh; height: 45svh; }
+.beat--parts { pointer-events: auto; height: auto; min-height: 100vh; display: flex; align-items: center; }
+/* the reactor is still behind this section, so the copy carries its own
+   ground. On one column that ground is the whole width. */
+.beat--parts::before {
+  content: ""; position: absolute; inset: 0; z-index: 0; pointer-events: none;
+  background: linear-gradient(180deg, rgb(7 11 9 / .55), rgb(7 11 9 / .93) 22%);
+}
+@media (min-width: 980px) {
+  .beat--parts::before { background: linear-gradient(90deg, rgb(7 11 9 / 0) 20%, rgb(7 11 9 / .62) 40%, rgb(7 11 9 / .96) 54%); }
+}
+.beat__inner {
+  position: relative; z-index: 1;
+  width: 100%; max-width: var(--max); margin: 0 auto;
+  padding: var(--sp-7) var(--sp-5);
+  display: grid; gap: var(--sp-5);
+}
+@media (min-width: 980px) {
+  /* one column, held in the right half, because the left half is the machine */
+  .beat__inner { padding-inline: var(--sp-6); padding-left: 52%; }
+}
 
-.people { display: grid; gap: var(--sp-4); grid-template-columns: repeat(auto-fit, minmax(15rem, 1fr)); }
-.person {
+.partlist { margin: 0; padding: 0; list-style: none; }
+.partlist__head {
+  margin: 0 0 var(--sp-4);
+  font-size: .6875rem; font-weight: 700; letter-spacing: .12em; text-transform: uppercase;
+  color: var(--sig-green);
+}
+.part {
+  display: block; width: 100%; text-align: left;
+  padding: var(--sp-4) var(--sp-4) var(--sp-4) var(--sp-6);
+  border: 0; border-top: 1px solid rgb(255 255 255 / .12);
+  background: transparent; color: inherit; font: inherit;
+  cursor: pointer; position: relative;
+  transition: background .2s;
+}
+.partlist li:last-child .part { border-bottom: 1px solid rgb(255 255 255 / .12); }
+.part::before {
+  content: ""; position: absolute; left: var(--sp-3); top: 1.55rem;
+  width: .5rem; height: .5rem; border-radius: 50%;
+  background: var(--flow, #5aa9ff); opacity: .55; transition: opacity .2s, box-shadow .2s;
+}
+.part[data-flow="lumen"] { --flow: #ff8a2e; }
+.part[data-flow="shell"] { --flow: #3ddc8b; }
+.part[data-flow="both"]  { --flow: #5aa9ff; }
+.part b { display: block; font-size: var(--text-base); font-weight: 650; color: var(--white); }
+.part span { display: block; font-size: var(--text-sm); color: rgb(255 255 255 / .55); }
+.part p { margin: var(--sp-3) 0 0; font-size: var(--text-sm); color: rgb(255 255 255 / .72); display: none; }
+.part:hover, .part:focus-visible { background: rgb(255 255 255 / .05); }
+.part:hover::before, .part.is-on::before { opacity: 1; box-shadow: 0 0 0 4px color-mix(in srgb, var(--flow) 22%, transparent); }
+.part.is-on { background: rgb(255 255 255 / .07); }
+.part.is-on p { display: block; }
+
+.flowkey { display: flex; flex-wrap: wrap; gap: var(--sp-4); margin-top: var(--sp-5); font-size: var(--text-xs); color: rgb(255 255 255 / .6); }
+.flowkey i { display: inline-block; width: .6rem; height: .6rem; border-radius: 50%; margin-right: .4rem; vertical-align: -.05rem; }
+
+.beat--parts .beat__copy h2 { max-width: 20ch; }
+
+/* Under 980px the stage has no left half to give away: the name card sits at
+   the foot of the frame and the reactor stays centred. */
+@media (max-width: 979px) {
+  .stage__reactor { transform: none; }
+  .stage__name {
+    left: 50%; right: auto; top: auto; bottom: 7vh;
+    width: min(88%, 26rem);
+    transform: translateX(-50%) translateY(calc((1 - var(--nameIn)) * 24px));
+  }
+  .stage__name img { width: 6.5rem; margin-bottom: var(--sp-4); }
+  .stage__gloss { display: none; }
+}
+
+/* ========================================================== 5  SYNBIO ===== */
+
+.figwide { margin: var(--sp-6) 0 0; }
+.figwide__scroll { overflow-x: auto; background: var(--white); border: 1px solid var(--gray-200); border-radius: var(--radius); }
+.figwide img { min-width: 46rem; width: 100%; }
+.figwide figcaption { margin-top: var(--sp-3); font-size: var(--text-sm); color: var(--gray-500); max-width: 72ch; }
+
+.modules { display: grid; gap: var(--sp-4); margin-top: var(--sp-6); grid-template-columns: repeat(auto-fit, minmax(15rem, 1fr)); }
+.module {
   padding: var(--sp-5);
-  border: 1px solid var(--gray-200);
-  border-radius: var(--radius);
-  background: var(--white);
+  border: 1px solid var(--gray-200); border-top: 3px solid var(--mod, var(--leaf-500));
+  border-radius: var(--radius-sm); background: var(--white);
 }
-.person b { display: block; color: var(--leaf-900); font-size: var(--text-base); }
-.person em { display: block; font-style: normal; font-size: var(--text-xs); color: var(--gray-500); margin-bottom: var(--sp-3); }
-.person p { margin: 0; font-size: var(--text-sm); color: var(--gray-600); }
-.person p b { display: inline; font-size: inherit; color: var(--leaf-700); }
+.module:nth-child(1) { --mod: #4a7c3f; }
+.module:nth-child(2) { --mod: #3f9ab0; }
+.module:nth-child(3) { --mod: #4f76c4; }
+.module:nth-child(4) { --mod: #c58a26; }
+/* direct child only: the module bodies use <i> for gene and species names and
+   must not pick up the eyebrow's monospace */
+.module > i {
+  font-style: normal; font-family: var(--font-mono);
+  font-size: var(--text-xs); font-weight: 700; letter-spacing: .1em;
+  color: var(--mod);
+}
+.module b { display: block; margin: var(--sp-2) 0 var(--sp-3); font-family: var(--font-display); font-size: var(--text-h3); font-weight: 700; color: var(--leaf-900); }
+.module p { margin: 0; font-size: var(--text-sm); color: var(--gray-600); }
 
-/* ============================================================== SECTIONS === */
+.switch {
+  display: grid; gap: var(--sp-4); margin-top: var(--sp-6);
+  grid-template-columns: repeat(auto-fit, minmax(16rem, 1fr));
+}
+.switch div { padding: var(--sp-4) var(--sp-5); border-radius: var(--radius-sm); }
+.switch b { display: block; font-size: var(--text-sm); letter-spacing: .06em; text-transform: uppercase; }
+.switch p { margin: var(--sp-2) 0 0; font-size: var(--text-sm); }
+.switch__green { background: #e8f7ee; border: 1px solid #b9e4cb; }
+.switch__green b { color: #1b7f4d; }
+.switch__red   { background: var(--rust-100); border: 1px solid #f0cfc3; }
+.switch__red b { color: var(--rust-700); }
 
-/* five cards. 13.5rem is the widest minimum that still lets all five sit on
-   one row at 1280px, which is what stops Team being orphaned below. */
-.sections { display: grid; gap: var(--sp-4); grid-template-columns: repeat(auto-fit, minmax(13.5rem, 1fr)); }
+/* ============================================================= 6  iHP ===== */
+
+.timeline { margin: var(--sp-6) 0 0; }
+.timeline__scroll { overflow-x: auto; border: 1px solid var(--gray-200); border-radius: var(--radius); background: var(--white); }
+.timeline img { min-width: 68rem; width: 100%; }
+.timeline figcaption { margin-top: var(--sp-3); font-size: var(--text-sm); color: var(--gray-500); }
+
+.visits { display: grid; gap: var(--sp-4); margin-top: var(--sp-6); grid-template-columns: repeat(auto-fit, minmax(14rem, 1fr)); }
+.visit { border: 1px solid var(--gray-200); border-radius: var(--radius); overflow: hidden; background: var(--white); }
+.visit img { aspect-ratio: 4 / 3; object-fit: cover; width: 100%; }
+.visit div { padding: var(--sp-4) var(--sp-5) var(--sp-5); }
+.visit b { display: block; color: var(--leaf-900); font-size: var(--text-base); }
+.visit em { display: block; font-style: normal; font-size: var(--text-xs); color: var(--gray-500); margin: .1rem 0 var(--sp-3); }
+.visit p { margin: 0; font-size: var(--text-sm); color: var(--gray-600); }
+
+/* ========================================================= 7  PRODUCT ===== */
+/* The schematic in the middle, five properties around it. On one column the
+   ring collapses to a list, which is the same information in reading order. */
+
+.ring { display: grid; gap: var(--sp-5); margin-top: var(--sp-6); align-items: center; }
+@media (min-width: 1040px) {
+  .ring { grid-template-columns: 1fr 1.7fr 1fr; gap: var(--sp-6); }
+  .ring__col { display: grid; gap: var(--sp-5); }
+}
+.ring__hub { text-align: center; }
+.ring__hub img { width: 100%; border-radius: var(--radius); border: 1px solid rgb(255 255 255 / .12); }
+.ring__hub figcaption { margin-top: var(--sp-3); font-size: var(--text-xs); color: rgb(255 255 255 / .5); }
+
+.prop {
+  padding: var(--sp-5);
+  border: 1px solid rgb(255 255 255 / .14);
+  border-radius: var(--radius);
+  background: rgb(255 255 255 / .035);
+  transition: border-color .25s, background .25s, transform .25s;
+}
+.prop:hover { border-color: var(--sig-dim); background: rgb(53 224 138 / .07); transform: translateY(-2px); }
+.prop b { display: block; font-family: var(--font-display); font-size: var(--text-h3); font-weight: 700; color: var(--white); }
+.prop p { margin: var(--sp-2) 0 0; font-size: var(--text-sm); color: rgb(255 255 255 / .68); }
+
+/* ========================================================== 8  VISION ===== */
+
+.vision { display: grid; gap: var(--sp-6); margin-top: var(--sp-6); }
+@media (min-width: 900px) { .vision { grid-template-columns: 1fr 1fr; gap: var(--sp-6); } }
+.vision figure { margin: 0; border-radius: var(--radius); overflow: hidden; border: 1px solid var(--gray-200); background: var(--white); }
+.vision img { aspect-ratio: 3 / 2; object-fit: cover; width: 100%; }
+.vision figcaption { padding: var(--sp-4) var(--sp-5); font-size: var(--text-sm); color: var(--gray-600); }
+.vision figcaption b { display: block; color: var(--leaf-900); margin-bottom: .2rem; }
+
+.vision__close {
+  margin-top: var(--sp-7); padding: var(--sp-6);
+  border-left: 4px solid var(--leaf-700); border-radius: var(--radius-sm); background: var(--white);
+}
+.vision__close p {
+  margin: 0; max-width: 40ch;
+  font-family: var(--font-display); font-size: var(--text-h3);
+  font-weight: 650; line-height: 1.35; color: var(--leaf-900);
+}
+
+/* ========================================================= 9  EXPLORE ===== */
+/* A map, not a menu. The lines say which page needs which other page, which is
+   the thing a list of twenty-six links cannot say. */
+
+.map { position: relative; margin-top: var(--sp-6); }
+.map__frame { position: relative; min-height: 34rem; }
+.map__wires { position: absolute; inset: 0; width: 100%; height: 100%; overflow: visible; pointer-events: none; }
+.map__wires path {
+  fill: none; stroke: var(--gray-300); stroke-width: 1.5;
+  transition: stroke .25s, stroke-width .25s, opacity .25s;
+}
+.map__wires path.lit { stroke: var(--leaf-500); stroke-width: 2.5; }
+.map.hot .map__wires path { opacity: .25; }
+.map.hot .map__wires path.lit { opacity: 1; }
+
+.node {
+  position: absolute;
+  transform: translate(-50%, -50%);
+  display: block; width: max-content; max-width: 13rem;
+  padding: var(--sp-3) var(--sp-4);
+  border: 1px solid var(--gray-300); border-radius: 999px;
+  background: var(--white); color: var(--leaf-900);
+  font-size: var(--text-sm); font-weight: 600; text-decoration: none;
+  box-shadow: var(--shadow-sm);
+  transition: border-color .2s, box-shadow .2s, transform .2s, opacity .25s, background .2s;
+}
+.node:hover, .node:focus-visible { border-color: var(--leaf-500); box-shadow: var(--shadow-md); transform: translate(-50%, -50%) scale(1.05); }
+.node--hub {
+  border-width: 2px; border-color: var(--leaf-700); background: var(--leaf-900); color: var(--white);
+  font-family: var(--font-display); font-size: var(--text-base); font-weight: 700;
+  padding: var(--sp-4) var(--sp-5);
+}
+.node small { display: block; font-weight: 400; font-size: var(--text-xs); color: var(--gray-500); }
+.node--hub small { color: var(--leaf-200); }
+.map.hot .node { opacity: .3; }
+.map.hot .node.lit { opacity: 1; }
+.map.hot .node.lit:not(.node--hub) { border-color: var(--leaf-500); }
+
+.map__read {
+  margin-top: var(--sp-5); min-height: 3.5rem;
+  padding: var(--sp-4) var(--sp-5);
+  border-left: 3px solid var(--leaf-500); background: var(--white);
+  border-radius: 0 var(--radius-sm) var(--radius-sm) 0;
+  font-size: var(--text-sm); color: var(--gray-600);
+}
+.map__read b { color: var(--leaf-900); }
+
+/* Below 900px the map is unreadable at any node size that is also tappable, so
+   it becomes the list it always was underneath. */
+.map__list { display: grid; gap: var(--sp-4); grid-template-columns: repeat(auto-fit, minmax(15rem, 1fr)); }
 .sectioncard {
-  display: block;
-  padding: var(--sp-5);
-  border: 1px solid var(--gray-200);
-  border-radius: var(--radius);
-  text-decoration: none;
-  background: var(--white);
+  display: block; padding: var(--sp-5);
+  border: 1px solid var(--gray-200); border-radius: var(--radius);
+  text-decoration: none; background: var(--white);
   transition: border-color .18s, transform .18s, box-shadow .18s;
 }
 .sectioncard:hover { border-color: var(--leaf-500); transform: translateY(-2px); box-shadow: var(--shadow-md); }
-.sectioncard h3 {
-  margin: 0 0 var(--sp-2);
-  font-family: var(--font-display);
-  font-size: var(--text-h3); font-weight: 700; color: var(--leaf-900);
-}
+.sectioncard h3 { margin: 0 0 var(--sp-2); font-family: var(--font-display); font-size: var(--text-h3); font-weight: 700; color: var(--leaf-900); }
 .sectioncard p { margin: 0 0 var(--sp-4); font-size: var(--text-sm); color: var(--gray-600); }
 .sectioncard ul { margin: 0; padding: 0; list-style: none; font-size: var(--text-xs); color: var(--gray-500); }
 .sectioncard li { display: inline-block; margin: 0 .5rem .3rem 0; }
 .sectioncard li::after { content: "·"; margin-left: .5rem; color: var(--gray-300); }
 .sectioncard li:last-child::after { content: ""; }
 
-/* ============================================================== FOOTER ===== */
+@media (max-width: 899px) { .map { display: none; } }
+@media (min-width: 900px) { .map__list { display: none; } }
+
+/* ============================================================== FOOTER ==== */
 /* footer2 comes from page.css; the homepage loads it for that alone. */
