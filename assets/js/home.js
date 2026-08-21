@@ -162,8 +162,10 @@
   })();
 
   /* ═══════════════════════════════════════════════════════════ 3  PARTS ══ */
-  /* Hover, focus or click a component and it lights up in the assembly. Click
-     also pins it, which is the only way this works on a touch screen. */
+  /* Hover, focus or click a highlight and the components it names light up in
+     the assembly. Click also pins it, which is the only way this works on a
+     touch screen. data-comp may hold several ids separated by spaces; the
+     whole string is the identity here, and home-reactor.js does the splitting. */
 
   (function partlist() {
     var list = document.getElementById("partlist");

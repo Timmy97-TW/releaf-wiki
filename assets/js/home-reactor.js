@@ -251,7 +251,7 @@ window.__homeRx = (function () {
   /* ---------- highlight, for the parts list ---------- */
   var comps = {};          // id -> [{ mat, hex, ei }]
   var ACCENT = { lumen: 0xff8a2e, shell: 0x3ddc8b, both: 0x5aa9ff };
-  var litId = null;
+  var litIds = [];
 
   function indexComponents() {
     if (typeof BIO_COMPONENTS === "undefined") return;
@@ -393,11 +393,18 @@ window.__homeRx = (function () {
     isReady: function () { return ready; },
     redraw: function () { if (ready) render(); },
     failed: false,
+    // One card on the homepage can name several components at once — the
+    // closed-loop claim points at the pump, the vent and the photometer
+    // together — so this takes an id, a space-separated list of ids, or an
+    // array, and lights the whole set.
     highlight: function (id) {
-      if (!ready || id === litId) return;
-      if (litId) paint(litId, 0);
-      litId = id || null;
-      if (litId) paint(litId, 0.45);
+      if (!ready) return;
+      var next = (id == null ? [] : (Array.isArray(id) ? id : String(id).split(/\s+/)))
+                   .filter(Boolean);
+      if (next.join(" ") === litIds.join(" ")) return;
+      litIds.forEach(function (x) { paint(x, 0); });
+      litIds = next;
+      litIds.forEach(function (x) { paint(x, 0.45); });
       if (reduced) render();
     },
   };
