@@ -103,96 +103,223 @@ h2.band__title {
 /* Two photographs meeting in a wash. Left is a farm at work, right is the
    reactor at work, and the fade between them is the distance the project is
    trying to close. On narrow screens the split turns vertical, because a
-   two-up at 380px is two thumbnails and reads as neither. */
+   two-up at 380px is two thumbnails and reads as neither.
+
+   COMPOSITION CONTRACT. Almost everything below is holding one arrangement in
+   place, and the arrangement is the point:
+
+     · the headline sits in the TOP LEFT and must never land on Farmer Chen's
+       face. That is solved in the CROP, not by moving type around. The farm
+       file is cut so her head sits low and centre-left, below the last line
+       of the sub. Re-export the crop and you will move her face into the type.
+     · the student on the right is meant to half-dissolve into the lab. Chen is
+       not the project; the team is. Her hand, her basket and one listening
+       student read, and the seam eats the rest of him.
+     · the reactor frame is about the MACHINE. Both of the faces that stood in
+       that photograph are cropped out of the file on purpose.
+
+   Read the notes on each rule before changing a number. */
 
 .hero { position: relative; background: var(--ink); color: var(--white); isolation: isolate; }
 
 /* The farm photograph is the base layer and spans the whole frame. The reactor
    sits in a column of its own on the right, so each photograph is cropped to
-   the shape it is actually seen in and object-position means what it says. The
-   reactor's left edge is masked, so the seam is a fade onto the farm rather
-   than a cut. */
+   the shape it is actually seen in. The reactor's left edge is masked, so the
+   seam is a fade onto the farm rather than a cut. */
 .hero__frames { position: absolute; inset: 0; display: grid; grid-template-columns: 55% 45%; }
 .hero__frame { grid-row: 1; position: relative; overflow: hidden; }
 .hero__frame img { width: 100%; height: 100%; object-fit: cover; }
 
 .hero__frame--farm { grid-column: 1 / -1; }
-.hero__frame--farm img { object-position: 42% 30%; }
+
+/* hero-farm-*.jpg is cut from the original at 6150x3705+22+8, which is very
+   nearly the full width of the negative and the top 90% of its height. That
+   crop does three things at once and all three are load-bearing:
+     · it takes the picture as far LEFT as the negative allows, so Chen's
+       outstretched hand, the basket on her arm and the listening student all
+       arrive in shot rather than only her portrait;
+     · it puts her head around 42% across and 44% down, which is under the
+       headline horizontally but well clear of it vertically;
+     · it leaves the student's face out near 67% across, i.e. inside the seam,
+       where the mask below can dissolve him.
+   The file is cut at 1.66:1, a little taller than the frame it usually lands
+   in (about 1.75:1 at 1280x800), so on a normal desktop window the browser
+   trims HEIGHT and the horizontal arrangement above is exactly what shows.
+   Anchoring to the top spends that trim on the bottom edge, where there is
+   only soil, and keeps the gap under the headline fixed at every width.
+   Below about 1.66:1, which is a short wide window or a narrow tall one, the
+   trim flips to width and the frame closes in on Chen and the basket from
+   both sides. That is a fair second reading rather than a bug, but it is why
+   the student is not guaranteed at every size, and why the seam has to work
+   without him. */
+.hero__frame--farm img { object-position: 50% 0%; }
 
 .hero__frame--reactor { grid-column: 2; }
-.hero__frame--reactor img { object-position: 30% 66%; }
+
+/* hero-reactor-*.jpg is cut at 948x1318+732+624, a third of the width of the
+   original. The instructor stood on the left of the negative and the student
+   on the right; the crop walls BOTH faces off outside the frame, so what is
+   left is the vessel on its stand, the feed lines, the two carboys, the pump
+   and the lit bench. His forearm and hands stay in shot at the left, which is
+   what the picture needs: someone working, nobody posing. The wider cut that
+   included the whiteboard read as "students in a room" and buried the machine;
+   this one reads as the machine. Do not recentre it on the people.
+   Portrait, 0.72 against a frame near 0.79, so the trim is vertical and
+   object-position Y picks the band. 74% spends the trim on ceiling and holds
+   the LED strip and the pump display. */
+.hero__frame--reactor img { object-position: 50% 74%; }
+
+/* The seam. The old fade closed by 30% of the reactor column, which cut the
+   student off at full strength and left him as a clean portrait on the farm
+   side. He now falls INSIDE the ramp: at his left ear the farm still reads at
+   three quarters, across his face at about a half, and past his far shoulder
+   at a fifth, so he resolves into the bench instead of standing in front of
+   it. The stops are uneven for that reason. A single linear ramp either
+   exposes him as a portrait or swallows him whole. */
 .hero__frame--reactor {
-  -webkit-mask-image: linear-gradient(90deg, transparent 0%, #000 30%);
-          mask-image: linear-gradient(90deg, transparent 0%, #000 30%);
+  -webkit-mask-image: linear-gradient(90deg,
+    transparent 0%, rgb(0 0 0 / .38) 20%, rgb(0 0 0 / .80) 40%, #000 58%);
+          mask-image: linear-gradient(90deg,
+    transparent 0%, rgb(0 0 0 / .38) 20%, rgb(0 0 0 / .80) 40%, #000 58%);
 }
 
-/* the wash: enough to hold white type over both photographs at once */
+/* The lab's left edge is white brick and a lit whiteboard, and the student
+   fading into it wears a cream t-shirt, so at the seam a pale figure was
+   dissolving into a pale wall and simply vanished. This gradient sinks the
+   reactor photograph's own left edge before the two are blended, which gives
+   the student something dark to be a silhouette against and quietly drops the
+   instructor's forearm back a plane. It sits INSIDE the masked element on
+   purpose: it has to darken the lab pixels only, not the farm behind them.
+   The second layer does the same job downwards. Everything above the bench in
+   that photograph is white brick, a whiteboard and a teammate's back, and all
+   of it was competing with the rig; sinking the top half of the frame leaves
+   the lit bench as the brightest thing on that side, which is the whole
+   reason the picture is there. */
+.hero__frame--reactor::after {
+  content: ""; position: absolute; inset: 0; z-index: 1;
+  background:
+    linear-gradient(90deg,
+      rgb(7 11 9 / .88) 0%, rgb(7 11 9 / .58) 26%, rgb(7 11 9 / .18) 52%, transparent 74%),
+    linear-gradient(180deg,
+      rgb(7 11 9 / .90) 0%, rgb(7 11 9 / .68) 22%, rgb(7 11 9 / .24) 46%, transparent 66%);
+}
+
+/* The wash. Three layers, and the first one is why Chen keeps her daylight:
+   a corner shadow anchored at the top left, sized so it has faded out before
+   it reaches her, holds the headline without dropping a grey sheet over the
+   whole field. The vertical layer is for the quote and the credits at the
+   bottom; the horizontal one is a light edge vignette. If you flatten these
+   back into one full-frame gradient, her face goes grey. */
 .hero__frames::after {
   content: ""; position: absolute; inset: 0; z-index: 2;
   background:
-    linear-gradient(180deg, rgb(7 11 9 / .72) 0%, rgb(7 11 9 / .16) 38%, rgb(7 11 9 / .50) 66%, rgb(7 11 9 / .92) 100%),
-    linear-gradient(90deg, rgb(7 11 9 / .42) 0%, rgb(7 11 9 / .04) 48%, rgb(7 11 9 / .28) 100%);
+    radial-gradient(125% 80% at 0% 0%,
+      rgb(7 11 9 / .82) 0%, rgb(7 11 9 / .46) 30%, rgb(7 11 9 / .12) 54%, transparent 72%),
+    linear-gradient(180deg,
+      rgb(7 11 9 / .28) 0%, rgb(7 11 9 / .04) 36%, rgb(7 11 9 / .22) 72%, rgb(7 11 9 / .72) 100%),
+    linear-gradient(90deg, rgb(7 11 9 / .20) 0%, rgb(7 11 9 / .02) 52%, rgb(7 11 9 / .10) 100%);
 }
 
+/* One column, not two. The headline and the quote both live on the left now,
+   pinned to opposite ends of the same edge, and the middle row is the spring
+   that pushes them apart. Widths are set per block rather than by the grid so
+   the headline can run wider than the quote. */
 .hero__inner {
   position: relative; z-index: 3;
   max-width: var(--max); margin: 0 auto;
-  padding: clamp(3rem, 6vw, 5rem) var(--sp-5) clamp(2.5rem, 5vw, 4rem);
+  padding: clamp(1.75rem, 3.2vw, 2.75rem) var(--sp-5) clamp(2.5rem, 5vw, 4rem);
   min-height: min(90vh, 800px);
   display: grid;
-  grid-template-columns: 1fr 1fr;
+  grid-template-columns: minmax(0, 1fr);
   grid-template-rows: auto 1fr auto;
-  column-gap: var(--sp-6);
 }
 @media (min-width: 640px) { .hero__inner { padding-left: var(--sp-6); padding-right: var(--sp-6); } }
 
-/* headline top right, over the lab; quote bottom left, over the field */
-.hero__head { grid-column: 2; grid-row: 1; justify-self: end; max-width: 30rem; }
-
-/* Farmer Chen, in the bottom-left corner, over her own field. Verbatim, so it
-   is marked up as a real quotation. */
-.hero__note {
-  grid-column: 1; grid-row: 3;
-  align-self: end; justify-self: start;
-  max-width: 30rem;
-  margin: 0;
-  padding: var(--sp-5) var(--sp-5) var(--sp-5) var(--sp-6);
-  border-left: 3px solid var(--sig-green);
-  border-radius: 0 var(--radius) var(--radius) 0;
-  background: rgb(7 11 9 / .58);
-  backdrop-filter: blur(8px);
-  -webkit-backdrop-filter: blur(8px);
-}
-.hero__note p {
-  margin: 0;
-  font-size: var(--text-base); line-height: 1.55; color: var(--white);
-  text-wrap: pretty;
-}
-.hero__note p::before { content: "\201C"; }
-.hero__note p::after  { content: "\201D"; }
-.hero__note footer { margin-top: var(--sp-4); }
-.hero__note b { display: block; font-size: var(--text-sm); color: var(--sig-green); }
-.hero__note em {
-  display: block; margin-top: .15rem; font-style: normal;
-  font-size: var(--text-xs); line-height: 1.5; color: rgb(255 255 255 / .58);
-}
-@media (max-width: 800px) { .hero__note { max-width: none; } }
+/* Top left corner, and it has to STAY short. On a 1280x800 window the top of
+   Chen's hair arrives at about 245px, and line two of the h1 runs far enough
+   right to reach her, so the h1 has to finish above roughly 200px. The sub is
+   allowed a little lower only because it is two short lines that stop well to
+   her left. Add a fourth line, or push the type size up, and words land on
+   her face. */
+.hero__head { grid-row: 1; justify-self: start; max-width: 41rem; }
 
 .hero__claim {
   margin: 0;
   font-family: var(--font-display);
-  font-size: clamp(1.9rem, 4.1vw, 3.25rem);
-  font-weight: 750; line-height: 1.08; letter-spacing: -.028em;
+  font-size: clamp(1.6rem, 3.45vw, 2.75rem);
+  font-weight: 750; line-height: 1.06; letter-spacing: -.028em;
   color: var(--white);
-  text-wrap: balance;
-  text-shadow: 0 2px 24px rgb(7 11 9 / .45);
 }
+
+/* Line one is drawn, not set. It is the team's own wordmark, lifted out of the
+   full-resolution official logo (the same mark you can see in logo-720.png),
+   straightened by the 26 degrees it is drawn at inside the badge, keyed off
+   the navy background and refilled flat in --sig-green. iGEM blocks any font
+   served from outside the wiki, so a licensed display face was never on the
+   table, and the team's own lettering says more than one would have anyway.
+   Height is set in em so the mark tracks the headline at every size. */
+.hero__mark { display: block; }
+.hero__mark img {
+  display: inline-block; vertical-align: baseline;
+  height: 2.05em; width: auto;
+  /* the drawing sits on its own optical baseline; this drops it onto the
+     text baseline so the comma beside it does not float */
+  margin-bottom: -.30em;
+  filter: drop-shadow(0 2px 18px rgb(7 11 9 / .55));
+}
+/* the comma the wordmark does not contain, matched to it in colour and set to
+   sit at the foot of the F rather than at the foot of the drawing's box */
+.hero__mark i {
+  font-style: normal; color: var(--sig-green);
+  font-size: 1.35em; line-height: 0;
+  margin-left: .03em; position: relative; top: -.30em;
+}
+
+.hero__claim-rest {
+  display: block;
+  margin-top: .18em;
+  text-wrap: balance;
+  text-shadow: 0 2px 24px rgb(7 11 9 / .5);
+}
+
 .hero__sub {
   margin: var(--sp-4) 0 0;
-  max-width: 32ch;
-  font-size: var(--text-lede); line-height: 1.45; font-weight: 400;
+  max-width: 44ch;
+  font-size: var(--text-lede); line-height: 1.42; font-weight: 400;
   color: var(--leaf-100);
-  text-shadow: 0 2px 18px rgb(7 11 9 / .5);
+  text-shadow: 0 2px 18px rgb(7 11 9 / .55);
+}
+
+/* Farmer Chen, bottom left, over her own field. Verbatim, so it is marked up
+   as a real quotation, and italic because it is her voice rather than ours.
+   Deliberately SMALL: at 20rem it stops short of the basket on her arm, which
+   sits around two thirds of the way across, so the box no longer sits on the
+   part of the photograph it is quoting. Widen it and you cover the basket. */
+.hero__note {
+  grid-row: 3;
+  align-self: end; justify-self: start;
+  max-width: 20rem;
+  margin: 0;
+  padding: var(--sp-4) var(--sp-4) var(--sp-4) var(--sp-5);
+  border-left: 3px solid var(--sig-green);
+  border-radius: 0 var(--radius) var(--radius) 0;
+  background: rgb(7 11 9 / .52);
+  backdrop-filter: blur(7px);
+  -webkit-backdrop-filter: blur(7px);
+}
+.hero__note p {
+  margin: 0;
+  font-style: italic;
+  font-size: var(--text-sm); line-height: 1.5; color: rgb(255 255 255 / .93);
+  text-wrap: pretty;
+}
+.hero__note p::before { content: "\201C"; }
+.hero__note p::after  { content: "\201D"; }
+.hero__note footer { margin-top: var(--sp-3); }
+.hero__note b { display: block; font-size: var(--text-xs); color: var(--sig-green); }
+.hero__note em {
+  display: block; margin-top: .12rem; font-style: normal;
+  font-size: .6875rem; line-height: 1.5; color: rgb(255 255 255 / .55);
 }
 
 .hero__credits {
@@ -202,21 +329,40 @@ h2.band__title {
 }
 
 @media (max-width: 800px) {
-  .hero__frames { grid-template-columns: 1fr; grid-template-rows: 55% 45%; }
+  .hero__frames { grid-template-columns: 1fr; grid-template-rows: 52% 48%; }
   .hero__frame--farm { grid-column: 1; grid-row: 1 / -1; }
-  .hero__frame--farm img { object-position: 30% 40%; }
+  /* Stacked, the farm frame is tall and narrow, so the browser trims WIDTH and
+     only about a third of the picture survives. There is no arrangement of
+     hand, basket and student that fits a 375px column, so this one gives up on
+     the group and keeps Chen: 42% centres her in what is left. Do not copy the
+     wide layout's reasoning down here, it does not apply. */
+  .hero__frame--farm img { object-position: 42% 50%; }
   .hero__frame--reactor { grid-column: 1; grid-row: 2; }
+  /* and here the reactor frame is short and wide, so the trim is vertical
+     again but far deeper: 76% pushes past the wall and holds the vessel, the
+     pump and the LED strip in the band that is not behind the quote. */
+  .hero__frame--reactor img { object-position: 50% 76%; }
+  .hero__frame--reactor::after { background: none; }
   .hero__frame--reactor {
-    -webkit-mask-image: linear-gradient(180deg, transparent 0%, #000 26%);
-            mask-image: linear-gradient(180deg, transparent 0%, #000 26%);
+    -webkit-mask-image: linear-gradient(180deg, transparent 0%, #000 22%);
+            mask-image: linear-gradient(180deg, transparent 0%, #000 22%);
   }
+  .hero__frames::after {
+    background:
+      linear-gradient(180deg,
+        rgb(7 11 9 / .72) 0%, rgb(7 11 9 / .22) 30%, rgb(7 11 9 / .48) 62%, rgb(7 11 9 / .93) 100%);
+  }
+  /* Stacked, the quote is full width and lands square on the reactor, which
+     left the machine as a rumour behind a text box. The extra bottom padding
+     buys a strip of frame under the quote wide enough for the lit bench to
+     show, so the mobile hero still has both halves of the argument in it. */
   .hero__inner {
     min-height: min(92vh, 720px);
-    grid-template-columns: 1fr; grid-template-rows: auto 1fr auto;
+    padding-bottom: 5.5rem;
     row-gap: var(--sp-6);
   }
-  .hero__head { grid-column: 1; grid-row: 1; justify-self: start; max-width: none; }
-  .hero__note { grid-column: 1; grid-row: 3; max-width: none; }
+  .hero__head { max-width: none; }
+  .hero__note { max-width: none; }
   .hero__credits { display: none; }
 }
 
@@ -235,6 +381,10 @@ h2.band__title {
   grid-auto-columns: 1fr;
   align-items: start;
   min-width: 60rem;
+  /* the icons sit above the dots, so the line has to drop by their height plus
+     half a dot. One variable, changed in one place, or the rail and the dots
+     come apart. */
+  --icon-band: 2.6rem;
 }
 
 /* the line runs from the first dot's centre to the last dot's centre. With
@@ -242,14 +392,38 @@ h2.band__title {
    numbers below are the column count and nothing else. Change the number of
    steps and change them with it. */
 .pathway__rail::before {
-  content: ""; position: absolute; left: 5.55%; right: 5.55%; top: .47rem; height: 2px;
+  content: ""; position: absolute; left: 5.55%; right: 5.55%;
+  top: calc(var(--icon-band) + .47rem); height: 2px;
   background: linear-gradient(90deg, var(--gray-300) 0 62%, var(--leaf-500) 66%, var(--leaf-700));
   transform-origin: left center; transform: scaleX(0);
   transition: transform 1.6s cubic-bezier(.2,.7,.2,1);
 }
 .pathway.in .pathway__rail::before { transform: scaleX(1); }
 
-.step { position: relative; padding: 0 var(--sp-2); text-align: center; }
+/* colour is set on the step and inherited by its icon, so the two halves of
+   the chain recolour in one place */
+.step {
+  position: relative;
+  padding: var(--icon-band) var(--sp-2) 0;
+  text-align: center;
+  color: var(--gray-500);
+}
+.step__icon {
+  position: absolute; left: 50%; top: 0;
+  width: 1.75rem; height: 1.75rem;
+  transform: translateX(-50%);
+  opacity: 0; transition: opacity .5s ease .1s;
+}
+.pathway.in .step__icon { opacity: 1; }
+.step:nth-child(1) .step__icon { transition-delay: .05s; }
+.step:nth-child(2) .step__icon { transition-delay: .20s; }
+.step:nth-child(3) .step__icon { transition-delay: .35s; }
+.step:nth-child(4) .step__icon { transition-delay: .50s; }
+.step:nth-child(5) .step__icon { transition-delay: .65s; }
+.step:nth-child(6) .step__icon { transition-delay: .80s; }
+.step:nth-child(7) .step__icon { transition-delay: .95s; }
+.step:nth-child(8) .step__icon { transition-delay: 1.10s; }
+.step:nth-child(9) .step__icon { transition-delay: 1.25s; }
 .step__dot {
   display: block; width: 1rem; height: 1rem; margin: 0 auto;
   border-radius: 50%;
@@ -279,6 +453,7 @@ h2.band__title {
 
 /* the last three steps are the farmer's own, marked so the reader can see how
    little of the chain that is */
+.step--farm { color: var(--leaf-700); }
 .step--farm .step__dot { border-color: var(--leaf-700); background: var(--leaf-700); }
 .step--farm b { color: var(--leaf-700); }
 
@@ -297,29 +472,13 @@ h2.band__title {
 @media (prefers-reduced-motion: reduce) {
   .pathway__rail::before { transform: scaleX(1); transition: none; }
   .step__dot { transform: scale(1); opacity: 1; transition: none; }
+  .step__icon { opacity: 1; transition: none; }
 }
 
 .pathway__hint {
   margin: var(--sp-3) 0 0; font-size: var(--text-xs); color: var(--gray-500);
 }
 @media (min-width: 1100px) { .pathway__hint { display: none; } }
-
-.pressure {
-  margin-top: var(--sp-7);
-  display: grid; gap: var(--sp-5);
-  padding: var(--sp-6);
-  border: 1px solid var(--amber-100);
-  border-left: 4px solid var(--amber-700);
-  border-radius: var(--radius-sm);
-  background: var(--amber-100);
-}
-@media (min-width: 860px) { .pressure { grid-template-columns: auto 1fr; align-items: start; gap: var(--sp-6); } }
-.pressure h3 {
-  margin: 0; font-family: var(--font-display); font-size: var(--text-h3);
-  font-weight: 700; color: var(--amber-700); max-width: 14ch;
-}
-.pressure p { margin: 0; max-width: 60ch; color: var(--gray-700); }
-.pressure p + p { margin-top: var(--sp-4); }
 
 /* ================================================= 3 + 4  THE DARK ACT ==== */
 /* One sticky stage, four beats, one WebGL scene. The wrapper is tall; the
@@ -328,10 +487,15 @@ h2.band__title {
 
 .stagewrap {
   position: relative; background: var(--ink); color: var(--white);
+  /* no hard line between the white band above and the dark act: the ink is
+     dealt in over the first screen, so the page dims rather than cuts */
+  background-image: linear-gradient(180deg, var(--white) 0, var(--ink) 42vh);
+  background-repeat: no-repeat;
   /* THE RESTING STATE IS THE FINISHED FRAME. home.js overwrites these as
      inline styles once it takes control; with no JavaScript the reader gets
      the reactor, the name and the slogan, lit and centred. */
   --dark: 0; --spark: 0; --sparkOn: 0;
+  --chainIn: 0; --conv: 1; --chainGrey: 0; --turn1: 0; --turn2: 0;
   --rxIn: 1; --rxShift: 1; --nameIn: 1; --sloganIn: 1;
 }
 .stagewrap::before {
@@ -420,10 +584,69 @@ h2.band__title {
   opacity: var(--sloganIn);
 }
 
+/* ---- the chain collapsing ---- */
+/* The nine dots are the nine steps of the pathway in section 2, in the same
+   order and the same two colours. As --conv runs 0 to 1 they travel to the
+   centre; the six that happen before the farmer is involved fade out on the
+   way in, and the farmer's three arrive together and become the single green
+   light the reactor runs on. --dx is each dot's resting distance from centre
+   in pixels, so the row lines up with nothing and needs no measuring. */
+
+.chain {
+  position: absolute; left: 50%; top: 46%;
+  width: 0; height: 0; margin: 0; padding: 0; list-style: none;
+  opacity: var(--chainIn, 0);
+  pointer-events: none;
+}
+.chain li {
+  position: absolute; left: 0; top: 0;
+  width: .75rem; height: .75rem; margin: -.375rem 0 0 -.375rem;
+  border-radius: 50%;
+  border: 2px solid var(--gray-500);
+  background: var(--ink);
+  transform: translateX(calc(var(--dx) * (1 - var(--conv, 0)) * 1px));
+  opacity: var(--chainGrey, 1);
+}
+.chain li:nth-child(1) { --dx: -336; }
+.chain li:nth-child(2) { --dx: -252; }
+.chain li:nth-child(3) { --dx: -168; }
+.chain li:nth-child(4) { --dx:  -84; }
+.chain li:nth-child(5) { --dx:    0; }
+.chain li:nth-child(6) { --dx:   84; }
+.chain li:nth-child(7) { --dx:  168; }
+.chain li:nth-child(8) { --dx:  252; }
+.chain li:nth-child(9) { --dx:  336; }
+/* the farmer's three: they keep their colour and they survive the collapse */
+.chain .chain__keep {
+  border-color: var(--sig-green);
+  background: var(--sig-green);
+  opacity: 1;
+  box-shadow: 0 0 0 0 rgb(53 224 138 / .35);
+}
+@media (max-width: 700px) {
+  .chain li { transform: translateX(calc(var(--dx) * (1 - var(--conv, 0)) * .52px)); }
+}
+
+/* the two lines that carry the turn. They cross-fade rather than stack, so the
+   reader is never reading one while the other is arriving. */
+.turn {
+  position: absolute; left: 50%; top: 62%;
+  width: min(90%, 34rem); margin: 0;
+  transform: translateX(-50%);
+  text-align: center; text-wrap: balance;
+  font-family: var(--font-display);
+  font-size: clamp(1.05rem, .95rem + .7vw, 1.5rem);
+  font-weight: 600; line-height: 1.4; letter-spacing: -.012em;
+  color: var(--leaf-100);
+  pointer-events: none;
+}
+.turn--1 { opacity: var(--turn1, 0); }
+.turn--2 { opacity: var(--turn2, 0); color: var(--sig-green); }
+
 /* the beats. Each is one screen of scroll; only the last carries visible copy
    beside the stage. */
 .beat { position: relative; z-index: 2; height: 100vh; height: 100svh; pointer-events: none; }
-.beat--short { height: 65vh; height: 65svh; }
+.beat--short { height: 100vh; height: 100svh; }
 .beat--tail { height: 45vh; height: 45svh; }
 .beat--parts { pointer-events: auto; height: auto; min-height: 100vh; display: flex; align-items: center; }
 /* the reactor is still behind this section, so the copy carries its own
@@ -641,118 +864,157 @@ h2.band__title {
 }
 
 /* ========================================================= 9  EXPLORE ===== */
-/* Five doors. Each carries a photograph of the work behind it, so a reader can
-   tell a wet lab from a dry lab before reading a word, and every page inside is
-   its own link rather than a bullet in a list.
+/* Four doors in a row, then the team as a full-width banner.
 
-   The mosaic is deliberately uneven: two, two, then one full-width. A five-up
-   row of identical cards is a menu, and a menu is what this replaced. */
+   Two problems this layout had to solve. First, a photograph in a rounded card
+   reads as a sticker unless its edges are dissolved into the card, so every
+   shot is masked out at the bottom and softened at the sides. Second, a row of
+   four boxes says nothing about how the pages inside them relate, which a map
+   used to. The answer is cross-highlighting: point at any page and the pages
+   it actually works with light up in the OTHER boxes, and the line underneath
+   names them. The relationships live in PAGE_LINKS in home.js. */
 
-.doors { display: grid; gap: var(--sp-5); }
-@media (min-width: 860px) {
-  .doors { grid-template-columns: 1fr 1fr; }
-  .door--wide { grid-column: 1 / -1; }
-}
+.doors { display: grid; gap: var(--sp-4); }
+@media (min-width: 720px)  { .doors { grid-template-columns: repeat(2, 1fr); } }
+@media (min-width: 1120px) { .doors { grid-template-columns: repeat(4, 1fr); } }
+.door--team { grid-column: 1 / -1; }
 
 .door {
   --accent: var(--leaf-700);
   position: relative;
-  display: grid;
+  display: flex; flex-direction: column;
   overflow: hidden;
   border: 1px solid var(--gray-200);
   border-radius: var(--radius);
   background: var(--white);
   transition: border-color .25s, box-shadow .25s, transform .25s;
 }
-.door--project    { --accent: #23684a; }
-.door--wetlab     { --accent: #2f7d8c; }
-.door--drylab     { --accent: #7a5cb8; }
-.door--engagement { --accent: #b3721f; }
-.door--team       { --accent: #a8443a; }
+.door--project { --accent: #23684a; }
+.door--wetlab  { --accent: #2f7d8c; }
+.door--drylab  { --accent: #7a5cb8; }
+.door--hp      { --accent: #b3721f; }
+.door--team    { --accent: #a8443a; }
 
-.door:hover { border-color: var(--accent); box-shadow: var(--shadow-lg); transform: translateY(-3px); }
-/* the whole card lifts when any link inside it takes keyboard focus, so the
-   mouse and the keyboard get the same affordance */
-.door:focus-within { border-color: var(--accent); box-shadow: var(--shadow-lg); }
+.door:hover, .door:focus-within { border-color: var(--accent); box-shadow: var(--shadow-md); }
+.door:hover { transform: translateY(-2px); }
 
-/* the accent rule along the top, drawn open on hover */
-.door::before {
-  content: ""; position: absolute; inset: 0 0 auto 0; height: 3px; z-index: 2;
-  background: var(--accent);
-  transform: scaleX(0); transform-origin: left;
-  transition: transform .4s cubic-bezier(.2,.7,.2,1);
+/* the photograph, dissolved rather than cropped: it fades out at the bottom
+   into the card and softens at both sides, so there is no rectangle edge */
+.door__shot { position: relative; overflow: hidden; background: var(--gray-100); }
+.door__shot::after {
+  content: ""; position: absolute; inset: 0;
+  background: linear-gradient(180deg, transparent 45%, rgb(255 255 255 / .55) 82%, var(--white) 100%);
 }
-.door:hover::before, .door:focus-within::before { transform: scaleX(1); }
-
-.door__shot { overflow: hidden; background: var(--gray-100); }
 .door__shot img {
-  width: 100%; height: 100%; object-fit: cover;
-  aspect-ratio: 4 / 3;
+  display: block; width: 100%; aspect-ratio: 10 / 7; object-fit: cover;
+  filter: saturate(.94);
   transition: transform .6s cubic-bezier(.2,.7,.2,1), filter .4s;
-  filter: saturate(.92);
+  -webkit-mask-image: linear-gradient(180deg, #000 62%, transparent 100%),
+                      linear-gradient(90deg, transparent 0, #000 7%, #000 93%, transparent 100%);
+          mask-image: linear-gradient(180deg, #000 62%, transparent 100%),
+                      linear-gradient(90deg, transparent 0, #000 7%, #000 93%, transparent 100%);
+  -webkit-mask-composite: source-in;
+          mask-composite: intersect;
 }
-.door:hover .door__shot img { transform: scale(1.045); filter: saturate(1.05); }
+.door:hover .door__shot img { transform: scale(1.04); filter: saturate(1.04); }
 
-.door__body { position: relative; padding: var(--sp-5) var(--sp-5) var(--sp-6); }
-
-/* the index sits behind the heading, large and very quiet: it gives each card
-   a landmark without asking to be read */
-.door__n {
-  position: absolute; top: .4rem; right: var(--sp-4);
-  font-family: var(--font-mono);
-  font-size: 3.25rem; font-weight: 700; line-height: 1;
-  color: var(--accent); opacity: .13;
-  pointer-events: none;
-}
+.door__body { position: relative; margin-top: -12%; padding: 0 var(--sp-5) var(--sp-5); }
 
 .door h3 {
   margin: 0;
-  padding-right: 3.5rem;      /* keeps a long section name clear of .door__n */
   font-family: var(--font-display);
-  font-size: clamp(1.35rem, 1.1rem + .8vw, 1.75rem);
+  font-size: clamp(1.25rem, 1.05rem + .6vw, 1.55rem);
   font-weight: 750; letter-spacing: -.02em; line-height: 1.1;
 }
 .door h3 a { color: var(--leaf-900); text-decoration: none; }
 .door h3 a::after {
-  content: " \2192"; display: inline-block;
-  color: var(--accent);
-  transform: translateX(0); transition: transform .3s;
+  content: " \2192"; display: inline-block; color: var(--accent);
+  transition: transform .3s;
 }
 .door:hover h3 a::after { transform: translateX(.28rem); }
 .door h3 a:hover { color: var(--accent); }
 
 .door__hook {
-  margin: var(--sp-3) 0 var(--sp-5);
-  max-width: 46ch;
+  margin: var(--sp-3) 0 var(--sp-4);
+  font-size: var(--text-sm); line-height: 1.55; color: var(--gray-600);
+}
+
+/* ---- the page chips ---- */
+
+.door__pages { display: flex; flex-direction: column; gap: .3rem; margin: 0; padding: 0; list-style: none; }
+.pg {
+  display: flex; align-items: center; gap: .5rem;
+  padding: .32rem .6rem;
+  margin-left: -.6rem;
+  border: 1px solid transparent; border-radius: 999px;
+  font-size: var(--text-xs); line-height: 1.3; color: var(--gray-600);
+  text-decoration: none;
+  transition: color .18s, border-color .18s, background .18s, opacity .2s;
+}
+.pg__i { flex: 0 0 auto; width: 16px; height: 16px; color: var(--accent); opacity: .75; transition: opacity .18s; }
+.pg:hover { color: var(--accent); border-color: color-mix(in srgb, var(--accent) 35%, transparent); background: color-mix(in srgb, var(--accent) 7%, transparent); }
+.pg:hover .pg__i { opacity: 1; }
+
+/* cross-highlighting. `.src` is the page being pointed at; `.lit` is a page it
+   works with, wherever it lives. Everything else steps back. */
+.doors.hot .pg { opacity: .32; }
+.doors.hot .pg.lit, .doors.hot .pg.src { opacity: 1; }
+.doors.hot .pg.src {
+  color: var(--accent);
+  border-color: var(--accent);
+  background: color-mix(in srgb, var(--accent) 10%, transparent);
+}
+.doors.hot .pg.lit {
+  border-color: color-mix(in srgb, currentColor 28%, transparent);
+  background: var(--gray-50);
+}
+.doors.hot .door { border-color: var(--gray-200); box-shadow: none; }
+.doors.hot .door__shot img { filter: saturate(.5) opacity(.55); }
+
+.doors__read {
+  margin: var(--sp-5) 0 0; min-height: 2.75rem;
+  padding: var(--sp-3) var(--sp-4);
+  border-left: 3px solid var(--leaf-500);
+  border-radius: 0 var(--radius-sm) var(--radius-sm) 0;
+  background: var(--white);
   font-size: var(--text-sm); line-height: 1.6; color: var(--gray-600);
 }
+.doors__read b { color: var(--leaf-900); }
 
-.door__pages { display: flex; flex-wrap: wrap; gap: .4rem; margin: 0; padding: 0; list-style: none; }
-.door__pages a {
-  display: inline-block;
-  padding: .3rem .7rem;
-  border: 1px solid var(--gray-200); border-radius: 999px;
-  background: var(--white);
-  font-size: var(--text-xs); color: var(--gray-600); text-decoration: none;
-  transition: border-color .18s, color .18s, background .18s;
+/* ---- the team banner ---- */
+/* Landscape, with the group shot bled into the section background on the left
+   and dissolved out under the text on the right. */
+.door--team { flex-direction: row; align-items: stretch; min-height: 15rem; background: var(--white); }
+.door--team .door__shot { position: absolute; inset: 0; background: none; }
+.door--team .door__shot::after {
+  background: linear-gradient(90deg, rgb(255 255 255 / .12) 0 26%, rgb(255 255 255 / .82) 62%, var(--white) 86%);
 }
-.door__pages a:hover {
-  border-color: var(--accent); color: var(--accent);
-  background: color-mix(in srgb, var(--accent) 7%, transparent);
+.door--team .door__shot img {
+  width: 100%; height: 100%; aspect-ratio: auto; object-fit: cover; object-position: 50% 42%;
+  -webkit-mask-image: linear-gradient(90deg, #000 0 44%, transparent 88%);
+          mask-image: linear-gradient(90deg, #000 0 44%, transparent 88%);
+  -webkit-mask-composite: source-over;
+          mask-composite: add;
 }
-
-/* On the wide card the photograph sits beside the text rather than above it,
-   which keeps the group shot readable instead of cropping it to a strip. */
-@media (min-width: 860px) {
-  .door--wide { grid-template-columns: 1.1fr 1fr; align-items: stretch; }
-  .door--wide .door__shot img { aspect-ratio: auto; height: 100%; min-height: 16rem; }
-  .door--wide .door__body { align-self: center; padding: var(--sp-6); }
+.door--team .door__body {
+  position: relative; z-index: 1;
+  margin: 0 0 0 auto; padding: var(--sp-6);
+  width: min(46%, 30rem);
+  align-self: center;
+}
+.door--team .door__pages { flex-direction: row; flex-wrap: wrap; gap: .35rem; }
+.door--team .pg { margin-left: 0; border-color: var(--gray-200); background: rgb(255 255 255 / .7); }
+@media (max-width: 719px) {
+  .door--team { flex-direction: column; }
+  .door--team .door__shot { position: relative; }
+  .door--team .door__shot img { aspect-ratio: 16 / 9; -webkit-mask-image: none; mask-image: none; }
+  .door--team .door__shot::after { background: linear-gradient(180deg, transparent 40%, var(--white) 100%); }
+  .door--team .door__body { width: auto; margin: -12% 0 0; padding: 0 var(--sp-5) var(--sp-5); }
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .door, .door::before, .door__shot img, .door h3 a::after { transition: none; }
+  .door, .door__shot img, .door h3 a::after, .pg { transition: none; }
   .door:hover { transform: none; }
-  .door::before { transform: scaleX(1); }
   .door:hover .door__shot img { transform: none; }
 }
 

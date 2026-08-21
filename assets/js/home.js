@@ -1,14 +1,15 @@
 /* =============================================================================
    ReLeaf: homepage behaviour
    -----------------------------------------------------------------------------
-   Four independent pieces. Each one checks for the element it drives and stops
+   Five independent pieces. Each one checks for the element it drives and stops
    if it is missing, so removing a section from index.html never breaks the
    rest of the file.
 
      1  reveal      one-shot fade-and-rise for .rise and the pathway
      2  darkact     scroll progress -> CSS custom properties on .stagewrap
      3  parts       the component list <-> the WebGL reactor
-     4  timeline    show the iHP figure only if its artwork exists
+     4  doors       cross-highlighting between related pages in Explore
+     5  timeline    show the iHP figure only if its artwork exists
 
    THE RESTING STATE IS THE FINISHED STATE. Every default in home.css shows the
    final frame, and this file only moves things once it has taken control. With
@@ -83,13 +84,27 @@
         rx.start();
       }
 
-      set("--dark", 1 - ease(span(p, 0.00, 0.10)));
-      set("--sparkOn", ease(span(p, 0.01, 0.07)) * (1 - ease(span(p, 0.34, 0.52))));
-      set("--spark", Math.round(ease(span(p, 0.04, 0.34)) * 100));
-      set("--rxIn", ease(span(p, 0.26, 0.46)));
+      // The act runs in two halves. FIRST the chain from section 2 collapses:
+      // nine dots travel to the centre, the six off-farm steps go out on the
+      // way, the farmer's three arrive and become one light. THEN the reactor
+      // that light belongs to fades up and takes the name.
+      //
+      // The handover is deliberately overlapped, not sequenced: the spark is
+      // already blooming while the last dots are still arriving, so the light
+      // reads as something the chain turned into rather than a new object.
+      set("--chainIn", ease(span(p, 0.01, 0.06)) * (1 - ease(span(p, 0.22, 0.30))));
+      set("--conv", ease(span(p, 0.03, 0.24)));
+      set("--chainGrey", 1 - ease(span(p, 0.10, 0.21)));
+      set("--turn1", ease(span(p, 0.03, 0.09)) * (1 - ease(span(p, 0.17, 0.23))));
+      set("--turn2", ease(span(p, 0.25, 0.31)) * (1 - ease(span(p, 0.42, 0.48))));
 
-      var shift = ease(span(p, 0.54, 0.72));
-      var name = ease(span(p, 0.62, 0.80));
+      set("--dark", 1 - ease(span(p, 0.00, 0.06)));
+      set("--sparkOn", ease(span(p, 0.20, 0.27)) * (1 - ease(span(p, 0.44, 0.58))));
+      set("--spark", Math.round(ease(span(p, 0.22, 0.44)) * 100));
+      set("--rxIn", ease(span(p, 0.38, 0.54)));
+
+      var shift = ease(span(p, 0.60, 0.76));
+      var name = ease(span(p, 0.66, 0.82));
 
       // as the parts section arrives the name steps back and the reactor moves
       // further out of the way, because the list is what the reader is now
@@ -102,11 +117,13 @@
 
       set("--rxShift", shift * (1 + q * 0.35));
       set("--nameIn", name * (1 - q));
-      set("--sloganIn", ease(span(p, 0.80, 0.94)) * (1 - q));
+      set("--sloganIn", ease(span(p, 0.83, 0.95)) * (1 - q));
     }
 
     if (reduced) {
-      // final frame, no runway: light off, reactor centred, name and slogan in
+      // final frame, no runway: chain already collapsed and gone, light off,
+      // reactor centred, name and slogan in
+      set("--chainIn", 0); set("--conv", 1); set("--turn1", 0); set("--turn2", 0);
       set("--dark", 0); set("--sparkOn", 0); set("--rxIn", 1);
       set("--rxShift", 1); set("--nameIn", 1); set("--sloganIn", 1);
       if (rx && !rx.failed) {
@@ -168,7 +185,103 @@
     });
   })();
 
-  /* ═══════════════════════════════════════════════════════ 4  ART SLOTS ══ */
+  /* ═══════════════════════════════════════════════════════════ 4  DOORS ══ */
+  /* Four boxes in a row say nothing about how the pages inside them relate.
+     This puts the relationships back without drawing a diagram: point at any
+     page and the pages it actually works with light up, wherever they live,
+     and the line underneath names them.
+
+     PAGE_LINKS is declared one way and mirrored below, so "hardware works with
+     measurement" automatically means "measurement works with hardware". Add a
+     page here, not in the markup. */
+
+  var PAGE_LINKS = {
+    "description":            ["peptide-design", "hardware", "model", "human-practices", "results"],
+    "engineering":            ["hardware", "results", "milestone", "drylab-notebook"],
+    "contribution":           ["parts", "software"],
+    "results":                ["measurement", "experiments", "engineering"],
+    "experiments":            ["plant", "measurement", "safety-and-security", "notebook", "parts"],
+    "parts":                  ["peptide-design"],
+    "plant":                  ["measurement", "geospatial-analysis"],
+    "measurement":            ["hardware", "model"],
+    "safety-and-security":    ["laws-and-regulations"],
+    "model":                  ["bioreactor-calculations", "software", "hardware"],
+    "hardware":               ["software", "bioreactor-calculations", "drylab-notebook"],
+    "software":               ["ai-responsibility"],
+    "peptide-design":         ["model"],
+    "human-practices":        ["hardware", "plant", "laws-and-regulations", "entrepreneurship",
+                               "education", "geospatial-analysis"],
+    "education":              ["gallery", "data-physicalization"],
+    "entrepreneurship":       ["sustainability"],
+    "sustainability":         ["entrepreneurship"],
+    "data-physicalization":   ["results"],
+    "team":                   ["attributions", "milestone", "gallery"],
+    "milestone":              ["gallery"]
+  };
+
+  (function doors() {
+    var wrap = document.getElementById("doors");
+    var read = document.getElementById("doors-read");
+    if (!wrap) return;
+
+    // mirror the map so every relationship reads both ways
+    var links = {};
+    function add(a, b) {
+      if (a === b) return;
+      (links[a] = links[a] || {})[b] = true;
+      (links[b] = links[b] || {})[a] = true;
+    }
+    Object.keys(PAGE_LINKS).forEach(function (a) {
+      PAGE_LINKS[a].forEach(function (b) { add(a, b); });
+    });
+
+    var chips = wrap.querySelectorAll(".pg");
+    var byPage = {};
+    Array.prototype.forEach.call(chips, function (c) {
+      byPage[c.getAttribute("data-pg")] = c;
+    });
+
+    var resting = read ? read.innerHTML : "";
+
+    function label(slug) {
+      var c = byPage[slug];
+      return c ? c.querySelector("span").textContent : slug;
+    }
+
+    function light(slug) {
+      if (!slug) {
+        wrap.classList.remove("hot");
+        Array.prototype.forEach.call(chips, function (c) {
+          c.classList.remove("lit", "src");
+        });
+        if (read) read.innerHTML = resting;
+        return;
+      }
+      var near = links[slug] || {};
+      wrap.classList.add("hot");
+      Array.prototype.forEach.call(chips, function (c) {
+        var id = c.getAttribute("data-pg");
+        c.classList.toggle("src", id === slug);
+        c.classList.toggle("lit", id !== slug && !!near[id]);
+      });
+      if (read) {
+        var names = Object.keys(near).filter(function (n) { return byPage[n]; }).map(label);
+        read.innerHTML = names.length
+          ? "<b>" + label(slug) + "</b> is read alongside " + names.join(", ") + "."
+          : "<b>" + label(slug) + "</b> stands on its own.";
+      }
+    }
+
+    Array.prototype.forEach.call(chips, function (c) {
+      var id = c.getAttribute("data-pg");
+      c.addEventListener("mouseenter", function () { light(id); });
+      c.addEventListener("focus", function () { light(id); });
+      c.addEventListener("mouseleave", function () { light(null); });
+      c.addEventListener("blur", function () { light(null); });
+    });
+  })();
+
+  /* ═══════════════════════════════════════════════════════ 5  ART SLOTS ══ */
   /* Some figures on this page are waiting on artwork the team has not made
      yet. Each one names the file it wants in data-art. If the file loads, the
      figure shows its picture; if it does not, the figure either stays hidden
