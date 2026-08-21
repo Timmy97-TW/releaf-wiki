@@ -84,27 +84,34 @@
         rx.start();
       }
 
-      // The act runs in two halves. FIRST the chain from section 2 collapses:
-      // nine dots travel to the centre, the six off-farm steps go out on the
-      // way, the farmer's three arrive and become one light. THEN the reactor
-      // that light belongs to fades up and takes the name.
+      // The act runs in one move, not two. The chain arrives on the same white
+      // paper as the section above it and holds there long enough to be read.
+      // Then the paper goes, the labels and the rail go with it, the nine dots
+      // walk to the centre, the six that happen before the farmer is involved
+      // fade out on the way, and the farmer's three land together and become
+      // the light. The reactor that light belongs to comes up after.
       //
-      // The handover is deliberately overlapped, not sequenced: the spark is
-      // already blooming while the last dots are still arriving, so the light
-      // reads as something the chain turned into rather than a new object.
-      set("--chainIn", ease(span(p, 0.01, 0.06)) * (1 - ease(span(p, 0.22, 0.30))));
-      set("--conv", ease(span(p, 0.03, 0.24)));
-      set("--chainGrey", 1 - ease(span(p, 0.10, 0.21)));
-      set("--turn1", ease(span(p, 0.03, 0.09)) * (1 - ease(span(p, 0.17, 0.23))));
-      set("--turn2", ease(span(p, 0.25, 0.31)) * (1 - ease(span(p, 0.42, 0.48))));
+      // The handovers overlap on purpose. The ink starts arriving while the
+      // labels are still fading, and the spark is already blooming while the
+      // last dots land, so nothing in the sequence reads as a new object
+      // appearing. Everything reads as the thing before it, changed.
+      set("--paper", 1 - ease(span(p, 0.06, 0.18)));
+      set("--railText", 1 - ease(span(p, 0.05, 0.14)));
+      set("--railLine", 1 - ease(span(p, 0.07, 0.17)));
 
-      set("--dark", 1 - ease(span(p, 0.00, 0.06)));
-      set("--sparkOn", ease(span(p, 0.20, 0.27)) * (1 - ease(span(p, 0.44, 0.58))));
-      set("--spark", Math.round(ease(span(p, 0.22, 0.44)) * 100));
-      set("--rxIn", ease(span(p, 0.38, 0.54)));
+      set("--chainIn", 1 - ease(span(p, 0.30, 0.38)));
+      set("--conv", ease(span(p, 0.10, 0.30)));
+      set("--chainGrey", 1 - ease(span(p, 0.16, 0.28)));
 
-      var shift = ease(span(p, 0.60, 0.76));
-      var name = ease(span(p, 0.66, 0.82));
+      set("--turn1", ease(span(p, 0.20, 0.26)) * (1 - ease(span(p, 0.32, 0.38))));
+      set("--turn2", ease(span(p, 0.40, 0.46)) * (1 - ease(span(p, 0.56, 0.62))));
+
+      set("--sparkOn", ease(span(p, 0.28, 0.35)) * (1 - ease(span(p, 0.50, 0.62))));
+      set("--spark", Math.round(ease(span(p, 0.30, 0.50)) * 100));
+      set("--rxIn", ease(span(p, 0.48, 0.62)));
+
+      var shift = ease(span(p, 0.66, 0.80));
+      var name = ease(span(p, 0.72, 0.86));
 
       // as the parts section arrives the name steps back and the reactor moves
       // further out of the way, because the list is what the reader is now
@@ -117,14 +124,15 @@
 
       set("--rxShift", shift * (1 + q * 0.35));
       set("--nameIn", name * (1 - q));
-      set("--sloganIn", ease(span(p, 0.83, 0.95)) * (1 - q));
+      set("--sloganIn", ease(span(p, 0.88, 0.97)) * (1 - q));
     }
 
     if (reduced) {
-      // final frame, no runway: chain already collapsed and gone, light off,
-      // reactor centred, name and slogan in
+      // final frame, no runway: paper gone, chain already collapsed and gone,
+      // light off, reactor centred, name and slogan in
+      set("--paper", 0); set("--railText", 0); set("--railLine", 0);
       set("--chainIn", 0); set("--conv", 1); set("--turn1", 0); set("--turn2", 0);
-      set("--dark", 0); set("--sparkOn", 0); set("--rxIn", 1);
+      set("--sparkOn", 0); set("--rxIn", 1);
       set("--rxShift", 1); set("--nameIn", 1); set("--sloganIn", 1);
       if (rx && !rx.failed) {
         var wake = function () {
