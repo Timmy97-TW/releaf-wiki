@@ -369,7 +369,7 @@ h2.band__title {
      inline styles once it takes control; with no JavaScript the reader gets
      the reactor, the name and the slogan, lit and centred. */
   --paper: 0; --spark: 0; --sparkOn: 0;
-  --chainIn: 0; --conv: 1; --chainGrey: 0; --railText: 0; --railLine: 0;
+  --chainIn: 0; --conv: 1; --recentre: 1; --chainGrey: 0; --railText: 0; --railLine: 0;
   --turn1: 0; --turn2: 0;
   --rxIn: 1; --rxShift: 1; --nameIn: 1; --sloganIn: 1;
 }
@@ -466,11 +466,47 @@ h2.band__title {
    the farmer's three land together and become the single green light the
    reactor runs on.
 
-   Convergence is done with the grid rather than measured offsets. With nine
-   equal columns, the centre of column i sits (i - 5) column-widths from the
-   middle, and a column width is exactly 100% of one item, so translating an
-   item by (5 - i) * 100% * --conv walks it to the centre at any screen size.
-   Change the number of steps and the 5 becomes (n + 1) / 2. */
+   Convergence is done with the grid rather than measured offsets. A column
+   width is exactly 100% of one item, so translating item i by (7 - i) * 100%
+   * --conv walks every dot onto column SEVEN at any screen size. Seven is the
+   farmer: the chain does not collapse to an arbitrary middle, it collapses
+   onto the person it was always trying to reach.
+
+   That leaves the merged dot two columns right of centre, so --recentre then
+   slides the whole rail left by 2/9 of its width to put it under the light.
+   Change the number of steps and 2/9 becomes (7 - (n + 1) / 2) / n. */
+
+.chainhead, .chainfoot {
+  position: absolute; left: 0; right: 0;
+  max-width: var(--max); margin: 0 auto;
+  padding: 0 var(--sp-6);
+  opacity: var(--railText, 0);
+  pointer-events: none;
+}
+/* measured off the dot row, not off the stage, so a longer title never pushes
+   the dots away from the point the light appears at */
+.chainhead { bottom: calc(48% + 4.4rem); }
+.chainfoot {
+  top: calc(52% + 5.4rem);
+  font-size: var(--text-lede); line-height: 1.5; color: var(--gray-600);
+}
+/* the measure is capped on the inner span, so the paragraph still starts on
+   the same left edge as the title above it rather than centring itself */
+.chainfoot span { display: block; max-width: 66ch; }
+.chainhead .kicker { margin-bottom: var(--sp-3); }
+.chainhead h2 {
+  margin: 0;
+  font-family: var(--font-display);
+  font-size: clamp(1.4rem, 2.55vw, 2.1rem);
+  font-weight: 700; line-height: 1.15; letter-spacing: -.018em;
+  color: var(--leaf-900);
+  /* one row at desktop: the sentence IS the shape of the argument, and broken
+     over two lines it reads as two claims */
+  white-space: nowrap;
+}
+@media (max-width: 880px) {
+  .chainhead h2 { white-space: normal; }
+}
 
 .chainwrap {
   position: absolute; left: 0; right: 0;
@@ -484,6 +520,7 @@ h2.band__title {
   display: grid; grid-auto-flow: column; grid-auto-columns: 1fr;
   max-width: var(--max); margin: 0 auto; padding: 0;
   list-style: none;
+  transform: translateX(calc(var(--recentre, 0) * -22.222%));
 }
 
 /* the rail, drawn from the first dot's centre to the last */
@@ -501,7 +538,7 @@ h2.band__title {
   padding: 0 var(--sp-2);
   text-align: center;
   color: var(--gray-500);
-  transform: translateX(calc((5 - var(--i)) * var(--conv, 0) * 100%));
+  transform: translateX(calc((7 - var(--i)) * var(--conv, 0) * 100%));
 }
 .chain .step:nth-child(1) { --i: 1; }
 .chain .step:nth-child(2) { --i: 2; }
@@ -539,6 +576,17 @@ h2.band__title {
 .chain .step--farm .step__dot { border-color: var(--sig-green); background: var(--sig-green); }
 .pathway.in .chain .step--farm .step__dot { opacity: 1; }
 
+/* The farmer is the node the whole chain lands on, so it is drawn as a target
+   rather than as one green dot among three: a wider ring, and a halo that the
+   other two do not have. */
+.chain .step--hub .step__dot {
+  width: 1.35rem; height: 1.35rem;
+  border-width: 3px; border-color: var(--leaf-700);
+  background: var(--sig-green);
+  box-shadow: 0 0 0 .35rem rgb(53 224 138 / .18), 0 0 0 .7rem rgb(53 224 138 / .08);
+}
+.chain .step--hub b { font-weight: 750; }
+
 /* icon above the dot, name below. Both belong to the white half of the act and
    are gone before the ink arrives, which is why they never need a light
    colour. */
@@ -570,7 +618,13 @@ h2.band__title {
   .chain .step b { display: none; }
   .chain .step__icon { width: 1.35rem; height: 1.35rem; top: -1.9rem; }
   .chain .step__dot { width: .8rem; height: .8rem; }
+  .chain .step--hub .step__dot {
+    width: 1.05rem; height: 1.05rem; border-width: 2px;
+    box-shadow: 0 0 0 .28rem rgb(53 224 138 / .18);
+  }
   .chain::before { top: .37rem; }
+  .chainhead { bottom: calc(48% + 3.4rem); }
+  .chainfoot { top: calc(52% + 3rem); font-size: var(--text-sm); }
 }
 
 @media (prefers-reduced-motion: reduce) {

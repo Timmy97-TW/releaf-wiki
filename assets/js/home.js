@@ -99,15 +99,18 @@
       set("--railText", 1 - ease(span(p, 0.05, 0.14)));
       set("--railLine", 1 - ease(span(p, 0.07, 0.17)));
 
-      set("--chainIn", 1 - ease(span(p, 0.30, 0.38)));
-      set("--conv", ease(span(p, 0.10, 0.30)));
-      set("--chainGrey", 1 - ease(span(p, 0.16, 0.28)));
+      set("--chainIn", 1 - ease(span(p, 0.38, 0.46)));
+      set("--conv", ease(span(p, 0.10, 0.28)));
+      // the dots land on the farmer first, then that point walks to the middle,
+      // so the collapse reads as arriving somewhere rather than averaging out
+      set("--recentre", ease(span(p, 0.26, 0.38)));
+      set("--chainGrey", 1 - ease(span(p, 0.15, 0.26)));
 
-      set("--turn1", ease(span(p, 0.20, 0.26)) * (1 - ease(span(p, 0.32, 0.38))));
+      set("--turn1", ease(span(p, 0.19, 0.25)) * (1 - ease(span(p, 0.33, 0.39))));
       set("--turn2", ease(span(p, 0.40, 0.46)) * (1 - ease(span(p, 0.56, 0.62))));
 
-      set("--sparkOn", ease(span(p, 0.28, 0.35)) * (1 - ease(span(p, 0.50, 0.62))));
-      set("--spark", Math.round(ease(span(p, 0.30, 0.50)) * 100));
+      set("--sparkOn", ease(span(p, 0.34, 0.42)) * (1 - ease(span(p, 0.54, 0.66))));
+      set("--spark", Math.round(ease(span(p, 0.36, 0.56)) * 100));
       set("--rxIn", ease(span(p, 0.48, 0.62)));
 
       var shift = ease(span(p, 0.66, 0.80));
@@ -131,7 +134,8 @@
       // final frame, no runway: paper gone, chain already collapsed and gone,
       // light off, reactor centred, name and slogan in
       set("--paper", 0); set("--railText", 0); set("--railLine", 0);
-      set("--chainIn", 0); set("--conv", 1); set("--turn1", 0); set("--turn2", 0);
+      set("--chainIn", 0); set("--conv", 1); set("--recentre", 1);
+      set("--turn1", 0); set("--turn2", 0);
       set("--sparkOn", 0); set("--rxIn", 1);
       set("--rxShift", 1); set("--nameIn", 1); set("--sloganIn", 1);
       if (rx && !rx.failed) {
