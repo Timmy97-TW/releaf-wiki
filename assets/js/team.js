@@ -33,20 +33,22 @@
     return "data:image/svg+xml;charset=utf-8," + encodeURIComponent(svg);
   };
 
-  const tagsOf = (m) =>
-    (m.own || []).map((t) => ({ label: t, own: true }))
-      .concat((m.mem || []).map((t) => ({ label: t, own: false })));
+  /* Every task pill is a member pill. Nobody is drawn as the owner of a task:
+     the roster says who worked on what, not who outranks whom. `own` and `mem`
+     are still read so an older roster keeps rendering, but both land in the
+     same place. */
+  const tasksOf = (m) => {
+    const all = (m.tasks || []).concat(m.own || [], m.mem || []);
+    return all.filter((t, i) => all.indexOf(t) === i);
+  };
+  const tagsOf = (m) => tasksOf(m).map((t) => ({ label: t, own: false }));
 
   const metaOf = (m) => [m.grade, m.school].filter(Boolean).join(" · ");
-  const trackOf = (m) => (m.track && m.level) ? m.track + " · " + m.level : "";
 
-  /* On a card the role badge usually names the subteam already, so the track
-     badge drops it and shows the level alone. It only spells the subteam out
-     when the two differ, which is where it carries real information. */
-  const trackShort = (m) => {
-    if (!m.track || !m.level) return "";
-    return (m.role && m.role.indexOf(m.track) === 0) ? m.level : trackOf(m);
-  };
+  /* The subteam, and only the subteam. Major and minor used to ride along
+     here; they are a training record rather than an introduction, so the card
+     no longer carries them. */
+  const trackOf = (m) => m.track || "";
 
   /* colour maths so member pills read as a quiet wash of the owner colour */
   const rgb = (hex) => [1, 3, 5].map((i) => parseInt(hex.slice(i, i + 2), 16));
@@ -68,7 +70,7 @@
     encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="' +
       (ICONS[id] || ICONS["student-members"]) + '"/></svg>') + '")';
 
-  /* Which flavour of role badge: lead / vice / advisor / instructor */
+  /* Which flavour of role badge: advisor / instructor. Students have none. */
   /* ---- where the photographs are -------------------------------------------
      roster.js stores paths relative to the wiki root ("assets/img/members/..").
      The page itself sits one folder down, so read the same data-base the nav
@@ -94,22 +96,14 @@
     if (!tags.length) return null;
     const wrap = el("div", cls || "card__tags");
     tags.forEach((t) => {
+      /* the task's own hue, washed back to a tint so a card full of pills
+         still reads as one person rather than a scoreboard */
       const color = LABELS[t.label] || "#737373";
-      const pill = el("span", "tag " + (t.own ? "tag--own" : "tag--mem"));
-      if (t.own) {
-        /* owner: saturated, filled, with a lead dot */
-        pill.style.backgroundColor = color;
-        const grad = (typeof LABEL_GRADIENTS !== "undefined") && LABEL_GRADIENTS[t.label];
-        if (grad) pill.style.backgroundImage = grad;
-        pill.appendChild(el("i", "tag__dot"));
-        pill.appendChild(document.createTextNode(t.label));
-      } else {
-        /* member: the same hue washed back to a tint */
-        pill.style.backgroundColor = tint(color, 0.16);
-        pill.style.color = shade(color, 0.72);
-        pill.textContent = t.label;
-      }
-      pill.title = t.label + (t.own ? ": task owner" : ": task member");
+      const pill = el("span", "tag tag--mem");
+      pill.style.backgroundColor = tint(color, 0.16);
+      pill.style.color = shade(color, 0.72);
+      pill.textContent = t.label;
+      pill.title = t.label + ": task member";
       wrap.appendChild(pill);
     });
     return wrap;
@@ -152,8 +146,7 @@
     if (m.role || track) {
       const badges = el("div", "card__badges");
       if (m.role) badges.appendChild(el("span", "card__role card__role--" + kind, m.role));
-      if (track) badges.appendChild(
-        el("span", "card__track card__track--" + m.level.toLowerCase(), trackShort(m)));
+      if (track) badges.appendChild(el("span", "card__track card__track--sub", track));
       body.appendChild(badges);
     }
 
