@@ -62,7 +62,7 @@ const SECTIONS = [
         photo: "assets/img/members/abby-kao.jpg", funPhoto: "",
         grade: "Freshman", school: "KCIS", track: "Wet Lab",
         bio: "Hey, I'm Abby! My favourite hobbies are dancing and experiencing different cultures around the world. Honestly, I am still surprised at how I found myself in this iGEM team, but through our hard work, I am very excited for what the future holds for us.",
-        tasks: ["Video", "Lab", "Plant", "Education", "Art"]
+        tasks: ["Video", "Lab", "Plant", "Education", "Art", "Entrepreneurship"]
       },
       {
         name: "Abby Tsai",
