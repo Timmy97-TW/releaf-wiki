@@ -1,5 +1,7 @@
 # ReLeaf wiki
 
+https://timmy97-tw.github.io/releaf-wiki/
+
 The full wiki for **ReLeaf**, a stress-responsive optogenetic bioreactor for
 precision plant protection. GEMS Taiwan, iGEM 2026, Biomanufacturing Village.
 
