@@ -22,12 +22,14 @@ assets/
          page.css         the standard sub-page
          team.css         the members page
          home.css         the homepage
+         big-picture-v2.css  the big-picture figure and map on the homepage
   js/    nav.js           builds the navigation from the data file
          page.js          numbering, contents rail, citations, tabs, lightbox
          team.js          builds the member cards and profiles
+         big-picture-v2.js   the figure's highlighting, the map legend, the dial
   data/  site-nav.js      every page address, in one place
          roster.js        the forty-seven people
-  img/   logo, group shot, members/, home/, tab-icons/
+  img/   logo, group shot, members/, home/, tab-icons/, bigpicture/
   fonts/ inter-variable.ttf
 build/
   pages.py                the section outline of every standard page
