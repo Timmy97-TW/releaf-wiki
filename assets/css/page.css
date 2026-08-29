@@ -290,8 +290,15 @@ h2:hover .anchor, h3:hover .anchor, .anchor:focus-visible { opacity: 1; }
 /* ============================================================= FIGURES ===== */
 
 .fig { margin: var(--sp-6) 0; }
+/* height:auto matters. A width/height pair on the <img> is a presentational
+   hint for BOTH properties: width:100% here overrides the width hint, but the
+   height hint survives and pins the image to its attribute height, which
+   squeezes every landscape photo on the page. With height auto the two
+   attributes go back to doing their real job — holding the aspect ratio and
+   reserving the space before the file arrives.                              */
 .fig img, .fig video, .fig svg {
   width: 100%;
+  height: auto;
   border: 1px solid var(--gray-200);
   border-radius: var(--radius-sm);
   background: var(--gray-50);
@@ -517,46 +524,77 @@ p.scaffold::before {
   margin-bottom: .15rem;
 }
 
-/* ======================================================= HEADER BANNER ===== */
-/* One photograph directly under the header text, so the first thing a reader
-   meets on click-in is the thing the page is about rather than a heading. It
-   sits inside .pagehead so it inherits the band's width and its bottom rule.
-   Wide and short on a desktop, taller on a phone where a 21:9 crop would be a
-   sliver. It is deliberately not a hero: the title stays above it.           */
+/* ========================================================= HEADER HERO ===== */
+/* A full-bleed photograph as the first thing on the page, with the title set
+   into it rather than stacked above it. .pagehead has no max-width of its own,
+   so the hero is already the width of the window — no negative-margin trick,
+   and no gutter for a scrollbar to fight over.
 
-.pagehead__banner {
-  max-width: var(--max);
-  margin: 0 auto;
-  padding: 0 var(--sp-5) var(--sp-7);
+   The scrim is two gradients, not a flat wash: the top of the frame stays a
+   photograph and only the corner the type sits in goes dark. Bottom-left,
+   because on this page's photograph that corner is blackboard. Its stops are
+   in rem rather than per cent, so the dark band is the height of the type
+   block and not a fraction of the picture — on a phone, where the hero is a
+   third of its desktop height, a percentage scrim leaves the eyebrow sitting
+   on bare photograph.                                                       */
+
+.pagehead--hero { background: var(--white); }
+
+.pagehead__hero {
+  position: relative;
+  width: 100%;
+  aspect-ratio: 3 / 2;
+  max-height: 78vh;
+  overflow: hidden;
+  background: var(--leaf-900);
 }
-@media (min-width: 640px) { .pagehead__banner { padding-left: var(--sp-6); padding-right: var(--sp-6); } }
+@media (min-width: 700px)  { .pagehead__hero { aspect-ratio: 16 / 9; } }
+@media (min-width: 1100px) { .pagehead__hero { aspect-ratio: 21 / 9; } }
 
-.pagehead__banner figure { margin: 0; }
-.pagehead__banner img {
+.pagehead__hero picture { display: block; width: 100%; height: 100%; }
+.pagehead__hero img {
   display: block;
   width: 100%;
-  height: auto;
-  aspect-ratio: 16 / 9;
+  height: 100%;
   object-fit: cover;
   object-position: center 72%;
-  border-radius: var(--radius);
-  border: 1px solid var(--leaf-200);
-  box-shadow: var(--shadow-md);
 }
-@media (min-width: 900px) { .pagehead__banner img { aspect-ratio: 21 / 8; } }
 
-.pagehead__banner figcaption {
-  margin-top: var(--sp-3);
-  max-width: 72ch;
+.pagehead__hero::after {
+  content: "";
+  position: absolute; inset: 0;
+  background:
+    linear-gradient(to top,   rgb(6 26 16 / .88) 0, rgb(6 26 16 / .60) 4.5rem, rgb(6 26 16 / .16) 9.5rem, rgb(6 26 16 / 0) 15rem),
+    linear-gradient(to right, rgb(6 26 16 / .50) 0%, rgb(6 26 16 / 0) 44%);
+}
+
+/* the type block tracks the same column the prose below it uses, so the title
+   sits on the left edge of the measure rather than the left edge of the glass */
+.pagehead__heroinner {
+  position: absolute; z-index: 1;
+  left: 0; right: 0; bottom: 0;
+  max-width: var(--max);
+  margin: 0 auto;
+  padding: var(--sp-6) var(--sp-5);
+}
+@media (min-width: 640px) { .pagehead__heroinner { padding: var(--sp-7) var(--sp-6); } }
+
+.pagehead__heroinner .pagehead__eyebrow { margin-bottom: var(--sp-3); color: var(--leaf-200); }
+.pagehead__heroinner .pagehead__eyebrow i { color: rgb(255 255 255 / .45); }
+.pagehead__heroinner .pagehead__title {
+  color: var(--white);
+  text-shadow: 0 1px 2px rgb(6 26 16 / .45), 0 2px 34px rgb(6 26 16 / .55);
+}
+
+/* the credit line for the hero, sitting under it with the lede and the meta */
+.pagehead__herocap {
+  margin: 0 0 var(--sp-5);
+  max-width: 74ch;
   font-size: var(--text-sm);
   line-height: 1.5;
   color: var(--gray-500);
 }
-.pagehead__banner figcaption b { color: var(--leaf-700); font-weight: 650; }
-
-/* the header meta rail sits above the banner, so it needs no bottom padding
-   of its own once a banner follows it */
-.pagehead__inner:has(+ .pagehead__banner) { padding-bottom: var(--sp-5); }
+.pagehead__herocap b { color: var(--leaf-700); font-weight: 650; }
 
 /* ======================================================= TOGGLE LISTS ====== */
 /* A run of <details>. Used where a page has to carry the full record — every
@@ -659,8 +697,22 @@ p.scaffold::before {
 /* Two or three photographs that belong to one moment. They share a caption
    only when the caption would otherwise repeat.                              */
 
-.figs { display: grid; gap: var(--sp-4); margin: var(--sp-6) 0; }
+/* Ratios are left alone. A row of photographs shot at different ratios comes
+   out at different heights, and that is the correct answer: cropping them to
+   a common box to tidy up the grid throws away the sides of the frame.      */
+.figs { display: grid; gap: var(--sp-5); margin: var(--sp-6) 0; align-items: start; }
 @media (min-width: 620px) { .figs--2 { grid-template-columns: 1fr 1fr; } }
 @media (min-width: 620px) { .figs--3 { grid-template-columns: repeat(3, 1fr); } }
 .figs .fig { margin: 0; }
-.figs .fig img { height: auto; aspect-ratio: 4 / 3; object-fit: cover; }
+
+/* Photographs of different ratios end at different heights, so left alone the
+   captions in a row all start on a different line. Subgrid puts every image in
+   one row and every caption in the next, and sits the images on the shared
+   floor between them — the row lines up without a single pixel of crop.     */
+@supports (grid-template-rows: subgrid) {
+  @media (min-width: 620px) {
+    .figs { grid-template-rows: auto auto; }
+    .figs .fig { display: grid; grid-row: span 2; grid-template-rows: subgrid; }
+    .figs .fig img { align-self: end; }
+  }
+}
