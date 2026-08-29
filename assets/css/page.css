@@ -516,3 +516,151 @@ p.scaffold::before {
   text-transform: uppercase; color: var(--gray-400);
   margin-bottom: .15rem;
 }
+
+/* ======================================================= HEADER BANNER ===== */
+/* One photograph directly under the header text, so the first thing a reader
+   meets on click-in is the thing the page is about rather than a heading. It
+   sits inside .pagehead so it inherits the band's width and its bottom rule.
+   Wide and short on a desktop, taller on a phone where a 21:9 crop would be a
+   sliver. It is deliberately not a hero: the title stays above it.           */
+
+.pagehead__banner {
+  max-width: var(--max);
+  margin: 0 auto;
+  padding: 0 var(--sp-5) var(--sp-7);
+}
+@media (min-width: 640px) { .pagehead__banner { padding-left: var(--sp-6); padding-right: var(--sp-6); } }
+
+.pagehead__banner figure { margin: 0; }
+.pagehead__banner img {
+  display: block;
+  width: 100%;
+  height: auto;
+  aspect-ratio: 16 / 9;
+  object-fit: cover;
+  object-position: center 72%;
+  border-radius: var(--radius);
+  border: 1px solid var(--leaf-200);
+  box-shadow: var(--shadow-md);
+}
+@media (min-width: 900px) { .pagehead__banner img { aspect-ratio: 21 / 8; } }
+
+.pagehead__banner figcaption {
+  margin-top: var(--sp-3);
+  max-width: 72ch;
+  font-size: var(--text-sm);
+  line-height: 1.5;
+  color: var(--gray-500);
+}
+.pagehead__banner figcaption b { color: var(--leaf-700); font-weight: 650; }
+
+/* the header meta rail sits above the banner, so it needs no bottom padding
+   of its own once a banner follows it */
+.pagehead__inner:has(+ .pagehead__banner) { padding-bottom: var(--sp-5); }
+
+/* ======================================================= TOGGLE LISTS ====== */
+/* A run of <details>. Used where a page has to carry the full record — every
+   segment of a lesson, every piece of feedback — without making a reader
+   scroll past all of it to reach the argument. The summary line has to say
+   enough that a reader can decide not to open it, so it carries a lead-in
+   after the title. Nothing inside is an h2 or h3: the contents rail is built
+   from those, and it must not point at text behind a closed toggle.          */
+
+.discloses { margin: var(--sp-5) 0; border: 1px solid var(--gray-200); border-radius: var(--radius-sm); overflow: hidden; }
+.discloses > .disclose + .disclose { border-top: 1px solid var(--gray-200); }
+
+.disclose { background: var(--white); }
+/* grid rather than flex so the lead-in always starts under the title rather
+   than wherever the title happens to end */
+.disclose > summary {
+  display: grid;
+  grid-template-columns: .55rem 1fr;
+  column-gap: var(--sp-3);
+  align-items: start;
+  padding: var(--sp-4) var(--sp-4) var(--sp-4) var(--sp-3);
+  cursor: pointer;
+  list-style: none;
+  font-size: var(--text-base);
+  color: var(--leaf-900);
+}
+.disclose > summary::-webkit-details-marker { display: none; }
+.disclose > summary:hover { background: var(--leaf-50); }
+.disclose > summary:focus-visible { outline: 2px solid var(--leaf-500); outline-offset: -2px; }
+
+/* the chevron is drawn, not a glyph, so it rotates cleanly and never shifts
+   the baseline of the text beside it */
+.disclose > summary::before {
+  content: "";
+  grid-column: 1; grid-row: 1;
+  width: .5rem; height: .5rem;
+  margin-top: .42em;
+  border-right: 2px solid var(--leaf-500);
+  border-bottom: 2px solid var(--leaf-500);
+  transform: translateY(-.1rem) rotate(-45deg);
+  transition: transform .16s ease;
+}
+.disclose[open] > summary::before { transform: translateY(.05rem) rotate(45deg); }
+.disclose[open] > summary { background: var(--leaf-50); }
+
+.disclose__title { grid-column: 2; grid-row: 1; font-weight: 650; line-height: 1.35; }
+.disclose__hint  { grid-column: 2; grid-row: 2; margin-top: .2rem; color: var(--gray-500); font-size: var(--text-sm); font-weight: 400; line-height: 1.45; }
+
+.disclose__body { padding: 0 var(--sp-4) var(--sp-5) calc(var(--sp-3) + .55rem + var(--sp-3)); }
+.disclose__body > :first-child { margin-top: 0; }
+.disclose__body > :last-child  { margin-bottom: 0; }
+.disclose__body h4 { margin: var(--sp-4) 0 var(--sp-2); }
+@media (max-width: 560px) { .disclose__body { padding-left: var(--sp-4); } }
+
+/* a single toggle standing on its own rather than in a run */
+.disclose--solo { border: 1px solid var(--gray-200); border-radius: var(--radius-sm); margin: var(--sp-5) 0; }
+
+/* ========================================================== DOWNLOADS ====== */
+/* Best Education is judged on whether somebody else can pick the material up
+   and teach it. So the files get their own object: name, what it is, format
+   and weight, all before the click.                                          */
+
+.dl { list-style: none; margin: var(--sp-5) 0; padding: 0; display: grid; gap: var(--sp-3); }
+.dl li { margin: 0; }
+.dl a {
+  display: flex; align-items: center; gap: var(--sp-4);
+  padding: var(--sp-4);
+  border: 1px solid var(--gray-200);
+  border-radius: var(--radius-sm);
+  background: var(--white);
+  text-decoration: none;
+  color: inherit;
+}
+.dl a:hover { border-color: var(--leaf-500); background: var(--leaf-50); }
+.dl__kind {
+  flex: none;
+  min-width: 3.1rem;
+  padding: .3rem .45rem;
+  border-radius: 3px;
+  background: var(--leaf-100);
+  color: var(--leaf-900);
+  font-family: var(--font-mono);
+  font-size: .6875rem; font-weight: 700; letter-spacing: .06em;
+  text-align: center;
+  text-transform: uppercase;
+}
+.dl__name { display: block; font-weight: 650; color: var(--leaf-900); }
+.dl__meta { display: block; margin-top: .15rem; font-size: var(--text-sm); color: var(--gray-500); }
+
+/* A dense figure — a grid of small multiples, a chart with seven panels — that
+   68ch of column cannot show at a readable size. It grows into the gutter
+   beside the text column, and only once a gutter exists to grow into. The
+   lightbox is still the fallback for the detail.                             */
+
+@media (min-width: 1240px) {
+  .fig--wide { width: min(54rem, calc(100vw - 24rem)); max-width: none; }
+}
+
+/* ========================================================= PHOTO ROWS ====== */
+/* Two or three photographs that belong to one moment. They share a caption
+   only when the caption would otherwise repeat.                              */
+
+.figs { display: grid; gap: var(--sp-4); margin: var(--sp-6) 0; }
+@media (min-width: 620px) { .figs--2 { grid-template-columns: 1fr 1fr; } }
+@media (min-width: 620px) { .figs--3 { grid-template-columns: repeat(3, 1fr); } }
+.figs .fig { margin: 0; }
+.figs .fig img { height: auto; aspect-ratio: 4 / 3; object-fit: cover; }
