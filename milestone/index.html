@@ -10,20 +10,125 @@
   <link rel="stylesheet" href="../assets/css/nav.css" />
   <link rel="stylesheet" href="../assets/css/page.css" />
   <style>
-    /* Page-local. A timeline is the one thing page.css has no component for,
-       and a milestone page is a timeline or it is nothing. The rail is a single
-       line on the .tl; each entry hangs a dot on it. Entries that have not
-       happened yet get a hollow dot, so the reader can see where the record
-       stops without having to read for it. */
-    /* page.css sets `.sec ol { padding-left: 1.4em }`, which outranks a bare
-       `.tl`, so the rail selectors all carry `.sec` to win the cascade rather
-       than to be specific for its own sake. */
+    /* ============================================================ CONTENTS ==
+       This page is a photo essay, so the fifteen-rem contents column in
+       page.css is fifteen rem of pictures nobody gets to see. Above 1040px the
+       rail comes out of the grid and becomes a spine of ticks pinned to the
+       left edge: one tick per section, the current one longer and green.
+       Hovering it — or tabbing into it — slides the labelled panel out over
+       the prose. While the reader is actually scrolling, `.is-peeking` widens
+       it just far enough to name the section they are in, then it folds back.
+       Nothing in here runs below 1040px, where page.css's collapsed
+       <details> is still the right answer.                                  */
+    @media (min-width: 1040px) {
+      .pagewrap { grid-template-columns: minmax(0, 1fr); }
+
+      /* the body keeps a readable measure for prose and hands the rest of the
+         column to the photographs */
+      .pagebody { max-width: 64rem; margin-inline: auto; }
+      .pagebody > .lede,
+      .sec > p, .sec > ul, .sec > h2, .sec > h3,
+      .sec ol.tl > li > p, .sec ol.tl > li > h3,
+      .refs > ol { max-width: var(--measure); }
+
+      .toc {
+        position: fixed;
+        z-index: 40;
+        left: 0;
+        top: calc(var(--nav-h) + var(--sp-6));
+        width: 2.75rem;
+        max-height: calc(100vh - var(--nav-h) - 5rem);
+        overflow: hidden;
+        padding: var(--sp-4) var(--sp-3) var(--sp-4) var(--sp-4);
+        border: 1px solid transparent;
+        border-left: 0;
+        border-radius: 0 var(--radius) var(--radius) 0;
+        background: transparent;
+        /* the rail is pinned below the navigation, which is still over the
+           hero photograph on load; ticks scattered across a photograph read as
+           dirt, so it arms itself once the header has scrolled away */
+        opacity: 0;
+        pointer-events: none;
+        transition: width .22s ease, opacity .2s ease, background-color .22s ease,
+                    border-color .22s ease, box-shadow .22s ease;
+      }
+      .toc.is-armed { opacity: 1; pointer-events: auto; }
+      .toc__title { opacity: 0; transition: opacity .16s ease; white-space: nowrap; }
+      .toc__list { border-left-color: transparent; transition: border-color .22s ease; }
+      .toc__list li { position: relative; }
+      .toc__list a {
+        white-space: nowrap;
+        color: transparent;
+        transition: color .18s ease;
+      }
+      /* the tick: what the reader sees when the panel is folded away */
+      .toc__list a::before {
+        content: "";
+        position: absolute; left: 0; top: 50%; translate: 0 -50%;
+        width: .9rem; height: 2px;
+        background: var(--gray-300);
+        transition: width .18s ease, background-color .18s ease, opacity .18s ease;
+      }
+      .toc__list a.is-active::before { width: 1.5rem; background: var(--leaf-700); }
+      .toc__list a:hover { background: none; }
+
+      /* peeking: the current section names itself for a moment while scrolling.
+         It gets the card behind it that the ticks do not need, because a bleed
+         photograph can reach to within a few rem of the rail, and grey text on
+         a photograph is not text. */
+      .toc.is-armed.is-peeking {
+        width: 14rem;
+        background: var(--white);
+        border-color: var(--gray-200);
+        box-shadow: 0 8px 28px rgb(6 26 16 / .09);
+      }
+      .toc.is-armed.is-peeking .toc__list { border-left-color: var(--gray-200); }
+      .toc.is-armed.is-peeking .toc__list a.is-active { color: var(--leaf-900); }
+
+      /* open: the whole rail, over the prose rather than beside it */
+      .toc:hover, .toc:focus-within {
+        width: 17rem;
+        background: var(--white);
+        border-color: var(--gray-200);
+        box-shadow: 0 12px 44px rgb(6 26 16 / .12);
+      }
+      .toc:hover .toc__title, .toc:focus-within .toc__title { opacity: 1; }
+      .toc:hover .toc__list, .toc:focus-within .toc__list { border-left-color: var(--gray-200); }
+      .toc:hover .toc__list a, .toc:focus-within .toc__list a { color: var(--gray-600); }
+      .toc:hover .toc__list a.is-active,
+      .toc:focus-within .toc__list a.is-active { color: var(--leaf-900); }
+      .toc:hover .toc__list a::before,
+      .toc:focus-within .toc__list a::before { opacity: 0; }
+      .toc:hover .toc__list a:hover,
+      .toc:focus-within .toc__list a:hover { color: var(--leaf-900); background: var(--leaf-50); }
+
+      /* page.css narrows .fig--wide to fit beside a rail that is no longer
+         there; on this page wide means wider than the body, not narrower */
+      .fig--wide { width: auto; max-width: none; }
+    }
+    @media (prefers-reduced-motion: reduce) {
+      .toc, .toc__title, .toc__list, .toc__list a, .toc__list a::before { transition: none; }
+    }
+
+    /* the two or three photographs that carry the year get the whole window */
+    .fig--bleed {
+      width: min(84rem, calc(100vw - 2.5rem));
+      max-width: none;
+      margin-left: 50%;
+      translate: -50% 0;
+    }
+
+    /* ============================================================ TIMELINE ==
+       page.css has no rail component, and a milestone page is a timeline or it
+       is nothing. `.sec ol` there sets its own padding-left, so these
+       selectors carry `.sec` to win the cascade rather than to be specific for
+       its own sake. Entries that have not happened yet get a hollow dot.    */
     .sec ol.tl { list-style: none; margin: var(--sp-6) 0; padding: 0 0 0 2.25rem; position: relative; }
     .sec ol.tl::before {
       content: ""; position: absolute; left: 8px; top: .5rem; bottom: .5rem; width: 2px;
       background: var(--leaf-200);
     }
-    .sec ol.tl > li { position: relative; margin: 0 0 var(--sp-7); }
+    .sec ol.tl > li { position: relative; margin: 0 0 var(--sp-8); }
     .sec ol.tl > li:last-child { margin-bottom: 0; }
     .sec ol.tl > li + li { margin-top: 0; }
     .sec ol.tl > li::before {
@@ -39,16 +144,10 @@
     }
     .tl__title { margin: 0 0 var(--sp-3); font-family: var(--font-display); font-size: var(--text-h3); line-height: 1.25; }
     .sec ol.tl > li > .fig, .sec ol.tl > li > .figs { margin-bottom: 0; }
-
-    /* The glance table is the whole year at once, so it earns the gutter on a
-       wide screen the same way .fig--wide does in page.css. */
-    @media (min-width: 1240px) {
-      .tablewrap--wide { width: min(56rem, calc(100vw - 24rem)); max-width: none; }
-    }
-    .tablewrap--wide table.data td:first-child { white-space: nowrap; }
+    .sec ol.tl > li > .fig--bleed { margin-left: 50%; }
 
     /* Four numbers, read standing up. */
-    .count { display: grid; gap: var(--sp-4); grid-template-columns: repeat(auto-fit, minmax(9rem, 1fr)); margin: var(--sp-6) 0; }
+    .count { display: grid; gap: var(--sp-4); grid-template-columns: repeat(auto-fit, minmax(9rem, 1fr)); margin: var(--sp-6) 0; max-width: var(--measure); }
     .count > div {
       padding: var(--sp-4) var(--sp-5);
       border: 1px solid var(--gray-200); border-radius: var(--radius); background: var(--white);
@@ -58,6 +157,7 @@
       font-weight: 700; color: var(--leaf-900); font-variant-numeric: tabular-nums;
     }
     .count span { display: block; margin-top: var(--sp-2); font-size: var(--text-xs); color: var(--gray-600); line-height: 1.4; }
+    .tablewrap table.data td:first-child { white-space: nowrap; }
   </style>
 </head>
 <body>
@@ -68,10 +168,10 @@
   <header class="pagehead pagehead--hero">
     <div class="pagehead__hero">
       <picture>
-        <source type="image/webp" srcset="../assets/img/milestone/hero-team-1400.webp" />
-        <img src="../assets/img/milestone/hero-team-1400.jpg"
-             alt="The full ReLeaf team, around forty people in dark green team hoodies over cream ReLeaf T-shirts, packed into four rows in their working room and facing the camera."
-             width="1400" height="794" fetchpriority="high" />
+        <source type="image/webp" srcset="../assets/img/milestone/hero-set-1800.webp" />
+        <img src="../assets/img/milestone/hero-set-1800.jpg"
+             alt="The bioreactor rig set up on a green-lit table for the promotion video shoot: a hollow-fibre column on a stand, two culture bottles, a peristaltic pump and a laptop showing a growth curve, in front of a whiteboard reading ReLeaf, Optogenetic, BIOREACTOR, ON-SITE ON-DEMAND and GEMS TAIWAN."
+             width="1800" height="772" fetchpriority="high" />
       </picture>
       <div class="pagehead__heroinner">
         <p class="pagehead__eyebrow">
@@ -82,7 +182,7 @@
     </div>
 
     <div class="pagehead__inner">
-      <p class="pagehead__herocap"><b>19 July 2026, seven months in.</b> Taken in the room where almost every photograph on this page was taken. By this point the bioreactor was reporting live pressure, the light plate was lit, the photometer was wrong by a factor of four, and nobody had told the plants any of it.</p>
+      <p class="pagehead__herocap"><b>8 August 2026, the whole year on one table.</b> Every object here was drawn on that whiteboard first. The rig ran for the camera that afternoon; the growth curve on the laptop is real, and so is the four-fold calibration error it was still carrying.</p>
       <p class="pagehead__lede">Two hundred and sixty days from the first team meeting to the writing of this page. This is the order it happened in &mdash; the decisions, the first results, and the things the February plan did not survive.</p>
       <ul class="pagehead__meta">
         <li><b>Section</b><span>Team</span></li>
@@ -118,7 +218,7 @@
           Several of the best days are missing and two of the worst are not.
         </p>
 
-        <div class="tablewrap tablewrap--wide">
+        <div class="tablewrap">
           <table class="data">
             <thead><tr><th>Date</th><th>Milestone</th><th>Why it mattered</th><th>Documented in</th></tr></thead>
             <tbody>
@@ -131,11 +231,12 @@
               <tr><td>4 Apr 2026</td><td>Verslues lab visit, Academia Sinica</td><td>Vertical plates, and how stress is actually scored</td><td><a href="../plant/">Plants</a></td></tr>
               <tr><td>10&ndash;15 Apr 2026</td><td><b>The pivot</b></td><td>Sensor, chambers, membrane, soil &mdash; ReLeaf as it now stands</td><td><a href="../description/">Description</a></td></tr>
               <tr><td>12 Apr 2026</td><td>First <i>Arabidopsis</i> on agar</td><td>The plant line starts</td><td><a href="../plant/">Plants</a></td></tr>
-              <tr><td>25 Apr 2026</td><td>Hollow-fibre membrane chosen</td><td>Fixed what the bioreactor had to be</td><td><a href="../hardware/">Hardware</a></td></tr>
+              <tr><td>18&ndash;25 Apr 2026</td><td>Hollow-fibre membrane chosen</td><td>Fixed what the bioreactor had to be</td><td><a href="../hardware/">Hardware</a></td></tr>
               <tr><td>16 May 2026</td><td>Farmers' market interviews, Taipei</td><td>First time the idea was said to a farmer</td><td><a href="../human-practices/">Human Practices</a></td></tr>
               <tr><td>27&ndash;28 May 2026</td><td>Light plate and photometer prototypes</td><td>Two instruments we could not buy</td><td><a href="../hardware/">Hardware</a></td></tr>
               <tr><td>6 Jun 2026</td><td>First <i>B. subtilis</i> growth test in the reactor</td><td>The loop held culture without leaking</td><td><a href="../experiments/">Experiments</a></td></tr>
               <tr><td>17 Jun 2026</td><td>Vertical plates racked the wrong way</td><td>Cost a fortnight; changed the protocol</td><td><a href="../notebook/">Notebook</a></td></tr>
+              <tr><td>16&ndash;19 Jun 2026</td><td>The whole system drawn on one whiteboard</td><td>Four teams found out they were building one thing</td><td><a href="../description/">Description</a></td></tr>
               <tr><td>18&ndash;20 Jun 2026</td><td>Bioreactor design reviewed by two professors</td><td>Prototype 1 did not survive it</td><td><a href="../human-practices/">Human Practices</a></td></tr>
               <tr><td>24&ndash;29 Jun 2026</td><td>First classroom trials</td><td>The lesson met students and lost an argument</td><td><a href="../education/">Education</a></td></tr>
               <tr><td>2 Jul 2026</td><td>The team learns git</td><td>This wiki exists because of one afternoon</td><td><a href="../contribution/">Contribution</a></td></tr>
@@ -146,6 +247,7 @@
               <tr><td>19 Jul 2026</td><td>Inline photometer reads live culture &mdash; four-fold high</td><td>A working instrument and a calibration problem</td><td><a href="../measurement/">Measurement</a></td></tr>
               <tr><td>21 Jul 2026</td><td>A day on Farmer Chen's smallholding</td><td>Changed who the device is for</td><td><a href="../human-practices/">Human Practices</a></td></tr>
               <tr><td>23 Jul 2026</td><td>Hydroponic line abandoned</td><td>Soil, from here on</td><td><a href="../plant/">Plants</a></td></tr>
+              <tr><td>30 Jul 2026</td><td>Every failure so far, listed on a board</td><td>The retrospective that set the last month's work</td><td><a href="../engineering/">Engineering</a></td></tr>
               <tr><td>3 Aug 2026</td><td>Reactor, photometer and plants in one incubator</td><td>First time the system was one system</td><td><a href="../results/">Results</a></td></tr>
               <tr><td>6 Aug 2026</td><td><i>B. subtilis</i> WB800 secured, NCHU</td><td>A protease-deficient chassis for secretion</td><td><a href="../parts/">Parts</a></td></tr>
               <tr><td>8&ndash;11 Aug 2026</td><td>Promotion video shot and published</td><td>The argument, in two minutes</td><td><a href="../gallery/">Gallery</a></td></tr>
@@ -204,10 +306,16 @@
               predict the shape of the year fairly well: the hardware line
               started before the biology did, and never stopped being ahead of it.
             </p>
-            <figure class="fig">
-              <img src="../assets/img/milestone/dec13-first-meeting.webp" alt="A long classroom with students seated at wooden benches facing a screen that reads DEC 13, with one person standing at the front presenting." loading="lazy" width="1400" height="1050" />
-              <figcaption><b>The first meeting.</b> Everything on this wiki is downstream of this room. At this point the words <i>Bacillus</i>, <i>optogenetic</i> and <i>bioreactor</i> had not been said in it.</figcaption>
-            </figure>
+            <div class="figs figs--2">
+              <figure class="fig">
+                <img src="../assets/img/milestone/dec13-first-meeting.webp" alt="A long classroom with students seated at wooden benches facing a screen that reads DEC 13, with one person standing at the front presenting." loading="lazy" width="1400" height="1050" />
+                <figcaption><b>The first meeting.</b> Everything on this wiki is downstream of this room. At this point the words <i>Bacillus</i>, <i>optogenetic</i> and <i>bioreactor</i> had not been said in it.</figcaption>
+              </figure>
+              <figure class="fig">
+                <img src="../assets/img/milestone/dec13-arduino.webp" alt="A long room of students at wooden benches on the first day of the season, with a laptop and a wired-up microcontroller board on the nearest desk in the foreground." loading="lazy" width="1500" height="1125" />
+                <figcaption><b>The same afternoon, front bench.</b> A microcontroller wired to a laptop at a meeting that had no project attached to it yet. The <a href="../hardware/">Hardware</a> section is what that turned into.</figcaption>
+              </figure>
+            </div>
           </li>
 
           <li>
@@ -262,33 +370,47 @@
 
         <ol class="tl">
           <li>
-            <p class="tl__date">7&ndash;27 March 2026</p>
-            <h3 class="tl__title" data-no-toc="1">Training, then an organism</h3>
+            <p class="tl__date">7 March 2026</p>
+            <h3 class="tl__title" data-no-toc="1">The lab learns to work</h3>
             <p>
-              Lab training ran through March: sterile technique, gels, plates,
-              the ordinary competence that has to exist before anything
-              interesting can be attempted. It ended on 27 March at Professor
-              Cheng's molecular biochemistry lab at National Taiwan University,
-              where the team learned the plant protocols it had been reading
-              about and left with <i>Arabidopsis</i> seed in a tube. A week later
-              the Verslues lab at Academia Sinica showed us vertical agar plates
-              and how plant stress is actually scored, which is a harder question
-              than it sounds and one we were about to get wrong.
+              Training ran through March: sterile technique, gels, plates, the
+              ordinary competence that has to exist before anything interesting
+              can be attempted. Nobody in the room had held a micropipette in
+              December. The protocols that came out of this stretch are in
+              <a href="../experiments/">Experiments</a>, and the provision that
+              made it safe to run them is in <a href="../safety-and-security/">Safety</a>.
+            </p>
+            <figure class="fig">
+              <img src="../assets/img/milestone/mar07-training.webp" alt="A large teaching room with rows of students at benches with laptops, facing a projected slide of laboratory safety rules." loading="lazy" width="1500" height="1117" />
+              <figcaption><b>Lab training, 7 March.</b> Forty-odd people, one room, and the rules before the reagents.</figcaption>
+            </figure>
+          </li>
+
+          <li>
+            <p class="tl__date">27 March 2026</p>
+            <h3 class="tl__title" data-no-toc="1">An organism</h3>
+            <p>
+              At Professor Cheng's molecular biochemistry lab at National Taiwan
+              University the team learned the plant protocols it had been reading
+              about, and left with <i>Arabidopsis</i> seed in a tube. A week
+              later the Verslues lab at Academia Sinica showed us vertical agar
+              plates and how plant stress is actually scored, which is a harder
+              question than it sounds and one we were about to get wrong.
             </p>
             <div class="figs figs--2">
               <figure class="fig">
-                <img src="../assets/img/milestone/apr25-technique.webp" alt="An instructor in a white lab coat demonstrating a pipetting technique to students crowded around a bench, with a whiteboard of plasmid notes behind." loading="lazy" width="900" height="1200" />
-                <figcaption><b>Technique, handed down.</b> Most of what the wet lab knows arrived this way rather than from a protocol sheet.</figcaption>
+                <img src="../assets/img/milestone/mar27-ntu-plates.webp" alt="Students crowded around a professor at an open growth cabinet in a university lab, one of them photographing an Arabidopsis agar plate he is holding up." loading="lazy" width="1500" height="1125" />
+                <figcaption><b>At the growth cabinet.</b> Agar plates, seedling density, how long a plate can be left. Everything here was written down and is now in <a href="../plant/">Plants</a>.</figcaption>
               </figure>
               <figure class="fig">
                 <img src="../assets/img/milestone/mar27-seeds.webp" alt="A hand holding up a small microcentrifuge tube of Arabidopsis seed inside a lift, with a smiling professor standing behind." loading="lazy" width="900" height="1200" />
-                <figcaption><b>27 March, in the lift on the way out.</b> <i>Arabidopsis thaliana</i> seed, in a tube, in a hand. The plant line in <a href="../plant/">Plants</a> starts here.</figcaption>
+                <figcaption><b>In the lift on the way out.</b> <i>Arabidopsis thaliana</i> seed, in a tube, in a hand. The plant line starts here.</figcaption>
               </figure>
             </div>
           </li>
 
           <li>
-            <p class="tl__date">10&ndash;15 April 2026</p>
+            <p class="tl__date">15 April 2026</p>
             <h3 class="tl__title" data-no-toc="1">The pivot</h3>
             <p>
               April is late to change a project. We changed it anyway. A meeting
@@ -297,10 +419,10 @@
               from two directions: a protectant that is sprayed is a protectant
               that is mostly wasted, and the interesting problem is not what you
               spray but when and where you release it. The diagram below is the
-              result, drawn on 15 April. Stress switches a light on; the light
-              activates one of several chambers of engineered <i>B. subtilis</i>;
-              each chamber releases a different protectant through a selective
-              membrane into the soil.
+              result. Stress switches a light on; the light activates one of
+              several chambers of engineered <i>B. subtilis</i>; each chamber
+              releases a different protectant through a selective membrane into
+              the soil.
             </p>
             <p>
               Everything after this point in the year is that diagram being
@@ -316,6 +438,32 @@
           </li>
 
           <li>
+            <p class="tl__date">18&ndash;25 April 2026</p>
+            <h3 class="tl__title" data-no-toc="1">Drawing the machine</h3>
+            <p>
+              Ten days after the pivot the device had a form. A hollow-fibre
+              membrane cartridge does the one thing the diagram demands and
+              nothing else does cheaply: it holds a dense bacterial culture on
+              one side and lets small molecules cross to the other, without
+              letting the organism itself out. Choosing it fixed the rest &mdash;
+              a recirculation loop, a peristaltic pump, a medium reservoir, and
+              somewhere to put the light. The reasoning is on
+              <a href="../hardware/">Hardware</a> and the volumes are in
+              <a href="../bioreactor-calculations/">Bioreactor Calculations</a>.
+            </p>
+            <div class="figs figs--2">
+              <figure class="fig">
+                <img src="../assets/img/milestone/apr25-membrane-board.webp" alt="A whiteboard sketch of a hollow-fibre membrane cartridge plumbed to a pump and a valve, annotated with soil and hydroponics as two delivery routes, above a second diagram of a tangential-flow arrangement." loading="lazy" width="938" height="1250" />
+                <figcaption><b>The board, 25 April.</b> A cartridge, a pump, a valve, and an argument about whether the output goes to soil or to hydroponics. It went to soil, three months later, for reasons nobody in this photograph knew yet.</figcaption>
+              </figure>
+              <figure class="fig">
+                <img src="../assets/img/milestone/apr25-reactor-render.webp" alt="A rendered diagram of the bioreactor: a peristaltic pump feeding an industrial hollow-fibre membrane cartridge with a labelled lumen and shell side, a heating blanket and PT100 sensor, a red and green LED spore stimulation wrap, and product streams going to a potted plant and to a hydroponics tray." loading="lazy" width="1024" height="559" />
+                <figcaption><b>The same board, tidied.</b> Lumen, shell side, recirculation loop, heating blanket, and the red-and-green LED wrap that later became the light plate. Drawn to explain the idea to people outside the team, which is most of what April was for.</figcaption>
+              </figure>
+            </div>
+          </li>
+
+          <li>
             <p class="tl__date">16 May 2026</p>
             <h3 class="tl__title" data-no-toc="1">Saying it out loud to a farmer</h3>
             <p>
@@ -328,10 +476,16 @@
               runs through <a href="../human-practices/">Human Practices</a> and
               eventually through the hardware.
             </p>
-            <figure class="fig">
-              <img src="../assets/img/milestone/may16-market.webp" alt="Two students with a tablet interviewing a farmer in a cap at his market stall under a red canopy, packets of rice on the counter between them." loading="lazy" width="1400" height="930" />
-              <figcaption><b>The Expo farmers' market.</b> Two students, one tablet, and a stallholder with a queue. Nine minutes of his time, and the first time anyone outside the team had to react to the idea.</figcaption>
-            </figure>
+            <div class="figs figs--2">
+              <figure class="fig">
+                <img src="../assets/img/milestone/may16-market.webp" alt="Two students with a tablet interviewing a farmer in a cap at his market stall under a red canopy, packets of rice on the counter between them." loading="lazy" width="1400" height="930" />
+                <figcaption><b>Stall by stall.</b> Two students, one tablet, and a stallholder with a queue. Nine minutes of his time.</figcaption>
+              </figure>
+              <figure class="fig">
+                <img src="../assets/img/milestone/may16-interview.webp" alt="Three students standing in a market aisle talking with a grower in a wide-brimmed bucket hat, one holding a phone to record notes." loading="lazy" width="1500" height="996" />
+                <figcaption><b>The same morning.</b> Nobody at this market asked what the bacteria were. Everybody asked who would look after the thing.</figcaption>
+              </figure>
+            </div>
           </li>
 
           <li>
@@ -347,10 +501,16 @@
               Neither instrument was any good yet. Both existed, which was the
               milestone.
             </p>
-            <figure class="fig">
-              <img src="../assets/img/milestone/may28-first-light.webp" alt="A student seated at a bench working on a breadboard connected to a laptop, with Arduino source code displayed on a large wall screen behind and a whiteboard of circuit sketches beside it." loading="lazy" width="900" height="1200" />
-              <figcaption><b>First light, 28 May, after school.</b> Breadboard, laptop, and the sketch on the screen behind. The instrument this became is in <a href="../hardware/">Hardware</a>; how far it can be trusted is in <a href="../measurement/">Measurement</a>.</figcaption>
-            </figure>
+            <div class="figs figs--2">
+              <figure class="fig">
+                <img src="../assets/img/milestone/may27-photometer-board.webp" alt="A whiteboard drawing of the photometer optical path in blue marker: an amber LED, a beam splitter, the liquid culture, and a BH1750 sensor, with an orange line tracing the beam." loading="lazy" width="938" height="1250" />
+                <figcaption><b>The optical path, 27 May.</b> Amber LED, beam splitter, culture, BH1750 sensor. The whole instrument is four components and a decision about where to put the lens.</figcaption>
+              </figure>
+              <figure class="fig">
+                <img src="../assets/img/milestone/may28-first-light.webp" alt="A student seated at a bench working on a breadboard connected to a laptop, with Arduino source code displayed on a large wall screen behind and a whiteboard of circuit sketches beside it." loading="lazy" width="900" height="1200" />
+                <figcaption><b>First light, 28 May, after school.</b> Breadboard, laptop, and the sketch on the screen behind. How far the instrument can be trusted is in <a href="../measurement/">Measurement</a>.</figcaption>
+              </figure>
+            </div>
           </li>
         </ol>
       </section>
@@ -367,22 +527,34 @@
           was enough built to fail.
         </p>
 
+        <figure class="fig fig--bleed">
+          <img src="../assets/img/milestone/jul19-team.webp" alt="The full ReLeaf team, around forty people in dark green team hoodies over cream ReLeaf T-shirts, packed into four rows in their working room and facing the camera." loading="lazy" width="1400" height="794" />
+          <figcaption><b>19 July 2026, seven months in.</b> Taken in the room where most of the photographs on this page were taken. By this point the bioreactor was reporting live pressure, the light plate was lit, the photometer was wrong by a factor of four, and nobody had told the plants any of it. The forty-seven people are named on <a href="../team/">Team</a>.</figcaption>
+        </figure>
+
         <ol class="tl">
           <li>
-            <p class="tl__date">6 June 2026</p>
+            <p class="tl__date">6&ndash;10 June 2026</p>
             <h3 class="tl__title" data-no-toc="1">The reactor holds a culture</h3>
             <p>
               The first <i>B. subtilis</i> growth test in the hollow-fibre loop.
               No induction, no protectant, no measurement worth the name &mdash;
               just medium, cells, a peristaltic pump and the question of whether
               the thing leaked. It did not. Sampling from the loop and from a
-              flask in parallel started the following week, which is where the
-              growth curves in <a href="../results/">Results</a> begin.
+              flask in parallel started the same week, and by 10 June there was a
+              curve to argue with: the lumen of the cartridge is not a shake
+              flask, and it does not behave like one.
             </p>
-            <figure class="fig">
-              <img src="../assets/img/milestone/jun06-first-growth.webp" alt="A student in a lab coat with a name written on the collar, sampling from a bottle of yellow Bacillus subtilis culture inside an open incubator, with trays of plants on the shelves above." loading="lazy" width="900" height="1200" />
-              <figcaption><b>First growth test.</b> Yellow culture in a serum bottle, plants two shelves up, one incubator holding both. The full system in <a href="../hardware/">Hardware</a> is this with eight more things attached.</figcaption>
-            </figure>
+            <div class="figs figs--2">
+              <figure class="fig">
+                <img src="../assets/img/milestone/jun06-first-growth.webp" alt="A student in a lab coat with a name written on the collar, sampling from a bottle of yellow Bacillus subtilis culture inside an open incubator, with trays of plants on the shelves above." loading="lazy" width="900" height="1200" />
+                <figcaption><b>First growth test.</b> Yellow culture in a serum bottle, plants two shelves up, one incubator holding both.</figcaption>
+              </figure>
+              <figure class="fig">
+                <img src="../assets/img/milestone/jun10-growth-curve.webp" alt="A plotted growth curve headed B. subtilis 168, all growth conditions overview, with optical density against time for normoxia, hypoxia, bioreactor lumen and sensor conditions." loading="lazy" width="1444" height="1250" />
+                <figcaption><b>Four conditions, one plot.</b> Normoxia against hypoxia against the reactor lumen. The gap between the black line and the red one is the reason <a href="../model/">the model</a> exists.</figcaption>
+              </figure>
+            </div>
           </li>
 
           <li>
@@ -395,12 +567,45 @@
               root-length data becomes a photograph of a mistake. This is that
               photograph. It is on this page rather than buried in the notebook
               because it changed the protocol &mdash; plate orientation is now
-              checked and initialled by a second person, and no run has repeated it.
+              checked and initialled by a second person, and no run has repeated
+              it. The same week cost us a trehalose series to contamination.
             </p>
-            <figure class="fig">
-              <img src="../assets/img/milestone/jun17-wrong-way.webp" alt="A square agar plate photographed from above, with two rows of Arabidopsis seedlings whose roots and shoots run sideways across the plate rather than down it, and a single yellow contaminant colony to the right." loading="lazy" width="1400" height="1050" />
-              <figcaption><b>A fortnight, sideways.</b> The seedlings did exactly what they were asked to. The yellow spot on the right is a second lesson from the same plate.</figcaption>
-            </figure>
+            <div class="figs figs--2">
+              <figure class="fig">
+                <img src="../assets/img/milestone/jun17-wrong-way.webp" alt="A square agar plate photographed from above, with two rows of Arabidopsis seedlings whose roots and shoots run sideways across the plate rather than down it, and a single yellow contaminant colony to the right." loading="lazy" width="1400" height="1050" />
+                <figcaption><b>A fortnight, sideways.</b> The seedlings did exactly what they were asked to. The yellow spot on the right is a second lesson from the same plate.</figcaption>
+              </figure>
+              <figure class="fig">
+                <img src="../assets/img/milestone/jun17-contamination.webp" alt="Two petri dishes side by side labelled 0.125 millimolar trehalose and 0.25 millimolar trehalose, both overgrown with white filamentous fungal contamination around the seedlings." loading="lazy" width="842" height="490" />
+                <figcaption><b>0.125 mM against 0.25 mM.</b> Neither plate answers the question it was set. Both went in the notebook anyway, which is how the sterile-work protocol on <a href="../experiments/">Experiments</a> got its extra step.</figcaption>
+              </figure>
+            </div>
+          </li>
+
+          <li>
+            <p class="tl__date">16&ndash;19 June 2026</p>
+            <h3 class="tl__title" data-no-toc="1">The whole thing, on one whiteboard</h3>
+            <p>
+              Somewhere in the middle of June the project stopped being four
+              teams working on four things. Someone drew the entire system on a
+              board &mdash; reactor, plasmid, promoter, ribosome binding site,
+              secretion, membrane, diffusion, plant &mdash; and it fitted. Not
+              because it was simple, but because by then everybody had enough of
+              it in their head to check somebody else's half. The board was
+              redrawn on the 19th with the team watching, and one member filmed
+              it, which is the closest thing this project has to a design review
+              record.
+            </p>
+            <div class="figs figs--2">
+              <figure class="fig">
+                <img src="../assets/img/milestone/jun19-bigpicture-drawn.webp" alt="A student at a whiteboard headed BIG PICTURE, drawing a coloured diagram of the construct while three teammates watch and one records on a phone." loading="lazy" width="1500" height="844" />
+                <figcaption><b>Being drawn, 19 June.</b> The phone in the foreground is the point: this was recorded, not just discussed.</figcaption>
+              </figure>
+              <figure class="fig">
+                <img src="../assets/img/milestone/jun16-bigpicture-board.webp" alt="A whiteboard covered in a hand-drawn system diagram headed BIG PICTURE, running from a bioreactor and B. subtilis through PCR, promoter, ribosome binding site and secretion, to a hollow-fibre membrane and a plant." loading="lazy" width="1500" height="1125" />
+                <figcaption><b>The board itself.</b> Left to right: reactor, organism, construct, secretion, membrane, diffusion, plant. Every arrow on it is now a section of this wiki.</figcaption>
+              </figure>
+            </div>
           </li>
 
           <li>
@@ -415,10 +620,16 @@
               <a href="../engineering/">Engineering</a> as cycle 2 starts the day
               after this meeting.
             </p>
-            <figure class="fig">
-              <img src="../assets/img/milestone/jun20-prototype-review.webp" alt="A student presenting a slide headed Prototype 1 Design, showing a labelled schematic of a PES hollow fibre membrane, peristaltic pump, sampling valve and medium reservoir, to a professor seated in the foreground." loading="lazy" width="1400" height="933" />
-              <figcaption><b>Prototype 1, defended.</b> Lumen volume, medium volume, pump, valve. Presenting a design to somebody who has built one is the cheapest test available and we did not use it often enough.</figcaption>
-            </figure>
+            <div class="figs figs--2">
+              <figure class="fig">
+                <img src="../assets/img/milestone/jun20-prototype-review.webp" alt="A student presenting a slide headed Prototype 1 Design, showing a labelled schematic of a PES hollow fibre membrane, peristaltic pump, sampling valve and medium reservoir, to a professor seated in the foreground." loading="lazy" width="1400" height="933" />
+                <figcaption><b>Prototype 1, defended.</b> Lumen volume, medium volume, pump, valve. Presenting a design to somebody who has built one is the cheapest test available and we did not use it often enough.</figcaption>
+              </figure>
+              <figure class="fig">
+                <img src="../assets/img/milestone/jun20-prof-group.webp" alt="The whole team posed together with Professor Chen in the middle, in front of a wall screen showing a slide headed Concept: Bioreactor, with breadboard electronics left out on the table in the foreground." loading="lazy" width="1500" height="1000" />
+                <figcaption><b>After the review.</b> The concept slide still on the screen, the electronics that had just been picked apart still on the table. Professor Chen comes back into this timeline on 9 July, at CH Biotech.</figcaption>
+              </figure>
+            </div>
           </li>
 
           <li>
@@ -435,10 +646,16 @@
               trial. <a href="../education/">Education</a> carries all four
               rewrites and the survey data behind them.
             </p>
-            <figure class="fig">
-              <img src="../assets/img/milestone/jun25-first-class.webp" alt="A ReLeaf member standing at the front of a school lab beside a projected slide headed STEP 9, arms open, while students at a black bench watch a beaker of leaf disks under a lamp." loading="lazy" width="1400" height="788" />
-              <figcaption><b>Step nine.</b> Room-temperature water against warm water, one lamp, and a class deciding for itself which beaker is doing more. The comparison is the whole lesson.</figcaption>
-            </figure>
+            <div class="figs figs--2">
+              <figure class="fig">
+                <img src="../assets/img/milestone/jun25-first-class.webp" alt="A ReLeaf member standing at the front of a school lab beside a projected slide headed STEP 9, arms open, while students at a black bench watch a beaker of leaf disks under a lamp." loading="lazy" width="1400" height="788" />
+                <figcaption><b>Step nine.</b> Room-temperature water against warm water, one lamp, and a class deciding for itself which beaker is doing more.</figcaption>
+              </figure>
+              <figure class="fig">
+                <img src="../assets/img/milestone/jun25-cardgame.webp" alt="Primary school children at desks in a classroom playing the card game, one holding a fan of illustrated cards in the foreground, while a team member presents at the board behind." loading="lazy" width="1500" height="1125" />
+                <figcaption><b>The ATCG card game.</b> Pair a sequence with its complement; get stuck with a Joker and you are holding a strand that cannot exist. Base pairing is the one abstract idea in the lesson, so we made it physical.</figcaption>
+              </figure>
+            </div>
           </li>
 
           <li>
@@ -453,64 +670,121 @@
               downstream of that hour &mdash; the handover notes are in
               <a href="../contribution/">Contribution</a>.
             </p>
-            <figure class="fig">
-              <img src="../assets/img/milestone/jul02-git.webp" alt="An advisor standing at a whiteboard with a numbered list about git workflow and forking, teaching five students seated around a table with open laptops, a terminal displayed on the wall screen." loading="lazy" width="1400" height="1003" />
-              <figcaption><b>Four items on a whiteboard.</b> The least glamorous milestone of the year and close to the most load-bearing.</figcaption>
-            </figure>
-          </li>
-
-          <li>
-            <p class="tl__date">7&ndash;9 July 2026</p>
-            <h3 class="tl__title" data-no-toc="1">Two outside institutions, two days apart</h3>
-            <p>
-              On 7 July the GIS group put the project to the creative director of
-              the Berkeley Historical GIS Project, which turned a hunch about
-              Taiwanese smallholdings into the mapping programme now on
-              <a href="../geospatial-analysis/">Geospatial Analysis</a>. On 9 July
-              the team spent a day at CH Biotech (正瀚) &mdash; a wall of the
-              company's own research posters, a regulatory briefing, and a bottle
-              of their commercial plant protectant to take back to the lab. That
-              bottle is why the efficacy work in <a href="../results/">Results</a>
-              has a benchmark instead of a baseline of zero.
-            </p>
-            <figure class="fig">
-              <img src="../assets/img/milestone/jul09-chbiotech.webp" alt="Students in cream ReLeaf T-shirts standing in a corporate showroom facing a lit wall of research posters while a researcher with a microphone explains, rows of white product bottles on a shelf to the right." loading="lazy" width="1400" height="1050" />
-              <figcaption><b>CH Biotech, 9 July.</b> The posters on that wall are the peer-reviewed case for the products on the shelf. Standing between the two is a fair summary of what a protectant has to clear.</figcaption>
-            </figure>
-          </li>
-
-          <li>
-            <p class="tl__date">12&ndash;19 July 2026</p>
-            <h3 class="tl__title" data-no-toc="1">Eight days in which the hardware became instruments</h3>
-            <p>
-              On 12 July a pressure sensor on the reactor reached an Arduino and
-              the laptop drew a live trace &mdash; the first time the rig reported
-              on itself rather than being read by hand. On 17 July the 3D-printed
-              parts arrived and the light plate apparatus was assembled whole for
-              the first time, its wells lit amber and green. On 19 July the inline
-              photometer read a growing culture in real time, and then read it
-              about four times too high against the bench Biodrop.
-            </p>
-            <p>
-              That last one is a milestone in both directions. The instrument
-              worked; the numbers were wrong; the calibration problem it opened is
-              still the largest caveat on <a href="../measurement/">Measurement</a>,
-              and 23 August was spent on it.
-            </p>
-            <div class="figs figs--3">
+            <div class="figs figs--2">
               <figure class="fig">
-                <img src="../assets/img/milestone/jul12-live-data.webp" alt="A lab bench with a peristaltic pump, a hollow fibre column on a stand, an Arduino on a breadboard, and a laptop displaying a live oscillating blue and orange pressure trace." loading="lazy" width="1386" height="1044" />
-                <figcaption><b>12 July.</b> First live pressure trace off the reactor.</figcaption>
+                <img src="../assets/img/milestone/jul02-git.webp" alt="An advisor standing at a whiteboard with a numbered list about git workflow and forking, teaching five students seated around a table with open laptops, a terminal displayed on the wall screen." loading="lazy" width="1400" height="1003" />
+                <figcaption><b>Four items on a whiteboard.</b> The least glamorous milestone of the year and close to the most load-bearing.</figcaption>
+              </figure>
+              <figure class="fig">
+                <img src="../assets/img/milestone/jul02-team-room.webp" alt="The team's main working room seen from the back, three long benches of students with laptops open, working in parallel." loading="lazy" width="1500" height="1125" />
+                <figcaption><b>The room, the same week.</b> Summer holidays. Three benches, one repository, and no more excuses about who had the latest copy.</figcaption>
+              </figure>
+            </div>
+          </li>
+
+          <li>
+            <p class="tl__date">7 July 2026</p>
+            <h3 class="tl__title" data-no-toc="1">A hunch about small farms becomes a map</h3>
+            <p>
+              The GIS group put the project to the creative director of the
+              Berkeley Historical GIS Project, and came away with a method rather
+              than an opinion. The claim we wanted to make &mdash; that Taiwanese
+              agriculture is thousands of small plots rather than a few large
+              ones, and that this changes what a device has to be &mdash; was
+              until that afternoon a thing we believed. The mapping programme on
+              <a href="../geospatial-analysis/">Geospatial Analysis</a> is what
+              turned it into 2.79&nbsp;million parcels and a colour scale.
+            </p>
+            <figure class="fig">
+              <img src="../assets/img/milestone/jul07-berkeley.webp" alt="A student presenting a slide headed Concept: Bioreactor on a wall screen to a listener seated at a table in a meeting room." loading="lazy" width="1500" height="1125" />
+              <figcaption><b>7 July.</b> Explaining a bioreactor to a historical geographer turns out to be a good test of whether the geography in your argument is real.</figcaption>
+            </figure>
+          </li>
+
+          <li>
+            <p class="tl__date">9 July 2026</p>
+            <h3 class="tl__title" data-no-toc="1">A benchmark, in a bottle</h3>
+            <p>
+              A day at CH Biotech (正瀚): a wall of the company's own research
+              posters, a regulatory briefing from someone who files the paperwork
+              for a living, and a bottle of their commercial plant protectant to
+              take back to the lab. That bottle is why the efficacy work in
+              <a href="../results/">Results</a> has a benchmark instead of a
+              baseline of zero, and the regulatory session is the spine of
+              <a href="../laws-and-regulations/">Laws and Regulations</a>.
+            </p>
+            <div class="figs figs--2">
+              <figure class="fig">
+                <img src="../assets/img/milestone/jul09-chbiotech.webp" alt="Students in cream ReLeaf T-shirts standing in a corporate showroom facing a lit wall of research posters while a researcher with a microphone explains, rows of white product bottles on a shelf to the right." loading="lazy" width="1400" height="1050" />
+                <figcaption><b>The poster wall.</b> The papers on that wall are the peer-reviewed case for the products on the shelf. Standing between the two is a fair summary of what a protectant has to clear.</figcaption>
+              </figure>
+              <figure class="fig">
+                <img src="../assets/img/milestone/jul09-bottles.webp" alt="A long dark table in a showroom laid out with a clean row of white plant-protectant product bottles and printed labels in front of each." loading="lazy" width="1500" height="1000" />
+                <figcaption><b>The shelf, laid out.</b> Every one of these is a formulation that got through registration. Ours has to be compared against them, not against nothing.</figcaption>
+              </figure>
+            </div>
+          </li>
+
+          <li>
+            <p class="tl__date">12 July 2026</p>
+            <h3 class="tl__title" data-no-toc="1">The reactor starts reporting on itself</h3>
+            <p>
+              A pressure sensor on the loop reached an Arduino and the laptop drew
+              a live trace. Until this afternoon every number about the reactor
+              came from somebody reading a gauge and writing it down. After it,
+              the rig was an instrument: it logged, it timestamped, and it could
+              be left running overnight without a person in the room. The
+              acquisition code is on <a href="../software/">Software</a>.
+            </p>
+            <figure class="fig">
+              <img src="../assets/img/milestone/jul12-live-data.webp" alt="A lab bench with a peristaltic pump, a hollow fibre column on a stand, an Arduino on a breadboard, and a laptop displaying a live oscillating blue and orange pressure trace." loading="lazy" width="1386" height="1044" />
+              <figcaption><b>First live trace.</b> The sawtooth is the pump. Being able to see the pump in the data is how we later found out when it was not running.</figcaption>
+            </figure>
+          </li>
+
+          <li>
+            <p class="tl__date">17 July 2026</p>
+            <h3 class="tl__title" data-no-toc="1">The light plate, whole</h3>
+            <p>
+              The 3D-printed parts arrived and the light plate apparatus was
+              assembled whole for the first time, its wells lit amber and green.
+              The unglamorous work was the week before it: every LED measured and
+              sorted by intensity, taped out in rows on a table, because an
+              optogenetic induction plate is only as good as its worst well. What
+              the instrument is for is on <a href="../hardware/">Hardware</a>;
+              what it can and cannot claim is on
+              <a href="../measurement/">Measurement</a>.
+            </p>
+            <div class="figs figs--2">
+              <figure class="fig">
+                <img src="../assets/img/milestone/jul09-led-sorting.webp" alt="Individual LEDs taped down in rows across a bench with handwritten labels, beside the black light-plate housing wired up with red and black leads and a breadboard." loading="lazy" width="938" height="1250" />
+                <figcaption><b>Sorting the bulbs, 9 July.</b> Every LED measured and binned by intensity before any of them went into the plate.</figcaption>
               </figure>
               <figure class="fig">
                 <img src="../assets/img/milestone/jul17-lpa.webp" alt="The assembled light plate apparatus: a black 3D-printed base with a white well plate on top, its grid of wells glowing alternately amber and green." loading="lazy" width="900" height="1200" />
-                <figcaption><b>17 July.</b> The light plate, lit, whole, on a floor.</figcaption>
-              </figure>
-              <figure class="fig">
-                <img src="../assets/img/milestone/jul19-photometer.webp" alt="The inline photometer plumbed into the bioreactor loop on a bench, with a laptop beside it showing a rising orange optical density trace." loading="lazy" width="1400" height="1054" />
-                <figcaption><b>19 July.</b> Live culture, read inline, four-fold high.</figcaption>
+                <figcaption><b>17 July.</b> Lit, whole, on a floor. Amber and green because the switch needs two wavelengths to be a switch rather than a lamp.</figcaption>
               </figure>
             </div>
+          </li>
+
+          <li>
+            <p class="tl__date">19 July 2026</p>
+            <h3 class="tl__title" data-no-toc="1">The photometer works, and is wrong</h3>
+            <p>
+              The inline photometer read a growing culture in real time, and then
+              read it about four times too high against the bench Biodrop. This
+              is a milestone in both directions, which is why it is here. The
+              instrument worked: it sat in the loop, it sampled continuously, it
+              produced a curve with the right shape. The numbers on that curve
+              could not be used. Everything on
+              <a href="../measurement/">Measurement</a> that carries a caveat
+              carries it because of this reading, and 23 August was spent chasing
+              it.
+            </p>
+            <figure class="fig">
+              <img src="../assets/img/milestone/jul19-photometer.webp" alt="The inline photometer plumbed into the bioreactor loop on a bench, with a laptop beside it showing a rising orange optical density trace." loading="lazy" width="1400" height="1054" />
+              <figcaption><b>Live culture, read inline.</b> Right shape, wrong scale. A curve you cannot put a number on is a hypothesis, not a measurement.</figcaption>
+            </figure>
           </li>
 
           <li>
@@ -524,14 +798,20 @@
               Taiwanese agriculture is thousands of small plots rather than a few
               large ones; this was the day that stopped being a statistic. A
               device for her farm cannot need mains power, a technician, or a
-              spare hour a day, and the entrepreneurship case in
+              spare hour a day, and the case in
               <a href="../entrepreneurship/">Entrepreneurship</a> is written to
               those limits because of this visit.
             </p>
-            <figure class="fig fig--wide">
-              <img src="../assets/img/milestone/jul21-farmer-chen.webp" alt="A farmer crouching in dry soil with a wicker basket and shears, showing seedlings to two students in ReLeaf T-shirts who are crouched beside her, all three looking down at the ground." loading="lazy" width="1400" height="933" />
-              <figcaption><b>Farmer Chen, 21 July.</b> Her basket, her shears, her soil, and the two people the device would have to be simple enough for. Most of what changed after this visit is in the constraints rather than the design.</figcaption>
-            </figure>
+            <div class="figs figs--2 fig--bleed">
+              <figure class="fig">
+                <img src="../assets/img/milestone/jul21-farmer-chen.webp" alt="A farmer crouching in dry soil with a wicker basket and shears, showing seedlings to two students in ReLeaf T-shirts who are crouched beside her, all three looking down at the ground." loading="lazy" width="1400" height="933" />
+                <figcaption><b>Her basket, her shears, her soil.</b> The two people beside her are who the device would have to be simple enough for.</figcaption>
+              </figure>
+              <figure class="fig">
+                <img src="../assets/img/milestone/jul21-cooking.webp" alt="Farmer Chen at a stove in her kitchen cooking the vegetables just harvested, two students standing beside her watching and laughing." loading="lazy" width="1500" height="1000" />
+                <figcaption><b>And then lunch.</b> Most of what changed after this visit is in the constraints rather than the design.</figcaption>
+              </figure>
+            </div>
           </li>
 
           <li>
@@ -541,52 +821,122 @@
               The hydroponic setup had been running since May and the plants in it
               kept dying in ways the team could not attribute. On 23 July it was
               taken apart and the failures were examined one seedling at a time
-              rather than in aggregate, which is the only way we found the pattern.
-              The decision was to stop: soil, from here on, for every experiment
-              that matters. It cost a whole line of work and it is the reason the
-              plant protocols in <a href="../plant/">Plants</a> are soil-based
-              despite hydroponics being easier to instrument.
+              rather than in aggregate, which is the only way we found the
+              pattern. The decision was to stop: soil, from here on, for every
+              experiment that matters. It cost a whole line of work and it is the
+              reason the protocols in <a href="../plant/">Plants</a> are
+              soil-based despite hydroponics being far easier to instrument.
+            </p>
+            <div class="figs figs--2">
+              <figure class="fig">
+                <img src="../assets/img/milestone/jul23-rosettes.webp" alt="Four small Arabidopsis rosettes lifted out of a hydroponic plate and laid out on a dark bench, two visibly smaller and paler than the others." loading="lazy" width="1500" height="1125" />
+                <figcaption><b>Laid out and compared.</b> Aggregated, the hydroponic failures looked like noise. Side by side on a bench they did not.</figcaption>
+              </figure>
+              <figure class="fig">
+                <img src="../assets/img/milestone/jul23-dead-plants.webp" alt="Three students leaning in closely over a black hydroponic float plate, one using forceps to lift a small failing Arabidopsis seedling out of its well." loading="lazy" width="900" height="1200" />
+                <figcaption><b>One seedling at a time.</b> The slowest possible way to look at a failure, and the only one that worked.</figcaption>
+              </figure>
+            </div>
+          </li>
+
+          <li>
+            <p class="tl__date">30 July 2026</p>
+            <h3 class="tl__title" data-no-toc="1">Everything that had gone wrong, written on a board</h3>
+            <p>
+              A week later the team put the year's failures on a whiteboard in
+              three columns &mdash; agar, hydroponics, soil &mdash; with the
+              problems listed down the right in red: 3D print, troubleshooting,
+              contamination, seeds disappearing, agar disappearing, plant stress,
+              medium renewal. It is the most useful hour of the summer and the
+              least photogenic. Almost every entry on that list has a section
+              somewhere on this wiki; the ones that do not are the ones we ran out
+              of time to solve, and they are named as such in
+              <a href="../engineering/">Engineering</a>.
             </p>
             <figure class="fig">
-              <img src="../assets/img/milestone/jul23-dead-plants.webp" alt="Three students leaning in closely over a black hydroponic float plate, one using forceps to lift a small failing Arabidopsis seedling out of its well." loading="lazy" width="900" height="1200" />
-              <figcaption><b>One seedling at a time.</b> Aggregated, the hydroponic failures looked like noise. Individually they did not.</figcaption>
+              <img src="../assets/img/milestone/jul30-retrospective.webp" alt="Two students writing on a whiteboard divided into columns headed Agar, Hydroponics and Soil, with a red list of problems down the right reading 3D print, troubleshooting, contamination, seed disappear, agar disappear, plant stress and medium renew." loading="lazy" width="1500" height="1125" />
+              <figcaption><b>The retrospective, 30 July.</b> Three growth systems across the top, seven ways things had failed down the side. Nobody enjoys writing this board and every team should.</figcaption>
             </figure>
           </li>
 
           <li>
-            <p class="tl__date">3&ndash;6 August 2026</p>
-            <h3 class="tl__title" data-no-toc="1">One cabinet, one system &mdash; and a chassis</h3>
+            <p class="tl__date">3 August 2026</p>
+            <h3 class="tl__title" data-no-toc="1">One cabinet, one system</h3>
             <p>
-              On 3 August the reactor, the inline photometer, the control
-              electronics and the plants were running in the same incubator at the
-              same time, and the growth curve on the screen was being produced by
-              instruments the team had built. Three days later a visit to National
-              Chung Hsing University ended with a plate of <i>B. subtilis</i>
-              WB800 &mdash; a protease-deficient strain, which is the difference
-              between a secreted protectant that survives in the medium and one
-              that is digested by the organism producing it. The strain work is on
-              <a href="../parts/">Parts</a>.
+              The reactor, the inline photometer, the control electronics and the
+              plants were running in the same incubator at the same time, and the
+              growth curve on the screen was being produced by instruments the
+              team had built. It is the first day the project was one system
+              rather than three, and the first long unattended run &mdash; the
+              thing a school team almost never gets to do, because it requires
+              trusting your own hardware overnight.
+            </p>
+            <div class="figs figs--2">
+              <figure class="fig">
+                <img src="../assets/img/milestone/aug03-incubator.webp" alt="An open incubator cabinet with shelves of clear plant boxes and red-lidded trays above, and the bioreactor, photometer and breadboard electronics running on the bottom shelf." loading="lazy" width="676" height="1200" />
+                <figcaption><b>One cabinet.</b> Plants on the upper shelves, the reactor and photometer on the floor of it, and a single temperature for all of them.</figcaption>
+              </figure>
+              <figure class="fig">
+                <img src="../assets/img/milestone/aug03-growth-screen.webp" alt="A laptop on a dark bench displaying a long optical-density growth curve logged overnight from the inline photometer." loading="lazy" width="1500" height="845" />
+                <figcaption><b>The overnight run.</b> Logged by our own instrument, in our own loop, without anybody in the room. The numbers still needed the August calibration before they meant anything.</figcaption>
+              </figure>
+            </div>
+          </li>
+
+          <li>
+            <p class="tl__date">6 August 2026</p>
+            <h3 class="tl__title" data-no-toc="1">A chassis that will not eat its own product</h3>
+            <p>
+              A visit to National Chung Hsing University ended with a plate of
+              <i>B. subtilis</i> WB800 &mdash; a strain with eight extracellular
+              proteases knocked out. That is the difference between a secreted
+              peptide that survives in the medium and one that is digested by the
+              organism producing it, and it is the single most consequential
+              reagent anybody handed us all year. The strain work is on
+              <a href="../parts/">Parts</a>; the peptide it has to keep intact is
+              on <a href="../peptide-design/">Peptide Design</a>.
+            </p>
+            <div class="figs figs--2">
+              <figure class="fig">
+                <img src="../assets/img/milestone/aug06-wb800.webp" alt="A petri dish photographed from above, hand-labelled in marker B. subtilis WB800 with four numbered quadrants and the date 260806." loading="lazy" width="938" height="1250" />
+                <figcaption><b>Four quadrants and a date.</b> Hand-labelled on the day. This plate is the origin of every WB800 culture in the notebook.</figcaption>
+              </figure>
+              <figure class="fig">
+                <img src="../assets/img/milestone/aug06-nchu-group.webp" alt="The visiting group of students and two professors posed together in a university office lined with framed pictures." loading="lazy" width="1500" height="1125" />
+                <figcaption><b>In the professor's office.</b> Asking for a strain is easy. Being given one, with the protocol and the caveats attached, is what makes the difference.</figcaption>
+              </figure>
+            </div>
+          </li>
+
+          <li>
+            <p class="tl__date">8&ndash;11 August 2026</p>
+            <h3 class="tl__title" data-no-toc="1">The argument, in two minutes</h3>
+            <p>
+              The promotion video was shot over one long day on a set built in the
+              team's own room &mdash; the reactor lit green, the whiteboard behind
+              it carrying the claim in marker, two members in front of the camera
+              and a dozen behind it. It went up on 11 August. Writing two minutes
+              that survive a stranger's attention is a harder edit than writing
+              this page, and it forced a decision the wiki had been avoiding: what
+              is the single sentence this project is for.
             </p>
             <figure class="fig">
-              <img src="../assets/img/milestone/aug03-incubator.webp" alt="An open incubator cabinet with shelves of clear plant boxes and red-lidded trays above, and the bioreactor, photometer and breadboard electronics running on the bottom shelf." loading="lazy" width="676" height="1200" />
-              <figcaption><b>3 August, one cabinet.</b> Plants on the upper shelves, the reactor and photometer on the floor of it, and a single temperature for all of them. The first day the project was one system rather than three.</figcaption>
+              <img src="../assets/img/milestone/aug08-promo-bts.webp" alt="Behind the scenes of the video shoot: the crew and teammates gathered behind a camera in a green-lit room, facing two team members standing at the bioreactor set." loading="lazy" width="1500" height="1125" />
+              <figcaption><b>Behind the camera.</b> The set in the photograph at the top of this page, from the other side. The finished film is in the <a href="../gallery/">Gallery</a>.</figcaption>
             </figure>
           </li>
 
           <li>
-            <p class="tl__date">11&ndash;14 August 2026</p>
-            <h3 class="tl__title" data-no-toc="1">What the alternative costs, and the third classroom</h3>
+            <p class="tl__date">11 August 2026</p>
+            <h3 class="tl__title" data-no-toc="1">What the alternative costs</h3>
             <p>
-              A commercial vertical farm on 11 August answered a question the
-              project has to answer honestly: controlled-environment agriculture
-              already solves crop stress, at a capital cost no smallholder will
-              ever meet. Standing under six storeys of LED-lit lettuce is the
-              clearest possible statement of the gap ReLeaf is aimed at, and the
-              comparison is drawn out on
-              <a href="../sustainability/">Sustainability</a>. Three days later
-              the education programme ran its high school session &mdash; the
-              third age band, the third rewrite, and the first audience old enough
-              to argue back about regulation.
+              A commercial vertical farm answered a question the project has to
+              answer honestly: controlled-environment agriculture already solves
+              crop stress, at a capital cost no smallholder will ever meet.
+              Standing under six storeys of LED-lit lettuce is the clearest
+              possible statement of the gap ReLeaf is aimed at. The comparison,
+              with numbers rather than impressions, is drawn out on
+              <a href="../sustainability/">Sustainability</a>.
             </p>
             <div class="figs figs--2">
               <figure class="fig">
@@ -594,49 +944,106 @@
                 <figcaption><b>The alternative, at scale.</b> It works. It costs more than the farms we are designing for will ever have.</figcaption>
               </figure>
               <figure class="fig">
-                <img src="../assets/img/milestone/aug14-fushing.webp" alt="A high school classroom with students in uniform at desks, several microscopes on a bench in the foreground, and a ReLeaf member presenting a slide headed Synbio and iGEM at the front." loading="lazy" width="1400" height="788" />
-                <figcaption><b>Microscopes out before the slides start.</b> The high school session puts the mechanism first and the argument about it last, which is the order the whole programme was rebuilt into.</figcaption>
+                <img src="../assets/img/milestone/aug11-director.webp" alt="Students clustered around the farm's director in a purple-lit room, asking questions while he gestures towards the growing wall." loading="lazy" width="1500" height="1125" />
+                <figcaption><b>The questions afterwards.</b> Energy per kilogram, labour per rack, and what happens on the day the power fails.</figcaption>
               </figure>
             </div>
           </li>
 
           <li>
-            <p class="tl__date">22&ndash;23 August 2026</p>
-            <h3 class="tl__title" data-no-toc="1">Safety on the record, and the reactor moves house</h3>
+            <p class="tl__date">14 August 2026</p>
+            <h3 class="tl__title" data-no-toc="1">The third classroom</h3>
             <p>
-              On 22 August the lab's safety provision was photographed item by
-              item &mdash; biosafety cabinet, eye wash, fire blanket, spill kit,
-              first aid, signage &mdash; because a safety form that asserts things
-              is worth less than one that shows them. It is filed on
-              <a href="../safety-and-security/">Safety</a>. On 23 August the
-              bioreactor was rebuilt into a computer case: a rigid, ventilated,
-              closable enclosure that can be carried, which is the first time the
-              hardware was designed for somewhere other than the bench it was born
-              on. The same day was spent recalibrating the photometer against the
-              Biodrop with a TiO&#8322; standard, chasing the four-fold error from
-              19 July.
+              The high school session: the third age band, the third rewrite of
+              the lesson, and the first audience old enough to argue back about
+              regulation. The order the programme was rebuilt into is visible in
+              the photograph &mdash; the microscopes are out before the slides
+              start, because mechanism first and argument last is the only
+              sequence that produced a change in the survey data.
             </p>
-            <figure class="fig">
-              <img src="../assets/img/milestone/aug23-case.webp" alt="A student standing at a table using a screwdriver on the frame of an empty black computer tower case, with another student watching from the right." loading="lazy" width="900" height="1200" />
-              <figcaption><b>23 August.</b> A computer case is cheap, rigid, ventilated, and already designed to hold hot electronics next to moving air. The full enclosure argument is in <a href="../hardware/">Hardware</a>.</figcaption>
-            </figure>
+            <div class="figs figs--2">
+              <figure class="fig">
+                <img src="../assets/img/milestone/aug14-fushing.webp" alt="A high school classroom with students in uniform at desks, several microscopes on a bench in the foreground, and a ReLeaf member presenting a slide headed Synbio and iGEM at the front." loading="lazy" width="1400" height="788" />
+                <figcaption><b>Microscopes out before the slides start.</b> Mechanism first, argument last.</figcaption>
+              </figure>
+              <figure class="fig">
+                <img src="../assets/img/milestone/aug14-group.webp" alt="The whole high school class and the visiting ReLeaf team posed together at the front of the classroom at the end of the session." loading="lazy" width="1500" height="844" />
+                <figcaption><b>At the end of it.</b> Every lesson leaves the school with its slides, its plan and its worksheets, so it can be run again without us. The files are on <a href="../education/">Education</a>.</figcaption>
+              </figure>
+            </div>
+          </li>
+
+          <li>
+            <p class="tl__date">22 August 2026</p>
+            <h3 class="tl__title" data-no-toc="1">Safety on the record</h3>
+            <p>
+              The lab's safety provision was photographed item by item &mdash;
+              biosafety cabinet, eye wash, fire blanket, spill kit, first aid,
+              signage &mdash; because a safety form that asserts things is worth
+              less than one that shows them. It is filed on
+              <a href="../safety-and-security/">Safety</a>. The same afternoon
+              produced the ordinary bench photographs that go with it: the point
+              of the record is that the cabinet is in use, not that it exists.
+            </p>
+            <div class="figs figs--2">
+              <figure class="fig">
+                <img src="../assets/img/milestone/aug22-bsc.webp" alt="A class two biological safety cabinet with the sash raised, a rack of tubes and a spray bottle inside, and a biohazard sign on the upper right corner." loading="lazy" width="1151" height="1250" />
+                <figcaption><b>The cabinet.</b> Sash up, tube rack and disinfectant inside, biohazard label in the corner. A photograph of the thing in use is worth more on a safety form than a sentence saying we own one.</figcaption>
+              </figure>
+              <figure class="fig">
+                <img src="../assets/img/milestone/aug22-mastermix.webp" alt="Two students in lab coats and gloves at a bench, one pipetting master mix into a strip of tubes while the other holds the rack steady." loading="lazy" width="1500" height="1000" />
+                <figcaption><b>Master mix, the same afternoon.</b> Gloves, coats, tubes on ice, and two people rather than one, which is the actual safety measure.</figcaption>
+              </figure>
+            </div>
+          </li>
+
+          <li>
+            <p class="tl__date">23 August 2026</p>
+            <h3 class="tl__title" data-no-toc="1">The reactor moves house, and the photometer is put on trial</h3>
+            <p>
+              The bioreactor was rebuilt into a computer case: rigid, ventilated,
+              closable, and carryable &mdash; the first time the hardware was
+              designed for somewhere other than the bench it was born on. The same
+              day was spent recalibrating the photometer against the Biodrop with
+              a TiO&#8322; standard, chasing the four-fold error from 19 July. The
+              standard was chosen because it scatters rather than absorbs, which
+              is what a bacterial suspension does; whether that closed the gap is
+              stated, with the residual, on
+              <a href="../measurement/">Measurement</a>.
+            </p>
+            <div class="figs figs--2">
+              <figure class="fig">
+                <img src="../assets/img/milestone/aug23-case.webp" alt="A student standing at a table using a screwdriver on the frame of an empty black computer tower case, with another student watching from the right." loading="lazy" width="900" height="1200" />
+                <figcaption><b>A computer case.</b> Cheap, rigid, ventilated, and already designed to hold hot electronics next to moving air.</figcaption>
+              </figure>
+              <figure class="fig">
+                <img src="../assets/img/milestone/aug23-calibration.webp" alt="A student in a lab coat and gloves running a photometer calibration at a bench with a laptop and the sensor rig, while an instructor in a lab coat sits alongside watching." loading="lazy" width="1500" height="1117" />
+                <figcaption><b>Against the Biodrop.</b> Our instrument, the reference, and a titanium dioxide standard between them, with somebody sitting there whose job was to disbelieve the result. This is what closing out a caveat looks like.</figcaption>
+              </figure>
+            </div>
           </li>
 
           <li>
             <p class="tl__date">29 August 2026</p>
             <h3 class="tl__title" data-no-toc="1">Saying it out loud, again</h3>
             <p>
-              Booth material and presentation rehearsals began on 29 August, nine
-              weeks out. The first rehearsals were in Chinese, in front of the
-              team's own poster, to an audience of one. Explaining the project to
-              somebody standing in front of you finds the holes in it faster than
-              rereading the wiki does, which is the same lesson as 27 December
-              2025 and 20 June 2026, learned for the third time.
+              Booth material and presentation rehearsals began nine weeks out. The
+              first run-throughs were in Chinese, in front of the team's own
+              poster, to an audience of one. Explaining the project to somebody
+              standing in front of you finds the holes in it faster than rereading
+              the wiki does, which is the same lesson as 27 December 2025 and 20
+              June 2026, learned for the third time.
             </p>
-            <figure class="fig">
-              <img src="../assets/img/milestone/aug29-booth.webp" alt="A student mid-sentence explaining a Chinese-language ReLeaf poster to a listener in the foreground; the poster shows the field device among crop rows and a diagram of sensing, production and protection." loading="lazy" width="1362" height="1200" />
-              <figcaption><b>Rehearsal, 29 August.</b> 偵測、生產、保護 &mdash; sense, produce, protect. Nine weeks to make that survive a question from someone who does this for a living.</figcaption>
-            </figure>
+            <div class="figs figs--2">
+              <figure class="fig">
+                <img src="../assets/img/milestone/aug29-booth.webp" alt="A student mid-sentence explaining a Chinese-language ReLeaf poster to a listener in the foreground; the poster shows the field device among crop rows and a diagram of sensing, production and protection." loading="lazy" width="1362" height="1200" />
+                <figcaption><b>偵測、生產、保護</b> &mdash; sense, produce, protect. Nine weeks to make that survive a question from someone who does this for a living.</figcaption>
+              </figure>
+              <figure class="fig">
+                <img src="../assets/img/milestone/aug29-presentation.webp" alt="A team member rehearsing in front of a wall screen showing a slide headed 我們的產品, our products, with phone interface mockups, while a seated listener takes notes." loading="lazy" width="1500" height="844" />
+                <figcaption><b>The product slide, first rehearsal.</b> The farmer-facing interface prototyped in July, presented to somebody whose job for the afternoon was to interrupt.</figcaption>
+              </figure>
+            </div>
           </li>
         </ol>
       </section>
@@ -793,5 +1200,36 @@
   <script src="../assets/data/site-nav.js"></script>
   <script src="../assets/js/nav.js"></script>
   <script src="../assets/js/page.js"></script>
+  <script>
+    /* The contents rail is folded down to a spine of ticks on this page; hover
+       and keyboard focus open it, and both are handled in the stylesheet. This
+       adds the third case the CSS cannot see: while the reader is actually
+       scrolling, widen the rail just far enough to name the section they are
+       in, then fold it back. `:hover` is declared after `.is-peeking` and wins
+       the tie, so reaching for the rail mid-scroll still opens it fully.     */
+    (function () {
+      var toc = document.querySelector(".toc");
+      if (!toc || !window.matchMedia) return;
+      if (!window.matchMedia("(min-width: 1040px)").matches) return;
+      if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+      /* arm the rail only once the header has gone past, so the ticks never
+         sit on top of the hero photograph */
+      var head = document.querySelector(".pagehead");
+      if (head && "IntersectionObserver" in window) {
+        new IntersectionObserver(function (entries) {
+          toc.classList.toggle("is-armed", !entries[0].isIntersecting);
+        }, { rootMargin: "-96px 0px 0px 0px", threshold: 0 }).observe(head);
+      } else {
+        toc.classList.add("is-armed");
+      }
+
+      var t;
+      window.addEventListener("scroll", function () {
+        toc.classList.add("is-peeking");
+        clearTimeout(t);
+        t = setTimeout(function () { toc.classList.remove("is-peeking"); }, 900);
+      }, { passive: true });
+    })();
+  </script>
 </body>
 </html>
