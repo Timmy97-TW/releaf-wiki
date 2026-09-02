@@ -597,6 +597,32 @@ PAGES = [
  ]},
 
 {
+ # This page is written by hand: it carries the map of the nine runs and the
+ # nine report files themselves. The entry is here so the outline, the prev/next
+ # links and site-nav.js stay in step. generate.py will not touch the file --
+ # its generated marker is long gone.
+ "slug": "md-simulations", "tab": "drylab", "title": "MD Simulations",
+ "lede": "Nine trajectories of BoPep4 on its receptor, read together rather "
+         "than one at a time.",
+ "owner": "Dry lab, molecular modelling",
+ "award": None,
+ "sections": [
+   {"h": "The nine runs, mapped",
+    "note": "The map, then the index of the nine reports underneath it."},
+   {"h": "What was actually varied",
+    "note": "The design matrix: ligand, residue range, C-terminal chemistry, "
+            "protonation."},
+   {"h": "What the set says that no single run does",
+    "note": "Score against chemistry, the invariant core, the apo noise floor, "
+            "and the protonation result."},
+   {"h": "How the runs were done",
+    "note": "Force field, water, time step, hardware, and what the pH label "
+            "actually names."},
+   {"h": "What these runs cannot tell you",
+    "note": "Timescale, one seed per system, and nothing checked at the bench."},
+ ]},
+
+{
  "slug": "drylab-notebook", "tab": "drylab", "title": "Dry Lab Notebook",
  "lede": "The computational and hardware record in order, month by month.",
  "owner": "Dry lab",

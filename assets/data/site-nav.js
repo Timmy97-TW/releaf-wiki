@@ -73,6 +73,8 @@ const NAV = [
         caption: "Control code, analysis and tooling." },
       { title: "Peptide Design",          slug: "peptide-design",          icon: "peptide",
         caption: "Choosing and refining the protectant sequence." },
+      { title: "MD Simulations",          slug: "md-simulations",          icon: "md",
+        caption: "Nine trajectories of BoPep4 on its receptor, read together." },
       { title: "Dry Lab Notebook",        slug: "drylab-notebook",         icon: "notebook",
         caption: "The computational record, week by week." }
     ]

@@ -1,0 +1,603 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>MD Simulations | ReLeaf &middot; iGEM 2026</title>
+  <meta name="description" content="Nine 30 ns all-atom trajectories of the BoPep4 peptide on the PEPR1 ectodomain, laid out as one map: what was varied, what the set says that no single run can, and where each full report lives." />
+  <link rel="icon" href="../assets/img/logo.png" />
+  <link rel="stylesheet" href="../assets/css/tokens.css" />
+  <link rel="stylesheet" href="../assets/css/nav.css" />
+  <link rel="stylesheet" href="../assets/css/page.css" />
+  <style>
+    /* -----------------------------------------------------------------------
+       Page-local. Two things page.css has no reason to know about: the
+       language pill, and the map of the nine runs.
+       -------------------------------------------------------------------- */
+
+    /* The wiki's stack has no CJK face in it, because until this page nothing on
+       the wiki was bilingual. Name the Traditional Chinese faces so the 中文 side
+       is not left to whatever the browser picks. */
+    body {
+      font-family: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI",
+        "PingFang TC", "Microsoft JhengHei", "Noto Sans TC", sans-serif;
+    }
+
+    /* ---- language pill ---- */
+    .langbar { display: flex; justify-content: flex-end; margin-bottom: calc(var(--sp-3) * -1); }
+    .langbtn {
+      font: inherit; font-size: var(--text-xs); font-weight: 650; line-height: 1;
+      padding: .55em 1.1em; cursor: pointer;
+      color: var(--leaf-900); background: var(--leaf-50);
+      border: 1px solid var(--leaf-200); border-radius: 999px;
+    }
+    .langbtn:hover { background: var(--leaf-100); }
+    .langbtn:focus-visible { outline: 2px solid var(--leaf-700); outline-offset: 2px; }
+
+    /* ---- the data figures ---- */
+    .dfig { margin: var(--sp-6) 0; }
+    @media (min-width: 1240px) { .dfig { width: min(64rem, calc(100vw - 30rem)); max-width: none; } }
+    .dfig__t {
+      font-size: var(--text-sm); font-weight: 700; color: var(--leaf-900);
+      margin-bottom: var(--sp-3);
+    }
+    .dfig__svg {
+      display: block; width: 100%; height: auto; font-family: var(--font-body);
+      background: var(--white); border: 1px solid var(--gray-200);
+      border-radius: var(--radius-sm); padding: var(--sp-3) 0;
+    }
+    .dfig__c { margin: var(--sp-3) 0 0; font-size: var(--text-xs); color: var(--gray-500); line-height: 1.65; max-width: 84ch; }
+
+    .dfig-ax { fill: var(--gray-500); font-size: 10px; }
+    .dfig-row { fill: var(--gray-700); font-size: 11px; font-weight: 650; }
+    .dfig-note { fill: var(--gray-600); font-family: var(--font-mono); font-size: 9.5px; font-weight: 650; }
+    .dfig-note.is-dim { fill: var(--gray-400); font-weight: 500; }
+    .dfig-band { fill: var(--leaf-50); }
+    .dfig-cut { stroke: var(--gray-400); stroke-width: 1; stroke-dasharray: 3 3; }
+    .dfig-trace { fill: none; stroke: var(--leaf-700); stroke-width: 1.1; stroke-linejoin: round; }
+    .dfig-trace.is-warn { stroke: var(--amber-700); }
+    .dfig-trace.is-bad { stroke: var(--rust-700); }
+    .dfig-tick, .dfig-axis { stroke: var(--gray-400); stroke-width: 1; }
+    .dfig-grid { stroke: var(--gray-200); stroke-width: 1; }
+    .dfig-cell { fill: var(--leaf-700); rx: 1.5; }
+    .dfig-cell.is-tag { fill: var(--rust-700); }
+    .dfig-seq { fill: var(--gray-400); font-family: var(--font-mono); font-size: 8.5px; }
+    .dfig-seq.is-tag { fill: var(--rust-700); opacity: .75; }
+    .dfig-pt { fill: var(--gray-500); stroke: var(--white); stroke-width: 1.4; }
+    .dfig-pt.is-good { fill: var(--leaf-500); }
+    .dfig-pt.is-warn { fill: var(--amber-700); }
+    .dfig-pt.is-bad { fill: var(--rust-700); }
+    .dfig-ptlab { fill: var(--gray-600); font-size: 10px; font-weight: 600; }
+    .dfig-span { fill: var(--leaf-100); }
+    .dfig-apo { stroke: var(--leaf-900); stroke-width: 2; }
+    .dfig-apolab { fill: var(--leaf-900); font-size: 10.5px; font-weight: 700; }
+    .dfig-spanlab { fill: var(--gray-600); font-size: 10px; font-weight: 600; }
+
+    /* ---- the landing pair: two real frames, one camera ---- */
+    .hero { margin: 0 0 var(--sp-7); }
+    @media (min-width: 1240px) { .hero { width: min(64rem, calc(100vw - 30rem)); max-width: none; } }
+    .hero__pair { display: grid; gap: var(--sp-4); grid-template-columns: minmax(0, 1fr); }
+    @media (min-width: 620px) { .hero__pair { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+    .hero__panel {
+      margin: 0; border: 1px solid var(--gray-200); border-radius: var(--radius);
+      background: var(--leaf-50); overflow: hidden;
+    }
+    .hero__panel svg { display: block; width: 100%; height: auto; font-family: var(--font-body); }
+    .hero__panel figcaption {
+      display: grid; gap: var(--sp-1);
+      padding: var(--sp-4); border-top: 1px solid var(--gray-200); background: var(--white);
+    }
+    .hero__name { font-size: var(--text-base); font-weight: 700; color: var(--leaf-900); }
+    .hero__bident {
+      justify-self: start; font-size: var(--text-xs); font-weight: 700;
+      letter-spacing: .04em; padding: .25em .7em; border-radius: 999px;
+      background: var(--gray-100); color: var(--gray-700);
+    }
+    .hero__bident.is-good { background: var(--leaf-100); color: var(--leaf-900); }
+    .hero__bident.is-bad  { background: var(--rust-100);  color: var(--rust-700); }
+    .hero__end { font-size: var(--text-sm); color: var(--gray-700); line-height: 1.55; }
+    .hero__frame { font-size: var(--text-xs); color: var(--gray-500); font-variant-numeric: tabular-nums; }
+    .hero__cap { margin: var(--sp-3) 0 0; font-size: var(--text-xs); color: var(--gray-500); line-height: 1.6; }
+
+    .hero-rec { fill: none; stroke: var(--leaf-700); stroke-width: 1.4; stroke-linejoin: round; }
+    .hero-halo { fill: none; stroke: var(--leaf-50); stroke-width: 6; stroke-linejoin: round; stroke-linecap: round; }
+    .hero-pep { fill: none; stroke: var(--leaf-900); stroke-width: 2.6; stroke-linejoin: round; stroke-linecap: round; }
+    .hero-pep.is-tag { stroke: var(--rust-700); stroke-width: 2.2; stroke-dasharray: 5 3; }
+    .hero-bond { stroke: var(--amber-700); stroke-width: 1.8; stroke-linecap: round; }
+    .hero-arg { fill: var(--slate-700); opacity: .55; }
+    .hero-oxy { fill: var(--rust-700); stroke: var(--white); stroke-width: 1; }
+    .hero-lab { fill: var(--gray-700); font-size: 10px; font-weight: 700; }
+    .hero-atom { fill: var(--rust-700); font-family: var(--font-mono); font-size: 9px; font-weight: 650; }
+    .hero-tag { fill: var(--rust-700); font-size: 9.5px; font-weight: 700; letter-spacing: .04em; }
+    .hero-d {
+      fill: var(--amber-700); font-family: var(--font-mono); font-size: 10px; font-weight: 700;
+    }
+
+    /* ---- the map ---- */
+    .map {
+      margin: var(--sp-6) 0;
+      border: 1px solid var(--gray-200); border-radius: var(--radius);
+      background: var(--leaf-50); overflow: hidden;
+    }
+    /* Same bargain .fig--wide strikes in page.css, one size up: a radial map of
+       nine labelled nodes at 68ch is a diagram of nothing. Once there is a
+       gutter, the map takes it. */
+    @media (min-width: 1240px) {
+      .map, .tablewrap--wide { width: min(64rem, calc(100vw - 30rem)); max-width: none; }
+    }
+
+    .map__stage { overflow-x: auto; }
+    .map__swipe {
+      display: none; margin: 0; padding: 0 var(--sp-5) var(--sp-3);
+      font-size: var(--text-xs); color: var(--gray-500);
+    }
+    @media (max-width: 760px) { .map__swipe { display: block; } }
+    .map__svg { display: block; width: 100%; min-width: 44rem; height: auto; font-family: var(--font-body); }
+
+    .map__panel {
+      border-top: 1px solid var(--gray-200); background: var(--white);
+      padding: var(--sp-5); font-size: var(--text-sm); min-width: 0;
+      display: grid; gap: var(--sp-3) var(--sp-6); grid-template-columns: minmax(0, 1fr);
+    }
+    @media (min-width: 860px) { .map__panel.is-run { grid-template-columns: minmax(0, 1fr) 19rem; } }
+    .map__panel > .map__full { grid-column: 1 / -1; }
+    .map__panel h3 { margin: 0 0 var(--sp-2); font-size: var(--text-base); color: var(--leaf-900); line-height: 1.3; }
+    .map__panel p { margin: 0 0 var(--sp-3); color: var(--gray-700); line-height: 1.6; }
+    .map__panel p:last-child { margin-bottom: 0; }
+    .map__limbs { display: grid; gap: var(--sp-4); grid-template-columns: repeat(auto-fit, minmax(13rem, 1fr)); }
+    .map__limbs h4 { margin: 0 0 var(--sp-1); font-size: var(--text-sm); color: var(--leaf-900); }
+    .map__hint { font-size: var(--text-xs); color: var(--gray-500); }
+
+    .map__seq {
+      font-family: var(--font-mono); font-size: var(--text-xs); line-height: 1.5;
+      word-break: break-all; color: var(--gray-600);
+      background: var(--gray-50); border: 1px solid var(--gray-200);
+      border-radius: var(--radius-sm); padding: var(--sp-2) var(--sp-3);
+      margin: 0 0 var(--sp-3);
+    }
+    .map__role {
+      display: inline-block; font-size: var(--text-xs); font-weight: 700;
+      letter-spacing: .06em; text-transform: uppercase;
+      padding: .3em .75em; border-radius: 999px; margin-bottom: var(--sp-3);
+      background: var(--gray-100); color: var(--gray-700);
+    }
+    .map__role.is-good { background: var(--leaf-100); color: var(--leaf-900); }
+    .map__role.is-warn { background: var(--amber-100); color: var(--amber-700); }
+    .map__role.is-bad  { background: var(--rust-100);  color: var(--rust-700); }
+
+    .map__stats { list-style: none; margin: 0 0 var(--sp-4); padding: 0; }
+    .map__stats li {
+      display: flex; justify-content: space-between; align-items: baseline; gap: var(--sp-3);
+      padding: .45em 0; border-bottom: 1px solid var(--gray-200);
+    }
+    .map__stats li:last-child { border-bottom: 0; }
+    .map__stats b { font-weight: 500; color: var(--gray-600); font-size: var(--text-xs); }
+    .map__stats span { font-family: var(--font-mono); font-weight: 650; font-size: var(--text-sm); color: var(--black); }
+    .map__stats span.is-flag { color: var(--rust-700); }
+
+    .map__open {
+      display: inline-block; font-weight: 650; font-size: var(--text-sm);
+      color: var(--leaf-700); text-decoration: none;
+      border-bottom: 2px solid var(--leaf-200); padding-bottom: 1px;
+    }
+    .map__open:hover { border-bottom-color: var(--leaf-700); }
+    .map__back {
+      font: inherit; font-size: var(--text-xs); font-weight: 600; cursor: pointer;
+      color: var(--gray-600); background: none; border: 0; padding: 0 0 var(--sp-3);
+    }
+    .map__back:hover { color: var(--leaf-700); }
+
+    .map__legend {
+      padding: var(--sp-3) var(--sp-5); border-top: 1px solid var(--gray-200);
+      background: var(--white); font-size: var(--text-xs); color: var(--gray-600);
+    }
+    .map__legendrow { display: flex; flex-wrap: wrap; gap: var(--sp-2) var(--sp-4); }
+    .map__legendnote { margin: var(--sp-2) 0 0; color: var(--gray-500); line-height: 1.6; max-width: 84ch; }
+    .map__legend span { display: inline-flex; align-items: center; gap: .5em; }
+    .map__legend i { width: .6rem; height: .6rem; border-radius: 50%; display: inline-block; }
+
+    /* map internals, styled here rather than with SVG attributes so the whole
+       thing follows the tokens */
+    .mm-link { fill: none; stroke: var(--gray-300); stroke-width: 1.6; }
+    .mm-hub rect { fill: var(--leaf-100); stroke: var(--leaf-200); stroke-width: 1; }
+    .mm-hub text { fill: var(--leaf-900); font-size: 13px; font-weight: 700; letter-spacing: .04em; }
+    .mm-core circle { fill: var(--white); stroke: var(--leaf-700); stroke-width: 2; }
+    .mm-core .mm-core__name { fill: var(--leaf-900); font-size: 21px; font-weight: 700; }
+    .mm-core .mm-core__sub  { fill: var(--gray-500); font-size: 12px; font-weight: 600; letter-spacing: .06em; }
+
+    .mm-node { cursor: pointer; }
+    .mm-node rect { fill: var(--white); stroke: var(--gray-300); stroke-width: 1.2; }
+    .mm-node .mm-node__name { fill: var(--black); font-size: 15px; font-weight: 650; }
+    .mm-node .mm-node__sub  { fill: var(--gray-500); font-size: 11.5px; }
+    .mm-node .mm-node__dot  { fill: var(--gray-400); }
+    .mm-node.is-good rect { stroke: var(--leaf-500); } .mm-node.is-good .mm-node__dot { fill: var(--leaf-500); }
+    .mm-node.is-warn rect { stroke: #d8b978; }         .mm-node.is-warn .mm-node__dot { fill: var(--amber-700); }
+    .mm-node.is-bad  rect { stroke: #d8a68f; }         .mm-node.is-bad  .mm-node__dot { fill: var(--rust-700); }
+    .mm-node:hover rect, .mm-node:focus-visible rect { stroke-width: 2.4; }
+    .mm-node:focus-visible { outline: none; }
+    .mm-node:focus-visible rect { stroke: var(--leaf-700); }
+    .mm-node.is-on rect { fill: var(--leaf-50); stroke: var(--leaf-700); stroke-width: 2.4; }
+
+    /* ---- the residue strip on a chip ---- */
+    .mm-bead { fill: var(--leaf-700); }
+    .mm-bead.is-tag { fill: var(--rust-700); }
+    .mm-gap { fill: none; stroke: var(--gray-400); stroke-width: .9; stroke-dasharray: 1.4 1.4; }
+    .mm-strip__none { stroke: var(--gray-300); stroke-width: 1.2; stroke-dasharray: 4 4; }
+
+    /* ---- the schematic in the panel ---- */
+    .map__glyph { margin: 0; }
+    .map__glyph figcaption {
+      margin-top: var(--sp-2); font-size: var(--text-xs); color: var(--gray-500); line-height: 1.5;
+    }
+    .mm-glyph {
+      display: block; width: 100%; max-width: 40rem; height: auto; margin: 0 auto;
+      background: var(--leaf-50); border: 1px solid var(--gray-200);
+      border-radius: var(--radius-sm); font-family: var(--font-body);
+    }
+    /* the receptor: a solenoid body ruled into its repeats */
+    .mm-body { fill: var(--leaf-100); stroke: var(--leaf-200); stroke-width: 1; }
+    .mm-lrr { stroke: var(--leaf-200); stroke-width: .8; opacity: .9; }
+    .mm-glyph__lab {
+      fill: var(--gray-500); font-size: 9px; font-weight: 600;
+      letter-spacing: .06em; text-transform: uppercase;
+    }
+    .mm-glyph__empty { fill: var(--gray-500); font-size: 10.5px; font-style: italic; }
+
+    /* the peptide */
+    .mm-chain { fill: none; stroke: var(--leaf-700); stroke-width: 1.6; opacity: .45; }
+    .mm-chain.is-cut { stroke: var(--gray-400); stroke-dasharray: 2.5 3; opacity: .8; }
+    .mm-res circle { fill: var(--leaf-700); }
+    .mm-res text { fill: var(--gray-600); font-family: var(--font-mono); font-size: 8.5px; }
+    .mm-res circle { stroke: var(--white); stroke-width: .6; }
+    .mm-res.is-tag circle { fill: var(--rust-700); }
+    .mm-res.is-gap circle { fill: var(--white); stroke: var(--gray-400); stroke-width: 1; stroke-dasharray: 2 2; }
+    .mm-res.is-gap text { fill: var(--gray-400); }
+    .mm-plus { fill: var(--amber-700); font-size: 10px; font-weight: 700; }
+    .mm-term { fill: var(--gray-500); font-size: 9px; font-weight: 700; }
+    .mm-tag__lab { fill: var(--rust-700); font-size: 8.5px; font-weight: 650; letter-spacing: .04em; }
+
+    /* the two contacts the whole set turns on */
+    .mm-bond { stroke-linecap: round; }
+    .mm-bond.is-2 { stroke: var(--leaf-700); stroke-width: 1.5; }
+    .mm-bond.is-1 { stroke: var(--leaf-700); stroke-width: 1.5; opacity: .6; }
+    .mm-bond.is-0 { stroke: var(--rust-700); stroke-width: 1.2; stroke-dasharray: 2 3; opacity: .8; }
+    .mm-anchor circle { fill: var(--white); stroke: var(--gray-400); stroke-width: 1.3; }
+    .mm-anchor text { fill: var(--gray-700); font-size: 9.5px; font-weight: 700; }
+    .mm-anchor__sub { fill: var(--gray-500) !important; font-size: 8.5px !important; font-weight: 500 !important; }
+    .mm-anchor.is-good circle { stroke: var(--leaf-700); }
+    .mm-anchor.is-good text { fill: var(--leaf-900); }
+    .mm-anchor.is-warn circle { stroke: var(--amber-700); }
+    .mm-anchor.is-bad  circle { stroke: var(--rust-700); }
+    .mm-anchor.is-bad  text { fill: var(--rust-700); }
+
+    /* dimming, one rule per limb because CSS cannot read the attribute back */
+    .map__svg[data-limb] .mm-el { opacity: .22; transition: opacity .12s; }
+    .map__svg[data-limb] .mm-core { opacity: 1; }
+    .map__svg[data-limb="control"] .mm-el[data-limb="control"],
+    .map__svg[data-limb="ladder"]  .mm-el[data-limb="ladder"],
+    .map__svg[data-limb="tag"]     .mm-el[data-limb="tag"],
+    .map__svg[data-limb="ph"]      .mm-el[data-limb="ph"] { opacity: 1; }
+
+    /* ---- the index of nine, which is also what a reader without JavaScript
+           gets in place of the map ---- */
+    .runs { list-style: none; margin: var(--sp-5) 0 0; padding: 0; display: grid; gap: var(--sp-4); }
+    @media (min-width: 720px) { .runs { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+    .runs > li {
+      border: 1px solid var(--gray-200); border-left: 3px solid var(--gray-300);
+      border-radius: var(--radius-sm); padding: var(--sp-4); background: var(--white);
+    }
+    .runs > li.is-good { border-left-color: var(--leaf-500); }
+    .runs > li.is-warn { border-left-color: var(--amber-700); }
+    .runs > li.is-bad  { border-left-color: var(--rust-700); }
+    .runs h4 { margin: 0 0 var(--sp-1); font-size: var(--text-base); }
+    .runs h4 a { color: var(--leaf-900); text-decoration: none; }
+    .runs h4 a:hover { color: var(--leaf-700); text-decoration: underline; }
+    .runs .runs__role { font-size: var(--text-xs); font-weight: 700; letter-spacing: .05em; text-transform: uppercase; color: var(--gray-500); }
+    .runs p { margin: var(--sp-2) 0 0; font-size: var(--text-sm); color: var(--gray-700); line-height: 1.55; }
+    .runs > li.runs__group { border: 0; padding: 0; background: none; }
+    .runs__group { grid-column: 1 / -1; margin: var(--sp-3) 0 calc(var(--sp-2) * -1); font-size: var(--text-xs); font-weight: 700; letter-spacing: .07em; text-transform: uppercase; color: var(--gray-500); }
+    .runs__group:first-child { margin-top: 0; }
+
+    /* ---- tables ---- */
+    td.is-same { color: var(--gray-400); }
+    td.is-flag { color: var(--rust-700); font-weight: 650; }
+    /* the run names are the row labels; wrapping them costs more than the
+       column width they save */
+    #matrix td:first-child, #numbers td:first-child,
+    #numbers td:last-child { white-space: nowrap; }
+    .num { font-family: var(--font-mono); font-variant-numeric: tabular-nums; }
+  </style>
+</head>
+<body>
+
+  <div id="site-nav" data-base="../" data-tab="drylab" data-page="md-simulations"></div>
+  <div class="sitenav-spacer"></div>
+
+  <header class="pagehead">
+    <div class="pagehead__inner">
+      <div class="langbar">
+        <button type="button" id="lang" class="langbtn" aria-label="切換為中文">中</button>
+      </div>
+      <p class="pagehead__eyebrow">
+        <a href="../">ReLeaf</a> <i>/</i> Dry Lab <i>/</i> <span data-en="MD Simulations" data-zh="分子動力學模擬">MD Simulations</span>
+      </p>
+      <h1 class="pagehead__title" data-en="MD Simulations" data-zh="分子動力學模擬">MD Simulations</h1>
+      <p class="pagehead__lede"
+         data-en="Nine all-atom trajectories of BoPep4 on the PEPR1 ectodomain, 30&nbsp;ns each. Nine separate reports is how they were produced; it is not how they should be read. This page is the map."
+         data-zh="BoPep4 與 PEPR1 胞外域的全原子軌跡共九條，每條 30&nbsp;奈秒。它們是分成九份產生的，但不該分成九份來讀。這一頁是那張地圖。">
+        Nine all-atom trajectories of BoPep4 on the PEPR1 ectodomain, 30&nbsp;ns each. Nine separate reports is how they were produced; it is not how they should be read. This page is the map.
+      </p>
+      <ul class="pagehead__meta">
+        <li><b data-en="Section" data-zh="區塊">Section</b><span data-en="Dry Lab" data-zh="乾實驗">Dry Lab</span></li>
+        <li><b data-en="Written by" data-zh="撰寫">Written by</b><span data-en="Dry lab, molecular modelling" data-zh="乾實驗，分子模擬組">Dry lab, molecular modelling</span></li>
+        <li><b data-en="Last updated" data-zh="最後更新">Last updated</b><span data-en="2 September 2026" data-zh="2026 年 9 月 2 日">2 September 2026</span></li>
+        <li><b data-en="Status" data-zh="狀態">Status</b><span data-en="Draft" data-zh="草稿">Draft</span></li>
+      </ul>
+    </div>
+  </header>
+
+  <div class="pagewrap">
+    <details class="toc" open>
+      <summary data-en="Contents" data-zh="目次">Contents</summary>
+      <div class="toc__inner"><p class="toc__title" data-en="On this page" data-zh="本頁內容">On this page</p></div>
+    </details>
+
+    <main class="pagebody">
+
+      <div class="hero" id="mdhero"></div>
+
+      <!-- ============================================================ 1 ==== -->
+      <section class="sec" id="the-map">
+        <h2 id="the-map-h"><span data-en="Nine runs: controls, truncation ladder, 6xHis tag, pH 5.5" data-zh="九條軌跡：對照、截短梯、6xHis 標籤、pH 5.5">Nine runs: controls, truncation ladder, 6xHis tag, pH 5.5</span></h2>
+
+        <p data-en="All nine trajectories share one receptor, one force field, one equilibration schedule and one analysis codebase. Four things change between them: which peptide is bound, where it starts and stops, what sits on its C-terminus, and which histidines carry a charge. The map is the shape of those four choices. BoPep4 sits at the centre; each limb is one thing we changed, and each chip on a limb is a trajectory that changed it."
+           data-zh="九條軌跡共用同一個受體、同一組力場、同一套平衡流程、同一份分析程式碼。彼此之間只有四件事不同：綁的是哪一條胜肽、胜肽從第幾號殘基起訖、C 端接了什麼、以及哪些組胺酸帶電。這張地圖就是那四個選擇的形狀。BoPep4 在正中央；每一條分支是我們改動的一件事，分支上的每一個方塊是改動了它的一條軌跡。">
+          All nine trajectories share one receptor, one force field, one equilibration schedule and one analysis codebase. Four things change between them: which peptide is bound, where it starts and stops, what sits on its C-terminus, and which histidines carry a charge. The map is the shape of those four choices. BoPep4 sits at the centre; each limb is one thing we changed, and each chip on a limb is a trajectory that changed it.
+        </p>
+
+        <figure class="map" id="mdmap">
+          <div class="map__stage">
+            <svg class="map__svg" id="mdmap-svg" viewBox="0 30 1000 586"
+                 role="group" aria-label="Map of the nine molecular dynamics runs"></svg>
+          </div>
+          <p class="map__swipe"
+             data-en="Drag the map sideways to reach the rest of it."
+             data-zh="橫向拖曳可看到地圖其餘部分。">Drag the map sideways to reach the rest of it.</p>
+          <div class="map__panel" id="mdmap-panel"></div>
+          <div class="map__legend" id="mdmap-legend"></div>
+        </figure>
+
+        <p class="map__hint"
+           data-en="The map needs JavaScript. Without it, the nine reports are listed below, grouped the same way."
+           data-zh="這張地圖需要 JavaScript。若未啟用，下方以相同的分組列出九份報告。">
+          The map needs JavaScript. Without it, the nine reports are listed below, grouped the same way.
+        </p>
+
+        <h3 id="the-nine-reports"><span data-en="Nine reports, one self-contained file each" data-zh="九份報告，每份都是獨立完整的檔案">Nine reports, one self-contained file each</span></h3>
+        <p data-en="Each report is a single self-contained file with its own 3D trajectory player and its own shareable link, so any one of them can be sent to a reader on its own. Whichever one you open, the navigation bar across the top will bring you back here."
+           data-zh="每一份報告都是一個獨立完整的檔案，內含自己的 3D 軌跡播放器與自己的連結，因此任何一份都可以單獨寄給別人。不論打開哪一份，頂端的導覽列都會帶你回到這裡。">
+          Each report is a single self-contained file with its own 3D trajectory player and its own shareable link, so any one of them can be sent to a reader on its own. Whichever one you open, the navigation bar across the top will bring you back here.
+        </p>
+        <ul class="runs" id="mdmap-index"></ul>
+      </section>
+
+      <!-- ============================================================ 2 ==== -->
+      <section class="sec" id="what-changed">
+        <h2 id="what-changed-h"><span data-en="Four columns change: ligand, residue range, C-terminus, protonation" data-zh="只有四欄不同：配體、殘基範圍、C 端、質子化">Four columns change: ligand, residue range, C-terminus, protonation</span></h2>
+
+        <p data-en="Whether two runs can be compared directly is a question of how many columns apart they sit in this table. One column apart is a controlled comparison. Three columns apart is two experiments at once, and the set contains one of those on purpose: 9&ndash;23 at pH&nbsp;5.5 crosses a truncation with a protonation change, and it is the run that failed."
+           data-zh="兩條軌跡能不能直接互相比較，取決於它們在這張表裡相隔幾欄。差一欄是受控比較。差三欄就是一次做了兩個實驗，而這一套裡刻意留了一個：9&ndash;23 在 pH&nbsp;5.5 同時改了截短與質子化，而它正是沒有通過驗收的那一條。">
+          Whether two runs can be compared directly is a question of how many columns apart they sit in this table. One column apart is a controlled comparison. Three columns apart is two experiments at once, and the set contains one of those on purpose: 9&ndash;23 at pH&nbsp;5.5 crosses a truncation with a protonation change, and it is the run that failed.
+        </p>
+
+        <div class="tablewrap tablewrap--wide">
+          <table class="data" id="matrix">
+            <caption class="visually-hidden">Design matrix: one row per trajectory</caption>
+            <thead><tr>
+              <th data-en="Trajectory" data-zh="軌跡">Trajectory</th>
+              <th data-en="Ligand" data-zh="配體">Ligand</th>
+              <th data-en="Residues" data-zh="殘基範圍">Residues</th>
+              <th data-en="C-terminus" data-zh="C 端化學">C-terminus</th>
+              <th data-en="Protonation" data-zh="質子化">Protonation</th>
+            </tr></thead>
+            <tbody></tbody>
+          </table>
+        </div>
+        <p class="map__hint" data-en="A muted cell is the same as the wild type." data-zh="灰字的格子代表與野生型相同。">A muted cell is the same as the wild type.</p>
+
+        <div id="fig-heat"></div>
+      </section>
+
+      <!-- ============================================================ 3 ==== -->
+      <section class="sec" id="reading-the-set">
+        <h2 id="reading-the-set-h"><span data-en="Four results that need all nine runs" data-zh="四個要靠全部九條軌跡才得到的結果">Four results that need all nine runs</span></h2>
+
+        <h3 id="steady-vs-attached"><span data-en="Backbone RMSD tracks the salt bridge at Spearman +0.29" data-zh="主鏈 RMSD 與鹽橋的 Spearman 相關只有 +0.29">Backbone RMSD tracks the salt bridge at Spearman +0.29</span></h3>
+        <p data-en="Eight of the nine runs carry a peptide, which makes this answerable with a number instead of an anecdote. Backbone RMSD over the shared 15&ndash;23 window, the kind of score constructs usually get ranked on, correlates with the bidentate Asn23&ndash;Arg487 salt bridge at Pearson +0.13 and Spearman +0.29. Against the four-contact clamp it is +0.03 the wrong way. Contact count does better and not by much: +0.26 and +0.55 respectively. Eight trajectories are not eight independent samples, so read these as descriptive, not inferential."
+           data-zh="九條裡有八條帶著胜肽，因此這個問題可以用數字回答，而不是靠印象。以共同的 15&ndash;23 窗口計算的主鏈 RMSD，也就是一般用來替構築排名的那種分數，與 Asn23&ndash;Arg487 雙齒鹽橋的相關係數是 Pearson +0.13、Spearman +0.29。對四點鉗合則是 +0.03，方向還相反。接觸數好一些，但也有限：分別是 +0.26 與 +0.55。八條軌跡並不是八個獨立樣本，所以這些係數是描述性的，不是推論性的。">
+          Eight of the nine runs carry a peptide, which makes this answerable with a number instead of an anecdote. Backbone RMSD over the shared 15&ndash;23 window, the kind of score constructs usually get ranked on, correlates with the bidentate Asn23&ndash;Arg487 salt bridge at Pearson +0.13 and Spearman +0.29. Against the four-contact clamp it is +0.03 the wrong way. Contact count does better and not by much: +0.26 and +0.55 respectively. Eight trajectories are not eight independent samples, so read these as descriptive, not inferential.
+        </p>
+        <p data-en="The practical consequence is on this page twice. Ranked on RMSD the 6xHis construct comes first in the set, and it is the one construct whose salt bridge is gone. Ranked on RMSD the failed run comes second."
+           data-zh="這件事的實際後果在本頁出現了兩次。以 RMSD 排名，6xHis 構築是全套第一，而它正是唯一鹽橋已經不存在的構築。以 RMSD 排名，沒有通過驗收的那一條排第二。">
+          The practical consequence is on this page twice. Ranked on RMSD the 6xHis construct comes first in the set, and it is the one construct whose salt bridge is gone. Ranked on RMSD the failed run comes second.
+        </p>
+
+        <div id="fig-scatter"></div>
+        <div id="fig-trace"></div>
+
+        <div class="tablewrap tablewrap--wide">
+          <table class="data" id="numbers">
+            <caption class="visually-hidden">Cross-run comparison, assembled from one analysis pass</caption>
+            <thead><tr>
+              <th data-en="System" data-zh="系統">System</th>
+              <th data-en="Res" data-zh="殘基">Res</th>
+              <th data-en="Clamp 4/4" data-zh="鉗合 4/4">Clamp 4/4</th>
+              <th data-en="Two guanidinium N" data-zh="雙胍基氮">Two guanidinium N</th>
+              <th data-en="Contacts 15&ndash;23" data-zh="15&ndash;23 接觸數">Contacts 15&ndash;23</th>
+              <th data-en="RMSD 15&ndash;23 (&Aring;)" data-zh="15&ndash;23 RMSD（&Aring;）">RMSD 15&ndash;23 (&Aring;)</th>
+              <th data-en="Receptor C&alpha; (&Aring;)" data-zh="受體 C&alpha;（&Aring;）">Receptor C&alpha; (&Aring;)</th>
+              <th data-en="Gate" data-zh="驗收">Gate</th>
+            </tr></thead>
+            <tbody></tbody>
+          </table>
+        </div>
+        <p data-en="The 15&ndash;23 columns count only the C-terminal nine residues, the one stretch present in all eight peptide-bearing systems. There are no whole-peptide averages here because the peptides run from 9 to 29 residues, and an average over them is not measuring the same thing twice. The apo row is mostly dashes for the same reason: with no peptide there is no clamp, no salt bridge and no contact count."
+           data-zh="15&ndash;23 這幾欄只計算 C 端的九個殘基，那是八個帶胜肽系統都有的唯一一段。這裡沒有整條胜肽的平均值，因為這些胜肽從 9 個殘基到 29 個殘基都有，對它們取平均並不是在量同一件事。apo 那一列大多是破折號，理由相同：沒有胜肽就沒有鉗合、沒有鹽橋、也沒有接觸數。">
+          The 15&ndash;23 columns count only the C-terminal nine residues, the one stretch present in all eight peptide-bearing systems. There are no whole-peptide averages here because the peptides run from 9 to 29 residues, and an average over them is not measuring the same thing twice. The apo row is mostly dashes for the same reason: with no peptide there is no clamp, no salt bridge and no contact count.
+        </p>
+
+        <div class="callout callout--unproven">
+          <p class="callout__label" data-en="Why 2.4% is not a weak salt bridge" data-zh="為什麼 2.4% 不是一條微弱的鹽橋">Why 2.4% is not a weak salt bridge</p>
+          <p data-en="The two-guanidinium-N column asks whether two nitrogens of the Arg487 guanidinium sit within 3.5&nbsp;&Aring; of a terminal oxygen of Asn23 at the same time. In the wild type that is a bidentate salt bridge, because Asn23 carries a free carboxylate with two terminal oxygens. The 6xHis construct has no OXT: Asn23 became an internal residue and its carboxylate was spent forming the amide bond to His24. On that construct the criterion is measuring one neutral amide carbonyl oxygen, so 2.4% is not a weak salt bridge. There is no salt bridge there to be weak."
+             data-zh="雙胍基氮這一欄問的是：Arg487 胍基上有沒有兩個氮同時落在 Asn23 末端氧的 3.5&nbsp;&Aring; 以內。在野生型裡那是一條雙齒鹽橋，因為 Asn23 帶著有兩個末端氧的自由羧基。6xHis 構築沒有 OXT：Asn23 變成了內部殘基，羧基已經拿去和 His24 形成醯胺鍵。在那個構築上，這項標準量到的是一個中性醯胺羰基氧，所以 2.4% 並不是一條微弱的鹽橋。那裡根本沒有鹽橋可以微弱。">
+            The two-guanidinium-N column asks whether two nitrogens of the Arg487 guanidinium sit within 3.5&nbsp;&Aring; of a terminal oxygen of Asn23 at the same time. In the wild type that is a bidentate salt bridge, because Asn23 carries a free carboxylate with two terminal oxygens. The 6xHis construct has no OXT: Asn23 became an internal residue and its carboxylate was spent forming the amide bond to His24. On that construct the criterion is measuring one neutral amide carbonyl oxygen, so 2.4% is not a weak salt bridge. There is no salt bridge there to be weak.
+          </p>
+        </div>
+
+        <h3 id="invariant-core"><span data-en="Ten receptor residues stay above 50% in all eight runs" data-zh="十個受體殘基在八條軌跡中都維持 50% 以上">Ten receptor residues stay above 50% in all eight runs</span></h3>
+        <p data-en="Pool the per-residue contact occupancies across all eight peptide-bearing runs and ten receptor residues stay above 50% in every one of them, whatever the peptide is doing at the other end. Five of the ten are on the list of eight hotspots Tang and colleagues read off the AtPep1 complex; five are not. The five that are not are Ser275, Lys345, Tyr395, Phe419 and Ile463. Tang's list was assembled from one crystal structure of a different peptide, and this is what it looks like after eight trajectories of a second one."
+           data-zh="把八條帶胜肽軌跡的逐殘基接觸佔有率放在一起，有十個受體殘基在每一條裡都維持在 50% 以上，無論胜肽另一端在做什麼。這十個裡有五個在 Tang 等人由 AtPep1 複合體讀出的八個熱點名單上，五個不在。不在名單上的五個是 Ser275、Lys345、Tyr395、Phe419 與 Ile463。Tang 的名單來自一個不同胜肽的單一晶體結構；把第二條胜肽跑了八條軌跡之後，看起來就是這樣。">
+          Pool the per-residue contact occupancies across all eight peptide-bearing runs and ten receptor residues stay above 50% in every one of them, whatever the peptide is doing at the other end. Five of the ten are on the list of eight hotspots Tang and colleagues read off the AtPep1 complex; five are not. The five that are not are Ser275, Lys345, Tyr395, Phe419 and Ile463. Tang's list was assembled from one crystal structure of a different peptide, and this is what it looks like after eight trajectories of a second one.
+        </p>
+
+        <h3 id="noise-floor"><span data-en="Apo floor: receptor C&alpha; 1.57 &Aring;, groove 35.91 &plusmn; 0.55 &Aring;" data-zh="apo 底線：受體 C&alpha; 1.57 &Aring;，凹槽 35.91 &plusmn; 0.55 &Aring;">Apo floor: receptor C&alpha; 1.57 &Aring;, groove 35.91 &plusmn; 0.55 &Aring;</span></h3>
+        <p data-en="The apo run exists to answer a question the other eight cannot: how much of the receptor motion they report would have happened anyway. Its receptor C&alpha; RMSD is 1.57&nbsp;&Aring;, which is below all seven peptide-bearing runs it can be compared with. Those seven span 1.58 to 2.16&nbsp;&Aring;. Swapping one peptide for another therefore moves the receptor across a 0.59&nbsp;&Aring; range, and removing the peptide altogether moves it less than that. The binding groove holds at 35.91 &plusmn; 0.55&nbsp;&Aring; with nothing in it, and the per-residue flexibility profile correlates with the bound runs at r&nbsp;=&nbsp;0.95. Any receptor-side difference smaller than about half an &aring;ngstr&ouml;m on the other eight pages is inside this floor."
+           data-zh="apo 這一條存在的目的，是回答另外八條答不出來的問題：它們報告的受體運動，有多少本來就會發生。它的受體 C&alpha; RMSD 是 1.57&nbsp;&Aring;，低於所有七條可比較的帶胜肽軌跡；那七條落在 1.58 到 2.16&nbsp;&Aring; 之間。換一條胜肽會讓受體在 0.59&nbsp;&Aring; 的範圍內移動，而把胜肽整個拿掉的移動比這還小。凹槽在沒有東西的情況下維持在 35.91 &plusmn; 0.55&nbsp;&Aring;，逐殘基柔性分布與帶胜肽軌跡的相關係數是 r&nbsp;=&nbsp;0.95。另外八頁上任何小於約半個 &aring;ngstr&ouml;m 的受體端差異，都落在這條線以下。">
+          The apo run exists to answer a question the other eight cannot: how much of the receptor motion they report would have happened anyway. Its receptor C&alpha; RMSD is 1.57&nbsp;&Aring;, which is below all seven peptide-bearing runs it can be compared with. Those seven span 1.58 to 2.16&nbsp;&Aring;. Swapping one peptide for another therefore moves the receptor across a 0.59&nbsp;&Aring; range, and removing the peptide altogether moves it less than that. The binding groove holds at 35.91 &plusmn; 0.55&nbsp;&Aring; with nothing in it, and the per-residue flexibility profile correlates with the bound runs at r&nbsp;=&nbsp;0.95. Any receptor-side difference smaller than about half an &aring;ngstr&ouml;m on the other eight pages is inside this floor.
+        </p>
+
+        <h3 id="the-headline"><span data-en="pH 5.5 puts Glu12 on His227 at 2.75 &Aring; in 99.9% of frames" data-zh="pH 5.5 讓 Glu12 以 2.75 &Aring; 貼上 His227，佔 99.9% 影格">pH 5.5 puts Glu12 on His227 at 2.75 &Aring; in 99.9% of frames</span></h3>
+        <p data-en="Switching His14 and His22 on the peptide and His227 on the receptor to their protonated form, with every other atom identical, locks the Glu12 carboxylate onto the His227 ring at 2.75 &plusmn; 0.11&nbsp;&Aring; in 99.9% of frames. At pH&nbsp;7 the same pair sits 5.33&nbsp;&Aring; apart and appears in 0.8%. The AtPep1 benchmark already makes that contact at neutral pH, at 3.36&nbsp;&Aring; and 76.9%, so what pH&nbsp;5.5 does for BoPep4 is recover a contact its own calibrating control has natively. The C-terminal anchor is untouched and the 15&ndash;23 window becomes the tightest of any BoPep4 run. Future BoPep4 simulations should default to pH&nbsp;5.5 with pH&nbsp;7 as the control."
+           data-zh="把胜肽上的 His14、His22 與受體上的 His227 換成質子化形式，其餘原子完全相同，Glu12 的羧基就以 2.75 &plusmn; 0.11&nbsp;&Aring; 鎖在 His227 環上，佔 99.9% 的影格。在 pH&nbsp;7 下，同一對相距 5.33&nbsp;&Aring;，只出現在 0.8% 的影格裡。AtPep1 基準在中性 pH 下本來就有這個接觸，距離 3.36&nbsp;&Aring;、佔 76.9%，所以 pH&nbsp;5.5 為 BoPep4 做的事，是把它自己的校正對照本來就有的接觸找回來。C 端的錨完全沒有受影響，15&ndash;23 窗口成為所有 BoPep4 軌跡中最緊的一個。往後的 BoPep4 模擬應以 pH&nbsp;5.5 為預設，以 pH&nbsp;7 為對照。">
+          Switching His14 and His22 on the peptide and His227 on the receptor to their protonated form, with every other atom identical, locks the Glu12 carboxylate onto the His227 ring at 2.75 &plusmn; 0.11&nbsp;&Aring; in 99.9% of frames. At pH&nbsp;7 the same pair sits 5.33&nbsp;&Aring; apart and appears in 0.8%. The AtPep1 benchmark already makes that contact at neutral pH, at 3.36&nbsp;&Aring; and 76.9%, so what pH&nbsp;5.5 does for BoPep4 is recover a contact its own calibrating control has natively. The C-terminal anchor is untouched and the 15&ndash;23 window becomes the tightest of any BoPep4 run. Future BoPep4 simulations should default to pH&nbsp;5.5 with pH&nbsp;7 as the control.
+        </p>
+        <p data-en="The His14 pH-switch idea that motivated the run is not supported. Protonated or not, its ring nitrogens sit about 6.1&nbsp;&Aring; from the nearest receptor carboxylate, at 0.0% occupancy. The pH-sensing pair is receptor His227 with peptide Glu12."
+           data-zh="促成這條軌跡的 His14 pH 開關構想並未獲得支持。無論是否質子化，它的環氮距離最近的受體羧基約 6.1&nbsp;&Aring;，佔有率 0.0%。真正的 pH 感測配對是受體 His227 與胜肽 Glu12。">
+          The His14 pH-switch idea that motivated the run is not supported. Protonated or not, its ring nitrogens sit about 6.1&nbsp;&Aring; from the nearest receptor carboxylate, at 0.0% occupancy. The pH-sensing pair is receptor His227 with peptide Glu12.
+        </p>
+
+        <div id="fig-apo"></div>
+      </section>
+
+      <!-- ============================================================ 4 ==== -->
+      <section class="sec" id="how">
+        <h2 id="how-h"><span data-en="ff19SB / OPC, 4 fs HMR, 30 ns on one A100" data-zh="ff19SB / OPC，4 fs HMR，單張 A100 跑 30 奈秒">ff19SB / OPC, 4 fs HMR, 30 ns on one A100</span></h2>
+        <p data-en="Every system was built on the PEPR1 ectodomain from PDB 5GR8, residues 29 to 738, and solvated in OPC water with AMBER ff19SB. Hydrogen mass repartitioning allows a 4&nbsp;fs time step. Each system ran 30&nbsp;ns of production after the same equilibration schedule, on one A100-SXM4-40GB at roughly 250&nbsp;ns per day, for 25.9 GPU-hours and 13,500 saved frames in total. Systems are about 127,600 atoms. Every number on this page and on the nine reports comes from one analysis codebase run over all nine trajectories, so the columns mean the same thing across rows."
+           data-zh="每個系統都以 PDB 5GR8 的 PEPR1 胞外域（殘基 29 至 738）為基礎，置於 OPC 水中，使用 AMBER ff19SB。氫質量重分配讓時間步長可以放到 4&nbsp;fs。每個系統在相同的平衡流程之後跑 30&nbsp;奈秒的生產軌跡，在單張 A100-SXM4-40GB 上約每日 250&nbsp;奈秒，合計 25.9 GPU 小時、13,500 個儲存影格。系統大小約 127,600 個原子。本頁與九份報告上的每一個數字，都出自同一份分析程式碼對九條軌跡的同一次計算，因此各列之間的欄位意義相同。">
+          Every system was built on the PEPR1 ectodomain from PDB 5GR8, residues 29 to 738, and solvated in OPC water with AMBER ff19SB. Hydrogen mass repartitioning allows a 4&nbsp;fs time step. Each system ran 30&nbsp;ns of production after the same equilibration schedule, on one A100-SXM4-40GB at roughly 250&nbsp;ns per day, for 25.9 GPU-hours and 13,500 saved frames in total. Systems are about 127,600 atoms. Every number on this page and on the nine reports comes from one analysis codebase run over all nine trajectories, so the columns mean the same thing across rows.
+        </p>
+
+        <div class="callout callout--borrowed">
+          <p class="callout__label" data-en="&ldquo;pH 5.5&rdquo; means three histidines held protonated for 30 ns" data-zh="「pH 5.5」指的是三個組胺酸在 30 奈秒中維持質子化">&ldquo;pH 5.5&rdquo; means three histidines held protonated for 30 ns</p>
+          <p data-en="Molecular dynamics has no pH. The label names the protonation state the two protonated runs were given for the apoplast: His14 and His22 on the peptide and His227 on the receptor carry a positive charge, every other histidine is neutral, and all aspartates and glutamates are deprotonated. That assignment is fixed for the whole 30&nbsp;ns and comes from model pK&#8339; values, not from PROPKA and not from constant-pH MD. Everything else in the set is at pH&nbsp;7."
+             data-zh="分子動力學沒有 pH。這個標籤指的是兩條質子化軌跡為了模擬質外體所給定的質子化狀態：胜肽上的 His14 與 His22、受體上的 His227 帶正電，其餘組胺酸皆為中性，所有天門冬胺酸與麩胺酸皆去質子化。這個指派在整整 30&nbsp;奈秒內固定不變，來自模型 pK&#8339; 值，不是 PROPKA，也不是恆 pH 分子動力學。這一套裡其他軌跡都在 pH&nbsp;7。">
+            Molecular dynamics has no pH. The label names the protonation state the two protonated runs were given for the apoplast: His14 and His22 on the peptide and His227 on the receptor carry a positive charge, every other histidine is neutral, and all aspartates and glutamates are deprotonated. That assignment is fixed for the whole 30&nbsp;ns and comes from model pK&#8339; values, not from PROPKA and not from constant-pH MD. Everything else in the set is at pH&nbsp;7.
+          </p>
+        </div>
+      </section>
+
+      <!-- ============================================================ 5 ==== -->
+      <section class="sec" id="limits">
+        <h2 id="limits-h"><span data-en="30 ns, one seed, nothing tested at the bench" data-zh="30 奈秒、單一亂數種子、實驗桌上尚未驗證">30 ns, one seed, nothing tested at the bench</span></h2>
+        <p data-en="Thirty nanoseconds is three to six orders of magnitude short of a dissociation event, so nothing here is a binding affinity, a leaving time or a free energy. The 15&ndash;23 run was designed to supply a leaving time and could not have, whatever it did. Each system has one seed, so a difference between two runs may be a difference between two relaxation paths. The acceptance gate was written before the tagged construct existed and, on that construct, measures atoms it does not have. And none of it has been checked at the bench: no binding assay, no thermal shift, no plant. Everything on this page is a hypothesis about what to build and what to measure next."
+           data-zh="三十奈秒比一次解離事件短了三到六個數量級，所以這裡沒有任何結合親和力、離開時間或自由能。15&ndash;23 那條軌跡的設計目的是量出離開時間，但無論它怎麼跑都不可能量到。每個系統只有一個亂數種子，所以兩條軌跡之間的差異，也可能只是兩條鬆弛路徑之間的差異。驗收標準是在帶標籤的構築出現之前寫的，在那個構築上量的是它並不具備的原子。而且這一切都還沒有在實驗桌上驗證過：沒有結合實驗、沒有熱位移、沒有植物。本頁上的所有內容，都是關於接下來該做什麼、該量什麼的假說。">
+          Thirty nanoseconds is three to six orders of magnitude short of a dissociation event, so nothing here is a binding affinity, a leaving time or a free energy. The 15&ndash;23 run was designed to supply a leaving time and could not have, whatever it did. Each system has one seed, so a difference between two runs may be a difference between two relaxation paths. The acceptance gate was written before the tagged construct existed and, on that construct, measures atoms it does not have. And none of it has been checked at the bench: no binding assay, no thermal shift, no plant. Everything on this page is a hypothesis about what to build and what to measure next.
+        </p>
+        <p data-en="Where this feeds the rest of the project: the sequence that goes into the order is argued on the Peptide Design page, and the release and dosing arithmetic is on the Math Model page."
+           data-zh="這一頁如何接上專案其餘部分：下單的序列在「胜肽設計」頁論證，釋放與劑量的計算在「數學模型」頁。">
+          Where this feeds the rest of the project: the sequence that goes into the order is argued on the <a href="../peptide-design/">Peptide Design</a> page, and the release and dosing arithmetic is on the <a href="../model/">Math Model</a> page.
+        </p>
+      </section>
+
+      <section class="refs" id="references">
+        <h2 data-no-toc data-en="References" data-zh="參考文獻">References</h2>
+        <ol>
+          <li>Tang J. <i>et al.</i> (2015) Structural basis for recognition of an endogenous peptide by the plant receptor kinase PEPR1. <i>Cell Research</i> 25, 110&ndash;120. PDB 5GR8.</li>
+          <li>Tian C. <i>et al.</i> (2020) ff19SB: amino-acid-specific protein backbone parameters trained against quantum mechanics energy surfaces in solution. <i>Journal of Chemical Theory and Computation</i> 16, 528&ndash;552.</li>
+          <li>Izadi S., Anandakrishnan R. &amp; Onufriev A. V. (2014) Building water models: a different approach. <i>Journal of Physical Chemistry Letters</i> 5, 3863&ndash;3871. The OPC water model.</li>
+          <li>Hopkins C. W. <i>et al.</i> (2015) Long-time-step molecular dynamics through hydrogen mass repartitioning. <i>Journal of Chemical Theory and Computation</i> 11, 1864&ndash;1874.</li>
+        </ol>
+      </section>
+
+    </main>
+  </div>
+
+  <nav class="pagenav" aria-label="Neighbouring pages">
+    <a class="is-prev" href="../peptide-design/"><b>Previous</b><span>Peptide Design</span></a>
+    <a class="is-next" href="../drylab-notebook/"><b>Next</b><span>Dry Lab Notebook</span></a>
+  </nav>
+
+  <footer class="footer2">
+    <div class="footer2__inner">
+        <div>
+          <h3>Project</h3>
+          <ul>
+          <li><a href="../description/">Description</a></li>
+          <li><a href="../engineering/">Engineering</a></li>
+          <li><a href="../contribution/">Contribution</a></li>
+          <li><a href="../results/">Results</a></li>
+          </ul>
+        </div>
+        <div>
+          <h3>Wet Lab</h3>
+          <ul>
+          <li><a href="../experiments/">Experiments</a></li>
+          <li><a href="../parts/">Parts</a></li>
+          <li><a href="../plant/">Plants</a></li>
+          <li><a href="../measurement/">Measurement</a></li>
+          <li><a href="../safety-and-security/">Safety</a></li>
+          <li><a href="../notebook/">Notebook</a></li>
+          </ul>
+        </div>
+        <div>
+          <h3>Dry Lab</h3>
+          <ul>
+          <li><a href="../model/">Math Model</a></li>
+          <li><a href="../bioreactor-calculations/">Bioreactor Calculations</a></li>
+          <li><a href="../hardware/">Hardware</a></li>
+          <li><a href="../software/">Software</a></li>
+          <li><a href="../peptide-design/">Peptide Design</a></li>
+          <li><a href="../md-simulations/">MD Simulations</a></li>
+          <li><a href="../drylab-notebook/">Dry Lab Notebook</a></li>
+          </ul>
+        </div>
+        <div>
+          <h3>Engagement</h3>
+          <ul>
+          <li><a href="../human-practices/">Integrated Human Practices</a></li>
+          <li><a href="../education/">Education</a></li>
+          <li><a href="../entrepreneurship/">Entrepreneurship</a></li>
+          <li><a href="../sustainability/">Sustainability</a></li>
+          <li><a href="../laws-and-regulations/">Laws and Regulations</a></li>
+          <li><a href="../geospatial-analysis/">Geospatial Analysis</a></li>
+          <li><a href="../data-physicalization/">Data Physicalization</a></li>
+          <li><a href="../ai-responsibility/">AI Responsibility</a></li>
+          </ul>
+        </div>
+        <div>
+          <h3>Team</h3>
+          <ul>
+          <li><a href="../team/">Members</a></li>
+          <li><a href="../attributions/">Attribution</a></li>
+          <li><a href="../milestone/">Milestone</a></li>
+          <li><a href="../gallery/">Gallery</a></li>
+          </ul>
+        </div>
+      <div class="footer2__legal">
+        <p><b>ReLeaf</b> &middot; GEMS Taiwan &middot; iGEM 2026 &middot; Biomanufacturing Village</p>
+        <p>&copy; 2026 &middot; Content on this wiki is licensed under a <a href="https://creativecommons.org/licenses/by/4.0/" rel="license">Creative Commons Attribution 4.0 International license</a>.</p>
+        <p>The repository used to create this website is available at <a href="https://gitlab.igem.org/2026/gems-taiwan">gitlab.igem.org/2026/gems-taiwan</a>.</p>
+        <p>Nothing on this wiki is fetched from a server outside iGEM. Before the wiki freeze, every image and font has to be re-hosted on <code>static.igem.wiki</code>.</p>
+      </div>
+    </div>
+  </footer>
+
+  <script src="../assets/data/site-nav.js"></script>
+  <script src="../assets/js/nav.js"></script>
+  <script src="../assets/js/page.js"></script>
+  <script src="data/runs.js"></script>
+  <script src="data/hero.js"></script>
+  <script src="data/traces.js"></script>
+  <script src="map.js"></script>
+</body>
+</html>

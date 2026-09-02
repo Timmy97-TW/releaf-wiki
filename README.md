@@ -16,6 +16,8 @@ index.html                the homepage
 <slug>/index.html         one folder per page, so the URL is /<slug>
 hardware/                 the hardware section: hub, three 3D teardowns,
                           the build notebook, and its own css/ js/ models/
+md-simulations/           the MD section: the overview with the map of the nine
+                          runs, plus the nine self-contained report files
 assets/
   css/   tokens.css       colours, type and spacing, read by everything else
          nav.css          the five-tab navigation
@@ -34,6 +36,11 @@ assets/
 build/
   pages.py                the section outline of every standard page
   generate.py             turns pages.py into HTML
+  md_overview_data.py     the MD analysis output -> md-simulations/data/runs.js
+  md_hero_frames.py       two real frames -> md-simulations/data/hero.js
+  md_traces.py            the Asn23-Arg487 distance -> md-simulations/data/traces.js
+  md_reskin_reports.py    pins the nine MD reports to light and the ReLeaf palette
+  md_relink_once.py       the one-off that threaded MD Simulations into the footers
   hardware/               the notebook build pipeline and CAD scratch scripts
 notes/                    structure.md, publishing.md, hardware-handoff.md
 ```
@@ -55,6 +62,49 @@ outline and the note telling whoever writes it what belongs in each section.
 | `index.html` | The homepage. Claim, refusals, system, ledger, doors. |
 | `team/` | Forty-seven people, built from `assets/data/roster.js`. |
 | `attributions/` | iGEM allows the nav, the footer and the embedded form on this page and nothing else. |
+
+**The MD Simulations section** is the third exception. `md-simulations/index.html`
+is a hand-written overview: a map of the nine trajectories with BoPep4 at the
+centre, the design matrix, and the cross-run findings, all built at page load
+from `md-simulations/data/runs.js`. That file is generated, never edited:
+
+```bash
+python3 build/md_overview_data.py
+```
+
+It reads `md-simulations/data/report_data_overview.json`, which the MD analysis
+pipeline writes in one pass over all nine runs, and carries the bilingual labels
+that the JSON has no opinion about.
+
+Two more builders read the trajectories themselves rather than the summary. Each
+report file embeds its own coordinates as a uint16 array for its 3D player, and
+those are the same coordinates the figures on the overview are drawn from:
+
+```bash
+python3 build/md_hero_frames.py    # -> data/hero.js
+python3 build/md_traces.py         # -> data/traces.js
+```
+
+`md_hero_frames.py` builds the landing figure. It takes the wild type and the
+6xHis construct, picks the frame in each that is closest to that run's own median
+Asn23-Arg487 distance, superposes the receptors with Kabsch, and projects both
+through one camera aimed at the contact, so the two panels differ only where the
+simulations do. It also reads the Asn23 oxygens off the atom list, which is the
+whole argument: the wild type ends `C, O, OXT` and the tagged construct ends
+`C, O`, its OXT having moved to His29.
+
+`md_traces.py` measures the Asn23-Arg487 closest approach in all 300 saved frames
+of each of the eight peptide-bearing runs, and counts how many separate times
+that contact reopens. All three builders need numpy and are safe to re-run. The nine report files beside it come from
+<https://github.com/Timmy97-TW/igem2026-bopep4-md> and are pinned to light and to
+the ReLeaf palette by `build/md_reskin_reports.py`, which is safe to re-run.
+This is the only bilingual page on the wiki: the 中 button swaps every string and
+writes the choice to the `bp4lang` key the nine reports already read, so the
+language follows you into them.
+
+Those nine files are large, about 27 MB together, because each one embeds its own
+trajectory for the 3D player. Check that against the iGEM upload limit before the
+freeze.
 
 **The hardware section** is its own thing again: `hardware/` is a hub plus three
 scroll-driven 3D teardowns built from the real STL files, plus the 62-page
