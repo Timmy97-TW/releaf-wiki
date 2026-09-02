@@ -37,6 +37,7 @@ build/
   pages.py                the section outline of every standard page
   generate.py             turns pages.py into HTML
   md_overview_data.py     the MD analysis output -> md-simulations/data/runs.js
+  md_banner.py            five real frames -> md-simulations/data/banner.js
   md_hero_frames.py       two real frames -> md-simulations/data/hero.js
   md_traces.py            the Asn23-Arg487 distance -> md-simulations/data/traces.js
   md_reskin_reports.py    pins the nine MD reports to light and the ReLeaf palette
@@ -81,9 +82,17 @@ report file embeds its own coordinates as a uint16 array for its 3D player, and
 those are the same coordinates the figures on the overview are drawn from:
 
 ```bash
+python3 build/md_banner.py         # -> data/banner.js
 python3 build/md_hero_frames.py    # -> data/hero.js
 python3 build/md_traces.py         # -> data/traces.js
 ```
+
+`md_banner.py` builds the art behind the page title. It uses the wiki's standard
+dark hero, which is the right ground for a molecular snapshot: BoPep4 on PEPR1
+in the middle and one frame from each of the four things the set varies at the
+corners, all five superposed and drawn through one camera, bond by bond out of
+`anim.bonds` and coloured by element, with the pocket surface stippled in behind
+the centre.
 
 `md_hero_frames.py` builds the landing figure. It takes the wild type and the
 6xHis construct, picks the frame in each that is closest to that run's own median

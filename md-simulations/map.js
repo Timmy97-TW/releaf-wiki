@@ -84,6 +84,11 @@
     singleLab:     { en: "one contact", zh: "單點接觸" },
     brokenLab:     { en: "mostly open", zh: "多半打開" },
     goneLab:       { en: "no salt bridge", zh: "無鹽橋" },
+    banControl:    { en: "Control", zh: "對照" },
+    banLadder:     { en: "Truncation", zh: "截短" },
+    banTag:        { en: "6xHis tag", zh: "6xHis 標籤" },
+    banPh:         { en: "pH 5.5", zh: "pH 5.5" },
+    banCentre:     { en: "BoPep4 &times; PEPR1", zh: "BoPep4 &times; PEPR1" },
     heroWT:        { en: "Wild type 1&ndash;23", zh: "野生型 1&ndash;23" },
     heroCHIS:      { en: "+ C-terminal 6xHis", zh: "加 C 端 6xHis" },
     heroWTend:     { en: "Asn23 ends C, O, OXT &mdash; a free carboxylate with two oxygens, and Arg487 holds both in 100% of frames.",
@@ -460,6 +465,84 @@
     });
 
     figCard("fig-apo", S("figApoT"), svgFig(W, H, o.join(""), S("figApoT")), S("figApoC"));
+  }
+
+
+  /* ---- the banner behind the title --------------------------------------- */
+  /* Five real frames on one camera: BoPep4 on PEPR1 in the middle, and the four
+     things the set varies at the corners. Drawn bond by bond out of
+     data/banner.js, pale on the deep green the wiki uses for a hero, which is
+     also how a molecular snapshot is usually shown.                          */
+
+  const BAN_LAB = { control: "banControl", ladder: "banLadder",
+                    tag: "banTag", ph: "banPh" };
+
+  /* Where each panel sits in the 1600 x 620 banner. The composition is pushed
+     into the upper three quarters because page.css scrims the bottom of a hero
+     for the title, and the left panels are carried brighter because the same
+     rule darkens the left 44% behind the eyebrow. */
+  const BAN_AT = {
+    WT:    { x: 812, y: 278, k: 1.00, o: 1.00 },
+    REF:   { x: 296, y: 142, k: 0.60, o: 0.86 },
+    CHIS:  { x: 1310, y: 142, k: 0.60, o: 0.66 },
+    T923:  { x: 296, y: 380, k: 0.60, o: 0.86 },
+    LOWPH: { x: 1310, y: 380, k: 0.60, o: 0.66 }
+  };
+
+  const ATOM_R = { C: 1.5, N: 1.9, O: 1.9, S: 2.2 };
+
+  function banPanel(p, at) {
+    const B = MD_BANNER.box, o = [];
+    const pt = (q) => q[0].toFixed(1) + "," + q[1].toFixed(1);
+
+    if (p.key === "WT") {                       /* the pocket, stippled */
+      MD_BANNER.surf.forEach((q) => {
+        o.push('<circle class="ban-surf" cx="' + q[0] + '" cy="' + q[1] +
+               '" r="' + (0.9 + 1.1 * q[2]).toFixed(2) +
+               '" style="opacity:' + (0.05 + 0.16 * q[2]).toFixed(3) + '"/>');
+      });
+    }
+    p.rec.forEach((seg) => {
+      o.push('<polyline class="ban-rec" points="' + seg.map(pt).join(" ") +
+             '" style="opacity:' + (0.14 + 0.4 * seg[0][2]).toFixed(2) + '"/>');
+    });
+    p.clamp.forEach((b) => {
+      o.push('<line class="ban-clamp" x1="' + b[0][0] + '" y1="' + b[0][1] +
+             '" x2="' + b[1][0] + '" y2="' + b[1][1] +
+             '" style="opacity:' + (0.2 + 0.45 * b[0][2]).toFixed(2) + '"/>');
+    });
+    p.pep.forEach((b) => {
+      o.push('<line class="ban-pep" x1="' + b[0][0] + '" y1="' + b[0][1] +
+             '" x2="' + b[1][0] + '" y2="' + b[1][1] +
+             '" style="opacity:' + (0.35 + 0.6 * b[0][2]).toFixed(2) + '"/>');
+    });
+    p.atoms.forEach((a) => {
+      const q = a[0];
+      o.push('<circle class="ban-atom is-' + a[1] + '" cx="' + q[0] + '" cy="' + q[1] +
+             '" r="' + ATOM_R[a[1]] + '" style="opacity:' + (0.4 + 0.55 * q[2]).toFixed(2) +
+             '"/>');
+    });
+
+    const lab = p.limb === "centre" ? S("banCentre") : S(BAN_LAB[p.limb]);
+    o.push('<text class="ban-lab' + (p.limb === "centre" ? " is-centre" : "") +
+           '" x="' + (B.w / 2) + '" y="' + (B.h - 30) + '" text-anchor="middle">' + lab + "</text>");
+
+    return '<g transform="translate(' + (at.x - B.w * at.k / 2).toFixed(1) + "," +
+           (at.y - B.h * at.k / 2).toFixed(1) + ") scale(" + at.k + ')" opacity="' + at.o +
+           '">' + o.join("") + "</g>";
+  }
+
+  function banner() {
+    const el = $("#mdbanner");
+    if (!el || typeof MD_BANNER === "undefined") return;
+    const order = ["REF", "T923", "CHIS", "LOWPH", "WT"];   /* centre last, on top */
+    const by = {};
+    MD_BANNER.panels.forEach((p) => { by[p.key] = p; });
+    el.innerHTML =
+      '<svg class="ban" viewBox="0 0 1600 620" preserveAspectRatio="xMidYMid meet" ' +
+        'aria-hidden="true" focusable="false">' +
+        order.filter((k) => by[k]).map((k) => banPanel(by[k], BAN_AT[k])).join("") +
+      "</svg>";
   }
 
   /* ---- the landing pair -------------------------------------------------- */
@@ -908,6 +991,7 @@
       const v = e.getAttribute(zh() ? "data-zh" : "data-en");
       if (v !== null) e.innerHTML = v;
     });
+    banner();
     hero();
     drawMap();
     figTrace();
