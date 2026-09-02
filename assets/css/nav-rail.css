@@ -1,0 +1,255 @@
+/* =============================================================================
+   ReLeaf: the hovering left rail
+   -----------------------------------------------------------------------------
+   An alternative to the five-tab top bar, used on pages that need the full
+   window height for instrumentation. Three states:
+
+     resting    a 46px spine of tick marks against the left edge
+     idle       after 3s of no pointer, no scroll and no focus, the spine
+                slides off and leaves a 6px accent strip
+     open       hover, focus or touch expands it to a 268px panel carrying
+                this page's contents above the five wiki sections
+
+   It reads the same NAV array as nav.css/nav.js, so page addresses still live
+   in exactly one file. Below 1080px it collapses to a floating button and a
+   sheet, because a permanent left rail eats a phone.
+   ========================================================================== */
+
+:root {
+  --rail-w: 46px;
+  --rail-open: 268px;
+}
+
+.rail {
+  position: fixed;
+  inset: 0 auto 0 0;
+  z-index: 90;
+  display: flex;
+  align-items: stretch;
+  font-family: var(--font-body);
+}
+.rail *, .rail *::before, .rail *::after { box-sizing: border-box; }
+
+/* ---- the hot strip that brings the rail back --------------------------- */
+.rail__edge {
+  position: fixed;
+  inset: 0 auto 0 0;
+  width: 68px;
+  z-index: 89;
+}
+.rail__edge::after {
+  content: "";
+  position: absolute;
+  inset: 12vh auto 12vh 0;
+  width: 3px;
+  border-radius: 0 3px 3px 0;
+  background: linear-gradient(180deg, transparent, var(--leaf-500) 22%, var(--leaf-500) 78%, transparent);
+  opacity: 0;
+  transition: opacity .35s ease;
+}
+.rail.is-idle + .rail__edge::after { opacity: .55; }
+
+/* ---- the spine --------------------------------------------------------- */
+.rail__spine {
+  position: relative;
+  width: var(--rail-w);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--sp-3);
+  padding: var(--sp-4) 0;
+  background: rgb(255 255 255 / .82);
+  backdrop-filter: saturate(160%) blur(14px);
+  -webkit-backdrop-filter: saturate(160%) blur(14px);
+  border-right: 1px solid var(--gray-200);
+  transition: transform .42s cubic-bezier(.22,.61,.36,1), opacity .3s ease;
+}
+.rail.is-idle .rail__spine { transform: translateX(-100%); opacity: 0; }
+.rail.is-open .rail__spine { transform: none; opacity: 1; }
+
+.rail__home {
+  display: block;
+  width: 26px;
+  height: 26px;
+  flex: none;
+  border-radius: 50%;
+  overflow: hidden;
+  box-shadow: 0 0 0 1px var(--gray-200);
+}
+.rail__home img { width: 100%; height: 100%; object-fit: cover; display: block; }
+
+.rail__ticks {
+  flex: 1 1 auto;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 9px;
+  padding: var(--sp-3) 0;
+}
+.rail__tick {
+  display: block;
+  width: 14px;
+  height: 2px;
+  padding: 0;
+  border: 0;
+  border-radius: 2px;
+  background: var(--gray-300);
+  cursor: pointer;
+  transition: width .25s ease, background .25s ease;
+}
+.rail__tick:hover { width: 20px; background: var(--leaf-500); }
+.rail__tick.is-active { width: 22px; height: 3px; background: var(--leaf-700); }
+
+.rail__menu {
+  width: 28px; height: 28px;
+  flex: none;
+  display: grid; place-items: center;
+  border: 0; padding: 0;
+  border-radius: var(--radius-sm);
+  background: none;
+  color: var(--gray-500);
+  cursor: pointer;
+}
+.rail__menu:hover { background: var(--leaf-50); color: var(--leaf-700); }
+.rail__menu svg { width: 17px; height: 17px; fill: none; stroke: currentColor; stroke-width: 1.7; stroke-linecap: round; }
+
+/* ---- the panel --------------------------------------------------------- */
+.rail__panel {
+  width: var(--rail-open);
+  max-width: calc(100vw - var(--rail-w));
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  padding: var(--sp-5) var(--sp-4) var(--sp-6);
+  background: rgb(255 255 255 / .96);
+  backdrop-filter: saturate(160%) blur(18px);
+  -webkit-backdrop-filter: saturate(160%) blur(18px);
+  border-right: 1px solid var(--gray-200);
+  box-shadow: var(--shadow-lg);
+  transform: translateX(-104%);
+  opacity: 0;
+  visibility: hidden;
+  transition: transform .34s cubic-bezier(.22,.61,.36,1), opacity .24s ease, visibility 0s linear .34s;
+}
+.rail.is-open .rail__panel {
+  transform: none;
+  opacity: 1;
+  visibility: visible;
+  transition-delay: 0s;
+}
+
+.rail__label {
+  margin: 0 0 var(--sp-3);
+  font-size: .625rem;
+  font-weight: 700;
+  letter-spacing: .12em;
+  text-transform: uppercase;
+  color: var(--gray-400);
+}
+.rail__label + .rail__label { margin-top: var(--sp-5); }
+
+.rail__contents { margin: 0 0 var(--sp-5); padding: 0; list-style: none; }
+.rail__contents a {
+  display: grid;
+  grid-template-columns: 1.6rem 1fr;
+  gap: .3rem;
+  padding: .32rem .4rem;
+  border-radius: var(--radius-sm);
+  font-size: var(--text-xs);
+  line-height: 1.35;
+  color: var(--gray-600);
+  text-decoration: none;
+}
+.rail__contents a:hover { background: var(--leaf-50); color: var(--leaf-900); }
+.rail__contents a.is-active { background: var(--leaf-100); color: var(--leaf-900); font-weight: 650; }
+.rail__contents i { font-style: normal; color: var(--gray-400); font-variant-numeric: tabular-nums; }
+.rail__contents a.is-active i { color: var(--leaf-700); }
+
+.rail__group + .rail__group { margin-top: .2rem; }
+.rail__grouptop {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--sp-2);
+  padding: .38rem .4rem;
+  border: 0;
+  border-radius: var(--radius-sm);
+  background: none;
+  font: inherit;
+  font-size: var(--text-sm);
+  font-weight: 600;
+  color: var(--gray-700);
+  cursor: pointer;
+  text-align: left;
+}
+.rail__grouptop:hover { background: var(--gray-100); }
+.rail__group.is-here > .rail__grouptop { color: var(--leaf-900); }
+.rail__chev {
+  width: 7px; height: 7px;
+  flex: none;
+  border-right: 1.6px solid var(--gray-400);
+  border-bottom: 1.6px solid var(--gray-400);
+  transform: rotate(-45deg);
+  transition: transform .2s ease;
+}
+.rail__group.is-open .rail__chev { transform: rotate(45deg); }
+
+.rail__groupbody { display: none; padding: .1rem 0 .3rem .55rem; margin-left: .35rem; border-left: 1px solid var(--gray-200); }
+.rail__group.is-open .rail__groupbody { display: block; }
+.rail__groupbody a {
+  display: block;
+  padding: .26rem .4rem;
+  border-radius: var(--radius-sm);
+  font-size: var(--text-xs);
+  color: var(--gray-600);
+  text-decoration: none;
+}
+.rail__groupbody a:hover { background: var(--leaf-50); color: var(--leaf-900); }
+.rail__groupbody a.is-current { color: var(--leaf-900); font-weight: 650; background: var(--leaf-100); }
+
+/* ---- desktop: give the page room ---------------------------------------- */
+@media (min-width: 1080px) {
+  body.has-rail { padding-left: var(--rail-w); }
+}
+
+/* ---- phone: a button and a sheet ---------------------------------------- */
+@media (max-width: 1079px) {
+  .rail { inset: auto auto var(--sp-4) var(--sp-4); }
+  .rail__edge { display: none; }
+  .rail__spine {
+    flex-direction: row;
+    width: auto;
+    height: 44px;
+    padding: 0 var(--sp-3);
+    gap: var(--sp-3);
+    border: 1px solid var(--gray-200);
+    border-radius: 999px;
+    box-shadow: var(--shadow-lg);
+    background: rgb(255 255 255 / .94);
+    align-items: center;
+  }
+  .rail.is-idle .rail__spine { transform: none; opacity: .55; }
+  .rail__ticks { flex-direction: row; padding: 0; gap: 5px; }
+  .rail__tick { width: 2px; height: 14px; }
+  .rail__tick:hover { width: 2px; height: 18px; }
+  .rail__tick.is-active { width: 3px; height: 20px; }
+  .rail__panel {
+    position: fixed;
+    inset: auto var(--sp-4) calc(44px + var(--sp-5)) var(--sp-4);
+    width: auto;
+    max-width: none;
+    max-height: 62vh;
+    border: 1px solid var(--gray-200);
+    border-radius: var(--radius);
+    transform: translateY(12px) scale(.98);
+    transform-origin: bottom left;
+  }
+  .rail.is-open .rail__panel { transform: none; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .rail__spine, .rail__panel, .rail__tick, .rail__chev, .rail__edge::after { transition: none; }
+}
+
+@media print { .rail, .rail__edge { display: none; } }

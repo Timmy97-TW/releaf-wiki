@@ -21,11 +21,13 @@ md-simulations/           the MD section: the overview with the map of the nine
 assets/
   css/   tokens.css       colours, type and spacing, read by everything else
          nav.css          the five-tab navigation
+         nav-rail.css     the hovering left rail, used by bioreactor-calculations
          page.css         the standard sub-page
          team.css         the members page
          home.css         the homepage
          big-picture-v2.css  the big-picture figure and map on the homepage
   js/    nav.js           builds the navigation from the data file
+         nav-rail.js      builds the left rail from NAV plus the page's own h2s
          page.js          numbering, contents rail, citations, tabs, lightbox
          team.js          builds the member cards and profiles
          big-picture-v2.js   the figure's highlighting, the map legend, the dial
@@ -63,6 +65,29 @@ outline and the note telling whoever writes it what belongs in each section.
 | `index.html` | The homepage. Claim, refusals, system, ledger, doors. |
 | `team/` | Forty-seven people, built from `assets/data/roster.js`. |
 | `attributions/` | iGEM allows the nav, the footer and the embedded form on this page and nothing else. |
+| `bioreactor-calculations/` | An instrument page. Hovering left rail, five live panels, its own CSS and JS. |
+
+**Bioreactor Calculations** is the fourth exception. `bioreactor-calculations/`
+keeps the wiki's palette and prose styles but drops the five-tab bar for the
+hovering left rail in `assets/css/nav-rail.css`, and adds `reactor.css` and
+`reactor.js` of its own. The rail rests as a 46 px spine of tick marks, slides
+off after three seconds of no pointer and no scroll, and expands on hover into a
+panel carrying this page's contents above the five wiki sections. It reads the
+same `assets/data/site-nav.js` as `nav.js`, so page addresses still live in one
+file. Below 1080 px it becomes a floating pill and a sheet.
+
+`reactor.js` holds one state object, one `compute()` and five panels that
+subscribe to it, so the cross-flow slider in section 1 also moves the operating
+dot on the shear chart in section 3. The startup transient integrates the
+Level-1 two-compartment model with Runge-Kutta 4 and reproduces the tables in
+the 2 September 2026 modelling handoff exactly (1.12 and 0.876 µg/mL at eight
+hours under the mid bracket), which is the check to re-run after any edit to the
+physics. Three fixes carried over from the internal explorer this page replaces
+are commented at the top of the file: no `innerHTML` rebuilds during animation,
+`ResizeObserver` instead of per-render `clientWidth` reads, and a critical flux
+that is predicted from cell density instead of tuned by a slider. The first
+paint does not depend on `requestAnimationFrame`, because a background tab never
+gets a frame and the page has to be right the moment it becomes visible.
 
 **The MD Simulations section** is the third exception. `md-simulations/index.html`
 is a hand-written overview: a map of the nine trajectories with BoPep4 at the
