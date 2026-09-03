@@ -1,167 +1,796 @@
 /* =============================================================================
-   ReLeaf: Engineering Success
+   ReLeaf: Engineering Success — the drawing set
    -----------------------------------------------------------------------------
-   page.css carries the frame — header, contents rail, sections, figures,
-   callouts, tables. This file adds the one thing that page does not have
-   anywhere else on the wiki: the cycle block.
+   This page is laid out as a set of controlled engineering drawings, because
+   the content already is one. A revision block records what changed, when, and
+   why: that is a DBTL cycle with different column headings. A redline is a
+   correction marked on an issued drawing: that is a failed test. "As drawn"
+   against "as fitted" is the team's own phrase for the gap between what was
+   specified and what the bench returned, and it recurs on nearly every cycle.
 
-   A cycle is a titled card containing the five literal headings Design, Build,
-   Test, Learn and Redesign. Every winning engineering page in the survey used
-   those words verbatim, so they are marked up as real headings and never
-   paraphrased. They sit at h4 so the contents rail lists tracks and cycles and
-   stops there; a rail with ninety entries is not a rail.
+   So the grammar here is a drawing sheet's grammar. Sheets with title blocks.
+   A revision history that is the page's spine. Zone letters down the edge for
+   wayfinding. Line weights that mean something — heavy for a sheet edge,
+   medium for a visible rule, thin for a dimension — instead of decorative
+   borders. State is carried by a stamp and by the link line that ties a cycle
+   to its outcome, never by a thick coloured bar.
 
-   Everything degrades. With CSS off the page is a list of headings and
-   paragraphs in the right order, which is the whole argument.
+   Palette stays ReLeaf. The reading sheets are drafting stock, because a judge
+   reads fifteen thousand words on a laptop in daylight. The cover and the atlas
+   invert to a blueprint ground, the way a drawing set's cover plate does, which
+   is where the page spends its contrast.
+
+   page.css supplies figures, tables and callouts. This file supplies the world,
+   the layout and the two interactive plates.
    ========================================================================== */
 
-/* ------------------------------------------------------------------ tracks --
-   A track is one instrument or one construct family. It opens with the
-   constraints we started from, then runs its cycles in order.               */
+/* ============================================================== TOKENS ===== */
 
-.track-lede {
-  margin: var(--sp-5) 0 var(--sp-6);
-  padding-left: var(--sp-5);
-  border-left: 3px solid var(--leaf-200);
-  font-size: var(--text-lede);
-  line-height: 1.55;
-  color: var(--gray-700);
+.eng {
+  /* drafting stock, warmed off the leaf greys so it belongs to ReLeaf */
+  --paper:      #f6f6f2;
+  --paper-2:    #eceee7;
+  --vellum:     #fbfbf8;
+
+  /* blueprint ground for the cover and the atlas */
+  --blue-900:   #0c231a;
+  --blue-800:   #10301f;
+  --blue-700:   #16412c;
+
+  /* graphite, pulled green so rules sit in the same family as the ink */
+  --graphite:   #5c6b62;
+  --graphite-2: #93a099;
+  --ink:        #15201a;
+  --ink-2:      #3d4a43;
+
+  /* line weights. A drawing's hierarchy is line weight, not colour. */
+  --lw-heavy:   1.5px;
+  --lw-med:     1px;
+  --lw-thin:    1px;
+
+  /* state, borrowed from drawing practice: issued, caution, redline */
+  --st-closed:  var(--leaf-700);
+  --st-fail:    #9a6a10;
+  --st-open:    #a33d21;
+
+  --sheet-max:  1560px;
+  --field:      .6875rem;   /* drawing-field lettering */
+
+  color: var(--ink);
+  background: var(--paper);
 }
-.track-lede b { color: var(--leaf-900); font-weight: 650; }
 
-/* the count chip that sits beside a track heading */
-.trackcount {
-  display: inline-block;
-  margin-left: var(--sp-3);
-  padding: .15em .5em;
-  border-radius: 999px;
-  background: var(--leaf-100);
-  color: var(--leaf-700);
-  font-size: .6875rem; font-weight: 700; letter-spacing: .06em;
+/* Drawing lettering. Real title blocks are a plain gothic, uppercase, widely
+   spaced — the character comes from the ruling around it, not from a costume
+   face. Inter's optical-size axis is set small here so the letterforms keep
+   their sturdiness at field size. */
+.eng .field {
+  font-family: var(--font-display);
+  font-variation-settings: "opsz" 14;
+  font-size: var(--field);
+  font-weight: 600;
+  letter-spacing: .14em;
   text-transform: uppercase;
-  vertical-align: middle;
+  font-variant-numeric: tabular-nums;
+  color: var(--graphite);
+}
+
+.eng :is(h1, h2, h3) { font-variation-settings: "opsz" 32; }
+.eng table { font-variant-numeric: tabular-nums; }
+
+/* Browser surfaces belong to the design too. */
+.eng ::selection { background: var(--leaf-200); color: var(--leaf-900); }
+.eng :focus-visible { outline: 2px solid var(--leaf-500); outline-offset: 3px; border-radius: 2px; }
+.eng { scrollbar-color: var(--graphite-2) var(--paper-2); }
+
+/* ============================================================== SHEETS ===== */
+/* Each band is a sheet. The reading sheets are stock; the cover and the atlas
+   are blueprint plates. */
+
+.sheet { position: relative; padding: clamp(2.5rem, 1rem + 5vw, 5rem) 0; }
+.sheet + .sheet { border-top: var(--lw-med) solid var(--graphite-2); }
+
+.sheet--plate {
+  background: var(--blue-900);
+  color: #dfe9e2;
+  border-top: none;
+}
+.sheet--plate + .sheet { border-top: none; }
+
+.sheet__inner {
+  max-width: var(--sheet-max);
+  margin: 0 auto;
+  padding: 0 clamp(1rem, .4rem + 2.4vw, 2.75rem);
+}
+
+/* The sheet's own title block: what drawing, what number, what revision. */
+.sheethead {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: var(--sp-3) var(--sp-5);
+  padding-bottom: var(--sp-3);
+  margin-bottom: var(--sp-6);
+  border-bottom: var(--lw-heavy) solid currentColor;
+}
+.sheethead__no {
+  font-family: var(--font-display);
+  font-variation-settings: "opsz" 14;
+  font-size: var(--field);
+  font-weight: 700;
+  letter-spacing: .16em;
+  padding: .25em .5em;
+  border: var(--lw-med) solid currentColor;
   white-space: nowrap;
 }
-
-/* ------------------------------------------------------------------- cycle --
-   One card per cycle. The rule down the left is the only ornament; it turns
-   rust when the cycle did not close, which is the state a judge should be
-   able to see from across the room.                                        */
-
-.cyc {
-  margin: var(--sp-6) 0;
-  padding: var(--sp-5) 0 var(--sp-5) var(--sp-5);
-  border-left: 3px solid var(--leaf-500);
-  border-top: 1px solid var(--gray-200);
-  border-bottom: 1px solid var(--gray-200);
-  background: linear-gradient(to right, var(--leaf-50), transparent 22rem);
+.sheethead h2 {
+  margin: 0;
+  flex: 1 1 22ch;
+  font-size: clamp(1.375rem, 1.05rem + 1.3vw, 2rem);
+  line-height: 1.15;
+  letter-spacing: -.02em;
 }
-.cyc--open { border-left-color: var(--rust-700); background: linear-gradient(to right, var(--rust-100), transparent 22rem); }
-.cyc--fail { border-left-color: var(--amber-700); background: linear-gradient(to right, var(--amber-100), transparent 22rem); }
+.sheet--plate .sheethead h2 { color: #f2f7f3; }
+.sheethead__note { flex: 0 1 34ch; margin: 0; font-size: var(--text-sm); color: var(--graphite); line-height: 1.45; }
+.sheet--plate .sheethead__note { color: #9fbcac; }
 
-.cyc > h3 { margin-top: 0; }
+/* ============================================================== COVER ====== */
 
-/* Iteration n/N. Heidelberg's label, copied deliberately: it tells a reader
-   scrolling a long track where they are and how much is left.              */
-.cyc__n {
+.cover { padding: 0; }
+/* The photograph and its wash are two layers of one background on one element.
+   An absolutely positioned image element under a separate scrim div failed to composite
+   on a cold load in at least one engine, and a cover that sometimes renders as
+   a grey gradient is not a cover. The alternative text lives on the plate. */
+.cover__plate {
+  position: relative;
+  min-height: clamp(30rem, 21rem + 27vw, 46rem);
   display: block;
-  margin-bottom: var(--sp-2);
-  font-family: var(--font-mono);
-  font-size: var(--text-xs);
-  letter-spacing: .08em;
-  text-transform: uppercase;
-  color: var(--leaf-700);
+  overflow: hidden;
+  background-image:
+    linear-gradient(to top, rgba(7,22,15,.90) 0%, rgba(7,22,15,.52) 20%, rgba(7,22,15,.14) 46%, rgba(7,22,15,0) 66%),
+    linear-gradient(to right, rgba(7,22,15,.93) 0%, rgba(7,22,15,.86) 24%, rgba(7,22,15,.46) 46%, rgba(7,22,15,.06) 64%, rgba(7,22,15,0) 74%),
+    url("../assets/img/engineering/cover-rig.webp");
+  background-repeat: no-repeat;
+  background-size: cover, cover, cover;
+  background-position: center, center, 50% 48%;
+  background-color: var(--blue-900);
 }
-.cyc--open .cyc__n { color: var(--rust-700); }
-.cyc--fail .cyc__n { color: var(--amber-700); }
+@media (max-width: 61.999rem) {
+  .cover__plate {
+    min-height: clamp(26rem, 18rem + 30vw, 34rem);
+    background-image:
+      linear-gradient(to top, rgba(8,26,18,.95) 0%, rgba(8,26,18,.88) 34%, rgba(8,26,18,.66) 62%, rgba(8,26,18,.42) 100%),
+      url("../assets/img/engineering/cover-rig.webp");
+    background-size: cover, cover;
+    background-position: center, 62% 46%;
+  }
+}
 
-/* the cycle's research question, in one sentence, before any method */
-.cyc__q {
-  margin: 0 0 var(--sp-5);
-  padding-bottom: var(--sp-4);
-  border-bottom: 1px dashed var(--gray-300);
-  font-size: var(--text-lede);
-  line-height: 1.5;
+.cover__body {
+  position: relative; z-index: 2;
+  max-width: var(--sheet-max);
+  margin: 0 auto;
+  padding: clamp(3rem, 2rem + 6vw, 7rem) clamp(1rem, .4rem + 2.4vw, 2.75rem) clamp(1.5rem, 1rem + 2vw, 2.5rem);
+  width: 100%;
+}
+.cover h1 {
+  margin: 0 0 var(--sp-4);
+  max-width: 15ch;
+  font-size: clamp(2rem, 1.15rem + 3.6vw, 4.5rem);
+  line-height: .98;
+  letter-spacing: -.035em;
+  color: #fff;
+  text-wrap: balance;
+}
+.cover__lede {
+  margin: 0;
+  max-width: 46ch;
+  font-size: clamp(1rem, .95rem + .35vw, 1.1875rem);
+  line-height: 1.55;
+  color: #cbdfd2;
+}
+.cover__lede b { color: #fff; font-weight: 650; }
+
+/* the count, as a drawing's quantity schedule */
+.cover__tally {
+  display: flex; flex-wrap: wrap; gap: 0;
+  margin: clamp(1.75rem, 1rem + 2vw, 2.75rem) 0 0;
+  padding: 0; list-style: none;
+  border: var(--lw-med) solid rgba(180,215,195,.34);
+  width: fit-content; max-width: 100%;
+}
+.cover__tally li {
+  padding: .7rem clamp(.85rem, .5rem + 1vw, 1.5rem);
+  border-right: var(--lw-med) solid rgba(180,215,195,.34);
+}
+.cover__tally li:last-child { border-right: 0; }
+.cover__tally b {
+  display: block;
+  font-size: clamp(1.5rem, 1.2rem + 1.2vw, 2.125rem);
+  font-weight: 700; line-height: 1;
+  font-variant-numeric: tabular-nums;
+  color: #fff;
+}
+.cover__tally span {
+  display: block; margin-top: .35em;
+  font-size: var(--field); font-weight: 600;
+  letter-spacing: .12em; text-transform: uppercase;
+  color: #9dbfab;
+}
+.cover__tally .is-open b, .cover__tally .is-open span { color: #f0b49a; }
+
+/* the strip under the plate: photo credit and sheet identity */
+.cover__strip {
+  background: var(--blue-800);
+  color: #9fbcac;
+  border-top: var(--lw-med) solid rgba(180,215,195,.22);
+}
+.cover__strip .sheet__inner {
+  display: flex; flex-wrap: wrap; gap: var(--sp-3) var(--sp-6);
+  align-items: baseline;
+  padding-top: var(--sp-4); padding-bottom: var(--sp-4);
+}
+.cover__strip p { margin: 0; font-size: var(--text-sm); line-height: 1.5; max-width: 62ch; }
+.cover__strip dl { display: flex; flex-wrap: wrap; gap: var(--sp-2) var(--sp-5); margin: 0; }
+.cover__strip dt { font-size: var(--field); font-weight: 600; letter-spacing: .12em; text-transform: uppercase; color: #6d8e7c; }
+.cover__strip dd { margin: 0 0 0 .5em; font-size: var(--text-sm); color: #cfe0d6; }
+
+/* ============================================================ READING ====== */
+/* A measured prose column with a live margin beside it. The margin is not
+   whitespace: it carries the cycle's metadata, cross-references and the
+   drawing notes, which is what a real sheet's border zone is for. */
+
+.rd {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: var(--sp-5);
+}
+@media (min-width: 62rem) {
+  .rd {
+    grid-template-columns: minmax(0, 68ch) minmax(0, 20rem);
+    gap: clamp(2rem, 1rem + 3vw, 4rem);
+    align-items: start;
+  }
+  .rd__wide { grid-column: 1 / -1; }
+  /* the sheet is wide so the evidence can be; the argument is not */
+  .rd__wide > :is(p, ul, ol, h3, h4, blockquote, .callout, .finding, .notes, .wherenext) {
+    max-width: 68ch;
+  }
+}
+.rd__main > * + * { margin-top: var(--sp-5); }
+.rd__aside { font-size: var(--text-sm); }
+@media (min-width: 62rem) { .rd__aside { position: sticky; top: calc(var(--nav-h) + 1.5rem); } }
+
+.eng p { line-height: 1.68; }
+.eng .lede { font-size: var(--text-lede); line-height: 1.55; color: var(--ink-2); }
+
+.eng .rd__main h3 {
+  margin: var(--sp-7) 0 var(--sp-3);
+  padding-top: var(--sp-3);
+  border-top: var(--lw-med) solid var(--graphite-2);
+  font-size: clamp(1.125rem, 1.02rem + .45vw, 1.4375rem);
+  line-height: 1.25; letter-spacing: -.015em;
   color: var(--leaf-900);
 }
+.eng .rd__main h3:first-child { margin-top: 0; }
 
-/* ------------------------------------------------------------- dbtl steps --
-   Label in a fixed left column on wide screens, above the text on narrow
-   ones. The label is an h4 so it is a real heading in the outline, not a
-   decorated span.                                                          */
+/* a drawing's general notes: numbered, terse, load-bearing */
+.notes { margin: 0; padding: 0; list-style: none; counter-reset: n; }
+.notes li {
+  counter-increment: n;
+  position: relative;
+  padding: var(--sp-4) 0 var(--sp-4) 3rem;
+  border-bottom: var(--lw-thin) solid var(--graphite-2);
+  line-height: 1.6;
+}
+.notes li:first-child { border-top: var(--lw-thin) solid var(--graphite-2); }
+.notes li::before {
+  content: counter(n, decimal-leading-zero);
+  position: absolute; left: 0; top: calc(var(--sp-4) + .18em);
+  font-family: var(--font-display);
+  font-size: var(--field); font-weight: 700;
+  letter-spacing: .1em;
+  color: var(--leaf-700);
+  font-variant-numeric: tabular-nums;
+}
+.notes b { color: var(--leaf-900); font-weight: 650; }
+
+/* the state key, in the same stamps the table and the cycles use */
+.keylist {
+  display: flex; flex-wrap: wrap; gap: var(--sp-3) var(--sp-5);
+  margin: var(--sp-5) 0; padding: 0; list-style: none;
+  font-size: var(--text-sm); color: var(--ink-2);
+}
+.keylist li { display: flex; align-items: center; gap: .55rem; }
+.keylist i {
+  width: .7rem; height: .7rem; flex: none;
+  background: var(--st-closed);
+  outline: var(--lw-med) solid var(--st-closed); outline-offset: 2px;
+}
+.keylist .k-fail i { background: var(--st-fail); outline-color: var(--st-fail); }
+.keylist .k-open i { background: var(--st-open); outline-color: var(--st-open); }
+
+/* ========================================================== RUBRIC ========= */
+/* What the judge is scoring, mapped to where the evidence is. */
+
+.rubric { display: grid; gap: var(--sp-4); grid-template-columns: repeat(auto-fit, minmax(15rem, 1fr)); margin: var(--sp-5) 0; }
+.rubric__item {
+  padding: var(--sp-4);
+  border: var(--lw-med) solid var(--graphite-2);
+  background: var(--vellum);
+}
+.rubric__q { margin: 0 0 var(--sp-3); font-weight: 650; color: var(--leaf-900); line-height: 1.4; }
+.rubric__a { margin: 0 0 var(--sp-3); font-size: var(--text-sm); color: var(--ink-2); line-height: 1.55; }
+.rubric__go {
+  display: inline-block;
+  font-size: var(--field); font-weight: 700; letter-spacing: .1em; text-transform: uppercase;
+  color: var(--leaf-700); text-decoration: none;
+  border-bottom: var(--lw-med) solid currentColor; padding-bottom: .15em;
+}
+.rubric__go:hover { color: var(--leaf-900); }
+
+.eng .card2 {
+  padding: var(--sp-4) var(--sp-5) var(--sp-5);
+  border: var(--lw-med) solid var(--graphite-2);
+  border-top: var(--lw-heavy) solid var(--leaf-700);
+  border-radius: 0;
+  background: var(--vellum);
+}
+.eng .card2 h4 { margin: 0 0 var(--sp-2); color: var(--leaf-900); font-size: var(--text-base); line-height: 1.35; }
+.eng .card2 p:last-child { margin-bottom: 0; }
+.eng .card2 .num {
+  display: block; margin-bottom: .1em;
+  font-family: var(--font-display);
+  font-size: clamp(1.75rem, 1.4rem + 1.4vw, 2.5rem);
+  font-weight: 700; line-height: 1;
+  color: var(--leaf-700);
+  font-variant-numeric: tabular-nums;
+  letter-spacing: -.02em;
+}
+.eng .card2 .num em { font-style: normal; font-size: .55em; margin-left: .1em; }
+.eng .grid { display: grid; gap: var(--sp-4); grid-template-columns: repeat(auto-fit, minmax(16rem, 1fr)); margin: var(--sp-5) 0; }
+
+/* ============================================================= ATLAS ======= */
+/* Four chains of cycles and the links between them. The point of the plate is
+   the arrows: a judge is hunting for evidence that cycle n caused cycle n+1,
+   and this is that evidence drawn once. */
+
+.atlas__tools {
+  display: flex; flex-wrap: wrap; gap: var(--sp-2) var(--sp-3);
+  align-items: center;
+  margin-bottom: var(--sp-5);
+}
+.atlas__tools .field { color: #8fae9d; margin-right: var(--sp-2); }
+.chip {
+  font-family: var(--font-display);
+  font-size: var(--field); font-weight: 600; letter-spacing: .1em; text-transform: uppercase;
+  padding: .45em .85em;
+  border: var(--lw-med) solid rgba(180,215,195,.4);
+  background: transparent; color: #cfe4d7;
+  cursor: pointer;
+  transition: background .14s ease, border-color .14s ease, color .14s ease;
+}
+.chip:hover { border-color: rgba(180,215,195,.85); color: #fff; }
+.chip[aria-pressed="true"] { background: #cfe4d7; border-color: #cfe4d7; color: var(--blue-900); }
+
+.atlas__scroll { max-width: 100%; overflow-x: auto; overscroll-behavior-x: contain; padding-bottom: var(--sp-3); }
+.atlas__svg { display: block; min-width: 60rem; width: 100%; height: auto; }
+
+.atlas .lane-rule  { stroke: rgba(160,200,178,.20); stroke-width: 1; }
+.atlas .lane-name  { fill: #8fae9d; font-family: var(--font-display); font-size: 12px; font-weight: 700; letter-spacing: .14em; text-transform: uppercase; }
+.atlas .lane-count { fill: #5f8571; font-family: var(--font-display); font-size: 11px; font-weight: 600; letter-spacing: .1em; }
+
+.atlas .link      { stroke: rgba(170,210,188,.5); stroke-width: 1.6; fill: none; marker-end: url(#eng-arrow); }
+.atlas .link-cross{ stroke: rgba(214,176,120,.62); stroke-width: 1.4; fill: none; stroke-dasharray: 5 4; marker-end: url(#eng-arrow-x); }
+
+.atlas .node       { cursor: pointer; }
+.atlas .node rect  { fill: var(--blue-700); stroke: rgba(180,215,195,.45); stroke-width: 1.4; transition: fill .14s ease, stroke .14s ease; }
+.atlas .node[data-state="fail"] > rect:first-of-type { stroke: rgba(212,160,58,.75); }
+.atlas .node[data-state="open"] > rect:first-of-type { stroke: rgba(216,115,76,.85); fill: #1b3527; }
+.atlas .node .id   { fill: #eaf5ee; font-family: var(--font-display); font-size: 13px; font-weight: 700; letter-spacing: .06em; }
+.atlas .node .cap  { fill: #a9c7b6; font-family: var(--font-display); font-size: 11px; font-weight: 500; }
+.atlas .node:hover rect,
+.atlas .node:focus-visible rect { fill: #1d5236; stroke: #cfe9d9; }
+.atlas .node:focus-visible { outline: none; }
+.atlas .node:focus-visible rect { stroke-width: 2.6; }
+
+/* the state tab on each node — the drawing's stamp, not a coloured border */
+.atlas .st-closed { fill: #4f9c6f; }
+.atlas .st-fail   { fill: #d4a03a; }
+.atlas .st-open   { fill: #d8734c; }
+
+.atlas .node.is-dim { opacity: .2; }
+.atlas .link.is-dim, .atlas .link-cross.is-dim { opacity: .12; }
+
+.atlas__legend {
+  display: flex; flex-wrap: wrap; gap: var(--sp-3) var(--sp-5);
+  margin-top: var(--sp-5); padding: 0; list-style: none;
+  font-size: var(--text-sm); color: #a9c7b6;
+}
+.atlas__legend li { display: flex; align-items: center; gap: .5rem; }
+.atlas__legend i { width: .85rem; height: .85rem; flex: none; }
+.atlas__legend .k-closed { background: #4f9c6f; }
+.atlas__legend .k-fail   { background: #d4a03a; }
+.atlas__legend .k-open   { background: #d8734c; }
+.atlas__legend .k-link   { background: linear-gradient(to right, rgba(170,210,188,.7) 60%, transparent 60%); height: 2px; width: 1.6rem; }
+.atlas__legend .k-cross  { background: repeating-linear-gradient(to right, rgba(214,176,120,.9) 0 5px, transparent 5px 9px); height: 2px; width: 1.6rem; }
+
+.atlas__tip {
+  margin-top: var(--sp-5);
+  padding: var(--sp-4);
+  border: var(--lw-med) solid rgba(180,215,195,.34);
+  background: rgba(255,255,255,.04);
+  min-height: 6.5rem;
+}
+.atlas__tip .field { color: #8fae9d; }
+.atlas__tip h3 { margin: .4rem 0 .5rem; font-size: 1.0625rem; line-height: 1.35; color: #f2f7f3; }
+.atlas__tip p { margin: 0 0 .5rem; font-size: var(--text-sm); line-height: 1.55; color: #bcd6c7; }
+.atlas__tip p:last-child { margin-bottom: 0; }
+.atlas__tip a { color: #cfe9d9; }
+
+/* ================================================== REVISION HISTORY ====== */
+
+.revs { width: 100%; border-collapse: collapse; font-size: var(--text-sm); }
+.revs th, .revs td { text-align: left; vertical-align: top; padding: .7rem .8rem; border-bottom: var(--lw-thin) solid var(--graphite-2); }
+.revs thead th {
+  font-family: var(--font-display);
+  font-size: var(--field); font-weight: 700; letter-spacing: .12em; text-transform: uppercase;
+  color: var(--graphite);
+  border-bottom: var(--lw-heavy) solid var(--ink);
+  white-space: nowrap;
+}
+.revs tbody tr:hover { background: var(--vellum); }
+.revs .rv-id a {
+  font-family: var(--font-display); font-weight: 700; letter-spacing: .08em;
+  color: var(--leaf-900); text-decoration: none; white-space: nowrap;
+}
+.revs .rv-id a:hover { text-decoration: underline; }
+.revs .rv-chg { color: var(--leaf-900); font-weight: 600; }
+.revs tr[data-state="open"] .rv-chg { color: var(--st-open); }
+
+/* the state stamp, shared by the table and the cycle headers */
+.stamp {
+  display: inline-flex; align-items: center; gap: .4em;
+  font-family: var(--font-display);
+  font-size: var(--field); font-weight: 700; letter-spacing: .1em; text-transform: uppercase;
+  padding: .25em .55em;
+  border: var(--lw-med) solid currentColor;
+  white-space: nowrap;
+}
+.stamp::before { content: ""; width: .5em; height: .5em; background: currentColor; flex: none; }
+.stamp--closed { color: var(--st-closed); }
+.stamp--fail   { color: var(--st-fail); }
+.stamp--open   { color: var(--st-open); }
+
+/* ============================================================ CYCLES ======= */
+/* Collapsed, a cycle is one revision row: what was asked, what came back, what
+   changed. Expanded, it is the full record. The judge scans twenty-two and
+   opens the four that matter. */
+
+.cyc {
+  border-bottom: var(--lw-thin) solid var(--graphite-2);
+}
+.cyc:first-of-type { border-top: var(--lw-heavy) solid var(--ink); }
+
+/* <details> supplies the disclosure; the marker is replaced by the drawn chevron */
+.cyc > summary { list-style: none; }
+.cyc > summary::-webkit-details-marker { display: none; }
+.cyc > summary::marker { content: ""; }
+
+.cyc__head {
+  display: grid;
+  grid-template-columns: auto 1fr auto;
+  align-items: start;
+  gap: var(--sp-3) var(--sp-4);
+  width: 100%;
+  padding: var(--sp-5) 0;
+  background: none; border: 0;
+  font: inherit; color: inherit; text-align: left;
+  cursor: pointer;
+}
+.cyc__head:hover { background: var(--vellum); }
+.cyc__head:hover .cyc__title { color: var(--leaf-700); }
+
+.cyc__no {
+  grid-row: 1 / span 2;
+  font-family: var(--font-display);
+  font-size: .8125rem; font-weight: 700; letter-spacing: .08em;
+  color: var(--leaf-900);
+  padding: .3em .5em;
+  border: var(--lw-med) solid var(--graphite-2);
+  min-width: 3.25rem; text-align: center;
+  font-variant-numeric: tabular-nums;
+}
+.cyc__title {
+  grid-column: 2; margin: 0;
+  font-size: clamp(1.0625rem, 1rem + .35vw, 1.3125rem);
+  line-height: 1.3; letter-spacing: -.01em;
+  color: var(--leaf-900);
+  transition: color .14s ease;
+}
+.cyc__q { grid-column: 2; margin: 0; font-size: var(--text-sm); color: var(--ink-2); line-height: 1.55; }
+.cyc__meta { grid-column: 3; grid-row: 1 / span 2; display: flex; flex-direction: column; align-items: flex-end; gap: var(--sp-2); }
+.cyc__chev {
+  width: 1.5rem; height: 1.5rem; flex: none;
+  border: var(--lw-med) solid var(--graphite);
+  display: grid; place-items: center;
+  color: var(--graphite);
+}
+.cyc__chev::before {
+  content: ""; width: .4rem; height: .4rem;
+  border-right: 1.5px solid currentColor; border-bottom: 1.5px solid currentColor;
+  transform: translateY(-.1rem) rotate(45deg);
+  transition: transform .18s cubic-bezier(.22,1,.36,1);
+}
+.cyc[open] .cyc__chev::before { transform: translateY(.06rem) rotate(-135deg); }
+.cyc[open] .cyc__head { background: var(--vellum); }
+
+/* the one-line result, visible while collapsed — this is what makes scanning
+   twenty-two cycles possible */
+.cyc__out {
+  grid-column: 2; margin: 0;
+  display: flex; flex-wrap: wrap; gap: .4rem 1.25rem;
+  font-size: var(--text-sm);
+}
+.cyc__out span { display: inline-flex; gap: .5em; }
+.cyc__out b { color: var(--graphite); font-weight: 600; font-size: var(--field); letter-spacing: .1em; text-transform: uppercase; padding-top: .18em; }
+.cyc__out i { font-style: normal; color: var(--ink); }
+
+/* On a phone the three-column header cannot hold a nowrap stamp in its third
+   column without pushing the whole document wider than the screen, so the
+   header folds to two rows and the stamp is allowed to wrap. */
+@media (max-width: 48rem) {
+  .cyc__head { grid-template-columns: auto minmax(0, 1fr); }
+  .cyc__no { grid-row: 1; grid-column: 1; }
+  .cyc__title { grid-column: 2; }
+  .cyc__q, .cyc__out { grid-column: 1 / -1; }
+  .cyc__meta {
+    grid-column: 1 / -1; grid-row: auto;
+    flex-direction: row; align-items: center; justify-content: space-between;
+    width: 100%;
+  }
+  .stamp { white-space: normal; }
+}
+
+.cyc__body { padding: 0 0 var(--sp-7); }
+@media (min-width: 62rem) { .cyc__body { padding-left: 4.6rem; } }
+
+/* ------------------------------------------------------------- dbtl steps -- */
 
 .step { margin: var(--sp-5) 0; }
 .step > h4 {
   margin: 0 0 var(--sp-2);
   font-family: var(--font-display);
-  font-size: .75rem; font-weight: 800; letter-spacing: .12em;
-  text-transform: uppercase;
+  font-size: var(--field); font-weight: 800; letter-spacing: .16em; text-transform: uppercase;
   color: var(--leaf-700);
 }
 .step > h4 .step__tail {
-  display: block;
-  margin-top: .35em;
-  font-size: var(--text-base); font-weight: 600; letter-spacing: 0;
-  text-transform: none;
-  color: var(--leaf-900);
-  line-height: 1.4;
+  display: block; margin-top: .5em;
+  font-size: var(--text-base); font-weight: 600; letter-spacing: 0; text-transform: none;
+  color: var(--leaf-900); line-height: 1.4;
 }
 .step > :last-child { margin-bottom: 0; }
-
-.step--test  > h4 { color: var(--amber-700); }
+.step--test  > h4 { color: var(--st-fail); }
 .step--learn > h4 { color: var(--leaf-900); }
-.step--redesign > h4 { color: var(--rust-700); }
+.step--redesign > h4 { color: var(--st-open); }
 
-@media (min-width: 60rem) {
+@media (min-width: 48rem) {
   .step {
     display: grid;
-    grid-template-columns: 7.5rem 1fr;
+    grid-template-columns: 7rem minmax(0, 1fr);
     column-gap: var(--sp-5);
     align-items: start;
   }
-  .step > h4 { grid-column: 1; margin-top: .3em; }
+  .step > h4 { grid-column: 1; margin-top: .35em; padding-top: .4em; border-top: var(--lw-med) solid currentColor; }
   .step > h4 .step__tail { display: none; }
   .step > :not(h4) { grid-column: 2; }
-  /* the sentence that would have been the tail on narrow screens is repeated
-     as the first line of the body, so nothing is lost when it is hidden */
 }
 
-/* the one-line finding that follows a Test, borrowed from Estonia-TUIT:
-   the sub-heading IS the result, so the heading teaches on its own       */
+/* the finding: the sentence a judge can quote */
 .finding {
-  margin: 0 0 var(--sp-3);
-  font-weight: 650;
-  color: var(--leaf-900);
+  margin: 0 0 var(--sp-4);
+  padding: var(--sp-3) var(--sp-4);
+  background: var(--paper-2);
+  border-left: var(--lw-med) solid var(--graphite);
+  font-weight: 600; color: var(--leaf-900); line-height: 1.5;
 }
 
-/* ------------------------------------------------------------- glance table */
+/* ---------------------------------------------------------------- filters -- */
 
-table.data td.chg { color: var(--leaf-900); font-weight: 600; }
-table.data td.open { color: var(--rust-700); font-weight: 600; }
-table.data th.num, table.data td.num { width: 3.5rem; white-space: nowrap; font-variant-numeric: tabular-nums; }
+.cycfilter {
+  display: flex; flex-wrap: wrap; gap: var(--sp-2) var(--sp-3);
+  align-items: center;
+  padding: var(--sp-4) 0;
+  margin-bottom: var(--sp-2);
+}
+.cycfilter .field { margin-right: var(--sp-2); }
+.cycfilter .chip { border-color: var(--graphite-2); color: var(--ink-2); }
+.cycfilter .chip:hover { border-color: var(--graphite); color: var(--ink); }
+.cycfilter .chip[aria-pressed="true"] { background: var(--leaf-900); border-color: var(--leaf-900); color: #fff; }
+.cyc[hidden] { display: none; }
 
-/* ------------------------------------------------------------------ scores --
-   the key-achievement row at the top of the page                            */
+/* ============================================================= INDEX ======= */
+/* The fat contents rail is gone. This is a sheet-edge index: a slim gutter of
+   ticks that names itself on hover or focus. */
 
-.scores { margin: var(--sp-6) 0; }
-.scores .card2 { border-top: 3px solid var(--leaf-500); }
+.edge { display: none; }
+@media (min-width: 78rem) {
+  .edge {
+    display: block;
+    position: fixed;
+    left: max(.75rem, calc(50vw - var(--sheet-max) / 2 - 3.25rem));
+    top: 50%; transform: translateY(-50%);
+    z-index: 40;
+    padding: var(--sp-3) 0;
+  }
+  .edge ol { margin: 0; padding: 0; list-style: none; }
+  .edge li + li { margin-top: 2px; }
+  .edge a {
+    display: flex; align-items: center; gap: .5rem;
+    text-decoration: none;
+    padding: .18rem .3rem;
+  }
+  .edge .tick {
+    width: 2rem; height: 2px; flex: none;
+    background: var(--graphite-2);
+    transform: scaleX(.675); transform-origin: left center;
+    transition: transform .16s ease, background .16s ease;
+  }
+  .edge a:hover .tick, .edge a:focus-visible .tick { transform: none; background: var(--leaf-700); }
+  .edge a[aria-current="true"] .tick { transform: none; background: var(--leaf-900); }
+  .edge .lbl {
+    font-family: var(--font-display);
+    font-size: .625rem; font-weight: 700; letter-spacing: .1em; text-transform: uppercase;
+    color: var(--graphite);
+    opacity: 0; transform: translateX(-.25rem);
+    transition: opacity .16s ease, transform .16s ease;
+    white-space: nowrap;
+  }
+  /* Labels appear only while the rail is being used. Left on permanently for
+     the current sheet they sit on top of the prose, which is worse than a
+     tick you can hover. */
+  .edge:hover .lbl, .edge a:focus-visible .lbl { opacity: 1; transform: none; }
+  .edge a[aria-current="true"] .lbl { color: var(--leaf-900); }
+  .edge:hover, .edge:focus-within {
+    background: var(--vellum);
+    border: var(--lw-med) solid var(--graphite-2);
+    padding: var(--sp-3) var(--sp-3) var(--sp-3) var(--sp-2);
+  }
+  .edge.on-plate:hover, .edge.on-plate:focus-within {
+    background: rgba(8,26,18,.94); border-color: rgba(180,215,195,.34);
+  }
+  .edge .st { width: .4rem; height: .4rem; flex: none; border-radius: 50%; }
+  .edge .st-closed { background: var(--st-closed); }
+  .edge .st-fail   { background: var(--st-fail); }
+  .edge .st-open   { background: var(--st-open); }
 
-/* --------------------------------------------------------------- figure note
-   a line under a figure saying what was done to the file. Required by the
-   judge handbook's figure-integrity rule, and cheap to write.              */
+  /* over a blueprint plate the graphite ticks vanish, so the rail inverts */
+  .edge.on-plate .tick { background: rgba(190,225,205,.5); }
+  .edge.on-plate a:hover .tick, .edge.on-plate a:focus-visible .tick { background: #cfe9d9; }
+  .edge.on-plate a[aria-current="true"] .tick { background: #fff; }
+  .edge.on-plate .lbl { color: #a9c7b6; }
+  .edge.on-plate a[aria-current="true"] .lbl { color: #fff; }
 
-.figs figcaption .prov, .fig figcaption .prov {
-  display: block;
-  margin-top: var(--sp-2);
-  color: var(--gray-500);
-  font-size: var(--text-xs);
+  /* nothing to index while the cover is still filling the screen */
+  .edge { opacity: 1; transition: opacity .2s ease; }
+  .edge.is-hidden { opacity: 0; pointer-events: none; }
 }
 
-/* ------------------------------------------------------------------ legend --
-   the small key that explains the left-rule colours                        */
+/* ============================================================ FIGURES ====== */
 
-.keylist { display: flex; flex-wrap: wrap; gap: var(--sp-4); margin: var(--sp-5) 0; padding: 0; list-style: none; font-size: var(--text-sm); }
-.keylist li { display: flex; align-items: center; gap: var(--sp-2); }
-.keylist i { width: 3px; height: 1.15em; border-radius: 2px; background: var(--leaf-500); }
-.keylist .k-fail i { background: var(--amber-700); }
-.keylist .k-open i { background: var(--rust-700); }
+.eng .fig { margin: var(--sp-6) 0; }
+.eng .fig img {
+  border: var(--lw-med) solid var(--graphite-2);
+  border-radius: 0;
+  background: var(--paper-2);
+}
+.eng .fig figcaption {
+  margin-top: var(--sp-3);
+  padding-left: var(--sp-3);
+  border-left: var(--lw-med) solid var(--graphite-2);
+  font-size: var(--text-sm); line-height: 1.55; color: var(--ink-2);
+}
+.eng .fig figcaption b { color: var(--leaf-900); }
+.eng .fig figcaption .prov { display: block; margin-top: var(--sp-2); font-size: var(--text-xs); color: var(--graphite); }
+
+/* ============================================================ TABLES ======= */
+
+.eng .tablewrap { max-width: 100%; overflow-x: auto; margin: var(--sp-5) 0; }
+.eng table.data { width: 100%; border-collapse: collapse; font-size: var(--text-sm); }
+.eng table.data th, .eng table.data td {
+  text-align: left; vertical-align: top;
+  padding: .6rem .75rem;
+  border-bottom: var(--lw-thin) solid var(--graphite-2);
+}
+.eng table.data thead th {
+  font-family: var(--font-display);
+  font-size: var(--field); font-weight: 700; letter-spacing: .12em; text-transform: uppercase;
+  color: var(--graphite);
+  border-bottom: var(--lw-heavy) solid var(--ink);
+}
+.eng table.data td.chg  { color: var(--leaf-900); font-weight: 600; }
+.eng table.data td.open { color: var(--st-open); font-weight: 600; }
+.eng table.data th.num, .eng table.data td.num { width: 3.5rem; white-space: nowrap; }
+
+/* =========================================================== CALLOUTS ====== */
+/* page.css ships these; this world squares them off and swaps the heavy bar
+   for a ruled block, because a 4px colour bar is decoration and a ruled note
+   is what a drawing actually carries. */
+
+.eng .callout {
+  border: var(--lw-med) solid var(--graphite-2);
+  border-left-width: var(--lw-med);
+  border-radius: 0;
+  background: var(--vellum);
+  padding: var(--sp-4) var(--sp-5);
+}
+.eng .callout__label {
+  font-family: var(--font-display);
+  font-size: var(--field); font-weight: 700; letter-spacing: .13em; text-transform: uppercase;
+}
+.eng .callout--medal    { border-color: var(--st-fail); background: #fdf8ec; }
+.eng .callout--medal .callout__label { color: var(--st-fail); }
+.eng .callout--unproven { border-color: var(--st-open); background: #fcf1ed; }
+.eng .callout--unproven .callout__label { color: var(--st-open); }
+.eng .callout--borrowed { border-color: var(--slate-700); background: #eef2f6; }
+.eng .callout--borrowed .callout__label { color: var(--slate-700); }
+
+.eng blockquote {
+  margin: var(--sp-5) 0; padding: 0 0 0 var(--sp-5);
+  border-left: var(--lw-med) solid var(--graphite);
+  color: var(--ink-2); font-style: normal;
+}
+
+/* ============================================================= CLOSING ===== */
+
+.eng .refs { margin-top: var(--sp-7); }
+.eng .refs h2 { font-size: var(--text-h3); }
+.eng .refs ol { padding-left: 1.4rem; font-size: var(--text-sm); line-height: 1.6; color: var(--ink-2); }
+.eng .refs li + li { margin-top: var(--sp-3); }
+
+.wherenext {
+  margin-top: var(--sp-6);
+  padding: var(--sp-5);
+  border: var(--lw-heavy) solid var(--ink);
+  background: var(--vellum);
+  font-size: var(--text-sm); line-height: 1.6;
+}
+.wherenext b { color: var(--leaf-900); }
+
+/* ============================================================== MOTION ===== */
+/* One authored moment: a sheet settles as it comes into view, the way a drawing
+   drops onto a light table. Everything is visible by default; this only plays
+   where the browser supports it and the reader has not asked for less. */
+
+@media (prefers-reduced-motion: no-preference) {
+  @supports (animation-timeline: view()) {
+    .sheet > .sheet__inner {
+      animation: sheet-settle linear both;
+      animation-timeline: view();
+      animation-range: entry 0% entry 32%;
+    }
+    @keyframes sheet-settle {
+      from { opacity: .55; transform: translateY(.75rem); }
+      to   { opacity: 1;   transform: none; }
+    }
+  }
+  .cyc__body { animation: cyc-open .26s cubic-bezier(.22,1,.36,1) both; }
+  @keyframes cyc-open {
+    from { opacity: 0; transform: translateY(-.35rem); }
+    to   { opacity: 1; transform: none; }
+  }
+}
+
+/* =============================================================== PRINT ===== */
+/* A judge may print this. Sheets flatten, every cycle opens, the plates drop. */
+
+@media print {
+  .eng { background: #fff; }
+  .edge, .atlas__tools, .cycfilter { display: none !important; }
+  .sheet--plate { background: #fff; color: #000; }
+  .sheet--plate :is(h2, h3, p, li) { color: #000 !important; }
+  .cyc__body { display: block !important; }
+  .cyc__chev { display: none; }
+  .cyc { break-inside: avoid; }
+  .fig { break-inside: avoid; }
+}
