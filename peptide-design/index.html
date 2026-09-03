@@ -4,32 +4,365 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>Peptide Design | ReLeaf &middot; iGEM 2026</title>
-  <meta name="description" content="Choosing the protectant, and letting its size decide the membrane." />
+  <meta name="description" content="How the twenty-three residues of BoPep4 were divided into a protected core and two editable ends, which of our own results survived their controls, and what was ordered." />
   <link rel="icon" href="../assets/img/logo.png" />
   <link rel="stylesheet" href="../assets/css/tokens.css" />
   <link rel="stylesheet" href="../assets/css/nav.css" />
   <link rel="stylesheet" href="../assets/css/page.css" />
+  <style>
+    /* -----------------------------------------------------------------------
+       Page-local. page.css knows about prose, figures and tables; it has no
+       reason to know about a sequence viewer, a seventeen-row alignment, a
+       truncation slider or a claim ledger. All of it is built on the tokens
+       and none of it is required for the page to read: with JavaScript off
+       every grid, chart and table below is already in the markup, and the
+       script only adds highlighting, the slider and the axis toggles.
+       -------------------------------------------------------------------- */
+
+    /* ---- the banner behind the title ---- */
+    .pagehead__bg { position: absolute; inset: 0; }
+    .pagehead__bg svg { display: block; width: 100%; height: 100%; }
+    .ban-lrr   { fill: none; stroke: var(--leaf-200); stroke-width: 1.4; stroke-linecap: round; opacity: .55; }
+    .ban-groove{ fill: none; stroke: var(--leaf-200); stroke-width: 2.2; opacity: .32; }
+    .ban-pep   { fill: none; stroke: #eafaf1; stroke-width: 2.6; stroke-linecap: round; stroke-linejoin: round; }
+    .ban-anch  { fill: #eafaf1; }
+    .ban-anch.is-clamp { fill: #f2a189; }
+    .ban-link  { stroke: #cfe4d8; stroke-width: 1.1; stroke-dasharray: 2.5 2.5; }
+    .ban-lab   { fill: #cfe4d8; font-size: 15px; font-weight: 700; letter-spacing: .16em; text-transform: uppercase; opacity: .62; }
+
+    /* engineering.css scopes .prov to its own page, and the figure-integrity
+       note has to read as a separate line wherever it appears. */
+    .fig figcaption .prov {
+      display: block; margin-top: var(--sp-2);
+      font-size: var(--text-xs); color: var(--gray-500);
+    }
+    /* two structural renders side by side need more than the 68ch column */
+    @media (min-width: 1180px) {
+      .figs--2 { width: min(54rem, calc(100vw - 24rem)); max-width: none; }
+    }
+
+    /* ---- wide blocks get the gutter, same bargain page.css strikes ---- */
+    @media (min-width: 1240px) {
+      .pd-ruler, .pd-aln, .pd-ladder, .pd-bench, .pd-ledger, .pd-casslist,
+      .tablewrap--wide, .fig--wider {
+        width: min(64rem, calc(100vw - 30rem)); max-width: none;
+      }
+    }
+
+    /* ---- shared furniture ---- */
+    .pd-chip {
+      font: inherit; font-size: var(--text-xs); font-weight: 650; line-height: 1;
+      padding: .5em 1em; cursor: pointer; border-radius: 999px;
+      color: var(--gray-600); background: var(--white);
+      border: 1px solid var(--gray-200);
+    }
+    .pd-chip:hover { border-color: var(--leaf-500); color: var(--leaf-900); }
+    .pd-chip:focus-visible { outline: 2px solid var(--leaf-700); outline-offset: 2px; }
+    .pd-chip.is-on { color: var(--leaf-900); background: var(--leaf-100); border-color: var(--leaf-200); }
+
+    .pd-tag {
+      display: inline-block; font-size: var(--text-xs); font-weight: 700;
+      letter-spacing: .04em; padding: .25em .7em; border-radius: 999px;
+      background: var(--gray-100); color: var(--gray-700); white-space: nowrap;
+    }
+    .pd-tag.is-anchor    { background: var(--leaf-900); color: #eafaf1; }
+    .pd-tag.is-core      { background: var(--leaf-700); color: #eafaf1; }
+    .pd-tag.is-buried    { background: var(--leaf-200); color: var(--leaf-900); }
+    .pd-tag.is-partial   { background: var(--amber-100); color: var(--amber-700); }
+    .pd-tag.is-none      { background: var(--gray-100); color: var(--gray-500); }
+    .pd-tag.is-p2-conserved { background: var(--leaf-100); color: var(--leaf-900); }
+    .pd-tag.is-p2-partial   { background: var(--amber-100); color: var(--amber-700); }
+    .pd-tag.is-p2-degraded  { background: var(--rust-100);  color: var(--rust-700); }
+    .pd-tag.is-p2-unmapped,
+    .pd-tag.is-p2-none      { background: var(--gray-100); color: var(--gray-500); }
+    .pd-tag.is-holds     { background: var(--leaf-100); color: var(--leaf-900); }
+    .pd-tag.is-qualified { background: var(--amber-100); color: var(--amber-700); }
+    .pd-tag.is-retracted { background: var(--rust-100);  color: var(--rust-700); }
+    .pd-tag.is-open      { background: var(--slate-100); color: var(--slate-700); }
+
+    .pd-stats { list-style: none; margin: 0; padding: 0; }
+    .pd-stats li {
+      display: flex; justify-content: space-between; align-items: baseline; gap: var(--sp-3);
+      padding: .42em 0; border-bottom: 1px solid var(--gray-200);
+    }
+    .pd-stats li:last-child { border-bottom: 0; }
+    .pd-stats b { font-weight: 500; color: var(--gray-600); font-size: var(--text-xs); }
+    .pd-stats span { font-family: var(--font-mono); font-weight: 650; font-size: var(--text-sm); color: var(--black); text-align: right; }
+
+    .pd-seq, .mono {
+      font-family: var(--font-mono); font-size: var(--text-sm); letter-spacing: .04em;
+      word-break: break-all; color: var(--gray-700);
+    }
+
+    /* ---- 1. the sequence explorer ---- */
+    .pd-ruler {
+      margin: var(--sp-6) 0; border: 1px solid var(--gray-200);
+      border-radius: var(--radius); background: var(--leaf-50); overflow: hidden;
+    }
+    .pd-ruler__strip {
+      display: flex; align-items: flex-end; gap: 2px;
+      padding: var(--sp-5) var(--sp-4) var(--sp-2);
+      overflow-x: auto;
+    }
+    .pd-res {
+      flex: 1 1 0; min-width: 1.75rem; appearance: none; cursor: pointer;
+      display: flex; flex-direction: column; align-items: center; gap: 3px;
+      padding: 0 0 .35rem; background: none; border: 0; border-radius: var(--radius-sm);
+      font: inherit;
+    }
+    .pd-res:hover { background: var(--white); }
+    .pd-res:focus-visible { outline: 2px solid var(--leaf-700); outline-offset: 1px; }
+    .pd-res[aria-pressed="true"] { background: var(--white); box-shadow: var(--shadow-sm); }
+    .pd-res__aa {
+      font-family: var(--font-mono); font-size: var(--text-sm); font-weight: 700;
+      color: var(--gray-500); line-height: 1;
+    }
+    .pd-res__n { font-size: 10px; color: var(--gray-400); font-variant-numeric: tabular-nums; }
+    .pd-res__bar { display: block; width: 60%; border-radius: 2px 2px 0 0; background: var(--gray-300); }
+    .pd-res.is-anchor  .pd-res__bar { background: var(--leaf-900); }
+    .pd-res.is-core    .pd-res__bar { background: var(--leaf-700); }
+    .pd-res.is-buried  .pd-res__bar { background: var(--leaf-500); }
+    .pd-res.is-partial .pd-res__bar { background: var(--amber-700); }
+    .pd-res.is-none    .pd-res__bar { background: var(--gray-300); }
+    .pd-res.is-anchor .pd-res__aa,
+    .pd-res.is-core   .pd-res__aa { color: var(--leaf-900); }
+    .pd-res[aria-pressed="true"] .pd-res__aa { color: var(--black); }
+
+    .pd-ruler__axis {
+      display: flex; justify-content: space-between; gap: var(--sp-3);
+      margin: 0; padding: 0 var(--sp-5) var(--sp-4);
+      font-size: var(--text-xs); color: var(--gray-500);
+    }
+    .pd-ruler__axis span:nth-child(2) { color: var(--gray-400); }
+    .pd-ruler__panel {
+      border-top: 1px solid var(--gray-200); background: var(--white);
+      padding: var(--sp-5);
+    }
+    .pd-ruler__head {
+      display: flex; flex-wrap: wrap; align-items: center; gap: var(--sp-3);
+      margin: 0 0 var(--sp-4);
+    }
+    .pd-ruler__head b { font-size: var(--text-h3); color: var(--leaf-900); line-height: 1; }
+    .pd-ruler__note { margin: var(--sp-4) 0 0; font-size: var(--text-sm); color: var(--gray-700); line-height: 1.6; }
+    .pd-ruler__hint {
+      margin: 0; padding: var(--sp-3) var(--sp-5); background: var(--white);
+      border-top: 1px solid var(--gray-200);
+      font-size: var(--text-xs); color: var(--gray-500);
+    }
+
+    /* ---- 2. the alignment ---- */
+    .pd-aln {
+      margin: var(--sp-6) 0; border: 1px solid var(--gray-200);
+      border-radius: var(--radius); background: var(--white); overflow: hidden;
+    }
+    .pd-aln__bar {
+      display: flex; flex-wrap: wrap; align-items: center; gap: var(--sp-2);
+      padding: var(--sp-3) var(--sp-4); background: var(--leaf-50);
+      border-bottom: 1px solid var(--gray-200);
+    }
+    .pd-aln__legend { font-size: var(--text-xs); color: var(--gray-500); margin-right: var(--sp-1); }
+    .pd-aln__scroll { overflow-x: auto; }
+    .pd-aln__grid { border-collapse: collapse; width: 100%; min-width: 40rem; }
+    .pd-aln__grid th, .pd-aln__grid td { padding: 0; }
+    .pd-aln__nm {
+      width: 9.5rem; text-align: left;
+      padding: .18rem var(--sp-3) .18rem var(--sp-4) !important;
+      white-space: nowrap; font-weight: 400;
+    }
+    .pd-aln__nm b { display: block; font-size: var(--text-xs); font-weight: 650; color: var(--gray-700); }
+    .pd-aln__nm i { display: block; font-size: 10px; font-style: normal; color: var(--gray-400); }
+    .is-us .pd-aln__nm b { color: var(--leaf-900); }
+    .is-us .pd-aln__nm { background: var(--leaf-50); }
+    .pd-aln__num {
+      font-size: 10px; font-weight: 600; color: var(--gray-400);
+      text-align: center; padding: var(--sp-2) 0 .3rem !important;
+      font-variant-numeric: tabular-nums;
+    }
+    .pd-cell {
+      text-align: center; font-family: var(--font-mono); font-size: 12px; font-weight: 650;
+      line-height: 1.65; color: var(--gray-600); border: 1px solid var(--white);
+    }
+    /* conservation shading, the default */
+    .pd-aln[data-mode="cons"] .pd-cell.is-c-hi  { background: var(--leaf-900); color: #eafaf1; }
+    .pd-aln[data-mode="cons"] .pd-cell.is-c-mid { background: var(--leaf-200); color: var(--leaf-900); }
+    .pd-aln[data-mode="cons"] .pd-cell.is-c-lo  { background: var(--leaf-50); }
+    /* chemistry shading */
+    .pd-aln[data-mode="chem"] .pd-cell.is-x-bas { background: #dfe9f4; color: var(--slate-700); }
+    .pd-aln[data-mode="chem"] .pd-cell.is-x-aci { background: var(--rust-100); color: var(--rust-700); }
+    .pd-aln[data-mode="chem"] .pd-cell.is-x-pol { background: var(--leaf-100); color: var(--leaf-900); }
+    .pd-aln[data-mode="chem"] .pd-cell.is-x-sml { background: var(--gray-100); color: var(--gray-600); }
+    .pd-aln[data-mode="chem"] .pd-cell.is-x-hyd { background: var(--amber-100); color: var(--amber-700); }
+    .pd-cell.is-gap { background: var(--white); color: var(--gray-300); }
+    .pd-cell.is-lit, .pd-aln__num.is-lit {
+      outline: 2px solid var(--leaf-700); outline-offset: -2px; position: relative;
+    }
+    .pd-aln__num.is-lit { color: var(--leaf-900); }
+    .pd-aln__foot {
+      margin: 0; padding: var(--sp-4) var(--sp-4) var(--sp-5);
+      border-top: 1px solid var(--gray-200);
+      font-size: var(--text-xs); color: var(--gray-500); line-height: 1.65;
+    }
+
+    /* ---- 3 + 4. charts ---- */
+    .pd-ladder, .pd-bench {
+      margin: var(--sp-6) 0; border: 1px solid var(--gray-200);
+      border-radius: var(--radius); background: var(--white); overflow: hidden;
+    }
+    .pd-ladder__stage { overflow-x: auto; }
+    .pd-chart {
+      display: block; width: 100%; min-width: 34rem; height: auto;
+      font-family: var(--font-body); padding: var(--sp-4) 0 0;
+    }
+    .pd-ax   { fill: var(--gray-500); font-size: 10px; }
+    .pd-ax--t{ fill: var(--gray-400); font-size: 10.5px; }
+    .pd-grid { stroke: var(--gray-200); stroke-width: 1; }
+    .pd-axis, .pd-tick { stroke: var(--gray-400); stroke-width: 1; }
+    .pd-band { fill: var(--rust-100); }
+    .pd-note { fill: var(--rust-700); font-size: 10px; font-weight: 650; }
+    .pd-trace{ fill: none; stroke: var(--leaf-700); stroke-width: 1.8; stroke-linejoin: round; }
+    .pd-trace.is-b { stroke: var(--slate-700); stroke-dasharray: 5 3; }
+    .pd-pt   { fill: var(--leaf-700); }
+    .pd-pt.is-b { fill: var(--slate-700); }
+    .pd-mark { stroke: var(--leaf-900); stroke-width: 1.6; }
+    .pd-chart g[hidden] { display: none; }
+    .pd-bpt circle { fill: var(--gray-400); }
+    .pd-bpt .pd-blab { fill: var(--gray-500); font-size: 9.5px; font-weight: 600; }
+    .pd-bpt.is-crit circle { fill: var(--rust-700); }
+    .pd-bpt.is-crit .pd-blab { fill: var(--rust-700); font-weight: 700; }
+    .pd-bench[data-view="crit"] .pd-bpt:not(.is-crit) { opacity: .18; }
+
+    .pd-ladder__key {
+      display: flex; gap: var(--sp-4); margin: 0; padding: 0 var(--sp-5) var(--sp-3);
+      font-size: var(--text-xs); color: var(--gray-500);
+    }
+    .pd-key::before {
+      content: ""; display: inline-block; width: 1.4rem; height: 2px;
+      margin-right: .45rem; vertical-align: .2em; background: var(--leaf-700);
+    }
+    .pd-key--b::before {
+      background: repeating-linear-gradient(to right,
+        var(--slate-700) 0 5px, transparent 5px 8px);
+    }
+    .pd-ladder__ctl {
+      display: flex; align-items: center; gap: var(--sp-4);
+      padding: var(--sp-4) var(--sp-5); border-top: 1px solid var(--gray-200);
+      background: var(--leaf-50);
+    }
+    .pd-ladder__ctl label { font-size: var(--text-xs); font-weight: 650; color: var(--gray-600); white-space: nowrap; }
+    .pd-ladder__ctl input { flex: 1 1 auto; accent-color: var(--leaf-700); }
+    .pd-ladder__read { padding: var(--sp-5); border-top: 1px solid var(--gray-200); }
+    .pd-ladder__frag { display: flex; align-items: center; gap: var(--sp-3); margin: 0 0 var(--sp-3); }
+    .pd-ladder__frag b { font-size: var(--text-base); color: var(--leaf-900); }
+    .pd-ladder__read .pd-seq { margin: 0 0 var(--sp-4); }
+    .pd-bench__foot {
+      margin: 0; padding: var(--sp-4) var(--sp-5) var(--sp-5);
+      border-top: 1px solid var(--gray-200);
+      font-size: var(--text-sm); color: var(--gray-600); line-height: 1.6;
+    }
+    .pd-bench__foot b { color: var(--rust-700); }
+
+    /* ---- 5. the claim ledger ---- */
+    .pd-ledger { margin: var(--sp-6) 0; border: 1px solid var(--gray-200); border-radius: var(--radius); overflow: hidden; }
+    .pd-claims { list-style: none; margin: 0; padding: 0; }
+    .pd-claim { padding: var(--sp-4) var(--sp-5); border-top: 1px solid var(--gray-200); }
+    .pd-claim:first-child { border-top: 0; }
+    .pd-claim[hidden] { display: none; }
+    .pd-claim__h { display: flex; flex-wrap: wrap; align-items: baseline; gap: var(--sp-3); margin: 0 0 var(--sp-2); font-weight: 650; color: var(--leaf-900); }
+    .pd-claim__w { margin: 0 0 var(--sp-2); font-size: var(--text-sm); color: var(--gray-700); line-height: 1.6; }
+    .pd-claim__a { margin: 0; font-size: var(--text-xs); color: var(--gray-500); }
+    .pd-claim.is-retracted { background: #fefaf8; }
+    .pd-claim.is-retracted .pd-claim__h { color: var(--rust-700); }
+
+    /* ---- 6. the cassettes ---- */
+    .pd-casslist { list-style: none; margin: var(--sp-6) 0; padding: 0; display: grid; gap: var(--sp-3); }
+    .pd-cass { margin: 0; padding: var(--sp-4); border: 1px solid var(--gray-200); border-radius: var(--radius-sm); background: var(--white); }
+    .pd-cass__h { display: flex; flex-wrap: wrap; align-items: baseline; gap: var(--sp-3); margin: 0 0 var(--sp-3); }
+    .pd-cass__h b { font-family: var(--font-mono); font-size: var(--text-sm); color: var(--leaf-900); }
+    .pd-cass__h span { font-size: var(--text-sm); font-weight: 650; color: var(--gray-700); }
+    .pd-cass__h i { margin-left: auto; font-style: normal; font-size: var(--text-xs); color: var(--gray-400); font-variant-numeric: tabular-nums; }
+    .pd-cass__seq { margin: 0 0 var(--sp-3); line-height: 2; }
+    .pd-part {
+      display: inline-block; font-size: var(--text-xs); font-weight: 650;
+      padding: .2em .55em; border-radius: 3px; margin-right: .25rem;
+      font-family: var(--font-mono);
+    }
+    .pd-part.is-sp  { background: var(--slate-100); color: var(--slate-700); }
+    .pd-part.is-tag { background: var(--amber-100); color: var(--amber-700); }
+    .pd-cut { color: var(--rust-700); margin: 0 .3rem 0 .05rem; }
+    .pd-aa {
+      display: inline-block; font-family: var(--font-mono); font-size: 12.5px;
+      width: 1.05em; text-align: center; color: var(--gray-500);
+    }
+    .pd-aa.is-anchor { color: var(--leaf-900); font-weight: 700; background: var(--leaf-100); border-radius: 2px; }
+    .pd-aa.is-mut { color: var(--rust-700); font-weight: 700; background: var(--rust-100); border-radius: 2px; }
+    .pd-cass__why { margin: 0; font-size: var(--text-sm); color: var(--gray-600); line-height: 1.6; }
+    .pd-cass__p1 { color: var(--gray-400); }
+    .pd-casskey { margin: calc(var(--sp-4) * -1) 0 var(--sp-6); font-size: var(--text-xs); color: var(--gray-500); }
+
+    /* ---- a two-column card row for the design rules ---- */
+    .pd-rules { display: grid; gap: var(--sp-4); grid-template-columns: minmax(0,1fr); margin: var(--sp-5) 0; }
+    @media (min-width: 620px) { .pd-rules { grid-template-columns: repeat(2, minmax(0,1fr)); } }
+    .pd-rule { margin: 0; padding: var(--sp-4) var(--sp-5); border-radius: var(--radius-sm); border: 1px solid var(--gray-200); }
+    .pd-rule h4 { margin: 0 0 var(--sp-2); font-size: var(--text-sm); letter-spacing: .04em; text-transform: uppercase; }
+    .pd-rule p { margin: 0; font-size: var(--text-sm); line-height: 1.6; color: var(--gray-700); }
+    .pd-rule--keep { background: var(--leaf-50); border-color: var(--leaf-200); }
+    .pd-rule--keep h4 { color: var(--leaf-900); }
+    .pd-rule--free { background: var(--amber-100); border-color: #f0e2c0; }
+    .pd-rule--free h4 { color: var(--amber-700); }
+    .pd-rule code { font-family: var(--font-mono); font-size: .92em; }
+
+    @media print {
+      .pd-chip, .pd-ladder__ctl, .pd-ruler__hint { display: none !important; }
+      .pd-claim[hidden] { display: block !important; }
+    }
+  </style>
 </head>
 <body>
-<!-- generated by build/generate.py do not hand-edit until you are ready to own this
-     file. Once you start writing, delete this comment and the script will
-     leave the page alone. -->
 
   <div id="site-nav" data-base="../" data-tab="drylab" data-page="peptide-design"></div>
   <div class="sitenav-spacer"></div>
 
-  <header class="pagehead">
+  <header class="pagehead pagehead--hero">
+    <div class="pagehead__hero">
+      <div class="pagehead__bg">
+      <svg viewBox="0 0 1200 320" preserveAspectRatio="xMidYMid slice" aria-hidden="true">
+        <!-- the concave face of an LRR solenoid, drawn as stacked arcs, with the
+             peptide threaded along it and the six anchors marked. Schematic. -->
+        <g>
+          <path class="ban-groove" d="M110 250 C 300 96, 900 96, 1090 250" />
+          <path class="ban-lrr" d="M96 262 C 292 84, 908 84, 1104 262" />
+          <path class="ban-lrr" d="M84 276 C 286 70, 914 70, 1116 276" />
+          <path class="ban-lrr" d="M126 238 C 308 110, 892 110, 1074 238" />
+          <path class="ban-lrr" d="M142 226 C 316 124, 884 124, 1058 226" />
+        </g>
+        <path class="ban-pep" d="M150 214 C 260 176, 330 200, 400 184
+                                 C 470 168, 520 196, 590 180
+                                 C 660 164, 720 190, 790 172
+                                 C 860 154, 920 176, 980 158" />
+        <g>
+          <line class="ban-link" x1="400" y1="184" x2="392" y2="140" />
+          <line class="ban-link" x1="590" y1="180" x2="582" y2="136" />
+          <line class="ban-link" x1="790" y1="172" x2="782" y2="128" />
+          <line class="ban-link" x1="980" y1="158" x2="1006" y2="196" />
+        </g>
+        <circle class="ban-anch" cx="400" cy="184" r="5.5" />
+        <circle class="ban-anch" cx="590" cy="180" r="5.5" />
+        <circle class="ban-anch" cx="790" cy="172" r="5.5" />
+        <circle class="ban-anch is-clamp" cx="980" cy="158" r="7.5" />
+      </svg>
+</div>
+      <div class="pagehead__heroinner">
+        <p class="pagehead__eyebrow"><a href="../">ReLeaf</a> <i>/</i> Dry Lab <i>/</i> Peptide Design</p>
+        <h1 class="pagehead__title">Peptide Design</h1>
+      </div>
+    </div>
     <div class="pagehead__inner">
-      <p class="pagehead__eyebrow">
-        <a href="../">ReLeaf</a> <i>/</i> Dry Lab <i>/</i> Peptide Design
-      </p>
-      <h1 class="pagehead__title">Peptide Design</h1>
-      <p class="pagehead__lede">Choosing the protectant, and letting its size decide the membrane.</p>
+      <p class="pagehead__lede">BoPep4 is twenty-three residues long. This page is the record of which of them we were allowed to change, how we worked that out, and which of our own answers we later took back.</p>
       <ul class="pagehead__meta">
         <li><b>Section</b><span>Dry Lab</span></li>
-        <li><b>Written by</b><span>Dry lab, design</span></li>
-        <li><b>Last updated</b><span>not yet</span></li>
-        <li><b>Status</b><span>Scaffold</span></li>
+        <li><b>Written by</b><span>Dry lab, protein design</span></li>
+        <li><b>Last updated</b><span>4 September 2026</span></li>
+        <li><b>Status</b><span>Draft</span></li>
       </ul>
     </div>
   </header>
@@ -41,73 +374,1716 @@
     </details>
 
     <main class="pagebody">
-      <section class="sec" id="why-acc-deaminase">
-        <h2>Why ACC deaminase</h2>
-        <p class="scaffold">In the open literature since the 1990s. Nothing about the biology is proprietary, which is the argument, not a weakness.</p>
+
+      <section class="sec" id="the-target">
+        <h2>The design target is a 23-mer that has to clear two receptors and a secretion pore</h2>
+
+        <p class="lede">
+          BoPep4 is a plant elicitor peptide from <i>Brassica&nbsp;oleracea</i>, mature
+          sequence <code>GILIGSKKRPREPHSSGKPGGHN</code>. Plants release peptides of this
+          family when they are wounded or stressed; the receptor kinases PEPR1 and PEPR2
+          read them, recruit the co-receptor BAK1, and switch on defence and
+          stress-tolerance responses&nbsp;[1,&nbsp;3]. ReLeaf asks <i>Bacillus subtilis</i>
+          to secrete one of these peptides into the root zone, so the molecule has to
+          satisfy two judges at once: the receptor at the far end, and the secretion
+          machinery it has to leave the cell through.
+        </p>
+
+        <p>
+          Those two judges disagree. The receptor wants the C-terminal two thirds intact
+          and untouched. The secretion pathway wants a short, uncharged mature N-terminus
+          at the signal-peptidase junction, and it does not care what happens downstream.
+          Nearly every design decision on this page comes out of that disagreement, and
+          the design space is small enough to enumerate: twenty-three positions, a handful
+          of substitutions worth making, and seventeen possible N-terminal truncations.
+        </p>
+
+        <div class="callout">
+          <p class="callout__label">What this page is for</p>
+          <p>
+            The <a href="../engineering/">Engineering page</a> tells this work as four
+            design&ndash;build&ndash;test&ndash;learn cycles, in the order they happened.
+            This page is the technical record underneath them: the inputs, the residue-level
+            map, the two structural methods, the controls they were put through, and the
+            places where they failed. The all-atom trajectory work sits on its own page,
+            <a href="../md-simulations/">MD&nbsp;Simulations</a>.
+          </p>
+        </div>
+
+        <h3>The modelling question, stated so it can be answered wrongly</h3>
+        <p>
+          Two questions run through everything below, and keeping them apart is the single
+          most useful thing this project did.
+        </p>
+        <ul>
+          <li>
+            <b>Question A, structural.</b> Does a given edit prevent the peptide from
+            making the interface the crystal shows? This has a defined answer at the level
+            of named, mutagenesis-validated contacts.
+          </li>
+          <li>
+            <b>Question B, affinity.</b> Which variant binds most tightly? Our pipeline
+            cannot answer this, and section&nbsp;7 is the experiment that proves it cannot.
+          </li>
+        </ul>
+        <p>
+          Every claim on this page is a Question&nbsp;A claim. Where the project made
+          Question&nbsp;B claims, they have been withdrawn, and they are listed as withdrawn
+          in section&nbsp;8.
+        </p>
       </section>
 
-      <section class="sec" id="sequence-selection">
-        <h2>Sequence selection</h2>
-        <p class="scaffold">Which source organism, which variant, and what ruled the others out.</p>
-      <div class="tablewrap">
-        <table class="data">
-          <thead><tr><th>Candidate</th><th>Source organism</th><th>Length</th><th>Why kept or dropped</th></tr></thead>
-          <tbody>
-            <tr><td>&nbsp;</td><td>&nbsp;</td><td>&nbsp;</td><td>&nbsp;</td></tr>
-            <tr><td>&nbsp;</td><td>&nbsp;</td><td>&nbsp;</td><td>&nbsp;</td></tr>
-            <tr><td>&nbsp;</td><td>&nbsp;</td><td>&nbsp;</td><td>&nbsp;</td></tr>
-            <tr><td>&nbsp;</td><td>&nbsp;</td><td>&nbsp;</td><td>&nbsp;</td></tr>
-          </tbody>
-        </table>
-      </div>
+      <section class="sec" id="ground-truth">
+        <h2>Three published results carry more weight than anything we computed</h2>
+
+        <p>
+          The modelling is anchored to experiments other people did, and it is worth being
+          precise about which parts of the story we own and which parts we borrowed.
+        </p>
+
+        <div class="tablewrap">
+          <table class="data">
+            <thead><tr><th>What it establishes</th><th>Evidence</th><th>How the design uses it</th></tr></thead>
+            <tbody>
+              <tr>
+                <td>The binding mode</td>
+                <td>PDB&nbsp;5GR8, the PEPR1&ndash;AtPep1 co-crystal at 2.59&nbsp;&Aring;&nbsp;[1]</td>
+                <td>Supplies the pose, the receptor partners, and the fact that AtPep1 residues 1&ndash;6 are not resolved at all.</td>
+              </tr>
+              <tr>
+                <td>Which residues carry activity</td>
+                <td>Alanine scan and deletion series on AtPep1&nbsp;[2]</td>
+                <td>Gly17 costs more than 4,000-fold, Ser15 about 100-fold, removing the C-terminal Asn about 400-fold. All three positions are conserved in BoPep4.</td>
+              </tr>
+              <tr>
+                <td>That the two receptors are not interchangeable</td>
+                <td>Radioligand binding&nbsp;[3]: PEPR1 binds AtPep1&ndash;6; PEPR2 binds only AtPep1 and AtPep2</td>
+                <td>Makes AtPep5 and AtPep6 the controls any method claiming to read PEPR2 recognition has to reject.</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+
+        <p>
+          BoPep4 is not a designed sequence in the <i>de novo</i> sense. It is a natural
+          <i>Brassica</i> peptide chosen because it aligns onto AtPep1 with every
+          activity-critical position conserved, and the design work is the decision about
+          what to change from there.
+        </p>
       </section>
 
-      <section class="sec" id="structure-and-oligomeric-state">
-        <h2>Structure and oligomeric state</h2>
-        <p class="scaffold">Molecular weight and oligomeric state are what decide the membrane cutoff. Look them up and cite them; do not supply them from memory.</p>
+      <section class="sec" id="alignment">
+        <h2>The family varies everywhere except four positions</h2>
+
+        <p>
+          Seventeen mature Pep sequences, seven from <i>Arabidopsis</i> and nine from
+          <i>Brassica</i> species alongside BoPep4, aligned over twenty-four columns.
+          The N-terminal third is close to unreadable as a family: at most six of
+          seventeen sequences agree on any residue in columns 1&ndash;6. The C-terminal
+          third is the opposite. <b>Ser15, Ser16, Gly17 and Gly20 are the same residue in
+          all seventeen.</b>
+        </p>
+
+        <div class="pd-aln" id="aln" data-mode="cons">
+  <div class="pd-aln__bar">
+    <span class="pd-aln__legend">Shading:</span>
+    <button type="button" class="pd-chip is-on" data-mode="cons" aria-pressed="true">column conservation</button>
+    <button type="button" class="pd-chip" data-mode="chem" aria-pressed="false">side-chain chemistry</button>
+  </div>
+  <div class="pd-aln__scroll">
+  <table class="pd-aln__grid">
+    <caption class="visually-hidden">Seventeen mature Pep peptides aligned over twenty-four columns.</caption>
+    <thead><tr><th scope="col" class="pd-aln__nm">Peptide</th>
+<th scope="col" class="pd-aln__num" data-col="1">1</th>
+<th scope="col" class="pd-aln__num" data-col="2">2</th>
+<th scope="col" class="pd-aln__num" data-col="3">3</th>
+<th scope="col" class="pd-aln__num" data-col="4">4</th>
+<th scope="col" class="pd-aln__num" data-col="5">5</th>
+<th scope="col" class="pd-aln__num" data-col="6">6</th>
+<th scope="col" class="pd-aln__num" data-col="7">7</th>
+<th scope="col" class="pd-aln__num" data-col="8">8</th>
+<th scope="col" class="pd-aln__num" data-col="9">9</th>
+<th scope="col" class="pd-aln__num" data-col="10">10</th>
+<th scope="col" class="pd-aln__num" data-col="11">11</th>
+<th scope="col" class="pd-aln__num" data-col="12">&middot;</th>
+<th scope="col" class="pd-aln__num" data-col="13">12</th>
+<th scope="col" class="pd-aln__num" data-col="14">13</th>
+<th scope="col" class="pd-aln__num" data-col="15">14</th>
+<th scope="col" class="pd-aln__num" data-col="16">15</th>
+<th scope="col" class="pd-aln__num" data-col="17">16</th>
+<th scope="col" class="pd-aln__num" data-col="18">17</th>
+<th scope="col" class="pd-aln__num" data-col="19">18</th>
+<th scope="col" class="pd-aln__num" data-col="20">19</th>
+<th scope="col" class="pd-aln__num" data-col="21">20</th>
+<th scope="col" class="pd-aln__num" data-col="22">21</th>
+<th scope="col" class="pd-aln__num" data-col="23">22</th>
+<th scope="col" class="pd-aln__num" data-col="24">23</th>
+</tr></thead>
+    <tbody>
+      <tr><th scope="row" class="pd-aln__nm"><b>AtPep1</b><i>Arabidopsis</i></th>
+<td class="pd-cell is-c-lo is-x-sml" data-col="1">A</td>
+<td class="pd-cell is-c-lo is-x-pol" data-col="2">T</td>
+<td class="pd-cell is-c-lo is-x-bas" data-col="3">K</td>
+<td class="pd-cell is-c-lo is-x-hyd" data-col="4">V</td>
+<td class="pd-cell is-c-lo is-x-bas" data-col="5">K</td>
+<td class="pd-cell is-c-lo is-x-sml" data-col="6">A</td>
+<td class="pd-cell is-c-mid is-x-bas" data-col="7">K</td>
+<td class="pd-cell is-c-lo is-x-pol" data-col="8">Q</td>
+<td class="pd-cell is-c-lo is-x-bas" data-col="9">R</td>
+<td class="pd-cell is-c-lo is-x-sml" data-col="10">G</td>
+<td class="pd-cell is-c-lo is-x-bas" data-col="11">K</td>
+<td class="pd-cell is-gap" data-col="12">&middot;</td>
+<td class="pd-cell is-c-lo is-x-aci" data-col="13">E</td>
+<td class="pd-cell is-c-lo is-x-bas" data-col="14">K</td>
+<td class="pd-cell is-c-lo is-x-hyd" data-col="15">V</td>
+<td class="pd-cell is-c-hi is-x-pol" data-col="16">S</td>
+<td class="pd-cell is-c-hi is-x-pol" data-col="17">S</td>
+<td class="pd-cell is-c-hi is-x-sml" data-col="18">G</td>
+<td class="pd-cell is-c-lo is-x-bas" data-col="19">R</td>
+<td class="pd-cell is-c-mid is-x-sml" data-col="20">P</td>
+<td class="pd-cell is-c-hi is-x-sml" data-col="21">G</td>
+<td class="pd-cell is-c-lo is-x-pol" data-col="22">Q</td>
+<td class="pd-cell is-c-lo is-x-bas" data-col="23">H</td>
+<td class="pd-cell is-c-mid is-x-pol" data-col="24">N</td>
+</tr>
+      <tr><th scope="row" class="pd-aln__nm"><b>AtPep2</b><i>Arabidopsis</i></th>
+<td class="pd-cell is-c-lo is-x-aci" data-col="1">D</td>
+<td class="pd-cell is-c-lo is-x-pol" data-col="2">N</td>
+<td class="pd-cell is-c-lo is-x-bas" data-col="3">K</td>
+<td class="pd-cell is-c-lo is-x-sml" data-col="4">A</td>
+<td class="pd-cell is-c-lo is-x-bas" data-col="5">K</td>
+<td class="pd-cell is-c-lo is-x-pol" data-col="6">S</td>
+<td class="pd-cell is-c-mid is-x-bas" data-col="7">K</td>
+<td class="pd-cell is-c-lo is-x-bas" data-col="8">K</td>
+<td class="pd-cell is-c-lo is-x-bas" data-col="9">R</td>
+<td class="pd-cell is-c-lo is-x-aci" data-col="10">D</td>
+<td class="pd-cell is-c-lo is-x-bas" data-col="11">K</td>
+<td class="pd-cell is-gap" data-col="12">&middot;</td>
+<td class="pd-cell is-c-lo is-x-aci" data-col="13">E</td>
+<td class="pd-cell is-c-lo is-x-bas" data-col="14">K</td>
+<td class="pd-cell is-c-lo is-x-sml" data-col="15">P</td>
+<td class="pd-cell is-c-hi is-x-pol" data-col="16">S</td>
+<td class="pd-cell is-c-hi is-x-pol" data-col="17">S</td>
+<td class="pd-cell is-c-hi is-x-sml" data-col="18">G</td>
+<td class="pd-cell is-c-lo is-x-bas" data-col="19">R</td>
+<td class="pd-cell is-c-mid is-x-sml" data-col="20">P</td>
+<td class="pd-cell is-c-hi is-x-sml" data-col="21">G</td>
+<td class="pd-cell is-c-lo is-x-pol" data-col="22">Q</td>
+<td class="pd-cell is-c-lo is-x-pol" data-col="23">T</td>
+<td class="pd-cell is-c-mid is-x-pol" data-col="24">N</td>
+</tr>
+      <tr><th scope="row" class="pd-aln__nm"><b>AtPep3</b><i>Arabidopsis</i></th>
+<td class="pd-cell is-c-lo is-x-aci" data-col="1">E</td>
+<td class="pd-cell is-c-lo is-x-hyd" data-col="2">I</td>
+<td class="pd-cell is-c-lo is-x-bas" data-col="3">K</td>
+<td class="pd-cell is-c-lo is-x-sml" data-col="4">A</td>
+<td class="pd-cell is-c-lo is-x-bas" data-col="5">R</td>
+<td class="pd-cell is-c-lo is-x-sml" data-col="6">G</td>
+<td class="pd-cell is-c-mid is-x-bas" data-col="7">K</td>
+<td class="pd-cell is-c-lo is-x-pol" data-col="8">N</td>
+<td class="pd-cell is-c-lo is-x-bas" data-col="9">K</td>
+<td class="pd-cell is-c-lo is-x-pol" data-col="10">T</td>
+<td class="pd-cell is-c-lo is-x-bas" data-col="11">K</td>
+<td class="pd-cell is-gap" data-col="12">&middot;</td>
+<td class="pd-cell is-c-lo is-x-sml" data-col="13">P</td>
+<td class="pd-cell is-c-lo is-x-pol" data-col="14">T</td>
+<td class="pd-cell is-c-lo is-x-sml" data-col="15">P</td>
+<td class="pd-cell is-c-hi is-x-pol" data-col="16">S</td>
+<td class="pd-cell is-c-hi is-x-pol" data-col="17">S</td>
+<td class="pd-cell is-c-hi is-x-sml" data-col="18">G</td>
+<td class="pd-cell is-c-lo is-x-bas" data-col="19">K</td>
+<td class="pd-cell is-c-mid is-x-sml" data-col="20">G</td>
+<td class="pd-cell is-c-hi is-x-sml" data-col="21">G</td>
+<td class="pd-cell is-c-lo is-x-bas" data-col="22">K</td>
+<td class="pd-cell is-c-lo is-x-bas" data-col="23">H</td>
+<td class="pd-cell is-c-mid is-x-pol" data-col="24">N</td>
+</tr>
+      <tr><th scope="row" class="pd-aln__nm"><b>AtPep4</b><i>Arabidopsis</i></th>
+<td class="pd-cell is-c-lo is-x-sml" data-col="1">G</td>
+<td class="pd-cell is-c-lo is-x-hyd" data-col="2">L</td>
+<td class="pd-cell is-c-lo is-x-sml" data-col="3">P</td>
+<td class="pd-cell is-c-lo is-x-sml" data-col="4">G</td>
+<td class="pd-cell is-c-lo is-x-bas" data-col="5">K</td>
+<td class="pd-cell is-c-lo is-x-bas" data-col="6">K</td>
+<td class="pd-cell is-c-mid is-x-pol" data-col="7">N</td>
+<td class="pd-cell is-c-lo is-x-hyd" data-col="8">V</td>
+<td class="pd-cell is-c-lo is-x-hyd" data-col="9">L</td>
+<td class="pd-cell is-c-lo is-x-bas" data-col="10">K</td>
+<td class="pd-cell is-c-lo is-x-bas" data-col="11">K</td>
+<td class="pd-cell is-gap" data-col="12">&middot;</td>
+<td class="pd-cell is-c-lo is-x-pol" data-col="13">S</td>
+<td class="pd-cell is-c-lo is-x-bas" data-col="14">R</td>
+<td class="pd-cell is-c-lo is-x-aci" data-col="15">E</td>
+<td class="pd-cell is-c-hi is-x-pol" data-col="16">S</td>
+<td class="pd-cell is-c-hi is-x-pol" data-col="17">S</td>
+<td class="pd-cell is-c-hi is-x-sml" data-col="18">G</td>
+<td class="pd-cell is-c-lo is-x-bas" data-col="19">K</td>
+<td class="pd-cell is-c-mid is-x-sml" data-col="20">P</td>
+<td class="pd-cell is-c-hi is-x-sml" data-col="21">G</td>
+<td class="pd-cell is-c-lo is-x-sml" data-col="22">G</td>
+<td class="pd-cell is-c-lo is-x-pol" data-col="23">T</td>
+<td class="pd-cell is-c-mid is-x-pol" data-col="24">N</td>
+</tr>
+      <tr><th scope="row" class="pd-aln__nm"><b>AtPep5</b><i>Arabidopsis</i></th>
+<td class="pd-cell is-c-lo is-x-pol" data-col="1">S</td>
+<td class="pd-cell is-c-lo is-x-hyd" data-col="2">L</td>
+<td class="pd-cell is-c-lo is-x-pol" data-col="3">N</td>
+<td class="pd-cell is-c-lo is-x-hyd" data-col="4">V</td>
+<td class="pd-cell is-c-lo is-x-hyd" data-col="5">M</td>
+<td class="pd-cell is-c-lo is-x-bas" data-col="6">R</td>
+<td class="pd-cell is-c-mid is-x-bas" data-col="7">K</td>
+<td class="pd-cell is-c-lo is-x-sml" data-col="8">G</td>
+<td class="pd-cell is-c-lo is-x-hyd" data-col="9">I</td>
+<td class="pd-cell is-c-lo is-x-bas" data-col="10">R</td>
+<td class="pd-cell is-c-lo is-x-bas" data-col="11">K</td>
+<td class="pd-cell is-gap" data-col="12">&middot;</td>
+<td class="pd-cell is-c-lo is-x-pol" data-col="13">Q</td>
+<td class="pd-cell is-c-lo is-x-sml" data-col="14">P</td>
+<td class="pd-cell is-c-lo is-x-hyd" data-col="15">V</td>
+<td class="pd-cell is-c-hi is-x-pol" data-col="16">S</td>
+<td class="pd-cell is-c-hi is-x-pol" data-col="17">S</td>
+<td class="pd-cell is-c-hi is-x-sml" data-col="18">G</td>
+<td class="pd-cell is-c-lo is-x-bas" data-col="19">K</td>
+<td class="pd-cell is-c-mid is-x-bas" data-col="20">R</td>
+<td class="pd-cell is-c-hi is-x-sml" data-col="21">G</td>
+<td class="pd-cell is-c-lo is-x-sml" data-col="22">G</td>
+<td class="pd-cell is-c-lo is-x-hyd" data-col="23">V</td>
+<td class="pd-cell is-c-mid is-x-pol" data-col="24">N</td>
+</tr>
+      <tr><th scope="row" class="pd-aln__nm"><b>AtPep6</b><i>Arabidopsis</i></th>
+<td class="pd-cell is-gap" data-col="1">&middot;</td>
+<td class="pd-cell is-c-lo is-x-hyd" data-col="2">I</td>
+<td class="pd-cell is-c-lo is-x-pol" data-col="3">T</td>
+<td class="pd-cell is-c-lo is-x-sml" data-col="4">A</td>
+<td class="pd-cell is-c-lo is-x-hyd" data-col="5">V</td>
+<td class="pd-cell is-c-lo is-x-hyd" data-col="6">L</td>
+<td class="pd-cell is-c-mid is-x-bas" data-col="7">R</td>
+<td class="pd-cell is-c-lo is-x-bas" data-col="8">R</td>
+<td class="pd-cell is-c-lo is-x-bas" data-col="9">R</td>
+<td class="pd-cell is-c-lo is-x-sml" data-col="10">P</td>
+<td class="pd-cell is-c-lo is-x-bas" data-col="11">R</td>
+<td class="pd-cell is-c-lo is-x-sml" data-col="12">P</td>
+<td class="pd-cell is-c-lo is-x-sml" data-col="13">P</td>
+<td class="pd-cell is-c-lo is-x-sml" data-col="14">P</td>
+<td class="pd-cell is-c-lo is-x-pol" data-col="15">Y</td>
+<td class="pd-cell is-c-hi is-x-pol" data-col="16">S</td>
+<td class="pd-cell is-c-hi is-x-pol" data-col="17">S</td>
+<td class="pd-cell is-c-hi is-x-sml" data-col="18">G</td>
+<td class="pd-cell is-c-lo is-x-bas" data-col="19">R</td>
+<td class="pd-cell is-c-mid is-x-sml" data-col="20">P</td>
+<td class="pd-cell is-c-hi is-x-sml" data-col="21">G</td>
+<td class="pd-cell is-c-lo is-x-pol" data-col="22">Q</td>
+<td class="pd-cell is-c-lo is-x-pol" data-col="23">N</td>
+<td class="pd-cell is-c-mid is-x-pol" data-col="24">N</td>
+</tr>
+      <tr><th scope="row" class="pd-aln__nm"><b>AtPep7</b><i>Arabidopsis</i></th>
+<td class="pd-cell is-c-lo is-x-hyd" data-col="1">V</td>
+<td class="pd-cell is-c-lo is-x-pol" data-col="2">S</td>
+<td class="pd-cell is-c-lo is-x-sml" data-col="3">G</td>
+<td class="pd-cell is-c-lo is-x-pol" data-col="4">N</td>
+<td class="pd-cell is-c-lo is-x-hyd" data-col="5">V</td>
+<td class="pd-cell is-c-lo is-x-sml" data-col="6">A</td>
+<td class="pd-cell is-c-mid is-x-sml" data-col="7">A</td>
+<td class="pd-cell is-c-lo is-x-bas" data-col="8">R</td>
+<td class="pd-cell is-c-lo is-x-bas" data-col="9">K</td>
+<td class="pd-cell is-c-lo is-x-sml" data-col="10">G</td>
+<td class="pd-cell is-c-lo is-x-bas" data-col="11">K</td>
+<td class="pd-cell is-gap" data-col="12">&middot;</td>
+<td class="pd-cell is-c-lo is-x-pol" data-col="13">Q</td>
+<td class="pd-cell is-c-lo is-x-pol" data-col="14">Q</td>
+<td class="pd-cell is-c-lo is-x-pol" data-col="15">T</td>
+<td class="pd-cell is-c-hi is-x-pol" data-col="16">S</td>
+<td class="pd-cell is-c-hi is-x-pol" data-col="17">S</td>
+<td class="pd-cell is-c-hi is-x-sml" data-col="18">G</td>
+<td class="pd-cell is-c-lo is-x-bas" data-col="19">K</td>
+<td class="pd-cell is-c-mid is-x-sml" data-col="20">G</td>
+<td class="pd-cell is-c-hi is-x-sml" data-col="21">G</td>
+<td class="pd-cell is-c-lo is-x-sml" data-col="22">G</td>
+<td class="pd-cell is-c-lo is-x-pol" data-col="23">T</td>
+<td class="pd-cell is-c-mid is-x-pol" data-col="24">N</td>
+</tr>
+      <tr class="is-us"><th scope="row" class="pd-aln__nm"><b>BoPep4</b><i>B. oleracea — our design</i></th>
+<td class="pd-cell is-c-lo is-x-sml" data-col="1">G</td>
+<td class="pd-cell is-c-lo is-x-hyd" data-col="2">I</td>
+<td class="pd-cell is-c-lo is-x-hyd" data-col="3">L</td>
+<td class="pd-cell is-c-lo is-x-hyd" data-col="4">I</td>
+<td class="pd-cell is-c-lo is-x-sml" data-col="5">G</td>
+<td class="pd-cell is-c-lo is-x-pol" data-col="6">S</td>
+<td class="pd-cell is-c-mid is-x-bas" data-col="7">K</td>
+<td class="pd-cell is-c-lo is-x-bas" data-col="8">K</td>
+<td class="pd-cell is-c-lo is-x-bas" data-col="9">R</td>
+<td class="pd-cell is-c-lo is-x-sml" data-col="10">P</td>
+<td class="pd-cell is-c-lo is-x-bas" data-col="11">R</td>
+<td class="pd-cell is-gap" data-col="12">&middot;</td>
+<td class="pd-cell is-c-lo is-x-aci" data-col="13">E</td>
+<td class="pd-cell is-c-lo is-x-sml" data-col="14">P</td>
+<td class="pd-cell is-c-lo is-x-bas" data-col="15">H</td>
+<td class="pd-cell is-c-hi is-x-pol" data-col="16">S</td>
+<td class="pd-cell is-c-hi is-x-pol" data-col="17">S</td>
+<td class="pd-cell is-c-hi is-x-sml" data-col="18">G</td>
+<td class="pd-cell is-c-lo is-x-bas" data-col="19">K</td>
+<td class="pd-cell is-c-mid is-x-sml" data-col="20">P</td>
+<td class="pd-cell is-c-hi is-x-sml" data-col="21">G</td>
+<td class="pd-cell is-c-lo is-x-sml" data-col="22">G</td>
+<td class="pd-cell is-c-lo is-x-bas" data-col="23">H</td>
+<td class="pd-cell is-c-mid is-x-pol" data-col="24">N</td>
+</tr>
+      <tr><th scope="row" class="pd-aln__nm"><b>BnPep1 B6E2</b><i>B. napus</i></th>
+<td class="pd-cell is-c-lo is-x-pol" data-col="1">S</td>
+<td class="pd-cell is-c-lo is-x-bas" data-col="2">R</td>
+<td class="pd-cell is-c-lo is-x-sml" data-col="3">G</td>
+<td class="pd-cell is-c-lo is-x-hyd" data-col="4">V</td>
+<td class="pd-cell is-c-lo is-x-bas" data-col="5">K</td>
+<td class="pd-cell is-c-lo is-x-sml" data-col="6">A</td>
+<td class="pd-cell is-c-mid is-x-bas" data-col="7">K</td>
+<td class="pd-cell is-c-lo is-x-pol" data-col="8">T</td>
+<td class="pd-cell is-c-lo is-x-bas" data-col="9">K</td>
+<td class="pd-cell is-c-lo is-x-bas" data-col="10">K</td>
+<td class="pd-cell is-c-lo is-x-bas" data-col="11">K</td>
+<td class="pd-cell is-gap" data-col="12">&middot;</td>
+<td class="pd-cell is-c-lo is-x-aci" data-col="13">E</td>
+<td class="pd-cell is-c-lo is-x-pol" data-col="14">Q</td>
+<td class="pd-cell is-c-lo is-x-bas" data-col="15">K</td>
+<td class="pd-cell is-c-hi is-x-pol" data-col="16">S</td>
+<td class="pd-cell is-c-hi is-x-pol" data-col="17">S</td>
+<td class="pd-cell is-c-hi is-x-sml" data-col="18">G</td>
+<td class="pd-cell is-c-lo is-x-bas" data-col="19">R</td>
+<td class="pd-cell is-c-mid is-x-sml" data-col="20">P</td>
+<td class="pd-cell is-c-hi is-x-sml" data-col="21">G</td>
+<td class="pd-cell is-c-lo is-x-pol" data-col="22">Q</td>
+<td class="pd-cell is-c-lo is-x-bas" data-col="23">H</td>
+<td class="pd-cell is-c-mid is-x-bas" data-col="24">H</td>
+</tr>
+      <tr><th scope="row" class="pd-aln__nm"><b>BnPep4 E5L6</b><i>B. napus</i></th>
+<td class="pd-cell is-c-lo is-x-sml" data-col="1">G</td>
+<td class="pd-cell is-c-lo is-x-hyd" data-col="2">I</td>
+<td class="pd-cell is-c-lo is-x-hyd" data-col="3">L</td>
+<td class="pd-cell is-c-lo is-x-hyd" data-col="4">V</td>
+<td class="pd-cell is-c-lo is-x-sml" data-col="5">G</td>
+<td class="pd-cell is-c-lo is-x-pol" data-col="6">S</td>
+<td class="pd-cell is-c-mid is-x-bas" data-col="7">K</td>
+<td class="pd-cell is-c-lo is-x-bas" data-col="8">K</td>
+<td class="pd-cell is-c-lo is-x-bas" data-col="9">R</td>
+<td class="pd-cell is-c-lo is-x-sml" data-col="10">P</td>
+<td class="pd-cell is-c-lo is-x-bas" data-col="11">R</td>
+<td class="pd-cell is-gap" data-col="12">&middot;</td>
+<td class="pd-cell is-c-lo is-x-aci" data-col="13">E</td>
+<td class="pd-cell is-c-lo is-x-sml" data-col="14">P</td>
+<td class="pd-cell is-c-lo is-x-bas" data-col="15">H</td>
+<td class="pd-cell is-c-hi is-x-pol" data-col="16">S</td>
+<td class="pd-cell is-c-hi is-x-pol" data-col="17">S</td>
+<td class="pd-cell is-c-hi is-x-sml" data-col="18">G</td>
+<td class="pd-cell is-c-lo is-x-bas" data-col="19">K</td>
+<td class="pd-cell is-c-mid is-x-sml" data-col="20">P</td>
+<td class="pd-cell is-c-hi is-x-sml" data-col="21">G</td>
+<td class="pd-cell is-c-lo is-x-sml" data-col="22">G</td>
+<td class="pd-cell is-c-lo is-x-bas" data-col="23">H</td>
+<td class="pd-cell is-c-mid is-x-pol" data-col="24">S</td>
+</tr>
+      <tr><th scope="row" class="pd-aln__nm"><b>BnPep4 UY23</b><i>B. napus</i></th>
+<td class="pd-cell is-c-lo is-x-sml" data-col="1">P</td>
+<td class="pd-cell is-c-lo is-x-bas" data-col="2">R</td>
+<td class="pd-cell is-c-lo is-x-bas" data-col="3">K</td>
+<td class="pd-cell is-c-lo is-x-sml" data-col="4">P</td>
+<td class="pd-cell is-c-lo is-x-sml" data-col="5">P</td>
+<td class="pd-cell is-c-lo is-x-bas" data-col="6">K</td>
+<td class="pd-cell is-c-mid is-x-bas" data-col="7">K</td>
+<td class="pd-cell is-c-lo is-x-hyd" data-col="8">L</td>
+<td class="pd-cell is-c-lo is-x-pol" data-col="9">Q</td>
+<td class="pd-cell is-c-lo is-x-pol" data-col="10">Q</td>
+<td class="pd-cell is-c-lo is-x-bas" data-col="11">K</td>
+<td class="pd-cell is-gap" data-col="12">&middot;</td>
+<td class="pd-cell is-c-lo is-x-sml" data-col="13">P</td>
+<td class="pd-cell is-c-lo is-x-bas" data-col="14">R</td>
+<td class="pd-cell is-c-lo is-x-aci" data-col="15">D</td>
+<td class="pd-cell is-c-hi is-x-pol" data-col="16">S</td>
+<td class="pd-cell is-c-hi is-x-pol" data-col="17">S</td>
+<td class="pd-cell is-c-hi is-x-sml" data-col="18">G</td>
+<td class="pd-cell is-c-lo is-x-bas" data-col="19">K</td>
+<td class="pd-cell is-c-mid is-x-sml" data-col="20">P</td>
+<td class="pd-cell is-c-hi is-x-sml" data-col="21">G</td>
+<td class="pd-cell is-c-lo is-x-bas" data-col="22">R</td>
+<td class="pd-cell is-c-lo is-x-hyd" data-col="23">I</td>
+<td class="pd-cell is-c-mid is-x-pol" data-col="24">N</td>
+</tr>
+      <tr><th scope="row" class="pd-aln__nm"><b>BnPep6 DM88</b><i>B. napus</i></th>
+<td class="pd-cell is-c-lo is-x-hyd" data-col="1">M</td>
+<td class="pd-cell is-c-lo is-x-hyd" data-col="2">V</td>
+<td class="pd-cell is-c-lo is-x-pol" data-col="3">T</td>
+<td class="pd-cell is-c-lo is-x-bas" data-col="4">R</td>
+<td class="pd-cell is-c-lo is-x-hyd" data-col="5">L</td>
+<td class="pd-cell is-c-lo is-x-hyd" data-col="6">V</td>
+<td class="pd-cell is-c-mid is-x-bas" data-col="7">R</td>
+<td class="pd-cell is-c-lo is-x-bas" data-col="8">R</td>
+<td class="pd-cell is-c-lo is-x-bas" data-col="9">R</td>
+<td class="pd-cell is-c-lo is-x-sml" data-col="10">P</td>
+<td class="pd-cell is-c-lo is-x-bas" data-col="11">R</td>
+<td class="pd-cell is-gap" data-col="12">&middot;</td>
+<td class="pd-cell is-c-lo is-x-sml" data-col="13">P</td>
+<td class="pd-cell is-c-lo is-x-sml" data-col="14">A</td>
+<td class="pd-cell is-c-lo is-x-pol" data-col="15">Y</td>
+<td class="pd-cell is-c-hi is-x-pol" data-col="16">S</td>
+<td class="pd-cell is-c-hi is-x-pol" data-col="17">S</td>
+<td class="pd-cell is-c-hi is-x-sml" data-col="18">G</td>
+<td class="pd-cell is-c-lo is-x-bas" data-col="19">R</td>
+<td class="pd-cell is-c-mid is-x-sml" data-col="20">P</td>
+<td class="pd-cell is-c-hi is-x-sml" data-col="21">G</td>
+<td class="pd-cell is-c-lo is-x-pol" data-col="22">Q</td>
+<td class="pd-cell is-c-lo is-x-hyd" data-col="23">I</td>
+<td class="pd-cell is-c-mid is-x-aci" data-col="24">D</td>
+</tr>
+      <tr><th scope="row" class="pd-aln__nm"><b>BnPep6 UR14</b><i>B. napus</i></th>
+<td class="pd-cell is-c-lo is-x-hyd" data-col="1">M</td>
+<td class="pd-cell is-c-lo is-x-hyd" data-col="2">V</td>
+<td class="pd-cell is-c-lo is-x-sml" data-col="3">A</td>
+<td class="pd-cell is-c-lo is-x-bas" data-col="4">R</td>
+<td class="pd-cell is-c-lo is-x-hyd" data-col="5">L</td>
+<td class="pd-cell is-c-lo is-x-pol" data-col="6">T</td>
+<td class="pd-cell is-c-mid is-x-bas" data-col="7">R</td>
+<td class="pd-cell is-c-lo is-x-bas" data-col="8">R</td>
+<td class="pd-cell is-c-lo is-x-bas" data-col="9">R</td>
+<td class="pd-cell is-c-lo is-x-sml" data-col="10">P</td>
+<td class="pd-cell is-c-lo is-x-bas" data-col="11">R</td>
+<td class="pd-cell is-gap" data-col="12">&middot;</td>
+<td class="pd-cell is-c-lo is-x-sml" data-col="13">P</td>
+<td class="pd-cell is-c-lo is-x-sml" data-col="14">P</td>
+<td class="pd-cell is-c-lo is-x-pol" data-col="15">Y</td>
+<td class="pd-cell is-c-hi is-x-pol" data-col="16">S</td>
+<td class="pd-cell is-c-hi is-x-pol" data-col="17">S</td>
+<td class="pd-cell is-c-hi is-x-sml" data-col="18">G</td>
+<td class="pd-cell is-c-lo is-x-pol" data-col="19">Q</td>
+<td class="pd-cell is-c-mid is-x-sml" data-col="20">P</td>
+<td class="pd-cell is-c-hi is-x-sml" data-col="21">G</td>
+<td class="pd-cell is-c-lo is-x-pol" data-col="22">Q</td>
+<td class="pd-cell is-c-lo is-x-hyd" data-col="23">I</td>
+<td class="pd-cell is-c-mid is-x-pol" data-col="24">N</td>
+</tr>
+      <tr><th scope="row" class="pd-aln__nm"><b>BrPep1 APQ1</b><i>B. rapa</i></th>
+<td class="pd-cell is-c-lo is-x-sml" data-col="1">G</td>
+<td class="pd-cell is-c-lo is-x-pol" data-col="2">T</td>
+<td class="pd-cell is-c-lo is-x-bas" data-col="3">K</td>
+<td class="pd-cell is-c-lo is-x-hyd" data-col="4">L</td>
+<td class="pd-cell is-c-lo is-x-bas" data-col="5">K</td>
+<td class="pd-cell is-c-lo is-x-sml" data-col="6">A</td>
+<td class="pd-cell is-c-mid is-x-bas" data-col="7">K</td>
+<td class="pd-cell is-c-lo is-x-pol" data-col="8">T</td>
+<td class="pd-cell is-c-lo is-x-bas" data-col="9">K</td>
+<td class="pd-cell is-c-lo is-x-bas" data-col="10">K</td>
+<td class="pd-cell is-c-lo is-x-bas" data-col="11">K</td>
+<td class="pd-cell is-gap" data-col="12">&middot;</td>
+<td class="pd-cell is-c-lo is-x-aci" data-col="13">E</td>
+<td class="pd-cell is-c-lo is-x-pol" data-col="14">Q</td>
+<td class="pd-cell is-c-lo is-x-bas" data-col="15">K</td>
+<td class="pd-cell is-c-hi is-x-pol" data-col="16">S</td>
+<td class="pd-cell is-c-hi is-x-pol" data-col="17">S</td>
+<td class="pd-cell is-c-hi is-x-sml" data-col="18">G</td>
+<td class="pd-cell is-c-lo is-x-bas" data-col="19">R</td>
+<td class="pd-cell is-c-mid is-x-pol" data-col="20">S</td>
+<td class="pd-cell is-c-hi is-x-sml" data-col="21">G</td>
+<td class="pd-cell is-c-lo is-x-pol" data-col="22">Q</td>
+<td class="pd-cell is-c-lo is-x-bas" data-col="23">H</td>
+<td class="pd-cell is-c-mid is-x-bas" data-col="24">H</td>
+</tr>
+      <tr><th scope="row" class="pd-aln__nm"><b>BrPep1 E6D1</b><i>B. rapa</i></th>
+<td class="pd-cell is-c-lo is-x-sml" data-col="1">G</td>
+<td class="pd-cell is-c-lo is-x-pol" data-col="2">T</td>
+<td class="pd-cell is-c-lo is-x-bas" data-col="3">K</td>
+<td class="pd-cell is-c-lo is-x-hyd" data-col="4">V</td>
+<td class="pd-cell is-c-lo is-x-pol" data-col="5">N</td>
+<td class="pd-cell is-c-lo is-x-sml" data-col="6">A</td>
+<td class="pd-cell is-c-mid is-x-bas" data-col="7">K</td>
+<td class="pd-cell is-c-lo is-x-bas" data-col="8">R</td>
+<td class="pd-cell is-c-lo is-x-bas" data-col="9">K</td>
+<td class="pd-cell is-c-lo is-x-aci" data-col="10">E</td>
+<td class="pd-cell is-c-lo is-x-bas" data-col="11">K</td>
+<td class="pd-cell is-gap" data-col="12">&middot;</td>
+<td class="pd-cell is-c-lo is-x-sml" data-col="13">A</td>
+<td class="pd-cell is-c-lo is-x-bas" data-col="14">K</td>
+<td class="pd-cell is-c-lo is-x-hyd" data-col="15">V</td>
+<td class="pd-cell is-c-hi is-x-pol" data-col="16">S</td>
+<td class="pd-cell is-c-hi is-x-pol" data-col="17">S</td>
+<td class="pd-cell is-c-hi is-x-sml" data-col="18">G</td>
+<td class="pd-cell is-c-lo is-x-bas" data-col="19">R</td>
+<td class="pd-cell is-c-mid is-x-sml" data-col="20">P</td>
+<td class="pd-cell is-c-hi is-x-sml" data-col="21">G</td>
+<td class="pd-cell is-c-lo is-x-bas" data-col="22">K</td>
+<td class="pd-cell is-c-lo is-x-bas" data-col="23">H</td>
+<td class="pd-cell is-c-mid is-x-bas" data-col="24">H</td>
+</tr>
+      <tr><th scope="row" class="pd-aln__nm"><b>BrPep4 A5G1</b><i>B. rapa</i></th>
+<td class="pd-cell is-c-lo is-x-sml" data-col="1">G</td>
+<td class="pd-cell is-c-lo is-x-hyd" data-col="2">I</td>
+<td class="pd-cell is-c-lo is-x-hyd" data-col="3">L</td>
+<td class="pd-cell is-c-lo is-x-hyd" data-col="4">V</td>
+<td class="pd-cell is-c-lo is-x-sml" data-col="5">G</td>
+<td class="pd-cell is-c-lo is-x-pol" data-col="6">S</td>
+<td class="pd-cell is-c-mid is-x-bas" data-col="7">K</td>
+<td class="pd-cell is-c-lo is-x-bas" data-col="8">K</td>
+<td class="pd-cell is-c-lo is-x-bas" data-col="9">R</td>
+<td class="pd-cell is-c-lo is-x-sml" data-col="10">P</td>
+<td class="pd-cell is-c-lo is-x-bas" data-col="11">R</td>
+<td class="pd-cell is-gap" data-col="12">&middot;</td>
+<td class="pd-cell is-c-lo is-x-aci" data-col="13">E</td>
+<td class="pd-cell is-c-lo is-x-sml" data-col="14">P</td>
+<td class="pd-cell is-c-lo is-x-bas" data-col="15">H</td>
+<td class="pd-cell is-c-hi is-x-pol" data-col="16">S</td>
+<td class="pd-cell is-c-hi is-x-pol" data-col="17">S</td>
+<td class="pd-cell is-c-hi is-x-sml" data-col="18">G</td>
+<td class="pd-cell is-c-lo is-x-bas" data-col="19">K</td>
+<td class="pd-cell is-c-mid is-x-sml" data-col="20">P</td>
+<td class="pd-cell is-c-hi is-x-sml" data-col="21">G</td>
+<td class="pd-cell is-c-lo is-x-sml" data-col="22">G</td>
+<td class="pd-cell is-c-lo is-x-bas" data-col="23">H</td>
+<td class="pd-cell is-c-mid is-x-pol" data-col="24">N</td>
+</tr>
+      <tr><th scope="row" class="pd-aln__nm"><b>BrPep6 ER01</b><i>B. rapa</i></th>
+<td class="pd-cell is-c-lo is-x-hyd" data-col="1">M</td>
+<td class="pd-cell is-c-lo is-x-hyd" data-col="2">V</td>
+<td class="pd-cell is-c-lo is-x-sml" data-col="3">A</td>
+<td class="pd-cell is-c-lo is-x-bas" data-col="4">R</td>
+<td class="pd-cell is-c-lo is-x-hyd" data-col="5">L</td>
+<td class="pd-cell is-c-lo is-x-pol" data-col="6">T</td>
+<td class="pd-cell is-c-mid is-x-bas" data-col="7">R</td>
+<td class="pd-cell is-c-lo is-x-bas" data-col="8">R</td>
+<td class="pd-cell is-c-lo is-x-bas" data-col="9">R</td>
+<td class="pd-cell is-c-lo is-x-sml" data-col="10">P</td>
+<td class="pd-cell is-c-lo is-x-bas" data-col="11">R</td>
+<td class="pd-cell is-gap" data-col="12">&middot;</td>
+<td class="pd-cell is-c-lo is-x-sml" data-col="13">P</td>
+<td class="pd-cell is-c-lo is-x-sml" data-col="14">P</td>
+<td class="pd-cell is-c-lo is-x-pol" data-col="15">Y</td>
+<td class="pd-cell is-c-hi is-x-pol" data-col="16">S</td>
+<td class="pd-cell is-c-hi is-x-pol" data-col="17">S</td>
+<td class="pd-cell is-c-hi is-x-sml" data-col="18">G</td>
+<td class="pd-cell is-c-lo is-x-pol" data-col="19">Q</td>
+<td class="pd-cell is-c-mid is-x-sml" data-col="20">P</td>
+<td class="pd-cell is-c-hi is-x-sml" data-col="21">G</td>
+<td class="pd-cell is-c-lo is-x-pol" data-col="22">Q</td>
+<td class="pd-cell is-c-lo is-x-pol" data-col="23">N</td>
+<td class="pd-cell is-c-mid is-x-pol" data-col="24">N</td>
+</tr>
+    </tbody>
+  </table>
+  </div>
+  <p class="pd-aln__foot">Four columns are the same residue in all seventeen sequences: Ser15, Ser16, Gly17 and Gly20. Three of the four bury surface on PEPR1, and the fourth, Gly17, is the residue Pearce measured at more than four thousandfold. BoPep4 and <i>B.&nbsp;rapa</i> Pep4 differ at one position, Ile4.</p>
+</div>
+
+        <p>
+          Two things in that grid mattered to the design. The first is that the invariant
+          block sits exactly where the crystal puts the interface, which is the subject of
+          the next section. The second is Asn23: it is the last residue in twelve of the
+          seventeen, and the others end in His, Ser, Asp or Thr. So the family does not
+          conserve the asparagine side chain as strictly as it conserves Gly17 &mdash; and
+          Pearce measured the same thing directly, since replacing Asn23 with alanine is
+          tolerated while <i>removing</i> it costs about 400-fold&nbsp;[2]. What is
+          conserved is the free carboxylate at the end of the chain, not the side chain
+          hanging off it. That distinction decides section&nbsp;9.
+        </p>
       </section>
 
-      <section class="sec" id="in-silico-work">
-        <h2>In silico work</h2>
-        <p class="scaffold">Whatever was actually run: alignment, structure prediction, signal peptide prediction. Name the tool and the version.</p>
-      <figure class="fig fig--pending">
-        <div class="fig__slot">Figure 1 &middot; image not added yet<br />drop the file in <code>assets/img/</code> and replace this div with an &lt;img&gt;</div>
-        <figcaption><b>Figure 1.</b> Predicted structure, with the feature that matters marked.</figcaption>
-      </figure>
+      <section class="sec" id="interface">
+        <h2>Residues 7&ndash;23 make the interface and 1&ndash;6 touch nothing</h2>
+
+        <p>
+          BoPep4 was docked onto the PEPR1 ectodomain taken from the 5GR8 crystal, in
+          HADDOCK&nbsp;2.5, with restraints transferred from the crystallographic
+          interface&nbsp;[4]. Before trusting the result, the same protocol was run on
+          AtPep1 itself: it returned the crystal pose at <b>0.77&nbsp;&Aring; ligand
+          RMSD</b>, top-ranked, with a 35-unit score gap to the first non-native pose. The
+          PEPR2 interface has no crystal to stand on and was predicted twice, by
+          AlphaFold3 co-folding and by docking, with the disagreements between them
+          reported rather than averaged.
+        </p>
+
+        <p>
+          Below is the interface, residue by residue, as buried surface area on PEPR1 with
+          the receptor partner and the PEPR2 status attached. Pick a residue to read it,
+          and the matching column of the alignment above lights up with it.
+        </p>
+
+        <div class="pd-ruler" id="ruler">
+  <div class="pd-ruler__strip" role="group" aria-label="BoPep4 sequence, residue by residue">
+    <button type="button" class="pd-res is-none" data-pos="1" aria-pressed="false"><span class="pd-res__aa">G</span><span class="pd-res__bar" style="height:4.0px"></span><span class="pd-res__n">1</span></button>
+    <button type="button" class="pd-res is-none" data-pos="2" aria-pressed="false"><span class="pd-res__aa">I</span><span class="pd-res__bar" style="height:4.0px"></span><span class="pd-res__n">2</span></button>
+    <button type="button" class="pd-res is-none" data-pos="3" aria-pressed="false"><span class="pd-res__aa">L</span><span class="pd-res__bar" style="height:4.0px"></span><span class="pd-res__n">3</span></button>
+    <button type="button" class="pd-res is-none" data-pos="4" aria-pressed="false"><span class="pd-res__aa">I</span><span class="pd-res__bar" style="height:4.0px"></span><span class="pd-res__n">4</span></button>
+    <button type="button" class="pd-res is-none" data-pos="5" aria-pressed="false"><span class="pd-res__aa">G</span><span class="pd-res__bar" style="height:4.0px"></span><span class="pd-res__n">5</span></button>
+    <button type="button" class="pd-res is-none" data-pos="6" aria-pressed="false"><span class="pd-res__aa">S</span><span class="pd-res__bar" style="height:4.0px"></span><span class="pd-res__n">6</span></button>
+    <button type="button" class="pd-res is-anchor" data-pos="7" aria-pressed="false"><span class="pd-res__aa">K</span><span class="pd-res__bar" style="height:18.0px"></span><span class="pd-res__n">7</span></button>
+    <button type="button" class="pd-res is-none" data-pos="8" aria-pressed="false"><span class="pd-res__aa">K</span><span class="pd-res__bar" style="height:6.8px"></span><span class="pd-res__n">8</span></button>
+    <button type="button" class="pd-res is-anchor" data-pos="9" aria-pressed="false"><span class="pd-res__aa">R</span><span class="pd-res__bar" style="height:28.6px"></span><span class="pd-res__n">9</span></button>
+    <button type="button" class="pd-res is-none" data-pos="10" aria-pressed="false"><span class="pd-res__aa">P</span><span class="pd-res__bar" style="height:4.0px"></span><span class="pd-res__n">10</span></button>
+    <button type="button" class="pd-res is-anchor" data-pos="11" aria-pressed="false"><span class="pd-res__aa">R</span><span class="pd-res__bar" style="height:19.6px"></span><span class="pd-res__n">11</span></button>
+    <button type="button" class="pd-res is-buried" data-pos="12" aria-pressed="false"><span class="pd-res__aa">E</span><span class="pd-res__bar" style="height:21.2px"></span><span class="pd-res__n">12</span></button>
+    <button type="button" class="pd-res is-none" data-pos="13" aria-pressed="false"><span class="pd-res__aa">P</span><span class="pd-res__bar" style="height:6.4px"></span><span class="pd-res__n">13</span></button>
+    <button type="button" class="pd-res is-buried" data-pos="14" aria-pressed="false"><span class="pd-res__aa">H</span><span class="pd-res__bar" style="height:20.0px"></span><span class="pd-res__n">14</span></button>
+    <button type="button" class="pd-res is-core" data-pos="15" aria-pressed="false"><span class="pd-res__aa">S</span><span class="pd-res__bar" style="height:23.2px"></span><span class="pd-res__n">15</span></button>
+    <button type="button" class="pd-res is-core" data-pos="16" aria-pressed="false"><span class="pd-res__aa">S</span><span class="pd-res__bar" style="height:12.0px"></span><span class="pd-res__n">16</span></button>
+    <button type="button" class="pd-res is-partial" data-pos="17" aria-pressed="false"><span class="pd-res__aa">G</span><span class="pd-res__bar" style="height:9.0px"></span><span class="pd-res__n">17</span></button>
+    <button type="button" class="pd-res is-anchor" data-pos="18" aria-pressed="false"><span class="pd-res__aa">K</span><span class="pd-res__bar" style="height:21.0px"></span><span class="pd-res__n">18</span></button>
+    <button type="button" class="pd-res is-none" data-pos="19" aria-pressed="false"><span class="pd-res__aa">P</span><span class="pd-res__bar" style="height:4.0px"></span><span class="pd-res__n">19</span></button>
+    <button type="button" class="pd-res is-buried" data-pos="20" aria-pressed="false"><span class="pd-res__aa">G</span><span class="pd-res__bar" style="height:13.0px"></span><span class="pd-res__n">20</span></button>
+    <button type="button" class="pd-res is-partial" data-pos="21" aria-pressed="false"><span class="pd-res__aa">G</span><span class="pd-res__bar" style="height:11.4px"></span><span class="pd-res__n">21</span></button>
+    <button type="button" class="pd-res is-anchor" data-pos="22" aria-pressed="false"><span class="pd-res__aa">H</span><span class="pd-res__bar" style="height:24.8px"></span><span class="pd-res__n">22</span></button>
+    <button type="button" class="pd-res is-anchor" data-pos="23" aria-pressed="false"><span class="pd-res__aa">N</span><span class="pd-res__bar" style="height:38.0px"></span><span class="pd-res__n">23</span></button>
+  </div>
+  <p class="pd-ruler__axis"><span>N-terminus</span><span>buried surface on PEPR1, per residue</span><span>C-terminus</span></p>
+  <div class="pd-ruler__panel" id="ruler-panel" aria-live="polite">
+    <p class="pd-ruler__head"><b id="rp-name">Asn23</b><span class="pd-tag is-anchor" id="rp-cls">salt-bridge anchor</span><span class="pd-tag is-p2-conserved" id="rp-p2">conserved on PEPR2</span></p>
+    <ul class="pd-stats">
+      <li><b>Buried on PEPR1</b><span id="rp-sasa">170&nbsp;&Aring;&sup2;</span></li>
+      <li><b>H-bonds / salt bridges</b><span id="rp-bonds">4 / 0</span></li>
+      <li><b>PEPR1 partner</b><span id="rp-p1">Asp441, Asn465, Arg487</span></li>
+      <li><b>Conserved across 17 Peps</b><span id="rp-cons">71%</span></li>
+    </ul>
+    <p class="pd-ruler__note" id="rp-note">The master clamp. Its free α-carboxylate salt-bridges Arg487 at 2.40&nbsp;&Aring; in the crystal. Anything fused after it removes that bond.</p>
+  </div>
+  <p class="pd-ruler__hint">Pick a residue. The matching column of the alignment below lights up with it.</p>
+</div>
+
+        <p>
+          The shape of that strip is the whole design brief. Nothing is buried until
+          Lys7. From there the peptide runs a belt of basic residues along a row of
+          receptor carboxylates &mdash; Lys7 to Glu199, Arg9 to Asp179, Arg11 to Asp294,
+          Lys18 to Glu324 and Asp348, His22 to Glu439 &mdash; and finishes with Asn23
+          buried in a pocket at 170&nbsp;&Aring;&sup2;, more than any other residue, held
+          by three receptor side chains at once.
+        </p>
+
+        <div class="figs figs--2">
+          <figure class="fig">
+            <img src="../assets/img/peptide-design/pep-anchor-belt.webp"
+                 alt="Ribbon rendering of the peptide lying along the concave face of the receptor solenoid, with three basic side chains reaching down to receptor carboxylates and the distances labelled."
+                 width="1300" height="950" loading="lazy" decoding="async" />
+            <figcaption>
+              <b>Figure 1.</b> The electrostatic belt. The peptide (orange) runs the concave
+              face of the leucine-rich-repeat solenoid, and the basic side chains at
+              positions 7, 9 and 18 reach down onto fixed receptor carboxylates at 2.6 to
+              3.0&nbsp;&Aring;. Rendered from a docked model that carries Arg at position 18;
+              the belt architecture is the same in every complex in the panel, including
+              wild-type Lys18.
+            </figcaption>
+          </figure>
+          <figure class="fig">
+            <img src="../assets/img/peptide-design/pep-asn23-clamp.webp"
+                 alt="Surface rendering showing the peptide C-terminus buried inside a pocket of the receptor, with the terminal asparagine drawn as sticks."
+                 width="1150" height="950" loading="lazy" decoding="async" />
+            <figcaption>
+              <b>Figure 2.</b> The C-terminal clamp. Asn23 is not on the surface of the
+              interface, it is inside a pocket, and its free &alpha;-carboxylate
+              salt-bridges Arg487 at 2.40&nbsp;&Aring; in the crystal&nbsp;[1]. There is no
+              room for a residue 24 without the peptide leaving the pocket.
+            </figcaption>
+          </figure>
+        </div>
+
+        <div class="disclose disclose--solo"><details class="disclose"><summary><span class="disclose__title">The per-residue table in full</span><span class="disclose__hint">Buried surface, bond counts, receptor partners and family conservation for all twenty-three positions.</span></summary><div class="disclose__body">
+        <div class="tablewrap"><table class="data">
+<thead><tr><th>Residue</th><th>&Delta;SASA (&Aring;&sup2;)</th><th>H-b / s-b</th><th>PEPR1 partner</th><th>Class</th><th>PEPR2</th><th>Conservation</th></tr></thead>
+<tbody><tr><td>G1</td><td>0</td><td>0 / 0</td><td>—</td><td>no receptor contact</td><td>no contact</td><td>35%</td></tr>
+<tr><td>I2</td><td>0</td><td>0 / 0</td><td>—</td><td>no receptor contact</td><td>no contact</td><td>29%</td></tr>
+<tr><td>L3</td><td>0</td><td>0 / 0</td><td>—</td><td>no receptor contact</td><td>no contact</td><td>35%</td></tr>
+<tr><td>I4</td><td>0</td><td>0 / 0</td><td>—</td><td>no receptor contact</td><td>no contact</td><td>35%</td></tr>
+<tr><td>G5</td><td>0</td><td>0 / 0</td><td>—</td><td>no receptor contact</td><td>no contact</td><td>29%</td></tr>
+<tr><td>S6</td><td>0</td><td>0 / 0</td><td>—</td><td>no receptor contact</td><td>no contact</td><td>29%</td></tr>
+<tr><td>K7</td><td>70</td><td>1 / 1</td><td>Glu199</td><td>salt-bridge anchor</td><td>conserved</td><td>65%</td></tr>
+<tr><td>K8</td><td>14</td><td>0 / 0</td><td>—</td><td>no receptor contact</td><td>not mapped</td><td>35%</td></tr>
+<tr><td>R9</td><td>123</td><td>3 / 3</td><td>Asp179</td><td>salt-bridge anchor</td><td>conserved</td><td>53%</td></tr>
+<tr><td>P10</td><td>0</td><td>0 / 0</td><td>—</td><td>no receptor contact</td><td>not mapped</td><td>41%</td></tr>
+<tr><td>R11</td><td>78</td><td>2 / 1</td><td>Asp294</td><td>salt-bridge anchor</td><td>degraded</td><td>59%</td></tr>
+<tr><td>E12</td><td>86</td><td>1 / 0</td><td>His227</td><td>buried contact</td><td>degraded</td><td>41%</td></tr>
+<tr><td>P13</td><td>12</td><td>0 / 0</td><td>—</td><td>no receptor contact</td><td>not mapped</td><td>41%</td></tr>
+<tr><td>H14</td><td>80</td><td>0 / 0</td><td>packing</td><td>buried contact</td><td>not mapped</td><td>24%</td></tr>
+<tr><td>S15</td><td>96</td><td>2 / 0</td><td>Asp273</td><td>conserved core contact</td><td>conserved</td><td>100%</td></tr>
+<tr><td>S16</td><td>40</td><td>1 / 0</td><td>Asn321</td><td>conserved core contact</td><td>conserved</td><td>100%</td></tr>
+<tr><td>G17</td><td>25</td><td>0 / 0</td><td>—</td><td>partial contact</td><td>not mapped</td><td>100%</td></tr>
+<tr><td>K18</td><td>85</td><td>2 / 2</td><td>Glu324, Asp348</td><td>salt-bridge anchor</td><td>partial</td><td>47%</td></tr>
+<tr><td>P19</td><td>0</td><td>0 / 0</td><td>—</td><td>no receptor contact</td><td>not mapped</td><td>76%</td></tr>
+<tr><td>G20</td><td>45</td><td>0 / 0</td><td>packing</td><td>buried contact</td><td>not mapped</td><td>100%</td></tr>
+<tr><td>G21</td><td>37</td><td>2 / 0</td><td>—</td><td>partial contact</td><td>not mapped</td><td>47%</td></tr>
+<tr><td>H22</td><td>104</td><td>1 / 3</td><td>Glu439</td><td>salt-bridge anchor</td><td>conserved</td><td>47%</td></tr>
+<tr><td>N23</td><td>170</td><td>4 / 0</td><td>Asp441, Asn465, Arg487</td><td>salt-bridge anchor</td><td>conserved</td><td>71%</td></tr></tbody></table></div>
+        <p>Burial and bond counts are measured on the native-mode PEPR1 complex; PEPR2 status is read off the AlphaFold3 pocket map. Positions marked <i>not mapped</i> are inside the bound stretch but were not assigned a PEPR2 partner by either method.</p>
+        </div></details></div>
+
+        <h3>PEPR2 reads the same footprint with two fewer grips</h3>
+        <p>
+          PEPR2 is 64% identical to PEPR1 and its groove superimposes to within about
+          2&nbsp;&Aring; at every anchor position. It keeps the C-terminal clamp and the
+          Lys7, Arg9, Ser15, Ser16 and His22 partners. It loses the acidic partner of
+          Arg11 and the basic partner of Glu12, and position 18 faces a hydrophobic patch
+          instead of a carboxylate. A receptor that keeps the anchors and loses the middle
+          of the belt is a plausible structural account of why PEPR2 binds two members of
+          the family where PEPR1 binds six&nbsp;[3]. It is an account, not a measurement:
+          there is no PEPR2 structure, and everything in this paragraph inherits the
+          uncertainty of an AlphaFold model.
+        </p>
       </section>
 
-      <section class="sec" id="expression-and-secretion-design">
-        <h2>Expression and secretion design</h2>
-        <p class="scaffold">Codon usage for B. subtilis, signal peptide, tags, and what each costs.</p>
+      <section class="sec" id="rules">
+        <h2>The interface map splits the peptide into a protected core and two editable ends</h2>
+
+        <p>
+          Reading the strip as a design rule gives the constraint every later decision was
+          checked against.
+        </p>
+
+        <div class="pd-rules">
+          <div class="pd-rule pd-rule--keep">
+            <h4>Do not touch</h4>
+            <p>
+              The invariant core <code>Ser15, Ser16, Gly17, Gly20</code> and the C-terminal
+              <code>Asn23</code>, plus the belt anchors <code>Lys7, Arg9, Arg11, Lys18,
+              His22</code>. Every one of these is either invariant across the family, buried
+              at the interface, or measured as costly by Pearce &mdash; and most are all three.
+            </p>
+          </div>
+          <div class="pd-rule pd-rule--free">
+            <h4>Free to edit</h4>
+            <p>
+              The N-terminus <code>1&ndash;6</code>, which buries nothing on either receptor
+              and is invisible in the crystal, and the solvent-facing
+              <code>Lys8, Pro10, Pro13, Pro19</code>. This is where truncations and any
+              purification tag have to go.
+            </p>
+          </div>
+        </div>
+
+        <p>
+          The rule is stronger than a docking score because none of it depends on one: it
+          is burial, plus family conservation, plus published mutagenesis. All three agree
+          on the same block of the sequence.
+        </p>
       </section>
 
-      <section class="sec" id="what-this-sets-for-the-membrane">
-        <h2>What this sets for the membrane</h2>
-        <p class="scaffold">Carry the size straight into the cutoff decision and link to the Bioreactor Calculations page.</p>
+      <section class="sec" id="ladder">
+        <h2>The truncation ladder has a cliff, and the two methods put it five residues apart</h2>
+
+        <p>
+          If residues 1&ndash;6 do nothing at the receptor, how much further can the
+          peptide be cut? Cutting is worth something: a shorter payload is cheaper to
+          synthesise, and moving the mature N-terminus changes the charge the signal
+          peptidase sees. So the whole ladder was built rather than one guess &mdash;
+          every N-terminal truncation from 1&ndash;23 down to 17&ndash;23, docked against
+          both receptors and co-folded in AlphaFold3. Seventeen fragments, two receptors,
+          thirty-four complexes.
+        </p>
+
+        <div class="pd-ladder" id="ladder">
+  <div class="pd-aln__bar">
+    <span class="pd-aln__legend">Y axis:</span>
+    <button type="button" class="pd-chip is-on" data-lad="raw" aria-pressed="true">docking score</button>
+    <button type="button" class="pd-chip" data-lad="norm" aria-pressed="false">score per buried &Aring;&sup2;</button>
+    <button type="button" class="pd-chip" data-lad="iptm" aria-pressed="false">AlphaFold3 confidence</button>
+  </div>
+  <div class="pd-ladder__stage">
+<svg class="pd-chart" viewBox="0 0 880 268" role="img" aria-label="Docking score and AlphaFold3 confidence against N-terminal truncation depth, seventeen rungs, two receptors.">
+<line class="pd-tick" x1="78.0" y1="214.0" x2="78.0" y2="218.0" />
+<text class="pd-ax" x="78.0" y="230.0" text-anchor="middle">1</text>
+<line class="pd-tick" x1="126.4" y1="214.0" x2="126.4" y2="218.0" />
+<text class="pd-ax" x="126.4" y="230.0" text-anchor="middle">2</text>
+<line class="pd-tick" x1="174.8" y1="214.0" x2="174.8" y2="218.0" />
+<text class="pd-ax" x="174.8" y="230.0" text-anchor="middle">3</text>
+<line class="pd-tick" x1="223.1" y1="214.0" x2="223.1" y2="218.0" />
+<text class="pd-ax" x="223.1" y="230.0" text-anchor="middle">4</text>
+<line class="pd-tick" x1="271.5" y1="214.0" x2="271.5" y2="218.0" />
+<text class="pd-ax" x="271.5" y="230.0" text-anchor="middle">5</text>
+<line class="pd-tick" x1="319.9" y1="214.0" x2="319.9" y2="218.0" />
+<text class="pd-ax" x="319.9" y="230.0" text-anchor="middle">6</text>
+<line class="pd-tick" x1="368.2" y1="214.0" x2="368.2" y2="218.0" />
+<text class="pd-ax" x="368.2" y="230.0" text-anchor="middle">7</text>
+<line class="pd-tick" x1="416.6" y1="214.0" x2="416.6" y2="218.0" />
+<text class="pd-ax" x="416.6" y="230.0" text-anchor="middle">8</text>
+<line class="pd-tick" x1="465.0" y1="214.0" x2="465.0" y2="218.0" />
+<text class="pd-ax" x="465.0" y="230.0" text-anchor="middle">9</text>
+<line class="pd-tick" x1="513.4" y1="214.0" x2="513.4" y2="218.0" />
+<text class="pd-ax" x="513.4" y="230.0" text-anchor="middle">10</text>
+<line class="pd-tick" x1="561.8" y1="214.0" x2="561.8" y2="218.0" />
+<text class="pd-ax" x="561.8" y="230.0" text-anchor="middle">11</text>
+<line class="pd-tick" x1="610.1" y1="214.0" x2="610.1" y2="218.0" />
+<text class="pd-ax" x="610.1" y="230.0" text-anchor="middle">12</text>
+<line class="pd-tick" x1="658.5" y1="214.0" x2="658.5" y2="218.0" />
+<text class="pd-ax" x="658.5" y="230.0" text-anchor="middle">13</text>
+<line class="pd-tick" x1="706.9" y1="214.0" x2="706.9" y2="218.0" />
+<text class="pd-ax" x="706.9" y="230.0" text-anchor="middle">14</text>
+<line class="pd-tick" x1="755.2" y1="214.0" x2="755.2" y2="218.0" />
+<text class="pd-ax" x="755.2" y="230.0" text-anchor="middle">15</text>
+<line class="pd-tick" x1="803.6" y1="214.0" x2="803.6" y2="218.0" />
+<text class="pd-ax" x="803.6" y="230.0" text-anchor="middle">16</text>
+<line class="pd-tick" x1="852.0" y1="214.0" x2="852.0" y2="218.0" />
+<text class="pd-ax" x="852.0" y="230.0" text-anchor="middle">17</text>
+<text class="pd-ax pd-ax--t" x="465" y="252" text-anchor="middle">first residue kept (peptide runs from here to Asn23)</text>
+<line class="pd-axis" x1="68.0" y1="214.0" x2="862.0" y2="214.0" />
+<rect class="pd-band" x="658.5" y="22.0" width="48.4" height="192.0" />
+<g id="lad-raw">
+<line class="pd-grid" x1="68.0" y1="48.1" x2="862.0" y2="48.1" />
+<text class="pd-ax" x="60.0" y="51.1" text-anchor="end">-80</text>
+<line class="pd-grid" x1="68.0" y1="81.3" x2="862.0" y2="81.3" />
+<text class="pd-ax" x="60.0" y="84.3" text-anchor="end">-110</text>
+<line class="pd-grid" x1="68.0" y1="114.5" x2="862.0" y2="114.5" />
+<text class="pd-ax" x="60.0" y="117.5" text-anchor="end">-140</text>
+<line class="pd-grid" x1="68.0" y1="147.6" x2="862.0" y2="147.6" />
+<text class="pd-ax" x="60.0" y="150.6" text-anchor="end">-170</text>
+<line class="pd-grid" x1="68.0" y1="180.8" x2="862.0" y2="180.8" />
+<text class="pd-ax" x="60.0" y="183.8" text-anchor="end">-200</text>
+<line class="pd-grid" x1="68.0" y1="214.0" x2="862.0" y2="214.0" />
+<text class="pd-ax" x="60.0" y="217.0" text-anchor="end">-230</text>
+<text class="pd-ax pd-ax--t" transform="translate(20,120) rotate(-90)" text-anchor="middle">HADDOCK score</text>
+<polyline class="pd-trace" points="78.0,178.4 126.4,182.4 174.8,175.8 223.1,177.3 271.5,181.0 319.9,179.7 368.2,170.2 416.6,142.7 465.0,142.6 513.4,123.7 561.8,123.6 610.1,113.4 658.5,93.3 706.9,87.1 755.2,67.8 803.6,53.3 852.0,53.7" />
+<polyline class="pd-trace is-b" points="78.0,194.0 126.4,204.6 174.8,193.6 223.1,189.0 271.5,188.1 319.9,196.2 368.2,189.2 416.6,162.5 465.0,146.0 513.4,118.1 561.8,125.5 610.1,102.2 658.5,84.6 706.9,77.6 755.2,53.7 803.6,44.1 852.0,35.9" />
+<circle class="pd-pt" cx="78.0" cy="178.4" r="3" />
+<circle class="pd-pt" cx="126.4" cy="182.4" r="3" />
+<circle class="pd-pt" cx="174.8" cy="175.8" r="3" />
+<circle class="pd-pt" cx="223.1" cy="177.3" r="3" />
+<circle class="pd-pt" cx="271.5" cy="181.0" r="3" />
+<circle class="pd-pt" cx="319.9" cy="179.7" r="3" />
+<circle class="pd-pt" cx="368.2" cy="170.2" r="3" />
+<circle class="pd-pt" cx="416.6" cy="142.7" r="3" />
+<circle class="pd-pt" cx="465.0" cy="142.6" r="3" />
+<circle class="pd-pt" cx="513.4" cy="123.7" r="3" />
+<circle class="pd-pt" cx="561.8" cy="123.6" r="3" />
+<circle class="pd-pt" cx="610.1" cy="113.4" r="3" />
+<circle class="pd-pt" cx="658.5" cy="93.3" r="3" />
+<circle class="pd-pt" cx="706.9" cy="87.1" r="3" />
+<circle class="pd-pt" cx="755.2" cy="67.8" r="3" />
+<circle class="pd-pt" cx="803.6" cy="53.3" r="3" />
+<circle class="pd-pt" cx="852.0" cy="53.7" r="3" />
+<circle class="pd-pt is-b" cx="78.0" cy="194.0" r="3" />
+<circle class="pd-pt is-b" cx="126.4" cy="204.6" r="3" />
+<circle class="pd-pt is-b" cx="174.8" cy="193.6" r="3" />
+<circle class="pd-pt is-b" cx="223.1" cy="189.0" r="3" />
+<circle class="pd-pt is-b" cx="271.5" cy="188.1" r="3" />
+<circle class="pd-pt is-b" cx="319.9" cy="196.2" r="3" />
+<circle class="pd-pt is-b" cx="368.2" cy="189.2" r="3" />
+<circle class="pd-pt is-b" cx="416.6" cy="162.5" r="3" />
+<circle class="pd-pt is-b" cx="465.0" cy="146.0" r="3" />
+<circle class="pd-pt is-b" cx="513.4" cy="118.1" r="3" />
+<circle class="pd-pt is-b" cx="561.8" cy="125.5" r="3" />
+<circle class="pd-pt is-b" cx="610.1" cy="102.2" r="3" />
+<circle class="pd-pt is-b" cx="658.5" cy="84.6" r="3" />
+<circle class="pd-pt is-b" cx="706.9" cy="77.6" r="3" />
+<circle class="pd-pt is-b" cx="755.2" cy="53.7" r="3" />
+<circle class="pd-pt is-b" cx="803.6" cy="44.1" r="3" />
+<circle class="pd-pt is-b" cx="852.0" cy="35.9" r="3" />
+</g>
+<g id="lad-norm" hidden>
+<line class="pd-grid" x1="68.0" y1="26.0" x2="862.0" y2="26.0" />
+<text class="pd-ax" x="60.0" y="29.0" text-anchor="end">-70</text>
+<line class="pd-grid" x1="68.0" y1="73.0" x2="862.0" y2="73.0" />
+<text class="pd-ax" x="60.0" y="76.0" text-anchor="end">-75</text>
+<line class="pd-grid" x1="68.0" y1="120.0" x2="862.0" y2="120.0" />
+<text class="pd-ax" x="60.0" y="123.0" text-anchor="end">-80</text>
+<line class="pd-grid" x1="68.0" y1="167.0" x2="862.0" y2="167.0" />
+<text class="pd-ax" x="60.0" y="170.0" text-anchor="end">-85</text>
+<line class="pd-grid" x1="68.0" y1="214.0" x2="862.0" y2="214.0" />
+<text class="pd-ax" x="60.0" y="217.0" text-anchor="end">-90</text>
+<text class="pd-ax pd-ax--t" transform="translate(20,120) rotate(-90)" text-anchor="middle">score per 1000 &#8491;&#178; buried</text>
+<polyline class="pd-trace" points="78.0,43.2 126.4,69.8 174.8,73.1 223.1,127.4 271.5,161.4 319.9,141.1 368.2,146.8 416.6,126.9 465.0,115.8 513.4,140.4 561.8,166.3 610.1,182.0 658.5,164.9 706.9,172.8 755.2,137.6 803.6,165.3 852.0,176.6" />
+<polyline class="pd-trace is-b" points="78.0,63.9 126.4,122.3 174.8,121.6 223.1,75.6 271.5,130.9 319.9,136.6 368.2,144.1 416.6,100.4 465.0,78.1 513.4,52.2 561.8,80.9 610.1,54.4 658.5,74.9 706.9,85.2 755.2,12.1 803.6,45.2 852.0,53.7" />
+<circle class="pd-pt" cx="78.0" cy="43.2" r="3" />
+<circle class="pd-pt" cx="126.4" cy="69.8" r="3" />
+<circle class="pd-pt" cx="174.8" cy="73.1" r="3" />
+<circle class="pd-pt" cx="223.1" cy="127.4" r="3" />
+<circle class="pd-pt" cx="271.5" cy="161.4" r="3" />
+<circle class="pd-pt" cx="319.9" cy="141.1" r="3" />
+<circle class="pd-pt" cx="368.2" cy="146.8" r="3" />
+<circle class="pd-pt" cx="416.6" cy="126.9" r="3" />
+<circle class="pd-pt" cx="465.0" cy="115.8" r="3" />
+<circle class="pd-pt" cx="513.4" cy="140.4" r="3" />
+<circle class="pd-pt" cx="561.8" cy="166.3" r="3" />
+<circle class="pd-pt" cx="610.1" cy="182.0" r="3" />
+<circle class="pd-pt" cx="658.5" cy="164.9" r="3" />
+<circle class="pd-pt" cx="706.9" cy="172.8" r="3" />
+<circle class="pd-pt" cx="755.2" cy="137.6" r="3" />
+<circle class="pd-pt" cx="803.6" cy="165.3" r="3" />
+<circle class="pd-pt" cx="852.0" cy="176.6" r="3" />
+<circle class="pd-pt is-b" cx="78.0" cy="63.9" r="3" />
+<circle class="pd-pt is-b" cx="126.4" cy="122.3" r="3" />
+<circle class="pd-pt is-b" cx="174.8" cy="121.6" r="3" />
+<circle class="pd-pt is-b" cx="223.1" cy="75.6" r="3" />
+<circle class="pd-pt is-b" cx="271.5" cy="130.9" r="3" />
+<circle class="pd-pt is-b" cx="319.9" cy="136.6" r="3" />
+<circle class="pd-pt is-b" cx="368.2" cy="144.1" r="3" />
+<circle class="pd-pt is-b" cx="416.6" cy="100.4" r="3" />
+<circle class="pd-pt is-b" cx="465.0" cy="78.1" r="3" />
+<circle class="pd-pt is-b" cx="513.4" cy="52.2" r="3" />
+<circle class="pd-pt is-b" cx="561.8" cy="80.9" r="3" />
+<circle class="pd-pt is-b" cx="610.1" cy="54.4" r="3" />
+<circle class="pd-pt is-b" cx="658.5" cy="74.9" r="3" />
+<circle class="pd-pt is-b" cx="706.9" cy="85.2" r="3" />
+<circle class="pd-pt is-b" cx="755.2" cy="12.1" r="3" />
+<circle class="pd-pt is-b" cx="803.6" cy="45.2" r="3" />
+<circle class="pd-pt is-b" cx="852.0" cy="53.7" r="3" />
+</g>
+<g id="lad-iptm" hidden>
+<line class="pd-grid" x1="68.0" y1="26.0" x2="862.0" y2="26.0" />
+<text class="pd-ax" x="60.0" y="29.0" text-anchor="end">1.0</text>
+<line class="pd-grid" x1="68.0" y1="63.6" x2="862.0" y2="63.6" />
+<text class="pd-ax" x="60.0" y="66.6" text-anchor="end">0.9</text>
+<line class="pd-grid" x1="68.0" y1="101.2" x2="862.0" y2="101.2" />
+<text class="pd-ax" x="60.0" y="104.2" text-anchor="end">0.8</text>
+<line class="pd-grid" x1="68.0" y1="138.8" x2="862.0" y2="138.8" />
+<text class="pd-ax" x="60.0" y="141.8" text-anchor="end">0.7</text>
+<line class="pd-grid" x1="68.0" y1="176.4" x2="862.0" y2="176.4" />
+<text class="pd-ax" x="60.0" y="179.4" text-anchor="end">0.6</text>
+<line class="pd-grid" x1="68.0" y1="214.0" x2="862.0" y2="214.0" />
+<text class="pd-ax" x="60.0" y="217.0" text-anchor="end">0.5</text>
+<text class="pd-ax pd-ax--t" transform="translate(20,120) rotate(-90)" text-anchor="middle">AlphaFold3 ipTM</text>
+<text class="pd-note" x="650.5" y="32.0" text-anchor="end">confidence collapses across this step</text>
+<polyline class="pd-trace" points="78.0,93.7 174.8,67.4 223.1,78.6 271.5,56.1 319.9,67.4 368.2,56.1 416.6,56.1 465.0,48.6 513.4,52.3 561.8,63.6 610.1,74.9 658.5,74.9 706.9,199.0 755.2,165.1 803.6,168.9 852.0,127.5" />
+<polyline class="pd-trace is-b" points="78.0,105.0 174.8,101.2 223.1,93.7 271.5,89.9 319.9,67.4 368.2,71.1 416.6,71.1 465.0,67.4 513.4,89.9 561.8,82.4 610.1,89.9 658.5,168.9 706.9,202.7 755.2,146.3 803.6,153.8 852.0,187.7" />
+<circle class="pd-pt" cx="78.0" cy="93.7" r="3" />
+<circle class="pd-pt" cx="174.8" cy="67.4" r="3" />
+<circle class="pd-pt" cx="223.1" cy="78.6" r="3" />
+<circle class="pd-pt" cx="271.5" cy="56.1" r="3" />
+<circle class="pd-pt" cx="319.9" cy="67.4" r="3" />
+<circle class="pd-pt" cx="368.2" cy="56.1" r="3" />
+<circle class="pd-pt" cx="416.6" cy="56.1" r="3" />
+<circle class="pd-pt" cx="465.0" cy="48.6" r="3" />
+<circle class="pd-pt" cx="513.4" cy="52.3" r="3" />
+<circle class="pd-pt" cx="561.8" cy="63.6" r="3" />
+<circle class="pd-pt" cx="610.1" cy="74.9" r="3" />
+<circle class="pd-pt" cx="658.5" cy="74.9" r="3" />
+<circle class="pd-pt" cx="706.9" cy="199.0" r="3" />
+<circle class="pd-pt" cx="755.2" cy="165.1" r="3" />
+<circle class="pd-pt" cx="803.6" cy="168.9" r="3" />
+<circle class="pd-pt" cx="852.0" cy="127.5" r="3" />
+<circle class="pd-pt is-b" cx="78.0" cy="105.0" r="3" />
+<circle class="pd-pt is-b" cx="174.8" cy="101.2" r="3" />
+<circle class="pd-pt is-b" cx="223.1" cy="93.7" r="3" />
+<circle class="pd-pt is-b" cx="271.5" cy="89.9" r="3" />
+<circle class="pd-pt is-b" cx="319.9" cy="67.4" r="3" />
+<circle class="pd-pt is-b" cx="368.2" cy="71.1" r="3" />
+<circle class="pd-pt is-b" cx="416.6" cy="71.1" r="3" />
+<circle class="pd-pt is-b" cx="465.0" cy="67.4" r="3" />
+<circle class="pd-pt is-b" cx="513.4" cy="89.9" r="3" />
+<circle class="pd-pt is-b" cx="561.8" cy="82.4" r="3" />
+<circle class="pd-pt is-b" cx="610.1" cy="89.9" r="3" />
+<circle class="pd-pt is-b" cx="658.5" cy="168.9" r="3" />
+<circle class="pd-pt is-b" cx="706.9" cy="202.7" r="3" />
+<circle class="pd-pt is-b" cx="755.2" cy="146.3" r="3" />
+<circle class="pd-pt is-b" cx="803.6" cy="153.8" r="3" />
+<circle class="pd-pt is-b" cx="852.0" cy="187.7" r="3" />
+</g>
+<line id="lad-mark" class="pd-mark" x1="465.0" y1="20.0" x2="465.0" y2="214.0" />
+</svg>
+  </div>
+  <p class="pd-ladder__key"><span class="pd-key pd-key--a">PEPR1</span><span class="pd-key pd-key--b">PEPR2</span></p>
+  <div class="pd-ladder__ctl">
+    <label for="lad-slider">Truncation depth</label>
+    <input type="range" id="lad-slider" min="1" max="17" step="1" value="9" aria-describedby="lad-read" />
+  </div>
+  <div class="pd-ladder__read" id="lad-read" aria-live="polite">
+    <p class="pd-ladder__frag"><b id="lr-name">BoPep4 9&ndash;23</b><span class="pd-tag is-anchor" id="lr-verdict">binder</span></p>
+    <p class="pd-seq" id="lr-seq">RPREPHSSGKPGGHN</p>
+    <ul class="pd-stats">
+      <li><b>Length / net charge</b><span id="lr-len">15 aa / +2</span></li>
+      <li><b>HADDOCK, PEPR1</b><span id="lr-s1">&minus;165.5</span></li>
+      <li><b>Score per 1000&nbsp;&Aring;&sup2;</b><span id="lr-n1">&minus;79.6</span></li>
+      <li><b>AlphaFold3 ipTM</b><span id="lr-ip">0.94 &middot; PEPR2 0.89</span></li>
+      <li><b>Anchors still present</b><span id="lr-anch">R9, R11, K18, N23</span></li>
+    </ul>
+  </div>
+</div>
+<div class="disclose disclose--solo"><details class="disclose"><summary><span class="disclose__title">All seventeen rungs, both receptors</span><span class="disclose__hint">The table the chart is drawn from.</span></summary><div class="disclose__body"><div class="tablewrap tablewrap--wide"><table class="data">
+<thead><tr><th>Fragment</th><th>Sequence</th><th>Length</th><th>Net charge</th><th>Score, PEPR1</th><th>ipTM, PEPR1</th><th>Score / 1000&nbsp;&Aring;&sup2;</th><th>ipTM, PEPR2</th><th>Anchors kept</th><th>Verdict</th></tr></thead>
+<tbody><tr><td>1&ndash;23</td><td class="mono">GILIGSKKRPREPHSSGKPGGHN</td><td>23</td><td>+4</td><td>-197.8</td><td>0.82</td><td>-71.8</td><td>0.79</td><td>K7, K8, R9, R11, K18, N23</td><td>binder</td></tr>
+<tr><td>2&ndash;23</td><td class="mono">ILIGSKKRPREPHSSGKPGGHN</td><td>22</td><td>+4</td><td>-201.4</td><td>&mdash;</td><td>-74.7</td><td>&mdash;</td><td>K7, K8, R9, R11, K18, N23</td><td>binder</td></tr>
+<tr><td>3&ndash;23</td><td class="mono">LIGSKKRPREPHSSGKPGGHN</td><td>21</td><td>+4</td><td>-195.5</td><td>0.89</td><td>-75.0</td><td>0.80</td><td>K7, K8, R9, R11, K18, N23</td><td>binder</td></tr>
+<tr><td>4&ndash;23</td><td class="mono">IGSKKRPREPHSSGKPGGHN</td><td>20</td><td>+4</td><td>-196.8</td><td>0.86</td><td>-80.8</td><td>0.82</td><td>K7, K8, R9, R11, K18, N23</td><td>binder</td></tr>
+<tr><td>5&ndash;23</td><td class="mono">GSKKRPREPHSSGKPGGHN</td><td>19</td><td>+4</td><td>-200.1</td><td>0.92</td><td>-84.4</td><td>0.83</td><td>K7, K8, R9, R11, K18, N23</td><td>binder</td></tr>
+<tr><td>6&ndash;23</td><td class="mono">SKKRPREPHSSGKPGGHN</td><td>18</td><td>+4</td><td>-198.9</td><td>0.89</td><td>-82.2</td><td>0.89</td><td>K7, K8, R9, R11, K18, N23</td><td>binder</td></tr>
+<tr><td>7&ndash;23</td><td class="mono">KKRPREPHSSGKPGGHN</td><td>17</td><td>+4</td><td>-190.4</td><td>0.92</td><td>-82.8</td><td>0.88</td><td>K7, K8, R9, R11, K18, N23</td><td>binder</td></tr>
+<tr><td>8&ndash;23</td><td class="mono">KRPREPHSSGKPGGHN</td><td>16</td><td>+3</td><td>-165.5</td><td>0.92</td><td>-80.7</td><td>0.88</td><td>K8, R9, R11, K18, N23</td><td>binder</td></tr>
+<tr><td>9&ndash;23</td><td class="mono">RPREPHSSGKPGGHN</td><td>15</td><td>+2</td><td>-165.5</td><td>0.94</td><td>-79.6</td><td>0.89</td><td>R9, R11, K18, N23</td><td>binder</td></tr>
+<tr><td>10&ndash;23</td><td class="mono">PREPHSSGKPGGHN</td><td>14</td><td>+1</td><td>-148.4</td><td>0.93</td><td>-82.2</td><td>0.83</td><td>R11, K18, N23</td><td>weak</td></tr>
+<tr><td>11&ndash;23</td><td class="mono">REPHSSGKPGGHN</td><td>13</td><td>+1</td><td>-148.3</td><td>0.90</td><td>-84.9</td><td>0.85</td><td>R11, K18, N23</td><td>weak</td></tr>
+<tr><td>12&ndash;23</td><td class="mono">EPHSSGKPGGHN</td><td>12</td><td>+0</td><td>-139.0</td><td>0.87</td><td>-86.6</td><td>0.83</td><td>K18, N23</td><td>weak</td></tr>
+<tr><td>13&ndash;23</td><td class="mono">PHSSGKPGGHN</td><td>11</td><td>+1</td><td>-120.9</td><td>0.87</td><td>-84.8</td><td>0.62</td><td>K18, N23</td><td>weak</td></tr>
+<tr><td>14&ndash;23</td><td class="mono">HSSGKPGGHN</td><td>10</td><td>+1</td><td>-115.2</td><td>0.54</td><td>-85.6</td><td>0.53</td><td>K18, N23</td><td>non-binder</td></tr>
+<tr><td>15&ndash;23</td><td class="mono">SSGKPGGHN</td><td>9</td><td>+1</td><td>-97.8</td><td>0.63</td><td>-81.9</td><td>0.68</td><td>K18, N23</td><td>non-binder</td></tr>
+<tr><td>16&ndash;23</td><td class="mono">SGKPGGHN</td><td>8</td><td>+1</td><td>-84.7</td><td>0.62</td><td>-84.8</td><td>0.66</td><td>K18, N23</td><td>non-binder</td></tr>
+<tr><td>17&ndash;23</td><td class="mono">GKPGGHN</td><td>7</td><td>+1</td><td>-85.1</td><td>0.73</td><td>-86.0</td><td>0.57</td><td>K18, N23</td><td>non-binder</td></tr></tbody></table></div></div></details></div>
+
+        <p>
+          Read on the docking score, the curve is a ramp with no edge in it. Read on
+          AlphaFold3 confidence, it is flat from 1&ndash;23 all the way to 13&ndash;23 and
+          then falls off between 13&ndash;23 and 14&ndash;23, where interface confidence
+          drops from 0.87 to 0.54 and the interface error jumps from 2.5 to
+          8.9&nbsp;&Aring;. The two methods are answering different questions: one is
+          asking how much interface there is, the other is asking whether it can place the
+          peptide at all.
+        </p>
+
+        <h3>Switch the axis to score per buried &Aring;&sup2; and the cliff disappears</h3>
+        <p>
+          The third setting on that chart is the one that mattered. Across the seventeen
+          rungs, the docking score correlates with peptide length at r&nbsp;=&nbsp;&minus;0.96
+          and with buried surface area at r&nbsp;=&nbsp;&minus;0.98; a regression on length
+          and net charge alone explains <b>93% of its variance</b>. Divide the score by the
+          area it buries and the whole series lies between &minus;72 and &minus;87 with no
+          step at any position, Arg9 included. The shortest fragment in the set, a
+          documented non-binder, has the most favourable score per residue of any rung.
+        </p>
+        <p>
+          The verdict column in the source table was assigned by hard score cut-offs. Given
+          that score runs at about &minus;7.4 per residue, the cut-off at &minus;160 is a
+          length threshold at fifteen residues, and fifteen residues is 9&ndash;23. The
+          cliff was reported at Arg9 because the threshold was set where Arg9 is.
+        </p>
+        <p>
+          None of this is surprising once it is looked for. Docking scores have been
+          benchmarked against measured affinities on forty-six complexes and carry no
+          useful correlation with them&nbsp;[8], and interface energy terms scale with
+          interface size, which is why contact counts predict affinity where raw energies
+          do not&nbsp;[9]. The project had been reading a size measurement as a strength
+          measurement.
+        </p>
+
+        <div class="callout callout--unproven">
+          <p class="callout__label">What survives</p>
+          <p>
+            The claim that the C-terminal fifteen or so residues carry the activity, and the
+            N-terminal six to eight are dispensable, holds: AlphaFold3, our docking, Pearce's
+            deletion series&nbsp;[2] and Cui&nbsp;2024&nbsp;[15] all agree on it. The precise
+            position of the cliff does not hold. It is stated on this wiki as
+            <b>somewhere between residues 9 and 14</b>, with both methods' answers given,
+            and the wet-lab fragment set was chosen to span that range instead of
+            committing to either answer.
+          </p>
+        </div>
       </section>
 
-      <section class="sec" id="validation-status">
-        <h2>Validation status</h2>
-        <p class="scaffold">Nothing here has been confirmed at the bench. Say it plainly.</p>
+      <section class="sec" id="benchmark">
+        <h2>The docking failed the one benchmark that had measured activity attached</h2>
+
+        <p>
+          Everything above is a Question&nbsp;A claim about geometry. The project also
+          wanted to rank designs, which is Question&nbsp;B, so it ran the test that decides
+          whether it can. Pearce&nbsp;2008 measured half-maximal activity for an alanine
+          scan across the 9&ndash;23 scaffold&nbsp;[2]. Sixteen of those analogues sit on the
+          same 9&ndash;23 scaffold, so length and buried surface are essentially constant
+          and the substitution is the only large variable. Docking all sixteen against measured
+          activity is as clean a test of a scoring function as this project could build.
+        </p>
+
+        <div class="pd-bench" id="bench" data-view="all">
+  <div class="pd-aln__bar">
+    <span class="pd-aln__legend">View:</span>
+    <button type="button" class="pd-chip is-on" data-bench="all" aria-pressed="true">all sixteen analogues</button>
+    <button type="button" class="pd-chip" data-bench="crit" aria-pressed="false">the three Pearce measured as dead</button>
+  </div>
+  <div class="pd-ladder__stage">
+<svg class="pd-chart" viewBox="0 0 880 262" role="img" aria-label="Docking score against measured half-maximal activity for sixteen equal-length AtPep1 analogues. The three analogues known to be inactive sit in the middle of the docking ranking.">
+<line class="pd-grid" x1="78.0" y1="195.8" x2="862.0" y2="195.8" />
+<text class="pd-ax" x="70.0" y="198.8" text-anchor="end">2.5</text>
+<line class="pd-grid" x1="78.0" y1="150.0" x2="862.0" y2="150.0" />
+<text class="pd-ax" x="70.0" y="153.0" text-anchor="end">25</text>
+<line class="pd-grid" x1="78.0" y1="104.2" x2="862.0" y2="104.2" />
+<text class="pd-ax" x="70.0" y="107.2" text-anchor="end">250</text>
+<line class="pd-grid" x1="78.0" y1="49.1" x2="862.0" y2="49.1" />
+<text class="pd-ax" x="70.0" y="52.1" text-anchor="end">4000</text>
+<text class="pd-ax pd-ax--t" transform="translate(24,128) rotate(-90)" text-anchor="middle">measured half-max, nM (log)</text>
+<line class="pd-axis" x1="78.0" y1="226.0" x2="862.0" y2="226.0" />
+<text class="pd-ax" x="150.2" y="242.0" text-anchor="middle">-144</text>
+<text class="pd-ax" x="324.6" y="242.0" text-anchor="middle">-150</text>
+<text class="pd-ax" x="499.1" y="242.0" text-anchor="middle">-156</text>
+<text class="pd-ax" x="673.5" y="242.0" text-anchor="middle">-162</text>
+<text class="pd-ax" x="848.0" y="242.0" text-anchor="middle">-168</text>
+<text class="pd-ax pd-ax--t" x="470" y="252" text-anchor="middle">HADDOCK score, pooled over both receptors &mdash; the model predicts stronger binding to the right</text>
+<text class="pd-ax" x="78.0" y="30" text-anchor="start">less active</text>
+<g class="pd-bpt">
+<circle cx="153.1" cy="195.8" r="4.5" />
+<text class="pd-blab" x="153.1" y="184.8" text-anchor="middle">H14A</text>
+</g>
+<g class="pd-bpt">
+<circle cx="275.2" cy="195.8" r="4.5" />
+<text class="pd-blab" x="275.2" y="172.8" text-anchor="middle">K18A</text>
+</g>
+<g class="pd-bpt">
+<circle cx="408.9" cy="195.8" r="4.5" />
+<text class="pd-blab" x="408.9" y="184.8" text-anchor="middle">E12A</text>
+</g>
+<g class="pd-bpt">
+<circle cx="426.4" cy="195.8" r="4.5" />
+<text class="pd-blab" x="426.4" y="172.8" text-anchor="middle">R9A</text>
+</g>
+<g class="pd-bpt">
+<circle cx="458.4" cy="195.8" r="4.5" />
+<text class="pd-blab" x="458.4" y="184.8" text-anchor="middle">R11A</text>
+</g>
+<g class="pd-bpt">
+<circle cx="528.2" cy="195.8" r="4.5" />
+<text class="pd-blab" x="528.2" y="172.8" text-anchor="middle">H22A</text>
+</g>
+<g class="pd-bpt">
+<circle cx="740.4" cy="195.8" r="4.5" />
+<text class="pd-blab" x="740.4" y="184.8" text-anchor="middle">N23A</text>
+</g>
+<g class="pd-bpt">
+<circle cx="740.4" cy="195.8" r="4.5" />
+<text class="pd-blab" x="740.4" y="172.8" text-anchor="middle">S16A</text>
+</g>
+<g class="pd-bpt">
+<circle cx="755.0" cy="195.8" r="4.5" />
+<text class="pd-blab" x="755.0" y="184.8" text-anchor="middle">P19A</text>
+</g>
+<g class="pd-bpt">
+<circle cx="772.4" cy="195.8" r="4.5" />
+<text class="pd-blab" x="772.4" y="172.8" text-anchor="middle">G21A</text>
+</g>
+<g class="pd-bpt">
+<circle cx="778.2" cy="195.8" r="4.5" />
+<text class="pd-blab" x="778.2" y="184.8" text-anchor="middle">P13A</text>
+</g>
+<g class="pd-bpt">
+<circle cx="804.4" cy="195.8" r="4.5" />
+<text class="pd-blab" x="804.4" y="172.8" text-anchor="middle">P10A</text>
+</g>
+<g class="pd-bpt">
+<circle cx="833.5" cy="195.8" r="4.5" />
+<text class="pd-blab" x="833.5" y="184.8" text-anchor="middle">G20A</text>
+</g>
+<g class="pd-bpt is-crit">
+<circle cx="560.1" cy="54.8" r="6" />
+<text class="pd-blab" x="560.1" y="41.8" text-anchor="middle">G17P</text>
+</g>
+<g class="pd-bpt is-crit">
+<circle cx="691.0" cy="150.0" r="6" />
+<text class="pd-blab" x="691.0" y="137.0" text-anchor="middle">S15A</text>
+</g>
+<g class="pd-bpt is-crit">
+<circle cx="734.6" cy="49.1" r="6" />
+<text class="pd-blab" x="734.6" y="36.1" text-anchor="middle">G17A</text>
+</g>
+</svg>
+  </div>
+  <p class="pd-bench__foot">Spearman &rho; between the two axes, over these sixteen: <b>+0.05</b>, p&nbsp;&gt;&nbsp;0.8. A perfect predictor would put every point on a rising diagonal.</p>
+</div>
+
+        <p>
+          The three analogues Pearce measured as catastrophic rank 7th, 8th and 9th out of
+          sixteen. G17A, which is more than 1,600-fold less active than any analogue the
+          docking ranked in its top six, scores as a <i>better</i> binder than all of them.
+          Spearman &rho; is <b>+0.05</b> with p&nbsp;&gt;&nbsp;0.8. The correlation the
+          source report originally quoted, +0.237, included the wild-type reference point
+          in its own correlation; removing that one self-referential point takes it to
+          +0.05, and it is not significant either way.
+        </p>
+
+        <p>
+          The co-folding arm fails the same control from the other direction. [A17]Pep1 is
+          the Gly17&rarr;Ala analogue Pearce measured at more than 4,000-fold down, and it
+          was included in the AlphaFold3 panel as a designed negative. It scored interface
+          confidence 0.73 against wild-type BoPep4's 0.74. This is the documented behaviour
+          of AlphaFold-family models on single missense substitutions&nbsp;[11], and our
+          own control reproduced it.
+        </p>
+
+        <div class="callout">
+          <p class="callout__label">The rule this set</p>
+          <p>
+            Neither method has substitution-level resolution, so neither is used to rank
+            designs anywhere on this wiki. Both are used for what the benchmark shows they
+            can do: decide whether a given edit still permits the native interface. Affinity
+            ranking is what the plant assay is for.
+          </p>
+        </div>
       </section>
 
+      <section class="sec" id="audit">
+        <h2>An audit of our own pipeline retracted five claims, one of them after the DNA had shipped</h2>
+
+        <p>
+          The audit started as a complaint. A team member pointed out that the docking had
+          been run without an inspectable statement of its restraints and search space.
+          That objection is partly a category error &mdash; HADDOCK has no search box to
+          report, because its search space <i>is</i> the list of residues declared active
+          at the interface&nbsp;[4] &mdash; and partly correct, because that list had never
+          been written down anywhere a reader could find it. Reconstructing it from the run
+          trees turned up four problems, and the one that mattered was not the missing
+          documentation.
+        </p>
+
+        <div class="tablewrap tablewrap--wide">
+          <table class="data">
+            <thead><tr><th></th><th>Founding campaign, 8 runs</th><th>The five later campaigns, 113 runs</th><th>Recommended for peptides</th></tr></thead>
+            <tbody>
+              <tr><td>Restraints derived from</td><td>The 5GR8 crystal interface</td><td class="open">The pose being tested</td><td>Independent evidence&nbsp;[4]</td></tr>
+              <tr><td>Peptide starting coordinates</td><td>Threaded on the crystal backbone</td><td class="open">The bound pose</td><td>Three unbound conformers&nbsp;[6]</td></tr>
+              <tr><td>Rigid-body sampling</td><td>800</td><td class="open">40</td><td>1000&nbsp;[5]</td></tr>
+              <tr><td>Clustering</td><td>RMSD at 5.0&nbsp;&Aring;</td><td class="open">FCC at 0.60</td><td>5.0&nbsp;&Aring; for peptides&nbsp;[17]</td></tr>
+              <tr><td>Unit of analysis</td><td>Clusters, with a size and a spread</td><td class="open">One top-scoring structure</td><td>Mean of the top four in a cluster&nbsp;[7]</td></tr>
+              <tr><td>Positive control</td><td>AtPep1 re-docked, 0.77&nbsp;&Aring;</td><td class="open">None</td><td>Required&nbsp;[4,&nbsp;12]</td></tr>
+            </tbody>
+          </table>
+        </div>
+
+        <p>
+          The later campaigns start from the pose they are meant to be testing and derive
+          their restraints by measuring which residues touch in that same pose. A run built
+          that way cannot reject its own input. It is a legitimate operation, restrained
+          refinement, and it was described in the downstream reports as independent
+          physics-based confirmation of the AlphaFold3 models, which it is not. The runs
+          also produced a single cluster containing every structure, so clustering carried
+          no information, and no run was repeated at a second random seed, so no reported
+          score difference had an error bar on it.
+        </p>
+
+        <p>
+          Two further findings came out of the project's own data with no new computation.
+          The founding campaign's mutant table shows every point mutant scoring
+          <i>better</i> than wild type, with the two mutants the literature calls most
+          damaging scoring best of all. And the wild-type run's top-ranked cluster is a
+          non-native pose at 5.80&nbsp;&Aring;; the complex carried forward as canonical is
+          cluster three of four, chosen because it matches the crystal. That choice is
+          defensible and it is now stated: the canonical wild-type pose is homology-guided,
+          not blindly predicted.
+        </p>
+
+        <h3>The ledger</h3>
+        <p>
+          Every claim the docking programme produced, with what it now rests on. Five were
+          withdrawn. The one that hurt was K18R, which had already gone into a DNA order
+          and was pulled out of it on the morning of 16&nbsp;August.
+        </p>
+
+        <div class="pd-ledger" id="ledger">
+  <div class="pd-aln__bar"><span class="pd-aln__legend">Show:</span><button type="button" class="pd-chip is-on" data-st="all" aria-pressed="true">all 14</button><button type="button" class="pd-chip is-holds" data-st="holds" aria-pressed="false">holds &middot; 4</button><button type="button" class="pd-chip is-qualified" data-st="qualified" aria-pressed="false">qualified &middot; 3</button><button type="button" class="pd-chip is-retracted" data-st="retracted" aria-pressed="false">retracted &middot; 5</button><button type="button" class="pd-chip is-open" data-st="open" aria-pressed="false">open &middot; 2</button></div>
+  <ul class="pd-claims"><li class="pd-claim is-holds" data-st="holds"><p class="pd-claim__h"><span class="pd-tag is-holds">holds</span>BoPep4 threads the PEPR1 groove in the AtPep1 register</p><p class="pd-claim__w">PDB&nbsp;5GR8 supplies the mode; re-docking AtPep1 returns it at 0.77&nbsp;&Aring; l-RMSD, top-ranked, with a 35-unit gap to the first non-native pose.</p><p class="pd-claim__a">Independent of our scoring function.</p></li>
+<li class="pd-claim is-holds" data-st="holds"><p class="pd-claim__h"><span class="pd-tag is-holds">holds</span>The C-terminal Asn23 carboxylate is the master anchor</p><p class="pd-claim__w">2.40&nbsp;&Aring; to Arg487&nbsp;NH1 and 2.80&nbsp;&Aring; to NE in the crystal; the most buried residue of the peptide at 170&nbsp;&Aring;&sup2;; removing it costs AtPep1 more than four hundredfold.</p><p class="pd-claim__a">Crystallographic and measured, not modelled.</p></li>
+<li class="pd-claim is-holds" data-st="holds"><p class="pd-claim__h"><span class="pd-tag is-holds">holds</span>Residues 1–6 make no receptor contact; 7–23 carries the interface</p><p class="pd-claim__w">Zero buried surface on both receptors in every model, and unresolved in the 2.59&nbsp;&Aring; crystal density.</p><p class="pd-claim__a">Three methods and one crystal agree.</p></li>
+<li class="pd-claim is-holds" data-st="holds"><p class="pd-claim__h"><span class="pd-tag is-holds">holds</span>Truncation to about 9–23 is tolerated</p><p class="pd-claim__w">AlphaFold3 confidence, our docking, Pearce&nbsp;2008 and Cui&nbsp;2024 all agree the N-terminal third is dispensable.</p><p class="pd-claim__a">Four independent lines.</p></li>
+<li class="pd-claim is-qualified" data-st="qualified"><p class="pd-claim__h"><span class="pd-tag is-qualified">qualified</span>The binding cliff sits at Arg9</p><p class="pd-claim__w">Our docking places it at 9–23 and AlphaFold3 places it at 14–23 — five residues apart. The docking component of that verdict is a length threshold (see&nbsp;§6).</p><p class="pd-claim__a">State it as a range, 9 to 14, with both methods named.</p></li>
+<li class="pd-claim is-qualified" data-st="qualified"><p class="pd-claim__h"><span class="pd-tag is-qualified">qualified</span>PEPR2 conserves the anchors and degrades the mid-belt</p><p class="pd-claim__w">The PEPR2 ectodomain has no experimental structure. Every PEPR2 number rests on an AlphaFold model, and no per-residue confidence filter was applied before docking it.</p><p class="pd-claim__a">Valid as a hypothesis, labelled as model-based.</p></li>
+<li class="pd-claim is-qualified" data-st="qualified"><p class="pd-claim__h"><span class="pd-tag is-qualified">qualified</span>Receptor bridging by a tandem construct is feasible</p><p class="pd-claim__w">Restrained two-body docking cannot fail to make contact, so the informative measurement is the clash count, which is zero.</p><p class="pd-claim__a">Report as not sterically excluded, never as bridges.</p></li>
+<li class="pd-claim is-retracted" data-st="retracted"><p class="pd-claim__h"><span class="pd-tag is-retracted">retracted</span>K18R is an affinity lead over wild type</p><p class="pd-claim__w">Withdrawn 2026-07-30 as a score-ranking claim, then withdrawn a second time on 2026-08-16: BoPep4&rsquo;s own Lys18 already makes both contacts Tang assigns to AtPep1&rsquo;s Arg18, at 2.62 and 4.17&nbsp;&Aring; against the crystal&rsquo;s 2.50 and 4.09&nbsp;&Aring;.</p><p class="pd-claim__a">Removed from the order the morning it was due to ship.</p></li>
+<li class="pd-claim is-retracted" data-st="retracted"><p class="pd-claim__h"><span class="pd-tag is-retracted">retracted</span>K8Q is a receptor-neutral secretion handle</p><p class="pd-claim__w">Two methods, months apart, measure zero contacting atoms at position&nbsp;8 on PEPR1. A substitution at a position that touches nothing is not a binding claim either way.</p><p class="pd-claim__a">Retired with the whole point-mutation axis.</p></li>
+<li class="pd-claim is-retracted" data-st="retracted"><p class="pd-claim__h"><span class="pd-tag is-retracted">retracted</span>K8Q+K18R collapses on PEPR1</p><p class="pd-claim__w">One AlphaFold3 confidence value (0.49) against a normal docking score (−194.7). The audit had already shown that a normal score is what a broken design also produces.</p><p class="pd-claim__a">One informative method and one uninformative one is not a disagreement.</p></li>
+<li class="pd-claim is-retracted" data-st="retracted"><p class="pd-claim__h"><span class="pd-tag is-retracted">retracted</span>Docking independently confirms the AlphaFold3 poses</p><p class="pd-claim__w">Those runs start from the AlphaFold3 pose and derive their restraints from it, so they cannot reject it. That is restrained refinement.</p><p class="pd-claim__a">Re-described as force-field relaxation.</p></li>
+<li class="pd-claim is-retracted" data-st="retracted"><p class="pd-claim__h"><span class="pd-tag is-retracted">retracted</span>Our docking reproduces the Pearce&nbsp;2008 activity trend</p><p class="pd-claim__w">&rho;&nbsp;&asymp;&nbsp;+0.05, p&nbsp;&gt;&nbsp;0.8 over the sixteen equal-length analogues. The published &rho;&nbsp;=&nbsp;+0.237 included the wild-type reference point in its own correlation.</p><p class="pd-claim__a">Corrected in the source report.</p></li>
+<li class="pd-claim is-open" data-st="open"><p class="pd-claim__h"><span class="pd-tag is-open">open</span>The peptide is active in planta</p><p class="pd-claim__w">No assay has run. The six cassettes were placed on 2026-08-20 and the synthetic peptide reference alongside them.</p><p class="pd-claim__a">Nothing on this page settles it.</p></li>
+<li class="pd-claim is-open" data-st="open"><p class="pd-claim__h"><span class="pd-tag is-open">open</span>The chassis secretes it at a measurable titre</p><p class="pd-claim__w">SamyQ has one sequence-verified precedent in our hands, the AmilCP construct, and it has not been read out.</p><p class="pd-claim__a">The single cheapest experiment still outstanding.</p></li></ul>
+</div>
+
+        <p>
+          K18R is worth one more sentence, because it was withdrawn twice for different
+          reasons. The audit killed the docking-score argument in July. What survived into
+          August was a structural argument from the literature: Tang reports AtPep1's
+          Arg18 both salt-bridging Asp348 and packing against Phe371, and BoPep4 has a
+          lysine there, which can make the salt bridge but not the stack&nbsp;[1]. Then the
+          August panel measured the distances. BoPep4's own Lys18 sits 2.62&nbsp;&Aring;
+          from Asp348 and 4.17&nbsp;&Aring; from Phe371, against 2.50 and 4.09&nbsp;&Aring;
+          in the crystal, and in three of four constructs it approaches the aromatic ring
+          more closely than a re-docked arginine does. A lysine amine over an aromatic ring
+          is a cation&ndash;&pi; contact. The gap the substitution existed to close was not
+          visible in our own models, so it lost its last rationale and its cloning slot.
+        </p>
+      </section>
+
+      <section class="sec" id="tag">
+        <h2>A C-terminal tag deletes the bond the peptide binds with</h2>
+
+        <p>
+          Every BoPep4 construct the project ordered before August fused six histidines
+          directly onto Asn23, with no linker. The reason this is fatal needs no docking at
+          all, and stating it without one is the point: peptide-bond geometry puts the
+          backbone nitrogen of any residue 24 essentially where Asn23's terminal oxygen
+          sits, which in the crystal is 2.40&nbsp;&Aring; from Arg487&nbsp;NH1 and
+          2.80&nbsp;&Aring; from NE, one half of a bidentate salt bridge&nbsp;[1].
+          Substituting an amide nitrogen there does not weaken that bond, it removes it.
+        </p>
+
+        <p>
+          The literature has already run the experiment. AtPep2, AtPep4 and AtPep5 all
+          carry natural C-terminal extensions past the conserved asparagine. Two of the
+          three fail to bind PEPR1 at all, the third binds and cannot recruit the
+          co-receptor, and truncating the extension restores activity in all three&nbsp;[1].
+          That is the base rate our seven tagged cassettes were drawing from.
+        </p>
+
+        <h3>The two ends of the peptide are not the same engineering site</h3>
+        <p>
+          The geometric question was asked with a flood fill over the receptor structure
+          using a 2.4&nbsp;&Aring; backbone-clearance probe: if a chain leaves the bound
+          peptide at either terminus, can it reach bulk solvent without the peptide moving?
+          No force field, no scoring function, nothing the audit had criticised.
+        </p>
+
+        <div class="tablewrap">
+          <table class="data">
+            <thead><tr><th>Terminus</th><th>State</th><th>Free grid points</th><th>Path to solvent</th><th>In residues</th></tr></thead>
+            <tbody>
+              <tr><td>N-terminus</td><td>PEPR1 alone</td><td>111</td><td>6.5&nbsp;&Aring;</td><td>1.9</td></tr>
+              <tr><td>N-terminus</td><td>PEPR1 + BAK1</td><td>111</td><td>6.5&nbsp;&Aring;</td><td>1.9</td></tr>
+              <tr><td>C-terminus</td><td>PEPR1 alone</td><td>45</td><td>10.4&nbsp;&Aring;</td><td>3.0</td></tr>
+              <tr><td>C-terminus</td><td class="open">PEPR1 + BAK1</td><td class="open">2</td><td class="open">20.9&nbsp;&Aring;</td><td class="open">6.2</td></tr>
+            </tbody>
+          </table>
+        </div>
+
+        <p>
+          The co-receptor position comes from a ternary model built on SERK-family
+          templates&nbsp;[16] and AlphaFold3, because no PEPR1&ndash;BAK1 crystal exists.
+          Co-receptor binding does not touch the N-terminal side by a single grid point,
+          and it closes the C-terminal side almost completely: the escape path becomes
+          longer than the six-residue tag that has to fit through it. An N-terminal tag
+          goes into space the peptide's own disordered N-terminus already occupies. A
+          C-terminal tag goes into the receptor&ndash;co-receptor interface.
+        </p>
+
+        <figure class="fig fig--wide">
+          <img src="../assets/img/engineering/pep-terminus-asymmetry.webp"
+               alt="Bar chart of free space at each peptide terminus with and without the co-receptor bound. The N-terminal bars are identical; the C-terminal free space collapses from 45 points to 2."
+               width="1400" height="526" loading="lazy" decoding="async" />
+          <figcaption>
+            <b>Figure 3.</b> Free space at each terminus, with and without the co-receptor.
+            The two N-terminal bars are identical because the co-receptor does not touch
+            that side.
+            <span class="prov">Generated from our own flood-fill output. Scaled only.</span>
+          </figcaption>
+        </figure>
+
+        <h3>The docking agreed, under a test permissive enough to rescue a known non-binder</h3>
+        <p>
+          A thirty-pose panel was then run on the eight constructs with one shared
+          wild-type-derived restraint set per receptor, sampling raised to 100/30/30,
+          clustering restored to 5.0&nbsp;&Aring;, and every engineering addition left
+          <i>unrestrained</i>, so where the tag ended up was an output rather than an
+          assumption. The result is categorical. Every construct reaches at least three of
+          the four crystallographic clamp contacts except the C-terminally tagged one,
+          which reaches <b>none of them, in none of its thirty poses</b>, with Asn23 sitting
+          47 to 57&nbsp;&Aring; from all four of its partners.
+        </p>
+        <p>
+          The panel's own negative control shows how permissive that test was: the
+          documented non-binder 15&ndash;23 also reaches three of four clamp contacts,
+          because it contains Asn23 and Lys18 and can therefore form them. A test generous
+          enough to rescue a peptide known to be inactive could not rescue the tagged one.
+        </p>
+
+        <figure class="fig fig--wide">
+          <img src="../assets/img/engineering/pep-clamp-vs-score.webp"
+               alt="Two panels: how much of the crystallographic interface each construct reproduces, and the same data plotted against docking score. The already-ordered construct scores best and makes none of the contacts."
+               width="1400" height="545" loading="lazy" decoding="async" />
+          <figcaption>
+            <b>Figure 4.</b> Clamp integrity against docking score. The construct already in
+            flight buries 2,261&nbsp;&Aring;&sup2; and scores &minus;155.7, better than
+            untagged wild-type BoPep4 at &minus;125.9, while making none of the four contacts
+            that carry function. It binds the receptor extensively, in the wrong register.
+            <span class="prov">Generated from our own docking output. Scaled only.</span>
+          </figcaption>
+        </figure>
+
+        <p>
+          A reproducibility check then made the same point a third time. Three constructs
+          were re-run at two further random seeds. Clamp integrity was identical across all
+          three seeds for all three constructs, including the failure, which repeated at
+          0&nbsp;of&nbsp;4 every time. The docking score moved by 13 to 36 units. At one
+          seed the tagged construct scored &minus;181.9, the best score in the entire study
+          and better than the crystallographic positive control, while still making none of
+          the four contacts. Every score difference this project had ever reported is
+          smaller than that seed spread.
+        </p>
+
+        <div class="callout callout--medal">
+          <p class="callout__label">Decision</p>
+          <p>
+            Every affinity tag moved to the N terminus, and every construct ordered after
+            16&nbsp;August ends in a free <code>&hellip;G-G-H-N-COO&minus;</code>. The seven
+            cassettes already at synthesis stay in the project as secretion and yield
+            reporters, which they are good at, and they are not used for bioactivity. If a
+            synthetic peptide is ordered it has to specify a C-terminal free acid, because
+            peptide houses ship a C-terminal amide by default and that re-creates the same
+            lesion.
+          </p>
+        </div>
+      </section>
+
+      <section class="sec" id="codon">
+        <h2>Codon choice is scored on the worse of two accessibilities, never on their sum</h2>
+
+        <p>
+          A sequence the receptor accepts is worth nothing if the chassis will not initiate
+          translation on its messenger RNA. The expression cassette is fixed &mdash; a
+          green-light-inducible promoter, the MF001 ribosome binding site with its
+          <code>AAGGAGG</code> core, the SamyQ secretion signal, the payload, the tag, the
+          terminator &mdash; so the only free variable is synonymous codon choice, and the
+          objective is the unpaired probability of two regions computed from the ViennaRNA
+          base-pair matrix at 37&nbsp;&deg;C: the fifteen bases from the start codon, and
+          the Shine&ndash;Dalgarno core. The reference is a gene that works in this chassis,
+          <i>ho1</i>, at 0.681.
+        </p>
+
+        <p>
+          The first optimiser ranked roughly 50,000 synonymous draws per payload by the
+          <i>sum</i> of those two scores, and the design it returned had start accessibility
+          at 0.911 and a Shine&ndash;Dalgarno core at 0.050, more occluded than the wild-type
+          sequence it replaced. A sum lets the search buy a large gain in one term with a
+          total loss in the other. Ranking moved to the bottleneck,
+          <b>J&nbsp;=&nbsp;min(start&nbsp;+15, SD&nbsp;core)</b>, and the random draw was
+          replaced with a deterministic descent over the codons that actually base-pair with
+          the initiation region. On BoPep4 the bottleneck went from 0.067 to 0.528 at a
+          codon adaptation index of 0.78.
+        </p>
+
+        <figure class="fig fig--wide">
+          <img src="../assets/img/engineering/pep-initiation-bottleneck.webp"
+               alt="Grouped bars of the translation-initiation bottleneck for each payload at three optimisation stages, with the reference gene marked as a dotted line."
+               width="1360" height="545" loading="lazy" decoding="async" />
+          <figcaption>
+            <b>Figure 5.</b> The initiation bottleneck by payload and stage. Optimising for
+            codon usage alone gives an adaptation index of 0.87 to 0.89 and a bottleneck
+            near 0.054 &mdash; the Shine&ndash;Dalgarno core essentially fully occluded in
+            every case.
+            <span class="prov">Generated from our own ViennaRNA output. Scaled only.</span>
+          </figcaption>
+        </figure>
+
+        <p>
+          Two results here contradict standard practice and are worth stating plainly.
+          Maximising codon adaptation alone produces designs whose ribosome binding site is
+          buried, which is the opposite of the intended effect. And the published low-GC
+          heuristic we ran as a literature control&nbsp;[13] made one payload <i>worse</i>
+          than its own wild type. The wild-type sequence separately fails a manufacturing
+          rule outright, with a run of seven adenines.
+        </p>
+        <p>
+          What this model ranks is precursor supply. It says nothing about signal-recognition
+          targeting, translocase throughput, or the quality-control proteases waiting on the
+          far side of the membrane, and it is not a yield prediction.
+        </p>
+
+        <h3>The signal peptide was screened and then left alone</h3>
+        <p>
+          A panel of <i>B.&nbsp;subtilis</i> Sec signal peptides was ranked on the
+          determinants known to matter &mdash; n-region charge, h-region hydrophobicity and
+          length, and the &minus;3/&minus;1 cleavage rule &mdash; from verified UniProt
+          sequences. SamyQ, the signal peptide already in our cassette, lands in the
+          favourable zone with an n-region charge of +4, a hydrophobic core mean of 1.65
+          and a clean A-X-A cleavage site; AprE is the best-matched alternative and AmyE
+          the weakest. That ranking is worth what such rankings are worth: signal-peptide
+          performance is strongly cargo-specific, and empirical screens of more than a
+          hundred signal peptides routinely find that the winner is
+          protein-dependent&nbsp;[14]. The screen chose which three to put in a wet-lab
+          panel, and it does not replace one.
+        </p>
+      </section>
+
+      <section class="sec" id="order">
+        <h2>Six cassettes went to synthesis, and three of them are controls with published effect sizes</h2>
+
+        <p>
+          The order placed on 20&nbsp;August is the design endpoint. Every mature product is
+          either the natural sequence exactly or the natural sequence with an N-terminal
+          tag; nothing is fused after Asn23; no spacer was inserted, so each tagged
+          construct has an untagged twin and the tag comparison is single-variable.
+        </p>
+
+        <ul class="pd-casslist"><li class="pd-cass"><p class="pd-cass__h"><b>D-01</b><span>BoPep4_9-23_NHis</span><i>691 bp</i></p><p class="pd-cass__seq"><span class="pd-part is-sp">SamyQ<sub>31</sub></span><span class="pd-cut" title="signal peptidase I cuts here">&#9662;</span><span class="pd-part is-tag">HHHHHH</span><span class="pd-aa is-anchor">R</span><span class="pd-aa ">P</span><span class="pd-aa ">R</span><span class="pd-aa ">E</span><span class="pd-aa ">P</span><span class="pd-aa ">H</span><span class="pd-aa is-anchor">S</span><span class="pd-aa is-anchor">S</span><span class="pd-aa is-anchor">G</span><span class="pd-aa is-anchor">K</span><span class="pd-aa ">P</span><span class="pd-aa ">G</span><span class="pd-aa ">G</span><span class="pd-aa is-anchor">H</span><span class="pd-aa is-anchor">N</span></p><p class="pd-cass__why">Activity lead, and the only lead that a western blot can see. <span class="pd-cass__p1">Cleavage +1 residue: <b>H</b>.</span></p></li>
+<li class="pd-cass"><p class="pd-cass__h"><b>D-02</b><span>BoPep4_G17A_1-23_NHis</span><i>715 bp</i></p><p class="pd-cass__seq"><span class="pd-part is-sp">SamyQ<sub>31</sub></span><span class="pd-cut" title="signal peptidase I cuts here">&#9662;</span><span class="pd-part is-tag">HHHHHH</span><span class="pd-aa ">G</span><span class="pd-aa ">I</span><span class="pd-aa ">L</span><span class="pd-aa ">I</span><span class="pd-aa ">G</span><span class="pd-aa ">S</span><span class="pd-aa ">K</span><span class="pd-aa ">K</span><span class="pd-aa is-anchor">R</span><span class="pd-aa ">P</span><span class="pd-aa ">R</span><span class="pd-aa ">E</span><span class="pd-aa ">P</span><span class="pd-aa ">H</span><span class="pd-aa is-anchor">S</span><span class="pd-aa is-anchor">S</span><span class="pd-aa is-mut">A</span><span class="pd-aa is-anchor">K</span><span class="pd-aa ">P</span><span class="pd-aa ">G</span><span class="pd-aa ">G</span><span class="pd-aa is-anchor">H</span><span class="pd-aa is-anchor">N</span></p><p class="pd-cass__why">Dead control. Pearce measured G17A at more than four thousandfold down. <span class="pd-cass__p1">Cleavage +1 residue: <b>H</b>.</span></p></li>
+<li class="pd-cass"><p class="pd-cass__h"><b>D-03</b><span>BoPep4_WT_1-23_NHis</span><i>715 bp</i></p><p class="pd-cass__seq"><span class="pd-part is-sp">SamyQ<sub>31</sub></span><span class="pd-cut" title="signal peptidase I cuts here">&#9662;</span><span class="pd-part is-tag">HHHHHH</span><span class="pd-aa ">G</span><span class="pd-aa ">I</span><span class="pd-aa ">L</span><span class="pd-aa ">I</span><span class="pd-aa ">G</span><span class="pd-aa ">S</span><span class="pd-aa ">K</span><span class="pd-aa ">K</span><span class="pd-aa is-anchor">R</span><span class="pd-aa ">P</span><span class="pd-aa ">R</span><span class="pd-aa ">E</span><span class="pd-aa ">P</span><span class="pd-aa ">H</span><span class="pd-aa is-anchor">S</span><span class="pd-aa is-anchor">S</span><span class="pd-aa is-anchor">G</span><span class="pd-aa is-anchor">K</span><span class="pd-aa ">P</span><span class="pd-aa ">G</span><span class="pd-aa ">G</span><span class="pd-aa is-anchor">H</span><span class="pd-aa is-anchor">N</span></p><p class="pd-cass__why">Full-length positive reference. <span class="pd-cass__p1">Cleavage +1 residue: <b>H</b>.</span></p></li>
+<li class="pd-cass"><p class="pd-cass__h"><b>D-04</b><span>BoPep4_9-23_native</span><i>673 bp</i></p><p class="pd-cass__seq"><span class="pd-part is-sp">SamyQ<sub>31</sub></span><span class="pd-cut" title="signal peptidase I cuts here">&#9662;</span><span class="pd-aa is-anchor">R</span><span class="pd-aa ">P</span><span class="pd-aa ">R</span><span class="pd-aa ">E</span><span class="pd-aa ">P</span><span class="pd-aa ">H</span><span class="pd-aa is-anchor">S</span><span class="pd-aa is-anchor">S</span><span class="pd-aa is-anchor">G</span><span class="pd-aa is-anchor">K</span><span class="pd-aa ">P</span><span class="pd-aa ">G</span><span class="pd-aa ">G</span><span class="pd-aa is-anchor">H</span><span class="pd-aa is-anchor">N</span></p><p class="pd-cass__why">The same lead with no tag. Arg at +1 is the least favourable cleavage context in the batch. <span class="pd-cass__p1">Cleavage +1 residue: <b>R</b>.</span></p></li>
+<li class="pd-cass"><p class="pd-cass__h"><b>D-05</b><span>BoPep4_WT_1-23_native</span><i>697 bp</i></p><p class="pd-cass__seq"><span class="pd-part is-sp">SamyQ<sub>31</sub></span><span class="pd-cut" title="signal peptidase I cuts here">&#9662;</span><span class="pd-aa ">G</span><span class="pd-aa ">I</span><span class="pd-aa ">L</span><span class="pd-aa ">I</span><span class="pd-aa ">G</span><span class="pd-aa ">S</span><span class="pd-aa ">K</span><span class="pd-aa ">K</span><span class="pd-aa is-anchor">R</span><span class="pd-aa ">P</span><span class="pd-aa ">R</span><span class="pd-aa ">E</span><span class="pd-aa ">P</span><span class="pd-aa ">H</span><span class="pd-aa is-anchor">S</span><span class="pd-aa is-anchor">S</span><span class="pd-aa is-anchor">G</span><span class="pd-aa is-anchor">K</span><span class="pd-aa ">P</span><span class="pd-aa ">G</span><span class="pd-aa ">G</span><span class="pd-aa is-anchor">H</span><span class="pd-aa is-anchor">N</span></p><p class="pd-cass__why">Exactly the natural molecule, and the internal control for the +1 question. <span class="pd-cass__p1">Cleavage +1 residue: <b>G</b>.</span></p></li>
+<li class="pd-cass"><p class="pd-cass__h"><b>D-06</b><span>BoPep4_S15A_1-23_NHis</span><i>715 bp</i></p><p class="pd-cass__seq"><span class="pd-part is-sp">SamyQ<sub>31</sub></span><span class="pd-cut" title="signal peptidase I cuts here">&#9662;</span><span class="pd-part is-tag">HHHHHH</span><span class="pd-aa ">G</span><span class="pd-aa ">I</span><span class="pd-aa ">L</span><span class="pd-aa ">I</span><span class="pd-aa ">G</span><span class="pd-aa ">S</span><span class="pd-aa ">K</span><span class="pd-aa ">K</span><span class="pd-aa is-anchor">R</span><span class="pd-aa ">P</span><span class="pd-aa ">R</span><span class="pd-aa ">E</span><span class="pd-aa ">P</span><span class="pd-aa ">H</span><span class="pd-aa is-mut">A</span><span class="pd-aa is-anchor">S</span><span class="pd-aa is-anchor">G</span><span class="pd-aa is-anchor">K</span><span class="pd-aa ">P</span><span class="pd-aa ">G</span><span class="pd-aa ">G</span><span class="pd-aa is-anchor">H</span><span class="pd-aa is-anchor">N</span></p><p class="pd-cass__why">Graded control, the middle rung. Pearce measured S15A at about a hundredfold down. <span class="pd-cass__p1">Cleavage +1 residue: <b>H</b>.</span></p></li></ul><p class="pd-casskey"><span class="pd-aa is-anchor">N</span> interface anchor &middot; <span class="pd-aa is-mut">A</span> substitution against wild type &middot; <span class="pd-cut">&#9662;</span> signal peptidase I cleaves here</p>
+
+        <p>
+          D-01, D-06 and D-02 are the point of the order. They are wild type, S15A and
+          G17A on one backbone: about 1&times;, about 100&times; and more than
+          4,000&times; down in Pearce's measurements&nbsp;[2], four orders of magnitude of
+          expected effect. Drop D-06 and the set collapses into a binary switch that can
+          show the peptide works but cannot show the platform ranks variants. That
+          distinction is the difference between a positive result and a measurement.
+        </p>
+
+        <p>
+          The residual risk in this design sits at the cleavage junction. Signal peptidase&nbsp;I
+          prefers small residues immediately after the cut, and four of the six constructs
+          present a histidine there, D-04 presents an arginine followed by a proline, and
+          only D-05 presents the ideal glycine. D-05 is therefore the internal control: if
+          it secretes and the tagged constructs do not, the +1 residue is the cause and the
+          peptide is exonerated. A cheaper answer already exists in the freezer, since the
+          sequence-verified AmilCP construct uses the same signal peptide and is a
+          chromoprotein, so its secretion can be read by eye off the supernatant.
+        </p>
+
+        <figure class="fig fig--wide">
+          <img src="../assets/img/engineering/pep-cassette-map.webp"
+               alt="Every BoPep4 expression cassette drawn to scale on a common axis, showing where the affinity tag sits in each one."
+               width="1400" height="443" loading="lazy" decoding="async" />
+          <figcaption>
+            <b>Figure 6.</b> Every cassette drawn to scale. The ones already at synthesis put
+            the tag where the receptor reads the peptide; the new ones put it at the end the
+            crystal cannot resolve.
+            <span class="prov">Generated from our own construct files. Scaled only.</span>
+          </figcaption>
+        </figure>
+
+        <h3>Three design axes were retired in writing</h3>
+        <p>
+          Retiring an idea on evidence is worth more than dropping it quietly, so all three
+          are recorded here. The <b>point-mutation axis</b> went, because position 8 makes
+          no receptor contact and position 18 already makes the contacts the substitution
+          was meant to add. <b>Tandem repetition</b> went: a sweep of
+          (SSGKPGGHN)<sub>n</sub> for n&nbsp;=&nbsp;1&hellip;8 found buried area per residue
+          falling monotonically with every added copy, from 127 to 32&nbsp;&Aring;&sup2; on
+          PEPR1, and the number of copies actually touching the receptor saturating at three
+          regardless of n. Repetition does not rescue a motif that does not bind alone. The
+          shallow truncations <b>&Delta;1&ndash;2 and &Delta;1&ndash;3</b> went because
+          their pre-registered predictions sat between two constructs we already had, which
+          is close to no information for a cloning slot.
+        </p>
+        <p>
+          One tandem idea survives in a different frame. The sweep asked whether repetition
+          rescues binding, and it does not. It never asked whether repetition raises yield,
+          and a cleavable-linker polypeptide giving n peptides per translation event is a
+          real proposal. It needs a protease with clean specificity in <i>B.&nbsp;subtilis</i>,
+          which is not a two-week problem, so it is filed as future work.
+        </p>
+      </section>
+
+      <section class="sec" id="predictions">
+        <h2>Five predictions, written down before the assay exists</h2>
+
+        <p>
+          These were recorded on 16&nbsp;August, before any construct had arrived, so they
+          can be wrong in public.
+        </p>
+
+        <div class="tablewrap tablewrap--wide">
+          <table class="data">
+            <thead><tr><th></th><th>Prediction</th><th>What it costs us if it fails</th></tr></thead>
+            <tbody>
+              <tr><td class="num">E1</td><td>The N-tagged and untagged constructs show activity at concentrations where the C-terminally tagged ones show none.</td><td>If the C-His constructs are equally active, the structural model on this page is wrong and section&nbsp;9 is retracted.</td></tr>
+              <tr><td class="num">E2</td><td>D-01 and D-04 are indistinguishable from each other.</td><td>If the tagged one is clearly worse, the N-terminal tag is not as inert as the flood fill says and the strategy needs re-examining.</td></tr>
+              <tr><td class="num">E3</td><td>BoPep4 needs a higher dose than AtPep1 for the same response, because Gly21 cannot fill the co-receptor cavity AtPep1's Gln21 occupies.</td><td>Published AtPep1 assays work at 1 to 100&nbsp;nM; the BoPep4 series has to reach at least 1&nbsp;&micro;M or a null result means nothing.</td></tr>
+              <tr><td class="num">E4</td><td>Activity is pH-sensitive, strong near pH&nbsp;6.0 and nearly abolished at pH&nbsp;4.0, because Arg487's protonation state governs the clamp.</td><td>Buffering the assay below pH&nbsp;5 suppresses every construct at once. This is a protocol trap, not a result.</td></tr>
+              <tr><td class="num">E5</td><td>The 15&ndash;23 fragment is inactive.</td><td>If it is active, the assay is reading something other than receptor signalling and every other number in it is suspect.</td></tr>
+            </tbody>
+          </table>
+        </div>
+
+        <p>
+          The assay also has to carry four controls or it cannot be interpreted: vehicle and
+          empty-vector supernatant, because <i>B.&nbsp;subtilis</i> supernatant contains
+          proteases and surfactin; a chemically synthesised reference peptide at a known
+          concentration, which is the only thing that separates &ldquo;the peptide does not
+          work&rdquo; from &ldquo;we secreted almost none of it&rdquo;; the dead fragment at
+          the same molar load; and quantification before activity, because activity per unit
+          peptide is the number that means something and activity per millilitre of
+          supernatant is not.
+        </p>
+      </section>
+
+      <section class="sec" id="limits">
+        <h2>What this modelling cannot decide</h2>
+
+        <ul>
+          <li>
+            <b>None of it is a measurement.</b> Two structural methods agreeing is agreement,
+            and the decisive next step is experimental.
+          </li>
+          <li>
+            <b>Neither method resolves single substitutions.</b> Section&nbsp;7 is the
+            evidence, and it is our own. No design on this wiki is ranked by a docking score
+            or by a co-folding confidence value.
+          </li>
+          <li>
+            <b>PEPR2 has no experimental structure.</b> Every PEPR2 number rests on an
+            AlphaFold model with no per-residue confidence filter applied before docking.
+            More docking rigour cannot fix this; a structure or a binding assay can.
+          </li>
+          <li>
+            <b>The receptors are the wrong species.</b> BoPep4 is a <i>Brassica</i> peptide
+            and we model it against <i>Arabidopsis</i> PEPR1 and PEPR2, because that is
+            where the structural and mutagenesis evidence is. The <i>Brassica</i>
+            orthologues will differ.
+          </li>
+          <li>
+            <b>The most informative published result is outside the pipeline.</b> Pearce
+            showed that Gly17&rarr;D-Ala and Gly17&rarr;2-methyl-Ala restore activity while
+            L-Pro and D-Pro abolish it, which proves the requirement is backbone
+            conformational freedom&nbsp;[2]. D-amino acids and Aib are not representable in
+            stock CNS topology, so three rows of our own panel are marked as not modellable.
+          </li>
+          <li>
+            <b>The canonical wild-type pose was chosen, not predicted.</b> The docking's own
+            top cluster was non-native at 5.80&nbsp;&Aring;; the pose carried forward is
+            cluster three of four, selected because it matches the crystal.
+          </li>
+        </ul>
+
+        <p>
+          The remaining computational item is a narrow, pre-registered re-run: the sixteen
+          equal-length analogues against PEPR1 only, from unbound conformer ensembles, with
+          crystal-derived restraints, full sampling, three seeds, and cluster-mean scoring.
+          The pass criterion is committed before the runs start &mdash; Spearman &rho;
+          above +0.5 at p&nbsp;&lt;&nbsp;0.05, with at least two of G17A, G17P and S15A in
+          the four worst-scoring analogues. Anything less means the protocol has no
+          substitution-level resolution and every remaining score-difference claim comes
+          out, whatever the numbers look like.
+        </p>
+      </section>
+
+      <section class="sec" id="reproducibility">
+        <h2>Every parameter, and where the runs live</h2>
+
+        <div class="tablewrap">
+          <table class="data">
+            <thead><tr><th>Component</th><th>Version and configuration</th></tr></thead>
+            <tbody>
+              <tr><td>Docking</td><td>HADDOCK&nbsp;2.5, distribution <code>haddock2.5-2026-07</code>, run locally. 121 production runs across seven campaigns.</td></tr>
+              <tr><td>Energy engine</td><td>CNS&nbsp;1.3, HADDOCK-patched, rebuilt from source for arm64 Darwin. OPLS non-bonded parameters, TIP3P explicit water in final refinement.</td></tr>
+              <tr><td>Restraints</td><td>Ambiguous interaction restraints, <code>2.0&nbsp;2.0&nbsp;0.0</code> throughout, with cross-validation on (<code>noecv</code>, two partitions). Active and passive residue lists are on disk for every run and reproduced in the audit.</td></tr>
+              <tr><td>Co-folding</td><td>AlphaFold3, 5 seeds per job, 44 jobs. Gates set before running: ipTM&nbsp;&ge;&nbsp;0.60, interface minimum PAE&nbsp;&le;&nbsp;5&nbsp;&Aring;, zero clashes.</td></tr>
+              <tr><td>RNA folding</td><td>ViennaRNA&nbsp;2.7.2, partition function at 37&nbsp;&deg;C over a 236&nbsp;nt window.</td></tr>
+              <tr><td>Structures</td><td>PEPR1 from PDB&nbsp;5GR8 chain&nbsp;A, cleaned to polymer heavy atoms. PEPR2 an AlphaFold monomer trimmed to residues 24&ndash;710. Peptides threaded on 5GR8 chain&nbsp;J or taken from co-folded complexes; provenance recorded per residue.</td></tr>
+              <tr><td>Structure handling</td><td>PyMOL&nbsp;2.x for splitting, interface detection and rendering; Biopython for superposition and RMSD.</td></tr>
+            </tbody>
+          </table>
+        </div>
+
+        <p>
+          Three numbering conventions coexist in the source data and cross-study comparisons
+          are only valid inside one of them: mature 1&ndash;23 as used by the truncation and
+          Pearce panels, renumber-from-one as used by the co-folding truncation jobs, and
+          construct-local numbering in the tandem study. Everything on this page is in
+          mature numbering.
+        </p>
+
+        <p>
+          The methodology audit reproduces the complete parameter and restraint record for
+          all 121 runs and all 44 co-folding jobs, lists twelve references split into five
+          that support the protocol and seven that challenge it, and triages every
+          downstream claim. The page you are reading is the summary; the audit is the
+          document to check it against, and both are in the dry-lab record alongside the
+          run trees, the restraint tables and the analysis scripts.
+        </p>
+      </section>
 
       <section class="refs" id="references">
         <h2 data-no-toc>References</h2>
         <ol>
-          <li>Reference list not started. Write <code>[1]</code> anywhere in the
-              prose above and it will link to the first item here.</li>
+          <li>Tang, J., Han, Z., Sun, Y., Zhang, H., Gong, X. &amp; Chai, J. Structural basis for recognition of an endogenous peptide by the plant receptor kinase PEPR1. <i>Cell Research</i> <b>25</b>, 110&ndash;120 (2015). PDB&nbsp;5GR8.</li>
+          <li>Pearce, G., Yamaguchi, Y., Munske, G. &amp; Ryan, C. A. Structure&ndash;activity studies of AtPep1, a plant peptide signal involved in the innate immune response. <i>Peptides</i> <b>29</b>, 2083&ndash;2089 (2008).</li>
+          <li>Yamaguchi, Y., Huffaker, A., Bryan, A. C., Tax, F. E. &amp; Ryan, C. A. PEPR2 is a second receptor for the Pep1 and Pep2 peptides and contributes to defense responses in Arabidopsis. <i>Plant Cell</i> <b>22</b>, 508&ndash;522 (2010).</li>
+          <li>Dominguez, C., Boelens, R. &amp; Bonvin, A. M. J. J. HADDOCK: a protein&ndash;protein docking approach based on biochemical or biophysical information. <i>J. Am. Chem. Soc.</i> <b>125</b>, 1731&ndash;1737 (2003).</li>
+          <li>Honorato, R. V. <i>et al.</i> The HADDOCK2.4 web server for integrative modeling of biomolecular complexes. <i>Nature Protocols</i> (2024).</li>
+          <li>Trellet, M., Melquiond, A. S. J. &amp; Bonvin, A. M. J. J. A unified conformational selection and induced fit approach to protein&ndash;peptide docking. <i>PLoS ONE</i> <b>8</b>, e58769 (2013).</li>
+          <li>Rodrigues, J. P. G. L. M. <i>et al.</i> Clustering biomolecular complexes by residue contacts similarity. <i>Proteins</i> <b>80</b>, 1810&ndash;1817 (2012).</li>
+          <li>Kastritis, P. L. &amp; Bonvin, A. M. J. J. Are scoring functions in protein&ndash;protein docking ready to predict interactomes? <i>J. Proteome Research</i> <b>9</b>, 2216&ndash;2225 (2010).</li>
+          <li>Vangone, A. &amp; Bonvin, A. M. J. J. Contacts-based prediction of binding affinity in protein&ndash;protein complexes. <i>eLife</i> <b>4</b>, e07454 (2015).</li>
+          <li>Abramson, J. <i>et al.</i> Accurate structure prediction of biomolecular interactions with AlphaFold&nbsp;3. <i>Nature</i> <b>630</b>, 493&ndash;500 (2024).</li>
+          <li>Buel, G. R. &amp; Walters, K. J. Can AlphaFold2 predict the impact of missense mutations on structure? <i>Nature Structural &amp; Molecular Biology</i> <b>29</b>, 1&ndash;2 (2022).</li>
+          <li>Ciemny, M. <i>et al.</i> Protein&ndash;peptide docking: opportunities and challenges. <i>Drug Discovery Today</i> <b>23</b>, 1530&ndash;1537 (2018).</li>
+          <li>Castillo-Hair, S. M. <i>et al.</i> Optimizing 5&prime; mRNA structure for translation initiation. <i>Nature Communications</i> <b>10</b>, 3099 (2019).</li>
+          <li>Brockmeier, U. <i>et al.</i> Systematic screening of all signal peptides from <i>Bacillus subtilis</i>. <i>J. Molecular Biology</i> <b>362</b>, 393&ndash;402 (2006).</li>
+          <li>Cui, J. <i>et al.</i> Plant elicitor peptides and abiotic stress tolerance. <i>Antioxidants</i> <b>13</b>, 549 (2024).</li>
+          <li>Sun, Y. <i>et al.</i> Structural basis for flg22-induced activation of the Arabidopsis FLS2&ndash;BAK1 immune complex. <i>Science</i> <b>342</b>, 624&ndash;628 (2013). PDB&nbsp;4MN8.</li>
+          <li>Bonvin Lab. HADDOCK best practice guide &mdash; peptide docking. <a href="https://www.bonvinlab.org/software/bpg/peptides/">bonvinlab.org/software/bpg/peptides</a>.</li>
         </ol>
       </section>
 
-      <div class="status">
-        <b>This page is a scaffold.</b>
-        Every italic note above is an instruction, not text to publish. Delete
-        each one as you replace it, delete this box when the page is written,
-        and set <span class="todo">Status</span> in the header to Draft and then
-        to Final. Re-running <code>build/generate.py</code> will not touch this
-        file once the generated marker at the top has been removed.
-      </div>
     </main>
   </div>
 
@@ -183,5 +2159,150 @@
   <script src="../assets/data/site-nav.js"></script>
   <script src="../assets/js/nav.js"></script>
   <script src="../assets/js/page.js"></script>
+  <script>
+(function () {
+  "use strict";
+  var $  = function (s, r) { return (r || document).querySelector(s); };
+  var $$ = function (s, r) { return Array.prototype.slice.call((r || document).querySelectorAll(s)); };
+
+  /* ---- 1. sequence explorer, wired to the alignment ---------------------- */
+  var RES = [{"name": "Gly1", "sasa": 0, "hb": 0, "sb": 0, "cls": "none", "clsLabel": "no receptor contact", "p2": "none", "p2Label": "no contact on PEPR2", "p1": "—", "cons": 35, "note": "Disordered in 5GR8. Deleted in the 9–23 constructs."}, {"name": "Ile2", "sasa": 0, "hb": 0, "sb": 0, "cls": "none", "clsLabel": "no receptor contact", "p2": "none", "p2Label": "no contact on PEPR2", "p1": "—", "cons": 29, "note": "Disordered in 5GR8."}, {"name": "Leu3", "sasa": 0, "hb": 0, "sb": 0, "cls": "none", "clsLabel": "no receptor contact", "p2": "none", "p2Label": "no contact on PEPR2", "p1": "—", "cons": 35, "note": "Disordered in 5GR8."}, {"name": "Ile4", "sasa": 0, "hb": 0, "sb": 0, "cls": "none", "clsLabel": "no receptor contact", "p2": "none", "p2Label": "no contact on PEPR2", "p1": "—", "cons": 35, "note": "The one residue separating BoPep4 from <i>B.&nbsp;rapa</i> Pep4, which carries Val here."}, {"name": "Gly5", "sasa": 0, "hb": 0, "sb": 0, "cls": "none", "clsLabel": "no receptor contact", "p2": "none", "p2Label": "no contact on PEPR2", "p1": "—", "cons": 29, "note": "Disordered in 5GR8."}, {"name": "Ser6", "sasa": 0, "hb": 0, "sb": 0, "cls": "none", "clsLabel": "no receptor contact", "p2": "none", "p2Label": "no contact on PEPR2", "p1": "—", "cons": 29, "note": "Last residue before the interface starts."}, {"name": "Lys7", "sasa": 70, "hb": 1, "sb": 1, "cls": "anchor", "clsLabel": "salt-bridge anchor", "p2": "conserved", "p2Label": "conserved on PEPR2", "p1": "Glu199", "cons": 65, "note": "First rung of the basic belt. Lost at truncation 8–23."}, {"name": "Lys8", "sasa": 14, "hb": 0, "sb": 0, "cls": "none", "clsLabel": "no receptor contact", "p2": "unmapped", "p2Label": "not mapped on PEPR2", "p1": "—", "cons": 35, "note": "Inside the bound stretch and still solvent-facing: nothing within 4.5&nbsp;&Aring; on PEPR1 in any model. This is the position K8Q was meant to exploit."}, {"name": "Arg9", "sasa": 123, "hb": 3, "sb": 3, "cls": "anchor", "clsLabel": "salt-bridge anchor", "p2": "conserved", "p2Label": "conserved on PEPR2", "p1": "Asp179", "cons": 53, "note": "The strongest single anchor in the peptide, and the residue the truncation ladder was built around."}, {"name": "Pro10", "sasa": 0, "hb": 0, "sb": 0, "cls": "none", "clsLabel": "no receptor contact", "p2": "unmapped", "p2Label": "not mapped on PEPR2", "p1": "—", "cons": 41, "note": "Solvent-exposed proline."}, {"name": "Arg11", "sasa": 78, "hb": 2, "sb": 1, "cls": "anchor", "clsLabel": "salt-bridge anchor", "p2": "degraded", "p2Label": "degraded on PEPR2", "p1": "Asp294", "cons": 59, "note": "PEPR2 has no acidic partner here — one of the two mid-belt losses that narrow its selectivity."}, {"name": "Glu12", "sasa": 86, "hb": 1, "sb": 0, "cls": "buried", "clsLabel": "buried contact", "p2": "degraded", "p2Label": "degraded on PEPR2", "p1": "His227", "cons": 41, "note": "PEPR2 has no basic partner here."}, {"name": "Pro13", "sasa": 12, "hb": 0, "sb": 0, "cls": "none", "clsLabel": "no receptor contact", "p2": "unmapped", "p2Label": "not mapped on PEPR2", "p1": "—", "cons": 41, "note": "Solvent-exposed proline."}, {"name": "His14", "sasa": 80, "hb": 0, "sb": 0, "cls": "buried", "clsLabel": "buried contact", "p2": "unmapped", "p2Label": "not mapped on PEPR2", "p1": "packing", "cons": 24, "note": "Buried by packing, with no polar partner. AtPep1 carries Val at this position."}, {"name": "Ser15", "sasa": 96, "hb": 2, "sb": 0, "cls": "core", "clsLabel": "conserved core contact", "p2": "conserved", "p2Label": "conserved on PEPR2", "p1": "Asp273", "cons": 100, "note": "Invariant across all seventeen aligned Peps. Pearce measured a hundredfold activity loss for S15A."}, {"name": "Ser16", "sasa": 40, "hb": 1, "sb": 0, "cls": "core", "clsLabel": "conserved core contact", "p2": "conserved", "p2Label": "conserved on PEPR2", "p1": "Asn321", "cons": 100, "note": "Invariant across all seventeen aligned Peps."}, {"name": "Gly17", "sasa": 25, "hb": 0, "sb": 0, "cls": "partial", "clsLabel": "partial contact", "p2": "unmapped", "p2Label": "not mapped on PEPR2", "p1": "—", "cons": 100, "note": "Invariant, and the most expensive residue in the peptide to touch: G17A costs more than four thousandfold."}, {"name": "Lys18", "sasa": 85, "hb": 2, "sb": 2, "cls": "anchor", "clsLabel": "salt-bridge anchor", "p2": "partial", "p2Label": "partial on PEPR2", "p1": "Glu324, Asp348", "cons": 47, "note": "Salt-bridges Asp348 and sits over Phe371. AtPep1 has Arg here, which is why K18R was proposed and then withdrawn."}, {"name": "Pro19", "sasa": 0, "hb": 0, "sb": 0, "cls": "none", "clsLabel": "no receptor contact", "p2": "unmapped", "p2Label": "not mapped on PEPR2", "p1": "—", "cons": 76, "note": "Solvent-exposed proline."}, {"name": "Gly20", "sasa": 45, "hb": 0, "sb": 0, "cls": "buried", "clsLabel": "buried contact", "p2": "unmapped", "p2Label": "not mapped on PEPR2", "p1": "packing", "cons": 100, "note": "Invariant across all seventeen aligned Peps."}, {"name": "Gly21", "sasa": 37, "hb": 2, "sb": 0, "cls": "partial", "clsLabel": "partial contact", "p2": "unmapped", "p2Label": "not mapped on PEPR2", "p1": "—", "cons": 47, "note": "AtPep1 carries Gln here and inserts it into a BAK1 cavity. A glycine cannot fill that cavity."}, {"name": "His22", "sasa": 104, "hb": 1, "sb": 3, "cls": "anchor", "clsLabel": "salt-bridge anchor", "p2": "conserved", "p2Label": "conserved on PEPR2", "p1": "Glu439", "cons": 47, "note": "Second-most-buried residue in the peptide."}, {"name": "Asn23", "sasa": 170, "hb": 4, "sb": 0, "cls": "anchor", "clsLabel": "salt-bridge anchor", "p2": "conserved", "p2Label": "conserved on PEPR2", "p1": "Asp441, Asn465, Arg487", "cons": 71, "note": "The master clamp. Its free α-carboxylate salt-bridges Arg487 at 2.40&nbsp;&Aring; in the crystal. Anything fused after it removes that bond."}];
+  var COL2POS = {"1": 1, "2": 2, "3": 3, "4": 4, "5": 5, "6": 6, "7": 7, "8": 8, "9": 9, "10": 10, "11": 11, "13": 12, "14": 13, "15": 14, "16": 15, "17": 16, "18": 17, "19": 18, "20": 19, "21": 20, "22": 21, "23": 22, "24": 23};
+
+  function paintAlignment(pos) {
+    $$(".pd-cell.is-lit, .pd-aln__num.is-lit").forEach(function (el) { el.classList.remove("is-lit"); });
+    if (!pos) return;
+    var col = null, k;
+    for (k in COL2POS) { if (COL2POS[k] === pos) { col = k; break; } }
+    if (!col) return;
+    $$('[data-col="' + col + '"]').forEach(function (el) { el.classList.add("is-lit"); });
+  }
+
+  function selectResidue(pos) {
+    var d = RES[pos - 1];
+    if (!d) return;
+    $$(".pd-res").forEach(function (b) {
+      b.setAttribute("aria-pressed", String(Number(b.dataset.pos) === pos));
+    });
+    $("#rp-name").textContent = d.name;
+    var c = $("#rp-cls");  c.className = "pd-tag is-" + d.cls; c.textContent = d.clsLabel;
+    var p = $("#rp-p2");   p.className = "pd-tag is-p2-" + d.p2; p.textContent = d.p2Label;
+    $("#rp-sasa").innerHTML = d.sasa + "&nbsp;Å²";
+    $("#rp-bonds").textContent = d.hb + " / " + d.sb;
+    $("#rp-p1").textContent = d.p1;
+    $("#rp-cons").textContent = d.cons + "%";
+    $("#rp-note").innerHTML = d.note;
+    paintAlignment(pos);
+  }
+
+  var ruler = $("#ruler");
+  if (ruler) {
+    $$(".pd-res", ruler).forEach(function (b) {
+      b.addEventListener("click", function () { selectResidue(Number(b.dataset.pos)); });
+      b.addEventListener("mouseenter", function () { paintAlignment(Number(b.dataset.pos)); });
+    });
+    ruler.addEventListener("mouseleave", function () {
+      var on = $('.pd-res[aria-pressed="true"]');
+      paintAlignment(on ? Number(on.dataset.pos) : null);
+    });
+    selectResidue(23);
+  }
+
+  /* ---- 2. alignment shading toggle -------------------------------------- */
+  var aln = $("#aln");
+  if (aln) {
+    aln.dataset.mode = "cons";
+    $$(".pd-chip[data-mode]", aln).forEach(function (b) {
+      b.addEventListener("click", function () {
+        aln.dataset.mode = b.dataset.mode;
+        $$(".pd-chip[data-mode]", aln).forEach(function (o) {
+          var on = o === b;
+          o.classList.toggle("is-on", on);
+          o.setAttribute("aria-pressed", String(on));
+        });
+      });
+    });
+  }
+
+  /* ---- 3. truncation ladder --------------------------------------------- */
+  var LAD = [{"seq": "GILIGSKKRPREPHSSGKPGGHN", "q": 4, "s1": -197.81, "n1": -71.82643427741466, "ip1": 0.82, "ip2": 0.79, "verdict": "binder", "anchors": "K7, K8, R9, R11, K18, N23"}, {"seq": "ILIGSKKRPREPHSSGKPGGHN", "q": 4, "s1": -201.43, "n1": -74.65900667160861, "ip1": null, "ip2": null, "verdict": "binder", "anchors": "K7, K8, R9, R11, K18, N23"}, {"seq": "LIGSKKRPREPHSSGKPGGHN", "q": 4, "s1": -195.47, "n1": -75.00767459708365, "ip1": 0.89, "ip2": 0.8, "verdict": "binder", "anchors": "K7, K8, R9, R11, K18, N23"}, {"seq": "IGSKKRPREPHSSGKPGGHN", "q": 4, "s1": -196.81, "n1": -80.79228243021348, "ip1": 0.86, "ip2": 0.82, "verdict": "binder", "anchors": "K7, K8, R9, R11, K18, N23"}, {"seq": "GSKKRPREPHSSGKPGGHN", "q": 4, "s1": -200.12, "n1": -84.40320539856602, "ip1": 0.92, "ip2": 0.83, "verdict": "binder", "anchors": "K7, K8, R9, R11, K18, N23"}, {"seq": "SKKRPREPHSSGKPGGHN", "q": 4, "s1": -198.94, "n1": -82.2405952873088, "ip1": 0.89, "ip2": 0.89, "verdict": "binder", "anchors": "K7, K8, R9, R11, K18, N23"}, {"seq": "KKRPREPHSSGKPGGHN", "q": 4, "s1": -190.38, "n1": -82.84595300261097, "ip1": 0.92, "ip2": 0.88, "verdict": "binder", "anchors": "K7, K8, R9, R11, K18, N23"}, {"seq": "KRPREPHSSGKPGGHN", "q": 3, "s1": -165.51, "n1": -80.73658536585366, "ip1": 0.92, "ip2": 0.88, "verdict": "binder", "anchors": "K8, R9, R11, K18, N23"}, {"seq": "RPREPHSSGKPGGHN", "q": 2, "s1": -165.48, "n1": -79.5576923076923, "ip1": 0.94, "ip2": 0.89, "verdict": "binder", "anchors": "R9, R11, K18, N23"}, {"seq": "PREPHSSGKPGGHN", "q": 1, "s1": -148.39, "n1": -82.16500553709857, "ip1": 0.93, "ip2": 0.83, "verdict": "weak", "anchors": "R11, K18, N23"}, {"seq": "REPHSSGKPGGHN", "q": 1, "s1": -148.28, "n1": -84.92554410080183, "ip1": 0.9, "ip2": 0.85, "verdict": "weak", "anchors": "R11, K18, N23"}, {"seq": "EPHSSGKPGGHN", "q": 0, "s1": -138.99, "n1": -86.5981308411215, "ip1": 0.87, "ip2": 0.83, "verdict": "weak", "anchors": "K18, N23"}, {"seq": "PHSSGKPGGHN", "q": 1, "s1": -120.89, "n1": -84.77559607293128, "ip1": 0.87, "ip2": 0.62, "verdict": "weak", "anchors": "K18, N23"}, {"seq": "HSSGKPGGHN", "q": 1, "s1": -115.24, "n1": -85.61664190193164, "ip1": 0.54, "ip2": 0.53, "verdict": "non-binder", "anchors": "K18, N23"}, {"seq": "SSGKPGGHN", "q": 1, "s1": -97.76, "n1": -81.87604690117253, "ip1": 0.63, "ip2": 0.68, "verdict": "non-binder", "anchors": "K18, N23"}, {"seq": "SGKPGGHN", "q": 1, "s1": -84.73, "n1": -84.81481481481481, "ip1": 0.62, "ip2": 0.66, "verdict": "non-binder", "anchors": "K18, N23"}, {"seq": "GKPGGHN", "q": 1, "s1": -85.08, "n1": -86.0262891809909, "ip1": 0.73, "ip2": 0.57, "verdict": "non-binder", "anchors": "K18, N23"}];
+  var ladder = $("#ladder");
+  if (ladder) {
+    var slider = $("#lad-slider", ladder);
+    var mark = $("#lad-mark", ladder);
+    var X0 = 78, X1 = 852;
+
+    function readRung(s) {
+      var d = LAD[s - 1];
+      mark.setAttribute("x1", (X0 + (s - 1) * (X1 - X0) / 16).toFixed(1));
+      mark.setAttribute("x2", (X0 + (s - 1) * (X1 - X0) / 16).toFixed(1));
+      $("#lr-name").innerHTML = "BoPep4 " + s + "–23";
+      var v = $("#lr-verdict");
+      v.textContent = d.verdict;
+      v.className = "pd-tag is-" + (d.verdict === "binder" ? "anchor" : d.verdict === "weak" ? "partial" : "none");
+      $("#lr-seq").textContent = d.seq;
+      $("#lr-len").textContent = d.seq.length + " aa / " + (d.q >= 0 ? "+" : "") + d.q;
+      $("#lr-s1").innerHTML = "−" + Math.abs(d.s1).toFixed(1);
+      $("#lr-n1").innerHTML = "−" + Math.abs(d.n1).toFixed(1);
+      $("#lr-ip").innerHTML = (d.ip1 ? d.ip1.toFixed(2) : "—") +
+        " · PEPR2 " + (d.ip2 ? d.ip2.toFixed(2) : "—");
+      $("#lr-anch").textContent = d.anchors;
+    }
+    slider.addEventListener("input", function () { readRung(Number(slider.value)); });
+
+    $$(".pd-chip[data-lad]", ladder).forEach(function (b) {
+      b.addEventListener("click", function () {
+        /* these are SVG groups, and SVGElement has no .hidden IDL property,
+           so the attribute has to be set by hand. */
+        ["raw", "norm", "iptm"].forEach(function (k) {
+          var g = document.getElementById("lad-" + k);
+          if (k === b.dataset.lad) { g.removeAttribute("hidden"); }
+          else { g.setAttribute("hidden", "hidden"); }
+        });
+        $$(".pd-chip[data-lad]", ladder).forEach(function (o) {
+          var on = o === b;
+          o.classList.toggle("is-on", on);
+          o.setAttribute("aria-pressed", String(on));
+        });
+      });
+    });
+    readRung(9);
+  }
+
+  /* ---- 4. the benchmark view -------------------------------------------- */
+  var bench = $("#bench");
+  if (bench) {
+    bench.dataset.view = "all";
+    $$(".pd-chip[data-bench]", bench).forEach(function (b) {
+      b.addEventListener("click", function () {
+        bench.dataset.view = b.dataset.bench;
+        $$(".pd-chip[data-bench]", bench).forEach(function (o) {
+          var on = o === b;
+          o.classList.toggle("is-on", on);
+          o.setAttribute("aria-pressed", String(on));
+        });
+      });
+    });
+  }
+
+  /* ---- 5. the claim ledger ---------------------------------------------- */
+  var ledger = $("#ledger");
+  if (ledger) {
+    $$(".pd-chip[data-st]", ledger).forEach(function (b) {
+      b.addEventListener("click", function () {
+        var want = b.dataset.st;
+        $$(".pd-claim", ledger).forEach(function (li) {
+          li.hidden = !(want === "all" || li.dataset.st === want);
+        });
+        $$(".pd-chip[data-st]", ledger).forEach(function (o) {
+          var on = o === b;
+          o.classList.toggle("is-on", on);
+          o.setAttribute("aria-pressed", String(on));
+        });
+      });
+    });
+  }
+})();
+  </script>
 </body>
 </html>
