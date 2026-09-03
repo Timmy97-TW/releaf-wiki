@@ -97,9 +97,7 @@ const NAV = [
       { title: "Geospatial Analysis",        slug: "geospatial-analysis",  icon: "gis",
         caption: "Mapping where plant stress actually bites." },
       { title: "Data Physicalization",       slug: "data-physicalization", icon: "physical",
-        caption: "Our data, rebuilt as objects you can pick up." },
-      { title: "AI Responsibility",          slug: "ai-responsibility",    icon: "ai",
-        caption: "Where we used AI, where we refused to, and how we checked it." }
+        caption: "Our data, rebuilt as objects you can pick up." }
     ]
   },
   {

@@ -221,7 +221,6 @@
     "safety-and-security":    ["laws-and-regulations"],
     "model":                  ["bioreactor-calculations", "software", "hardware"],
     "hardware":               ["software", "bioreactor-calculations", "drylab-notebook"],
-    "software":               ["ai-responsibility"],
     "peptide-design":         ["model"],
     "human-practices":        ["hardware", "plant", "laws-and-regulations", "entrepreneurship",
                                "education", "geospatial-analysis"],

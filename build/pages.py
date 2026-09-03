@@ -877,41 +877,6 @@ PAGES = [
  ]},
 
 {
- "slug": "ai-responsibility", "tab": "engagement",
- "title": "AI Responsibility",
- "lede": "Where we used AI, where we refused to, and how a reader can tell "
-         "which is which.",
- "owner": "Whole team",
- "award": None,
- "intro": "The 2026 Judge Handbook is explicit that feeding a team's wiki or "
-          "project description into an AI system and submitting the output as "
-          "the team's own work is not acceptable. This page is our account of "
-          "where the line was, and how we held it.",
- "sections": [
-   {"h": "Our position",
-    "note": "One paragraph, written by a person, saying what the team decided "
-            "and why."},
-   {"h": "Where we used it",
-    "note": "Task by task. Be specific: which tool, for what, and who checked "
-            "the output.",
-    "table": (["Task", "Tool", "What it produced", "Who verified it", "How"],
-              [["", "", "", "", ""] for _ in range(6)])},
-   {"h": "Where we refused to use it",
-    "note": "Results, numbers, quotes, human practices entries, and anything "
-            "presented as the team's own reasoning. Say so, and say why."},
-   {"h": "How we checked",
-    "note": "The verification procedure. An unverified generated number is a "
-            "fabricated number."},
-   {"h": "Data, consent and privacy",
-    "note": "Whether any interview, photograph or personal data went into a "
-            "third-party system, and on whose consent."},
-   {"h": "Bias, and who the tools do not serve",
-    "note": "Language, agricultural context, and what the models did badly on "
-            "繁體中文 material."},
-   {"h": "What we would tell another team", "note": ""},
- ]},
-
-{
  "slug": "inclusivity", "tab": "engagement", "title": "Inclusivity",
  "lede": "Who the project is built for, who it would leave out, and what we "
          "changed once we could name them.",

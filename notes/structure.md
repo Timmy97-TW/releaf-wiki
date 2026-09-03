@@ -37,7 +37,6 @@ team three awards.
 | Laws and Regulations | `/laws-and-regulations` | — |
 | Geospatial Analysis | `/geospatial-analysis` | — |
 | Data Physicalization | `/data-physicalization` | — |
-| AI Responsibility | `/ai-responsibility` | — |
 | Inclusivity | `/inclusivity` | Inclusivity Award |
 | Members | `/team` | Bronze #1 (wiki) |
 | Attribution | `/attributions` | Bronze #2 |
