@@ -16,15 +16,51 @@
       tiers.forEach(function (t) {
         const ch = CHANNELS.filter(function (c) { return c.hue === hue && c.tier === t; })[0];
         const mean = ch.lux.reduce(function (s, v) { return s + v; }, 0) / ch.lux.length;
-        html += '<div class="mx-c ' + hue + " " + t.toLowerCase() + '">' +
+        html += '<button type="button" class="mx-c ' + hue + " " + t.toLowerCase() +
+          '" aria-pressed="false" aria-label="' + t + " " + hue +
+          ' channel, mean ' + mean.toFixed(ch.unit === "kLux" ? 2 : 0) + " " + ch.unit +
+          '. Show its four LEDs in the matching chart.">' +
           '<div class="mx-dots">' + ch.lux.map(function () { return "<i></i>"; }).join("") + "</div>" +
           '<div class="mx-v">' + mean.toFixed(ch.unit === "kLux" ? 2 : 0) +
-          "<em>" + ch.unit + "</em></div></div>";
+          "<em>" + ch.unit + "</em></div></button>";
       });
     });
     html += '<div class="mx-note">' +
-      "Green induces protectant production · red halts it · four replicates per cell</div>";
+      "Green induces protectant production · red halts it · four replicates per cell" +
+      '<span class="mx-hint">Choose a condition to find its four LEDs below</span></div>';
     el.innerHTML = html;
+
+    /* ---- link the matrix to the I² chart ----
+       The LED matching is the most rigorous work on this page, and it sat as two
+       figures that never referred to each other: a grid of conditions here, a
+       dot plot of every LED bought further down. Clicking a condition now picks
+       out the four units that ended up in it — the question the chart exists to
+       answer, and which could not previously be asked. */
+    const TIER_INDEX = { low: 0, mid: 1, high: 2 };
+    el.addEventListener("click", function (ev) {
+      const cell = ev.target.closest(".mx-c");
+      if (!cell) return;
+      const hue = cell.classList.contains("green") ? "green" : "red";
+      const tier = ["low", "mid", "high"].filter(function (t) {
+        return cell.classList.contains(t);
+      })[0];
+      const on = !cell.classList.contains("picked");
+      el.querySelectorAll(".mx-c").forEach(function (c) {
+        c.classList.remove("picked");
+        c.setAttribute("aria-pressed", "false");
+      });
+      if (on) { cell.classList.add("picked"); cell.setAttribute("aria-pressed", "true"); }
+
+      const chart = document.getElementById("i2-chart");
+      if (!chart) return;
+      chart.classList.toggle("focused", on);
+      chart.querySelectorAll(".i2-dot").forEach(function (d) {
+        d.classList.remove("lit");
+        if (on && d.classList.contains(hue) && d.classList.contains("t" + TIER_INDEX[tier])) {
+          d.classList.add("lit");
+        }
+      });
+    });
   })();
 
   // ---------- I² chart ----------

@@ -1,15 +1,6 @@
 :root {
-  --bg: #06070a;
-  --fg: #f2f5f8;
-  --muted: #98a0ac;
-  --dim: #78818f;
-  --faint: #3a4049;
   --amber: #ffa23d;
-  --amber-deep: #a15f14;
-  --line: rgba(255, 255, 255, 0.09);
-  --sans: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, sans-serif;
-  --mono: ui-monospace, "SFMono-Regular", Menlo, Consolas, monospace;
-  --ease: cubic-bezier(.22, .61, .36, 1);
+  --amber-deep: #8a510b;
 }
 
 * { box-sizing: border-box; }
@@ -21,7 +12,14 @@ body {
   font-family: var(--sans);
   -webkit-font-smoothing: antialiased;
   text-rendering: optimizeLegibility;
-  overflow-x: hidden;
+  /* `clip`, not `hidden`. Per spec a non-visible value on one axis forces the
+     other to `auto`, so `overflow-x: hidden` here quietly made <body> a scroll
+     container: scroll events then fire on body and never reach window, which
+     kills every window-level scroll listener on the page — including the
+     fallbacks that fill the reveals and the marks when IntersectionObserver
+     does not deliver. `clip` blocks the same overflow without creating a
+     scroll box. */
+  overflow-x: clip;
   font-feature-settings: "tnum" 1, "ss01" 1;
 }
 
@@ -70,7 +68,7 @@ h1, h2 { font-weight: 600; letter-spacing: -0.035em; margin: 0; }
   position: fixed; top: 0; left: 0; right: 0; z-index: 50;
   display: flex; justify-content: space-between; align-items: center;
   padding: 20px clamp(18px, 3.2vw, 34px);
-  font-family: var(--mono); font-size: .63rem;
+  font-family: var(--mono); font-size: .62rem;
   letter-spacing: .22em; text-transform: uppercase;
 }
 .brand { color: var(--fg); font-weight: 500; }
@@ -96,7 +94,7 @@ h1, h2 { font-weight: 600; letter-spacing: -0.035em; margin: 0; }
 .intro h1 span { color: var(--amber); }
 .intro > p {
   max-width: 44ch; margin: 0 auto;
-  color: var(--muted); font-size: 1.01rem; line-height: 1.7;
+  color: var(--muted); font-size: 1rem; line-height: 1.7;
 }
 
 /* stat strip */
@@ -171,7 +169,7 @@ h1, h2 { font-weight: 600; letter-spacing: -0.035em; margin: 0; }
   margin-bottom: .5rem; line-height: 1.14;
 }
 .prole {
-  font-family: var(--mono); font-size: .61rem;
+  font-family: var(--mono); font-size: .6rem;
   letter-spacing: .2em; text-transform: uppercase;
   color: var(--amber); margin-bottom: 1.2rem;
 }
@@ -229,7 +227,7 @@ h1, h2 { font-weight: 600; letter-spacing: -0.035em; margin: 0; }
 .rail.show { opacity: 1; }
 .dot {
   width: 20px; flex: 0 1 20px; min-width: 5px;
-  height: 2px; border-radius: 2px;
+  height: 2px; border-radius: var(--r-xs);
   background: rgba(255, 255, 255, .13);
   transition: background .4s var(--ease), width .4s var(--ease);
 }
@@ -313,7 +311,7 @@ h1, h2 { font-weight: 600; letter-spacing: -0.035em; margin: 0; }
   line-height: 1.03; margin-bottom: 1.6rem;
 }
 .standfirst {
-  font-size: 1.12rem; line-height: 1.62; color: var(--fg);
+  font-size: 1.1rem; line-height: 1.62; color: var(--fg);
   margin: 0 0 1.4rem; font-weight: 350;
 }
 .doc-aim {
@@ -326,7 +324,7 @@ h1, h2 { font-weight: 600; letter-spacing: -0.035em; margin: 0; }
   font-size: .82rem; line-height: 1.6; color: var(--muted);
   background: rgba(255, 162, 61, .05);
   border: 1px solid rgba(255, 162, 61, .16);
-  border-radius: 3px; padding: .85rem 1rem;
+  border-radius: var(--r-xs); padding: .85rem 1rem;
 }
 .status-dot {
   width: 6px; height: 6px; border-radius: 50%;
@@ -354,7 +352,7 @@ h1, h2 { font-weight: 600; letter-spacing: -0.035em; margin: 0; }
 /* ---- sections ---- */
 .sec { margin-bottom: 3.4rem; }
 .sec h3 {
-  font-size: 1.16rem; font-weight: 600; letter-spacing: -.02em;
+  font-size: 1.42rem; font-weight: 600; letter-spacing: -.02em;
   margin: 0 0 1.1rem; line-height: 1.3;
   display: flex; gap: .75rem; align-items: baseline;
 }
@@ -365,15 +363,20 @@ h1, h2 { font-weight: 600; letter-spacing: -0.035em; margin: 0; }
 }
 .sec h3 em, .sec h4 em { font-style: normal; color: var(--dim); font-weight: 400; }
 .sec h4 {
-  font-size: .95rem; font-weight: 600; margin: 2.2rem 0 .8rem;
+  font-size: 1.1rem; font-weight: 600; margin: 2.2rem 0 .8rem;
   display: flex; gap: .7rem; align-items: baseline;
 }
-.sec h5 { font-size: .88rem; font-weight: 600; margin: 0 0 .4rem; }
+.sec h5 { font-size: .87rem; font-weight: 600; margin: 0 0 .4rem; }
 .sec p {
-  color: var(--muted); line-height: 1.8; font-size: .95rem;
-  margin: 0 0 1.1rem; max-width: 68ch;
+  /* Body was .95rem/68ch, which measures 15.2px at 70 characters — small for
+     long-form and at the top of the readable range. 1.06rem is about 17px, and
+     because the cap is in ch it has to come down with it or the measure just
+     stays where it was: 64ch lands near the 66-character optimum. */
+  color: var(--muted); line-height: 1.8; font-size: 1.05rem;
+  margin: 0 0 1.25rem; max-width: 64ch;
 }
 .sec p b, .sec li b { color: var(--fg); font-weight: 600; }
+.sec li { font-size: 1.05rem; line-height: 1.8; }
 .sec a { color: var(--amber); text-decoration: none; border-bottom: 1px solid rgba(255,162,61,.3); }
 .sec a:hover { border-bottom-color: var(--amber); }
 .sec abbr { text-decoration: none; border-bottom: 1px dotted var(--dim); cursor: help; }
@@ -388,7 +391,7 @@ h1, h2 { font-weight: 600; letter-spacing: -0.035em; margin: 0; }
   display: inline-block; vertical-align: baseline;
   min-width: 4.4em; height: 1.05em;
   border: 1px dashed rgba(255, 162, 61, .42);
-  border-radius: 2px;
+  border-radius: var(--r-xs);
   background: repeating-linear-gradient(-45deg,
     rgba(255,162,61,.05) 0 4px, transparent 4px 8px);
 }
@@ -400,7 +403,7 @@ h1, h2 { font-weight: 600; letter-spacing: -0.035em; margin: 0; }
   display: flex; gap: .9rem; align-items: flex-start;
   border: 1px solid rgba(255,255,255,.08);
   border-left: 2px solid var(--amber-deep);
-  border-radius: 3px; padding: .9rem 1.1rem;
+  border-radius: var(--r-xs); padding: .9rem 1.1rem;
   margin: 1.4rem 0; background: rgba(255,255,255,.017);
 }
 .openitem.tight { margin: .9rem 0 0; padding: .7rem .9rem; }
@@ -416,7 +419,7 @@ h1, h2 { font-weight: 600; letter-spacing: -0.035em; margin: 0; }
 /* ---- blank slot ---- */
 .blank-slot {
   border: 1px dashed rgba(255,255,255,.11);
-  border-radius: 4px; min-height: 130px;
+  border-radius: var(--r-sm); min-height: 130px;
   display: grid; place-content: center;
   margin: 1.2rem 0;
   background: repeating-linear-gradient(-45deg,
@@ -432,14 +435,17 @@ h1, h2 { font-weight: 600; letter-spacing: -0.035em; margin: 0; }
 .keynote {
   display: flex; gap: 1.6rem; align-items: center;
   margin: 2rem 0; padding: 1.4rem 1.6rem;
-  border: 1px solid var(--line); border-radius: 4px;
+  border: 1px solid var(--line); border-radius: var(--r-sm);
   background: linear-gradient(100deg, rgba(255,162,61,.06), transparent 60%);
 }
 .keynote-fig {
   font-size: 2.6rem; font-weight: 650; letter-spacing: -.04em;
   color: var(--amber); line-height: 1; flex: none;
 }
-.keynote-fig em { font-style: normal; font-size: .38em; margin-left: .12em; color: var(--amber-deep); }
+/* The unit suffix rides on the keynote's dark panel, so it cannot use the
+   deep variant — that is tuned for white and lands near 2.9:1 here. Use
+   --amber: the light theme already promotes it to --amber-deep. */
+.keynote-fig em { font-style: normal; font-size: .38em; margin-left: .12em; color: var(--amber); }
 .keynote p { margin: 0 !important; font-size: .9rem !important; }
 
 /* ---- tables ---- */
@@ -471,7 +477,7 @@ table tfoot td {
 
 /* ---- spec card ---- */
 .spec-card {
-  border: 1px solid var(--line); border-radius: 4px;
+  border: 1px solid var(--line); border-radius: var(--r-sm);
   padding: 1.3rem 1.5rem; margin: 1.8rem 0;
 }
 .spec-card-title {
@@ -488,7 +494,7 @@ table tfoot td {
   letter-spacing: .16em; text-transform: uppercase; color: var(--dim);
   margin-bottom: .25rem;
 }
-.spec-card dd { margin: 0; font-size: .88rem; font-weight: 500; }
+.spec-card dd { margin: 0; font-size: .87rem; font-weight: 500; }
 .spec-note { font-size: .84rem !important; color: var(--dim) !important; margin: 0 !important; }
 
 /* ---- iterations ---- */
@@ -514,7 +520,7 @@ table tfoot td {
 /* delta */
 .delta {
   display: flex; align-items: center; gap: 1.1rem; flex-wrap: wrap;
-  border: 1px solid var(--line); border-radius: 4px;
+  border: 1px solid var(--line); border-radius: var(--r-sm);
   padding: 1rem 1.2rem; margin: 1.1rem 0;
 }
 .delta > div { text-align: center; }
@@ -533,7 +539,7 @@ table tfoot td {
 
 /* ---- callout ---- */
 .callout {
-  border: 1px solid var(--line); border-radius: 4px;
+  border: 1px solid var(--line); border-radius: var(--r-sm);
   padding: 1.2rem 1.4rem; margin: 2rem 0;
   background: rgba(255,255,255,.017);
 }
@@ -546,7 +552,7 @@ table tfoot td {
 .filter-steps {
   display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
   gap: 1px; background: var(--line);
-  border: 1px solid var(--line); border-radius: 4px; overflow: hidden;
+  border: 1px solid var(--line); border-radius: var(--r-sm); overflow: hidden;
   margin: 1.6rem 0;
 }
 .filter-steps > div { background: var(--bg); padding: 1rem; }
@@ -574,7 +580,7 @@ table tfoot td {
 /* ---- equation ---- */
 .equation {
   display: flex; align-items: center; gap: .9rem; flex-wrap: wrap;
-  border: 1px solid var(--line); border-radius: 4px;
+  border: 1px solid var(--line); border-radius: var(--r-sm);
   padding: 1.3rem 1.5rem; margin: 1.4rem 0;
   background: rgba(255,255,255,.017);
   font-family: var(--mono);
@@ -596,7 +602,7 @@ table tfoot td {
 /* ---- figures ---- */
 .fig { margin: 2rem 0; }
 .fig-slot {
-  border: 1px dashed rgba(255,255,255,.11); border-radius: 4px;
+  border: 1px dashed rgba(255,255,255,.11); border-radius: var(--r-sm);
   min-height: 230px; display: grid; place-content: center;
   background: repeating-linear-gradient(-45deg,
     rgba(255,255,255,.012) 0 8px, transparent 8px 16px);
@@ -617,7 +623,7 @@ table tfoot td {
 /* ---- parameters ---- */
 .params { display: grid; gap: 1rem; margin: 1.6rem 0; }
 .param {
-  border: 1px solid var(--line); border-radius: 4px; padding: 1.2rem 1.4rem;
+  border: 1px solid var(--line); border-radius: var(--r-sm); padding: 1.2rem 1.4rem;
 }
 .param.prio { border-color: rgba(255,162,61,.24); background: rgba(255,162,61,.035); }
 .param-head {
@@ -629,7 +635,7 @@ table tfoot td {
   font-family: var(--mono); font-size: .52rem;
   letter-spacing: .18em; text-transform: uppercase;
   color: var(--dim); border: 1px solid var(--line);
-  border-radius: 2px; padding: .22rem .5rem;
+  border-radius: var(--r-xs); padding: .22rem .5rem;
   /* `flex: none` here used to let a long tag ("Highest priority", widened by the
      .18em tracking) push past the page edge on a phone. Shrinkable, and allowed
      to wrap, so it can never be the widest thing on the page. */
@@ -643,7 +649,7 @@ table tfoot td {
 .headline-stats {
   display: grid; grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
   gap: 1px; background: var(--line);
-  border: 1px solid var(--line); border-radius: 4px; overflow: hidden;
+  border: 1px solid var(--line); border-radius: var(--r-sm); overflow: hidden;
   margin: 1.8rem 0;
 }
 .headline-stats > div { background: var(--bg); padding: 1.2rem 1rem; text-align: center; }
@@ -654,7 +660,7 @@ table tfoot td {
 .headline-stats b em { font-style: normal; font-size: .45em; margin-left: .06em; }
 .headline-stats span {
   display: block; margin-top: .5rem;
-  font-family: var(--mono); font-size: .53rem;
+  font-family: var(--mono); font-size: .52rem;
   letter-spacing: .16em; text-transform: uppercase; color: var(--dim);
 }
 
@@ -662,7 +668,7 @@ table tfoot td {
 .phases {
   display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
   gap: 1px; background: var(--line);
-  border: 1px solid var(--line); border-radius: 4px; overflow: hidden;
+  border: 1px solid var(--line); border-radius: var(--r-sm); overflow: hidden;
   margin: 1.6rem 0;
 }
 .phases > div { background: var(--bg); padding: .9rem 1rem; }
@@ -726,7 +732,7 @@ table tfoot td {
   .doc-wrap { padding-bottom: 4rem; }
   .doc { padding-top: 3rem; }
   .part { margin: 4.5rem 0 2.2rem; }
-  .sec p { font-size: .92rem; }
+  .sec p, .sec li { font-size: 1rem; }
   .keynote { flex-direction: column; align-items: flex-start; gap: .9rem; }
   .iters li { gap: 1rem; }
   .iters li::before { left: 15px; }
@@ -755,7 +761,7 @@ table tfoot td {
 .frames .frame { margin: 0; }
 .frame-img {
   position: relative; overflow: hidden;
-  border: 1px solid var(--line); border-radius: 4px;
+  border: 1px solid var(--line); border-radius: var(--r-sm);
   background: #0b0d10;
   /* the real photos are portrait phone shots, so portrait is the default —
      cropping them into a landscape box throws most of the device away */
@@ -795,7 +801,7 @@ table tfoot td {
 }
 /* a frame sitting inside an iteration entry */
 .iter-body .frames { margin: 1.1rem 0 .2rem; }
-.iter-body .frame figcaption { font-size: .74rem; }
+.iter-body .frame figcaption { font-size: .72rem; }
 
 /* upload reminder for iGEM */
 .frame-note {
@@ -820,11 +826,6 @@ table tfoot td {
 /* ═══════════ elevation pass ═══════════ */
 
 /* deeper base + a display type scale that commits */
-:root {
-  --bg: #05060a;
-  --line-2: rgba(255, 255, 255, 0.13);
-  --ease-out: cubic-bezier(.16, 1, .3, 1);
-}
 h1 { letter-spacing: -.045em; }
 h2 { letter-spacing: -.038em; }
 ::selection { background: color-mix(in srgb, var(--amber) 30%, transparent); }
@@ -861,7 +862,7 @@ body.leaving { opacity: 0; transition: opacity .32s var(--ease); }
   background: linear-gradient(180deg, rgba(255,255,255,.026), rgba(255,255,255,.006));
   box-shadow: 0 1px 0 rgba(255,255,255,.035) inset, 0 16px 34px -28px rgba(0,0,0,.9);
 }
-.spec-card, .callout, .param, .i2-panel, .keynote { border-radius: 8px; }
+.spec-card, .callout, .param, .i2-panel, .keynote { border-radius: var(--r-lg); }
 
 /* stat strip: bigger figures, tighter */
 .stats dd { font-size: clamp(1.5rem, 2.5vw, 1.95rem); letter-spacing: -.04em; }
@@ -876,7 +877,7 @@ body.leaving { opacity: 0; transition: opacity .32s var(--ease); }
 }
 
 /* photo frames sit on the page instead of floating on it */
-.frame-img { border-radius: 6px; overflow: hidden; }
+.frame-img { border-radius: var(--r-md); overflow: hidden; }
 .frame img { transition: transform .8s var(--ease-out), filter .6s var(--ease); }
 .frame:hover img { transform: scale(1.035); filter: saturate(1) contrast(1.06); }
 
@@ -884,7 +885,7 @@ body.leaving { opacity: 0; transition: opacity .32s var(--ease); }
 .doc-nav a { position: relative; }
 .doc-nav a::before {
   content: ""; position: absolute; left: -.8rem; top: 50%;
-  width: 2px; height: 0; border-radius: 2px; background: var(--amber);
+  width: 2px; height: 0; border-radius: var(--r-xs); background: var(--amber);
   transform: translateY(-50%);
   transition: height .45s var(--ease-out);
 }
@@ -905,7 +906,7 @@ table tbody tr { transition: background .3s var(--ease); }
 ::-webkit-scrollbar { width: 10px; height: 10px; }
 ::-webkit-scrollbar-track { background: transparent; }
 ::-webkit-scrollbar-thumb {
-  background: rgba(255,255,255,.09); border-radius: 6px;
+  background: rgba(255,255,255,.09); border-radius: var(--r-md);
   border: 3px solid transparent; background-clip: content-box;
 }
 ::-webkit-scrollbar-thumb:hover { background: rgba(255,255,255,.18); background-clip: content-box; }
@@ -917,7 +918,7 @@ table tbody tr { transition: background .3s var(--ease); }
 /* ═══════════ OD600 run chart ═══════════ */
 .od-wrap {
   margin: 1.8rem 0 2rem;
-  border-radius: 10px; padding: 1.2rem 1.3rem 1rem;
+  border-radius: var(--r-lg); padding: 1.2rem 1.3rem 1rem;
   background: linear-gradient(180deg, rgba(255,255,255,.03), rgba(255,255,255,.006));
   box-shadow: 0 1px 0 rgba(255,255,255,.045) inset, 0 20px 44px -30px rgba(0,0,0,.9);
   position: relative;
@@ -937,7 +938,7 @@ table tbody tr { transition: background .3s var(--ease); }
 .od-read { display: flex; gap: clamp(1.2rem, 4vw, 2.6rem); }
 .od-read > div { display: flex; flex-direction: column; gap: .3rem; }
 .od-read span {
-  font-family: var(--mono); font-size: .53rem;
+  font-family: var(--mono); font-size: .52rem;
   letter-spacing: .2em; text-transform: uppercase; color: var(--dim);
 }
 .od-read b {
@@ -946,7 +947,7 @@ table tbody tr { transition: background .3s var(--ease); }
 }
 .od-read b.hi { color: var(--amber); }
 .od-read b.ph { font-size: 1.05rem; }
-.od-read em { font-style: normal; color: var(--dim); font-size: .7rem; margin-left: .15em; }
+.od-read em { font-style: normal; color: var(--dim); font-size: .68rem; margin-left: .15em; }
 .od-hint {
   font-family: var(--mono); font-size: .55rem;
   letter-spacing: .18em; text-transform: uppercase; color: var(--faint);
@@ -980,7 +981,7 @@ svg.odc { width: 100%; height: auto; display: block; overflow: visible; touch-ac
 .od-hit { fill: transparent; cursor: crosshair; }
 
 .od-note {
-  font-size: .76rem; line-height: 1.6; color: var(--faint);
+  font-size: .78rem; line-height: 1.6; color: var(--faint);
   padding-top: .7rem; margin: 0;
 }
 
@@ -1024,7 +1025,7 @@ a.xref-broken::after { content: "[missing figure]"; }
 /* an affordance, so it is discoverable without hovering everything */
 .zoomable::after {
   content: ""; position: absolute; right: .5rem; bottom: .5rem;
-  width: 26px; height: 26px; border-radius: 3px;
+  width: 26px; height: 26px; border-radius: var(--r-xs);
   background: rgba(8,9,11,.66) url("data:image/svg+xml;utf8,\
 <svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' \
 stroke='white' stroke-width='2' stroke-linecap='round'>\
@@ -1053,7 +1054,7 @@ stroke='white' stroke-width='2' stroke-linecap='round'>\
 .lb-fig img {
   min-height: 0; max-height: 78vh; width: auto; max-width: 100%;
   object-fit: contain; margin: 0 auto; display: block;
-  border: 1px solid var(--line); border-radius: 4px;
+  border: 1px solid var(--line); border-radius: var(--r-sm);
   cursor: default;
 }
 .lb-fig figcaption {
@@ -1085,7 +1086,7 @@ stroke='white' stroke-width='2' stroke-linecap='round'>\
   font-family: var(--mono); font-size: .58rem;
   letter-spacing: .17em; text-transform: uppercase;
   color: var(--muted); text-decoration: none;
-  border: 1px solid var(--line); border-radius: 3px;
+  border: 1px solid var(--line); border-radius: var(--r-xs);
   background: rgba(255,255,255,.02);
   pointer-events: auto;      /* the HUD above it is click-through */
   transition: color .25s var(--ease), border-color .25s var(--ease),
@@ -1127,7 +1128,7 @@ stroke='white' stroke-width='2' stroke-linecap='round'>\
   grid-template-areas: "n t" ". s";
   column-gap: .75rem; row-gap: .5rem;
   padding: 1.05rem 1.1rem 1.15rem;
-  border: 1px solid var(--line); border-radius: 5px;
+  border: 1px solid var(--line); border-radius: var(--r-md);
   background: rgba(255,255,255,.015);
   text-decoration: none; color: inherit;
   transition: border-color .3s var(--ease), background .3s var(--ease),
@@ -1145,7 +1146,7 @@ stroke='white' stroke-width='2' stroke-linecap='round'>\
 }
 .map-t {
   grid-area: t;
-  font-size: .93rem; font-weight: 600; line-height: 1.3;
+  font-size: .92rem; font-weight: 600; line-height: 1.3;
   letter-spacing: -.012em;
 }
 .map-sub {
@@ -1153,7 +1154,7 @@ stroke='white' stroke-width='2' stroke-linecap='round'>\
   display: flex; flex-direction: column; gap: .28rem;
 }
 .map-sub > span {
-  font-size: .73rem; line-height: 1.45; color: var(--dim);
+  font-size: .72rem; line-height: 1.45; color: var(--dim);
   padding-left: .72rem; position: relative;
 }
 .map-sub > span::before {
@@ -1207,3 +1208,32 @@ stroke='white' stroke-width='2' stroke-linecap='round'>\
 .legal p { margin: 0 0 .3rem; }
 .legal a { color: var(--dim); }
 .legal a:hover { color: var(--amber); }
+
+/* ---- chart events ---- */
+/* Week 22's own next-step was "plot this trace with the pump-death event
+   annotated. It is the hardware page's headline figure." This is that. */
+.od-event rect { fill: rgba(255, 95, 74, .13); }
+.od-event line { stroke: #ff5f4a; stroke-width: 1.4; stroke-dasharray: 4 3; }
+.od-event text {
+  fill: #ff5f4a; font-family: var(--mono); font-size: 11px;
+  letter-spacing: .12em; text-transform: uppercase;
+}
+body.doc-light .od-event rect { fill: rgba(193, 57, 42, .10); }
+body.doc-light .od-event line { stroke: #c1392a; }
+body.doc-light .od-event text { fill: #c1392a; }
+
+
+/* A passage describing a procedure that has not been run yet. Marked so a
+   reader can never mistake a planned method for a reported result — the page
+   used to narrate this calibration in the past tense with every number blank. */
+.planned {
+  border-left: 2px solid var(--amber-deep);
+  padding: .85rem 1.1rem; margin: 1.2rem 0;
+  background: rgba(255, 255, 255, .017);
+  border-radius: var(--r-xs);
+}
+.planned b {
+  display: block; margin-bottom: .35rem;
+  font-family: var(--mono); font-size: .6rem; letter-spacing: .16em;
+  text-transform: uppercase; color: var(--amber);
+}

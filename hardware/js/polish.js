@@ -6,18 +6,83 @@
 (function () {
   const reduced = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
 
+  /* ---------- reach helper ----------
+     Runs fn(el) the first time the reader reaches el. Nothing here may depend
+     on IntersectionObserver alone: it is not delivered in every embedding, and
+     an effect that hides something until it fires would hide it forever. So the
+     observer is backed by a scroll-position sweep that reaches the same
+     conclusion, and both are idempotent. */
+  function onReach(list, fn, opts) {
+    const els = Array.prototype.slice.call(list);
+    if (!els.length) return;
+    if (reduced || !("IntersectionObserver" in window)) { els.forEach(fn); return; }
+    const done = new WeakSet();
+    let pending = els.length;
+    const fire = function (el) {
+      if (done.has(el)) return;
+      done.add(el); pending--; fn(el);
+    };
+    const io = new IntersectionObserver(function (entries) {
+      entries.forEach(function (e) {
+        if (!e.isIntersecting) return;
+        io.unobserve(e.target); fire(e.target);
+      });
+    }, opts || { rootMargin: "0px 0px -12% 0px", threshold: 0.55 });
+    els.forEach(function (el) { io.observe(el); });
+    const sweep = function () {
+      els.forEach(function (el) {
+        if (done.has(el)) return;
+        if (el.getBoundingClientRect().top < window.innerHeight * 0.92) {
+          io.unobserve(el); fire(el);
+        }
+      });
+      if (pending <= 0) window.removeEventListener("scroll", onScroll);
+    };
+    let last = 0, trail = null;
+    const onScroll = function () {
+      const now = Date.now();
+      if (now - last < 80) {
+        // trailing edge: a burst of events must not drop the position the
+        // reader actually stopped at
+        if (!trail) trail = setTimeout(function () { trail = null; last = Date.now(); sweep(); }, 90);
+        return;
+      }
+      last = now;
+      sweep();
+    };
+    window.addEventListener("scroll", onScroll, { passive: true });
+    setTimeout(sweep, 1200);
+  }
+
   /* ---------- reveal on scroll ---------- */
   // Two details worth keeping: the asymmetric rootMargin fires slightly early
   // at the top and slightly late at the bottom, and images are decoded before
   // being revealed so they never appear half-painted.
+  // Prose is deliberately absent from this list. NN/g's research on
+  // scroll-triggered animation is that users resent waiting for text to arrive
+  // — "I hate that it has to load every single section" — and that the effect
+  // belongs on secondary, supporting content instead. A judge reading this
+  // under time pressure is the worst case for it, so paragraphs and list items
+  // are painted immediately and only the furniture around them animates.
   const revealables = document.querySelectorAll(
-    ".sec > p, .sec > .frames, .sec > figure, .sec > .table-scroll," +
+    ".sec > .frames, .sec > figure, .sec > .table-scroll," +
     " .sec > .specgrid, .sec > .circuits, .sec > .headline-stats," +
-    " .sec > .params, .sec > .rel-strip, .sec > ul, .sec > ol," +
+    " .sec > .params, .sec > .rel-strip," +
     " .sec > .callout, .sec > .keynote, .sec > .openitem, .map-card"
   );
+  // Groups cascade their children instead of arriving as one block.
+  const STAGGER = ".headline-stats, .specgrid, .frames, .circuits, .params";
   if (revealables.length && !reduced && "IntersectionObserver" in window) {
-    revealables.forEach(function (el) { el.classList.add("reveal"); });
+    revealables.forEach(function (el) {
+      if (el.matches(STAGGER) && el.children.length > 1) {
+        el.classList.add("stagger");
+        Array.prototype.forEach.call(el.children, function (c, i) {
+          c.style.setProperty("--i", i);
+        });
+      } else {
+        el.classList.add("reveal");
+      }
+    });
     const io = new IntersectionObserver(function (entries) {
       entries.forEach(function (e) {
         if (!e.isIntersecting) return;
@@ -34,11 +99,41 @@
     revealables.forEach(function (el) { io.observe(el); });
 
     // Safety net. This pattern hides content and depends on the observer, the
-    // class and the transition all behaving. After a beat, show everything
-    // regardless — a missed animation is far cheaper than missing content.
-    setTimeout(function () {
-      revealables.forEach(function (el) { el.classList.add("in"); });
-    }, 1800);
+    // class and the transition all behaving, so it can never rely on the
+    // observer alone — a missed animation is far cheaper than missing content.
+    //
+    // It used to show the whole page after 1.8s. That guaranteed the content
+    // but ran every reveal before the reader had scrolled anywhere near it,
+    // so none of them were ever actually seen. Instead, sweep whatever the
+    // reader has reached and keep sweeping on scroll: content is still
+    // guaranteed without the observer, and the animation survives.
+    const sweepReached = function () {
+      let pending = 0;
+      revealables.forEach(function (el) {
+        if (el.classList.contains("in")) return;
+        if (el.getBoundingClientRect().top < window.innerHeight * 1.1) {
+          el.classList.add("in");
+          io.unobserve(el);
+        } else {
+          pending++;
+        }
+      });
+      if (!pending) window.removeEventListener("scroll", onScroll);
+    };
+    let lastSweep = 0, trailSweep = null;
+    const onScroll = function () {
+      const now = Date.now();
+      if (now - lastSweep < 80) {
+        if (!trailSweep) trailSweep = setTimeout(function () {
+          trailSweep = null; lastSweep = Date.now(); sweepReached();
+        }, 90);
+        return;
+      }
+      lastSweep = now;
+      sweepReached();
+    };
+    setTimeout(sweepReached, 1800);
+    window.addEventListener("scroll", onScroll, { passive: true });
   } else {
     revealables.forEach(function (el) { el.classList.add("reveal", "in"); });
   }
@@ -62,22 +157,8 @@
   }
 
   /* ---------- marker-pen sweeps ---------- */
-  const marks = document.querySelectorAll(".mark");
-  if (marks.length) {
-    if (reduced || !("IntersectionObserver" in window)) {
-      marks.forEach(function (m) { m.classList.add("in"); });
-    } else {
-      const mo = new IntersectionObserver(function (entries) {
-        entries.forEach(function (e) {
-          if (!e.isIntersecting) return;
-          e.target.classList.add("in");
-          mo.unobserve(e.target);
-        });
-      }, { rootMargin: "0px 0px -18% 0px", threshold: 0.9 });
-      marks.forEach(function (m) { mo.observe(m); });
-      setTimeout(function () { marks.forEach(function (m) { m.classList.add("in"); }); }, 2600);
-    }
-  }
+  onReach(document.querySelectorAll(".mark, .ann"),
+          function (m) { m.classList.add("in"); });
 
   /* ---------- scanline scrollspy ---------- */
   // A thin band across the middle of the viewport marks exactly one section
@@ -152,6 +233,51 @@
 
     const search = tools.querySelector(".bom-search");
     const count = tools.querySelector(".bom-count");
+
+    /* ---- how much of this bill of materials actually exists ----
+       The affordability claim rests on this table, and almost every cell in it
+       is still a blank. Rather than print a total of the handful of priced rows
+       — which would read as the cost of the instrument — this states plainly
+       how complete the table is, and totals only what is genuinely filled in.
+       It recomputes from the DOM, so it cannot drift from the table it
+       describes: the day someone types a price in, this moves. */
+    (function summarise() {
+      const rows = Array.prototype.slice.call(table.tBodies[0].rows);
+      let priced = 0, identified = 0, sum = 0;
+      rows.forEach(function (tr) {
+        const cells = tr.cells;
+        if (!cells.length) return;
+        const spec = cells[1] ? cells[1].textContent.replace(/[\s—–-]/g, "") : "";
+        if (spec.length > 2) identified++;
+        const totalCell = cells[cells.length - 1 - (cells.length > 5 ? 1 : 0)];
+        const raw = totalCell ? totalCell.textContent.replace(/[^0-9.]/g, "") : "";
+        if (raw && !totalCell.querySelector(".pending")) { priced++; sum += parseFloat(raw); }
+      });
+      const pct = Math.round(priced / Math.max(1, rows.length) * 100);
+      const bar = document.createElement("div");
+      bar.className = "bom-summary";
+      bar.innerHTML =
+        '<div class="bom-meter"><span style="width:' + pct + '%"></span></div>' +
+        '<div class="bom-facts">' +
+          "<div><dt>Line items</dt><dd>" + rows.length + "</dd></div>" +
+          "<div><dt>With a part number</dt><dd>" + identified + " / " + rows.length + "</dd></div>" +
+          "<div><dt>Costed</dt><dd>" + priced + " / " + rows.length + "</dd></div>" +
+          "<div><dt>Priced so far</dt><dd>" +
+            (priced ? sum.toFixed(2) : "&mdash;") + "</dd></div>" +
+        "</div>" +
+        '<p class="bom-note">' + (
+          priced === rows.length
+            ? "Every line is costed, so the figure above is the build cost."
+            : priced === 0
+              ? "No line in this table carries a cost yet, so the instrument has no "
+                + "stated build price. The claim that it is affordable rests on this "
+                + "table being filled in."
+              : "The figure above is the cost of the " + priced + " line"
+                + (priced === 1 ? "" : "s") + " that carry a number, not the cost of "
+                + "the instrument. " + (rows.length - priced) + " lines are still blank."
+        ) + "</p>";
+      wrap.parentNode.insertBefore(bar, wrap);
+    })();
     const empty = document.createElement("div");
     empty.className = "bom-empty";
     empty.hidden = true;
@@ -208,6 +334,20 @@
 
     refresh();
   });
+
+  /* ---------- section heading rules ---------- */
+  // The hairline already existed; it just never moved. It is drawn from a
+  // scaleX(0) start, so this must run — see the html.js guard in the CSS,
+  // which keeps the rule fully drawn when there is no script to draw it.
+  onReach(document.querySelectorAll(".doc .sec > h3"),
+          function (h) { h.classList.add("in"); }, { rootMargin: "0px 0px -15% 0px", threshold: 1 });
+
+  /* ---------- counting figures ---------- */
+  // Folded into the single count-up further down. There were two of these and
+  // both claimed .headline-stats b, so two animations wrote the same text on
+  // the same frame.
+
+
 })();
 
 /* ---------- count-up figures ---------- */
@@ -215,7 +355,8 @@
 // numerics animate — "All", "0.8–0.9" and similar are left exactly as written.
 (function () {
   const reduced = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
-  const targets = document.querySelectorAll(".hero-stats dd, .headline-stats b");
+  const targets = document.querySelectorAll(
+    ".hero-stats dd, .headline-stats b, .keynote-fig, .score-fig, .stats dd");
   if (!targets.length || !("IntersectionObserver" in window)) return;
 
   const jobs = [];
@@ -233,7 +374,10 @@
   if (reduced) return;   // leave the final values in place
 
   function settle(job) {
+    if (job.settled) return;
+    job.settled = true;
     job.el.innerHTML = job.to.toFixed(job.dp) + job.unit;
+    job.el.classList.remove("counting");
   }
 
   const io = new IntersectionObserver(function (entries) {
@@ -243,17 +387,24 @@
       io.unobserve(e.target);
       if (!job || job.done) return;
       job.done = true;
+      job.el.classList.add("counting");
       // Zero it only once the animation is actually about to run. Setting it
       // to 0 upfront would leave the reader looking at 0 forever if rAF never
       // fires — a background tab, a stalled frame loop, anything.
       const dur = 1100, t0 = performance.now();
       (function tick(now) {
+        if (job.settled) return;
         const u = Math.min(1, (now - t0) / dur);
         const eased = 1 - Math.pow(1 - u, 3);
         job.el.innerHTML = (job.to * eased).toFixed(job.dp) + job.unit;
         if (u < 1) requestAnimationFrame(tick);
         else settle(job);
       })(t0);
+      // rAF stops being delivered in a background tab and in some embedded
+      // views, and this one had no way back from that: the number was simply
+      // left wherever the last frame put it. The hub hero was caught reading
+      // "0 instruments" and "48h longest run" against a real 3 and 336.
+      setTimeout(function () { settle(job); }, dur + 400);
     });
   }, { threshold: 0.6 });
 
@@ -271,11 +422,16 @@
 (function () {
   if (!document.querySelector(".doc") && !document.querySelector(".decks")) return;
 
+  // Declared here like the three sibling IIFEs in this file. Without it the
+  // reference below threw a ReferenceError, which aborted the handler and
+  // silently broke every in-page jump the palette offers.
+  const reduced = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+
   const here = location.pathname;
   const rel = /\/(photometer|diopal|bioreactor)\//.test(here) ? "../" : "";
   const PAGES = [
     { label: "Hardware hub", sub: "All three instruments", href: rel + "index.html" },
-    { label: "V4 Photometer", sub: "In-line OD600", href: rel + "photometer/index.html" },
+    { label: "Photometer", sub: "In-line OD600", href: rel + "photometer/index.html" },
     { label: "DiOPAL", sub: "Dual-wavelength LED array", href: rel + "diopal/index.html" },
     { label: "Bioreactor", sub: "Perfusion loop", href: rel + "bioreactor/index.html" },
   ];
@@ -484,4 +640,5 @@
   requestAnimationFrame(function () { requestAnimationFrame(update); });
   addEventListener("scroll", update, { passive: true });
   addEventListener("resize", update, { passive: true });
+
 })();

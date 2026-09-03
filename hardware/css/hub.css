@@ -1,26 +1,3 @@
-:root {
-  /* deeper, cooler base — the old near-black read flat */
-  --bg: #05060a;
-  --bg-2: #090b11;
-  --fg: #f4f7fa;
-  --muted: #99a2af;
-  --dim: #78818f;
-  --faint: #363c45;
-  --line: rgba(255, 255, 255, 0.075);
-  --line-2: rgba(255, 255, 255, 0.13);
-
-  --accent: #d3dae3;
-  --c-photometer: #ffa23d;
-  --c-diopal: #3ddc8b;
-  --c-reactor: #5aa9ff;
-
-  --sans: -apple-system, "SF Pro Display", BlinkMacSystemFont, "Inter",
-          "Segoe UI", Roboto, Helvetica, sans-serif;
-  --mono: ui-monospace, "SFMono-Regular", Menlo, Consolas, monospace;
-  --ease: cubic-bezier(.22, .61, .36, 1);
-  --ease-out: cubic-bezier(.16, 1, .3, 1);
-}
-
 * { box-sizing: border-box; }
 
 html { scroll-behavior: smooth; }
@@ -29,13 +6,28 @@ body {
   margin: 0; background: var(--bg); color: var(--fg);
   font-family: var(--sans);
   -webkit-font-smoothing: antialiased; text-rendering: optimizeLegibility;
-  overflow-x: hidden;
+  /* `clip`, not `hidden`. Per spec a non-visible value on one axis forces the
+     other to `auto`, so `overflow-x: hidden` here quietly made <body> a scroll
+     container: scroll events then fire on body and never reach window, which
+     kills every window-level scroll listener on the page — including the
+     fallbacks that fill the reveals and the marks when IntersectionObserver
+     does not deliver. `clip` blocks the same overflow without creating a
+     scroll box. */
+  overflow-x: clip;
   font-feature-settings: "tnum" 1, "ss01" 1, "cv11" 1;
 }
 /* Only the *exit* is animated. Hiding <body> and relying on an animation to
    bring it back means any interruption leaves a blank page — the fade-out is
    safe because it is user-initiated and immediately followed by navigation. */
 body.leaving { opacity: 0; transition: opacity .32s var(--ease); }
+/* There is deliberately no matching entrance. A page-in animation on the body
+   is a blank page waiting to happen: without a fill mode it holds its own
+   first frame for as long as the animation clock is stalled — a background
+   tab, an embedded view — and that first frame is opacity 0. Measured: every
+   one of the five pages sat at 0. The exit fade is safe because its failure
+   state is "the page you are leaving stays visible"; an entrance's failure
+   state is "the page you arrived at is blank", and no amount of polish is
+   worth that trade. */
 
 /* display type commits to a scale — big, tight, and confident */
 h1, h2, h3 { margin: 0; font-weight: 600; }
@@ -84,7 +76,7 @@ a { color: inherit; text-decoration: none; }
   position: fixed; top: 0; left: 0; right: 0; z-index: 50;
   display: flex; justify-content: space-between; align-items: center;
   padding: 22px clamp(18px, 3.4vw, 40px);
-  font-family: var(--mono); font-size: .625rem;
+  font-family: var(--mono); font-size: .62rem;
   letter-spacing: .24em; text-transform: uppercase;
 }
 .topbar::after {
@@ -99,7 +91,7 @@ a { color: inherit; text-decoration: none; }
 .topbar-meta span { color: var(--faint); margin: 0 .35em; }
 
 .eyebrow {
-  font-family: var(--mono); font-size: .625rem;
+  font-family: var(--mono); font-size: .62rem;
   letter-spacing: .32em; text-transform: uppercase;
   color: var(--accent); margin-bottom: 1.6rem;
   display: flex; align-items: center; gap: .8rem; justify-content: center;
@@ -142,7 +134,7 @@ a { color: inherit; text-decoration: none; }
 }
 .hero-stats div { text-align: center; }
 .hero-stats dt {
-  font-family: var(--mono); font-size: .555rem;
+  font-family: var(--mono); font-size: .55rem;
   letter-spacing: .2em; text-transform: uppercase;
   color: var(--dim); margin-bottom: .55rem;
 }
@@ -154,7 +146,7 @@ a { color: inherit; text-decoration: none; }
 
 .scroll-cue {
   margin-top: 3.2rem;
-  font-family: var(--mono); font-size: .585rem;
+  font-family: var(--mono); font-size: .58rem;
   letter-spacing: .32em; text-transform: uppercase; color: var(--dim);
 }
 .scroll-cue::after {
@@ -180,7 +172,7 @@ a { color: inherit; text-decoration: none; }
   --c: var(--accent);
   --mx: 50%; --my: 40%;      /* pointer position, set by hub.js */
   position: relative; display: flex; flex-direction: column;
-  border-radius: 10px;
+  border-radius: var(--r-lg);
   background:
     linear-gradient(180deg, rgba(255,255,255,.028), rgba(255,255,255,.008));
   isolation: isolate; overflow: hidden;
@@ -225,8 +217,15 @@ a.deck:hover::after, a.deck:focus-visible::after { opacity: 1; }
 .deck-b { --c: var(--c-diopal); }
 .deck-c { --c: var(--c-reactor); }
 
+a.deck:focus-visible {
+  outline: 2px solid var(--c);
+  outline-offset: 4px;
+}
+
+/* Hover and keyboard focus were styled identically, and both dropped the ring.
+   A card lighting up the same way under a pointer and under Tab gives the
+   keyboard no signal of its own, so focus keeps the ring and hover does not. */
 a.deck:hover, a.deck:focus-visible {
-  outline: none;
   background: linear-gradient(180deg, rgba(255,255,255,.05), rgba(255,255,255,.012));
   box-shadow:
     0 1px 0 rgba(255,255,255,.07) inset,
@@ -237,6 +236,14 @@ a.deck:hover, a.deck:focus-visible {
 .deck-media {
   position: relative; aspect-ratio: 4 / 3;
   display: grid; place-items: center; padding: 1.1rem;
+  /* Its own 3D context. The card above declares transform-style: preserve-3d,
+     but it also sets overflow: hidden for the rounded corners, and a non-visible
+     overflow forces the used value back to flat. That flattened the whole chain,
+     so the render's rotateY collapsed to a horizontal squash and translateZ did
+     nothing at all. Perspective here applies to this element's own children, so
+     the render turns properly regardless of what the card does. */
+  perspective: 900px;
+  perspective-origin: 50% 45%;
   background:
     radial-gradient(58% 58% at 50% 50%,
       color-mix(in srgb, var(--c) 13%, transparent), transparent 70%);
@@ -253,12 +260,50 @@ a.deck:hover, a.deck:focus-visible {
   width: 100%; height: 100%; object-fit: contain; display: block;
   filter: drop-shadow(0 20px 30px rgba(0, 0, 0, .65));
   transform: translateZ(38px);
-  transition: transform .6s var(--ease-out);
+  transition: transform .75s var(--ease-out);
 }
-a.deck:hover .deck-media img { transform: translateZ(58px) scale(1.05); }
+/* A full turn on hover. Driven from :hover rather than per-frame JS, so it does
+   not depend on the pointer block in hub.js (gated behind hover: hover and
+   prefers-reduced-motion) or on requestAnimationFrame running.
+
+   These are flat renders, so the card passes through edge-on at 90 and 270
+   degrees and shows the image mirrored across the back half of the turn. That
+   is inherent to spinning a picture rather than a model, and it is what was
+   asked for. Timing is linear — easing a full rotation makes the loop point
+   visibly stutter. */
+@keyframes deck-spin {
+  from { transform: translateZ(58px) scale(1.05) rotateY(0deg); }
+  to   { transform: translateZ(58px) scale(1.05) rotateY(360deg); }
+}
+a.deck:hover .deck-media img,
+a.deck:focus-visible .deck-media img {
+  transform: translateZ(58px) scale(1.05);
+  animation: deck-spin 4s linear infinite;
+}
+/* Once the real model is up, the render underneath is redundant — it was only
+   ever the poster while the geometry loaded, and the fallback if WebGL is off. */
+/* The hub is neutral, so a mark here falls back to --accent — a pale grey that
+   reads as a text selection rather than a pen. These two questions are each
+   answered by a specific instrument, so they are marked in its colour. */
+.mark.mk-a { --mk: var(--c-photometer); }
+.mark.mk-b { --mk: var(--c-diopal); }
+
+.deck-gl {
+  position: absolute; inset: 0; width: 100%; height: 100%;
+  display: block; opacity: 0; transition: opacity .6s var(--ease-out);
+  z-index: 1;
+}
+.deck-media.gl-ready .deck-gl { opacity: 1; }
+.deck-media.gl-ready img { opacity: 0; transition: opacity .5s var(--ease-out); }
+.deck-media.gl-ready img,
+.deck-media.gl-ready::after { pointer-events: none; }
+@media (prefers-reduced-motion: reduce) {
+  a.deck:hover .deck-media img,
+  a.deck:focus-visible .deck-media img { animation: none; }
+}
 
 .deck-placeholder {
-  width: 60%; aspect-ratio: 1; border-radius: 10px;
+  width: 60%; aspect-ratio: 1; border-radius: var(--r-lg);
   border: 1px dashed rgba(255, 255, 255, .12);
   background: repeating-linear-gradient(-45deg,
     rgba(255, 255, 255, .014) 0 9px, transparent 9px 18px);
@@ -279,15 +324,18 @@ a.deck:hover .deck-media img { transform: translateZ(58px) scale(1.05); }
 }
 .deck h2 { font-size: 1.6rem; margin-bottom: .4rem; letter-spacing: -.04em; }
 .deck-role {
-  font-family: var(--mono); font-size: .585rem;
+  font-family: var(--mono); font-size: .58rem;
   letter-spacing: .2em; text-transform: uppercase;
-  color: var(--dim); margin-bottom: 1.1rem;
+  /* --dim is measured against the page ground, and each card sits on its own
+     coloured glow, which lifts it: 4.2:1 rather than the 5.1 the token is
+     tuned for. This is the smallest type on the card, so it takes --muted. */
+  color: var(--muted); margin-bottom: 1.1rem;
 }
-.deck p { color: var(--muted); font-size: .885rem; line-height: 1.78; margin: 0 0 1.3rem; }
+.deck p { color: var(--muted); font-size: .89rem; line-height: 1.78; margin: 0 0 1.3rem; }
 
 .deck-facts { list-style: none; margin: 0 0 1.5rem; padding: 0; display: grid; gap: .45rem; }
 .deck-facts li {
-  font-size: .795rem; color: var(--dim);
+  font-size: .8rem; color: var(--dim);
   padding-left: .95rem; position: relative;
 }
 .deck-facts li::before {
@@ -327,7 +375,7 @@ a.deck:hover .deck-go i { transform: translateX(6px); }
 .rel-node {
   --c: var(--accent);
   flex: 1; min-width: 220px; position: relative;
-  border-radius: 8px; padding: 1.3rem 1.4rem;
+  border-radius: var(--r-lg); padding: 1.3rem 1.4rem;
   background: linear-gradient(180deg, rgba(255,255,255,.028), rgba(255,255,255,.006));
   box-shadow: 0 1px 0 rgba(255,255,255,.04) inset, 0 16px 34px -26px rgba(0,0,0,.9);
 }
@@ -343,18 +391,18 @@ a.deck:hover .deck-go i { transform: translateX(6px); }
 .rel-node.b { --c: var(--c-diopal); }
 .rel-node.c { --c: var(--c-reactor); }
 .rel-tag {
-  display: block; font-family: var(--mono); font-size: .545rem;
+  display: block; font-family: var(--mono); font-size: .55rem;
   letter-spacing: .22em; color: var(--c); margin-bottom: .55rem;
 }
 .rel-node b { display: block; font-size: 1.02rem; font-weight: 600; margin-bottom: .35rem; letter-spacing: -.02em; }
-.rel-node p { margin: 0; font-size: .795rem; line-height: 1.62; color: var(--dim); }
+.rel-node p { margin: 0; font-size: .8rem; line-height: 1.62; color: var(--dim); }
 
 .rel-link {
   display: flex; flex-direction: column; align-items: center; justify-content: center;
   padding: 0 1.2rem; min-width: 130px;
 }
 .rel-link span {
-  font-family: var(--mono); font-size: .535rem;
+  font-family: var(--mono); font-size: .52rem;
   letter-spacing: .2em; text-transform: uppercase; color: var(--dim);
   margin-bottom: .6rem;
 }
@@ -365,7 +413,7 @@ a.deck:hover .deck-go i { transform: translateX(6px); }
 /* a pulse travelling the link, so the direction of flow is unmistakable */
 .rel-line::before {
   content: ""; position: absolute; top: -1.5px; left: 0;
-  width: 26%; height: 4px; border-radius: 3px;
+  width: 26%; height: 4px; border-radius: var(--r-xs);
   background: linear-gradient(90deg, transparent, #fff, transparent);
   opacity: .55; animation: flow 3.4s var(--ease) infinite;
 }
@@ -398,7 +446,7 @@ a.deck:hover .deck-go i { transform: translateX(6px); }
   padding: 2.6rem clamp(18px, 4vw, 44px); text-align: center;
 }
 .outro-meta {
-  font-family: var(--mono); font-size: .565rem;
+  font-family: var(--mono); font-size: .56rem;
   letter-spacing: .26em; text-transform: uppercase; color: var(--faint);
 }
 
@@ -550,4 +598,196 @@ a.deck:hover, a.deck:focus-visible {
 
 @media (prefers-reduced-motion: reduce) {
   .deck, .deck .deck-media::before { transition: none; }
+}
+
+/* The photometer and the reactor have not run together yet, so the link between
+   them is drawn as intent rather than as an existing connection. */
+.rel-line.dashed {
+  background: none;
+  border-top: 1px dashed color-mix(in srgb, var(--accent) 42%, transparent);
+}
+.rel-caveat {
+  margin-top: 1rem; padding-left: .9rem;
+  border-left: 2px solid color-mix(in srgb, var(--c-photometer) 45%, transparent);
+  font-size: .84rem; line-height: 1.6; color: var(--dim);
+}
+
+/* ---- build lanes ------------------------------------------------------- */
+/* The hub presented three instruments as three separate things that happen to
+   share a team. They were built by the same few people in overlapping weeks,
+   and two of the three exist because of the third. That is a shape, and it is
+   easier to show than to assert. */
+.lanes-head { margin: 2.4rem 0 1rem; }
+.lanes-head h3 { margin: 0 0 .3rem; font-size: 1.02rem; font-weight: 600; letter-spacing: -.015em; }
+.lanes-head p { margin: 0; font-size: .84rem; color: var(--dim); }
+
+/* ---- the panel ----
+   The chart used to float on the page as seven bars and a row of numbers. It
+   is a readout, so it is framed as one: a ruled header, week gridlines behind
+   the rows, a column cursor that follows the pointer, and a readout line that
+   names whatever the pointer is on.
+
+   --nx is the track inset: the row label on the left and the span label on the
+   right sit outside the plotted area, and the grid, cursor and scale all have
+   to line up with the track between them. One variable so they cannot drift. */
+.lanes-panel {
+  --nx-l: 9.5rem; --nx-r: 4.5rem;
+  position: relative; margin-top: 1rem;
+  border: 1px solid var(--line);
+  border-radius: var(--r-lg);
+  padding: 0 1.15rem 1.05rem;
+  background:
+    radial-gradient(120% 100% at 50% 0%, rgba(255,255,255,.028), transparent 70%),
+    rgba(255, 255, 255, .012);
+}
+/* corner ticks, the way a scope frames its screen */
+.lanes-panel::before, .lanes-panel::after {
+  content: ""; position: absolute; width: 12px; height: 12px; pointer-events: none;
+  border-color: color-mix(in srgb, var(--accent) 42%, transparent);
+}
+.lanes-panel::before { top: -1px; left: -1px; border-top: 1px solid; border-left: 1px solid;
+  border-top-left-radius: 10px; }
+.lanes-panel::after { bottom: -1px; right: -1px; border-bottom: 1px solid; border-right: 1px solid;
+  border-bottom-right-radius: 10px; }
+
+.lanes-rule {
+  display: flex; justify-content: space-between; align-items: baseline;
+  padding: .7rem 0 .8rem; margin-bottom: .55rem;
+  border-bottom: 1px solid var(--line);
+  font-family: var(--mono); font-size: .52rem; letter-spacing: .2em;
+  text-transform: uppercase; color: var(--dim);
+}
+.lanes-rule-r { color: var(--faint); letter-spacing: .14em; }
+
+.lanes { position: relative; display: flex; flex-direction: column; gap: .35rem; }
+
+/* one cell per week, behind the rows */
+.lanes-grid {
+  position: absolute; left: var(--nx-l); right: var(--nx-r);
+  top: 1.1rem; bottom: 0; z-index: 0; pointer-events: none;
+  display: grid; grid-auto-flow: column; grid-auto-columns: 1fr;
+}
+.lanes-grid i { border-left: 1px solid rgba(255, 255, 255, .035); }
+.lanes-grid i:first-child { border-left-color: rgba(255, 255, 255, .07); }
+
+/* the column under the pointer */
+.lanes-cursor {
+  position: absolute; top: 1.1rem; bottom: 0; z-index: 0;
+  left: var(--nx-l);
+  width: calc((100% - var(--nx-l) - var(--nx-r)) / var(--n));
+  transform: translateX(calc(var(--i, 0) * 100%));
+  background: linear-gradient(rgba(255,255,255,.075), rgba(255,255,255,.02));
+  border-left: 1px solid rgba(255, 255, 255, .16);
+  border-right: 1px solid rgba(255, 255, 255, .06);
+  opacity: 0; pointer-events: none;
+  transition: transform .13s var(--ease-out), opacity .18s var(--ease-out);
+}
+.lanes-panel.tracking .lanes-cursor { opacity: 1; }
+
+.lanes-scale {
+  position: relative; z-index: 1;
+  display: grid; grid-auto-flow: column; grid-auto-columns: 1fr;
+  margin-left: var(--nx-l); margin-right: var(--nx-r); gap: 0;
+  font-family: var(--mono); font-size: .48rem; letter-spacing: .06em;
+  color: var(--faint); text-align: center;
+}
+.lanes-scale span { transition: color .16s var(--ease-out); }
+.lanes-scale span.on { color: var(--fg); }
+
+/* what the pointer is on, named */
+.lanes-readout {
+  display: flex; align-items: baseline; gap: .7rem;
+  margin: .85rem 0 0; padding-top: .7rem;
+  border-top: 1px solid var(--line);
+  font-size: .78rem; min-height: 1.2em;
+}
+.lanes-readout-w {
+  font-family: var(--mono); font-size: .58rem; letter-spacing: .16em;
+  color: var(--c, var(--accent)); white-space: nowrap;
+}
+.lanes-readout-t { color: var(--dim); }
+.lanes-panel.reading .lanes-readout-t { color: var(--fg); }
+.lane {
+  position: relative; z-index: 1;
+  display: grid; grid-template-columns: var(--nx-l) 1fr var(--nx-r);
+  align-items: center; gap: 0;
+  transition: opacity .18s var(--ease-out);
+}
+/* pointing at one row quietens the others without hiding them */
+.lanes-panel.tracking .lane { opacity: .48; }
+.lanes-panel.tracking .lane.on,
+.lanes-panel:not(.tracking) .lane { opacity: 1; }
+.lane-name {
+  font-family: var(--mono); font-size: .58rem; letter-spacing: .12em;
+  text-transform: uppercase; color: var(--dim); padding-right: .8rem;
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+.lane-name a { color: var(--c); border-bottom: 1px solid transparent; }
+.lane-name a:hover { border-bottom-color: var(--c); }
+.lane-track { position: relative; height: 20px; }
+.lane-track::before {
+  content: ""; position: absolute; left: 0; right: 0; top: 50%;
+  height: 1px; background: rgba(255, 255, 255, .07);
+}
+.lane-run {
+  position: absolute; top: 50%; height: 5px;
+  left: calc(var(--a) / var(--n) * 100%);
+  width: calc(var(--b) / var(--n) * 100%);
+  border-radius: var(--r-xs);
+  background: linear-gradient(90deg,
+    color-mix(in srgb, var(--c) 34%, transparent),
+    color-mix(in srgb, var(--c) 16%, transparent));
+  transform: translateY(-50%);
+  transform-origin: left center;
+}
+/* Draw-in with no way to leave the chart blank.
+ 
+   The resting style is the finished one — a bar with no class is fully drawn —
+   and `in` only adds an animation over the top. There is deliberately no
+   animation-delay and no fill mode: `both` plus a delay parks an element on its
+   invisible first frame, and any environment that throttles animation clocks
+   (a background tab, an embedded view) leaves it parked there. The stagger is
+   done by adding the class one row at a time instead, so every animation starts
+   the moment its element is told to run, and a frozen clock costs the animation
+   rather than the chart.
+ 
+   The dots do not animate at all. Fading them in needs the same delay the bars
+   avoid, and a bar sweeping out from under them already reads as a draw. */
+.lane.in .lane-run { animation: lane-grow .8s var(--ease-out-quart); }
+@keyframes lane-grow {
+  from { transform: translateY(-50%) scaleX(0); }
+  to   { transform: translateY(-50%) scaleX(1); }
+}
+.lane-dot {
+  position: absolute; top: 50%; width: 11px; height: 11px; margin: -5.5px 0 0 -1px;
+  left: calc((var(--a) + .5) / var(--n) * 100%);
+  border-radius: var(--r-xs); background: var(--c);
+  transition: transform .18s var(--ease), box-shadow .18s var(--ease);
+}
+.lane-dot:hover, .lane-dot:focus-visible {
+  transform: scale(1.5); z-index: 2;
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--c) 30%, transparent),
+              0 0 16px color-mix(in srgb, var(--c) 55%, transparent);
+}
+.lane-span {
+  font-family: var(--mono); font-size: .5rem; letter-spacing: .1em;
+  color: var(--faint); text-align: right;
+}
+.lane[data-mark="BR"] { --c: var(--c-reactor); }
+.lane[data-mark="PH"] { --c: var(--c-photometer); }
+.lane[data-mark="LP"] { --c: var(--c-diopal); }
+.lane[data-mark="HB"] { --c: #c48bff; }
+.lane[data-mark="IS"] { --c: #ff6fb5; }
+.lane[data-mark="FP"] { --c: #4ad9d9; }
+.lane[data-mark="--"] { --c: #8e9bab; }
+@media (max-width: 760px) {
+  .lanes-panel { --nx-l: 6.5rem; --nx-r: 0rem; padding: 0 .8rem .85rem; }
+  .lane { grid-template-columns: var(--nx-l) 1fr; }
+  .lane-span { display: none; }
+  .lanes-scale { font-size: .42rem; }
+  .lanes-rule { letter-spacing: .12em; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .lane.in .lane-run { animation: none; }
+  .lanes-cursor { transition: none; }
 }

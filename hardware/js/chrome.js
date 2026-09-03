@@ -18,6 +18,10 @@
 
   if (reduced) return;
 
+  // Guarded, unlike before: without this the handler still swallowed the click
+  // and sat on it for 300ms for readers who had asked for no motion.
+  if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+
   document.addEventListener("click", function (e) {
     const a = e.target.closest ? e.target.closest("a[href]") : null;
     if (!a) return;

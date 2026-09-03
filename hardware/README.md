@@ -20,9 +20,9 @@ hardware/
   css/hub.css         hub-only styling
   js/hub.js           reveal-on-scroll
   img/                card renders, captured from each instrument's own scene
-  photometer/         V4 Photometer — teardown + technical record
+  photometer/         Photometer — teardown + technical record
   diopal/             DiOPAL — teardown + technical record
-  (bioreactor/)       to come
+  bioreactor/         Bioreactor — teardown + technical record
 ```
 
 Each instrument folder is self-contained: its own `index.html`, `css`, `js`,
@@ -36,7 +36,7 @@ colour, set once as a CSS variable and used for its deck accent, rule and hover:
 
 | Instrument | Colour |
 |---|---|
-| V4 Photometer | `--c-photometer: #ffa23d` (amber — the LED it runs on) |
+| Photometer | `--c-photometer: #ffa23d` (amber — the LED it runs on) |
 | DiOPAL | `--c-diopal: #3ddc8b` (green — the wavelength that induces) |
 | Bioreactor | `--c-reactor: #5aa9ff` (reserved) |
 
@@ -116,8 +116,11 @@ Source of truth is the deck. To rebuild after the team edits it:
 3. `python3 tools/parse_notebook.py <unpacked-deck>` — reads entry metadata
    (week, dates, instrument mark, title) out of the slide XML by layout
    position, since the shapes carry no semantic names.
-4. `python3 tools/build_notebook.py` — writes `notebook/index.html` and
-   `tools/_hub-band.html`, which is pasted into `index.html`.
+4. `python3 tools/build_notebook.py` — writes `notebook/index.html`,
+   `tools/_hub-band.html` and `tools/_lanes.html`, which are pasted into
+   `index.html`.
+5. `python3 tools/stamp_assets.py` — **run this last, and before every commit
+   that touches CSS or JS.** See below.
 
 **Watch the artifact size.** iGEM's runner rejects the artifact upload with a
 bare `413 Request Entity Too Large`, and the limit is lower than it looks:
@@ -138,6 +141,36 @@ done
 The 98 photo slots in the notebook are still empty. Once real photographs go in,
 palette PNG stops being the right format for those pages — switch them to JPEG
 or WebP, which handle photographs far better, and re-measure.
+
+## Cache busting
+
+Pages serves HTML and its stylesheets with the same ten-minute lifetime and no
+version in the URL. For the length of that window a browser can hold new HTML
+beside a stylesheet it cached before the deploy, and the page half-works: new
+markup with no rules for it. It looks like a broken deploy and is not one — it
+cost us an hour once already, with "Back to hardware" rendering as a bare blue
+link because the cached CSS had never heard of `.backbtn`.
+
+`tools/stamp_assets.py` appends a content hash to every local CSS and JS
+reference, so updated HTML points at a URL the browser has never seen and the
+two cannot be out of step. The hash is of the file's bytes, so re-running it
+changes nothing unless an asset actually changed.
+
+**Run it last**, after `build_notebook.py` — that regenerates `notebook/index.html`
+and would otherwise drop its stamps:
+
+```sh
+python3 tools/build_notebook.py && python3 tools/stamp_assets.py
+```
+
+It is deliberately not wired into `.gitlab-ci.yml`; that file is left alone.
+
+## What is not published
+
+`dev/` sits outside `hardware/` and never reaches the artifact. The CI copies
+`hardware/` wholesale, so a scratch page left inside it would be deployed
+without the licence notice and repository link that judging requires on every
+page. Build harnesses belong in `dev/`. See `dev/README.md`.
 
 ## Adding to the iGEM wiki
 

@@ -7,159 +7,756 @@
  * a reader can follow one instrument down the page by colour alone.
  */
 
-:root {
-  --c-photometer: #ffa23d;
-  --c-diopal: #3ddc8b;
-  --c-reactor: #5aa9ff;
-  --c-other: #8e9bab;
-}
-
 /* per-entry accent, keyed off the notebook's own instrument marks */
 [data-mark="PH"] { --c: var(--c-photometer); }
 [data-mark="LP"] { --c: var(--c-diopal); }
 [data-mark="BR"] { --c: var(--c-reactor); }
-[data-mark="HB"], [data-mark="IS"], [data-mark="FP"], [data-mark="--"] { --c: var(--c-other); }
+[data-mark="HB"] { --c: var(--c-humidity); }
+[data-mark="IS"] { --c: var(--c-imaging); }
+[data-mark="FP"] { --c: var(--c-floating); }
+[data-mark="--"] { --c: var(--c-other); }
 
-/* ══════════════ hub band ══════════════ */
-/* Sits directly under the three instrument cards. It has to read as a
-   different kind of thing than a card, or it gets scanned past as a fourth
-   one — hence the full-bleed rule above it and the timeline as the hook. */
+/* ══════════════ hub band — the ledger ══════════════ */
+/* The band used to be metadata *about* the notebook: a count, a chart, three
+   teaser cards, all in the site's dark theme. Nothing in it was *of* the
+   notebook. It now is the notebook — the same cream stock, dark-green section
+   bars, gold rule, mono field labels and printed page numbers the team's own
+   pages use. The palette is sampled off notebook/pages/p07.png, not invented.
+   No spiral binding, no coffee rings, no handwriting fonts: their notebook is
+   a designed printed form, and faking a battered composition book would be
+   less true to it, not more. */
+
+.nb-zone {
+  --paper:      #faf8f0;
+  --paper-2:    #f7f4ea;
+  --nb-ink:     #26312a;
+  --nb-ink-2:   #5d6b60;
+  /* 4.5:1 on the cream stock. Was #8d998f at 2.79:1 — below the AA floor,
+     and applied to the meaning-bearing micro-copy (the printed fields, the
+     fore-edge labels, the colour key, the card week/build lines). */
+  --nb-ink-3:   #6d7672;
+  --nb-green:   #246e3e;
+  --nb-green-d: #1b4d2e;
+  --nb-gold:    #e3b13b;
+  --nb-warm:    #f7f0dd;
+  --nb-line:    #e6e0cd;
+}
+
+/* ---- the approach ------------------------------------------------------
+   The instrument cards sit on near-black under cool accents. The notebook is
+   cream. Cutting between them is a slam; instead the ground itself warms as
+   you scroll down into it, the way a room warms as you walk toward a lit
+   desk, and cools again on the far side. This is a gradient the page scrolls
+   through rather than an effect played at it, so there is no trigger to miss,
+   nothing to replay on the way back up, and it costs no script at all. */
+.nb-zone {
+  position: relative; isolation: isolate; overflow-x: clip;
+  padding-top: 1.4rem;
+  background: linear-gradient(180deg,
+    var(--bg)  0,
+    #0a0908    90px,
+    #131009   170px,
+    #1a150d   250px,
+    #1a150d   calc(100% - 210px),
+    #120f0a   calc(100% - 110px),
+    var(--bg) 100%);
+}
+/* and a bloom under the paper, so the warmth has a source */
+.nb-zone::after {
+  content: ""; position: absolute; inset: 0; z-index: -2; pointer-events: none;
+  background:
+    repeating-linear-gradient(0deg, rgba(110, 220, 230, .035) 0 1px, transparent 1px 4px),
+    repeating-linear-gradient(90deg, rgba(110, 220, 230, .022) 0 1px, transparent 1px 60px);
+  -webkit-mask: linear-gradient(180deg, transparent, #000 12%, #000 88%, transparent);
+  mask: linear-gradient(180deg, transparent, #000 12%, #000 88%, transparent);
+}
+.nb-zone::before {
+  content: ""; position: absolute; inset: 0; z-index: -1; pointer-events: none;
+  background:
+    /* the pool of light the sheet is laid in */
+    radial-gradient(64% 380px at 50% 300px,
+      rgba(240, 198, 104, .34) 0%,
+      rgba(227, 177, 59, .11) 44%,
+      transparent 74%),
+    radial-gradient(120% 72% at 50% 52%,
+      rgba(227, 177, 59, .06) 0%, transparent 66%),
+    /* and the dark the light falls off into — deeper now, so the book is the
+       one lit thing on the page */
+    radial-gradient(150% 125% at 50% 44%,
+      transparent 44%, rgba(0, 0, 0, .5) 78%, rgba(0, 0, 0, .72) 100%);
+}
+
+/* ---- signpost ----------------------------------------------------------
+   Someone who clicks a card and comes back has never seen the bottom of this
+   page. The cards end, and this is the next thing the eye lands on. It warms
+   along with the ground it is drawn on. */
+.nb-signpost {
+  display: flex; flex-direction: column; align-items: center; gap: .8rem;
+  padding: 5rem 1.5rem 0; margin: 0 auto; max-width: 1180px;
+  color: #8a7f63; text-decoration: none; position: relative;
+}
+.nb-signpost-l {
+  font-family: var(--mono); font-size: .6rem; letter-spacing: .22em;
+  text-transform: uppercase; transition: color .25s var(--ease);
+}
+.nb-signpost-a {
+  display: block; width: 1px; height: 46px; position: relative;
+  background: linear-gradient(180deg, transparent, rgba(227, 177, 59, .28) 35%, #a08f63);
+}
+.nb-signpost-a::after {
+  content: ""; position: absolute; left: 50%; bottom: 0;
+  width: 7px; height: 7px; margin-left: -4px; margin-bottom: -1px;
+  border-right: 1px solid #a08f63; border-bottom: 1px solid #a08f63;
+  transform: rotate(45deg);
+}
+.nb-signpost:hover .nb-signpost-l,
+.nb-signpost:focus-visible .nb-signpost-l { color: var(--nb-gold); }
+@media (prefers-reduced-motion: no-preference) {
+  .nb-signpost-a { animation: nb-drift 2.6s var(--ease-io) infinite; }
+  @keyframes nb-drift {
+    0%, 100% { transform: translateY(0); opacity: .75; }
+    50%      { transform: translateY(6px); opacity: 1; }
+  }
+}
+
+/* ---- the sheet --------------------------------------------------------- */
 .nb-band {
   position: relative;
-  margin: 0 auto; padding: 5.5rem 1.5rem 5rem;
+  margin: 2.4rem auto 0; padding: 0 1.5rem 3.6rem;
   max-width: 1180px;
 }
-.nb-band::before {
-  content: ""; position: absolute; left: 1.5rem; right: 1.5rem; top: 0;
-  height: 1px;
-  background: linear-gradient(90deg,
-    transparent,
-    color-mix(in srgb, var(--c-photometer) 40%, transparent) 18%,
-    color-mix(in srgb, var(--c-diopal) 40%, transparent) 50%,
-    color-mix(in srgb, var(--c-reactor) 40%, transparent) 82%,
-    transparent);
+.nb-sheet {
+  position: relative; color: var(--nb-ink);
+  /* the stock has a faint fibre so it reads as paper, not flat fill */
+  background: url("data:image/svg+xml,%3Csvg%20xmlns='http://www.w3.org/2000/svg'%20width='160'%20height='160'%3E%3Cfilter%20id='n'%3E%3CfeTurbulence%20type='fractalNoise'%20baseFrequency='0.8'%20numOctaves='2'%20stitchTiles='stitch'/%3E%3CfeColorMatrix%20type='saturate'%20values='0'/%3E%3C/filter%3E%3Crect%20width='160'%20height='160'%20filter='url(%23n)'%20opacity='0.05'/%3E%3C/svg%3E") repeat, var(--paper);
+  border-radius: 12px; overflow: hidden;
+  box-shadow:
+    /* a close warm glow, so the book looks lit without washing the page */
+    0 0 44px -26px rgba(233, 190, 92, .75),
+    /* a cool light raking the block edge, so it reads as a lit archive */
+    20px 30px 34px -18px rgba(96, 216, 228, .24),
+    /* the thick block of leaves under the top sheet — many pages, seen from
+       just above the right */
+    6.7px 7.6px 0 0 rgb(239,232,216),
+    8.5px 12.2px 0 0 rgb(232,225,206),
+    10.3px 16.8px 0 0 rgb(225,217,196),
+    12.1px 21.4px 0 0 rgb(217,209,186),
+    13.9px 26.0px 0 0 rgb(210,201,176),
+    15.7px 30.6px 0 0 rgb(203,194,166),
+    26.6px 35.2px 0 0 rgb(196,186,156),
+    /* the block's own drop onto the desk */
+    0 34px 64px -30px rgba(0, 0, 0, .8),
+    0 10px 24px -8px rgba(0, 0, 0, .55),
+    0 0 0 1px rgba(255, 255, 255, .09);
 }
+/* the frame is the sheet's positioning context and carries the brackets */
+.nb-frame { position: relative; }
+
+/* two lit columns in the dark either side of the book — the page framed like
+   an exhibit on a stand. Hidden when there is no room for them. */
+.nb-aside {
+  position: absolute; top: .4rem; bottom: 6rem; width: 46px; z-index: 1;
+  display: flex; flex-direction: column; align-items: center; justify-content: center;
+  gap: 1.1rem; pointer-events: none;
+}
+.nb-aside-l { left: -74px; }
+.nb-aside-r { right: -74px; }
+.nb-aside-line {
+  flex: 1; width: 1px;
+  background: linear-gradient(180deg, transparent, rgba(96, 216, 228, .5), transparent);
+  box-shadow: 0 0 7px rgba(96, 216, 228, .35);
+}
+.nb-aside span {
+  writing-mode: vertical-rl; font-family: var(--mono); font-size: .55rem;
+  letter-spacing: .34em; text-transform: uppercase; white-space: nowrap;
+  color: rgba(150, 205, 210, .62);
+}
+.nb-aside-r span { transform: rotate(180deg); }
+.nb-aside-node {
+  width: 7px; height: 7px; border-radius: 50%; background: rgba(120, 226, 236, .95);
+  box-shadow: 0 0 12px 2px rgba(96, 216, 228, .6), 0 0 3px #cffcff;
+  animation: nb-aside-pulse 3.2s var(--ease-io) infinite;
+}
+.nb-aside-mark {
+  font-family: var(--mono); font-size: .62rem; letter-spacing: .18em; font-style: normal;
+  color: rgba(227, 177, 59, .85); text-transform: uppercase;
+  padding: .3rem .4rem; border: 1px solid rgba(227, 177, 59, .3); border-radius: 3px;
+  writing-mode: vertical-rl;
+}
+@keyframes nb-aside-pulse {
+  0%, 100% { opacity: 1; box-shadow: 0 0 12px 2px rgba(96, 216, 228, .6), 0 0 3px #cffcff; }
+  50%      { opacity: .55; box-shadow: 0 0 6px 1px rgba(96, 216, 228, .3); }
+}
+@media (prefers-reduced-motion: reduce) { .nb-aside-node { animation: none; } }
+@media (max-width: 1380px) { .nb-aside { display: none; } }
+.nb-spine {
+  position: absolute; left: 0; top: 0; bottom: 0; width: 11px; z-index: 3;
+  pointer-events: none;
+  background: linear-gradient(90deg,
+    color-mix(in srgb, var(--nb-green-d) 80%, #000) 0,
+    var(--nb-green-d) 30%, var(--nb-green) 72%,
+    color-mix(in srgb, var(--nb-green) 55%, #000) 100%);
+  /* a thread of light where the cover folds, and the page dipping into it */
+  box-shadow:
+    inset -1px 0 0 rgba(255, 255, 255, .12),
+    17px 0 24px -12px rgba(40, 34, 18, .55);
+}
+/* the stitched thread down the seam */
+.nb-spine::after {
+  content: ""; position: absolute; left: 5px; top: 14px; bottom: 14px; width: 1px;
+  background: repeating-linear-gradient(180deg,
+    rgba(255, 255, 255, .62) 0 7px, transparent 7px 15px);
+}
+/* the headbands: a striped cap at the head and the tail of the spine */
+.nb-spine i, .nb-spine b {
+  position: absolute; left: 0; right: 0; height: 9px;
+  background: repeating-linear-gradient(90deg,
+    #efe6cf 0 2px, #9c7a34 2px 4px);
+  box-shadow: inset 0 0 0 1px rgba(40, 34, 18, .3);
+}
+.nb-spine i { top: 0; border-radius: 2px 2px 0 0; }
+.nb-spine b { bottom: 0; border-radius: 0 0 2px 2px; }
+/* the notebook's own printed header — a thick rule with a thin companion
+   below it, the way a title rule is set in print */
+.nb-rule {
+  height: 5px; margin: 5px 9px 0 14px; border-radius: 3px;
+  background:
+    linear-gradient(180deg, transparent 0 4px,
+      color-mix(in srgb, var(--nb-gold) 55%, transparent) 4px 5px),
+    linear-gradient(90deg, color-mix(in srgb, var(--nb-gold) 55%, transparent),
+      #f3d787 42%, color-mix(in srgb, var(--nb-gold) 55%, transparent)) 0 0 / 100% 3px no-repeat;
+}
+.nb-headbar {
+  position: relative; overflow: hidden; z-index: 2;
+  /* an inset cover plate rather than a flat full-bleed bar, so the page
+     visibly wraps it — with a woven leaf motif picking up the vines outside */
+  margin: 9px 9px 0 14px; border-radius: 12px;
+  background: url("data:image/svg+xml,%3Csvg%20xmlns='http://www.w3.org/2000/svg'%20width='56'%20height='34'%20viewBox='0 0 56 34'%3E%3Cg%20fill='none'%20stroke='%23ffffff'%20stroke-opacity='0.13'%20stroke-width='1.1'%3E%3Cpath%20d='M4 26 C10 26 15 22 17 16 C11 15 5 19 4 26 Z'/%3E%3Cpath%20d='M17 16 C17 10 22 5 28 4'/%3E%3Cpath%20d='M32 26 C38 26 43 22 45 16 C39 15 33 19 32 26 Z'/%3E%3Cpath%20d='M45 16 C45 10 50 5 56 4'/%3E%3C/g%3E%3C/svg%3E") repeat,
+              linear-gradient(180deg, #2e8550 0%, var(--nb-green) 52%, #1c5c37 100%);
+  color: #fff;
+  padding: .72rem 1.15rem;
+  display: grid; grid-template-columns: minmax(0,1fr) auto minmax(0,1fr);
+  align-items: center; gap: .9rem;
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, .22),
+    inset 0 -1px 0 rgba(0, 0, 0, .22),
+    0 3px 10px -3px rgba(20, 46, 30, .55);
+}
+/* the fillets: the page curves into the plate's lower corners instead of
+   meeting it at a hard right angle */
+.nb-headbar::before, .nb-headbar::after {
+  content: ""; position: absolute; bottom: -9px; width: 9px; height: 9px;
+  z-index: 3; pointer-events: none;
+}
+.nb-headbar::before { left: 0;
+  background: radial-gradient(circle 9px at 0 100%, transparent 0 9px, #1c5c37 9px); }
+.nb-headbar::after { right: 0;
+  background: radial-gradient(circle 9px at 100% 100%, transparent 0 9px, #1c5c37 9px); }
+/* a slow iridescent sweep — holographic foil on the cover band */
+.nb-headbar::after {
+  content: ""; position: absolute; inset: 0; pointer-events: none; z-index: 0;
+  mix-blend-mode: screen; opacity: .16;
+  background: linear-gradient(100deg, transparent 34%,
+    rgba(90, 230, 220, .30) 44%, rgba(150, 170, 255, .26) 50%,
+    rgba(120, 255, 190, .24) 56%, transparent 66%);
+  transform: translateX(-60%);
+}
+.nb-headbar > * { position: relative; z-index: 1; }
+@keyframes nb-holo {
+  0%, 8% { transform: translateX(-70%); }
+  60%, 100% { transform: translateX(180%); }
+}
+@media (prefers-reduced-motion: reduce) { .nb-headbar::after { animation: none; opacity: 0; } }
+.nb-chip {
+  display: inline-flex; align-items: center; justify-content: center;
+  justify-self: start;
+  min-width: 46px; height: 21px; padding: 0 .62rem; border-radius: 11px;
+  background: rgba(255, 255, 255, .17); color: #fff;
+  font-family: var(--mono); font-size: .56rem; letter-spacing: .16em; font-weight: 600;
+}
+.nb-headbar b {
+  font-family: var(--mono); font-size: .74rem; letter-spacing: .22em; font-weight: 600;
+  justify-self: center; white-space: nowrap;
+}
+.nb-headbar span {
+  justify-self: end; text-align: right; min-width: 0;
+  font-family: var(--mono); font-size: .57rem;
+  letter-spacing: .13em; color: rgba(255, 255, 255, .62);
+  overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+}
+@media (max-width: 760px) {
+  .nb-headbar { grid-template-columns: auto 1fr; }
+  .nb-headbar b { justify-self: end; }
+  .nb-headbar span { grid-column: 1 / -1; justify-self: start; text-align: left; }
+}
+
+/* the printed folio at the foot of the page, the way their pages are set */
+.nb-folio {
+  position: absolute; left: 50%; transform: translateX(-50%); bottom: .55rem;
+  font-family: var(--mono); font-size: .5rem; letter-spacing: .22em;
+  text-transform: uppercase; color: var(--nb-ink-3); white-space: nowrap;
+  z-index: 2; pointer-events: none;
+}
+
+/* ---- head: the claim, and the printed fields --------------------------- */
 .nb-band-head {
-  display: grid; grid-template-columns: minmax(0, 1.15fr) minmax(0, 1fr);
-  gap: 2.2rem 3.5rem; align-items: end; margin-bottom: 2.6rem;
+  display: grid; grid-template-columns: minmax(0, 1.25fr) minmax(0, 300px);
+  gap: 1rem 3rem; align-items: start;
+  padding: 1rem 1.6rem 0;
+}
+/* the base eyebrow is flex-centred with flanking rules; here it is a printed
+   label, so it left-aligns with the heading and drops the decorative lines */
+.nb-band .eyebrow {
+  color: var(--nb-green); justify-content: flex-start; margin: 0;
+}
+.nb-band .eyebrow::before { display: none; }
+.nb-band .eyebrow::after {
+  background: linear-gradient(90deg, color-mix(in srgb, var(--nb-green) 30%, transparent), transparent);
+  width: clamp(24px, 6vw, 90px);
 }
 .nb-band h2 {
-  font-size: clamp(2rem, 4.4vw, 3.2rem); line-height: 1.04; margin: .5rem 0 0;
+  font-size: clamp(1.7rem, 3.2vw, 2.35rem); line-height: 1.1;
+  letter-spacing: -.025em; margin: .45rem 0 0; color: var(--nb-ink);
+  max-width: 19ch; text-wrap: balance;
 }
 .nb-band h2 em {
-  font-style: normal;
-  background: linear-gradient(96deg, var(--c-photometer), var(--c-diopal) 60%, var(--c-reactor));
-  -webkit-background-clip: text; background-clip: text; color: transparent;
+  font-style: normal; color: var(--nb-green);
+  background: none; -webkit-background-clip: initial; background-clip: initial;
 }
-.nb-lede { color: var(--muted); font-size: 1.02rem; line-height: 1.66; margin: 0; }
-.nb-lede b { color: var(--fg); font-weight: 600; }
+.nb-lede {
+  color: var(--nb-ink-2); font-size: .95rem; line-height: 1.72;
+  margin: .55rem 1.6rem 0; max-width: 62ch; text-wrap: pretty;
+}
+.nb-lede .mark { color: var(--nb-ink); font-weight: 600; }
+.nb-lede .ann { color: #8a7534; font-style: italic; }
 
-.nb-figures { display: flex; flex-wrap: wrap; gap: 1.8rem 2.6rem; margin-top: 1.4rem; }
-.nb-figures div { display: flex; flex-direction: column; gap: .2rem; }
-.nb-figures dt, .nb-fig-n {
-  font-size: 1.9rem; font-weight: 600; letter-spacing: -.03em; line-height: 1;
-  font-variant-numeric: tabular-nums;
+/* the footer fields off their own pages: label, dotted leader, value */
+.nb-fields { display: grid; gap: .32rem; padding-top: .2rem; }
+.nb-field {
+  font-family: var(--mono); font-size: .63rem; letter-spacing: .17em;
+  text-transform: uppercase; color: var(--nb-ink-3);
+  display: flex; align-items: baseline;
 }
-/* a span of dates is not a quantity — it reads as one at figure size */
-.nb-fig-span { font-size: 1.05rem; letter-spacing: -.01em; white-space: nowrap; }
-.nb-figures dd, .nb-fig-l {
-  margin: 0; font-family: var(--mono); font-size: .55rem;
-  letter-spacing: .18em; text-transform: uppercase; color: var(--dim);
+.nb-lead { flex: 1; border-bottom: 1px dotted #c3bda8; margin: 0 .6rem .18rem; }
+.nb-field b {
+  color: var(--nb-ink); font-weight: 600; font-variant-numeric: tabular-nums;
+  letter-spacing: .1em;
+}
+/* the one field they left empty on purpose — it should read as a decision */
+.nb-field b.blank { color: #b8933a; }
+
+/* ---- the block: 62 leaves, edge-on -------------------------------------
+   A notebook is a thickness. Seen from the fore-edge the whole year is legible
+   as a pattern before a word is read: the coloured edges open an entry, the
+   plain ones are that week still running. */
+.nb-edge { margin: .9rem 1.6rem 0; position: relative; }
+.nb-edge-l {
+  display: flex; justify-content: space-between; gap: 1rem;
+  font-family: var(--mono); font-size: .62rem; letter-spacing: .16em;
+  text-transform: uppercase; color: var(--nb-ink-3); margin-bottom: .5rem;
+}
+.nb-edge-r {
+  color: var(--nb-ink-2); transition: color .18s var(--ease);
+  min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+}
+.nb-edge.reading .nb-edge-r { color: var(--nb-ink); }
+.nb-block {
+  position: relative; background: #efe9da;
+  height: 86px; display: flex; align-items: flex-end;
+  padding: 0 1px; cursor: crosshair; -webkit-user-select: none; user-select: none;
+  box-shadow: inset 0 1px 3px rgba(90, 80, 55, .22), 0 8px 16px -8px rgba(60, 50, 26, .34);
+}
+.nb-leaf {
+  position: relative; flex: 1 1 0; min-width: 0; height: 100%;
+  display: flex; align-items: flex-end;
+  background: none; border: 0; padding: 0; cursor: inherit;
+}
+.nb-leaf i {
+  display: block; width: 100%; height: var(--h, 99%); border-radius: 1px 1px 0 0;
+  background: linear-gradient(180deg, #fffdf6 0 2px, #ece5d2 2px, #cfc6ac 100%);
+  box-shadow: inset -1px 0 0 rgba(90, 80, 55, .2);
+  transform-origin: 50% 100%;
+  transition: transform .28s var(--ease-out), filter .2s var(--ease);
+}
+.nb-leaf.mk i {
+  background:
+    linear-gradient(180deg,
+      var(--c) 0 12px,
+      color-mix(in srgb, var(--c) 55%, #fff) 12px 13px,
+      color-mix(in srgb, var(--c) 9%, #f4eddc) 13px,
+      color-mix(in srgb, var(--c) 5%, #cfc6ac) 100%);
+  box-shadow:
+    inset -1px 0 0 rgba(90, 80, 55, .2),
+    0 0 7px -2px color-mix(in srgb, var(--c) 60%, transparent),
+    0 -2px 6px -3px color-mix(in srgb, var(--c) 62%, transparent);
+}
+/* a bright bead of light on the very top of each marker */
+.nb-leaf.mk::after {
+  content: ""; position: absolute; left: 1px; right: 1px; top: 0; height: 3px;
+  border-radius: 2px; z-index: 2; pointer-events: none;
+  background: color-mix(in srgb, var(--c) 40%, #fff);
+  box-shadow: 0 0 5px 0 color-mix(in srgb, var(--c) 62%, transparent);
+}
+/* the standing tab catches a touch more light on its cap */
+.nb-leaf.mk::before {
+  content: ""; position: absolute; left: 0; right: 0; top: 0; height: 12px;
+  border-radius: 1px 1px 0 0;
+  background: linear-gradient(180deg, rgba(255, 255, 255, .28), transparent);
+  z-index: 1; pointer-events: none;
+}
+/* pointing at the block quietens the rest so the thumb has a place */
+.nb-block:hover .nb-leaf i { filter: brightness(.93) saturate(.85); }
+.nb-block:hover .nb-leaf.near i { filter: none; }
+.nb-block:hover .nb-leaf.on i { filter: brightness(1.07); }
+.nb-leaf:focus-visible { outline: none; }
+.nb-leaf:focus-visible i {
+  filter: brightness(1.1);
+  box-shadow: inset -1px 0 0 rgba(90, 80, 55, .16), 0 0 0 2px var(--nb-green);
+}
+.nb-block-base {
+  height: 4px; margin: 0 1px; border-radius: 0 0 2px 2px;
+  background: linear-gradient(90deg, #6d6248, #453d2c);
+  box-shadow: inset 0 1px 0 rgba(255, 240, 205, .22);
 }
 
-/* ---- the week strip: 21 weeks, one column each ---- */
-/* This is the part that makes the notebook impossible to miss. It shows the
-   whole span at once and colours every entry by instrument, so the shape of
-   the project — pre-pivot months, then three instruments in parallel — is
-   legible before a single word is read. */
-.nb-strip {
-  display: grid; grid-auto-flow: column; grid-auto-columns: 1fr;
-  gap: 4px; align-items: end;
-  padding: 1.5rem 0 0; margin: 0 0 2.4rem;
-  overflow-x: auto; -webkit-overflow-scrolling: touch;
+/* what the tabs mean, and how much of each build there is. This is the key the
+   timeline used to carry in its row labels; without it the colours are a
+   pattern nobody can read. */
+.nb-key {
+  display: flex; flex-wrap: wrap; align-items: center; gap: .45rem 1.15rem;
+  margin-top: .7rem;
 }
-.nb-wk { display: flex; flex-direction: column; gap: 4px; min-width: 34px; }
-.nb-wk-n {
-  font-family: var(--mono); font-size: .5rem; letter-spacing: .1em;
-  color: var(--faint); text-align: center; margin-top: .35rem;
+.nb-key-lead {
+  font-family: var(--mono); font-size: .62rem; letter-spacing: .12em;
+  text-transform: uppercase; color: var(--nb-ink-3); margin-right: .1rem;
 }
-.nb-cell {
-  display: block; height: 26px; border-radius: 3px;
-  background: color-mix(in srgb, var(--c) 26%, transparent);
-  border: 1px solid color-mix(in srgb, var(--c) 42%, transparent);
-  position: relative; transition: background .2s var(--ease), transform .2s var(--ease);
+.nb-key-i {
+  display: inline-flex; align-items: center; gap: .4rem;
+  font-family: var(--mono); font-size: .58rem; letter-spacing: .05em;
+  color: var(--nb-ink-2);
 }
-.nb-cell:hover, .nb-cell:focus-visible {
-  background: color-mix(in srgb, var(--c) 62%, transparent);
-  transform: translateY(-2px);
+.nb-key-i i {
+  width: 9px; height: 9px; border-radius: 2px; background: var(--c);
+  box-shadow: 0 0 0 1px rgba(90, 80, 55, .18);
 }
-.nb-cell span {                       /* the mark, only where it fits */
-  position: absolute; inset: 0; display: grid; place-items: center;
-  font-family: var(--mono); font-size: .46rem; letter-spacing: .06em;
-  color: var(--fg); opacity: .85;
+.nb-key-i b {
+  color: var(--nb-ink); font-weight: 700; font-variant-numeric: tabular-nums;
+  margin-left: .05rem;
 }
-.nb-wk.empty .nb-cell {
-  height: 8px; background: none;
-  border: 1px dashed rgba(255,255,255,.10);
+/* the three real instruments carry their name at full ink; the earlier and
+   minor builds sit back a step so the eye lands on what matters */
+.nb-key-i[data-mark="HB"],
+.nb-key-i[data-mark="IS"],
+.nb-key-i[data-mark="FP"],
+.nb-key-i[data-mark="--"] { color: var(--nb-ink-3); }
+.nb-key-i[data-mark="HB"] b,
+.nb-key-i[data-mark="IS"] b,
+.nb-key-i[data-mark="FP"] b,
+.nb-key-i[data-mark="--"] b { color: var(--nb-ink-2); font-weight: 600; }
+/* the page riding the cursor */
+.nb-peek {
+  position: absolute; bottom: calc(100% + .6rem); left: 0; width: 118px;
+  z-index: 6; pointer-events: none; opacity: 0;
+  transform: translate(-50%, 6px);
+  transition: opacity .16s var(--ease), transform .2s var(--ease-out);
+  background: #fdfbf4; padding: 5px 5px 7px; border-radius: 2px;
+  box-shadow:
+    0 18px 36px -12px rgba(20, 16, 8, .7),
+    0 0 0 1px rgba(90, 80, 55, .3);
+}
+.nb-peek.show { opacity: 1; transform: translate(-50%, 0); }
+.nb-peek img {
+  width: 100%; display: block; background: var(--paper-2);
+  aspect-ratio: 1 / 1.32; object-fit: cover; object-position: top center;
+  box-shadow: inset 0 0 0 1px rgba(90, 80, 55, .16);
+}
+/* a hairline where the mat meets the page, like a photo corner */
+.nb-peek::after {
+  content: ""; position: absolute; left: 5px; right: 5px; bottom: 7px; height: 1px;
+  background: rgba(90, 80, 55, .12);
 }
 
-.nb-legend {
-  display: flex; flex-wrap: wrap; gap: .5rem 1.4rem; margin: 0 0 2.6rem;
-  font-family: var(--mono); font-size: .58rem; letter-spacing: .1em;
-  text-transform: uppercase; color: var(--dim);
+/* The block deals itself in when it is reached, the way the lane chart does —
+   as an animation on top of the authored state, never a transition off it. A
+   trigger that never fires costs the deal, not the block. */
+.nb-block.dealt .nb-leaf i { animation: nb-deal .5s var(--ease-out-quart) both; }
+@keyframes nb-deal {
+  from { transform: translateY(14px) scaleY(.3); opacity: 0; }
+  to   { transform: none; opacity: 1; }
 }
-.nb-legend span { display: inline-flex; align-items: center; gap: .45rem; }
-.nb-legend i {
-  width: 9px; height: 9px; border-radius: 2px; display: block;
-  background: color-mix(in srgb, var(--c) 55%, transparent);
-  border: 1px solid color-mix(in srgb, var(--c) 70%, transparent);
+/* Once the tabs have dealt in, a single soft light travels along them — the
+   trace of a thumb about to run the block. It plays once and is gone; it never
+   loops, so it reads as an invitation rather than a spinner. */
+.nb-block.dealt::after {
+  content: ""; position: absolute; top: 0; bottom: 0; left: -12%; width: 12%;
+  z-index: 4; pointer-events: none; opacity: 0;
+  background: linear-gradient(90deg,
+    transparent, rgba(255, 255, 255, .5) 45%, rgba(255, 255, 255, .5) 55%, transparent);
+  animation: nb-riffle 1.25s var(--ease-io) .95s 1 both;
+}
+@keyframes nb-riffle {
+  0%   { left: -12%; opacity: 0; }
+  12%  { opacity: .75; }
+  88%  { opacity: .75; }
+  100% { left: 100%; opacity: 0; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .nb-block.dealt .nb-leaf i { animation: none; }
+  .nb-block.dealt::after { animation: none; content: none; }
+  .nb-leaf i, .nb-peek { transition: none; }
+  .nb-plate-s i { animation: none; }
 }
 
-/* ---- three real entries, pulled forward ---- */
-.nb-picks { display: grid; grid-template-columns: repeat(3, 1fr); gap: 1.1rem; margin-bottom: 2.4rem; }
+/* ---- section bars, off their own pages --------------------------------- */
+.nb-sec { margin: .95rem 1.6rem 0; }
+.nb-sech { display: flex; align-items: center; gap: .8rem; margin-bottom: .6rem; }
+.nb-bar {
+  background: var(--nb-green); color: #eaf3ec;
+  padding: .34rem .8rem; border-radius: 2px; flex-shrink: 0;
+  font-family: var(--mono); font-size: .56rem; letter-spacing: .2em; font-weight: 600;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, .12);
+}
+.nb-sech em {
+  font-family: var(--mono); font-size: .55rem; letter-spacing: .13em;
+  color: var(--nb-ink-3); font-style: normal; margin-left: auto; white-space: nowrap;
+}
+
+/* ---- the timeline, on cream -------------------------------------------
+   Same markup and the same hub.js as the notebook reader, so the pointer
+   cursor, the week readout, the row dimming and the draw-in all still work —
+   only the surface under them is the notebook's cream. */
+.nb-sheet .lanes-head { margin: 0 0 .6rem; }
+.nb-sheet .lanes-head h3 { color: var(--nb-ink); }
+.nb-sheet .lanes-head p  { color: var(--nb-ink-2); }
+.nb-sheet .lanes-panel {
+  background: var(--paper-2); border: 1px solid var(--nb-line);
+  border-radius: 3px; color: var(--nb-ink);
+}
+.nb-sheet .lanes-panel::before, .nb-sheet .lanes-panel::after { color: #cfc8b3; }
+.nb-sheet .lanes-rule { border-bottom-color: var(--nb-line); color: var(--nb-ink-2); }
+.nb-sheet .lanes-rule-r { color: var(--nb-ink-3); }
+.nb-sheet .lanes-grid i { border-left-color: rgba(90, 80, 55, .09); }
+.nb-sheet .lanes-grid i:first-child { border-left-color: rgba(90, 80, 55, .18); }
+.nb-sheet .lanes-cursor { background: rgba(36, 110, 62, .09); }
+.nb-sheet .lanes-scale span { color: var(--nb-ink-3); }
+.nb-sheet .lanes-scale span.on { color: var(--nb-green); }
+.nb-sheet .lanes-readout-w { color: var(--nb-ink-3); }
+.nb-sheet .lanes-readout-t { color: var(--nb-ink-2); }
+.nb-sheet .lanes-panel.reading .lanes-readout-t { color: var(--nb-ink); }
+.nb-sheet .lane-name { color: var(--nb-ink-2); }
+.nb-sheet .lane-name a { color: var(--nb-green); }
+.nb-sheet .lane-track::before { background: #ece6d6; }
+.nb-sheet .lane-span { color: var(--nb-ink-3); }
+.nb-sheet .lane-dot:hover, .nb-sheet .lane-dot:focus-visible {
+  box-shadow: 0 0 0 3px var(--paper-2), 0 0 0 4px var(--c);
+}
+
+/* ---- the reel, on cream: every entry, three at a time -----------------
+   Also unchanged in markup and hub.js: three at a time, paging through all of
+   them, pausing the moment anyone reaches for one. */
+.nb-reel { margin: 0; overflow: hidden; }
+.nb-reel-track {
+  display: grid; grid-auto-flow: column;
+  grid-auto-columns: calc((100% - 2 * 1.1rem) / 3);
+  gap: 1.1rem;
+  transition: transform .62s var(--ease-out);
+  will-change: transform;
+}
+.nb-reel-bar {
+  display: flex; align-items: center; justify-content: center; gap: .9rem;
+  margin-top: .7rem; padding-top: .7rem; border-top: 1px solid var(--nb-line);
+}
+/* the pause control the auto-advance needs to satisfy WCAG 2.2.2 */
+.nb-reel-play {
+  display: inline-flex; align-items: center; gap: .4rem;
+  border: 1px solid var(--nb-line); background: #fff; cursor: pointer;
+  border-radius: var(--r-pill, 999px); padding: .28rem .62rem .28rem .5rem;
+  font-family: var(--mono); font-size: .56rem; letter-spacing: .12em;
+  text-transform: uppercase; color: var(--nb-ink-2);
+  transition: border-color .2s var(--ease), color .2s var(--ease);
+}
+.nb-reel-play:hover, .nb-reel-play:focus-visible {
+  border-color: var(--nb-green); color: var(--nb-green);
+}
+.nb-reel-ico {
+  width: 8px; height: 9px; flex: 0 0 auto; background: currentColor;
+  /* two bars = pause; the single triangle below = play */
+  clip-path: polygon(0 0, 34% 0, 34% 100%, 0 100%, 0 0, 66% 0, 100% 0, 100% 100%, 66% 100%, 66% 0);
+}
+.nb-reel-play.paused .nb-reel-ico { clip-path: polygon(0 0, 100% 50%, 0 100%); }
+
+/* At 1-up the reel builds 31 dots; unwrapped they overflowed the bar and were
+   clipped by the sheet, unreachable. */
+.nb-reel-dots { display: flex; flex-wrap: wrap; justify-content: center;
+  gap: .38rem; row-gap: .34rem; max-width: 100%; }
+.nb-reel-dots button {
+  width: 7px; height: 7px; padding: 0; border-radius: 50%; cursor: pointer;
+  border: 0; background: #d9d2be;
+  transition: background .25s var(--ease), width .25s var(--ease);
+}
+.nb-reel-dots button.on { width: 20px; border-radius: var(--r-sm); background: var(--nb-green); }
 .nb-pick {
-  display: flex; flex-direction: column; gap: .55rem;
-  padding: 1.15rem 1.2rem 1.25rem;
-  border: 1px solid var(--line); border-radius: 9px;
-  background: linear-gradient(180deg,
-    color-mix(in srgb, var(--c) 7%, transparent), transparent 62%);
-  transition: border-color .25s var(--ease), transform .25s var(--ease);
+  display: flex; flex-direction: column; gap: .4rem;
+  padding: .7rem .9rem .75rem; text-decoration: none;
+  background: #fff; border: 1px solid var(--nb-line); border-radius: 10px;
+  color: var(--nb-ink); overflow: hidden;
+  transition: border-color .25s var(--ease), transform .25s var(--ease),
+              box-shadow .25s var(--ease);
 }
 .nb-pick:hover, .nb-pick:focus-visible {
-  border-color: color-mix(in srgb, var(--c) 45%, transparent);
+  border-color: #cdc5ad;
+  box-shadow: 0 10px 26px -12px rgba(60, 50, 26, .45);
   transform: translateY(-3px);
 }
 .nb-pick-w {
   font-family: var(--mono); font-size: .55rem; letter-spacing: .16em;
-  text-transform: uppercase; color: var(--c);
+  text-transform: uppercase; color: var(--nb-ink-3);
+  border-bottom: 1px solid #efeadb; padding-bottom: .45rem; margin-bottom: .1rem;
 }
-.nb-pick b { font-size: 1rem; font-weight: 600; line-height: 1.3; letter-spacing: -.01em; }
-.nb-pick p { margin: 0; font-size: .84rem; line-height: 1.58; color: var(--muted); }
+.nb-pick[data-mark] .nb-pick-w::before {
+  content: ""; display: inline-block; width: 7px; height: 7px; border-radius: 1px;
+  background: var(--c); margin-right: .45rem; vertical-align: baseline;
+}
+.nb-pick b { font-size: .97rem; font-weight: 600; line-height: 1.32; letter-spacing: -.01em; color: var(--nb-ink); }
+.nb-pick p {
+  margin: 0; font-size: .82rem; line-height: 1.55; color: var(--nb-ink-2);
+  display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;
+}
 
-.nb-cta { display: flex; flex-wrap: wrap; gap: .8rem 1rem; align-items: center; }
+/* ---- the honest note + the way in -------------------------------------- */
+.nb-foot {
+  margin-top: .55rem; border-top: 1px solid var(--nb-line);
+  padding: .85rem 1.6rem 1rem;
+  display: grid; grid-template-columns: minmax(0, 1fr) auto;
+  gap: 1.8rem 2.4rem; align-items: center;
+}
+.nb-note {
+  margin: 0; font-size: .82rem; line-height: 1.72; color: #6a5c33;
+  font-style: italic; max-width: 64ch; text-wrap: pretty;
+  padding-left: .8rem; border-left: 2px solid var(--nb-gold);
+}
+.nb-note b { font-style: normal; color: var(--nb-ink); font-weight: 600; }
+
+/* ---- the call to action ------------------------------------------------
+   This is the only thing on the page that is supposed to be clicked, so it
+   stops behaving like a link and becomes a plate: full green, gold-edged, its
+   own page-corner fold, with a sheen that crosses it once on hover. */
+.nb-cta { justify-self: end; }
 .nb-go {
-  display: inline-flex; align-items: center; gap: .6rem;
-  padding: .85rem 1.5rem; border-radius: 7px;
-  background: var(--fg); color: #05060a;
-  font-size: .92rem; font-weight: 600; letter-spacing: -.01em;
-  transition: transform .22s var(--ease), box-shadow .22s var(--ease);
+  position: relative; display: inline-flex; align-items: center; gap: 1.15rem;
+  padding: 1.25rem 1.8rem 1.25rem 1.9rem; border-radius: 8px;
+  background: linear-gradient(180deg, #2c8149, var(--nb-green) 60%, var(--nb-green-d));
+  color: #fff; text-decoration: none;
+  box-shadow:
+    0 0 0 1px var(--nb-green-d),
+    0 0 0 4px rgba(227, 177, 59, .5),
+    0 0 26px 2px rgba(120, 226, 236, .28),
+    0 18px 40px -12px rgba(27, 77, 46, .9);
+  overflow: hidden; isolation: isolate;
+  transition: background .22s var(--ease), box-shadow .22s var(--ease),
+              transform .22s var(--ease-out);
 }
 .nb-go:hover, .nb-go:focus-visible {
-  transform: translateY(-2px);
-  box-shadow: 0 12px 30px -12px rgba(255,255,255,.5);
+  background: var(--nb-green-d); transform: translateY(-2px);
+  box-shadow:
+    0 0 0 1px var(--nb-green-d),
+    0 0 0 4px rgba(227, 177, 59, .62),
+    0 22px 44px -14px rgba(27, 77, 46, .92);
 }
-.nb-go i { font-style: normal; }
-.nb-alt-note {
-  font-family: var(--mono); font-size: .6rem; letter-spacing: .14em;
-  text-transform: uppercase; color: var(--faint);
+@keyframes nb-cta-breathe {
+  0%, 100% { box-shadow: 0 0 0 1px var(--nb-green-d), 0 0 0 4px rgba(227,177,59,.5),
+    0 0 26px 2px rgba(120,226,236,.28), 0 18px 40px -12px rgba(27,77,46,.9); }
+  50% { box-shadow: 0 0 0 1px var(--nb-green-d), 0 0 0 4px rgba(227,177,59,.7),
+    0 0 34px 5px rgba(120,226,236,.45), 0 18px 40px -12px rgba(27,77,46,.9); }
 }
+@media (prefers-reduced-motion: reduce) { .nb-go { animation: none; } }
+.nb-go-main {
+  display: block; font-size: 1.18rem; font-weight: 700; letter-spacing: -.015em;
+}
+.nb-go-sub {
+  display: block; margin-top: .16rem;
+  font-family: var(--mono); font-size: .55rem; letter-spacing: .14em;
+  text-transform: uppercase; color: rgba(255, 255, 255, .68);
+}
+.nb-go i {
+  font-style: normal; font-size: 1.2rem; line-height: 1;
+  transition: transform .25s var(--ease);
+}
+.nb-go:hover i, .nb-go:focus-visible i { transform: translateX(5px); }
+/* the folded corner of a page, in gold */
+.nb-go::after {
+  content: ""; position: absolute; right: 0; top: 0; width: 15px; height: 15px;
+  background: linear-gradient(225deg, var(--nb-gold) 50%, transparent 50%);
+}
+/* one sheen across it, not a loop */
+.nb-go::before {
+  content: ""; position: absolute; inset: 0 auto 0 -60%; width: 45%; z-index: -1;
+  background: linear-gradient(100deg, transparent, rgba(255, 255, 255, .16), transparent);
+  transform: skewX(-18deg); transition: left .55s var(--ease-out);
+}
+.nb-go:hover::before, .nb-go:focus-visible::before { left: 115%; }
+@media (prefers-reduced-motion: reduce) {
+  .nb-go, .nb-go i, .nb-go::before { transition: none; }
+  .nb-go:hover, .nb-go:focus-visible { transform: none; }
+}
+
+/* ---- the plate caption ------------------------------------------------
+   Names the sheet the way a figure is captioned in a technical document, and
+   gives the framing a foot to stand on. */
+.nb-plate {
+  display: flex; align-items: baseline; gap: .8rem; flex-wrap: wrap;
+  max-width: 1180px; margin: 1.5rem auto 0; padding: 0 .3rem;
+  font-family: var(--mono);
+}
+.nb-plate-s {
+  display: inline-flex; align-items: center; gap: .4rem;
+  font-size: .58rem; letter-spacing: .2em; color: rgba(233, 190, 92, .9);
+}
+.nb-plate-s i {
+  width: 6px; height: 6px; border-radius: 50%; background: var(--nb-gold);
+  box-shadow: 0 0 7px rgba(227, 177, 59, .7);
+}
+@keyframes nb-blink { 0%, 62%, 100% { opacity: 1; } 78% { opacity: .25; } }
+.nb-plate-n {
+  font-size: .58rem; letter-spacing: .2em; color: rgba(233, 190, 92, .82);
+  border: 1px solid rgba(233, 190, 92, .34); border-radius: 2px;
+  padding: .18rem .5rem;
+}
+.nb-plate-t {
+  font-size: .62rem; letter-spacing: .04em; color: #9a927f; flex: 1; min-width: 12ch;
+}
+.nb-plate-r {
+  font-size: .58rem; letter-spacing: .16em; color: #7f7761; margin-left: auto;
+}
+
 
 @media (max-width: 900px) {
-  .nb-band-head { grid-template-columns: 1fr; align-items: start; }
-  .nb-picks { grid-template-columns: 1fr; }
-  .nb-strip { grid-auto-columns: 40px; }
+  .nb-band-head { grid-template-columns: 1fr; }
+  .nb-foot { grid-template-columns: 1fr; }
+  .nb-cta { justify-self: start; }
+  .nb-block { height: 74px; }
+  .nb-reel-track { grid-auto-columns: calc(100% - 2rem); }
 }
-
+@media (min-width: 901px) and (max-width: 1180px) {
+  .nb-reel-track { grid-auto-columns: calc((100% - 1.1rem) / 2); }
+}
+@media (max-width: 640px) {
+  /* the meta is nowrap with a 232px min-content width, so below this it took
+     the whole row and crushed the green bar into a vertical slab */
+  .nb-sech { flex-wrap: wrap; }
+  .nb-sech em { margin-left: 0; white-space: normal; }
+}
+@media (max-width: 620px) {
+  /* the meta wraps onto its own line here, and margin-left:auto then reads as
+     a stray indent rather than as the right-hand end of a bar */
+  .nb-headbar span { margin-left: 0; }
+  /* the readout answers a pointer, and there is no pointer here */
+  .nb-edge-r { display: none; }
+  .nb-edge-l { display: block; }
+  .nb-band-head, .nb-edge, .nb-foot { margin-left: 1.1rem; margin-right: 1.1rem; }
+  .nb-band-head, .nb-foot { padding-left: 0; padding-right: 0; }
+  .nb-lede { margin-left: 1.1rem; margin-right: 1.1rem; }
+}
 /* ══════════════ notebook reader ══════════════ */
 /* The pages are the team's own artwork — cream stock, dark green header band,
    gold annotations. Nothing here recolours or re-typesets them; the site only
@@ -185,7 +782,7 @@
 .nbr-head { max-width: 1080px; margin: 0 auto; padding: 9rem 1.5rem 2.4rem; }
 @media (max-width: 939px) { .nbr-head { padding-top: 7.5rem; } }
 .nbr-head h1 { font-size: clamp(2.2rem, 5.5vw, 3.6rem); line-height: 1.03; margin: .6rem 0 1.1rem; }
-.nbr-head .standfirst { max-width: 64ch; color: var(--muted); font-size: 1.04rem; line-height: 1.7; margin: 0; }
+.nbr-head .standfirst { max-width: 64ch; color: var(--muted); font-size: 1.05rem; line-height: 1.7; margin: 0; }
 
 .nbr-wrap {
   display: grid; grid-template-columns: 232px minmax(0, 1fr);
@@ -228,7 +825,7 @@
 /* the anchor is offset so a jump does not tuck the page under the topbar */
 .nbr-anchor { position: absolute; top: -4.5rem; height: 1px; width: 1px; }
 .nbr-page img {
-  display: block; width: 100%; height: auto; border-radius: 6px;
+  display: block; width: 100%; height: auto; border-radius: var(--r-md);
   background: #f7f5ee;                       /* the page stock, before it loads */
   box-shadow: 0 1px 2px rgba(0,0,0,.5), 0 22px 50px -26px rgba(0,0,0,.9);
 }
@@ -268,3 +865,117 @@
   .nbr-page img { box-shadow: none; border-radius: 0; }
   .nbr-page figcaption { display: none; }
 }
+
+/* ---- timeline: month bands -------------------------------------------- */
+.nb-timeline { margin: 1.5rem 0 2.2rem; }
+.nb-months {
+  display: grid; grid-auto-flow: column; gap: 4px;
+  margin-bottom: .5rem;
+}
+.nb-month {
+  grid-column: span var(--span);
+  border-top: 1px solid var(--line-2);
+  padding-top: .35rem;
+  font-family: var(--mono); font-size: .52rem; letter-spacing: .18em;
+  text-transform: uppercase; color: var(--faint);
+  min-width: 0; overflow: hidden;
+}
+.nb-month span { white-space: nowrap; }
+.nb-strip-key {
+  margin: .8rem 0 0; font-size: .72rem; line-height: 1.6; color: var(--faint);
+  max-width: 62ch;
+}
+/* an empty week should read as "nothing here", not as a broken cell */
+.nb-wk.empty .nb-cell { border-style: dashed; opacity: .5; }
+
+/* ---- notebook search --------------------------------------------------- */
+/* The pages are images, so their text is invisible to the browser's find and
+   to search engines. This is the only way into 62 pages other than scrolling. */
+.nbr-search {
+  position: relative; max-width: 1400px;
+  margin: 0 auto; padding: 0 1.5rem 1.6rem;
+}
+.nbr-search input {
+  width: 100%; padding: .85rem 1.05rem;
+  border-radius: var(--r-lg); border: 1px solid var(--line-2);
+  background: rgba(255, 255, 255, .04); color: var(--fg);
+  font-family: var(--sans); font-size: .92rem; letter-spacing: -.005em;
+  transition: border-color .2s var(--ease), background .2s var(--ease);
+}
+.nbr-search input::placeholder { color: var(--faint); }
+.nbr-search input:focus {
+  background: rgba(255, 255, 255, .06);
+  border-color: color-mix(in srgb, var(--c-reactor) 55%, transparent);
+}
+/* the ring goes for the mouse only — see the global rule in polish.css */
+.nbr-search input:focus:not(:focus-visible) { outline: none; }
+.nbr-hits {
+  position: absolute; left: 1.5rem; right: 1.5rem; top: calc(100% - 1.1rem);
+  z-index: 60; max-height: 62vh; overflow-y: auto;
+  border: 1px solid var(--line-2); border-radius: var(--r-lg);
+  background: color-mix(in srgb, var(--bg) 96%, transparent);
+  backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px);
+  box-shadow: 0 26px 60px -28px rgba(0, 0, 0, .95);
+}
+.nbr-hit {
+  display: block; padding: .8rem 1rem;
+  border-bottom: 1px solid var(--line);
+  border-left: 2px solid var(--c);
+  text-decoration: none;
+}
+.nbr-hit:last-child { border-bottom: 0; }
+.nbr-hit:hover, .nbr-hit:focus-visible { background: rgba(255, 255, 255, .045); }
+.nbr-hit-w {
+  display: block; font-family: var(--mono); font-size: .52rem;
+  letter-spacing: .15em; text-transform: uppercase; color: var(--c);
+}
+.nbr-hit b { display: block; margin: .2rem 0 .15rem; font-size: .95rem; color: var(--fg); }
+.nbr-hit-s { display: block; font-size: .8rem; line-height: 1.55; color: var(--dim); }
+.nbr-hit-s mark { background: color-mix(in srgb, var(--c) 30%, transparent); color: var(--fg); border-radius: var(--r-xs); }
+.nbr-none { margin: 0; padding: 1rem; font-size: .85rem; color: var(--dim); }
+
+/* ══════════════ the living pedestal ══════════════
+   The book is held aloft by a bioluminescent plant — fitting, since RELEAF
+   makes plant protectants. Glowing vines arc up from a root base and cradle
+   the record on both sides, so it reads as an exhibit raised on a living
+   stand. It sits behind the book and shows only in the dark around it. */
+.nb-band { position: relative; z-index: 0; }
+.nb-frame { position: relative; z-index: 1; }
+.nb-flora {
+  position: absolute; left: 50%; top: -64px; bottom: -110px; z-index: 0;
+  transform: translateX(-50%); width: 122vw; max-width: 1780px;
+  pointer-events: none; overflow: visible;
+  opacity: .4; filter: saturate(.85);
+}
+.nf-pods circle { fill: url(#nf-pod); }
+.nf-halo { opacity: .16; }
+.nf-pods circle:nth-child(2) { animation-delay: 1.1s; }
+.nf-pods circle:nth-child(3) { animation-delay: 2.2s; }
+.nf-spores circle { fill: #c8fced;
+  opacity: .55; }
+.nf-spores circle:nth-child(even) { animation-duration: 9s; animation-delay: 1.4s; }
+.nf-spores circle:nth-child(3n) { animation-delay: 2.6s; }
+.nf-sway { transform-box: view-box; transform-origin: 800px 1074px; will-change: transform;
+  animation: nf-sway 24s var(--ease-io) infinite; }
+@keyframes nf-sway { 0%, 100% { transform: rotate(-.35deg); } 50% { transform: rotate(.35deg); } }
+@keyframes nf-pulse { 0%, 100% { opacity: 1; } 50% { opacity: .5; } }
+@keyframes nf-drift { 0%, 100% { transform: translateY(0); opacity: .8; }
+  50% { transform: translateY(-10px); opacity: .3; } }
+@media (prefers-reduced-motion: reduce) {
+  .nf-sway, .nf-pods circle, .nf-spores circle, .nf-baseglow { animation: none; }
+}
+
+
+/* ══════════════ the build map, on the notebook's own page ══════════════
+   The timeline moved off the hub and onto the record it indexes. It keeps the
+   site's dark ground rather than the cream of the pages below, so it reads as
+   the map you consult before opening the book. The lane styles it uses are the
+   original dark ones in hub.css — only the framing here is new. */
+.nbr-map {
+  max-width: 1180px; margin: 0 auto 2.6rem; padding: 0 1.5rem;
+}
+.nbr-map .lanes-head { margin: 0 0 .9rem; }
+.nbr-map .lanes-head h3 {
+  margin: 0 0 .3rem; font-size: 1.02rem; font-weight: 600; letter-spacing: -.015em;
+}
+.nbr-map .lanes-head p { margin: 0; font-size: .84rem; color: var(--dim); }

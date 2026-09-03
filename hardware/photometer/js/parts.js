@@ -1,4 +1,4 @@
-// V4 Photometer — part data.
+// Photometer — part data.
 //
 // `pose` is a presentation tilt, eased in only as a part lifts out, so the
 // assembled pose is untouched and the part still turns at exactly the rig's

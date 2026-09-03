@@ -7,8 +7,15 @@
 // Parts are keyed by (name, mesh index). The names collide across Part Studios
 // — "Part 1" is six different geometries — so the name alone is not an id.
 (function () {
-  const canvas = document.getElementById("gl");
-  const hud = document.getElementById("hud");
+  // Runs either on its own page (canvas #gl, HUD present) or embedded in the
+  // technical record (canvas #pkg-gl, no HUD). Everything below is the same
+  // scene either way — the reveal and the chamber tour were built once.
+  const canvas = document.getElementById("pkg-gl") || document.getElementById("gl");
+  let scheduleLoop = null;   // set when the embedded playback loop is built
+  let zeroRetries = 0, sizeWatch = null;   // bounded wait for a real width
+  if (!canvas) return;
+  const embedded = canvas.id === "pkg-gl";
+  const hud = document.getElementById("hud") || { style: {}, set textContent(v) {} };
 
   const renderer = new THREE.WebGLRenderer({ canvas: canvas, antialias: true, alpha: true });
   renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
@@ -191,7 +198,8 @@
   };
 
   function materialFor(role, ch) {
-    if (role === "pumpAccent") return accentMat[Math.max(0, ch)];
+    if (role === "pumpAccent" || role === "rotorFront" ||
+        role === "rotorBack" || role === "knob") return accentMat[Math.max(0, ch)];
     if (role === "reservoirProtectant") return protectantMat[Math.max(0, ch)];
     return shared[role] || shared.charcoal;
   }
@@ -205,18 +213,23 @@
   const loader = new THREE.STLLoader();
   let showFasteners = false;
 
-  fetch("placed/_manifest.json", { cache: "reload" })
+  // placed/ is 343 files and 96 MB and is gitignored, so it can only be used on
+  // a local machine. package/ is the same assembly merged by (role, channel)
+  // and decimated to something that fits the deploy budget; the manifest there
+  // already carries the role, so no name lookup is needed.
+  const DIR = embedded ? "package/" : "placed/";
+  fetch(DIR + "_manifest.json", { cache: "reload" })
     .then(function (r) { return r.json(); })
     .then(function (man) {
       const wanted = man.filter(function (e) {
-        return showFasteners || !/^Hex |^Prevailing/.test(e.name);
+        return e.role || showFasteners || !/^Hex |^Prevailing/.test(e.name);
       });
       let done = 0;
       hud.textContent = "loading 0/" + wanted.length;
       wanted.forEach(function (e) {
-        loader.load("placed/" + encodeURIComponent(e.file), function (geo) {
+        loader.load(DIR + encodeURIComponent(e.file), function (geo) {
           geo.computeVertexNormals();
-          const role = roleFor(e.name, e.mesh);
+          const role = e.role || roleFor(e.name, e.mesh);
           const mesh = new THREE.Mesh(geo, materialFor(role, e.ch));
           if (role === "boxFront") mesh.renderOrder = 10;
           if (role === "boxLid") mesh.visible = false;      // off by default
@@ -232,7 +245,8 @@
                           emI: m.emissiveIntensity || 0 });
           }
           // must come after userData is assigned, or the flag gets wiped
-          if (SPINS[e.name + "|" + e.mesh]) {
+          if (SPINS[e.name + "|" + e.mesh] ||
+              role === "rotorFront" || role === "rotorBack") {
             geo.computeBoundingBox();
             const c = new THREE.Vector3();
             geo.boundingBox.getCenter(c);
@@ -248,6 +262,9 @@
         }, undefined, function () { if (++done === wanted.length) finish(wanted.length); });
       });
       function finish(n) {
+        allIn = true;
+        chBox = null; chBoxFinal = false;   // rebuild from the whole set
+        measure();
         const roles = {};
         parts.forEach(function (p) { roles[p.userData.role] = (roles[p.userData.role] || 0) + 1; });
         hud.innerHTML = n + " instances<br>" +
@@ -274,8 +291,34 @@
   }
   function render() {
     renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
-    renderer.setSize(window.innerWidth, window.innerHeight, false);
-    camera.aspect = window.innerWidth / window.innerHeight;
+    // embedded, the figure sets the width and the aspect is fixed at 16:9
+    let w = embedded ? canvas.parentElement.getBoundingClientRect().width
+                     : window.innerWidth;
+    // The figure can be measured before the record has laid out, so a
+    // zero-width reading needs a retry rather than a baked-in zero canvas.
+    // That retry used to be an unbounded requestAnimationFrame(render): if the
+    // figure never gained a width — collapsed container, a reflow that leaves
+    // it at zero, a viewport this narrow — it re-entered render() at 60fps
+    // forever, doing a full setSize + WebGL render each time. It is bounded
+    // now, and a ResizeObserver does the waiting instead of a spin.
+    if (embedded && w < 2) {
+      if (zeroRetries < 8) { zeroRetries++; requestAnimationFrame(render); }
+      else if (!sizeWatch && "ResizeObserver" in window) {
+        sizeWatch = new ResizeObserver(function () {
+          if (canvas.parentElement.getBoundingClientRect().width >= 2) {
+            sizeWatch.disconnect(); sizeWatch = null; zeroRetries = 0; render();
+          }
+        });
+        sizeWatch.observe(canvas.parentElement);
+      }
+      w = 640;
+    } else {
+      zeroRetries = 0;
+    }
+    const h = embedded ? Math.round(w * 0.5625) : window.innerHeight;
+    if (embedded) canvas.style.height = h + "px";
+    renderer.setSize(w, h, false);
+    camera.aspect = w / h;
     camera.updateProjectionMatrix();
     place(); renderer.render(scene, camera);
   }
@@ -295,6 +338,9 @@
     render();
   }, { passive: false });
   window.addEventListener("resize", render);
+  if (embedded && "ResizeObserver" in window) {
+    new ResizeObserver(render).observe(canvas.parentElement);
+  }
 
   // 40 RPM puts exactly 4 revolutions in 6 seconds, and a 3-roller head repeats
   // every 120 degrees, so a 6s capture loops seamlessly.
@@ -416,12 +462,22 @@
                overlap: 0.5, creep: 0.035 };
 
   const FRAME_ROLES = {
-    pumpBody: 1, pumpAccent: 1, reservoirCulture: 1, reservoirProtectant: 1,
-    probe: 1, screen: 1,
+    pumpBody: 1, pumpAccent: 1, rotorFront: 1, rotorBack: 1, knob: 1,
+    reservoirCulture: 1, reservoirProtectant: 1, probe: 1, screen: 1,
   };
   let chBox = null, allBox = null, lidMesh = null, frontMat = null;
+  // Locked only once every part is in. It used to memoise on the first call,
+  // and loop() makes that call as soon as `parts` is non-empty — which is the
+  // moment the *first* of 47 parts lands, not the last. Whatever had arrived
+  // by then became the framing forever, and if the chamber parts were not
+  // among them the three chamber boxes stayed empty, so the tour framed
+  // nothing and the figure went blank part-way through. On a warm local load
+  // everything arrives inside one frame and it looks fine, which is exactly
+  // what makes it a race.
+  let allIn = false, chBoxFinal = false;
+
   function measure() {
-    if (chBox) return;
+    if (chBoxFinal) return;
     chBox = [new THREE.Box3(), new THREE.Box3(), new THREE.Box3()];
     allBox = new THREE.Box3();
     parts.forEach(function (p) {
@@ -435,6 +491,7 @@
       const c = p.userData.ch;
       if (c >= 0 && c < 3 && FRAME_ROLES[p.userData.role]) chBox[c].union(b);
     });
+    if (allIn) chBoxFinal = true;
   }
 
   function pushStart() { return AN.intro + AN.open * AN.overlap; }
@@ -493,7 +550,7 @@
 
   function animFrame(t, w, h, bg) {
     live = false;
-    renderer.setPixelRatio(1);
+    renderer.setPixelRatio(bg === false ? Math.min(window.devicePixelRatio, 2) : 1);
     renderer.setSize(w, h, false);
     camera.aspect = w / h; camera.updateProjectionMatrix();
     measure();
@@ -526,7 +583,10 @@
     const tFirst = tPush + AN.push;
     const cycle = AN.hold + AN.move;
 
-    const chD = chBox.map(function (b) { return fitDist(b, 0.86); });
+    // Pull back from a single chamber. Framed tight on one, the neighbours are
+    // off-camera entirely and the move reads as three separate shots rather
+    // than a pan down a machine that has three of these side by side.
+    const chD = chBox.map(function (b) { return fitDist(b, 1.62); });
     const off = centringOffset(chBox[1], chD[1], 0, 0.09);
     const chC = chBox.map(function (b) {
       const v = new THREE.Vector3(); b.getCenter(v); return v.add(off);
@@ -563,6 +623,11 @@
     lookFrom(tgt, dist, yaw, pitch);
     renderer.render(scene, camera);
 
+    // Live playback stops here. Compositing a caption into a 2D canvas and
+    // reading it back as a data URL costs more per frame than the render does,
+    // and embedded the caption is a DOM element anyway.
+    if (bg === false) return { idx: idx, cap: cap };
+
     const c2 = window.__prod._c2 || (window.__prod._c2 = document.createElement("canvas"));
     c2.width = w; c2.height = h;
     const g = c2.getContext("2d");
@@ -593,13 +658,126 @@
     spinners.forEach(function (m) { m.rotation.y = a; });
   }
 
+  // Both loops in this file used to schedule unconditionally, so the page ran
+  // two WebGL render loops forever alongside scene.js's third — even off-screen
+  // and in a background tab. They park when the canvas is off-screen or the
+  // document is hidden; t0 is shifted by the parked time so playback resumes
+  // where it left off.
   let live = true, t0 = performance.now();
-  (function tick(now) {
+  let raf1 = null, onScreen = true, parkedAt = 0;
+
+  function schedule1() {
+    if (raf1 == null && onScreen && !document.hidden) raf1 = requestAnimationFrame(tick);
+  }
+  function tick(now) {
+    raf1 = null;
     if (live && parts.length) { setTime((now - t0) / 1000); render(); }
-    requestAnimationFrame(tick);
-  })(t0);
+    schedule1();
+  }
+  function parkAll() {
+    if (raf1 != null) { cancelAnimationFrame(raf1); raf1 = null; }
+    if (!parkedAt) parkedAt = performance.now();
+  }
+  function wakeAll() {
+    if (parkedAt) { t0 += performance.now() - parkedAt; parkedAt = 0; }
+    schedule1();
+    if (typeof scheduleLoop === "function") scheduleLoop();
+  }
+  if ("IntersectionObserver" in window) {
+    new IntersectionObserver(function (es) {
+      onScreen = es[0].isIntersecting;
+      if (onScreen) wakeAll(); else parkAll();
+    }, { rootMargin: "120px" }).observe(canvas);
+  }
+  schedule1();
+
+  // ---------- embedded playback ----------
+  // On its own page this file renders a free-orbit view. Embedded in the
+  // record it plays the reveal — which it could always draw, frame by frame,
+  // but nothing had ever driven it in real time.
+  if (embedded) {
+    const host = canvas.closest(".triple") || canvas.parentElement;
+    const label = host.querySelector(".triple-label");
+    const scrub = host.querySelector(".triple-scrub");
+    const bar = host.querySelector(".triple-bar");
+    let clock = 0, playing = true, held = false, lastNow = 0, ready = false;
+
+    function size2() {
+      const w = Math.max(2, Math.round(canvas.parentElement.getBoundingClientRect().width));
+      return { w: w, h: Math.round(w * 0.5625) };
+    }
+
+    function paint(t) {
+      const d = size2();
+      canvas.style.height = d.h + "px";
+      const r = animFrame(t, d.w, d.h, false);
+      if (label && r) {
+        const p = PROTECTANTS[r.idx] || null;
+        const on = r.idx >= 0 && r.cap > 0.05;
+        label.classList.toggle("on", on);
+        label.style.opacity = on ? Math.min(1, r.cap * 1.3) : 1;
+        label.innerHTML = on
+          ? '<b>Chamber ' + (r.idx + 1) + '</b><span>' + p.name + '</span><i>' + p.sub + '</i>'
+          : '<b>Three channels</b><span>One housing, one controller</span>' +
+            '<i>Each chamber runs a different protectant</i>';
+      }
+      if (bar) bar.style.width = (t / animLength() * 100).toFixed(1) + "%";
+    }
+
+    let raf2 = null;
+    scheduleLoop = function () {
+      if (raf2 == null && onScreen && !document.hidden) raf2 = requestAnimationFrame(loop);
+    };
+    function loop(now) {
+      raf2 = null;
+      scheduleLoop();
+      if (!parts.length) return;
+      if (!ready) { ready = true; measure(); }
+      // a parked loop leaves a stale lastNow; drop the gap rather than
+      // swallowing it as one enormous dt
+      const dt = lastNow ? Math.min(0.05, (now - lastNow) / 1000) : 0;
+      lastNow = now;
+      if (playing && !held) clock = (clock + dt) % animLength();
+      paint(clock);
+    }
+    scheduleLoop();
+
+    // scrubbing: drag anywhere on the track to move through the tour
+    if (scrub) {
+      const seek = function (e) {
+        const r = scrub.getBoundingClientRect();
+        clock = Math.max(0, Math.min(1, (e.clientX - r.left) / r.width)) * animLength();
+        paint(clock);
+      };
+      scrub.addEventListener("pointerdown", function (e) {
+        held = true; scrub.setPointerCapture(e.pointerId); seek(e);
+      });
+      scrub.addEventListener("pointermove", function (e) { if (held) seek(e); });
+      scrub.addEventListener("pointerup", function () { held = false; });
+      scrub.addEventListener("pointercancel", function () { held = false; });
+      scrub.addEventListener("keydown", function (e) {
+        const step = animLength() / 24;
+        if (e.key === "ArrowLeft") { clock = Math.max(0, clock - step); paint(clock); e.preventDefault(); }
+        if (e.key === "ArrowRight") { clock = Math.min(animLength(), clock + step); paint(clock); e.preventDefault(); }
+      });
+    }
+    host.querySelectorAll("[data-seek]").forEach(function (b) {
+      b.addEventListener("click", function () {
+        clock = parseFloat(b.getAttribute("data-seek")) * animLength();
+        playing = false; paint(clock);
+        host.querySelectorAll("[data-seek]").forEach(function (o) { o.classList.remove("on"); });
+        b.classList.add("on");
+      });
+    });
+    const play = host.querySelector(".triple-play");
+    if (play) play.addEventListener("click", function () {
+      playing = !playing;
+      play.setAttribute("aria-pressed", String(playing));
+      play.textContent = playing ? "Pause" : "Play";
+    });
+  }
   document.addEventListener("visibilitychange", function () {
-    if (!document.hidden) t0 = performance.now();
+    if (document.hidden) parkAll(); else wakeAll();
   });
 
   function shot(w, h, bg) {

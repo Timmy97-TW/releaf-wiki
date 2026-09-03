@@ -22,12 +22,12 @@ const GRID = {
 };
 
 const CHANNELS = [
-  { x: -45, hue: "green", tier: "Low",  nm: 535, lux: [2.33, 2.33, 2.33, 2.34], unit: "kLux" },
-  { x: -27, hue: "red",   tier: "Low",  nm: 670, lux: [390, 393, 397, 397],     unit: "Lux"  },
-  { x:  -9, hue: "green", tier: "Mid",  nm: 535, lux: [2.35, 2.36, 2.37, 2.37], unit: "kLux" },
-  { x:   9, hue: "red",   tier: "Mid",  nm: 670, lux: [410, 410, 411, 416],     unit: "Lux"  },
-  { x:  27, hue: "green", tier: "High", nm: 535, lux: [2.38, 2.40, 2.40, 2.42], unit: "kLux" },
-  { x:  45, hue: "red",   tier: "High", nm: 670, lux: [424, 428, 430, 431],     unit: "Lux"  },
+  { x: -45, hue: "green", tier: "Low",  nm: 520, lux: [2.33, 2.33, 2.33, 2.34], unit: "kLux" },
+  { x: -27, hue: "red",   tier: "Low",  nm: 660, lux: [390, 393, 397, 397],     unit: "Lux"  },
+  { x:  -9, hue: "green", tier: "Mid",  nm: 520, lux: [2.35, 2.36, 2.37, 2.37], unit: "kLux" },
+  { x:   9, hue: "red",   tier: "Mid",  nm: 660, lux: [410, 410, 411, 416],     unit: "Lux"  },
+  { x:  27, hue: "green", tier: "High", nm: 520, lux: [2.38, 2.40, 2.40, 2.42], unit: "kLux" },
+  { x:  45, hue: "red",   tier: "High", nm: 660, lux: [424, 428, 430, 431],     unit: "Lux"  },
 ];
 
 // Every LED that was bought and measured at 5 V, before matching. Twelve of each

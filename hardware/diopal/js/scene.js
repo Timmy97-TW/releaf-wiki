@@ -1,4 +1,4 @@
-// V4 Photometer — scroll-driven disassembly.
+// Photometer — scroll-driven disassembly.
 //
 // Timeline (in beats):
 //   [0 .. HERO]          the complete instrument, large and centered
@@ -462,6 +462,154 @@
   const asmSize = new THREE.Vector3();
   let rigScaleBase = 1;
 
+
+  // ---------- the light path ----------
+  // What the instrument does is shine two wavelengths up through 24 tubes, and
+  // none of it is in the geometry: the LEDs sit under an opaque holder and the
+  // tubes are opaque white. So it is drawn — but faintly. This is a hint that
+  // the thing is lit, not a diagram drawn over the model.
+  //
+  // A column is one condition — four resistance-matched LEDs of one wavelength
+  // at one tier — and the six columns alternate green and red. Coordinates come
+  // from tube-holder.stl in the rotated frame the parts end up in: the tubes
+  // run y 66.5 to 146.5 inside a holder spanning x -68..66, z -55..54.
+  const beamGroup = new THREE.Group();
+  const glowGroup = new THREE.Group();
+  const beamCols = [], glowSprites = [];
+  const TUBE_TOP = 146.5;
+
+  // A plume, not a disc. Light leaving a tube keeps going and spreads as it
+  // goes, so the texture is brightest at the mouth, widens as it rises, and is
+  // gone before the top edge — nothing in it has a hard boundary, so it has no
+  // edge to read against the background.
+  //
+  // Built per pixel rather than from canvas gradients: the widening needs the
+  // horizontal falloff to depend on height, which a linear or radial gradient
+  // cannot express.
+  function glowTexture() {
+    // Anchored at the tube mouth, not above it. Chasing the step where the
+    // plume crossed the print's silhouette, I had moved the bright part a
+    // third of the way up the sprite — which lifted the light clean off the
+    // instrument and left a row of blobs hanging in the air above it. The
+    // glow has to sit on the openings; that is the whole point of it.
+    //
+    // So: brightest at the mouth, falling away fast downward onto the print
+    // and gently upward into the dark. A teardrop, not a column.
+    const W = 192, H = 256;
+    const c = document.createElement("canvas");
+    c.width = W; c.height = H;
+    const ctx = c.getContext("2d");
+    const img = ctx.createImageData(W, H);
+    const ANCHOR = 0.28;      // where the mouth sits up the sprite
+    const DOWN = 0.15;        // reach onto the print
+    const UP = 0.46;          // reach into the air above
+    // ~12 output levels over a few hundred pixels contours about every 30 of
+    // them, and a contour reads as an edge. Noise of about one level breaks
+    // them into grain.
+    const DITHER = 0.13;
+    for (let y = 0; y < H; y++) {
+      const u = 1 - y / (H - 1);
+      const dy = u - ANCHOR;
+      const vs = dy < 0 ? DOWN : UP;
+      const vert = Math.exp(-(dy / vs) * (dy / vs) * 1.6);
+      const spread = 0.34 + 0.9 * Math.max(0, dy);   // opens out as it rises
+      for (let x = 0; x < W; x++) {
+        const dx = (x / (W - 1) - 0.5) * 2 / spread;
+        let a = Math.exp(-dx * dx * 1.5) * vert;
+        a += (Math.random() - 0.5) * DITHER * Math.min(1, a / 0.012);
+        const i = (y * W + x) * 4;
+        img.data[i] = img.data[i + 1] = img.data[i + 2] = 255;
+        img.data[i + 3] = Math.round(Math.max(0, Math.min(1, a)) * 255);
+      }
+    }
+    ctx.putImageData(img, 0, 0);
+    const t = new THREE.CanvasTexture(c);
+    t.generateMipmaps = false;
+    t.minFilter = THREE.LinearFilter;
+    t.magFilter = THREE.LinearFilter;
+    t.wrapS = t.wrapT = THREE.ClampToEdgeWrapping;
+    t.needsUpdate = true;
+    return t;
+  }
+
+  (function buildLight() {
+    const Y0 = 80, Y1 = TUBE_TOP - 3;
+    const tex = glowTexture();
+    for (let col = 0; col < 6; col++) {
+      const x = -48 + col * 19.2;
+      const hex = col % 2 ? 0xff5f4a : 0x3ddc8b;
+      const lin = new THREE.Color(hex).convertSRGBToLinear();
+      // one material per column, so opacity is set six times a frame not 48
+      // Additive, not alpha. Alpha-blending a colour over the white tube rack
+      // darkens it — measured 118 down to 77 — which is the opposite of what a
+      // light does. Additive can only brighten, so the shaft lifts the dark
+      // tube openings and leaves the white print alone.
+      const shaft = new THREE.MeshBasicMaterial({
+        color: lin, transparent: true, opacity: 0, toneMapped: false,
+        blending: THREE.AdditiveBlending,
+        depthTest: false, depthWrite: false
+      });
+      const halo = new THREE.SpriteMaterial({
+        map: tex, color: lin, transparent: true, opacity: 0,
+        blending: THREE.AdditiveBlending, depthTest: false, depthWrite: false,
+        toneMapped: false
+      });
+      beamCols.push(shaft);
+      glowSprites.push(halo);
+      for (let row = 0; row < 4; row++) {
+        const z = -34 + row * 22.7;
+        // splayed along the direction of travel: light leaving an LED opens
+        // out up the tube
+        const m = new THREE.Mesh(
+          new THREE.CylinderGeometry(2.2, 0.9, Y1 - Y0, 7, 1, true), shaft);
+        m.position.set(x, (Y0 + Y1) / 2, z);
+        m.renderOrder = 2000;
+        beamGroup.add(m);
+        // The foot sits exactly at the mouth, where the texture is zero. Sinking
+        // it into the print did not help: additive light over a near-white
+        // surface does nothing anyway, so all that did was put the plume at
+        // half strength by the time it cleared the silhouette — which is the
+        // step that read as an edge. Starting at zero on that line means there
+        // is no row where the glow arrives.
+        // the sprite's anchor is the point the texture is brightest at, and it
+        // is placed on the mouth of the tube
+        const sp = new THREE.Sprite(halo);
+        sp.center.set(0.5, 0.28);
+        sp.scale.set(30, 62, 1);
+        sp.position.set(x, TUBE_TOP, z);
+        sp.renderOrder = 2002;
+        glowGroup.add(sp);
+      }
+    }
+    rig.add(beamGroup);
+    rig.add(glowGroup);
+  })();
+
+  function placeBeam() {
+    // the same rig-local frame as every part anchor
+    beamGroup.position.set(-asmCenter.x, -asmCenter.y, -asmCenter.z);
+    glowGroup.position.copy(beamGroup.position);
+  }
+
+  // `shaft` is the light inside the tubes and `glow` is what escapes the top.
+  // They are separate because they become true at different moments in the
+  // build: the shafts once the LEDs are seated, the glow only once there is a
+  // tube holder for the light to come out of.
+  function runBeam(shaft, glow) {
+    beamGroup.visible = shaft > 0.01;
+    glowGroup.visible = glow > 0.01;
+    for (let i = 0; i < beamCols.length; i++) {
+      // 0.16 pushed the lit face of the print to a flat 255 and took its
+      // shading with it; this lifts the dark tube openings and leaves the
+      // white surface still reading as a surface
+      beamCols[i].opacity = 0.11 * shaft;
+      // four tubes to a column overlap on screen and additive light stacks,
+      // so the per-glow figure has to leave room for that: 0.115 clipped a
+      // plateau to white where they piled up
+      glowSprites[i].opacity = 0.085 * glow;
+    }
+  }
+
   function layout() {
     const union = new THREE.Box3();
     items.forEach(function (it) { union.union(it.box); });
@@ -470,6 +618,7 @@
     items.forEach(function (it) {
       it.anchor.position.copy(it.home).sub(asmCenter);
     });
+    placeBeam();
     rigScaleBase = (frameSize() * 0.35) / asmSize.y;
   }
 
@@ -586,6 +735,13 @@
     // scale up over the first step so the build happens at full size
     const finaleT = ease(clamp01((progress - FINALE_START) / (ASM_STEP * 0.8)));
     const big = Math.max(heroT, finaleT);
+    // The light is tied to the build, not to a single "assembled" flag. The
+    // shafts come up once the LED holder and the array are home — build step 1,
+    // the second move — and the glow only once the tube holder is on at step 4,
+    // because before that there is no top for light to leave through.
+    const shaftT = inAsm ? ease(clamp01((asmStep - 1) / 0.9)) : heroT;
+    const glowT  = inAsm ? ease(clamp01((asmStep - (ASM_STEPS - 1)) / 0.9)) : heroT;
+    runBeam(shaftT, glowT);
 
     // Large state sits slightly low and stops short of full height, leaving
     // clear space at the top for the hero / finale caption.
@@ -770,7 +926,21 @@
     bar.style.transform = "scaleX(" + (progress / TOTAL).toFixed(4) + ")";
   }
 
+  // The loop is gated. It used to schedule itself unconditionally, so a full
+  // WebGL render ran every frame for the life of the page — including while the
+  // stage was scrolled far off-screen (this track is several viewport-heights
+  // tall) and while the tab was in the background. It now parks whenever the
+  // canvas is off-screen or the document is hidden, and is woken by scroll,
+  // by the observer, and by visibilitychange. Same contract as
+  // hardware/js/deck3d.js.
+  let raf = null, onScreen = true;
+
+  function schedule() {
+    if (raf == null && onScreen && !document.hidden) raf = requestAnimationFrame(tick);
+  }
+
   function tick() {
+    raf = null;
     const dt = Math.min(clock.getDelta(), 0.05);
     target = clamp01((window.scrollY - trackTop) / trackRange) * TOTAL;
     const k = 1 - Math.exp(-dt * 11);   // frame-rate independent damping
@@ -779,8 +949,19 @@
 
     frame(dt);
     renderer.render(scene, camera);
-    requestAnimationFrame(tick);
+    schedule();
   }
+
+  if ("IntersectionObserver" in window) {
+    new IntersectionObserver(function (es) {
+      onScreen = es[0].isIntersecting;
+      if (onScreen) { clock.getDelta(); schedule(); }   // drop the idle gap
+    }, { rootMargin: "120px" }).observe(canvas);
+  }
+  document.addEventListener("visibilitychange", function () {
+    if (!document.hidden) { clock.getDelta(); schedule(); }
+  });
+  window.addEventListener("scroll", schedule, { passive: true });
 
   // ---------- QA hooks ----------
   window.__photo = {

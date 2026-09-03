@@ -8,8 +8,6 @@
 
 :root {
   /* motion */
-  --ease-out-quart: cubic-bezier(.22, 1, .32, 1);
-  --ease-io: cubic-bezier(.4, 0, .2, 1);
   --dur-1: .18s; --dur-2: .32s; --dur-3: .6s;
   /* prose measure — Cornell runs ~170 characters per line; 68ch is the
      comfortable range and the single biggest readability difference */
@@ -23,7 +21,7 @@
 :focus-visible {
   outline: 2px solid var(--amber);
   outline-offset: 3px;
-  border-radius: 3px;
+  border-radius: var(--r-xs);
 }
 /* a mouse click on a card should not leave a ring behind */
 :focus:not(:focus-visible) { outline: none; }
@@ -33,7 +31,7 @@
 ::-webkit-scrollbar-track { background: transparent; }
 ::-webkit-scrollbar-thumb {
   background: rgba(255,255,255,.11);
-  border-radius: 7px;
+  border-radius: var(--r-md);
   border: 3px solid var(--bg);
 }
 ::-webkit-scrollbar-thumb:hover { background: rgba(255,255,255,.2); }
@@ -48,21 +46,215 @@
   background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='140' height='140'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.85' numOctaves='3'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
 }
 
-/* ---- marker-pen reveal ----------------------------------------------- */
-/* Wraps a phrase that matters. The sweep runs when it scrolls into view. */
-.mark {
+/* ---- type stack --------------------------------------------------------
+   One stack, everywhere. The instrument pages asked for "Inter" first and the
+   hub asked for it fourth, behind the Apple system faces — so on any machine
+   with Inter installed the hub rendered in SF Pro and the instrument pages
+   rendered in Inter. Two typefaces on one site, and invisible to anyone who
+   does not happen to have Inter.
+
+   Nothing here is self-hosted: there is no @font-face and no font file in the
+   repository, so "Inter" only ever applied to visitors who already had it.
+   System-first is the honest version of that — it renders natively everywhere
+   and costs no download. If the team uploads Inter through the iGEM uploads
+   tool, add the @font-face and move it to the front of this one declaration
+   and the whole site follows. */
+/* ---- what each build is called, in colour -------------------------------
+   These are identity, not decoration: a colour means the same thing on the
+   hub, in the notebook timeline, on the onward cards and in the bioreactor's
+   three-channel label. They were defined in hub.css and notebook.css, neither
+   of which an instrument page loads — so anything on an instrument page that
+   reached for --c-reactor resolved to nothing. They live here, where every
+   page can see them.
+
+   The four earlier builds get their own hues rather than sharing one grey:
+   five months of work went into them, and lumping them together made the
+   timeline read as "three instruments and some filler". */
+:root {
+  --c-photometer: #ffa23d;   /* PH */
+  --c-diopal:     #3ddc8b;   /* LP, later DiOPAL */
+  --c-reactor:    #5aa9ff;   /* BR */
+  --c-humidity:   #c48bff;   /* HB */
+  --c-imaging:    #ff6fb5;   /* IS */
+  --c-floating:   #4ad9d9;   /* FP */
+  --c-other:      #8e9bab;   /* pre-pivot, before the instruments existed */
+}
+
+/* ---- motion ------------------------------------------------------------
+   Four curves for the whole site, which is a tight enough language to keep.
+   --ease and --ease-out were each declared four times over, identically, in
+   every page stylesheet; they join the rest of the tokens here.
+
+     ease        the default, for hovers and small state changes
+     ease-out    arrivals — things coming to rest
+     ease-out-quart  long draws: the marker sweeps, the lane bars
+     ease-io     symmetrical moves that go and come back */
+:root {
+  --ease:           cubic-bezier(.22, .61, .36, 1);
+  --ease-out:       cubic-bezier(.16, 1, .3, 1);
+  --ease-out-quart: cubic-bezier(.22, 1, .32, 1);
+  --ease-io:        cubic-bezier(.4, 0, .2, 1);
+}
+
+:root {
+  --sans: -apple-system, "SF Pro Display", BlinkMacSystemFont, "Inter",
+          "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  --mono: ui-monospace, "SFMono-Regular", Menlo, Consolas, monospace;
+}
+
+/* ---- the palette ------------------------------------------------------
+   One source of truth for the dark theme. It used to be declared four times —
+   once in hub.css and once in each instrument's style.css — and the copies had
+   drifted: two different page blacks (#05060a and #06070a), two foregrounds
+   (#f4f7fa and #f2f5f8) and two muteds (#98a0ac and #99a2af). Two units per
+   channel is imperceptible on its own, but it meant the hub and the instrument
+   pages were not literally on the same palette.
+
+   polish.css loads after every page stylesheet, so these win. Each instrument
+   still sets its own --amber and --amber-deep; only the neutrals are shared.
+   The light record theme overrides these under body.doc-light further down,
+   which outranks :root. */
+:root {
+  --bg:     #05060a;
+  --bg-2:   #090b11;
+  --fg:     #f2f5f8;
+  --muted:  #98a0ac;
+  --dim:    #78818f;
+  --faint:  #757f8b;
+  --accent: #d3dae3;
+  --line:   rgba(255, 255, 255, .09);
+  --line-2: rgba(255, 255, 255, .13);
+}
+
+/* ---- radius scale ------------------------------------------------------
+   Eleven different corner radii were in use — 2, 3, 4, 5, 6, 7, 8, 9, 10, 20
+   and 100px — which is not a system, it is what accumulates when each
+   component picks its own. Four steps, chosen from what the site already
+   reached for most often, so cards match cards and buttons match buttons:
+
+     xs   bars, dots, marks, the small square chips
+     sm   the workhorse, on 50 elements already and left where it was
+     md   buttons, images, plots, small panels
+     lg   cards, keynotes, the big framed panels
+
+   Directional radii (`6px 0 0 6px` and the like) are shapes rather than scale
+   steps, and are left alone. */
+:root {
+  --r-xs: 3px;
+  --r-sm: 4px;
+  --r-md: 6px;
+  --r-lg: 10px;
+  --r-pill: 999px;
+}
+
+/* ---- annotation marks ------------------------------------------------ */
+/* Three weights of the same idea — someone went through the page with a pen.
+   All three colour only the mark, never the text, so the contrast work holds:
+   the ink stays var(--fg) and the wash sits behind it.
+
+   Each takes its colour from --mk. The instrument pages define --amber, but
+   the hub deliberately does not (it is neutral, and each instrument carries
+   its own colour), so --mk falls back through --accent. Without that fallback
+   color-mix() receives an undefined var, the whole gradient is invalid, and
+   the mark silently does not paint — which is why the hub had none. */
+/* --c is the hub deck's own instrument colour, so a mark inside a deck marks
+   in that instrument's colour and the neutral --accent catches the rest. */
+.mark, .ann, .q { --mk: var(--amber, var(--c, var(--accent, #d3dae3))); }
+
+/* 1. marker-pen swipe, for the sentence that carries the section */
+/* The element selectors are deliberate. A bare `.mark` is (0,1,0) and loses to
+   things like `.pull b` (0,1,1), which colours its text with the accent — put a
+   swipe behind that and you get accent ink on an accent wash, 4.0:1. Matching
+   the element keeps the ink at --fg wherever the mark is used. */
+.mark, b.mark, i.mark, em.mark, strong.mark, span.mark {
   color: var(--fg); font-weight: 600;
   background-image: linear-gradient(
-    color-mix(in srgb, var(--amber) 26%, transparent),
-    color-mix(in srgb, var(--amber) 42%, transparent));
+    color-mix(in srgb, var(--mk) 26%, transparent),
+    color-mix(in srgb, var(--mk) 42%, transparent));
   background-repeat: no-repeat;
   background-size: 0% 78%;
   background-position: 0 62%;
-  border-radius: 3px;
+  border-radius: var(--r-xs);
   padding: 0 .16em; margin: 0 -.16em;
+  /* without this a phrase that wraps keeps the swipe only on its first line */
+  -webkit-box-decoration-break: clone; box-decoration-break: clone;
   transition: background-size .75s var(--ease-out-quart);
 }
 .mark.in { background-size: 100% 78%; }
+
+/* 2. underline, for a phrase that matters but not enough to swipe */
+.ann {
+  background-image: linear-gradient(var(--mk), var(--mk));
+  background-repeat: no-repeat;
+  background-size: 0% 1.5px;
+  background-position: 0 calc(100% - .06em);
+  padding-bottom: .06em;
+  -webkit-box-decoration-break: clone; box-decoration-break: clone;
+  transition: background-size .6s var(--ease-out-quart) .08s;
+}
+.ann.in { background-size: 100% 1.5px; }
+
+/* 3. quantity, for a measured number sitting in prose */
+.q {
+  font-family: var(--mono);
+  font-variant-numeric: tabular-nums;
+  color: color-mix(in srgb, var(--mk) 82%, var(--fg));
+  letter-spacing: .01em; white-space: nowrap;
+}
+
+/* ---- margin captions --------------------------------------------------- */
+/* .doc-wrap is `1fr 760px 1fr`: the contents rail sits in column 1, the
+   document in column 2, and column 3 has never held anything at all. That is
+   the Tufte margin, already in the grid and unused.
+ 
+   Figure captions move into it. It takes the explanation out of the reading
+   column — where it interrupts the prose — and puts it beside the figure it
+   describes, which is where the eye already is. All 36 figures on the record
+   pages are captioned, median about 100 characters, which is four or five
+   lines at this width.
+ 
+   The breakpoint is not a guess. Each margin is (100vw - 96px - 760px) / 2, so
+   a 250px margin needs about 1356px of viewport. Below that there is no room
+   and the caption stays where it was, under the figure. */
+@media (min-width: 1360px) {
+  /* Only figures that stand alone in a section. The small multiples inside
+     .frames sit side by side in a row, so each caption has to stay under its
+     own image — pushed to the margin they would all stack on one another. */
+  .doc .sec > figure { position: relative; }
+  .doc .sec > figure > figcaption {
+    position: absolute; top: 0; left: calc(100% + 2.2rem);
+    width: 250px; max-width: none;
+    margin: 0; padding: 0 0 0 .85rem;
+    font-size: .78rem; line-height: 1.66;
+    text-align: left;
+    border-left: 1px solid var(--line);
+  }
+  .doc .sec > figure > figcaption b { display: block; margin-bottom: .35em; color: var(--fg); }
+
+  /* A caption is positioned from its figure's right edge, so a figure narrower
+     than the column drags its caption back into the text. The hero plate is
+     capped at 430px and centred; let the figure box fill the column and centre
+     the image inside it instead — the picture is unchanged, the caption lands
+     in the margin with the others. */
+  .doc .sec > figure.frame.hero { max-width: none; }
+  .doc .sec > figure.frame.hero > .frame-img { max-width: 430px; margin-inline: auto; }
+}
+
+/* ---- staggered reveal ------------------------------------------------- */
+/* A group whose children arrive one after another rather than as one block.
+   The container is observed exactly like a .reveal; the cascade is the
+   children's own transition-delay, indexed by JS. */
+html.js .stagger > * { opacity: 0; transform: translateY(12px); }
+html.js .stagger.in > * {
+  opacity: 1; transform: none;
+  transition: opacity .55s var(--ease-out-quart), transform .55s var(--ease-out-quart);
+  transition-delay: calc(var(--i, 0) * 65ms);
+}
+
+/* ---- counting figures ------------------------------------------------- */
+/* Tabular figures while a number counts, so the width does not jitter as the
+   digits change and shove the unit around. */
+.counting { font-variant-numeric: tabular-nums; }
 
 /* ---- scroll reveal ---------------------------------------------------- */
 /* Both rules carry the html.js guard: `html.js .reveal` (0,2,1) outweighs
@@ -80,7 +272,7 @@ html.js .reveal.in {
 .doc-nav a { position: relative; }
 .doc-nav a .rail-fill {
   position: absolute; left: -.8rem; top: 50%; transform: translateY(-50%);
-  width: 2px; height: 1.1rem; border-radius: 2px;
+  width: 2px; height: 1.1rem; border-radius: var(--r-xs);
   background: var(--amber); transform-origin: top;
   opacity: 0; transition: opacity .3s var(--ease-io);
 }
@@ -95,12 +287,16 @@ html.js .reveal.in {
 .bom-search {
   flex: 1 1 190px; min-width: 0;
   background: rgba(255,255,255,.03); color: var(--fg);
-  border: 1px solid var(--line); border-radius: 4px;
+  border: 1px solid var(--line); border-radius: var(--r-sm);
   padding: .5rem .7rem;
   font-family: var(--mono); font-size: .72rem; letter-spacing: .04em;
 }
 .bom-search::placeholder { color: var(--faint); }
-.bom-search:focus { outline: none; border-color: color-mix(in srgb, var(--amber) 45%, transparent); }
+/* The border warms on any focus; the ring is only dropped for the mouse.
+   A border colour shift alone is a weak keyboard affordance on a control this
+   small. */
+.bom-search:focus { border-color: color-mix(in srgb, var(--amber) 45%, transparent); }
+.bom-search:focus:not(:focus-visible) { outline: none; }
 .bom-count {
   font-family: var(--mono); font-size: .58rem; letter-spacing: .16em;
   text-transform: uppercase; color: var(--dim); white-space: nowrap;
@@ -115,12 +311,12 @@ table.bom th[data-sort][aria-sort="descending"]::after { content: "↓"; opacity
 table.bom tbody tr.hidden-row { display: none; }
 .bom-empty {
   padding: 1.2rem; text-align: center; color: var(--dim);
-  font-size: .82rem; border: 1px dashed var(--line); border-radius: 4px;
+  font-size: .82rem; border: 1px dashed var(--line); border-radius: var(--r-sm);
 }
 
 /* ---- gradient-border card -------------------------------------------- */
 .gradcard {
-  border: 1px solid transparent; border-radius: 8px;
+  border: 1px solid transparent; border-radius: var(--r-lg);
   background:
     linear-gradient(var(--bg), var(--bg)) padding-box,
     linear-gradient(135deg,
@@ -138,7 +334,77 @@ table.bom tbody tr.hidden-row { display: none; }
     scroll-behavior: auto !important;
   }
   html.js .reveal { opacity: 1; transform: none; }
+  html.js .stagger > * { opacity: 1; transform: none; }
+  .sec > h3::after { transform: scaleX(1); }
   .mark { background-size: 100% 78%; }
+  .ann { background-size: 100% 1.5px; }
+}
+
+
+/* ---- onward navigation -------------------------------------------------
+   An instrument page used to end at its own footer, so the only way to the
+   other two was back to the hub and in again. Three cards at the foot: the
+   other instruments in their own colours, and the hub for the relationship
+   between them. Deliberately quiet — it is a way out of the page, not a
+   feature of it. */
+.onward {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: .7rem;
+  margin: 4.5rem 0 0;
+  padding-top: 2rem;
+  border-top: 1px solid var(--line);
+}
+.onward-card {
+  --c: var(--accent);
+  position: relative;
+  display: grid;
+  gap: .12rem;
+  padding: 1.05rem 2.4rem 1.1rem 1.1rem;
+  border: 1px solid var(--line);
+  border-radius: var(--r-md);
+  background: rgba(255, 255, 255, .012);
+  text-decoration: none;
+  transition: border-color .22s var(--ease-out), background .22s var(--ease-out),
+              transform .22s var(--ease-out);
+}
+/* the instrument's own colour, so the destination is legible before it is read */
+.onward-card::before {
+  content: ""; position: absolute; left: 0; top: 12px; bottom: 12px;
+  width: 2px; border-radius: var(--r-xs);
+  background: var(--c);
+  opacity: .55; transition: opacity .22s var(--ease-out);
+}
+.onward-photometer { --c: var(--c-photometer, #ffa23d); }
+.onward-diopal     { --c: var(--c-diopal, #3ddc8b); }
+.onward-reactor    { --c: var(--c-reactor, #5aa9ff); }
+.onward-all        { --c: var(--accent); }
+
+.onward-k {
+  font-family: var(--mono); font-size: .52rem; letter-spacing: .2em;
+  text-transform: uppercase; color: var(--faint);
+}
+.onward-card b { font-size: .95rem; font-weight: 600; color: var(--fg); letter-spacing: -.01em; }
+.onward-role { font-size: .78rem; color: var(--dim); }
+.onward-card i {
+  position: absolute; right: 1rem; top: 50%; transform: translateY(-50%);
+  font-style: normal; color: var(--c); opacity: .7;
+  transition: transform .22s var(--ease-out), opacity .22s var(--ease-out);
+}
+.onward-card:hover, .onward-card:focus-visible {
+  border-color: color-mix(in srgb, var(--c) 45%, transparent);
+  background: rgba(255, 255, 255, .03);
+}
+.onward-card:hover::before, .onward-card:focus-visible::before { opacity: 1; }
+.onward-card:hover i, .onward-card:focus-visible i {
+  transform: translateY(-50%) translateX(3px); opacity: 1;
+}
+@media (max-width: 760px) {
+  .onward { grid-template-columns: 1fr; gap: .5rem; margin-top: 3rem; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .onward-card, .onward-card i, .onward-card::before { transition: none; }
+  .onward-card:hover i, .onward-card:focus-visible i { transform: translateY(-50%); }
 }
 
 /* ---- print ------------------------------------------------------------ */
@@ -202,7 +468,7 @@ table .num, ul.mini li b, .bom-count { font-variant-numeric: tabular-nums; }
   position: relative; z-index: 1;
   width: min(560px, calc(100vw - 2rem));
   margin: min(16vh, 120px) auto 0;
-  border-radius: 10px; border: 1px solid var(--line);
+  border-radius: var(--r-lg); border: 1px solid var(--line);
   background: rgba(10,13,18,.97);
   box-shadow: 0 30px 80px -20px rgba(0,0,0,.85);
   overflow: hidden;
@@ -215,12 +481,15 @@ table .num, ul.mini li b, .bom-count { font-variant-numeric: tabular-nums; }
   background: transparent; color: var(--fg);
   font-family: var(--sans); font-size: .95rem;
 }
-.palette-input:focus { outline: none; }
+/* was `:focus`, which took the ring away from the keyboard too and put
+   nothing in its place — the one control on the site you could focus with no
+   way to tell. Narrowed to the mouse case the global rule already handles. */
+.palette-input:focus:not(:focus-visible) { outline: none; }
 .palette-input::placeholder { color: var(--faint); }
 .palette-list { list-style: none; margin: 0; padding: .35rem; max-height: 46vh; overflow-y: auto; }
 .palette-list li {
   display: grid; grid-template-columns: auto 1fr auto; gap: .7rem;
-  align-items: baseline; padding: .55rem .7rem; border-radius: 5px; cursor: pointer;
+  align-items: baseline; padding: .55rem .7rem; border-radius: var(--r-md); cursor: pointer;
 }
 .palette-list li.on { background: color-mix(in srgb, var(--amber) 13%, transparent); }
 .p-kind {
@@ -242,13 +511,13 @@ table .num, ul.mini li b, .bom-count { font-variant-numeric: tabular-nums; }
 }
 .palette-foot kbd, .palette-hint kbd {
   font-family: var(--mono); font-size: .9em;
-  border: 1px solid var(--line); border-radius: 3px;
+  border: 1px solid var(--line); border-radius: var(--r-xs);
   padding: .08em .35em; color: var(--dim);
 }
 .palette-hint {
   position: fixed; right: 18px; bottom: 18px; z-index: 120;
   display: inline-flex; align-items: center; gap: .4rem;
-  padding: .5rem .7rem; border-radius: 20px;
+  padding: .5rem .7rem; border-radius: var(--r-pill);
   border: 1px solid var(--line); background: rgba(10,13,18,.82);
   backdrop-filter: blur(8px); cursor: pointer;
   color: var(--dim); font-family: var(--mono);
@@ -477,11 +746,17 @@ body::after {
   content: ""; flex: 1; height: 1px; margin-left: 1rem;
   background: linear-gradient(90deg,
     color-mix(in srgb, var(--amber) 26%, transparent), transparent 78%);
+  /* the rule was already here, it just never moved — draw it as the heading
+     arrives so a section announces itself */
+  transform-origin: left;
+  transition: transform .9s var(--ease-out-quart);
 }
+html.js .sec > h3::after { transform: scaleX(0); }
+html.js .sec > h3.in::after { transform: scaleX(1); }
 
 /* ---- keynote: the one big number per section --------------------------- */
 .keynote {
-  border: 0; border-radius: 8px; padding: 1.6rem 1.7rem;
+  border: 0; border-radius: var(--r-lg); padding: 1.6rem 1.7rem;
   background:
     radial-gradient(90% 140% at 0% 0%,
       color-mix(in srgb, var(--amber) 13%, transparent), transparent 62%),
@@ -506,14 +781,14 @@ body::after {
 /* ---- spec grid reads as an instrument readout -------------------------- */
 .specgrid > div {
   padding: .9rem 1rem;
-  border-radius: 5px;
+  border-radius: var(--r-md);
   background: rgba(255,255,255,.02);
   box-shadow: inset 0 0 0 1px rgba(255,255,255,.045);
   position: relative;
 }
 .specgrid > div::before {
   content: ""; position: absolute; left: 0; top: .9rem; bottom: .9rem;
-  width: 2px; border-radius: 2px;
+  width: 2px; border-radius: var(--r-xs);
   background: color-mix(in srgb, var(--amber) 45%, transparent);
 }
 .specgrid h4 {
@@ -525,7 +800,15 @@ body::after {
 /* ---- headline stats: the page's loudest voice -------------------------- */
 .headline-stats {
   padding: 1.4rem 0; border-top: 1px solid var(--line); border-bottom: 1px solid var(--line);
+  /* style.css builds this as a 1px-gap grid whose gaps show the container's
+     background as lines. The readout panels below replace that, but the
+     container background was left behind — it tinted the whole strip and
+     lifted the ground under the labels to 4.31:1. */
+  background: none; border-left: 0; border-right: 0; gap: .8rem;
 }
+/* --dim is tuned for the page ground, not for a raised amber-tinted panel, and
+   these labels are the smallest text on the page. */
+.headline-stats span { color: var(--muted); font-size: .58rem; }
 .headline-stats b {
   text-shadow: 0 0 34px color-mix(in srgb, var(--amber) 34%, transparent);
 }
@@ -562,7 +845,7 @@ table.bom tfoot td {
 
 /* ---- open items read as ticket stubs ----------------------------------- */
 .openitem {
-  border: 0; border-radius: 5px;
+  border: 0; border-radius: var(--r-md);
   background:
     repeating-linear-gradient(-45deg,
       rgba(255,162,61,.05) 0 7px, transparent 7px 14px),
@@ -572,7 +855,7 @@ table.bom tfoot td {
 
 /* ---- the standfirst carries the page ----------------------------------- */
 .standfirst {
-  font-size: 1.06rem !important; line-height: 1.72 !important;
+  font-size: 1.05rem !important; line-height: 1.72 !important;
   color: var(--fg) !important;
 }
 .doc-head h1 {
@@ -649,7 +932,7 @@ body[data-instrument="bioreactor"] .doc-wrap::after {
    corner ticks, a unit rail and a glow — the loudest thing on the page. */
 .headline-stats > div {
   padding: .95rem 1.05rem;
-  border-radius: 5px;
+  border-radius: var(--r-md);
   background: linear-gradient(180deg,
     color-mix(in srgb, var(--amber) 7%, transparent), rgba(255,255,255,.014));
   box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--amber) 18%, transparent);
@@ -701,10 +984,12 @@ body.doc-light {
   --bg-2: #f5f7f9;
   --fg: #0f1319;
   --muted: #4d5866;
-  --dim: #626d7b;
-  /* --faint is only ever used for text — labels, captions, chart ticks — so
-     it has to clear 4.5:1 rather than stay decorative. #aab3be managed 2.1. */
-  --faint: #67727e;
+  --dim: #556070;
+  /* --faint and --dim are only ever used for text — labels, captions, chart
+     ticks — so both have to clear 4.5:1. Measure them against the darkest
+     surface they land on (the #e0e0e1 panels), not against white: #67727e
+     cleared 4.90 on white but only 3.72 there. */
+  --faint: #586370;
   --line: rgba(15, 19, 25, .13);
   --line-2: rgba(15, 19, 25, .20);
   /* The page accent is tuned for a dark field; on white it lands near 1.9:1
@@ -798,26 +1083,57 @@ body.doc-light ::selection { background: var(--amber); color: #fff; }
    "wherever this file used rgba(255,255,255,x)".
    -------------------------------------------------------------------- */
 body.doc-light {
-  --wash:   rgba(15, 19, 25, .035);
-  --wash-2: rgba(15, 19, 25, .065);
-  --hair:   rgba(15, 19, 25, .14);
+  /* A surface has to clear roughly 1.15:1 against the page before the eye reads
+     it as a separate plane. The previous values sat at 1.05-1.07:1, so every
+     callout, open item, equation and spec cell on the record was technically a
+     box and visually nothing — which is most of why the light half read as an
+     unbroken wall of grey text. */
+  --wash:   rgba(15, 19, 25, .085);   /* 1.19:1 against the page */
+  --wash-2: rgba(15, 19, 25, .115);
+  --hair:   rgba(15, 19, 25, .17);
+  /* the accent has to do two jobs that want different values: ink that clears
+     4.5:1 as text, and a tint light enough to sit under it */
+  --amber-tint: color-mix(in srgb, var(--amber) 16%, #fff);
 }
 
-body.doc-light .openitem,
-body.doc-light .callout,
-body.doc-light .equation,
+/* These eleven components used to share one wash, so a callout, an open item,
+   an equation and a spec cell were the same rectangle with different borders.
+   They now differ in kind — tint, paper, slab, ruled — so a reader can tell
+   what they are looking at without reading it. */
 body.doc-light .map-card,
 body.doc-light .circuit,
 body.doc-light .rel-card,
 body.doc-light .pick-item,
 body.doc-light .bom-search,
 body.doc-light .od-wrap,
-body.doc-light .specgrid > div,
 body.doc-light .params .param {
   background: var(--wash);
   border-color: var(--hair);
 }
-body.doc-light .openitem { border-left-color: var(--amber); }
+/* callout: the accent surface — this is the page talking to you */
+body.doc-light .callout {
+  background: var(--amber-tint);
+  border-color: color-mix(in srgb, var(--amber) 28%, transparent);
+  border-left: 3px solid var(--amber);
+}
+/* open item: unfinished work, so it stays paper-white behind a hard rule */
+body.doc-light .openitem {
+  background: #fff;
+  border-color: var(--hair);
+  border-left: 3px solid var(--amber);
+  box-shadow: 0 1px 2px rgba(15, 19, 25, .05);
+}
+/* equation: a cooler, heavier slab so maths reads as set apart from prose */
+body.doc-light .equation {
+  background: #e7ebf1;
+  border-color: rgba(15, 19, 25, .18);
+}
+/* spec cells: ruled rather than filled, so a grid of them is not a grey block */
+body.doc-light .specgrid > div {
+  background: transparent;
+  border-color: var(--hair);
+  border-top: 2px solid color-mix(in srgb, var(--amber) 42%, transparent);
+}
 body.doc-light table tbody tr:hover td,
 body.doc-light table.bom tbody tr:nth-child(even),
 body.doc-light table.bom tr.bom-linked.is-hover,
@@ -933,7 +1249,7 @@ body.doc-light .frame {
   counter-increment: plate;
   background: #fff;
   border: 1px solid rgba(15, 19, 25, .13);
-  border-radius: 5px;
+  border-radius: var(--r-md);
   padding: 14px 14px 2px;
   box-shadow: 0 1px 1px rgba(15, 19, 25, .04),
               0 18px 34px -22px rgba(15, 19, 25, .40);
@@ -961,7 +1277,7 @@ body.doc-light .frame::after {
   content: "FIG " counter(plate, decimal-leading-zero);
   position: absolute; top: 0; right: 16px; transform: translateY(-50%);
   padding: 0 .55em; background: #fff;
-  font-family: var(--mono); font-size: .54rem; font-weight: 600;
+  font-family: var(--mono); font-size: .55rem; font-weight: 600;
   letter-spacing: .18em; color: var(--amber);
 }
 body.doc-light .frames .frame::after { right: 10px; font-size: .5rem; }
@@ -982,7 +1298,7 @@ body.doc-light .frame figcaption {
 }
 body.doc-light .frame figcaption b {
   display: inline-block; margin-right: .55em;
-  font-family: var(--mono); font-size: .57rem; font-weight: 600;
+  font-family: var(--mono); font-size: .56rem; font-weight: 600;
   letter-spacing: .16em; text-transform: uppercase;
   color: var(--amber);
 }
@@ -1016,7 +1332,11 @@ body.doc-light .sec > h3 {
 body.doc-light .sec > h3::after {
   content: ""; position: absolute; top: -1px; left: 0;
   width: 46px; height: 2px; background: var(--amber);
+  transform-origin: left;
+  transition: transform .9s var(--ease-out-quart);
 }
+html.js body.doc-light .sec > h3::after { transform: scaleX(0); }
+html.js body.doc-light .sec > h3.in::after { transform: scaleX(1); }
 
 /* The topbar is fixed in both themes, so anything jumped to from the contents
    list or the jump palette landed underneath it. Never handled, because a
@@ -1027,7 +1347,7 @@ body.doc-light .sec > h3::after {
 .wipe { margin: 2rem 0; }
 .wipe-stage {
   position: relative; overflow: hidden;
-  border: 1px solid var(--line); border-radius: 5px;
+  border: 1px solid var(--line); border-radius: var(--r-md);
   aspect-ratio: 4 / 3; background: #0b0d10;
   cursor: ew-resize; touch-action: none; user-select: none;
 }
@@ -1058,7 +1378,7 @@ body.doc-light .sec > h3::after {
   position: absolute; bottom: 10px; z-index: 2;
   font-family: var(--mono); font-size: .56rem;
   letter-spacing: .16em; text-transform: uppercase;
-  padding: .32em .6em; border-radius: 3px;
+  padding: .32em .6em; border-radius: var(--r-xs);
   background: rgba(8, 10, 14, .74); color: #eef3f8;
   backdrop-filter: blur(3px);
 }
@@ -1075,7 +1395,7 @@ body.doc-light .sec > h3::after {
 }
 .wipe-picks button {
   font-family: var(--mono); font-size: .58rem; letter-spacing: .12em;
-  padding: .38em .7em; border-radius: 3px; cursor: pointer;
+  padding: .38em .7em; border-radius: var(--r-xs); cursor: pointer;
   border: 1px solid var(--line); background: transparent; color: var(--dim);
   transition: color .2s var(--ease-io), border-color .2s var(--ease-io);
 }
@@ -1097,60 +1417,60 @@ body.doc-light .wipe-picks button { background: #fff; }
 }
 
 /* ==== self-drawing schematics =========================================== */
-.autodraw { margin: 2.2rem 0; }
-.autodraw svg { width: 100%; height: auto; display: block; overflow: visible; }
-.autodraw .beam {
+.autodraw , .syswalk-fig { margin: 2.2rem 0; }
+.autodraw svg , .syswalk-fig svg { width: 100%; height: auto; display: block; overflow: visible; }
+.autodraw .beam , .syswalk-fig .beam {
   stroke: var(--amber); stroke-width: 2.4; stroke-linecap: round; fill: none;
 }
-.autodraw .beam.ref { stroke-dasharray: none; opacity: .8; stroke-width: 1.8; }
-.autodraw .beam.thin { stroke-width: 1.2; opacity: .55; }
-.autodraw .part {
+.autodraw .beam.ref , .syswalk-fig .beam.ref { stroke-dasharray: none; opacity: .8; stroke-width: 1.8; }
+.autodraw .beam.thin , .syswalk-fig .beam.thin { stroke-width: 1.2; opacity: .55; }
+.autodraw .part , .syswalk-fig .part {
   stroke: var(--muted); stroke-width: 1.6; fill: none; stroke-linecap: round;
 }
-.autodraw .part.hot { stroke: var(--amber); stroke-width: 2.2; }
-.autodraw .part.led { stroke: var(--amber); fill: color-mix(in srgb, var(--amber) 22%, transparent); }
+.autodraw .part.hot , .syswalk-fig .part.hot { stroke: var(--amber); stroke-width: 2.2; }
+.autodraw .part.led , .syswalk-fig .part.led { stroke: var(--amber); fill: color-mix(in srgb, var(--amber) 22%, transparent); }
 /* hollow-fiber bundle: present, but it must not compete with the circuit */
-.autodraw .part.thin { stroke-width: .9; opacity: .5; }
+.autodraw .part.thin , .syswalk-fig .part.thin { stroke-width: .9; opacity: .5; }
 /* DiOPAL's two wavelengths are the one place the diagram carries real colour.
    Like --amber, the values tuned for a dark field wash out on paper, so each
    has a deeper twin rather than one compromise value that suits neither. */
-.autodraw .g { stroke: #35c46f; fill: rgba(53, 196, 111, .18); }
-.autodraw .r { stroke: #ff6a55; fill: rgba(255, 106, 85, .18); }
-.autodraw text {
+.autodraw .g , .syswalk-fig .g { stroke: #35c46f; fill: rgba(53, 196, 111, .18); }
+.autodraw .r , .syswalk-fig .r { stroke: #ff6a55; fill: rgba(255, 106, 85, .18); }
+.autodraw text , .syswalk-fig text {
   font-family: var(--mono); font-size: 12px; letter-spacing: .1em;
   text-transform: uppercase; fill: var(--fg);
 }
-.autodraw text.dim { fill: var(--dim); font-size: 10.5px; letter-spacing: .08em; }
+.autodraw text.dim , .syswalk-fig text.dim { fill: var(--dim); font-size: 10.5px; letter-spacing: .08em; }
 /* Labels are uppercased for the drafting look, but some terms carry their case
    as part of their meaning — "pH" is not "PH". Those opt out. */
-.autodraw text.case { text-transform: none; letter-spacing: .06em; }
-.autodraw text.big {
+.autodraw text.case , .syswalk-fig text.case { text-transform: none; letter-spacing: .06em; }
+.autodraw text.big , .syswalk-fig text.big {
   font-size: 21px; letter-spacing: -.01em; text-transform: none;
   fill: var(--amber); font-weight: 600;
 }
-.autodraw figcaption {
+.autodraw figcaption , .syswalk-fig figcaption {
   margin-top: .9rem; padding-top: .8rem;
   border-top: 1px solid var(--line);
   font-size: .82rem; color: var(--muted); line-height: 1.62;
 }
-.autodraw figcaption b {
+.autodraw figcaption b , .syswalk-fig figcaption b {
   display: inline-block; margin-right: .55em;
-  font-family: var(--mono); font-size: .57rem; font-weight: 600;
+  font-family: var(--mono); font-size: .56rem; font-weight: 600;
   letter-spacing: .16em; text-transform: uppercase; color: var(--amber);
 }
 
 /* on paper it becomes a mounted plate like the photographs */
-body.doc-light .autodraw {
+body.doc-light .autodraw , body.doc-light .syswalk-fig {
   background: #fff;
   border: 1px solid rgba(15, 19, 25, .13);
-  border-radius: 5px;
+  border-radius: var(--r-md);
   padding: 18px 18px 4px;
   box-shadow: 0 1px 1px rgba(15, 19, 25, .04),
               0 18px 34px -22px rgba(15, 19, 25, .40);
 }
-body.doc-light .autodraw figcaption { border-top-color: rgba(15, 19, 25, .11); }
-body.doc-light .autodraw .g { stroke: #17843f; fill: rgba(23, 132, 63, .16); }
-body.doc-light .autodraw .r { stroke: #c1392a; fill: rgba(193, 57, 42, .16); }
+body.doc-light .autodraw figcaption , body.doc-light .syswalk-fig figcaption { border-top-color: rgba(15, 19, 25, .11); }
+body.doc-light .autodraw .g , body.doc-light .syswalk-fig .g { stroke: #17843f; fill: rgba(23, 132, 63, .16); }
+body.doc-light .autodraw .r , body.doc-light .syswalk-fig .r { stroke: #c1392a; fill: rgba(193, 57, 42, .16); }
 
 /* ---- narrow screens ---------------------------------------------------
    An SVG with a fixed viewBox scales its type down with everything else. At
@@ -1164,14 +1484,14 @@ body.doc-light .autodraw .r { stroke: #c1392a; fill: rgba(193, 57, 42, .16); }
    its own sub-label. Holding a minimum width keeps the authored spacing and
    lets the diagram scroll, which costs a swipe and keeps every label legible. */
 @media (max-width: 760px) {
-  .autodraw { overflow-x: auto; -webkit-overflow-scrolling: touch; }
+  .autodraw , .syswalk-fig { overflow-x: auto; -webkit-overflow-scrolling: touch; }
   /* Labels are positioned in viewBox units, so enlarging the type collides them
      — the only way to make them legible is to render the diagram larger and
      scroll. At 560px the secondary labels came out at 8.9px; 640 puts them back
      over 10px, and the diagram was already wider than the viewport either way,
      so the extra swipe costs nothing that was not already being paid. */
-  .autodraw svg { min-width: 640px; }
-  .autodraw.scrolls::after {
+  .autodraw svg , .syswalk-fig svg { min-width: 640px; }
+  .autodraw.scrolls::after , .syswalk-fig.scrolls::after {
     content: "swipe to see the full diagram";
     display: block; margin-top: .5rem;
     font-family: var(--mono); font-size: .52rem;
@@ -1186,3 +1506,635 @@ body.doc-light .autodraw .r { stroke: #c1392a; fill: rgba(193, 57, 42, .16); }
   .wipe-bar { gap: .5rem .7rem; }
   .wipe-grip { width: 44px; height: 44px; }
 }
+
+/* ---- back control ------------------------------------------------------ */
+/* The way home used to be the wordmark "← GEMS-Taiwan", set at 0.63rem in
+   tracked uppercase mono. That reads as branding, and nobody clicks branding
+   to navigate — the breadcrumb "Hardware" beside it had the same problem. This
+   is a control that looks like one and says where it goes, and it keeps the
+   team name on the page as static text where it belongs. */
+.backbtn {
+  display: inline-flex; align-items: center; gap: .55rem;
+  padding: .5rem .95rem .5rem .8rem;
+  border: 1px solid var(--line-2); border-radius: var(--r-pill);
+  background: color-mix(in srgb, var(--bg) 70%, transparent);
+  color: var(--fg); text-decoration: none;
+  font-family: var(--mono); font-size: .6rem;
+  letter-spacing: .16em; text-transform: uppercase; white-space: nowrap;
+  transition: border-color .25s var(--ease), background .25s var(--ease),
+              transform .25s var(--ease);
+}
+.backbtn i {
+  font-style: normal; color: var(--amber); font-size: 1.05em; line-height: 1;
+  transition: transform .25s var(--ease);
+}
+.backbtn:hover, .backbtn:focus-visible {
+  border-color: color-mix(in srgb, var(--amber) 55%, transparent);
+  background: color-mix(in srgb, var(--amber) 12%, transparent);
+}
+.backbtn:hover i, .backbtn:focus-visible i { transform: translateX(-3px); }
+.tb-brand { color: var(--fg); font-weight: 500; }
+.topbar-meta .tb-sep { color: var(--faint); margin: 0 .35em; }
+
+/* on the light record the bar is deep green, so the control follows it */
+body.doc-light .backbtn {
+  border-color: rgba(255, 255, 255, .28);
+  background: rgba(255, 255, 255, .07);
+  color: #eaf5ef;
+}
+body.doc-light .backbtn i { color: #eaf5ef; }
+body.doc-light .backbtn:hover, body.doc-light .backbtn:focus-visible {
+  background: rgba(255, 255, 255, .16);
+  border-color: rgba(255, 255, 255, .5);
+}
+body.doc-light .tb-brand { color: #eaf5ef; }
+
+/* the label shortens before it can push the breadcrumb off the bar */
+@media (max-width: 640px) {
+  .backbtn .backbtn-long { display: none; }
+  .backbtn { padding: .5rem .8rem; }
+}
+
+/* ---- accent at reading size, on paper ---------------------------------- */
+/* Measured on the photometer record: 1.6% of characters carried the accent, and
+   269 of those 440 characters were 9px micro-caps. Above 14px there were 38
+   accent characters in a 22,000px document. The dark half is saturated orange
+   everywhere; the light half was black-on-white with brown labels. These put
+   the accent where the eye already goes. */
+body.doc-light .doc .part::before {
+  /* the single largest graphic on the page was outlined at 1.35:1 — invisible */
+  -webkit-text-stroke: 1.5px color-mix(in srgb, var(--amber) 52%, transparent);
+}
+body.doc-light .sec h3 i { font-size: .8em; }
+body.doc-light .keynote-fig { color: var(--amber); }
+body.doc-light .headline-stats b { color: var(--amber); }
+body.doc-light .delta b.good { color: var(--amber); }
+/* a lead-in rule on every section heading, so the accent appears at the size
+   the reader is actually reading at rather than only in 9px labels */
+body.doc-light .sec h3 {
+  padding-top: .85rem;
+  border-top: 2px solid color-mix(in srgb, var(--amber) 30%, transparent);
+}
+body.doc-light .sec h4 { color: var(--fg); }
+
+/* ---- rhythm ------------------------------------------------------------ */
+/* Every part divider was pinned to the same 34vh, so all four landed
+   identically. The first announces the document; the rest are waypoints. */
+body.doc-light .doc .part { min-height: 26vh; }
+body.doc-light .doc .part[data-n="1"] { min-height: 38vh; }
+
+/* ---- three-channel package view ---------------------------------------- */
+/* Sits in the bioreactor's outlook section. It is a massing study built from
+   the geometry the hero already loaded, so it costs nothing to ship — but it
+   has to read as a proposal, not as a photograph of something that exists. */
+.triple {
+  position: relative; margin: 2.2rem 0 1.4rem;
+  border-radius: var(--r-lg); overflow: hidden;
+  background:
+    radial-gradient(70% 60% at 50% 42%, rgba(90, 169, 255, .10), transparent 72%),
+    #0a0d12;
+  border: 1px solid var(--line);
+}
+.triple-stage { position: relative; }
+.triple canvas { display: block; width: 100%; }
+.triple-label {
+  /* anchored to the render, not the figure — otherwise it sits on the caption */
+  position: absolute; left: 1.1rem; bottom: 1.1rem; max-width: 20rem;
+  padding: .7rem .9rem; border-radius: var(--r-md);
+  background: rgba(6, 8, 12, .74);
+  backdrop-filter: blur(7px); -webkit-backdrop-filter: blur(7px);
+  border: 1px solid rgba(255, 255, 255, .09);
+  transition: border-color .4s var(--ease);
+}
+.triple-label.on { border-color: color-mix(in srgb, var(--c-reactor) 38%, transparent); }
+.triple-label b {
+  display: block; font-family: var(--mono); font-size: .52rem;
+  letter-spacing: .2em; text-transform: uppercase; color: var(--c-reactor); font-weight: 600;
+}
+.triple-label span {
+  display: block; margin-top: .22rem; font-size: 1rem; font-weight: 600;
+  letter-spacing: -.01em; color: var(--fg);
+}
+.triple-label i {
+  display: block; margin-top: .12rem; font-style: normal;
+  font-size: .78rem; line-height: 1.5; color: #99a2af;
+}
+.triple figcaption {
+  padding: .85rem 1.1rem 1rem;
+  font-size: .84rem; line-height: 1.6; color: var(--muted);
+  border-top: 1px solid var(--line);
+}
+.triple figcaption b {
+  font-family: var(--mono); font-size: .55rem; letter-spacing: .16em;
+  text-transform: uppercase; color: #5aa9ff; margin-right: .55em;
+}
+/* the viewer keeps its dark stage even once the record turns to paper —
+   it is a render, and it reads as one */
+body.doc-light .triple { border-color: rgba(15, 19, 25, .18); }
+body.doc-light .triple figcaption {
+  background: #fff; color: var(--muted); border-top-color: rgba(15, 19, 25, .12);
+}
+/* --amber, not --c-reactor. This asked for --c-reactor with #1d5a9e as a
+   fallback, and only ever rendered the fallback: --c-reactor was not defined
+   on this page at all, so the rule worked by accident. Once the instrument
+   colours became available everywhere it started resolving for real, to the
+   bright #5aa9ff, which is 2.46:1 on the light record's white — the exact
+   failure the fallback had been quietly preventing. The light theme already
+   promotes --amber to each page's deep variant, which is what this wanted. */
+body.doc-light .triple figcaption b { color: var(--amber); }
+@media (max-width: 700px) { .triple-label { left: .7rem; bottom: .7rem; max-width: 14rem; padding: .55rem .7rem; } }
+
+/* ---- feature figure ---------------------------------------------------- */
+/* One figure on the site is doing more than illustrating a paragraph: the
+   packaged design is the thing the whole record is working toward. It gets a
+   wider measure than the prose and a label, so it reads as a set piece rather
+   than as the seventh figure in a row. */
+.feature {
+  /* wider than the prose measure, centred on it */
+  width: min(112%, calc(100% + 7rem));
+  margin-left: calc(50% - min(56%, 50% + 3.5rem));
+  border-radius: var(--r-lg); overflow: hidden;
+  border: 1px solid color-mix(in srgb, var(--c-reactor, #5aa9ff) 30%, transparent);
+  box-shadow: 0 30px 70px -40px rgba(0, 0, 0, .9);
+}
+.feature-tag {
+  display: flex; align-items: center; gap: .6rem;
+  padding: .7rem 1.1rem;
+  font-family: var(--mono); font-size: .55rem; letter-spacing: .2em;
+  text-transform: uppercase; color: #cfe3ff;
+  background: linear-gradient(90deg,
+    color-mix(in srgb, var(--c-reactor, #5aa9ff) 26%, transparent), transparent 78%);
+  border-bottom: 1px solid rgba(255, 255, 255, .08);
+}
+.feature-tag::before {
+  content: ""; width: 6px; height: 6px; border-radius: 50%;
+  background: var(--c-reactor, #5aa9ff);
+  box-shadow: 0 0 10px var(--c-reactor, #5aa9ff);
+}
+@media (max-width: 900px) { .feature { width: 100%; margin-left: 0; transform: none; } }
+
+/* ---- tour controls ----------------------------------------------------- */
+.triple-controls {
+  display: flex; align-items: center; gap: .9rem;
+  padding: .7rem 1.1rem;
+  background: rgba(6, 8, 12, .82);
+  border-top: 1px solid rgba(255, 255, 255, .07);
+}
+.triple-play {
+  flex: none; cursor: pointer;
+  padding: .42em .85em; border-radius: var(--r-sm);
+  border: 1px solid rgba(255, 255, 255, .18); background: transparent;
+  color: #cfd8e3; font-family: var(--mono); font-size: .56rem;
+  letter-spacing: .14em; text-transform: uppercase; min-width: 4.6rem;
+}
+.triple-play:hover, .triple-play:focus-visible { color: #fff; border-color: #fff; }
+.triple-scrub {
+  flex: 1 1 auto; height: 22px; cursor: pointer; position: relative;
+  display: flex; align-items: center;
+}
+.triple-scrub::before {
+  content: ""; position: absolute; left: 0; right: 0; height: 3px;
+  border-radius: var(--r-xs); background: rgba(255, 255, 255, .12);
+}
+.triple-bar {
+  position: relative; height: 3px; border-radius: var(--r-xs); width: 0;
+  background: linear-gradient(90deg,
+    color-mix(in srgb, var(--c-reactor, #5aa9ff) 55%, transparent), var(--c-reactor, #5aa9ff));
+}
+.triple-bar::after {
+  content: ""; position: absolute; right: -5px; top: 50%;
+  width: 10px; height: 10px; margin-top: -5px; border-radius: 50%;
+  background: #fff; box-shadow: 0 0 10px rgba(90, 169, 255, .8);
+}
+.triple-jump { display: flex; gap: .3rem; flex: none; }
+.triple-jump button {
+  cursor: pointer; padding: .42em .7em; border-radius: var(--r-sm);
+  border: 1px solid rgba(255, 255, 255, .14); background: transparent;
+  /* These controls sit on the WebGL stage, which stays dark in both themes, so
+     they cannot follow --dim: the light theme turns it to dark ink and the
+     labels drop to 3.8:1 against the stage. Pinned to the dark-theme value. */
+  color: #78818f; font-family: var(--mono); font-size: .55rem;
+  letter-spacing: .12em; text-transform: uppercase;
+}
+.triple-jump button:hover, .triple-jump button.on { color: #fff; border-color: rgba(255,255,255,.5); }
+@media (max-width: 640px) { .triple-jump { display: none; } }
+
+/* ---- try-it demo ------------------------------------------------------- */
+/* The rejection filter is the best piece of method on this page and it was
+   four sentences of prose. The argument — that one outlier drags a mean but
+   cannot drag a median — is far easier to believe when the reader is the one
+   putting the outlier there. */
+.demo {
+  margin: 2rem 0; border-radius: var(--r-lg); overflow: hidden;
+  border: 1px solid color-mix(in srgb, var(--amber) 26%, transparent);
+  background: var(--bg-2);
+}
+.demo-head {
+  display: flex; align-items: baseline; gap: .7rem; flex-wrap: wrap;
+  padding: .75rem 1.1rem;
+  background: linear-gradient(90deg, color-mix(in srgb, var(--amber) 16%, transparent), transparent 76%);
+  border-bottom: 1px solid var(--line);
+}
+.demo-head b {
+  font-family: var(--mono); font-size: .56rem; letter-spacing: .2em;
+  text-transform: uppercase; color: var(--amber);
+}
+.demo-head span { font-size: .82rem; color: var(--muted); }
+.demo-body { padding: 1rem 1.1rem 1.2rem; }
+.demo-plot { width: 100%; overflow: hidden; border-radius: var(--r-md); }
+.demo-plot canvas { width: 100%; height: auto; display: block; }
+.demo-controls {
+  display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+  gap: .7rem 1.1rem; align-items: end; margin-top: 1rem;
+}
+.demo-controls label {
+  display: flex; flex-direction: column; gap: .3rem;
+  font-family: var(--mono); font-size: .55rem; letter-spacing: .14em;
+  text-transform: uppercase; color: var(--dim);
+}
+.demo-controls input[type="range"] { width: 100%; accent-color: var(--amber); cursor: pointer; }
+.demo-controls button {
+  padding: .5em .9em; border-radius: var(--r-sm); cursor: pointer;
+  border: 1px solid var(--line-2); background: transparent; color: var(--muted);
+  font-family: var(--mono); font-size: .55rem; letter-spacing: .14em; text-transform: uppercase;
+}
+.demo-controls button:hover, .demo-controls button:focus-visible { color: var(--fg); border-color: var(--fg); }
+.demo-read {
+  display: grid; grid-template-columns: repeat(4, 1fr); gap: .6rem;
+  margin: 1.1rem 0 0; padding-top: .9rem; border-top: 1px solid var(--line);
+}
+.demo-read div { display: flex; flex-direction: column; gap: .15rem; }
+.demo-read dt {
+  font-family: var(--mono); font-size: .5rem; letter-spacing: .16em;
+  text-transform: uppercase; color: var(--faint);
+}
+.demo-read dd {
+  margin: 0; font-size: 1.05rem; font-weight: 600; letter-spacing: -.02em;
+  font-variant-numeric: tabular-nums; color: var(--fg);
+}
+.demo-note { margin: .9rem 0 0; font-size: .84rem; line-height: 1.6; color: var(--muted); min-height: 2.6em; }
+.demo figcaption {
+  padding: .85rem 1.1rem 1rem; border-top: 1px solid var(--line);
+  font-size: .84rem; line-height: 1.6; color: var(--muted);
+}
+.demo figcaption b {
+  font-family: var(--mono); font-size: .55rem; letter-spacing: .16em;
+  text-transform: uppercase; color: var(--amber); margin-right: .55em;
+}
+/* on paper it becomes a mounted instrument panel like the other figures */
+body.doc-light .demo { background: #fff; border-color: color-mix(in srgb, var(--amber) 32%, transparent); }
+body.doc-light .demo-plot { background: #0b0e13; }
+body.doc-light .demo-read dd { color: var(--fg); }
+@media (max-width: 620px) { .demo-read { grid-template-columns: repeat(2, 1fr); } }
+
+/* ══════════════ the paper record, second pass ══════════════ */
+
+/* ---- pending values ---------------------------------------------------- */
+/* There are about 150 of these across the three records, which makes them the
+   dominant texture of the light half — and a hatched dashed box reads as a
+   hole in the page. Set as a ruled blank instead: the same information, marked
+   the way a proof reader marks a gap rather than the way a browser marks a
+   broken image. */
+body.doc-light .pending {
+  border: 0; border-radius: 0;
+  background: none;
+  border-bottom: 1.5px solid color-mix(in srgb, var(--amber) 55%, transparent);
+  height: .95em; min-width: 3.4em;
+  position: relative; margin: 0 .12em;
+}
+body.doc-light .pending.s { min-width: 2em; }
+body.doc-light .pending.eq { min-width: 10em; height: 1.4em; }
+/* a small caret under the rule, so a blank cannot be mistaken for underline */
+body.doc-light .pending::after {
+  content: ""; position: absolute; left: 50%; bottom: -4px;
+  width: 4px; height: 4px; margin-left: -2px;
+  border-right: 1.5px solid color-mix(in srgb, var(--amber) 55%, transparent);
+  border-bottom: 1.5px solid color-mix(in srgb, var(--amber) 55%, transparent);
+  transform: rotate(45deg);
+}
+
+/* ---- unphotographed figures -------------------------------------------- */
+/* Fifteen dashed rectangles read as a page that failed to load. These read as
+   a reserved plate in a printed report: ruled corners, a plate number, and the
+   caption of the photograph that will go there. */
+body.doc-light .frame.empty .frame-img {
+  border: 1px solid rgba(15, 19, 25, .16);
+  border-radius: var(--r-sm);
+  background:
+    linear-gradient(135deg, rgba(15,19,25,.028) 0 40%, transparent 40%) 0 0 / 14px 14px,
+    #f4f5f7;
+  box-shadow: inset 0 0 0 1px #fff;
+  position: relative; min-height: 8rem;
+}
+body.doc-light .frame.empty .frame-img::before {
+  content: "Plate reserved";
+  position: absolute; top: .7rem; left: .8rem;
+  font-family: var(--mono); font-size: .5rem; letter-spacing: .18em;
+  text-transform: uppercase; color: color-mix(in srgb, var(--amber) 85%, #000);
+  padding: .2em .5em; border-radius: var(--r-xs);
+  background: color-mix(in srgb, var(--amber) 15%, #fff);
+}
+body.doc-light .frame.empty .frame-img::after { color: #79828e; max-width: 30ch; }
+
+/* ---- section openers --------------------------------------------------- */
+/* Every part divider was the same height and the same weight, so four of them
+   read as one repeated element. The opening line of each part now carries a
+   raised initial, which is the cheapest way to make a page turn feel like a
+   page turn. */
+body.doc-light .doc .part + .sec > p:first-of-type::first-letter {
+  float: left; line-height: .82; padding: .06em .12em 0 0;
+  font-size: 3.1em; font-weight: 600; color: var(--amber);
+}
+body.doc-light .doc .part + .sec > h3 + p::first-letter { float: none; font-size: inherit; color: inherit; }
+
+/* ---- tables ------------------------------------------------------------ */
+/* A bill of materials is the densest thing on the page and was styled like
+   running prose. Ruled head, alternating ground, figures aligned on the point. */
+body.doc-light table.bom thead th {
+  background: #eef0f3;
+  border-bottom: 2px solid color-mix(in srgb, var(--amber) 40%, transparent);
+  position: sticky; top: 0; z-index: 2;
+}
+body.doc-light table.bom caption {
+  text-align: left; padding-bottom: .55rem;
+  font-family: var(--mono); font-size: .55rem; letter-spacing: .18em;
+  text-transform: uppercase; color: var(--dim);
+}
+body.doc-light table .num { font-variant-numeric: tabular-nums lining-nums; }
+
+/* ---- evidence scoreboard ----------------------------------------------- */
+/* What a device has actually demonstrated is currently spread across a
+   limitations section, a set of open items and the notebook, so a reader has to
+   assemble it themselves and mostly does not. This is one panel that says it
+   outright, split by how much weight each claim can carry. */
+.score { margin: 2.2rem 0; }
+.score-head {
+  display: flex; align-items: baseline; gap: .8rem; flex-wrap: wrap;
+  margin-bottom: 1rem;
+}
+.score-head h4 {
+  margin: 0; font-size: 1.1rem; font-weight: 600; letter-spacing: -.015em;
+}
+.score-head span { font-size: .82rem; color: var(--dim); }
+.score-cols { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; }
+.score-col {
+  border: 1px solid var(--line); border-radius: var(--r-lg); overflow: hidden;
+}
+.score-col > h5 {
+  margin: 0; padding: .6rem .9rem;
+  font-family: var(--mono); font-size: .55rem; letter-spacing: .18em;
+  text-transform: uppercase; font-weight: 600;
+  border-bottom: 1px solid var(--line);
+}
+.score-col.yes > h5 { color: #4ad98a; background: rgba(74, 217, 138, .10); }
+.score-col.no  > h5 { color: #ff8a6a; background: rgba(255, 138, 106, .10); }
+.score-col ul { list-style: none; margin: 0; padding: .55rem 0; }
+.score-col li {
+  position: relative; padding: .5rem .9rem .5rem 2rem;
+  font-size: .87rem; line-height: 1.6; color: var(--muted);
+}
+.score-col li b { color: var(--fg); font-weight: 600; }
+.score-col li::before {
+  position: absolute; left: .85rem; top: .55rem;
+  font-family: var(--mono); font-size: .72rem; font-weight: 700;
+}
+.score-col.yes li::before { content: "\2713"; color: #4ad98a; }
+.score-col.no  li::before { content: "\2013"; color: #ff8a6a; }
+.score-col li cite {
+  display: block; margin-top: .18rem; font-style: normal;
+  font-family: var(--mono); font-size: .52rem; letter-spacing: .12em;
+  text-transform: uppercase; color: var(--faint);
+}
+.score-col li cite a { color: inherit; border-bottom: 1px solid var(--line-2); }
+.score-col li cite a:hover { color: var(--fg); }
+
+body.doc-light .score-col { border-color: var(--hair); background: #fff; }
+body.doc-light .score-col > h5 { border-bottom-color: var(--hair); }
+body.doc-light .score-col.yes > h5 { color: #12703f; background: rgba(18, 112, 63, .09); }
+body.doc-light .score-col.no  > h5 { color: #a83a1c; background: rgba(168, 58, 28, .09); }
+body.doc-light .score-col.yes li::before { color: #12703f; }
+body.doc-light .score-col.no  li::before { color: #a83a1c; }
+@media (max-width: 720px) { .score-cols { grid-template-columns: 1fr; } }
+
+/* ---- bill of materials: how complete is it ----------------------------- */
+/* The affordability argument rests on this table and most of it is blank.
+   Saying so in one line is worth more than eleven rows of dashes. */
+.bom-summary {
+  margin: 1.2rem 0 .8rem; padding: .9rem 1.1rem;
+  border: 1px solid var(--line); border-radius: var(--r-md);
+  background: var(--wash, rgba(255,255,255,.02));
+}
+.bom-meter {
+  height: 4px; border-radius: var(--r-xs); overflow: hidden;
+  background: rgba(255, 255, 255, .09); margin-bottom: .85rem;
+}
+.bom-meter span {
+  display: block; height: 100%;
+  background: linear-gradient(90deg,
+    color-mix(in srgb, var(--amber) 55%, transparent), var(--amber));
+}
+.bom-facts { display: grid; grid-template-columns: repeat(4, 1fr); gap: .7rem; }
+.bom-facts div { display: flex; flex-direction: column; gap: .15rem; }
+.bom-facts dt {
+  font-family: var(--mono); font-size: .5rem; letter-spacing: .16em;
+  text-transform: uppercase; color: var(--faint);
+}
+.bom-facts dd {
+  margin: 0; font-size: 1rem; font-weight: 600; letter-spacing: -.02em;
+  font-variant-numeric: tabular-nums; color: var(--fg);
+}
+.bom-note { margin: .8rem 0 0; font-size: .8rem; line-height: 1.55; color: var(--muted); }
+body.doc-light .bom-summary { background: #fff; border-color: var(--hair); }
+body.doc-light .bom-meter { background: rgba(15, 19, 25, .10); }
+@media (max-width: 620px) { .bom-facts { grid-template-columns: repeat(2, 1fr); } }
+
+/* ══════════════ printing ══════════════ */
+/* A judge who prints this should get the record, not a screenshot of a dark
+   website with holes where the WebGL was. The existing print block hid the
+   decoration; this one makes the result read as a document: the walkthroughs
+   become a stated omission rather than a blank, figures and tables stay whole,
+   cross-references resolve on paper, and the notebook prints as pages. */
+@media print {
+  @page { margin: 18mm 16mm; }
+
+  html, body { background: #fff !important; color: #111 !important; font-size: 10.5pt; }
+
+  /* anything that only exists to be interacted with */
+  .backbtn, .nb-signpost, .nb-reel-bar, .triple-controls, .demo-controls,
+  .bom-tools, .nbr-search, .nbr-rail, .nbr-progress, .od-hint, .scroll-cue,
+  .wipe-bar, .wipe-note, .jump-btn, .stage-hint, .autodraw::after { display: none !important; }
+
+  /* The 3D walkthroughs cannot print. The earlier print block already hides the
+     hero, so the note goes on the document header, which does print. */
+  .track, .stage, canvas { display: none !important; }
+  .doc-head::after {
+    content: "This page has an interactive 3D walkthrough and live figures that cannot be printed. The web version carries both.";
+    display: block; margin-top: 10pt; padding: 6pt 8pt;
+    border: .5pt solid #bbb; border-radius: 2pt;
+    font-size: 8.5pt; color: #444;
+  }
+
+  /* keep the evidence together */
+  .score, .score-col, figure, table, .iters li, .demo, .openitem, .callout,
+  .circuit, .params .param { break-inside: avoid; }
+  .doc .part { break-before: page; padding-top: 0; min-height: 0 !important; }
+  .doc .part::before { display: none !important; }
+
+  /* structure a printed reader needs and a screen reader does not */
+  /* Margin captions are absolutely positioned beside the figure. The print
+     page box is narrower than the 1360px breakpoint so they should already be
+     inline, but a wide paper size would push them off the sheet. */
+  .doc .sec > figure > figcaption {
+    position: static; width: auto; max-width: none;
+    border-left: 0; padding-left: 0; padding-top: .6rem;
+  }
+  .doc h2, .doc h3 { break-after: avoid; }
+  .sec h3 { border-top: 1.5pt solid #333 !important; padding-top: 6pt !important; }
+  a { color: #111 !important; text-decoration: none; }
+  .sec p a[href^="http"]::after,
+  .sec li a[href^="http"]::after { content: " <" attr(href) ">"; font-size: 8pt; color: #555; }
+
+  /* pending values have to survive as visible gaps on paper */
+  .pending {
+    border: 0 !important; border-bottom: 1pt solid #999 !important;
+    background: none !important; min-width: 3em !important; height: .9em !important;
+  }
+  .pending::after { display: none !important; }
+  .frame.empty .frame-img { background: none !important; border: 1pt dashed #aaa !important; }
+
+  .score-cols { grid-template-columns: 1fr 1fr !important; }
+  .score-col { border: 1pt solid #bbb !important; }
+  .score-col.yes > h5 { color: #14532d !important; background: #eef6f0 !important; }
+  .score-col.no  > h5 { color: #7f1d1d !important; background: #fdf0ee !important; }
+
+  table { border-collapse: collapse !important; width: 100% !important; }
+  table th, table td { border: .5pt solid #bbb !important; padding: 3pt 5pt !important; }
+  thead { display: table-header-group; }        /* repeat headers across pages */
+
+  /* the notebook prints as what it is: pages */
+  .nbr-pages { gap: 0 !important; }
+  .nbr-page { break-after: page; }
+  .nbr-page img { width: 100% !important; box-shadow: none !important; }
+  .nbr-page figcaption { display: none !important; }
+}
+
+/* ---- system walkthrough --------------------------------------------------
+   The two-circuit schematic used to draw itself once on entry and then sit
+   still, with the order of operations left in the paragraph underneath. Here
+   the diagram is pinned and the reader scrolls *through* the system: the live
+   stage is lit and flowing, stages already passed stay dimly on so the system
+   visibly accumulates, and stages not yet reached wait in the dark.
+
+   The default state — no script, no data-active — is the whole diagram fully
+   lit. Dimming only ever applies once JS has taken control, so a reader whose
+   scroll handler never runs sees the finished schematic rather than an empty
+   frame. */
+.syswalk { position: relative; margin: 2.2rem 0 2.6rem; }
+.syswalk-grid { display: grid; grid-template-columns: minmax(0, 1.05fr) minmax(0, .95fr); gap: 2.4rem; }
+
+.syswalk-stage {
+  position: sticky; top: 84px; align-self: start;
+  height: min(76vh, 560px);
+  display: flex; flex-direction: column; justify-content: center;
+  border: 1px solid var(--line); border-radius: var(--r-lg);
+  background:
+    radial-gradient(120% 90% at 50% 0%, rgba(255,255,255,.030), transparent 68%),
+    rgba(255,255,255,.010);
+  padding: 1.1rem 1.2rem 2.6rem;
+}
+/* corner ticks, the way an instrument frames its screen */
+.syswalk-stage::before, .syswalk-stage::after {
+  content: ""; position: absolute; width: 13px; height: 13px; pointer-events: none;
+  border-color: color-mix(in srgb, var(--amber) 42%, transparent);
+}
+.syswalk-stage::before { top: -1px; left: -1px; border-top: 1px solid; border-left: 1px solid;
+  border-top-left-radius: var(--r-lg); }
+.syswalk-stage::after { bottom: -1px; right: -1px; border-bottom: 1px solid; border-right: 1px solid;
+  border-bottom-right-radius: var(--r-lg); }
+
+.syswalk-fig { margin: 0; }
+.syswalk-fig svg { width: 100%; height: auto; display: block; overflow: visible; }
+
+/* ---- stage states ---- */
+.syswalk[data-active] .syswalk-fig [data-stage] {
+  transition: opacity .55s var(--ease-out), filter .55s var(--ease-out);
+}
+.syswalk[data-active] .syswalk-fig [data-stage] { opacity: .13; }       /* not yet reached */
+.syswalk[data-active] .syswalk-fig [data-stage].sw-past { opacity: .42; }
+.syswalk[data-active] .syswalk-fig [data-stage].sw-live { opacity: 1; }
+
+/* the live run carries the accent and moves */
+.syswalk[data-active] .syswalk-fig .beam.sw-live,
+.syswalk[data-active] .syswalk-fig .part.sw-live {
+  stroke: var(--amber);
+  filter: drop-shadow(0 0 5px color-mix(in srgb, var(--amber) 45%, transparent));
+}
+.syswalk[data-active] .syswalk-fig .beam.sw-live {
+  stroke-dasharray: 7 11;
+  animation: sw-flow 1.05s linear infinite;
+}
+@keyframes sw-flow { to { stroke-dashoffset: -18; } }
+
+/* ---- the readout ---- */
+.syswalk-readout {
+  position: absolute; left: 1.2rem; right: 1.2rem; bottom: .95rem;
+  display: flex; align-items: baseline; gap: .42rem;
+  font-family: var(--mono); font-size: .55rem; letter-spacing: .2em;
+  text-transform: uppercase; color: var(--faint);
+  border-top: 1px solid var(--line); padding-top: .7rem;
+}
+.syswalk-rn { color: var(--amber); font-size: .72rem; letter-spacing: .1em; }
+.syswalk-rname { color: var(--muted); letter-spacing: .12em; margin-left: .5rem; }
+
+/* progress down the left edge of the frame */
+.syswalk-rail {
+  position: absolute; left: -1px; top: 12px; bottom: 12px; width: 2px;
+  border-radius: var(--r-xs); background: rgba(255,255,255,.07); overflow: hidden;
+}
+.syswalk-rail::after {
+  content: ""; position: absolute; inset: 0 0 auto 0; height: var(--sw-progress, 0%);
+  background: linear-gradient(var(--amber), color-mix(in srgb, var(--amber) 35%, transparent));
+  transition: height .35s var(--ease-out);
+}
+
+/* ---- the narration ---- */
+.syswalk-steps { list-style: none; margin: 0; padding: 0; }
+.syswalk-step {
+  min-height: 62vh; display: flex; flex-direction: column; justify-content: center;
+  padding: 1rem 0;
+  border-left: 1px solid transparent; padding-left: 1.3rem;
+  transition: opacity .45s var(--ease-out), border-color .45s var(--ease-out);
+}
+.syswalk[data-active] .syswalk-step { opacity: .3; }
+.syswalk[data-active] .syswalk-step.sw-live { opacity: 1; border-left-color: var(--amber); }
+.syswalk-step-n {
+  font-family: var(--mono); font-size: .55rem; letter-spacing: .22em;
+  color: var(--amber); display: block; margin-bottom: .5rem;
+}
+.syswalk-step h4 {
+  margin: 0 0 .5rem; font-size: 1.15rem; font-weight: 600; letter-spacing: -.018em;
+  color: var(--fg);
+}
+.syswalk-step p { margin: 0; font-size: 1rem; line-height: 1.75; color: var(--muted); max-width: 46ch; }
+
+@media (max-width: 900px) {
+  /* No pinning on a small screen: the diagram sits above its own narration and
+     each stage is simply read in turn. */
+  .syswalk-grid { grid-template-columns: 1fr; gap: 1.2rem; }
+  .syswalk-stage { position: static; height: auto; padding-bottom: 2.4rem; }
+  .syswalk-step { min-height: 0; padding: .9rem 0; padding-left: 1rem; }
+  .syswalk[data-active] .syswalk-step { opacity: 1; }
+  .syswalk[data-active] .syswalk-step.sw-live { border-left-color: var(--amber); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .syswalk[data-active] .syswalk-fig [data-stage],
+  .syswalk[data-active] .syswalk-step { opacity: 1; }
+  .syswalk[data-active] .syswalk-fig .beam.sw-live { animation: none; stroke-dasharray: none; }
+  .syswalk-rail::after, .syswalk-step { transition: none; }
+}
+
+
+/* Third-party attribution in the footer, set a step back from the required
+   licence and repository lines so it reads as a credit, not a notice. */
+.legal .credits { margin-top: .5rem; opacity: .78; }
+.legal .credits a { text-decoration: underline; text-underline-offset: 2px; }

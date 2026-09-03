@@ -1,6 +1,6 @@
-# V4 Photometer — interactive scroll showcase
+# Photometer — interactive scroll showcase
 
-A scroll-driven 3D disassembly of the V4 photometer. The complete instrument sits
+A scroll-driven 3D disassembly of the photometer. The complete instrument sits
 at the bottom of the stage. Each scroll beat lifts one part out of it, floats it to
 upper-center where it enlarges and spins beside its description, then dissolves it —
 leaving the assembly one part lighter. After the last part, everything returns for a

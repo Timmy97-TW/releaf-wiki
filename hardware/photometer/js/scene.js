@@ -1,4 +1,4 @@
-// V4 Photometer — scroll-driven disassembly.
+// Photometer — scroll-driven disassembly.
 //
 // Timeline (in beats):
 //   [0 .. HERO]          the complete instrument, large and centered
@@ -355,10 +355,63 @@
     if (ready) placeBeam();
   });
 
+  // Pulses along the same path the model traces. The route is read off
+  // light-path.stl itself rather than written twice: it runs y -19.3 (the LED)
+  // down to the splitter at y -171.9, where the reference branch leaves to
+  // x -19.1, and on to the sample sensor at y -193.8.
+  const pulses = new THREE.Group();
+  const pulseRuns = [];
+  (function buildPulses() {
+    const routes = [
+      [[0, -19.3, 0], [0, -171.9, 0], [-19.1, -171.9, 0]],
+      [[0, -19.3, 0], [0, -193.8, 0]]
+    ];
+    routes.forEach(function (pts, i) {
+      const v = pts.map(function (a) { return new THREE.Vector3(a[0], a[1], a[2]); });
+      const segs = [];
+      let total = 0;
+      for (let k = 1; k < v.length; k++) {
+        const len = v[k - 1].distanceTo(v[k]);
+        segs.push({ a: v[k - 1], b: v[k], len: len, at: total });
+        total += len;
+      }
+      const dot = new THREE.Mesh(
+        new THREE.SphereGeometry(3.2, 8, 6),
+        new THREE.MeshBasicMaterial({
+          color: new THREE.Color(0xffa63f).convertSRGBToLinear(),
+          transparent: true, opacity: 0.85, toneMapped: false,
+          // additive for the same reason the beam itself is: light adds, and
+          // alpha-blending a colour over a pale surface darkens it
+          blending: THREE.AdditiveBlending,
+          depthTest: false, depthWrite: false }));
+      dot.renderOrder = 2001;
+      dot.position.copy(v[0]);
+      pulses.add(dot);
+      pulseRuns.push({ dot: dot, segs: segs, total: total, phase: i * 0.42 });
+    });
+    rig.add(pulses);
+  })();
+
   function placeBeam() {
-    if (!beam) return;
+    if (beam) beam.position.set(-asmCenter.x, -asmCenter.y, -asmCenter.z);
     // same rig-local frame as every part anchor
-    beam.position.set(-asmCenter.x, -asmCenter.y, -asmCenter.z);
+    pulses.position.set(-asmCenter.x, -asmCenter.y, -asmCenter.z);
+  }
+
+  // The path belongs to the assembled instrument. Left at full strength it hung
+  // in the air while the parts flew apart around it.
+  function runBeam(t, visible) {
+    if (beam) beam.material.opacity = 0.17 * visible;
+    pulses.visible = visible > 0.02;
+    if (!pulses.visible) return;
+    pulseRuns.forEach(function (run) {
+      run.dot.material.opacity = 0.85 * visible;
+      if (reduced) return;
+      let d = ((t / 3.6) + run.phase) % 1 * run.total, k = 0;
+      while (k < run.segs.length - 1 && d > run.segs[k].at + run.segs[k].len) k++;
+      const sg = run.segs[k];
+      run.dot.position.copy(sg.a).lerp(sg.b, Math.min(1, Math.max(0, (d - sg.at) / sg.len)));
+    });
   }
 
   // ---------- framing ----------
@@ -460,6 +513,7 @@
     const heroT = 1 - ease(clamp01(progress / (HERO * 0.9)));
     const finaleT = ease(clamp01((progress - FINALE_START) / FINALE_SPAN));
     const big = Math.max(heroT, finaleT);
+    runBeam(clock.getElapsedTime(), big);
 
     // Large state sits slightly low and stops short of full height, leaving
     // clear space at the top for the hero / finale caption.
@@ -580,7 +634,21 @@
     bar.style.transform = "scaleX(" + (progress / TOTAL).toFixed(4) + ")";
   }
 
+  // The loop is gated. It used to schedule itself unconditionally, so a full
+  // WebGL render ran every frame for the life of the page — including while the
+  // stage was scrolled far off-screen (this track is several viewport-heights
+  // tall) and while the tab was in the background. It now parks whenever the
+  // canvas is off-screen or the document is hidden, and is woken by scroll,
+  // by the observer, and by visibilitychange. Same contract as
+  // hardware/js/deck3d.js.
+  let raf = null, onScreen = true;
+
+  function schedule() {
+    if (raf == null && onScreen && !document.hidden) raf = requestAnimationFrame(tick);
+  }
+
   function tick() {
+    raf = null;
     const dt = Math.min(clock.getDelta(), 0.05);
     target = clamp01((window.scrollY - trackTop) / trackRange) * TOTAL;
     const k = 1 - Math.exp(-dt * 11);   // frame-rate independent damping
@@ -589,8 +657,19 @@
 
     frame(dt);
     renderer.render(scene, camera);
-    requestAnimationFrame(tick);
+    schedule();
   }
+
+  if ("IntersectionObserver" in window) {
+    new IntersectionObserver(function (es) {
+      onScreen = es[0].isIntersecting;
+      if (onScreen) { clock.getDelta(); schedule(); }   // drop the idle gap
+    }, { rootMargin: "120px" }).observe(canvas);
+  }
+  document.addEventListener("visibilitychange", function () {
+    if (!document.hidden) { clock.getDelta(); schedule(); }
+  });
+  window.addEventListener("scroll", schedule, { passive: true });
 
   // ---------- QA hooks ----------
   window.__photo = {

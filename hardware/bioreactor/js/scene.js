@@ -299,19 +299,51 @@
   }
   function render() { size(); place(); renderer.render(scene, camera); }
 
-  let t0 = 0;
+  // This scene orbits and flows continuously, so it wants frames while it is
+  // being looked at — but it used to schedule itself unconditionally, so it
+  // rendered forever even scrolled off-screen or in a background tab. It now
+  // parks when the canvas is off-screen or the document is hidden, and t0 is
+  // shifted by the time spent parked so the orbit resumes where it left off
+  // instead of jumping.
+  let t0 = 0, raf = null, onScreen = true, parkedAt = 0;
+
+  function schedule() {
+    if (raf == null && onScreen && !document.hidden && !reduced) {
+      raf = requestAnimationFrame(tick);
+    }
+  }
+  function tick(now) {
+    raf = null;
+    const t = (now - t0) / 1000;
+    // idle orbit, released back to auto once the reader lets go
+    if (!dragging && !userHeld) yaw = -0.5 + t * 0.06;
+    flowMats.forEach(function (m) { m.map.offset.x = -(t * FLOW_SPEED) / DASH_MM; });
+    rotors.forEach(function (r) { r.rotation.z = t * 1.7; });
+    render();
+    schedule();
+  }
+  function park() {
+    if (raf != null) { cancelAnimationFrame(raf); raf = null; }
+    if (!parkedAt) parkedAt = performance.now();
+  }
+  function wake() {
+    if (parkedAt) { t0 += performance.now() - parkedAt; parkedAt = 0; }
+    schedule();
+  }
+
   function start() {
     t0 = performance.now();
     if (reduced) { render(); return; }
-    (function tick(now) {
-      const t = (now - t0) / 1000;
-      // idle orbit, released back to auto once the reader lets go
-      if (!dragging && !userHeld) yaw = -0.5 + t * 0.06;
-      flowMats.forEach(function (m) { m.map.offset.x = -(t * FLOW_SPEED) / DASH_MM; });
-      rotors.forEach(function (r) { r.rotation.z = t * 1.7; });
-      render();
-      requestAnimationFrame(tick);
-    })(performance.now());
+    schedule();
+    if ("IntersectionObserver" in window) {
+      new IntersectionObserver(function (es) {
+        onScreen = es[0].isIntersecting;
+        if (onScreen) wake(); else park();
+      }, { rootMargin: "120px" }).observe(canvas);
+    }
+    document.addEventListener("visibilitychange", function () {
+      if (document.hidden) park(); else wake();
+    });
   }
 
   window.__bioHero = {

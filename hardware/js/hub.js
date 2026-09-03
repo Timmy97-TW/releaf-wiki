@@ -53,7 +53,7 @@
      starts reading as a gimmick. Driven off one rAF so many cards stay cheap. */
   const decks = Array.prototype.slice.call(document.querySelectorAll("a.deck"));
   if (decks.length && !reduced && window.matchMedia("(hover: hover)").matches) {
-    const MAX = 5.5;            // degrees
+    const MAX = 5.5;            // degrees, the card
     let queued = false;
     let pending = null;
 
@@ -108,4 +108,130 @@
       if (ev.persisted) document.body.classList.remove("leaving");
     });
   }
+
+
+  /* ---------- notebook reel ----------
+     Three entry cards on screen, paging through all 31 rather than showing the
+     same three forever. Auto-advance stops the moment anyone interacts, because
+     a card that slides away mid-read is worse than one that never moved. */
+  (function () {
+    const reel = document.getElementById("nb-reel");
+    const track = document.getElementById("nb-reel-track");
+    const dots = document.getElementById("nb-reel-dots");
+    if (!reel || !track || !dots) return;
+
+    const cards = Array.prototype.slice.call(track.children);
+    if (!cards.length) return;
+
+    let page = 0, pages = 1, timer = null;
+
+    function perPage() {
+      // derived from what actually fits, so it follows the CSS breakpoints
+      const w = track.getBoundingClientRect().width;
+      const cw = cards[0].getBoundingClientRect().width;
+      return Math.max(1, Math.round(w / (cw + 17.6)));
+    }
+
+    function layout() {
+      pages = Math.ceil(cards.length / perPage());
+      page = Math.min(page, pages - 1);
+      dots.innerHTML = "";
+      for (let i = 0; i < pages; i++) {
+        const b = document.createElement("button");
+        b.type = "button";
+        b.setAttribute("role", "tab");
+        b.setAttribute("aria-label", "Entries " + (i * perPage() + 1) +
+                       " to " + Math.min(cards.length, (i + 1) * perPage()));
+        b.addEventListener("click", function () { go(i); });
+        dots.appendChild(b);
+      }
+      go(page);
+    }
+
+    function go(p) {
+      page = (p + pages) % pages;
+      const step = cards[0].getBoundingClientRect().width + 17.6;
+      // clamp the last (partial) page so it right-aligns instead of leaving
+      // empty slots — 31 cards over 3-up does not divide evenly
+      const maxShift = Math.max(0, cards.length * step - 17.6 -
+                                   reel.getBoundingClientRect().width);
+      const shift = Math.min(page * perPage() * step, maxShift);
+      track.style.transform = "translateX(" + (-shift) + "px)";
+      Array.prototype.forEach.call(dots.children, function (d, i) {
+        d.classList.toggle("on", i === page);
+        d.setAttribute("aria-selected", String(i === page));
+      });
+      // Only the visible cards should be reachable by keyboard. Visibility is
+      // derived from the shift actually applied, not from page * perPage():
+      // the last page is clamped so it right-aligns, which slides cards into
+      // view that the page arithmetic still considered off-screen — and they
+      // were being marked aria-hidden while plainly readable.
+      const per = perPage();
+      const first = Math.round(shift / step);
+      cards.forEach(function (c, i) {
+        const vis = i >= first && i < first + per;
+        c.setAttribute("tabindex", vis ? "0" : "-1");
+        c.setAttribute("aria-hidden", vis ? "false" : "true");
+      });
+    }
+
+    // advance backwards so the cards slide left-to-right as they cycle
+    function tick() { go(page - 1); }
+    function start() {
+      if (!timer && !reduced && !stopped) timer = setInterval(tick, 5200);
+    }
+    function halt() { if (timer) { clearInterval(timer); timer = null; } }
+
+    // WCAG 2.2.2 Pause, Stop, Hide: content that moves on its own for longer
+    // than five seconds beside other content needs a control a reader can
+    // actually reach. Hover and focus already paused it, which does nothing for
+    // someone who is neither hovering nor tabbing.
+    let stopped = false;
+    const play = document.getElementById("nb-reel-play");
+    if (play) {
+      play.addEventListener("click", function () {
+        stopped = !stopped;
+        play.setAttribute("aria-pressed", String(stopped));
+        play.classList.toggle("paused", stopped);
+        play.querySelector(".nb-reel-txt").textContent = stopped ? "Play" : "Pause";
+        if (stopped) halt(); else start();
+      });
+    }
+
+    // Hovering pauses so a card cannot slide out from under someone reading it,
+    // and it resumes on leave. Nothing here stops the cycle permanently — it is
+    // meant to run on its own.
+    reel.addEventListener("pointerenter", function () {
+      if (timer) { clearInterval(timer); timer = null; }
+    });
+    reel.addEventListener("pointerleave", start);
+    reel.addEventListener("focusin", function () {
+      if (timer) { clearInterval(timer); timer = null; }
+    });
+    reel.addEventListener("focusout", function () {
+      if (!reel.contains(document.activeElement)) start();
+    });
+
+    let rt = null;
+    window.addEventListener("resize", function () {
+      clearTimeout(rt); rt = setTimeout(layout, 160);
+    });
+
+    layout();
+    // Start it outright. Gating the start on IntersectionObserver meant that if
+    // the observer was slow, throttled or never delivered, the reel simply sat
+    // on the first three entries forever — which is what it did. The observer
+    // now only pauses it while it is scrolled away, and its absence costs
+    // nothing worse than a carousel ticking off screen.
+    start();
+    if ("IntersectionObserver" in window) {
+      new IntersectionObserver(function (es) {
+        es.forEach(function (e) {
+          if (e.isIntersecting) start();
+          else if (timer) { clearInterval(timer); timer = null; }
+        });
+      }, { threshold: 0 }).observe(reel);
+    }
+  })();
+
 })();

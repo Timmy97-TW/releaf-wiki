@@ -20,6 +20,15 @@
     { a: 210, b: T_MAX, name: "Plateau",   note: "holds near 1.5" },
   ];
 
+  // Events, marked where the data actually shows them rather than where the
+  // story would like them. Hour 282 carries a scatter of 1.28 OD against 0.60
+  // for the next worst hour in the run, and the largest one-hour fall in the
+  // median — it is the disturbance, unambiguously. Week 22 records what caused
+  // it: the recirculation pump had failed, confirmed on inspection.
+  const EVENTS = [
+    { a: 280, b: 283, name: "Pump failure" },
+  ];
+
   const W = 1000, H = 380;
   const M = { t: 26, r: 20, b: 46, l: 46 };
   const iw = W - M.l - M.r, ih = H - M.t - M.b;
@@ -34,19 +43,12 @@
   const band =
     S.map((p, i) => (i ? "L" : "M") + x(p[0]).toFixed(1) + " " + y(p[3]).toFixed(1)).join("") +
     S.slice().reverse().map((p) => "L" + x(p[0]).toFixed(1) + " " + y(p[2]).toFixed(1)).join("") + "Z";
-  // The fill under the median line: start on the baseline, follow the line,
-  // drop back to the baseline, close.
-  //
-  // `path()` starts with "M", and this shape has already moved. Dropping that
-  // "M" is not enough — it leaves the first pair with no command in front of
-  // it, so it runs straight into the baseline coordinate and the browser reads
-  // "M46 334" + "46.0 327.3" as "M46 33446.0 327.3" and rejects the whole
-  // attribute. The leading command has to be replaced, not removed. Everything
-  // here is toFixed(1) for the same reason the rest of the file is: an
-  // unrounded float can print in exponential form and break the parse.
-  const area = "M" + x(0).toFixed(1) + " " + y(0).toFixed(1) +
-               "L" + path((p) => p[1]).slice(1) +
-               "L" + x(T_MAX).toFixed(1) + " " + y(0).toFixed(1) + "Z";
+  // Start on the baseline, then draw to the first sample. slice(1) drops the
+  // leading "M" from path(), so the "L" has to be put back — without it y(0)
+  // ran straight into the next x ("M46 33446.0 327.3…") and the fill was an
+  // invalid path the browser refused to render.
+  const area = "M" + x(0) + " " + y(0) + "L" + path((p) => p[1]).slice(1) +
+               "L" + x(T_MAX) + " " + y(0) + "Z";
 
   const xTicks = [0, 50, 100, 150, 200, 250, 300];
   const yTicks = [0, 0.5, 1.0, 1.5];
@@ -83,6 +85,13 @@
       '<path class="od-area" d="' + area + '"/>' +
       '<path class="od-band" d="' + band + '"/>' +
       '<path class="od-line" d="' + path((p) => p[1]) + '"/>' +
+      EVENTS.map((e, i) =>
+        '<g class="od-event">' +
+        '<rect x="' + x(e.a) + '" y="' + M.t + '" width="' + Math.max(2, x(e.b) - x(e.a)) +
+          '" height="' + ih + '"/>' +
+        '<line x1="' + x(e.a) + '" x2="' + x(e.a) + '" y1="' + M.t + '" y2="' + (M.t + ih) + '"/>' +
+        '<text x="' + (x(e.a) + 7) + '" y="' + (M.t + 16 + i * 15) + '">' + e.name + "</text>" +
+        "</g>").join("") +
       '<g class="od-cursor" opacity="0">' +
         '<line y1="' + M.t + '" y2="' + (M.t + ih) + '"/>' +
         '<circle r="4.5"/>' +
