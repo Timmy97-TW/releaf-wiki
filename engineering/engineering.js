@@ -68,8 +68,8 @@
 
     nodes.forEach(function (n) {
       var id = n.dataset.cyc;
-      n.addEventListener("mouseenter", function () { describe(id); highlight(id); });
-      n.addEventListener("focus", function () { describe(id); highlight(id); });
+      n.addEventListener("mouseenter", function () { announce(tip, true); describe(id); highlight(id); });
+      n.addEventListener("focus", function () { announce(tip, false); describe(id); highlight(id); });
       n.addEventListener("click", function () { go(id); });
       n.addEventListener("keydown", function (e) {
         if (e.key === "Enter" || e.key === " ") { e.preventDefault(); go(id); }
@@ -88,14 +88,31 @@
         $$('.atlas__tools .chip[data-filter="' + kind + '"]').forEach(function (b) {
           b.setAttribute("aria-pressed", String(b === btn));
         });
+        var live = {};
         nodes.forEach(function (n) {
           var ok = (want.track === "all" || n.dataset.track === want.track) &&
                    (want.state === "all" || n.dataset.state === want.state);
+          live[n.dataset.cyc] = ok;
           n.classList.toggle("is-dim", !ok);
         });
-        links.forEach(function (l) { l.classList.toggle("is-dim", want.track !== "all" || want.state !== "all"); });
+        /* an arrow survives only if both cycles it joins survived, so filtering
+           to one track keeps that track's causation visible instead of erasing it */
+        links.forEach(function (l) {
+          l.classList.toggle("is-dim", !(live[l.dataset.from] && live[l.dataset.to]));
+        });
+        var shown = Object.keys(live).filter(function (k) { return live[k]; }).length;
+        var count = $("#atlas-count");
+        if (count) count.textContent = shown + " of " + nodes.length + " cycles shown";
       });
     });
+  }
+
+  function announce(el, on) {
+    /* the tip is only a live region while the pointer drives it; with the
+       keyboard the focused node already announces itself, and a second
+       announcement on every tab stop is noise */
+    if (on) { el.setAttribute("aria-live", "polite"); }
+    else { el.removeAttribute("aria-live"); }
   }
 
   function esc(t) {
@@ -252,7 +269,11 @@
     });
   }
 
-  function start() { atlas(); record(); edge(); lightbox(); }
+  function start() {
+    document.documentElement.classList.add("js");
+    $$("[data-needs-js]").forEach(function (el) { el.hidden = false; });
+    atlas(); record(); edge(); lightbox();
+  }
   if (document.readyState === "loading") {
     document.addEventListener("DOMContentLoaded", start);
   } else { start(); }
