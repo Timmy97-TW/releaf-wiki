@@ -204,8 +204,14 @@
       var label = s.getAttribute("data-rail") ||
                   (h ? h.textContent.trim() : (s.id === "cover" ? "Cover" : s.id));
       if (label.length > 38) label = label.slice(0, 36).trim() + "…";
+      /* A tick until you are on the sheet; then the sheet's own mark, in the
+         same slot, so the rail says where you are without a second colour. */
+      var ico = s.getAttribute("data-ico");
+      var mark = '<span class="mark"><span class="tick"></span>' +
+                 (ico ? '<svg class="edge__ico" aria-hidden="true"><use href="#ico-' +
+                        esc(ico) + '"/></svg>' : "") + "</span>";
       var li = document.createElement("li");
-      li.innerHTML = '<a href="#' + s.id + '"><span class="tick"></span>' +
+      li.innerHTML = '<a href="#' + s.id + '">' + mark +
                      '<span class="lbl">' + esc(label) + "</span></a>";
       host.appendChild(li);
     });

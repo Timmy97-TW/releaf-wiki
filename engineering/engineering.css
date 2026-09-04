@@ -109,22 +109,43 @@
 .sheethead {
   display: flex;
   flex-wrap: wrap;
-  align-items: baseline;
-  gap: var(--sp-3) var(--sp-5);
-  padding-bottom: var(--sp-3);
+  align-items: center;
+  gap: var(--sp-3) clamp(.85rem, .4rem + 1.4vw, 1.5rem);
+  padding-bottom: var(--sp-4);
   margin-bottom: var(--sp-6);
   border-bottom: var(--lw-heavy) solid currentColor;
 }
-.sheethead__no {
-  font-family: var(--font-display);
-  font-variation-settings: "opsz" 14;
-  font-size: var(--field);
-  font-weight: 700;
-  letter-spacing: .16em;
-  padding: .25em .5em;
-  border: var(--lw-med) solid currentColor;
-  white-space: nowrap;
+/* The plate mark: the sheet's number at display size with the sheet's own
+   drawn icon beside it. Both sit on the title's baseline row, so the head is
+   still one line of information and not a stacked badge. */
+.sheetmark {
+  display: inline-flex; align-items: center; gap: .5rem;
+  flex: none;
+  align-self: center;
 }
+.sheetmark__ico {
+  width: clamp(1.5rem, 1.15rem + 1vw, 2rem);
+  height: clamp(1.5rem, 1.15rem + 1vw, 2rem);
+  flex: none;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.4;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  color: var(--graphite);
+}
+.sheetmark__no {
+  font-family: var(--font-display);
+  font-variation-settings: "opsz" 32;
+  font-size: clamp(1.75rem, 1.35rem + 1.5vw, 2.75rem);
+  font-weight: 600;
+  line-height: .9;
+  letter-spacing: -.045em;
+  font-variant-numeric: tabular-nums;
+  color: var(--leaf-900);
+}
+.sheet--plate .sheetmark__no { color: #f2f7f3; }
+.sheet--plate .sheetmark__ico { color: rgba(180,215,195,.78); }
 .sheethead h2 {
   margin: 0;
   flex: 1 1 auto;
@@ -152,12 +173,13 @@
   overflow: hidden;
   background-image:
     linear-gradient(to left,
-      rgba(7,22,15,.97) 0%,
-      rgba(7,22,15,.96) 50%,
-      rgba(7,22,15,.86) 58%,
-      rgba(7,22,15,.45) 68%,
-      rgba(7,22,15,.10) 78%,
-      rgba(7,22,15,0) 86%),
+      rgba(7,22,15,.90) 0%,
+      rgba(7,22,15,.88) 44%,
+      rgba(7,22,15,.80) 56%,
+      rgba(7,22,15,.62) 68%,
+      rgba(7,22,15,.38) 80%,
+      rgba(7,22,15,.16) 91%,
+      rgba(7,22,15,0) 100%),
     url("../assets/img/engineering/cover-rig.webp");
   background-repeat: no-repeat;
   background-size: cover, contain;
@@ -198,7 +220,7 @@
   .cover__body > * { grid-column: 2; }
 }
 .cover h1 {
-  margin: 0 0 var(--sp-4);
+  margin: 0 0 var(--sp-5);
   max-width: 18ch;
   font-size: clamp(2rem, 1.15rem + 3.6vw, 4.25rem);
   line-height: .98;
@@ -206,14 +228,113 @@
   color: #fff;
   text-wrap: balance;
 }
-.cover__lede {
-  margin: 0;
-  max-width: 46ch;
-  font-size: clamp(1rem, .95rem + .35vw, 1.1875rem);
-  line-height: 1.55;
-  color: #cbdfd2;
+/* ---------------------------------------------- the four tracks, drawn ---- */
+/* The cover used to name the four tracks in a sentence. It draws them now: one
+   design-build-test-learn ring on the left, four tracks fanning off it, and
+   every cycle as the mark it carries everywhere else on this page. The reader
+   meets the notation here and then reads the atlas, the table and every cycle
+   header in it. */
+
+.tracks {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  align-items: center;
+  column-gap: clamp(1.25rem, .5rem + 2vw, 2.5rem);
+  row-gap: var(--sp-4);
+  margin: var(--sp-2) 0 0;
 }
-.cover__lede b { color: #fff; font-weight: 650; }
+
+.tracks__unit { display: grid; justify-items: center; gap: .5rem; }
+.tracks__ring {
+  width: clamp(5.5rem, 4rem + 4vw, 8rem);
+  height: auto;
+  fill: none;
+  stroke: rgba(180,215,195,.58);
+  stroke-width: 2;
+  stroke-linecap: round;
+}
+.tracks__ring .ring__head { fill: rgba(180,215,195,.58); stroke: none; }
+.tracks__ring text {
+  fill: #dcece2; stroke: none;
+  font-family: var(--font-display);
+  font-size: 20px; font-weight: 650; letter-spacing: .02em;
+  text-anchor: middle;
+}
+.tracks__unitcap {
+  font-family: var(--font-display);
+  font-size: var(--field); font-weight: 600;
+  letter-spacing: .12em; text-transform: uppercase;
+  color: #8fae9d; white-space: nowrap;
+}
+
+/* the fan: one hairline spine, one stub per track */
+.tracks__list {
+  margin: 0; padding: 0 0 0 clamp(.75rem, .3rem + 1.2vw, 1.25rem);
+  list-style: none;
+  border-left: var(--lw-med) solid rgba(180,215,195,.30);
+}
+.tracks__list li {
+  display: grid;
+  /* the strips start on a common line, so five against seven reads as a
+     length the way a schedule's quantities do */
+  grid-template-columns: minmax(0, 1fr) 6.25rem;
+  align-items: baseline;
+  column-gap: var(--sp-4);
+  padding: .5rem 0;
+  position: relative;
+}
+.tracks__list li + li { border-top: var(--lw-med) solid rgba(180,215,195,.16); }
+.tracks__list li::before {
+  content: ""; position: absolute;
+  left: calc(-1 * clamp(.75rem, .3rem + 1.2vw, 1.25rem)); top: 50%;
+  width: clamp(.5rem, .2rem + .8vw, .8rem); height: 1px;
+  background: rgba(180,215,195,.30);
+}
+.tracks__list b {
+  grid-column: 1;
+  font-family: var(--font-display);
+  font-size: var(--field); font-weight: 700;
+  letter-spacing: .14em; text-transform: uppercase;
+  color: #fff;
+}
+.tracks__what {
+  grid-column: 1; grid-row: 2;
+  font-size: var(--text-sm); line-height: 1.35;
+  color: #a9c7b6;
+}
+.tracks .pips {
+  grid-column: 2; grid-row: 1 / span 2;
+  align-self: center; justify-self: start;
+  display: inline-flex; gap: .3rem; flex: none;
+}
+
+/* the three marks the whole page uses, at cover size */
+.pips i, .tracks__key i {
+  width: .5rem; height: .5rem; flex: none;
+  border-radius: 50%;
+  background: #62b48a;
+}
+.p-fail { background: linear-gradient(to bottom, #d9a747 0 40%, transparent 40% 60%, #d9a747 60% 100%) !important; }
+.p-open { background: none !important; box-shadow: inset 0 0 0 1.5px #e08356; }
+
+.tracks__key {
+  grid-column: 1 / -1;
+  display: flex; flex-wrap: wrap; gap: .35rem 1.25rem;
+  margin: 0;
+  font-family: var(--font-display);
+  font-size: var(--field); font-weight: 600;
+  letter-spacing: .1em; text-transform: uppercase;
+  color: #8fae9d;
+}
+.tracks__key span { display: inline-flex; align-items: center; gap: .45rem; }
+
+@media (max-width: 47.999rem) {
+  .tracks { grid-template-columns: minmax(0, 1fr); }
+  .tracks__unit {
+    grid-auto-flow: column; justify-items: start; align-items: center;
+    justify-content: start; gap: .85rem;
+  }
+}
 
 /* the count, as a drawing's quantity schedule */
 .cover__tally {
@@ -375,6 +496,8 @@
   background: linear-gradient(to bottom, var(--st-fail) 0 40%, transparent 40% 60%, var(--st-fail) 60% 100%);
 }
 .keylist .k-open i { background: none; box-shadow: inset 0 0 0 2px var(--st-open); }
+
+.sprite { position: absolute; width: 0; height: 0; overflow: hidden; }
 
 .visually-hidden {
   position: absolute; width: 1px; height: 1px;
@@ -753,18 +876,6 @@
   font-weight: 600; color: var(--leaf-900); line-height: 1.5;
 }
 
-/* ---------------------------------------------------------------- filters -- */
-
-.cycfilter {
-  display: flex; flex-wrap: wrap; gap: var(--sp-2) var(--sp-3);
-  align-items: center;
-  padding: var(--sp-4) 0;
-  margin-bottom: var(--sp-2);
-}
-.cycfilter .field { margin-right: var(--sp-2); }
-.cycfilter .chip { border-color: var(--graphite-2); color: var(--ink-2); }
-.cycfilter .chip:hover { border-color: var(--graphite); color: var(--ink); }
-.cycfilter .chip[aria-pressed="true"] { background: var(--leaf-900); border-color: var(--leaf-900); color: #fff; }
 .cyc[hidden] { display: none; }
 
 /* ============================================================= INDEX ======= */
@@ -796,15 +907,32 @@
     position: relative;
     pointer-events: auto;
   }
+  /* One slot, two states: a tick for a sheet you are not on, that sheet's own
+     mark for the one you are. Both live in the same box so nothing shifts. */
+  .edge .mark {
+    width: 1.5rem; height: 1.5rem; flex: none;
+    display: grid;
+  }
+  .edge .mark > * { grid-area: 1 / 1; align-self: center; }
   .edge .tick {
-    width: 1.5rem; height: 2px; flex: none;
+    width: 1.5rem; height: 2px;
     border-radius: 2px;
     background: var(--graphite-3);
     transform: scaleX(.62); transform-origin: left center;
-    transition: transform .18s cubic-bezier(.22,1,.36,1), background .18s ease;
+    transition: transform .18s cubic-bezier(.22,1,.36,1), background .18s ease, opacity .18s ease;
+  }
+  .edge__ico {
+    width: 1.25rem; height: 1.25rem;
+    justify-self: start;
+    fill: none; stroke: currentColor; stroke-width: 1.5;
+    stroke-linecap: round; stroke-linejoin: round;
+    color: var(--leaf-900);
+    opacity: 0;
+    transition: opacity .18s ease;
   }
   .edge a:hover .tick, .edge a:focus-visible .tick { transform: none; background: var(--leaf-700); }
-  .edge a[aria-current="true"] .tick { transform: none; background: var(--leaf-900); }
+  .edge a[aria-current="true"] .tick { opacity: 0; }
+  .edge a[aria-current="true"] .edge__ico { opacity: 1; }
   /* Collapsed, the label is out of flow, so an anchor is only as wide as its
      tick and there is no invisible column of hover target beside the text. */
   .edge .lbl {
@@ -840,7 +968,7 @@
   /* over a blueprint plate the graphite ticks vanish, so the rail inverts */
   .edge.on-plate .tick { background: rgba(190,225,205,.5); }
   .edge.on-plate a:hover .tick, .edge.on-plate a:focus-visible .tick { background: #cfe9d9; }
-  .edge.on-plate a[aria-current="true"] .tick { background: #fff; }
+  .edge.on-plate .edge__ico { color: #fff; }
   .edge.on-plate .lbl { color: #a9c7b6; }
   .edge.on-plate a[aria-current="true"] .lbl { color: #fff; }
 
@@ -959,7 +1087,7 @@
 
 @media print {
   .eng { background: #fff; }
-  .edge, .atlas__tools, .cycfilter { display: none !important; }
+  .edge, .atlas__tools { display: none !important; }
   .sheet--plate { background: #fff; color: #000; }
   .sheet--plate :is(h2, h3, p, li) { color: #000 !important; }
   .cyc__body { display: block !important; }
