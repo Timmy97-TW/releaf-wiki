@@ -301,7 +301,6 @@
 .people { display: grid; gap: var(--sp-5); margin: var(--sp-6) 0; grid-template-columns: 1fr; }
 @media (min-width: 640px) { .people { grid-template-columns: 1fr 1fr; } }
 .people .fig { margin: 0; }
-.people .fig img { aspect-ratio: 4 / 3; object-fit: cover; width: 100%; }
 .people figcaption b { display: block; margin-bottom: .15rem; }
 
 /* ------------------------------------------------------------ PROTOTYPES -- */
@@ -321,7 +320,7 @@
   overflow: hidden;
 }
 .proto--kept { border-top-color: var(--leaf-700); }
-.proto img { display: block; width: 100%; height: auto; background: var(--gray-50); }
+.proto img { display: block; width: 100%; height: auto; aspect-ratio: 20 / 9; background: var(--gray-50); }
 .proto__body { padding: var(--sp-3) var(--sp-4) var(--sp-4); }
 .proto__no { font-size: .625rem; font-weight: 700; letter-spacing: .16em; text-transform: uppercase; color: var(--gray-400); }
 .proto--kept .proto__no { color: var(--leaf-700); }
@@ -343,3 +342,39 @@
 .story__beat p { margin: 0 0 var(--sp-3); max-width: 82ch; }
 .story__beat p:last-child { margin-bottom: 0; }
 .story__beat .fig, .story__beat .figs { margin-top: var(--sp-4); }
+
+/* ------------------------------------------------------------- FIGURES -- */
+/* Two different jobs, two different rules.
+   A standalone figure is a thing to look at: it keeps its own aspect ratio,
+   nothing is cropped, and it is capped at 70% of the window height so a tall
+   portrait photograph cannot push a paragraph off the screen.
+   A figure inside a row is a thing to compare: those are cropped to one
+   shared frame so the row reads as a row. The uncropped original is always
+   one click away, because every image on this page opens in the lightbox. */
+
+.plant .fig img {
+  width: auto;
+  height: auto;
+  max-width: 100%;
+  max-height: 70vh;
+  margin-inline: auto;
+  display: block;
+}
+
+.plant .figs .fig img,
+.plant .people .fig img {
+  width: 100%;
+  max-height: none;
+  aspect-ratio: 4 / 3;
+  object-fit: cover;
+}
+
+/* documents and diagrams get the same frame but are never cropped */
+.plant .figs--doc .fig img,
+.proto img {
+  object-fit: contain;
+  background: var(--gray-50);
+}
+.plant .figs--doc .fig img { aspect-ratio: 16 / 10; }
+
+.rail__shot img, .proto img { cursor: zoom-in; }

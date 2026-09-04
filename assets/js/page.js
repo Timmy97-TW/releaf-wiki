@@ -236,7 +236,10 @@
   /* ---- 5. lightbox ------------------------------------------------------- */
 
   function lightbox() {
-    const imgs = $$(".fig:not(.fig--pending) img");
+    /* [data-zoom] lets a page opt a non-.fig block in: the plant page uses it
+       for its stage rail and its prototype cards, whose images are cropped in
+       place and are only fully visible here. */
+    const imgs = $$(".fig:not(.fig--pending) img, [data-zoom] img");
     if (!imgs.length) return;
 
     const box = document.createElement("div");
