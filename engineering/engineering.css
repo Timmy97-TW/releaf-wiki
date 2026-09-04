@@ -27,10 +27,11 @@
 /* ============================================================== TOKENS ===== */
 
 .eng {
-  /* drafting stock, warmed off the leaf greys so it belongs to ReLeaf */
-  --paper:      #f6f6f2;
-  --paper-2:    #eceee7;
-  --vellum:     #fbfbf8;
+  /* white stock. The sheet is paper white and the ink does the work; the two
+     greys below are surfaces, not tints of a warm stock. */
+  --paper:      #ffffff;
+  --paper-2:    #f5f5f7;
+  --vellum:     #fafafa;
 
   /* blueprint ground for the cover and the atlas */
   --blue-900:   #0c231a;
@@ -39,7 +40,8 @@
 
   /* graphite, pulled green so rules sit in the same family as the ink */
   --graphite:   #5c6b62;
-  --graphite-2: #93a099;
+  --graphite-2: #c3cbc6;   /* a hairline on white, not a hairline on stock */
+  --graphite-3: #8b968f;   /* the old rule weight, kept for text-adjacent marks */
   --ink:        #15201a;
   --ink-2:      #3d4a43;
 
@@ -81,7 +83,7 @@
 /* Browser surfaces belong to the design too. */
 .eng ::selection { background: var(--leaf-200); color: var(--leaf-900); }
 .eng :focus-visible { outline: 2px solid var(--leaf-500); outline-offset: 3px; border-radius: 2px; }
-.eng { scrollbar-color: var(--graphite-2) var(--paper-2); }
+.eng { scrollbar-color: var(--graphite-3) var(--paper-2); }
 
 /* ============================================================== SHEETS ===== */
 /* Each band is a sheet. The reading sheets are stock; the cover and the atlas
@@ -125,14 +127,12 @@
 }
 .sheethead h2 {
   margin: 0;
-  flex: 1 1 22ch;
+  flex: 1 1 auto;
   font-size: clamp(1.375rem, 1.05rem + 1.3vw, 2rem);
   line-height: 1.15;
   letter-spacing: -.02em;
 }
 .sheet--plate .sheethead h2 { color: #f2f7f3; }
-.sheethead__note { flex: 0 1 34ch; margin: 0; font-size: var(--text-sm); color: var(--graphite); line-height: 1.45; }
-.sheet--plate .sheethead__note { color: #9fbcac; }
 
 /* ============================================================== COVER ====== */
 
@@ -140,29 +140,38 @@
 /* The photograph and its wash are two layers of one background on one element.
    An absolutely positioned image element under a separate scrim div failed to composite
    on a cold load in at least one engine, and a cover that sometimes renders as
-   a grey gradient is not a cover. The alternative text lives on the plate. */
+   a grey gradient is not a cover. The alternative text lives on the plate.
+   The frame is never cropped: the plate is sized so the whole 4:3 photograph
+   sits inside it, flush left, and the words take the ground it leaves on the
+   right. The wash runs right-to-left, dark under the type and clear of the
+   faces. */
 .cover__plate {
   position: relative;
-  min-height: clamp(30rem, 21rem + 27vw, 46rem);
+  min-height: clamp(28rem, 46vw, 52rem);
   display: block;
   overflow: hidden;
   background-image:
-    linear-gradient(to top, rgba(7,22,15,.90) 0%, rgba(7,22,15,.52) 20%, rgba(7,22,15,.14) 46%, rgba(7,22,15,0) 66%),
-    linear-gradient(to right, rgba(7,22,15,.94) 0%, rgba(7,22,15,.89) 26%, rgba(7,22,15,.66) 46%, rgba(7,22,15,.22) 64%, rgba(7,22,15,0) 78%),
+    linear-gradient(to left,
+      rgba(7,22,15,.97) 0%,
+      rgba(7,22,15,.96) 50%,
+      rgba(7,22,15,.86) 58%,
+      rgba(7,22,15,.45) 68%,
+      rgba(7,22,15,.10) 78%,
+      rgba(7,22,15,0) 86%),
     url("../assets/img/engineering/cover-rig.webp");
   background-repeat: no-repeat;
-  background-size: cover, cover, cover;
-  background-position: center, center, 50% 48%;
+  background-size: cover, contain;
+  background-position: center, left center;
   background-color: var(--blue-900);
 }
 @media (max-width: 61.999rem) {
+  /* Stacked, and still uncropped: the photograph takes the full width at its
+     own 4:3, and the words sit on the blueprint ground beneath it. */
   .cover__plate {
-    min-height: clamp(26rem, 18rem + 30vw, 34rem);
-    background-image:
-      linear-gradient(to top, rgba(8,26,18,.95) 0%, rgba(8,26,18,.88) 34%, rgba(8,26,18,.66) 62%, rgba(8,26,18,.42) 100%),
-      url("../assets/img/engineering/cover-rig.webp");
-    background-size: cover, cover;
-    background-position: center, 62% 46%;
+    min-height: 0;
+    background-image: url("../assets/img/engineering/cover-rig.webp");
+    background-size: 100% auto;
+    background-position: top center;
   }
 }
 
@@ -170,13 +179,28 @@
   position: relative; z-index: 2;
   max-width: var(--sheet-max);
   margin: 0 auto;
-  padding: clamp(3rem, 2rem + 6vw, 7rem) clamp(1rem, .4rem + 2.4vw, 2.75rem) clamp(1.5rem, 1rem + 2vw, 2.5rem);
+  padding: clamp(3rem, 2rem + 6vw, 6.5rem) clamp(1rem, .4rem + 2.4vw, 2.75rem) clamp(1.5rem, 1rem + 2vw, 2.5rem);
   width: 100%;
+}
+@media (max-width: 61.999rem) {
+  .cover__body { padding-top: calc(75vw + clamp(1.75rem, 5vw, 2.75rem)); }
+}
+@media (min-width: 62rem) {
+  /* one empty column the width of the photograph, one column of words */
+  .cover__body {
+    display: grid;
+    /* the split is a proportion, not a fixed column: the photograph's width is
+       four thirds of the plate's height, which is itself a proportion of the
+       viewport, so a fixed column would drift out from under the wash */
+    grid-template-columns: minmax(0, 50%) minmax(0, 1fr);
+    align-content: center;
+  }
+  .cover__body > * { grid-column: 2; }
 }
 .cover h1 {
   margin: 0 0 var(--sp-4);
-  max-width: 15ch;
-  font-size: clamp(2rem, 1.15rem + 3.6vw, 4.5rem);
+  max-width: 18ch;
+  font-size: clamp(2rem, 1.15rem + 3.6vw, 4.25rem);
   line-height: .98;
   letter-spacing: -.035em;
   color: #fff;
@@ -184,7 +208,7 @@
 }
 .cover__lede {
   margin: 0;
-  max-width: 42ch;
+  max-width: 46ch;
   font-size: clamp(1rem, .95rem + .35vw, 1.1875rem);
   line-height: 1.55;
   color: #cbdfd2;
@@ -204,6 +228,22 @@
   border-right: var(--lw-med) solid rgba(180,215,195,.34);
 }
 .cover__tally li:last-child { border-right: 0; }
+@media (max-width: 61.999rem) {
+  /* wrapped, the cells fill their row and each row rules itself, so a short
+     last row never reads as an empty cell */
+  .cover__tally li {
+    flex: 1 1 auto;
+    border-top: var(--lw-med) solid rgba(180,215,195,.34);
+    margin-top: -1px;
+  }
+}
+@media (min-width: 62rem) {
+  /* five equal cells that hold one row inside the words column, rather than
+     wrapping the last one onto a line of its own */
+  .cover__tally { width: 100%; }
+  .cover__tally li { flex: 1 1 0; min-width: 0; }
+  .cover__tally span { white-space: normal; }
+}
 .cover__tally b {
   display: block;
   font-size: clamp(1.5rem, 1.2rem + 1.2vw, 2.125rem);
@@ -215,6 +255,7 @@
   display: block; margin-top: .35em;
   font-size: var(--field); font-weight: 600;
   letter-spacing: .12em; text-transform: uppercase;
+  line-height: 1.35;
   color: #9dbfab;
 }
 .cover__tally .is-open b, .cover__tally .is-open span { color: #f0b49a; }
@@ -230,7 +271,7 @@
   align-items: baseline;
   padding-top: var(--sp-4); padding-bottom: var(--sp-4);
 }
-.cover__strip p { margin: 0; font-size: var(--text-sm); line-height: 1.5; max-width: 62ch; }
+.cover__strip p { margin: 0; font-size: var(--text-sm); line-height: 1.5; }
 .cover__strip dl { display: flex; flex-wrap: wrap; gap: var(--sp-2) var(--sp-5); margin: 0; }
 .cover__strip dt { font-size: var(--field); font-weight: 600; letter-spacing: .12em; text-transform: uppercase; color: #6d8e7c; }
 .cover__strip dd { margin: 0 0 0 .5em; font-size: var(--text-sm); color: #cfe0d6; }
@@ -246,15 +287,19 @@
   gap: var(--sp-5);
 }
 @media (min-width: 62rem) {
+  /* The prose runs the width of the sheet. Nothing is held back on the right:
+     the main column takes whatever the margin leaves, and the type grows and
+     the leading opens so a long line is still trackable. */
   .rd {
-    grid-template-columns: minmax(0, 68ch) minmax(0, 20rem);
+    grid-template-columns: minmax(0, 1fr) minmax(0, 21rem);
     gap: clamp(2rem, 1rem + 3vw, 4rem);
     align-items: start;
   }
   .rd__wide { grid-column: 1 / -1; }
-  /* the sheet is wide so the evidence can be; the argument is not */
+  /* a margin only exists where something is written in it */
+  .rd > .rd__main:only-child { grid-column: 1 / -1; }
   .rd__wide > :is(p, ul, ol, h3, h4, blockquote, .callout, .finding, .notes, .wherenext) {
-    max-width: 68ch;
+    max-width: none;
   }
 }
 .rd__main > * + * { margin-top: var(--sp-5); }
@@ -262,6 +307,10 @@
 @media (min-width: 62rem) { .rd__aside { position: sticky; top: calc(var(--nav-h) + 1.5rem); } }
 
 .eng p { line-height: 1.68; }
+@media (min-width: 62rem) {
+  .eng .rd__main { font-size: clamp(1rem, .93rem + .28vw, 1.125rem); }
+  .eng .rd__main :is(p, li) { line-height: 1.75; }
+}
 .eng .lede { font-size: var(--text-lede); line-height: 1.55; color: var(--ink-2); }
 
 .eng .rd__main h3 {
@@ -282,7 +331,6 @@
   padding: var(--sp-4) 0 var(--sp-4) 3rem;
   border-bottom: var(--lw-thin) solid var(--graphite-2);
   line-height: 1.6;
-  max-width: 74ch;
 }
 .notes__q { display: block; color: var(--leaf-900); }
 .notes__a { display: block; margin-top: .25rem; }
@@ -291,8 +339,8 @@
      next, so the sheet is wide without any line running past its measure */
   .notes li {
     display: grid;
-    grid-template-columns: minmax(0, 24ch) minmax(0, 62ch);
-    column-gap: var(--sp-5);
+    grid-template-columns: minmax(0, 26ch) minmax(0, 1fr);
+    column-gap: clamp(2rem, 1rem + 3vw, 4rem);
     align-items: start;
     max-width: none;
   }
@@ -317,14 +365,16 @@
   font-size: var(--text-sm); color: var(--ink-2);
 }
 .keylist li { display: flex; align-items: center; gap: .55rem; }
+/* the same three marks the stamps carry, at key size */
 .keylist i {
-  width: .4rem; height: 1.05rem; flex: none;
+  width: .68rem; height: .68rem; flex: none;
+  border-radius: 50%;
   background: var(--st-closed);
 }
 .keylist .k-fail i {
-  background: linear-gradient(to bottom, var(--st-fail) 0 38%, transparent 38% 62%, var(--st-fail) 62% 100%);
+  background: linear-gradient(to bottom, var(--st-fail) 0 40%, transparent 40% 60%, var(--st-fail) 60% 100%);
 }
-.keylist .k-open i { background: none; border: 2px solid var(--st-open); }
+.keylist .k-open i { background: none; box-shadow: inset 0 0 0 2px var(--st-open); }
 
 .visually-hidden {
   position: absolute; width: 1px; height: 1px;
@@ -351,8 +401,9 @@
 
 .rubric { display: grid; gap: var(--sp-4); grid-template-columns: repeat(auto-fit, minmax(15rem, 1fr)); margin: var(--sp-5) 0; }
 .rubric__item {
-  padding: var(--sp-4);
+  padding: var(--sp-5);
   border: var(--lw-med) solid var(--graphite-2);
+  border-radius: 14px;
   background: var(--vellum);
 }
 .rubric__q { margin: 0 0 var(--sp-3); font-weight: 650; color: var(--leaf-900); line-height: 1.4; }
@@ -366,10 +417,10 @@
 .rubric__go:hover { color: var(--leaf-900); }
 
 .eng .card2 {
-  padding: var(--sp-4) var(--sp-5) var(--sp-5);
+  padding: var(--sp-5);
   border: var(--lw-med) solid var(--graphite-2);
   border-top: var(--lw-heavy) solid var(--leaf-700);
-  border-radius: 0;
+  border-radius: 0 0 14px 14px;
   background: var(--vellum);
 }
 .eng .card2 h4 { margin: 0 0 var(--sp-2); color: var(--leaf-900); font-size: var(--text-base); line-height: 1.35; }
@@ -400,8 +451,9 @@
 .chip {
   font-family: var(--font-display);
   font-size: var(--field); font-weight: 600; letter-spacing: .1em; text-transform: uppercase;
-  padding: .45em .85em;
+  padding: .5em .95em;
   border: var(--lw-med) solid rgba(180,215,195,.4);
+  border-radius: 999px;
   background: transparent; color: #cfe4d7;
   cursor: pointer;
   transition: background .14s ease, border-color .14s ease, color .14s ease;
@@ -527,17 +579,35 @@
 
 /* the state stamp, shared by the table and the cycle headers */
 .stamp {
-  display: inline-flex; align-items: center; gap: .4em;
+  display: inline-flex; align-items: center; gap: .45em;
   font-family: var(--font-display);
   font-size: var(--field); font-weight: 700; letter-spacing: .1em; text-transform: uppercase;
-  padding: .25em .55em;
+  padding: .3em .7em .3em .55em;
   border: var(--lw-med) solid currentColor;
+  border-radius: 999px;
   white-space: nowrap;
 }
-.stamp::before { content: ""; width: .5em; height: .5em; background: currentColor; flex: none; }
+/* Three marks drawn on one circle: filled for a cycle that closed, cut across
+   the middle for one that closed on a failure, an open ring for one still
+   running. The state reads from the shape at a glance and survives greyscale;
+   colour only agrees with it. */
+.stamp::before {
+  content: ""; flex: none;
+  width: .68em; height: .68em;
+  border-radius: 50%;
+  background: currentColor;
+}
 .stamp--closed { color: var(--st-closed); }
 .stamp--fail   { color: var(--st-fail); }
 .stamp--open   { color: var(--st-open); }
+.stamp--fail::before {
+  background: linear-gradient(to bottom,
+    currentColor 0 40%, transparent 40% 60%, currentColor 60% 100%);
+}
+.stamp--open::before {
+  background: none;
+  box-shadow: inset 0 0 0 .16em currentColor;
+}
 
 /* ============================================================ CYCLES ======= */
 /* Collapsed, a cycle is one revision row: what was asked, what came back, what
@@ -573,8 +643,9 @@
   font-family: var(--font-display);
   font-size: .8125rem; font-weight: 700; letter-spacing: .08em;
   color: var(--leaf-900);
-  padding: .3em .5em;
+  padding: .34em .5em;
   border: var(--lw-med) solid var(--graphite-2);
+  border-radius: 7px;
   min-width: 3.25rem; text-align: center;
   font-variant-numeric: tabular-nums;
 }
@@ -587,19 +658,28 @@
 }
 .cyc__q { grid-column: 2; margin: 0; font-size: var(--text-sm); color: var(--ink-2); line-height: 1.55; }
 .cyc__meta { grid-column: 3; grid-row: 1 / span 2; display: flex; flex-direction: column; align-items: flex-end; gap: var(--sp-2); }
+/* A chevron drawn once, at 1.6 units on a 16 grid with round caps and a round
+   join, and painted through a mask so it takes currentColor. The box that used
+   to be around it is gone; the target is a circle that only tints under the
+   pointer. */
 .cyc__chev {
-  width: 1.5rem; height: 1.5rem; flex: none;
-  border: var(--lw-med) solid var(--graphite);
+  --chev: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16' fill='none' stroke='%23000' stroke-width='1.6' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M4.25 6.25 8 10l3.75-3.75'/%3E%3C/svg%3E");
+  width: 1.75rem; height: 1.75rem; flex: none;
+  border-radius: 50%;
   display: grid; place-items: center;
   color: var(--graphite);
+  transition: background .18s ease, color .18s ease;
 }
 .cyc__chev::before {
-  content: ""; width: .4rem; height: .4rem;
-  border-right: 1.5px solid currentColor; border-bottom: 1.5px solid currentColor;
-  transform: translateY(-.1rem) rotate(45deg);
-  transition: transform .18s cubic-bezier(.22,1,.36,1);
+  content: ""; width: 1.0625rem; height: 1.0625rem;
+  background: currentColor;
+  -webkit-mask: var(--chev) center / contain no-repeat;
+          mask: var(--chev) center / contain no-repeat;
+  transition: transform .28s cubic-bezier(.22,1,.36,1);
 }
-.cyc[open] .cyc__chev::before { transform: translateY(.06rem) rotate(-135deg); }
+.cyc__head:hover .cyc__chev { background: rgba(21,32,26,.06); color: var(--ink); }
+.cyc[open] .cyc__chev::before { transform: rotate(180deg); }
+.cyc[open] .cyc__chev { color: var(--leaf-900); }
 .cyc[open] .cyc__head { background: var(--vellum); }
 
 /* the one-line result, visible while collapsed — this is what makes scanning
@@ -666,9 +746,10 @@
 /* the finding: the sentence a judge can quote */
 .finding {
   margin: 0 0 var(--sp-4);
-  padding: var(--sp-3) var(--sp-4);
+  padding: var(--sp-4) var(--sp-5);
   background: var(--paper-2);
-  border-left: var(--lw-med) solid var(--graphite);
+  border-radius: 0 12px 12px 0;
+  border-left: 2px solid var(--leaf-700);
   font-weight: 600; color: var(--leaf-900); line-height: 1.5;
 }
 
@@ -695,46 +776,61 @@
   .edge {
     display: block;
     position: fixed;
-    left: max(.75rem, calc(50vw - var(--sheet-max) / 2 - 3.25rem));
+    left: max(.5rem, calc(50vw - var(--sheet-max) / 2 - 2.5rem));
     top: 50%; transform: translateY(-50%);
     z-index: 40;
     padding: var(--sp-3) 0;
+    /* The rail opens only when the pointer is on a tick. Its own box, its
+       padding and its labels are all transparent to the mouse, so drifting
+       into the margin beside the prose no longer throws a panel over the
+       text. Only the ticks accept a pointer, and hovering one opens the rail
+       through :hover on this element. */
+    pointer-events: none;
   }
   .edge ol { margin: 0; padding: 0; list-style: none; }
   .edge li + li { margin-top: 2px; }
   .edge a {
     display: flex; align-items: center; gap: .5rem;
     text-decoration: none;
-    padding: .18rem .3rem;
+    padding: .2rem .3rem;
+    position: relative;
+    pointer-events: auto;
   }
   .edge .tick {
-    width: 2rem; height: 2px; flex: none;
-    background: var(--graphite-2);
-    transform: scaleX(.675); transform-origin: left center;
-    transition: transform .16s ease, background .16s ease;
+    width: 1.5rem; height: 2px; flex: none;
+    border-radius: 2px;
+    background: var(--graphite-3);
+    transform: scaleX(.62); transform-origin: left center;
+    transition: transform .18s cubic-bezier(.22,1,.36,1), background .18s ease;
   }
   .edge a:hover .tick, .edge a:focus-visible .tick { transform: none; background: var(--leaf-700); }
   .edge a[aria-current="true"] .tick { transform: none; background: var(--leaf-900); }
+  /* Collapsed, the label is out of flow, so an anchor is only as wide as its
+     tick and there is no invisible column of hover target beside the text. */
   .edge .lbl {
+    position: absolute; left: 2.1rem; top: 50%;
     font-family: var(--font-display);
     font-size: .625rem; font-weight: 700; letter-spacing: .1em; text-transform: uppercase;
     color: var(--graphite);
-    opacity: 0; transform: translateX(-.25rem);
+    opacity: 0; transform: translateY(-50%) translateX(-.25rem);
     transition: opacity .16s ease, transform .16s ease;
     white-space: nowrap;
+    pointer-events: none;
   }
-  /* Labels appear only while the rail is being used. Left on permanently for
-     the current sheet they sit on top of the prose, which is worse than a
-     tick you can hover. */
-  .edge:hover .lbl, .edge a:focus-visible .lbl { opacity: 1; transform: none; }
+  .edge:hover .lbl, .edge:focus-within .lbl {
+    position: static; opacity: 1; transform: none;
+  }
   .edge a[aria-current="true"] .lbl { color: var(--leaf-900); }
   .edge:hover, .edge:focus-within {
-    background: var(--vellum);
+    background: #fff;
     border: var(--lw-med) solid var(--graphite-2);
+    border-radius: 12px;
+    box-shadow: 0 12px 32px rgba(21,32,26,.10), 0 2px 6px rgba(21,32,26,.06);
     padding: var(--sp-3) var(--sp-3) var(--sp-3) var(--sp-2);
   }
   .edge.on-plate:hover, .edge.on-plate:focus-within {
-    background: rgba(8,26,18,.94); border-color: rgba(180,215,195,.34);
+    background: rgba(8,26,18,.96); border-color: rgba(180,215,195,.30);
+    box-shadow: 0 12px 32px rgba(0,0,0,.28);
   }
   .edge .st { width: .4rem; height: .4rem; flex: none; border-radius: 50%; }
   .edge .st-closed { background: var(--st-closed); }

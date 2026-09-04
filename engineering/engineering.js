@@ -198,8 +198,11 @@
     if (!sheets.length) { host.parentNode.remove(); return; }
 
     sheets.forEach(function (s) {
+      /* the rail carries a short name of its own: a sheet's heading is a full
+         sentence now, and a rail full of ellipses names nothing */
       var h = $(".sheethead h2", s);
-      var label = h ? h.textContent.trim() : (s.id === "cover" ? "Cover" : s.id);
+      var label = s.getAttribute("data-rail") ||
+                  (h ? h.textContent.trim() : (s.id === "cover" ? "Cover" : s.id));
       if (label.length > 38) label = label.slice(0, 36).trim() + "…";
       var li = document.createElement("li");
       li.innerHTML = '<a href="#' + s.id + '"><span class="tick"></span>' +
