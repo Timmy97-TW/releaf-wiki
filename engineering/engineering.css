@@ -171,19 +171,31 @@
   min-height: clamp(28rem, 46vw, 52rem);
   display: block;
   overflow: hidden;
+  /* The wash was a flat slab: one left-running linear gradient sitting at .90
+     for the first half of the plate, which paints the words' half a solid
+     green rectangle and stops the photograph at a hard vertical edge. It is
+     an ellipse now, anchored off the right, so the dark pools under the type
+     and falls away as a curve. There is no straight edge anywhere in it, the
+     photograph keeps going underneath, and the ground reads as depth rather
+     than as a panel laid on top. */
   background-image:
-    linear-gradient(to left,
-      rgba(7,22,15,.90) 0%,
-      rgba(7,22,15,.88) 44%,
-      rgba(7,22,15,.80) 56%,
-      rgba(7,22,15,.62) 68%,
-      rgba(7,22,15,.38) 80%,
-      rgba(7,22,15,.16) 91%,
-      rgba(7,22,15,0) 100%),
+    radial-gradient(118% 132% at 93% 44%,
+      rgba(5,17,13,.93) 0%,
+      rgba(5,17,13,.88) 30%,
+      rgba(5,17,13,.74) 50%,
+      rgba(5,17,13,.46) 68%,
+      rgba(5,17,13,.20) 84%,
+      rgba(5,17,13,.04) 95%,
+      rgba(5,17,13,0) 100%),
+    linear-gradient(to top,
+      rgba(5,17,13,.66) 0%,
+      rgba(5,17,13,.30) 18%,
+      rgba(5,17,13,.06) 38%,
+      rgba(5,17,13,0) 56%),
     url("../assets/img/engineering/cover-rig.webp");
   background-repeat: no-repeat;
-  background-size: cover, contain;
-  background-position: center, left center;
+  background-size: cover, cover, contain;
+  background-position: center, center, left center;
   background-color: var(--blue-900);
 }
 @media (max-width: 61.999rem) {
@@ -228,43 +240,46 @@
   color: #fff;
   text-wrap: balance;
 }
-/* ---------------------------------------------- the four tracks, drawn ---- */
-/* The cover used to name the four tracks in a sentence. It draws them now: one
-   design-build-test-learn ring on the left, four tracks fanning off it, and
-   every cycle as the mark it carries everywhere else on this page. The reader
-   meets the notation here and then reads the atlas, the table and every cycle
-   header in it. */
+/* ------------------------------------------- the loop, left unlabelled ---- */
+/* The cover used to teach the notation outright: a ring with D, B, T and L
+   lettered round it and ONE CYCLE captioned underneath, which is a diagram
+   explaining itself before the reader has been given anything to explain.
+   The teaching moved to Sheet 02, where seven of these loops carry real work.
+   What is left here is the construction geometry a drafting sheet would carry
+   anyway: two concentric circles, four arcs broken at the quadrants, two
+   arrowheads, and a tick where each break falls. Hairline, at a tenth of the
+   contrast of the type. It reads as the sheet's own setting-out until the
+   reader notices the arrowheads, and then it is a cycle. */
+.cover__loop {
+  position: absolute; z-index: 1;
+  right: -10%; top: 50%; translate: 0 -50%;
+  width: min(48rem, 62%); height: auto;
+  fill: none;
+  stroke: rgba(196,228,210,.22);
+  stroke-linecap: round;
+  pointer-events: none;
+}
+/* hairlines at any size: the ring is a setting-out line, not a graphic */
+.cover__loop path, .cover__loop circle { vector-effect: non-scaling-stroke; stroke-width: 1.1; }
+/* the heads are the only thing that says cycle rather than circle, so they
+   stay — at half the weight of the arc they sit on, so what the eye finds
+   first is the ring and not a triangle */
+.cover__loop .loop__head { fill: rgba(196,228,210,.13); stroke: none; }
+/* the quadrant breaks, run out past the ring: the four divisions govern the
+   whole plate rather than just the circle */
+.cover__loop .loop__tick { stroke: rgba(196,228,210,.17); stroke-width: 1; }
+.cover__loop .loop__con  { stroke: rgba(196,228,210,.10); }
+@media (max-width: 61.999rem) {
+  /* stacked, the words sit under the photograph and there is no ground to
+     set the geometry out on */
+  .cover__loop { display: none; }
+}
 
 .tracks {
   display: grid;
-  grid-template-columns: auto minmax(0, 1fr);
-  align-items: center;
-  column-gap: clamp(1.25rem, .5rem + 2vw, 2.5rem);
+  grid-template-columns: minmax(0, 1fr);
   row-gap: var(--sp-4);
   margin: var(--sp-2) 0 0;
-}
-
-.tracks__unit { display: grid; justify-items: center; gap: .5rem; }
-.tracks__ring {
-  width: clamp(5.5rem, 4rem + 4vw, 8rem);
-  height: auto;
-  fill: none;
-  stroke: rgba(180,215,195,.58);
-  stroke-width: 2;
-  stroke-linecap: round;
-}
-.tracks__ring .ring__head { fill: rgba(180,215,195,.58); stroke: none; }
-.tracks__ring text {
-  fill: #dcece2; stroke: none;
-  font-family: var(--font-display);
-  font-size: 20px; font-weight: 650; letter-spacing: .02em;
-  text-anchor: middle;
-}
-.tracks__unitcap {
-  font-family: var(--font-display);
-  font-size: var(--field); font-weight: 600;
-  letter-spacing: .12em; text-transform: uppercase;
-  color: #8fae9d; white-space: nowrap;
 }
 
 /* the fan: one hairline spine, one stub per track */
@@ -328,13 +343,6 @@
 }
 .tracks__key span { display: inline-flex; align-items: center; gap: .45rem; }
 
-@media (max-width: 47.999rem) {
-  .tracks { grid-template-columns: minmax(0, 1fr); }
-  .tracks__unit {
-    grid-auto-flow: column; justify-items: start; align-items: center;
-    justify-content: start; gap: .85rem;
-  }
-}
 
 /* the count, as a drawing's quantity schedule */
 .cover__tally {
@@ -594,25 +602,71 @@
 .atlas .link      { stroke: rgba(170,210,188,.5); stroke-width: 1.6; fill: none; marker-end: url(#eng-arrow); }
 .atlas .link-cross{ stroke: rgba(214,176,120,.62); stroke-width: 1.4; fill: none; stroke-dasharray: 5 4; marker-end: url(#eng-arrow-x); }
 
-.atlas .node       { cursor: pointer; }
-.atlas .node rect  { fill: var(--blue-700); stroke: rgba(180,215,195,.45); stroke-width: 1.4; transition: fill .14s ease, stroke .14s ease; }
-.atlas .node[data-state="fail"] > rect:first-of-type { stroke: rgba(212,160,58,.75); }
-.atlas .node[data-state="open"] > rect:first-of-type { stroke: rgba(216,115,76,.85); fill: #1b3527; }
-.atlas .node .id   { fill: #eaf5ee; font-family: var(--font-display); font-size: 13px; font-weight: 700; letter-spacing: .06em; }
-.atlas .node .cap  { fill: #a9c7b6; font-family: var(--font-display); font-size: 11px; font-weight: 500; }
-.atlas .node:hover rect,
-.atlas .node:focus-visible rect { fill: #1d5236; stroke: #cfe9d9; }
-.atlas .node:focus-visible { outline: none; }
-.atlas .node:focus-visible rect { stroke-width: 2.6; }
+/* ---------------------------------------------------- one loop per cycle -- */
+/* Each cycle is drawn as the ring the whole page is written in: four arcs,
+   Design at the top and round to Learn on the left, a mark at the centre for
+   the work, and an outer ring carrying the outcome. Redesign is deliberately
+   absent from the ring, because it is the arrow: the fifth heading is the line
+   leaving the loop, which is the one relationship a static list of five steps
+   can never show. */
 
-/* the state tab on each node — the drawing's stamp, not a coloured border */
-/* These must out-specify `.atlas .node rect` (0,2,1) or the tab paints in the
-   node's own body colour and the whole state notation disappears. */
-.atlas .node rect.st-closed { fill: #4f9c6f; stroke: none; }
-.atlas .node rect.st-fail   { fill: #d4a03a; stroke: none; }
-.atlas .node rect.st-open   { fill: none; stroke: #d8734c; stroke-width: 2px; }
+.atlas .cyc-node { cursor: pointer; }
+.atlas .cyc-node:focus-visible { outline: none; }
 
-.atlas .node.is-dim { opacity: .2; }
+/* the hit area is the whole disc, so the pointer never falls through the gaps
+   between the arcs and drops the reader back to the plate summary */
+.atlas .ring-hit { fill: transparent; stroke: none; }
+
+.atlas .dbtl-arc {
+  fill: rgba(180,215,195,.20);
+  stroke: none;
+  transition: fill .14s ease;
+}
+.atlas .cyc-node:hover .dbtl-arc,
+.atlas .cyc-node:focus-visible .dbtl-arc { fill: rgba(196,229,210,.34); }
+.atlas .dbtl-arc.is-lit,
+.atlas .dbtl-arc:hover { fill: #cfe9d9; }
+
+.atlas .dbtl-letter {
+  fill: #7fa591;
+  font-family: var(--font-display);
+  font-size: 10px; font-weight: 700; letter-spacing: .04em;
+  text-anchor: middle; pointer-events: none;
+  transition: fill .14s ease;
+}
+.atlas .cyc-node:hover .dbtl-letter,
+.atlas .cyc-node:focus-visible .dbtl-letter { fill: #bcd6c7; }
+.atlas .dbtl-letter.is-lit { fill: var(--blue-900); }
+
+.atlas .cyc-ico {
+  fill: none; stroke: rgba(196,229,210,.72);
+  stroke-width: 1.4; stroke-linecap: round; stroke-linejoin: round;
+  pointer-events: none;
+  transition: stroke .14s ease;
+}
+.atlas .cyc-node:hover .cyc-ico,
+.atlas .cyc-node:focus-visible .cyc-ico { stroke: #fff; }
+
+/* the outcome is the ring around the loop: solid, broken, or open. Same three
+   marks as the cover pips and the revision table, in the same order. */
+.atlas .ring-state { fill: none; stroke-width: 1.6; transition: stroke .14s ease; }
+.atlas .cyc-node[data-state="closed"] .ring-state { stroke: #4f9c6f; }
+.atlas .cyc-node[data-state="fail"]   .ring-state { stroke: #d4a03a; stroke-dasharray: 7 5; }
+.atlas .cyc-node[data-state="open"]   .ring-state { stroke: #d8734c; stroke-dasharray: 1.5 5; stroke-linecap: round; }
+.atlas .cyc-node:focus-visible .ring-state { stroke-width: 3; }
+
+.atlas .cyc-id {
+  fill: #eaf5ee; font-family: var(--font-display);
+  font-size: 13px; font-weight: 700; letter-spacing: .08em;
+  text-anchor: middle; pointer-events: none;
+}
+.atlas .cyc-cap {
+  fill: #a9c7b6; font-family: var(--font-display);
+  font-size: 11.5px; font-weight: 500;
+  text-anchor: middle; pointer-events: none;
+}
+
+.atlas .cyc-node.is-dim { opacity: .18; }
 .atlas .link.is-dim, .atlas .link-cross.is-dim { opacity: .12; }
 
 .atlas__legend {
@@ -625,11 +679,21 @@
    it: the three swatches are the node tab at legend size, solid, gapped and
    outline, so the plate stays readable without hue. */
 .atlas__legend i { width: .45rem; height: 1.15rem; flex: none; }
-.atlas__legend .k-closed { background: #4f9c6f; }
-.atlas__legend .k-fail   {
-  background: linear-gradient(to bottom, #d4a03a 0 38%, transparent 38% 62%, #d4a03a 62% 100%);
+/* the outcome key is the ring itself at legend size, so the plate stays
+   readable without hue: solid, broken, open */
+.atlas__legend .k-ring {
+  width: .95rem; height: .95rem; border-radius: 50%;
+  background: none; align-self: center;
 }
-.atlas__legend .k-open   { background: none; border: 2px solid #d8734c; }
+.atlas__legend .k-ring.k-closed { border: 1.5px solid #4f9c6f; }
+.atlas__legend .k-ring.k-fail   { border: 1.5px dashed #d4a03a; }
+.atlas__legend .k-ring.k-open   { border: 1.5px dotted #d8734c; }
+.atlas__legend .k-quad {
+  font-family: var(--font-display); font-size: var(--field); font-weight: 700;
+  letter-spacing: .28em; color: #cfe9d9;
+  padding: .1rem .3rem .1rem .45rem;
+  border: var(--lw-med) solid rgba(180,215,195,.34); border-radius: 999px;
+}
 .atlas__legend .k-link   { background: linear-gradient(to right, rgba(170,210,188,.8) 60%, transparent 60%); height: 2px; width: 1.6rem; align-self: center; }
 .atlas__legend .k-cross  { background: repeating-linear-gradient(to right, rgba(214,176,120,.95) 0 5px, transparent 5px 9px); height: 2px; width: 1.6rem; }
 .atlas__legend .k-skip   { background: repeating-linear-gradient(to right, rgba(140,205,170,.95) 0 7px, transparent 7px 12px); height: 2px; width: 1.6rem; }
@@ -646,6 +710,23 @@
 .atlas__tip p { margin: 0 0 .5rem; font-size: var(--text-sm); line-height: 1.55; color: #bcd6c7; }
 .atlas__tip p:last-child { margin-bottom: 0; }
 .atlas__tip a { color: #cfe9d9; }
+/* the ring, read out: four steps in the order the arcs run */
+.tip__ring { margin: .1rem 0 .6rem; padding: 0; list-style: none; }
+.tip__ring li {
+  display: grid; grid-template-columns: 4.6rem minmax(0, 1fr);
+  gap: var(--sp-3);
+  padding: .3rem 0;
+  font-size: var(--text-sm); line-height: 1.5; color: #bcd6c7;
+  border-top: var(--lw-med) solid rgba(180,215,195,.16);
+}
+.tip__ring li b {
+  font-family: var(--font-display);
+  font-size: var(--field); font-weight: 700;
+  letter-spacing: .12em; text-transform: uppercase;
+  color: #8fae9d;
+}
+.atlas__tip .tip__phase { font-size: var(--text-base); color: #eaf5ee; }
+.atlas__tip .tip__phase b { color: #cfe9d9; }
 
 .crossings { margin-top: var(--sp-6); }
 .crossings h3 { margin: 0 0 var(--sp-3); color: #8fae9d; }

@@ -27,13 +27,17 @@
 
   /* ---- 1 + 2. the atlas ------------------------------------------------- */
 
+  var PHASE_WORD = { d: "Design", b: "Build", t: "Test", l: "Learn" };
+
   function atlas() {
     var svg = $(".atlas__svg");
     var tip = $("#atlas-tip");
     if (!svg || !tip || !DATA) return;
 
-    var nodes = $$(".node", svg);
+    var nodes = $$(".cyc-node", svg);
+    var arcs  = $$(".dbtl-arc", svg);
     var links = $$(".link, .link-cross", svg);
+    var home  = tip.innerHTML;
 
     function describe(id) {
       var c = DATA.cycles[id];
@@ -44,10 +48,32 @@
         "<h3>" + esc(c.t) + "</h3>" +
         "<p>" + esc(c.q) + "</p>" +
         "<p><b>Result.</b> " + esc(c.f) + "</p>";
-      if (c.x) html += "<p><b>Which is why the next cycle happened.</b> " + esc(c.x) + "</p>";
+      /* the four arcs, written out, so the loop on the plate is readable as a
+         loop and not only as a shape */
+      if (c.ph) {
+        html += '<ol class="tip__ring">';
+        ["d", "b", "t", "l"].forEach(function (k) {
+          html += '<li data-phase="' + k + '"><b>' + PHASE_WORD[k] + "</b>" + c.ph[k] + "</li>";
+        });
+        html += "</ol>";
+      }
+      if (c.x) html += "<p><b>Redesign, which is the arrow out.</b> " + esc(c.x) + "</p>";
       crossing.forEach(function (x) { html += "<p><b>Crosses tracks.</b> " + esc(x.why) + "</p>"; });
       html += '<p><a href="#' + id + '">Open the full record for ' + id.toUpperCase() + " &rarr;</a></p>";
       tip.innerHTML = html;
+    }
+
+    /* one arc: the same header, then that step alone. Hovering round a ring
+       reads the cycle a quarter at a time. */
+    function describePhase(id, k) {
+      var c = DATA.cycles[id];
+      if (!c || !c.ph) return describe(id);
+      tip.innerHTML =
+        '<span class="field">' + c.n + " &middot; " + STATE_WORD[c.s] + "</span>" +
+        "<h3>" + esc(c.t) + "</h3>" +
+        '<p class="tip__phase"><b>' + PHASE_WORD[k] + ".</b> " + c.ph[k] + "</p>" +
+        '<p><a href="#' + id + "-" + k + '">Open ' + PHASE_WORD[k] + " in " +
+        id.toUpperCase() + " &rarr;</a></p>";
     }
 
     function highlight(id) {
@@ -65,18 +91,45 @@
                (l.dataset.to === id && l.dataset.from === other);
       });
     }
+    function markArc(id, k) {
+      arcs.forEach(function (a) {
+        a.classList.toggle("is-lit", !!k && a.dataset.cyc === id && a.dataset.phase === k);
+      });
+      $$(".dbtl-letter", svg).forEach(function (t) {
+        var g = t.closest(".cyc-node");
+        t.classList.toggle("is-lit", !!k && g && g.dataset.cyc === id && t.dataset.phase === k);
+      });
+    }
 
     nodes.forEach(function (n) {
       var id = n.dataset.cyc;
-      n.addEventListener("mouseenter", function () { announce(tip, true); describe(id); highlight(id); });
-      n.addEventListener("focus", function () { announce(tip, false); describe(id); highlight(id); });
-      n.addEventListener("click", function () { go(id); });
+      n.addEventListener("mouseenter", function () { announce(tip, true); describe(id); highlight(id); markArc(null); });
+      n.addEventListener("focus", function () { announce(tip, false); describe(id); highlight(id); markArc(null); });
+      n.addEventListener("click", function (e) {
+        var arc = e.target.closest && e.target.closest(".dbtl-arc");
+        go(arc ? id + "-" + arc.dataset.phase : id, id);
+      });
       n.addEventListener("keydown", function (e) {
         if (e.key === "Enter" || e.key === " ") { e.preventDefault(); go(id); }
       });
     });
+
+    /* The arcs are pointer targets only. Making 28 of them tab stops would put
+       four extra stops in front of every cycle for a keyboard reader who has
+       already been read all four steps by the node itself. */
+    arcs.forEach(function (a) {
+      a.addEventListener("mouseenter", function () {
+        announce(tip, true);
+        describePhase(a.dataset.cyc, a.dataset.phase);
+        highlight(a.dataset.cyc);
+        markArc(a.dataset.cyc, a.dataset.phase);
+      });
+    });
+
     var plate = $(".atlas__scroll");
-    if (plate) plate.addEventListener("mouseleave", function () { highlight(null); });
+    if (plate) plate.addEventListener("mouseleave", function () {
+      highlight(null); markArc(null); tip.innerHTML = home;
+    });
 
     /* filters dim rather than remove, so the shape of the whole set stays
        visible while you ask a narrower question of it */
@@ -121,12 +174,13 @@
 
   /* ---- 3 + 4. the record ------------------------------------------------ */
 
-  function go(id) {
-    var d = document.getElementById(id);
-    if (!d) return;
-    d.open = true;
-    d.scrollIntoView({ behavior: prefersMotion() ? "smooth" : "auto", block: "start" });
-    var s = $("summary", d);
+  function go(id, cycleId) {
+    var host = document.getElementById(cycleId || id);
+    var target = document.getElementById(id) || host;
+    if (!host) return;
+    host.open = true;
+    (target || host).scrollIntoView({ behavior: prefersMotion() ? "smooth" : "auto", block: "start" });
+    var s = $("summary", host);
     if (s) s.focus({ preventScroll: true });
   }
 
@@ -185,7 +239,11 @@
       if (!a) return;
       var id = a.getAttribute("href").slice(1);
       var d = document.getElementById(id);
-      if (d && d.classList.contains("cyc")) { e.preventDefault(); go(id); history.replaceState(null, "", "#" + id); }
+      if (d && d.classList.contains("cyc")) { e.preventDefault(); go(id); history.replaceState(null, "", "#" + id); return; }
+      /* #c1-d is a step inside a folded cycle: open its cycle, then land on it */
+      var step = document.getElementById(id);
+      var owner = step && step.closest(".cyc");
+      if (owner) { e.preventDefault(); go(id, owner.id); history.replaceState(null, "", "#" + id); }
     });
   }
 
