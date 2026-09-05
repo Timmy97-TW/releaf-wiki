@@ -28,6 +28,9 @@
   /* ---- 1 + 2. the atlas ------------------------------------------------- */
 
   var PHASE_WORD = { d: "Design", b: "Build", t: "Test", l: "Learn" };
+  /* a hollow arc: this cycle never separated that step from its neighbour, or
+     there was nothing to build. Said plainly rather than left blank. */
+  var NO_STEP = "No separate step in this cycle.";
 
   function atlas() {
     var svg = $(".atlas__svg");
@@ -53,7 +56,9 @@
       if (c.ph) {
         html += '<ol class="tip__ring">';
         ["d", "b", "t", "l"].forEach(function (k) {
-          html += '<li data-phase="' + k + '"><b>' + PHASE_WORD[k] + "</b>" + c.ph[k] + "</li>";
+          var line = c.ph[k];
+          html += '<li data-phase="' + k + '"' + (line ? "" : ' class="is-absent"') + "><b>" +
+                  PHASE_WORD[k] + "</b>" + (line || NO_STEP) + "</li>";
         });
         html += "</ol>";
       }
@@ -68,12 +73,15 @@
     function describePhase(id, k) {
       var c = DATA.cycles[id];
       if (!c || !c.ph) return describe(id);
+      var line = c.ph[k];
       tip.innerHTML =
         '<span class="field">' + c.n + " &middot; " + STATE_WORD[c.s] + "</span>" +
         "<h3>" + esc(c.t) + "</h3>" +
-        '<p class="tip__phase"><b>' + PHASE_WORD[k] + ".</b> " + c.ph[k] + "</p>" +
-        '<p><a href="#' + id + "-" + k + '">Open ' + PHASE_WORD[k] + " in " +
-        id.toUpperCase() + " &rarr;</a></p>";
+        '<p class="tip__phase"><b>' + PHASE_WORD[k] + ".</b> " + (line || NO_STEP) + "</p>" +
+        (line
+          ? '<p><a href="#' + id + "-" + k + '">Open ' + PHASE_WORD[k] + " in " +
+            id.toUpperCase() + " &rarr;</a></p>"
+          : '<p><a href="#' + id + '">Open the full record for ' + id.toUpperCase() + " &rarr;</a></p>");
     }
 
     function highlight(id) {
