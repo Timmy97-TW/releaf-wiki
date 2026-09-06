@@ -530,39 +530,18 @@ PAGES = [
 # `generate.py hardware --force` and destroy it. The section's own
 # documentation is hardware/README.md and notes/hardware-handoff.md.
 
-{
- "slug": "software", "tab": "drylab", "title": "Software",
- "lede": "The control code, the logging, and the analysis that turns a serial "
-         "stream into a figure.",
- "owner": "Dry lab, software",
- "award": ("special", "Best Software Tool",
-           "To be eligible, your software has to be documented and made "
-           "available under an OSI-approved open-source license.",
-           "https://competition.igem.org/judging/awards/special"),
- "sections": [
-   {"h": "What it does",
-    "note": "In non-technical language first. A reader who does not code "
-            "should still learn what problem this solves."},
-   {"h": "Getting started",
-    "note": "Install, run, and a first result. Screenshots.",
-    "figs": ["The tool running."]},
-   {"h": "Control firmware", "note": "What runs on the instrument: loop rate, "
-    "safety interlocks, what happens when a sensor stops answering."},
-   {"h": "Logging and analysis", "note": "File format, how a run becomes a "
-    "figure, and how somebody re-runs our analysis on our data."},
-   {"h": "Design choices", "note": "The decisions that were not obvious, and "
-    "what was given up for each."},
-   {"h": "Testing", "note": "What is tested, what is not, and how you would "
-    "know if it were wrong."},
-   {"h": "Repository and licence",
-    "note": "Software judged for this award has to be on iGEM's GitLab, under "
-            "an OSI-approved licence. Link it here.",
-    "callout": ("medal", "Where the code must live",
-                "Teams applying for the Software award must host the source on "
-                "iGEM's GitLab at gitlab.igem.org/2026/software-tools/. Code "
-                "on any other host cannot be judged.")},
-   {"h": "Limits", "note": ""},
- ]},
+# NOT GENERATED: software.
+#
+# /software is hand-owned. It is written in the Engineering sheet idiom —
+# software/software.css and software/software.js are its own — and it carries
+# the BR-01 operator interface itself at software/ui/0906UI.html, so the page
+# and the thing it documents cannot drift apart.
+#
+# generate.py would skip it anyway, because the page no longer carries the
+# generated marker, but leaving a scaffold spec here would invite somebody to
+# run `generate.py software --force` and destroy it. The award block that used
+# to live in this entry is on the page as the Best Software Tool callout on
+# Sheet 01, and the hosting requirement it carries is scored on Sheet 09.
 
 {
  "slug": "peptide-design", "tab": "drylab", "title": "Peptide Design",

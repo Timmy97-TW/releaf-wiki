@@ -1,0 +1,1051 @@
+/* =============================================================================
+   ReLeaf: Software — the operator interface, the models, and the twin claim
+   -----------------------------------------------------------------------------
+   Built to sit beside engineering/engineering.css, and it borrows that file's
+   frame on purpose: the same sheet system, the same drafting stock, the same
+   84ch measure with breakouts, the same sheet-edge index and scroll gauge, the
+   same figure frames and the same lightbox. A judge moving from Engineering to
+   Software should not feel they have changed sites. Three things are ours.
+
+   1. COLOUR CARRIES PROVENANCE. On Engineering the two colour-shaped variables
+      are assembly level and wavelength. Here there is exactly one, and it is
+      the argument of the page: where a number came from.
+        · IN-LINE  slate   a sensor in the stream
+        · AT-LINE  teal    measured on a sample beside the rig
+        · SOFT     plum    no instrument anywhere; a model produced it
+        · PLANNED  orange  the instrument is drawn and not fitted
+      Orange is not a decoration: the running interface draws planned equipment
+      dashed orange on its own P&ID, and this page uses the same convention so
+      the two can be checked against each other. Model status keeps leaf, amber
+      and rust; literature keeps graphite.
+
+   2. THE STACK replaces THE LADDER. Five layers — field, MCU, Linux, browser,
+      off-board Python — with the ten process channels and the one command path
+      drawn crossing them, each coloured by its provenance. Choosing a layer
+      lights what crosses it; choosing a channel lights the layers it touches.
+      Same machinery as the ladder plate, same fallback: with scripts off it is
+      a static drawing plus the whole written register underneath it.
+
+   3. THE LEDGER replaces THE DIAL. One switch, two states, and the claim
+      changes under it. Cable out, the honest description is an operator
+      interface with a simulator behind it; board in, it is a digital twin at
+      the soft-sensing and virtual-experiment level — and T5 still fails either
+      way, which is the point of building the switch rather than writing the
+      sentence. With scripts off both columns show at once, labelled.
+
+   LAYOUT. One centred 84ch column, tables and figures breaking out from it on
+   the same left spine, grounds alternating between stock, pale leaf, pale sand
+   and blueprint. Unchanged from Engineering, deliberately.
+
+   FIGURES. Photographs sit in a fixed-ratio frame on a blueprint mat.
+   Screenshots of the interface do not: a 1440x900 screen shot into a 16:10 box
+   loses its own edges, so .fig--ui drops the box and takes its own height, the
+   way .fig--map does on Engineering.
+
+   PHOTOGRAPHS are ours, out of the team archive. Every caption says what the
+   frame does not show, because half of these frames are of equipment that is
+   not finished.
+
+   DRAFT. Nothing on this sheet is a placeholder. Where a thing is missing the
+   page says which experiment produces it, and the eighteen of those are the
+   register on Sheet 07.
+   ========================================================================== */
+
+/* ============================================================== TOKENS ===== */
+
+.sw {
+  /* grounds */
+  --paper:      #f7f7f3;   /* drafting stock: the default reading ground */
+  --paper-2:    #ecebe3;   /* a half-step down: figure mats, findings */
+  --vellum:     #fdfdfa;   /* a half-step up: boxed notes, open records */
+  --tint-leaf:  #edf3ee;   /* pale leaf sheet */
+  --tint-sand:  #f8f3e7;   /* pale sand sheet */
+  --blue-900:   #0c231a;   /* blueprint: cover and plates */
+  --blue-800:   #10301f;
+  --blue-700:   #16412c;
+
+  /* ink */
+  --ink:        #15201a;
+  --ink-2:      #3a4841;
+  --graphite:   #57665d;
+  --graphite-2: #b3bdb6;   /* rules only, never text */
+
+  --e-leaf-900: #14402b;
+  --e-leaf-700: #23684a;
+  --e-leaf-500: #4f9c6f;
+  --e-leaf-200: #cfe4d8;
+
+  /* provenance: the one variable on this page that is genuinely colour-shaped */
+  --pv-in:      #2f6d8c;   /* IN-LINE  */
+  --pv-at:      #1f7a86;   /* AT-LINE  */
+  --pv-soft:    #6b4a86;   /* SOFT     */
+  --pv-plan:    #a8631a;   /* PLANNED  */
+  --pv-in-bg:   #e7f0f5;
+  --pv-at-bg:   #e4f1f2;
+  --pv-soft-bg: #efe9f4;
+  --pv-plan-bg: #f8eddd;
+
+  /* state */
+  --st-fail:    #8a5f10;
+  --st-open:    #a33d21;
+  --st-fail-bg: #faf3e2;
+  --st-open-bg: #fbeee9;
+
+  /* on blueprint */
+  --plate-ink:       #e3ece6;
+  --plate-ink-muted: #97b4a3;
+  --plate-rule:      rgba(180,215,195,.32);
+
+  --rule-heavy: 1.5px;
+  --rule:       1px;
+
+  --measure: 84ch;         /* the reading column */
+  --wide:    1180px;       /* what a table or a figure may break out to */
+  --gutter:  clamp(1.15rem, .5rem + 2.4vw, 2.5rem);
+  --rail:    0px;          /* the lane the contents rail sits in; see INDEX */
+
+  --fld: 600 .6875rem/1.2 var(--font-display);
+  --lsp: .13em;
+
+  background: var(--paper);
+  color: var(--ink);
+}
+
+.sw ::selection { background: var(--e-leaf-200); color: var(--e-leaf-900); }
+
+.sw h1, .sw h2, .sw h3, .sw h4 {
+  font-family: var(--font-display);
+  font-variation-settings: "opsz" 32;
+  color: var(--e-leaf-900);
+  text-wrap: pretty;
+}
+.sw code {
+  font-family: var(--font-mono);
+  font-size: .875em;
+  background: rgba(35,104,74,.09);
+  padding: .08em .32em;
+  color: var(--e-leaf-900);
+}
+/* A file path and a DOI are single unbreakable words longer than a phone
+   column. They break rather than push the page sideways. */
+.sw code, .sw .refs a, .sw .files code { overflow-wrap: anywhere; }
+.sw a { color: var(--e-leaf-700); text-underline-offset: .18em; }
+.sw a:hover { color: var(--e-leaf-900); }
+.sw :focus-visible { outline: 2px solid var(--e-leaf-500); outline-offset: 2px; }
+.sw .sprite { position: absolute; width: 0; height: 0; overflow: hidden; }
+.sw svg[class*="ico"], .sw .sheetmark__ico, .sw .edge__ico {
+  fill: none; stroke: currentColor; stroke-width: 1.4;
+  stroke-linecap: round; stroke-linejoin: round;
+}
+
+.sw .field {
+  font: var(--fld);
+  letter-spacing: var(--lsp);
+  text-transform: uppercase;
+  font-variant-numeric: tabular-nums;
+  font-variation-settings: "opsz" 14;
+  color: var(--graphite);
+}
+
+/* ============================================================== SHEETS ===== */
+
+.sw .sheet { padding: clamp(2.75rem, 1.4rem + 3.6vw, 5.25rem) 0; }
+.sw .sheet--tint  { background: var(--tint-leaf); }
+.sw .sheet--warm  { background: var(--tint-sand); }
+.sw .sheet--plate { background: var(--blue-900); color: var(--plate-ink); }
+.sw .sheet--plate h2, .sw .sheet--plate h3, .sw .sheet--plate h4 { color: #fff; }
+.sw .sheet--plate .field { color: var(--plate-ink-muted); }
+.sw .sheet--plate a { color: var(--e-leaf-200); }
+.sw .sheet--plate p, .sw .sheet--plate li { color: var(--plate-ink); }
+.sw .sheet--plate code { background: rgba(207,228,216,.14); color: var(--plate-ink); }
+
+.sw .sheet__inner {
+  max-width: calc(var(--rail) + var(--gutter) + var(--measure));
+  margin-inline: 0 auto;
+  padding-inline: calc(var(--rail) + var(--gutter)) var(--gutter);
+}
+.sw .wide {
+  width: min(var(--wide), calc(100vw - var(--rail) - 2 * var(--gutter)));
+  margin-inline: 0;
+  max-width: none;
+}
+.sw .full {
+  width: min(1560px, calc(100vw - var(--rail) - 2 * var(--gutter)));
+  margin-inline: 0;
+  max-width: none;
+}
+
+.sw .sheethead {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: .9rem 1.15rem;
+  align-items: start;
+  padding-bottom: var(--sp-4);
+  border-bottom: var(--rule-heavy) solid var(--ink);
+  margin-bottom: var(--sp-6);
+}
+.sw .sheet--plate .sheethead { border-bottom-color: var(--plate-rule); }
+.sw .sheethead h2 {
+  margin: 0;
+  font-size: clamp(1.5rem, 1.1rem + 1.5vw, 2.35rem);
+  line-height: 1.14;
+  letter-spacing: -.022em;
+}
+.sw .sheetmark {
+  display: flex; align-items: center; gap: .5rem;
+  padding-top: .3rem;
+  color: var(--e-leaf-700);
+}
+.sw .sheet--plate .sheetmark { color: var(--e-leaf-500); }
+.sw .sheetmark__ico { width: 30px; height: 30px; }
+.sw .sheetmark__no {
+  font: var(--fld); letter-spacing: var(--lsp);
+  font-size: .8125rem; font-variant-numeric: tabular-nums;
+  color: var(--graphite);
+}
+.sw .sheet--plate .sheetmark__no { color: var(--plate-ink-muted); }
+
+/* the paragraph mark that appears on a heading you can link to */
+.sw .anchor {
+  margin-left: .35em;
+  opacity: 0;
+  font-weight: 400; font-size: .7em;
+  color: var(--graphite-2);
+  text-decoration: none;
+  transition: opacity .15s;
+}
+.sw h2:hover .anchor, .sw h3:hover .anchor, .sw .anchor:focus-visible { opacity: 1; }
+
+/* ============================================================== COVER ====== */
+
+.sw .cover { padding: 0; }
+.sw .cover__plate {
+  position: relative;
+  background:
+    linear-gradient(180deg, rgba(12,35,26,.22) 0%, rgba(12,35,26,.55) 26%,
+                    rgba(12,35,26,.84) 48%, rgba(12,35,26,.96) 72%, var(--blue-900) 100%),
+    url("../assets/img/software/photometer-live-20260719.jpg") center 34% / cover no-repeat,
+    var(--blue-900);
+  color: #fff;
+  min-height: min(84vh, 800px);
+  display: flex;
+  align-items: flex-end;
+}
+.sw .cover__body {
+  position: relative;
+  max-width: 1560px;
+  margin-inline: 0 auto;
+  padding: clamp(4rem, 2rem + 8vw, 9rem) var(--gutter)
+           clamp(2.5rem, 1.5rem + 3vw, 4.5rem) calc(var(--rail) + var(--gutter));
+  width: 100%;
+}
+/* The scrim below is a full-bleed 100vw band, and 100vw counts the scrollbar
+   while the body does not, so on a phone it hangs a dozen pixels off the right
+   edge and takes the whole document sideways with it. Clip it at the plate. */
+.sw .cover__plate { overflow: hidden; }
+.sw .cover__body::before {
+  content: ""; position: absolute; inset: 0;
+  left: 50%; width: 100vw; transform: translateX(-50%);
+  background: linear-gradient(180deg,
+    rgba(9,26,19,0) 0%, rgba(9,26,19,.46) 22%,
+    rgba(9,26,19,.78) 52%, rgba(9,26,19,.9) 100%);
+}
+.sw .cover__body > * { position: relative; }
+.sw .cover h1 {
+  margin: 0 0 .35em;
+  color: #fff;
+  text-shadow: 0 2px 14px rgba(6,18,13,.4);
+  font-size: clamp(3rem, 1rem + 9vw, 8.5rem);
+  line-height: .92;
+  letter-spacing: -.045em;
+}
+.sw .cover__sub {
+  margin: 0;
+  text-shadow: 0 1px 3px rgba(6,18,13,.5);
+  max-width: 36ch;
+  font-size: clamp(1.15rem, .95rem + .95vw, 1.9rem);
+  line-height: 1.28;
+  letter-spacing: -.012em;
+  color: #eaf2ed;
+  padding-top: var(--sp-4);
+  border-top: 2px solid rgba(207,228,216,.4);
+}
+.sw .cover__strip {
+  background: var(--blue-800);
+  border-top: var(--rule) solid var(--plate-rule);
+  padding: var(--sp-3) 0;
+}
+.sw .cover__strip dl {
+  max-width: 1560px; margin: 0 auto 0 0;
+  padding-inline: calc(var(--rail) + var(--gutter)) var(--gutter);
+  display: flex; flex-wrap: wrap; gap: .35rem 1.75rem;
+  font: var(--fld); letter-spacing: .12em; text-transform: uppercase;
+}
+.sw .cover__strip dt { color: var(--plate-ink-muted); }
+.sw .cover__strip dd { margin: 0 1.25rem 0 0; color: var(--plate-ink); }
+
+/* ============================================================ READING ====== */
+
+.sw .sheet p, .sw .sheet li { color: var(--ink-2); }
+.sw .sheet p { line-height: 1.7; }
+.sw .sheet h3 {
+  margin: var(--sp-7) 0 var(--sp-3);
+  padding-top: var(--sp-3);
+  border-top: var(--rule) solid var(--graphite-2);
+  font-size: clamp(1.2rem, 1.05rem + .6vw, 1.55rem);
+  line-height: 1.22;
+}
+.sw .sheet--plate h3 { border-top-color: var(--plate-rule); }
+.sw .sheet h3.bare { border-top: 0; padding-top: 0; margin-top: var(--sp-6); }
+.sw .sheethead + h3 { margin-top: 0; border-top: 0; padding-top: 0; }
+.sw .sheet h4 { margin: var(--sp-5) 0 var(--sp-2); font-size: 1.0625rem; line-height: 1.3; }
+
+.sw .finding {
+  background: #e6f1ea;
+  border-left: 3px solid var(--e-leaf-700);
+  padding: var(--sp-3) var(--sp-4);
+  margin-block: 0 var(--sp-4);
+  color: var(--e-leaf-900);
+  font-weight: 600;
+  line-height: 1.5;
+}
+.sw .sheet--tint .finding { background: #e2ece5; }
+.sw .sheet--warm .finding { background: #f1ead8; }
+
+/* the sentence this whole page exists to be able to write */
+.sw .defended {
+  margin-block: 0 var(--sp-5);
+  padding: var(--sp-5);
+  border: var(--rule) solid var(--e-leaf-500);
+  border-left: 4px solid var(--e-leaf-700);
+  background: var(--vellum);
+  font-size: 1.0625rem; line-height: 1.6;
+  color: var(--e-leaf-900);
+}
+.sw .defended b { font-weight: 700; }
+.sw .defended__lbl {
+  display: block; margin-bottom: .5rem;
+  font: var(--fld); letter-spacing: var(--lsp); text-transform: uppercase;
+  color: var(--e-leaf-700);
+}
+
+.sw .key { margin-block: 0; }
+.sw .key > div {
+  display: grid; gap: .2rem var(--sp-5);
+  padding: var(--sp-4) 0;
+  border-bottom: var(--rule) solid var(--graphite-2);
+}
+.sw .key dt { font-weight: 600; color: var(--e-leaf-900); }
+.sw .key dd { margin: 0; color: var(--ink-2); }
+@media (min-width: 52rem) {
+  .sw .key > div { grid-template-columns: 26ch minmax(0, 1fr); }
+}
+
+/* the provenance tag, wherever the page names where a number came from */
+.sw .pv {
+  display: inline-flex; align-items: center; gap: .4em;
+  font: var(--fld); letter-spacing: var(--lsp); text-transform: uppercase;
+  padding: .22em .5em; border: var(--rule) solid currentColor;
+  white-space: nowrap;
+}
+.sw .pv--in   { color: var(--pv-in);   background: var(--pv-in-bg); }
+.sw .pv--at   { color: var(--pv-at);   background: var(--pv-at-bg); }
+.sw .pv--soft { color: var(--pv-soft); background: var(--pv-soft-bg); }
+.sw .pv--plan { color: var(--pv-plan); background: var(--pv-plan-bg); border-style: dashed; }
+
+/* ============================================================== STAMPS ===== */
+
+.sw .stamp {
+  display: inline-flex; align-items: center; gap: .45em;
+  font: var(--fld); letter-spacing: var(--lsp); text-transform: uppercase;
+  border: var(--rule) solid currentColor;
+  padding: .3em .6em;
+  white-space: nowrap;
+}
+.sw .stamp::before { content: ""; width: .5em; height: .5em; background: currentColor; }
+.sw .stamp--done   { color: var(--e-leaf-700); background: #e6f1ea; }
+.sw .stamp--part   { color: var(--st-fail);    background: var(--st-fail-bg); }
+.sw .stamp--no     { color: var(--st-open);    background: var(--st-open-bg); }
+.sw .stamp--lit    { color: var(--graphite);   background: var(--paper-2); }
+.sw .stamp--draft  { color: var(--graphite);   background: var(--paper-2); }
+
+.sw .statekey {
+  display: flex; flex-wrap: wrap; align-items: center; gap: .7rem 1.5rem;
+  margin-block: 0 var(--sp-5); padding: 0; list-style: none;
+  font-size: var(--text-sm); color: var(--ink-2);
+}
+.sw .statekey li { display: flex; align-items: center; gap: .55rem; }
+
+/* ============================================================ FIGURES ====== */
+
+.sw .fig { margin-block: 0 var(--sp-6); }
+.sw .fig__frame {
+  --mat: var(--paper-2);
+  aspect-ratio: 16 / 10;
+  background: var(--mat);
+  border: var(--rule) solid var(--graphite-2);
+  display: grid; place-items: center;
+  overflow: hidden;
+}
+.sw .fig__frame img {
+  max-width: 100%; max-height: 100%;
+  width: auto; height: auto;
+  object-fit: contain;
+  cursor: zoom-in;
+}
+.sw .fig--photo .fig__frame { --mat: var(--blue-900); border-color: var(--blue-900); }
+.sw .fig--photo .fig__frame img { width: 100%; height: 100%; object-fit: cover; }
+.sw .fig--tall  .fig__frame { aspect-ratio: 4 / 5; }
+
+/* A screen shot is not a photograph. Boxing a 1440x900 frame into a 16:10 mat
+   either bars it or clips its own edges, and the edges of an interface are
+   where the nav rail and the DEMO DATA label live. So screenshots and drawn
+   schematics drop the fixed box and take their own height. */
+.sw .fig--ui .fig__frame,
+.sw .fig--art .fig__frame {
+  aspect-ratio: auto; background: none; border: 0;
+  display: block; overflow: visible;
+}
+.sw .fig--ui .fig__frame img,
+.sw .fig--art .fig__frame img {
+  width: 100%; max-width: none; max-height: none; height: auto;
+  border: var(--rule) solid var(--graphite-2);
+  background: #fff;
+}
+.sw .fig--ui figcaption { border-left-color: var(--pv-soft); }
+
+.sw .fig figcaption {
+  margin-top: var(--sp-3);
+  padding-left: var(--sp-4);
+  border-left: 3px solid var(--e-leaf-500);
+  font-size: var(--text-sm); line-height: 1.6; color: var(--ink-2);
+}
+.sw .fig figcaption b { color: var(--e-leaf-900); }
+.sw .fig--photo figcaption { border-left-color: var(--blue-700); }
+.sw .sheet--plate .fig figcaption { color: var(--plate-ink-muted); }
+.sw .sheet--plate .fig figcaption b { color: var(--plate-ink); }
+
+/* "What it does not show." Every caption on this page carries one. */
+.sw .not {
+  display: block; margin-top: .45rem;
+  padding-left: .75rem;
+  border-left: 2px solid var(--st-open);
+  color: var(--graphite);
+}
+.sw .sheet--plate .not { color: var(--plate-ink-muted); }
+
+.sw .figs { display: grid; gap: var(--sp-5); margin-bottom: var(--sp-6); }
+@media (min-width: 46rem) {
+  .sw .figs--2 { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .sw .figs--3 { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+  .sw .figs[class*="figs--"] > .fig { display: flex; flex-direction: column; }
+  .sw .figs[class*="figs--"] > .fig > figcaption { margin-top: auto; padding-top: var(--sp-3); }
+}
+.sw .figs:not([class*="figs--"]) { max-width: var(--measure); }
+
+/* a photograph run as a band across the sheet */
+.sw .band { margin-block: 0 var(--sp-6); }
+.sw .band__frame { aspect-ratio: 21 / 9; background: var(--blue-900); overflow: hidden; }
+.sw .band__frame img { width: 100%; height: 100%; object-fit: cover; cursor: zoom-in; }
+.sw .band figcaption {
+  margin: var(--sp-3) auto 0;
+  max-width: var(--measure);
+  font-size: var(--text-sm); line-height: 1.6; color: var(--ink-2);
+}
+.sw .band figcaption b { color: var(--e-leaf-900); }
+
+/* the growth plate: one figure drawn from the run's own numbers */
+.sw .growth__frame {
+  background: var(--vellum);
+  border: var(--rule) solid var(--graphite-2);
+  padding: var(--sp-3);
+}
+.sw .growth__svg { display: block; width: 100%; height: auto; }
+.sw .growth__svg text { font-family: var(--font-display); }
+
+/* the lightbox: 80% of the window, caption on the same 80% */
+.sw .lightbox {
+  position: fixed; inset: 0; z-index: 200;
+  background: rgba(8,20,15,.965);
+  display: none; flex-direction: column;
+  align-items: center; justify-content: center;
+  padding: 3vh 3vw;
+}
+.sw .lightbox.is-open { display: flex; }
+.sw .lightbox figure { margin: 0; width: 80vw; display: grid; justify-items: center; }
+.sw .lightbox img { max-width: 80vw; max-height: 78vh; width: auto; height: auto; object-fit: contain; }
+.sw .lightbox figcaption {
+  width: 80vw; max-width: 80vw;
+  margin: var(--sp-4) 0 0;
+  color: var(--plate-ink); font-size: var(--text-sm); line-height: 1.6;
+  text-align: left;
+}
+.sw .lightbox__close {
+  position: absolute; top: 1rem; right: 1rem;
+  background: none; border: var(--rule) solid var(--plate-rule);
+  color: #fff; font-size: 1.5rem; line-height: 1;
+  width: 2.5rem; height: 2.5rem; cursor: pointer;
+}
+
+/* ============================================================= TABLES ====== */
+
+.sw .tablewrap { overflow-x: auto; margin-block: 0 var(--sp-6); }
+.sw table.data {
+  border-collapse: collapse; width: 100%; min-width: 30rem;
+  font-size: var(--text-sm); font-variant-numeric: tabular-nums;
+}
+.sw table.data th {
+  text-align: left; vertical-align: bottom;
+  font: var(--fld); letter-spacing: var(--lsp); text-transform: uppercase;
+  color: var(--graphite);
+  padding: 0 var(--sp-4) .5rem 0;
+  border-bottom: var(--rule-heavy) solid var(--ink);
+}
+.sw table.data td {
+  vertical-align: top; padding: .7rem var(--sp-4) .7rem 0;
+  border-bottom: var(--rule) solid var(--graphite-2);
+  color: var(--ink-2);
+}
+.sw table.data tbody tr:hover { background: var(--vellum); }
+.sw .sheet--tint table.data tbody tr:hover { background: #e5ece7; }
+.sw .sheet--warm table.data tbody tr:hover { background: #f2ecdb; }
+.sw table.data td.yes { color: var(--e-leaf-700); font-weight: 600; }
+.sw table.data td.no  { color: var(--st-open); font-weight: 600; }
+.sw table.data code { background: none; padding: 0; font-size: .8125rem; }
+.sw .sheet--plate table.data th { color: var(--plate-ink-muted); border-bottom-color: var(--plate-rule); }
+.sw .sheet--plate table.data td { color: var(--plate-ink); border-bottom-color: var(--plate-rule); }
+.sw .sheet--plate table.data tbody tr:hover { background: rgba(207,228,216,.05); }
+
+/* =========================================================== CALLOUTS ====== */
+
+.sw .callout {
+  border: var(--rule) solid var(--graphite-2);
+  border-left: 3px solid var(--graphite);
+  background: var(--vellum);
+  border-radius: 0;
+  padding: var(--sp-4);
+  margin-block: 0 var(--sp-5);
+  font-size: var(--text-sm);
+}
+.sw .callout__label {
+  display: block; margin-bottom: .4rem;
+  font: var(--fld); letter-spacing: var(--lsp); text-transform: uppercase;
+  color: var(--graphite);
+}
+.sw .callout p { margin: 0 0 .6rem; font-size: var(--text-sm); }
+.sw .callout p:last-child { margin-bottom: 0; }
+
+/* what iGEM asks this page to prove */
+.sw .callout--medal { border-color: #ddcfae; border-left-color: var(--st-fail); background: var(--st-fail-bg); }
+.sw .callout--medal .callout__label { color: var(--st-fail); }
+/* a claim we have not earned yet */
+.sw .callout--unproven { border-color: #e2c6ba; border-left-color: var(--st-open); background: var(--st-open-bg); }
+.sw .callout--unproven .callout__label { color: var(--st-open); }
+/* a number or a method taken from somebody else's paper */
+.sw .callout--borrowed { border-color: #bcd4e0; border-left-color: var(--pv-in); background: var(--pv-in-bg); }
+.sw .callout--borrowed .callout__label { color: var(--pv-in); }
+.sw .callout--note { border-color: #bcd4e0; border-left-color: var(--pv-in); background: var(--pv-in-bg); }
+.sw .callout--note .callout__label { color: var(--pv-in); }
+
+.sw .sheet--plate .callout {
+  background: rgba(207,228,216,.05); border-color: var(--plate-rule);
+  border-left-color: var(--e-leaf-500);
+}
+.sw .sheet--plate .callout p { color: var(--plate-ink); }
+.sw .sheet--plate .callout__label { color: var(--e-leaf-500); }
+
+.sw blockquote {
+  margin-block: 0 var(--sp-5);
+  padding-left: var(--sp-4);
+  border-left: 3px solid var(--e-leaf-500);
+  color: var(--ink-2);
+}
+
+/* ====================================================== THE RECORD ROWS ==== */
+/* Every long list on this page is the same object: a run of <details> with a
+   summary that says enough for a reader to decide not to open it. Eleven
+   models, eighteen missing measurements, nine build steps. Borrowed wholesale
+   from the cycle rows on Engineering so the two pages fold the same way.      */
+
+.sw .rows { border-top: var(--rule-heavy) solid var(--ink); }
+.sw .row { --row-accent: var(--e-leaf-700); border-bottom: var(--rule) solid var(--graphite-2); }
+.sw .row--part { --row-accent: var(--st-fail); }
+.sw .row--no   { --row-accent: var(--st-open); }
+.sw .row--lit  { --row-accent: var(--graphite); }
+.sw .row[open] { background: var(--vellum); }
+.sw .sheet--warm .row[open] { background: #fdfaf2; }
+.sw .row__head {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  gap: var(--sp-3) var(--sp-4);
+  align-items: start;
+  padding: var(--sp-4) var(--sp-3) var(--sp-4) 0;
+  cursor: pointer;
+  list-style: none;
+}
+.sw .row__title, .sw .row__who, .sw .row__out { grid-column: 1 / -1; }
+.sw .row__meta { grid-column: 2; justify-self: end; }
+@media (min-width: 48rem) {
+  .sw .row__head { grid-template-columns: 3.4rem minmax(0, 1fr) auto; }
+  .sw .row__title, .sw .row__who, .sw .row__out { grid-column: 2; }
+  .sw .row__meta { grid-column: 3; justify-self: auto; }
+}
+.sw .row__head::-webkit-details-marker { display: none; }
+.sw .row__head:hover { background: var(--vellum); }
+.sw .row__no {
+  align-self: center;
+  font: var(--fld); letter-spacing: .08em; font-size: .75rem;
+  color: #fff; background: var(--row-accent);
+  border: var(--rule) solid var(--row-accent);
+  padding: .45em .1em; text-align: center;
+  font-variant-numeric: tabular-nums;
+}
+.sw .row__title {
+  margin: 0;
+  font-size: clamp(1.05rem, .98rem + .45vw, 1.3rem);
+  line-height: 1.3; letter-spacing: -.012em;
+}
+.sw .row__who {
+  margin: .35rem 0 0;
+  font: var(--fld); letter-spacing: var(--lsp); text-transform: uppercase;
+  color: var(--graphite);
+}
+.sw .row__out {
+  margin: .7rem 0 0;
+  display: grid; gap: .35rem;
+  font-size: var(--text-sm); color: var(--ink-2);
+}
+.sw .row__out b {
+  font: var(--fld); letter-spacing: var(--lsp); text-transform: uppercase;
+  color: var(--graphite); margin-right: .6rem;
+}
+.sw .row__out i { font-style: normal; }
+.sw .row__meta { display: flex; align-items: center; gap: var(--sp-3); }
+.sw .row__chev {
+  width: 1.5rem; height: 1.5rem;
+  border-right: var(--rule-heavy) solid var(--graphite);
+  border-bottom: var(--rule-heavy) solid var(--graphite);
+  transform: rotate(45deg) translate(-.28rem, -.28rem) scale(.5);
+  transition: transform .16s ease;
+}
+.sw .row[open] .row__chev {
+  transform: rotate(-135deg) translate(-.28rem, -.28rem) scale(.5);
+  border-color: var(--e-leaf-900);
+}
+.sw .row__body { padding: 0 var(--sp-3) var(--sp-6) 0; }
+@media (min-width: 48rem) { .sw .row__body { padding-left: calc(3.4rem + var(--sp-4)); } }
+.sw .row[hidden] { display: none; }
+
+/* the four fields inside an open row, laid out like a DBTL step */
+.sw .fld { display: grid; gap: .3rem var(--sp-5); margin-bottom: var(--sp-5); }
+.sw .fld h4 {
+  margin: 0;
+  font: var(--fld); letter-spacing: .16em; text-transform: uppercase;
+  color: var(--e-leaf-900);
+  padding-bottom: .35rem;
+  border-bottom: var(--rule) solid var(--graphite-2);
+}
+.sw .fld p, .sw .fld li { margin-top: 0; }
+.sw .fld > :not(h4) { grid-column: 1; }
+@media (min-width: 48rem) {
+  .sw .fld { grid-template-columns: 8.5rem minmax(0, 1fr); }
+  .sw .fld h4 { grid-column: 1; border-bottom: 0; }
+  .sw .fld > :not(h4) { grid-column: 2; max-width: 74ch; }
+}
+.sw .fld--in    h4 { color: var(--pv-in); }
+.sw .fld--val   h4 { color: var(--st-fail); }
+.sw .fld--range h4 { color: var(--pv-soft); }
+.sw .fld--fals  h4 { color: var(--st-open); }
+
+/* the chip row that filters a record, and the open-everything switch */
+.sw .ctl {
+  display: flex; flex-wrap: wrap; align-items: center;
+  gap: .5rem .9rem; margin-bottom: var(--sp-4);
+}
+.sw .ctl__lbl {
+  font: var(--fld); letter-spacing: var(--lsp); text-transform: uppercase;
+  color: var(--graphite);
+}
+.sw .chips { display: flex; flex-wrap: wrap; gap: .4rem; }
+.sw .chip {
+  font: var(--fld); letter-spacing: var(--lsp); text-transform: uppercase;
+  padding: .45em .85em;
+  background: none;
+  border: var(--rule) solid var(--graphite-2);
+  color: var(--ink-2);
+  cursor: pointer;
+  transition: background .16s ease, border-color .16s ease, color .16s ease;
+}
+.sw .chip:hover { border-color: var(--e-leaf-700); color: var(--e-leaf-900); }
+.sw .chip[aria-pressed="true"] {
+  background: var(--e-leaf-900); border-color: var(--e-leaf-900); color: #fff;
+}
+.sw .chip__n { opacity: .7; margin-left: .4em; font-variant-numeric: tabular-nums; }
+.sw button.stamp { cursor: pointer; font-family: inherit; }
+
+/* ====================================================== THE STACK, SHEET 03 =
+   Five layers and eleven roads across them. Same machinery as the ladder plate
+   on Engineering: data-lit on a channel names the layers it crosses, the
+   reverse of that same list is what a layer carries, and the written panel is
+   the definition list already in the HTML. Nothing about the routes is written
+   twice, and with scripts off the whole register is on the page.
+
+   DIMMING IS NOT THE SIGNAL. A lit road also thickens and its layer box gains
+   stroke weight, so the drawing reads with no colour vision at all. The four
+   provenance hues are lifted here for blueprint, because --pv-* are mixed for
+   drafting stock and go muddy on a dark ground.
+   ========================================================================== */
+
+.sw .stack {
+  --sk-in:    #8fc4dc;
+  --sk-at:    #77c9cf;
+  --sk-soft:  #c3a8dc;
+  --sk-plan:  #e8a868;
+  --sk-cmd:   #7fc9a2;
+  --sk-dim:   .24;
+  margin-block: 0;
+}
+.sw #stack { --rail: 0px; }
+.sw #stack .sheet__inner { max-width: none; }
+.sw #stack .sheethead { margin-bottom: var(--sp-4); }
+.sw #stack .sheethead h2 { font-size: clamp(1.15rem, .7rem + 1.05vw, 1.7rem); max-width: none; }
+
+.sw .stack__grid { display: grid; gap: var(--sp-5); }
+/* A grid item's automatic minimum size is its content's min-content width, and
+   the plate inside carries a 780px min-width so its labels stay readable. The
+   scroll container swallows that overflow, but only once the item it sits in is
+   allowed to be narrower than it — hence min-width:0. Without this line the
+   whole document is 780px wide on a phone, and every other sheet inherits a
+   horizontal scrollbar it never asked for. */
+.sw .stack__grid > * { min-width: 0; }
+.sw .stack__scroll { max-width: 100%; }
+@media (min-width: 66rem) {
+  .sw .stack__grid {
+    grid-template-columns: minmax(0, 1fr) clamp(15rem, 20vw, 19rem);
+    gap: clamp(1.25rem, .6rem + 1.6vw, 2.25rem);
+    align-items: start;
+  }
+}
+.sw .stack__scroll { overflow-x: auto; padding-bottom: var(--sp-2); }
+.sw .stack__svg { display: block; min-width: 780px; width: 100%; height: auto; }
+.sw .stack__svg text { font-family: var(--font-display); }
+
+.sw .stk-col {
+  font: var(--fld); font-size: 9px; letter-spacing: .12em; text-transform: uppercase;
+  fill: var(--plate-ink-muted);
+}
+.sw .stk-rule { stroke: var(--plate-rule); stroke-width: 1; }
+
+/* ---- a layer box ------------------------------------------------------- */
+.sw .stk-node { cursor: pointer; }
+.sw .stk-node__box {
+  fill: rgba(207,228,216,.03);
+  stroke: var(--plate-rule); stroke-width: 1.2;
+  transition: fill .16s ease, stroke .16s ease, stroke-width .16s ease;
+}
+.sw .stk-node__t { fill: #fff; font-size: 12px; font-weight: 600; }
+.sw .stk-node__sb { fill: var(--plate-ink-muted); font-size: 9px; }
+.sw .stk-node__ring { fill: none; stroke: none; stroke-width: 2; }
+.sw .stk-node:focus { outline: none; }
+.sw .stk-node:focus-visible .stk-node__ring { stroke: var(--e-leaf-500); }
+.sw .stk-node[aria-pressed="true"] .stk-node__ring { stroke: var(--e-leaf-500); stroke-dasharray: 3 2.6; }
+.sw .stk-node[aria-pressed="true"]:focus-visible .stk-node__ring { stroke-dasharray: none; }
+.sw .stk-node.is-lit .stk-node__box { stroke-width: 2.2; stroke: var(--e-leaf-500); fill: #14382a; }
+
+/* ---- a channel --------------------------------------------------------- */
+.sw .stk-ch { cursor: pointer; }
+.sw .stk-ch__line {
+  fill: none; stroke: var(--plate-ink-muted); stroke-width: 1.6;
+  transition: stroke-width .16s ease, opacity .16s ease;
+}
+.sw .stk-ch__dot { fill: var(--plate-ink-muted); }
+.sw .stk-ch__t {
+  fill: var(--plate-ink); font-size: 10.5px; font-weight: 600;
+  font-variant-numeric: tabular-nums;
+}
+.sw .stk-ch__ring { fill: none; stroke: none; stroke-width: 2; }
+.sw .stk-ch:focus { outline: none; }
+.sw .stk-ch:focus-visible .stk-ch__ring { stroke: var(--e-leaf-500); }
+.sw .stk-ch[aria-pressed="true"] .stk-ch__ring { stroke: var(--e-leaf-500); stroke-dasharray: 3 2.6; }
+
+.sw .stk-ch--in   .stk-ch__line, .sw .stk-ch--in   .stk-ch__dot { stroke: var(--sk-in);   }
+.sw .stk-ch--at   .stk-ch__line, .sw .stk-ch--at   .stk-ch__dot { stroke: var(--sk-at);   }
+.sw .stk-ch--soft .stk-ch__line, .sw .stk-ch--soft .stk-ch__dot { stroke: var(--sk-soft); }
+.sw .stk-ch--plan .stk-ch__line { stroke: var(--sk-plan); stroke-dasharray: 5 3.5; }
+.sw .stk-ch--cmd  .stk-ch__line, .sw .stk-ch--cmd  .stk-ch__dot { stroke: var(--sk-cmd);  }
+.sw .stk-ch--in   .stk-ch__dot { fill: var(--sk-in);   }
+.sw .stk-ch--at   .stk-ch__dot { fill: var(--sk-at);   }
+.sw .stk-ch--soft .stk-ch__dot { fill: var(--sk-soft); }
+.sw .stk-ch--plan .stk-ch__dot { fill: var(--sk-plan); }
+.sw .stk-ch--cmd  .stk-ch__dot { fill: var(--sk-cmd);  }
+
+/* Nothing dims until something is pointed at or chosen. */
+.sw .stack__svg.is-active .stk-ch,
+.sw .stack__svg.is-active .stk-node { opacity: var(--sk-dim); }
+.sw .stack__svg.is-active .stk-ch.is-lit,
+.sw .stack__svg.is-active .stk-node.is-lit { opacity: 1; }
+.sw .stk-ch.is-lit .stk-ch__line { stroke-width: 3; }
+
+/* ---- the panel --------------------------------------------------------- */
+.sw .stack__panel {
+  border-top: var(--rule-heavy) solid var(--e-leaf-500);
+  padding-top: var(--sp-4);
+  max-width: var(--measure);
+}
+@media (min-width: 66rem) {
+  .sw .stack__panel {
+    border-top: 0;
+    border-left: var(--rule) solid var(--plate-rule);
+    padding: .2rem 0 .2rem var(--sp-4);
+    max-width: none; min-height: 18rem; align-self: stretch;
+  }
+}
+.sw .stack__hint { margin: 0; font-size: var(--text-xs); line-height: 1.6; color: var(--plate-ink-muted); }
+.sw .stack__key { margin: 0; }
+.sw .stack__item + .stack__item { margin-top: var(--sp-4); }
+.sw .stack__item[hidden] { display: none; }
+.sw .stack__key dt {
+  margin: 0 0 .35rem;
+  font-family: var(--font-display); font-weight: 700;
+  font-size: 1.0625rem; line-height: 1.3; color: #fff;
+}
+.sw .stack__key dd { margin: 0; font-size: var(--text-sm); line-height: 1.62; color: var(--plate-ink); }
+.sw .stack__key code { font-size: .9em; }
+.sw .stack__route {
+  margin: var(--sp-3) 0 0; padding-top: var(--sp-3);
+  border-top: var(--rule) solid var(--plate-rule);
+  font-size: var(--text-xs); line-height: 1.7; color: var(--plate-ink-muted);
+}
+.sw .stack__route b {
+  font: var(--fld); letter-spacing: var(--lsp); text-transform: uppercase;
+  color: var(--plate-ink-muted); margin-right: .5rem;
+}
+.sw .stack__route i { font-style: normal; color: var(--plate-ink); }
+.sw .stack__route span { display: block; }
+.sw .stack__route span + span { margin-top: .25rem; }
+
+.sw .stack__ctl { display: flex; flex-wrap: wrap; align-items: center; gap: .5rem .9rem; margin-bottom: var(--sp-4); }
+.sw .stack__ctl .ctl__lbl { color: var(--plate-ink-muted); }
+.sw .stack .chip { border-color: var(--plate-rule); color: var(--plate-ink); }
+.sw .stack .chip:hover { border-color: var(--e-leaf-500); color: #fff; }
+.sw .stack .chip[aria-pressed="true"] { background: var(--e-leaf-500); border-color: var(--e-leaf-500); color: var(--blue-900); }
+.sw .stack .chip--in   { border-left: 3px solid var(--sk-in); }
+.sw .stack .chip--at   { border-left: 3px solid var(--sk-at); }
+.sw .stack .chip--soft { border-left: 3px solid var(--sk-soft); }
+.sw .stack .chip--plan { border-left: 3px solid var(--sk-plan); }
+.sw .stack .chip--cmd  { border-left: 3px solid var(--sk-cmd); }
+
+.sw .stack figcaption {
+  margin: var(--sp-5) 0 0;
+  max-width: var(--measure);
+  padding-left: var(--sp-4);
+  border-left: 3px solid var(--e-leaf-500);
+  font-size: var(--text-sm); line-height: 1.6;
+  color: var(--plate-ink-muted);
+}
+.sw .stack figcaption b { color: var(--plate-ink); }
+
+/* ===================================================== THE LEDGER, SHEET 06 =
+   One switch. Five tests. The claim underneath rewrites itself.
+
+   The whole definition of a digital twin, in the papers this page is scored
+   against, turns on one thing: whether the flow runs both ways automatically.
+   Writing that in a paragraph asks a reader to hold two states in their head.
+   Flipping it in front of them does not. So the switch is the argument, and
+   the two things it cannot change — T1, T2 and above all T5 — are what the
+   reader is left looking at.
+
+   With scripts off both columns are on the page, headed CABLE OUT and BOARD
+   CONNECTED, and both claim paragraphs show with their own labels. The switch
+   is an enhancement, never the only way to read the section.
+   ========================================================================== */
+
+.sw .ledger { margin-block: 0 var(--sp-6); }
+.sw .ledger__switch {
+  display: inline-flex; align-items: center; gap: .7rem;
+  padding: .55rem .9rem;
+  border: var(--rule) solid var(--graphite);
+  background: var(--vellum);
+  font: var(--fld); letter-spacing: var(--lsp); text-transform: uppercase;
+  font-size: .75rem; color: var(--ink);
+  cursor: pointer;
+}
+.sw .ledger__switch:hover { border-color: var(--e-leaf-700); }
+.sw .ledger__track {
+  width: 2.6rem; height: 1.15rem; flex: none;
+  border: var(--rule) solid var(--graphite); background: var(--paper-2);
+  position: relative; transition: background .18s ease, border-color .18s ease;
+}
+.sw .ledger__track::after {
+  content: ""; position: absolute; top: 1px; left: 1px;
+  width: calc(50% - 2px); height: calc(100% - 4px);
+  background: var(--graphite);
+  transition: transform .18s ease, background .18s ease;
+}
+.sw .ledger__switch[aria-pressed="true"] { border-color: var(--e-leaf-700); color: var(--e-leaf-900); }
+.sw .ledger__switch[aria-pressed="true"] .ledger__track { background: #dcece2; border-color: var(--e-leaf-700); }
+.sw .ledger__switch[aria-pressed="true"] .ledger__track::after {
+  transform: translateX(calc(100% + 2px)); background: var(--e-leaf-700);
+}
+.sw .ledger__state { display: block; margin: var(--sp-3) 0 var(--sp-5); font-size: var(--text-sm); color: var(--graphite); }
+
+.sw .tests { border-top: var(--rule-heavy) solid var(--ink); margin-block: 0 var(--sp-5); }
+.sw .test {
+  display: grid; gap: .35rem var(--sp-4);
+  padding: var(--sp-4) 0;
+  border-bottom: var(--rule) solid var(--graphite-2);
+}
+@media (min-width: 52rem) {
+  .sw .test { grid-template-columns: 2.6rem minmax(0, 1fr) 8.5rem 8.5rem; align-items: start; }
+}
+.sw .test__no { font: var(--fld); letter-spacing: .08em; color: var(--graphite); font-variant-numeric: tabular-nums; }
+.sw .test__q { margin: 0; font-weight: 600; color: var(--e-leaf-900); }
+.sw .test__ev { margin: .35rem 0 0; font-size: var(--text-sm); grid-column: 1 / -1; }
+@media (min-width: 52rem) { .sw .test__ev { grid-column: 2; } }
+.sw .test__v { font-size: var(--text-sm); }
+.sw .test__v b {
+  display: block;
+  font: var(--fld); letter-spacing: var(--lsp); text-transform: uppercase;
+  color: var(--graphite); margin-bottom: .2rem;
+}
+.sw .test__v i { font-style: normal; font-weight: 650; }
+.sw .test__v[data-v="pass"] i { color: var(--e-leaf-700); }
+.sw .test__v[data-v="cond"] i { color: var(--st-fail); }
+.sw .test__v[data-v="fail"] i { color: var(--st-open); }
+/* with the switch live, the column that is not the current state steps back */
+.sw .ledger.is-live .test__v { opacity: .3; transition: opacity .18s ease; }
+.sw .ledger.is-live .test__v.is-on { opacity: 1; }
+
+.sw .verdict { margin-block: 0 var(--sp-4); }
+.sw .verdict__lbl {
+  display: block; margin-bottom: .4rem;
+  font: var(--fld); letter-spacing: var(--lsp); text-transform: uppercase;
+}
+.sw .verdict--out { border-left: 3px solid var(--st-fail); background: var(--st-fail-bg); padding: var(--sp-4); }
+.sw .verdict--out .verdict__lbl { color: var(--st-fail); }
+.sw .verdict--in  { border-left: 3px solid var(--e-leaf-700); background: #e6f1ea; padding: var(--sp-4); }
+.sw .verdict--in .verdict__lbl { color: var(--e-leaf-700); }
+.sw .verdict p { margin: 0 0 .6rem; }
+.sw .verdict p:last-child { margin-bottom: 0; }
+.sw .ledger.is-live .verdict[hidden] { display: none; }
+
+/* ============================================================== INDEX ====== */
+
+.sw .edge { display: none; }
+@media (min-width: 62rem) {
+  .sw { --rail: 8.5rem; }
+  .sw .edge {
+    display: block; position: fixed; z-index: 40;
+    left: var(--gutter);
+    top: calc(var(--nav-h) + 3.5rem);
+    width: calc(8.5rem - .5rem);
+    max-height: calc(100vh - var(--nav-h) - 5rem);
+    overflow: hidden;
+    transition: opacity .22s ease;
+  }
+  .sw .edge.is-hidden { opacity: 0; pointer-events: none; }
+  .sw .edge ol { list-style: none; margin: 0; padding: 0; display: grid; gap: .5rem; }
+  .sw .edge a {
+    display: grid; grid-template-columns: 1.1rem minmax(0, 1fr);
+    align-items: center; gap: .5rem;
+    text-decoration: none; color: var(--graphite);
+  }
+  .sw .edge .tick {
+    display: block; width: 1.1rem; height: 2px;
+    background: var(--graphite-2);
+    transform-origin: left center; transform: scaleX(.6);
+    transition: transform .16s ease, background .16s ease;
+  }
+  .sw .edge a:hover .tick,
+  .sw .edge a[aria-current="true"] .tick { transform: scaleX(1); background: var(--e-leaf-700); }
+  .sw .edge a[aria-current="true"] .tick { background: var(--e-leaf-900); }
+  .sw .edge .lbl {
+    font: var(--fld); letter-spacing: .09em; text-transform: uppercase;
+    font-size: .625rem; line-height: 1.25;
+    color: var(--graphite);
+    transition: color .16s ease;
+  }
+  .sw .edge a:hover .lbl { color: var(--e-leaf-900); }
+  .sw .edge a[aria-current="true"] .lbl { color: var(--e-leaf-900); font-weight: 700; }
+  .sw .edge.on-plate a, .sw .edge.on-plate .lbl { color: #dbe8e0; }
+  .sw .edge.on-plate::before {
+    content: ""; position: absolute; inset: -1.5rem -2.5rem -1.5rem -3rem;
+    background: linear-gradient(90deg,
+      rgba(8,20,15,.8) 0%, rgba(8,20,15,.68) 55%, rgba(8,20,15,0) 100%);
+    pointer-events: none; z-index: -1;
+  }
+  .sw .edge.on-plate .tick { background: var(--plate-rule); }
+  .sw .edge.on-plate a:hover .tick,
+  .sw .edge.on-plate a[aria-current="true"] .tick { background: var(--e-leaf-500); }
+  .sw .edge.on-plate a:hover .lbl,
+  .sw .edge.on-plate a[aria-current="true"] .lbl { color: #fff; }
+}
+@media (min-width: 78rem) { .sw { --rail: 10.5rem; } .sw .edge { width: 10rem; } }
+
+.sw .gauge {
+  position: fixed; z-index: 40;
+  right: 0; top: var(--nav-h); bottom: 0; width: 3px;
+  background: rgba(87,102,93,.18);
+}
+.sw .gauge i { display: block; width: 100%; height: 0; background: var(--e-leaf-700); }
+@media (max-width: 48rem) { .sw .gauge { display: none; } }
+
+/* ============================================================= CLOSING ===== */
+
+.sw .refs { counter-reset: ref; list-style: none; padding: 0; margin: 0; }
+.sw .refs li {
+  counter-increment: ref;
+  display: grid; grid-template-columns: 2.5rem minmax(0, 1fr); gap: var(--sp-3);
+  padding: var(--sp-3) 0;
+  border-bottom: var(--rule) solid var(--graphite-2);
+  font-size: var(--text-sm); color: var(--ink-2);
+  scroll-margin-top: calc(var(--nav-h) + 2rem);
+}
+.sw .refs li::before {
+  content: "[" counter(ref) "]";
+  font: var(--fld); letter-spacing: .06em; color: var(--e-leaf-700);
+  font-variant-numeric: tabular-nums;
+}
+.sw .refs li:target { background: #e6f1ea; }
+.sw .refs .what { display: block; margin-top: .3rem; color: var(--graphite); }
+
+/* the [3] in running text */
+.sw a.cite {
+  font-size: .84em; font-weight: 600; vertical-align: .25em;
+  text-decoration: none; color: var(--e-leaf-700); padding: 0 .1em;
+}
+.sw a.cite:hover { text-decoration: underline; }
+.sw .refs a.back { text-decoration: none; }
+
+/* the file register at the foot: every number on this page resolves to one */
+.sw .files { list-style: none; margin: 0; padding: 0; }
+.sw .files li {
+  display: grid; gap: .1rem var(--sp-4);
+  padding: .55rem 0;
+  border-bottom: var(--rule) solid var(--graphite-2);
+  font-size: var(--text-sm);
+}
+@media (min-width: 52rem) { .sw .files li { grid-template-columns: 30rem minmax(0, 1fr); } }
+.sw .files code { background: none; padding: 0; color: var(--e-leaf-900); font-size: .8125rem; }
+
+/* ============================================================== MOTION ===== */
+
+@media (prefers-reduced-motion: reduce) {
+  .sw * { transition-duration: 0s !important; animation-duration: 0s !important; }
+}
+
+/* =============================================================== PRINT ===== */
+
+@media print {
+  .sw .edge, .sw .gauge, .sw .lightbox, .sw .ctl, .sw .stack__ctl,
+  .sw .ledger__switch, .sitenav-spacer { display: none !important; }
+  .sw .sheet--plate, .sw .sheet--tint, .sw .sheet--warm,
+  .sw .cover__plate, .sw .cover__strip { background: #fff !important; color: #000 !important; }
+  .sw .cover h1, .sw .sheet--plate h2, .sw .sheet--plate h3 { color: #000 !important; }
+  .sw .row { break-inside: avoid; }
+  .sw .row__body { display: block !important; }
+  .sw .fig, .sw .band { break-inside: avoid; }
+  .sw .stack__item, .sw .verdict { display: block !important; }
+  .sw .stack__grid { display: block; }
+  .sw .ledger.is-live .test__v { opacity: 1 !important; }
+}
