@@ -321,11 +321,6 @@
 .eng .lad-lvl--0 { fill: #8fc4dc; }
 .eng .lad-lvl--1 { fill: #7fc9a2; }
 .eng .lad-lvl--2 { fill: #c3a8dc; }
-.eng .lad-box--0 { fill: #123443; stroke: #4d8ba8; stroke-width: 1.2; }
-.eng .lad-box--1 { fill: #12402b; stroke: #4f9c6f; stroke-width: 1.2; }
-.eng .lad-box--2 { fill: #2b2039; stroke: #9b7cbb; stroke-width: 1.2; }
-.eng .lad-box--ghost { fill: none; stroke: var(--plate-rule); stroke-width: 1.2; stroke-dasharray: 4 3.4; }
-.eng .lad-name { fill: #fff; font-size: 13px; font-weight: 600; }
 .eng .lad-sub  { fill: var(--plate-ink-muted); font-size: 11px; }
 .eng .lad-arrow { stroke: var(--plate-ink-muted); stroke-width: 1.3; fill: none; }
 .eng .lad-head  { fill: var(--plate-ink-muted); }
@@ -792,10 +787,16 @@
   }
   .eng .edge a:hover .lbl { color: var(--e-leaf-900); }
   .eng .edge a[aria-current="true"] .lbl { color: var(--e-leaf-900); font-weight: 700; }
-  /* Over a blueprint plate, and over the cover photograph, the rail inverts and
-     takes a shadow, because a photograph is not a flat ground to letter on. */
-  .eng .edge.on-plate a, .eng .edge.on-plate .lbl { color: #cfe0d5; }
-  .eng .edge.on-plate .lbl { text-shadow: 0 1px 4px rgba(6,18,13,.9); }
+  /* Over a blueprint plate, and over the cover photograph, the rail inverts. A
+     photograph is not a flat ground to letter on, so it also gets a soft scrim
+     of its own rather than relying on a text shadow to carry the contrast. */
+  .eng .edge.on-plate a, .eng .edge.on-plate .lbl { color: #dbe8e0; }
+  .eng .edge.on-plate::before {
+    content: ""; position: absolute; inset: -1.5rem -2.5rem -1.5rem -3rem;
+    background: linear-gradient(90deg,
+      rgba(8,20,15,.8) 0%, rgba(8,20,15,.68) 55%, rgba(8,20,15,0) 100%);
+    pointer-events: none; z-index: -1;
+  }
   .eng .edge.on-plate .tick { background: var(--plate-rule); }
   .eng .edge.on-plate a:hover .tick,
   .eng .edge.on-plate a[aria-current="true"] .tick { background: var(--e-leaf-500); }
@@ -863,3 +864,264 @@
 /* A single figure in a row keeps the reading measure. Letting one gel stretch to
    the full breakout width only buys it wider black bars. */
 .eng .figs:not([class*="figs--"]) { max-width: var(--measure); }
+
+/* ======================================================= LADDER, SHEET 04 ===
+   The plate is still one drawing read bottom to top, and it is still the same
+   three colours: Level 0 slate, Level 1 leaf, Level 2 plum. What changed is
+   that every box on it is a button.
+
+   TWO HIGHLIGHTS, TWO MEANINGS. Pointing at a box lights it and everything one
+   step along its road, and dims the rest: point at ho1:pcyA and the BsaI riser
+   into pSTK-1A lights with it. Choosing a box keeps that lit and opens its
+   entry in the panel beside the plate. The trace chips are a shortcut to
+   choosing a module, which is the one selection you cannot make by eye, because
+   a module's parts are scattered across all five slot columns.
+
+   DIMMING IS NOT THE SIGNAL. A lit box also gains stroke weight and a lit
+   riser thickens, so the drawing still reads with no colour vision and at any
+   opacity. The nine parts we amplified ourselves carry a small triangle, not a
+   tint, for the same reason.
+
+   ON A DARK GROUND the three level hues are lifted off --lvl-0/1/2, which are
+   mixed for drafting stock and go muddy on blueprint. The lifted values are
+   named here once and used everywhere below.
+
+   THE PANEL IS THE FALLBACK. With scripts off the panel is a plain definition
+   list of all twenty-nine entries, which is the page's written record of what
+   every part is. With scripts on the same list is filtered down to one entry at
+   a time. There is one copy of that prose and it lives in the HTML.
+   ========================================================================== */
+
+.eng .ladder {
+  /* the three levels, lifted for blueprint */
+  --lad-0:     #8fc4dc;   /* --lvl-0 slate */
+  --lad-0-ln:  #4d8ba8;
+  --lad-0-bg:  #123443;
+  --lad-1:     #7fc9a2;   /* --lvl-1 leaf */
+  --lad-1-ln:  #4f9c6f;
+  --lad-1-bg:  #12402b;
+  --lad-2:     #c3a8dc;   /* --lvl-2 plum */
+  --lad-2-ln:  #9b7cbb;
+  --lad-2-bg:  #2b2039;
+
+  --lad-dim:   .26;       /* what an unrelated box drops to */
+  margin-block: 0;
+}
+
+/* The plate wants every pixel it can get: under about 880 of them the part
+   labels stop being readable and it starts scrolling sideways instead. So the
+   panel only moves alongside once there is room for both, which is a wide
+   desktop. Everywhere below that it sits under the plate on the reading
+   measure, which is also the 375px behaviour. */
+.eng .ladder__grid { display: grid; gap: var(--sp-5); }
+@media (min-width: 96rem) {
+  .eng .ladder__grid {
+    grid-template-columns: minmax(0, 1fr) 20rem;
+    gap: clamp(1.5rem, .8rem + 2vw, 2.75rem);
+    align-items: start;
+  }
+}
+
+/* ---- the plate --------------------------------------------------------- */
+
+/* The plate carries nineteen named parts now instead of five grouped boxes, so
+   it needs more room before its labels stop being readable. Raised from the 720
+   above; .ladder__scroll and the rest of .ladder__svg are unchanged. */
+.eng .ladder__svg { min-width: 880px; }
+
+.eng .lad-lvl--top { fill: var(--plate-ink-muted); }
+.eng .lad-col {
+  font: var(--fld); font-size: 9px; letter-spacing: .12em; text-transform: uppercase;
+  fill: var(--plate-ink-muted);
+}
+.eng .lad-col--syn {
+  font-family: var(--font-mono); font-size: 8.5px; font-weight: 400;
+  letter-spacing: .04em; text-transform: none;
+  fill: rgba(151,180,163,.72);
+}
+.eng .lad-sub--em { fill: var(--lad-0); font-weight: 600; }
+.eng .lad-mark { fill: var(--plate-ink-muted); }
+.eng .lad-arrow--ghost { stroke-dasharray: 4 3.4; }
+
+/* ---- a node ------------------------------------------------------------ */
+
+.eng .lad-node { cursor: pointer; }
+.eng .lad-node__box {
+  fill: rgba(207,228,216,.03);
+  stroke: var(--plate-rule);
+  stroke-width: 1.2;
+  transition: fill .16s ease, stroke .16s ease, stroke-width .16s ease;
+}
+.eng .lad-node__t {
+  fill: #fff; font-size: 12px; font-weight: 600;
+  transition: fill .16s ease;
+}
+.eng .lad-node__t--big { font-size: 13px; }
+.eng .lad-node__t--dim { fill: var(--plate-ink-muted); }
+.eng .lad-node__sb { font-size: 9px; }
+.eng .lad-node__ring { fill: none; stroke: none; stroke-width: 2; }
+
+.eng .lad-node--0 .lad-node__box { fill: var(--lad-0-bg); stroke: var(--lad-0-ln); }
+.eng .lad-node--1 .lad-node__box { fill: var(--lad-1-bg); stroke: var(--lad-1-ln); }
+.eng .lad-node--2 .lad-node__box { fill: var(--lad-2-bg); stroke: var(--lad-2-ln); }
+.eng .lad-node--ghost .lad-node__box { stroke-dasharray: 4 3.4; }
+.eng .lad-node--enz .lad-node__box { stroke: rgba(180,215,195,.22); }
+.eng .lad-node--enz .lad-enz { transition: fill .16s ease; }
+
+/* Focus is drawn, not outlined: an outline on an SVG <g> lands on the union of
+   its children and boxes the text as well as the rect. */
+.eng .lad-node:focus { outline: none; }
+.eng .lad-node:focus .lad-node__ring { stroke: var(--e-leaf-500); }
+.eng .lad-node:focus:not(:focus-visible) .lad-node__ring { stroke: none; }
+.eng .lad-node:focus-visible .lad-node__ring { stroke: var(--e-leaf-500); }
+
+/* ---- lit, dim, chosen -------------------------------------------------- */
+
+.eng .lad-edge path { transition: stroke .16s ease, stroke-width .16s ease, opacity .16s ease; }
+
+/* Nothing is dimmed until something is being pointed at or has been chosen. */
+.eng .ladder__svg.is-active .lad-node,
+.eng .ladder__svg.is-active .lad-edge { opacity: var(--lad-dim); }
+.eng .ladder__svg.is-active .lad-node.is-lit,
+.eng .ladder__svg.is-active .lad-edge.is-lit { opacity: 1; }
+
+.eng .lad-node.is-lit .lad-node__box { stroke-width: 2.2; }
+.eng .lad-node--0.is-lit .lad-node__box { stroke: var(--lad-0); fill: #16465a; }
+.eng .lad-node--1.is-lit .lad-node__box { stroke: var(--lad-1); fill: #17573a; }
+.eng .lad-node--2.is-lit .lad-node__box { stroke: var(--lad-2); fill: #3a2b4d; }
+.eng .lad-node--ghost.is-lit .lad-node__box { stroke: var(--plate-ink-muted); }
+.eng .lad-node--ghost.is-lit .lad-node__t--dim { fill: var(--plate-ink); }
+.eng .lad-node--enz.is-lit .lad-node__box { stroke: var(--e-leaf-500); }
+.eng .lad-node--enz.is-lit .lad-enz { fill: #fff; }
+
+.eng .lad-edge.is-lit path { stroke: var(--e-leaf-500); stroke-width: 2.2; }
+.eng .lad-edge.is-lit .lad-head { fill: var(--e-leaf-500); stroke: none; }
+
+/* The chosen box keeps a second rule outside it, so choice reads differently
+   from the hover it shares a colour with. */
+.eng .lad-node[aria-pressed="true"] .lad-node__ring {
+  stroke: var(--e-leaf-500);
+  stroke-dasharray: 3 2.6;
+}
+.eng .lad-node[aria-pressed="true"]:focus-visible .lad-node__ring { stroke-dasharray: none; }
+
+/* ---- the trace chips --------------------------------------------------- */
+
+.eng .ladder__ctl {
+  display: flex; flex-wrap: wrap; align-items: center;
+  gap: .5rem .9rem;
+  margin-bottom: var(--sp-4);
+}
+.eng .ladder__ctl-lbl {
+  font: var(--fld); letter-spacing: var(--lsp); text-transform: uppercase;
+  color: var(--plate-ink-muted);
+}
+.eng .ladder__chips { display: flex; flex-wrap: wrap; gap: .4rem; }
+.eng .lad-chip {
+  font: var(--fld); letter-spacing: var(--lsp); text-transform: uppercase;
+  padding: .45em .85em;
+  background: none;
+  border: var(--rule) solid var(--plate-rule);
+  color: var(--plate-ink);
+  cursor: pointer;
+  transition: background .16s ease, border-color .16s ease, color .16s ease;
+}
+.eng .lad-chip:hover { border-color: var(--e-leaf-500); color: #fff; }
+.eng .lad-chip[aria-pressed="true"] {
+  background: var(--e-leaf-500);
+  border-color: var(--e-leaf-500);
+  color: var(--blue-900);
+}
+.eng .lad-chip--off { color: var(--plate-ink-muted); }
+
+/* ---- the panel --------------------------------------------------------- */
+
+.eng .ladder__panel {
+  border-top: var(--rule-heavy) solid var(--e-leaf-500);
+  padding-top: var(--sp-4);
+  /* stacked, it keeps the sheet's own reading measure and the sheet's own
+     centre line, so the plate does not look like it is hanging off one side */
+  max-width: var(--measure);
+  margin-inline: auto;
+}
+@media (min-width: 96rem) {
+  .eng .ladder__panel {
+    border-top: 0;
+    border-left: var(--rule-heavy) solid var(--e-leaf-500);
+    padding: 0 0 0 var(--sp-5);
+    max-width: none;
+    margin-inline: 0;
+    /* one entry is short and the plate is tall, so the panel keeps pace with
+       the reader instead of sitting at the top of a metre of drawing */
+    position: sticky;
+    top: calc(var(--nav-h) + 2rem);
+    min-height: 13rem;
+  }
+}
+.eng .ladder__hint {
+  margin: 0;
+  font-size: var(--text-sm); line-height: 1.6;
+  color: var(--plate-ink-muted);
+}
+.eng .ladder__key { margin: 0; }
+.eng .ladder__item + .ladder__item { margin-top: var(--sp-4); }
+/* Not a flex row: a flex dt would make the <sub> in a promoter name its own
+   flex item and open a gap in the middle of the word. */
+.eng .ladder__key dt {
+  margin: 0 0 .35rem;
+  font-family: var(--font-display); font-weight: 700;
+  font-size: 1.0625rem; line-height: 1.3;
+  color: #fff;
+}
+.eng .ladder__key dd {
+  margin: 0;
+  font-size: var(--text-sm); line-height: 1.62;
+  color: var(--plate-ink);
+}
+.eng .ladder__key code { font-size: .9em; }
+/* the wavelength pair is mixed for stock and disappears on blueprint */
+.eng .ladder__key .nm--g { color: #6fd18f; }
+.eng .ladder__key .nm--r { color: #e58a7e; }
+
+.eng .lad-tag {
+  display: inline-block;
+  margin-left: .5rem;
+  vertical-align: .12em;
+  font: var(--fld); letter-spacing: var(--lsp); text-transform: uppercase;
+  padding: .22em .5em;
+  border: var(--rule) solid currentColor;
+  white-space: nowrap;
+}
+.eng .lad-tag--0    { color: var(--lad-0); }
+.eng .lad-tag--1    { color: var(--lad-1); }
+.eng .lad-tag--2    { color: var(--lad-2); }
+.eng .lad-tag--step { color: var(--plate-ink-muted); }
+.eng .lad-tag--open { color: #e8a888; }
+
+/* Where the chosen part goes, and what it is made of. Written by the script
+   from the arrows on the plate, so the two can never disagree. */
+.eng .ladder__route {
+  margin: var(--sp-3) 0 0;
+  padding-top: var(--sp-3);
+  border-top: var(--rule) solid var(--plate-rule);
+  font-size: var(--text-xs); line-height: 1.7;
+  color: var(--plate-ink-muted);
+}
+.eng .ladder__route b {
+  font: var(--fld); letter-spacing: var(--lsp); text-transform: uppercase;
+  color: var(--plate-ink-muted);
+  margin-right: .5rem;
+}
+.eng .ladder__route i { font-style: normal; color: var(--plate-ink); }
+.eng .ladder__route span { display: block; }
+.eng .ladder__route span + span { margin-top: .25rem; }
+
+/* With scripts on, one entry shows at a time and the rest stay in the DOM for
+   aria-describedby to reach. */
+.eng .ladder__item[hidden] { display: none; }
+
+@media print {
+  .eng .ladder__ctl { display: none !important; }
+  .eng .ladder__item { display: block !important; }
+  .eng .ladder__panel { position: static; }
+}

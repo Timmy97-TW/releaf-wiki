@@ -12,6 +12,7 @@
      3. the sheet-edge index, which follows the scroll
      4. the scroll gauge down the right edge
      5. figures open full-window
+     6. the ladder plate: every box on Sheet 04 explains itself and lights its road
    ========================================================================== */
 (function () {
   "use strict";
@@ -296,10 +297,224 @@
     });
   }
 
+  /* ---- 6. the ladder plate ----------------------------------------------- */
+
+  /* Sheet 04 is a drawing of nineteen entry parts, five modules and one
+     circuit, and the thing a reader wants from it is never the whole drawing
+     at once. It is one box: what is that, and where does it go.
+
+     So the plate answers per box. Pointing at one lights it and everything one
+     step along its road and dims the rest; choosing one keeps that lit and
+     opens its written entry in the panel. Both states come from the same two
+     lookups: data-lit on a node lists what it feeds, and the reverse of that
+     same list is what feeds it. Nothing about the routes is written twice, and
+     the panel prose is not written in here at all. It is the definition list
+     already in the HTML, which is what a reader with scripts off gets.
+
+     The one control worth having is a shortcut to choosing a module, because a
+     module's parts are spread across all five slot columns and cannot be
+     picked out by eye. */
+
+  function plate() {
+    var fig = $(".ladder");
+    if (!fig) return;
+    var svg    = $(".ladder__svg", fig);
+    var panel  = $(".ladder__panel", fig);
+    var hint   = $(".ladder__hint", fig);
+    var scroll = $(".ladder__scroll", fig);
+    var nodes  = $$(".lad-node", fig);
+    var edges  = $$(".lad-edge", fig);
+    var items  = $$(".ladder__item", fig);
+    var chips  = $$(".lad-chip", fig);
+    if (!svg || !panel || !nodes.length) return;
+
+    var byId = {};
+    nodes.forEach(function (n) { byId[n.id] = n; });
+
+    function lit(n) {
+      var v = (n.getAttribute("data-lit") || "").trim();
+      return v ? v.split(/\s+/) : [];
+    }
+
+    /* What feeds a box is just the reverse of what every other box feeds. */
+    var feeds = {};
+    nodes.forEach(function (n) {
+      lit(n).forEach(function (t) { (feeds[t] = feeds[t] || []).push(n.id); });
+    });
+
+    function related(n) {
+      var set = {};
+      set[n.id] = true;
+      lit(n).forEach(function (t) { set[t] = true; });
+      (feeds[n.id] || []).forEach(function (t) { set[t] = true; });
+      return set;
+    }
+
+    function name(id) {
+      var n = byId[id];
+      return n ? n.getAttribute("data-name") : "";
+    }
+    function isLevel(id, cls) {
+      var n = byId[id];
+      return !!n && n.classList.contains(cls);
+    }
+
+    /* ---- painting ------------------------------------------------------- */
+
+    function paint(set) {
+      svg.classList.toggle("is-active", !!set);
+      nodes.forEach(function (n) { n.classList.toggle("is-lit", !!set && !!set[n.id]); });
+      edges.forEach(function (e) { e.classList.toggle("is-lit", !!set && !!set[e.id]); });
+    }
+
+    /* The route lines are read off the arrows, so the words and the drawing
+       cannot drift apart. Only a module or the circuit is somewhere a part
+       goes into; only a part or a module is something built from. */
+    var routeEl = document.createElement("p");
+    routeEl.className = "ladder__route";
+    routeEl.hidden = true;
+    panel.appendChild(routeEl);
+
+    function route(n) {
+      var into = [], from = [], html = "";
+      if (n) {
+        lit(n).forEach(function (t) {
+          if (isLevel(t, "lad-node--1") || isLevel(t, "lad-node--2")) into.push(name(t));
+        });
+        (feeds[n.id] || []).forEach(function (t) {
+          if (isLevel(t, "lad-node--0") || isLevel(t, "lad-node--1")) from.push(name(t));
+        });
+      }
+      if (into.length) html += "<span><b>Into</b><i>" + esc(into.join(", ")) + "</i></span>";
+      if (from.length) html += "<span><b>Built from</b><i>" + esc(from.join(", ")) + "</i></span>";
+      routeEl.innerHTML = html;
+      routeEl.hidden = !html;
+    }
+
+    function show(n) {
+      var want = n ? n.getAttribute("aria-describedby") : null;
+      items.forEach(function (it) { it.hidden = it.id !== want; });
+      if (hint) hint.hidden = !!n;
+      route(n);
+    }
+
+    var chosen = null, hover = null;
+
+    function restore() {
+      var n = hover || chosen;
+      paint(n ? related(n) : null);
+      show(n);
+    }
+
+    function choose(n) {
+      chosen = n || null;
+      nodes.forEach(function (x) { x.setAttribute("aria-pressed", String(x === chosen)); });
+      chips.forEach(function (c) {
+        if (!c.hasAttribute("aria-pressed")) return;
+        c.setAttribute("aria-pressed", String(!!chosen && c.getAttribute("data-trace") === chosen.id));
+      });
+      restore();
+    }
+
+    /* At 375px the plate is wider than its frame, so a chip press that lands on
+       a box off to the right has to bring the box with it. */
+    function centre(n) {
+      if (!scroll || scroll.scrollWidth <= scroll.clientWidth + 1) return;
+      var a = n.getBoundingClientRect(), b = scroll.getBoundingClientRect();
+      var dx = (a.left + a.width / 2) - (b.left + b.width / 2);
+      if (Math.abs(dx) < 8) return;
+      if (scroll.scrollTo) {
+        scroll.scrollTo({ left: scroll.scrollLeft + dx, behavior: prefersMotion() ? "smooth" : "auto" });
+      } else {
+        scroll.scrollLeft += dx;
+      }
+    }
+
+    /* ---- the live region ------------------------------------------------ */
+
+    /* A pointer moving over the plate rewrites the panel with nothing else to
+       announce it, so the panel is a live region for exactly as long as the
+       pointer is on the plate. Focus and a press announce themselves through
+       the node's own name and aria-pressed, and a second announcement of the
+       same text on top of that is noise, so keyboard use switches it off. */
+    function live(on) {
+      if (on && panel.getAttribute("aria-live") !== "polite") panel.setAttribute("aria-live", "polite");
+      if (!on && panel.hasAttribute("aria-live")) panel.removeAttribute("aria-live");
+    }
+
+    /* ---- the plate ------------------------------------------------------ */
+
+    function nodeFrom(el) {
+      return el && el.closest ? el.closest(".lad-node") : null;
+    }
+
+    svg.addEventListener("pointerover", function (e) {
+      live(true);
+      var n = nodeFrom(e.target);
+      if (!n || n === hover) return;
+      hover = n;
+      restore();
+    });
+    svg.addEventListener("pointerout", function (e) {
+      var n = nodeFrom(e.target);
+      if (!n || n !== hover) return;
+      if (nodeFrom(e.relatedTarget) === n) return;
+      hover = null;
+      restore();
+    });
+    svg.addEventListener("pointerleave", function () {
+      live(false);
+      hover = null;
+      restore();
+    });
+
+    svg.addEventListener("focusin", function (e) {
+      var n = nodeFrom(e.target);
+      if (!n) return;
+      hover = n;
+      restore();
+    });
+    svg.addEventListener("focusout", function (e) {
+      if (nodeFrom(e.target) !== hover) return;
+      hover = null;
+      restore();
+    });
+
+    nodes.forEach(function (n) {
+      n.addEventListener("click", function () { choose(chosen === n ? null : n); });
+      n.addEventListener("keydown", function (e) {
+        if (e.key !== "Enter" && e.key !== " " && e.key !== "Spacebar") return;
+        e.preventDefault();
+        choose(chosen === n ? null : n);
+      });
+    });
+
+    /* ---- the trace chips ------------------------------------------------ */
+
+    chips.forEach(function (c) {
+      c.addEventListener("click", function () {
+        var id = c.getAttribute("data-trace");
+        var n = id ? byId[id] : null;
+        if (n && n === chosen) n = null;
+        choose(n);
+        if (n) centre(n);
+      });
+    });
+
+    document.addEventListener("keydown", function (e) {
+      if (e.key === "Tab") live(false);
+      if (e.key !== "Escape" || !chosen) return;
+      if (!fig.contains(document.activeElement)) return;
+      choose(null);
+    });
+
+    show(null);
+  }
+
   function start() {
     document.documentElement.classList.add("js");
     $$("[data-needs-js]").forEach(function (el) { el.hidden = false; });
-    dial(); record(); edge(); gauge(); lightbox();
+    dial(); record(); edge(); gauge(); lightbox(); plate();
   }
   if (document.readyState === "loading") {
     document.addEventListener("DOMContentLoaded", start);
