@@ -198,13 +198,14 @@
   function edge() {
     var host = $("#edge-index");
     if (!host) return;
-    var sheets = $$("main .sheet[id]");
+    /* Only a sheet that names itself gets a rail entry, which is how the cover
+       stays out of the list. */
+    var sheets = $$("main .sheet[id][data-rail]");
+    var all    = $$("main .sheet[id]");
     if (!sheets.length) { host.parentNode.remove(); return; }
 
     sheets.forEach(function (s) {
-      var h = $(".sheethead h2", s);
-      var label = s.getAttribute("data-rail") ||
-                  (h ? h.textContent.trim() : (s.id === "cover" ? "Cover" : s.id));
+      var label = s.getAttribute("data-rail");
       if (label.length > 22) label = label.slice(0, 20).trim() + "…";
       var ico = s.getAttribute("data-ico");
       var mark = '<span class="mark"><span class="tick"></span>' +
@@ -219,19 +220,21 @@
     var rail = host.parentNode;
     if (!("IntersectionObserver" in window)) return;
     var seen = {};
+    /* The rail stays out of the way on two sheets: the cover, where it would
+       letter over a photograph before the reader has anything to navigate, and
+       the assembly plate, which wants the whole width. */
+    var QUIET = { cover: 1, ladder: 1 };
     var io = new IntersectionObserver(function (entries) {
       entries.forEach(function (en) { seen[en.target.id] = en.isIntersecting; });
       var current = null, node = null;
-      sheets.forEach(function (s) { if (seen[s.id] && !current) { current = s.id; node = s; } });
+      all.forEach(function (s) { if (seen[s.id] && !current) { current = s.id; node = s; } });
       links.forEach(function (a) {
         a.setAttribute("aria-current", String(a.getAttribute("href") === "#" + current));
       });
-      /* The rail is permanent now, including over the cover; it only inverts its
-         palette when the sheet behind it is a blueprint plate. */
-      rail.classList.toggle("on-plate", !!node &&
-        (node.classList.contains("sheet--plate") || node.classList.contains("cover")));
+      rail.classList.toggle("on-plate", !!node && node.classList.contains("sheet--plate"));
+      rail.classList.toggle("is-hidden", !current || QUIET[current] === 1);
     }, { rootMargin: "-25% 0px -60% 0px", threshold: 0 });
-    sheets.forEach(function (s) { io.observe(s); });
+    all.forEach(function (s) { io.observe(s); });
   }
 
   /* ---- 4. the scroll gauge ---------------------------------------------- */

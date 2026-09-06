@@ -613,16 +613,24 @@
   cursor: zoom-in;
 }
 .eng .fig--gel   .fig__frame { --mat: #080b09; border-color: #080b09; }
-/* A gel letterboxes invisibly because its mat is the same near-black as the gel
-   itself. A plasmid map needs the same trick and the opposite colour: white mat,
-   white map, so a three-to-one drawing can sit beside a three-to-two gel in one
-   row without a slab of grey appearing under it. The frame keeps its hairline,
-   so the figure still reads as a framed object. */
+/* A gel is a photograph and lives in a frame. A plasmid map is a line drawing on
+   white, and a frame does nothing for it but add filler above and below. So maps
+   and amplicon strips drop the fixed box entirely and take their own height:
+   full width, hairline round the drawing, nothing else. */
 .eng .fig--map   .fig__frame,
-.eng .fig--strip .fig__frame { --mat: #fff; }
-/* Alone on a line a map has room to be cut to its own shape. */
-.eng .fig--map.wide   .fig__frame { aspect-ratio: 16 / 5; }
-.eng .fig--strip .fig__frame { aspect-ratio: 9 / 2; }
+.eng .fig--strip .fig__frame {
+  aspect-ratio: auto;
+  background: none;
+  border: 0;
+  display: block;
+  overflow: visible;
+}
+.eng .fig--map   .fig__frame img,
+.eng .fig--strip .fig__frame img {
+  width: 100%; max-width: none; max-height: none; height: auto;
+  border: var(--rule) solid var(--graphite-2);
+  background: #fff;
+}
 .eng .fig--strip figcaption { border-left-color: var(--lvl-0); }
 
 .eng .fig--photo .fig__frame { --mat: var(--blue-900); border-color: var(--blue-900); }
@@ -763,7 +771,10 @@
     width: calc(8.5rem - .5rem);
     max-height: calc(100vh - var(--nav-h) - 5rem);
     overflow: hidden;
+    transition: opacity .22s ease;
   }
+  /* Out of the way on the cover and on the assembly plate. */
+  .eng .edge.is-hidden { opacity: 0; pointer-events: none; }
   .eng .edge ol { list-style: none; margin: 0; padding: 0; display: grid; gap: .5rem; }
   .eng .edge a {
     display: grid; grid-template-columns: 1.1rem minmax(0, 1fr);
@@ -908,16 +919,23 @@
   margin-block: 0;
 }
 
-/* The plate wants every pixel it can get: under about 880 of them the part
-   labels stop being readable and it starts scrolling sideways instead. So the
-   panel only moves alongside once there is room for both, which is a wide
-   desktop. Everywhere below that it sits under the plate on the reading
-   measure, which is also the 375px behaviour. */
+/* This sheet gives the drawing the whole window. The contents rail hides here
+   (see INDEX), the sheet closes its own rail lane, and the panel moves alongside
+   the plate as soon as there is room, so the section fits one screen without
+   scrolling. Below that the panel sits under the plate, which is the 375px
+   behaviour too. */
+.eng #ladder { --rail: 0px; }
+.eng #ladder .sheet__inner { max-width: none; }
+.eng #ladder .sheethead { margin-bottom: var(--sp-4); }
+.eng #ladder .sheethead h2 {
+  font-size: clamp(1.15rem, .7rem + 1.05vw, 1.7rem);
+  max-width: none;
+}
 .eng .ladder__grid { display: grid; gap: var(--sp-5); }
-@media (min-width: 96rem) {
+@media (min-width: 66rem) {
   .eng .ladder__grid {
-    grid-template-columns: minmax(0, 1fr) 20rem;
-    gap: clamp(1.5rem, .8rem + 2vw, 2.75rem);
+    grid-template-columns: minmax(0, 1fr) clamp(15rem, 20vw, 19rem);
+    gap: clamp(1.25rem, .6rem + 1.6vw, 2.25rem);
     align-items: start;
   }
 }
@@ -927,7 +945,7 @@
 /* The plate carries nineteen named parts now instead of five grouped boxes, so
    it needs more room before its labels stop being readable. Raised from the 720
    above; .ladder__scroll and the rest of .ladder__svg are unchanged. */
-.eng .ladder__svg { min-width: 880px; }
+.eng .ladder__svg { min-width: 820px; }
 
 .eng .lad-lvl--top { fill: var(--plate-ink-muted); }
 .eng .lad-col {
@@ -1039,30 +1057,28 @@
 .eng .ladder__panel {
   border-top: var(--rule-heavy) solid var(--e-leaf-500);
   padding-top: var(--sp-4);
-  /* stacked, it keeps the sheet's own reading measure and the sheet's own
-     centre line, so the plate does not look like it is hanging off one side */
   max-width: var(--measure);
-  margin-inline: auto;
 }
-@media (min-width: 96rem) {
+@media (min-width: 66rem) {
+  /* Beside the plate the panel is a quiet column, not a card: one hairline down
+     its left edge, and a reserved height so the drawing does not jump when an
+     entry opens under the pointer. */
   .eng .ladder__panel {
     border-top: 0;
-    border-left: var(--rule-heavy) solid var(--e-leaf-500);
-    padding: 0 0 0 var(--sp-5);
+    border-left: var(--rule) solid var(--plate-rule);
+    padding: .2rem 0 .2rem var(--sp-4);
     max-width: none;
-    margin-inline: 0;
-    /* one entry is short and the plate is tall, so the panel keeps pace with
-       the reader instead of sitting at the top of a metre of drawing */
-    position: sticky;
-    top: calc(var(--nav-h) + 2rem);
-    min-height: 13rem;
+    min-height: 16rem;
+    align-self: stretch;
   }
 }
 .eng .ladder__hint {
   margin: 0;
-  font-size: var(--text-sm); line-height: 1.6;
+  font-size: var(--text-xs); line-height: 1.6;
   color: var(--plate-ink-muted);
 }
+.eng .ladder__key dt, .eng .ladder__key dd { font-size: var(--text-sm); }
+.eng .ladder__key dd { line-height: 1.55; }
 .eng .ladder__key { margin: 0; }
 .eng .ladder__item + .ladder__item { margin-top: var(--sp-4); }
 /* Not a flex row: a flex dt would make the <sub> in a promoter name its own
@@ -1124,4 +1140,33 @@
   .eng .ladder__ctl { display: none !important; }
   .eng .ladder__item { display: block !important; }
   .eng .ladder__panel { position: static; }
+}
+
+/* Two marks at the top of the plate, in the induction ghost: the light plate
+   apparatus and then the reactor. They say where the run that has not happened
+   is going, in the same 1.4 stroke as every other mark on the page. */
+.eng .lad-icon {
+  fill: none;
+  stroke: var(--plate-ink-muted);
+  stroke-width: 1.4;
+  stroke-linejoin: round;
+  opacity: .78;
+}
+.eng .lad-icon__t {
+  fill: var(--plate-ink-muted);
+  stroke: none;
+  font: 600 7.5px/1 var(--font-display);
+  letter-spacing: .1em;
+  text-transform: uppercase;
+}
+.eng .lad-node--ghost:hover .lad-icon,
+.eng .lad-node--ghost.is-lit .lad-icon { opacity: 1; stroke: var(--e-leaf-500); }
+.eng .lad-node--ghost:hover .lad-icon__t,
+.eng .lad-node--ghost.is-lit .lad-icon__t { fill: var(--e-leaf-500); }
+
+/* In a row of two, the captions line up along the bottom even when one figure
+   is a tall gel and the other a short map. The pair reads as a pair. */
+@media (min-width: 46rem) {
+  .eng .figs[class*="figs--"] > .fig { display: flex; flex-direction: column; }
+  .eng .figs[class*="figs--"] > .fig > figcaption { margin-top: auto; padding-top: var(--sp-3); }
 }
