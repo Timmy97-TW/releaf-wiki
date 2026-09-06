@@ -1,67 +1,95 @@
 /* =============================================================================
    ReLeaf: Engineering Success — the wet lab record
    -----------------------------------------------------------------------------
-   Same world as the drawing set this page was before (DESIGN.md at the repo
-   root governs it): two grounds and no third, drafting stock for reading and
-   blueprint for plates, meaning carried by line weight and by a stamp that
-   spells its state out, every corner square, one typeface worked on Inter's
-   optical-size axis.
+   Descends from the drawing set this page was before (DESIGN.md at the repo
+   root), and departs from it in three places, on purpose.
 
-   What is new here is the spine. The wet lab record is not four parallel
-   tracks, it is one hierarchy: Level 0 parts, Level 1 modules, Level 2 circuit.
-   So the atlas plate is gone and two components replace it.
+   1. ONE COLUMN, CENTRED. The margin column of tip boxes is gone. Everything
+      reads down a single 84ch measure that sits in the middle of the sheet, and
+      tables, figures and plates break out wider from it. Nothing is capped at
+      34ch any more, so a heading uses the width it has before it wraps.
 
-     · THE LADDER, a blueprint plate of the three assembly levels, which is the
-       one drawing that says what the whole cloning effort was for.
-     · THE DIAL, six cycles set round a circle with the DBTL loop drawn inside
-       it, sticky beside the record, turning so the cycle you are reading sits
-       at the top. This is the team's own wiki-brainstorm sketch, built.
+   2. COLOUR CARRIES TWO REAL VARIABLES. The old rule was one green plus two
+      state colours. Two more variables on this page are genuinely colour-shaped
+      and now get their own hues:
+        · ASSEMBLY LEVEL. Level 0 slate, Level 1 leaf, Level 2 plum. The same
+          three run through the ladder plate, the level tags and the step labels.
+        · WAVELENGTH. 535 nm green and 672 nm red, used only where the page is
+          talking about the light the circuit actually sees.
+      State keeps amber and rust. Nothing else is coloured, and no colour is
+      decorative.
 
-   Everything the dial does is additive. With scripts off it is a static ring
-   of six links, the cycles are <details> that open on click, and the page is
-   a complete document.
+   3. GROUNDS ALTERNATE. Drafting stock, a pale leaf tint and a pale sand tint,
+      with blueprint for plates. Four grounds instead of two, so a ten-sheet page
+      has a rhythm you can feel while scrolling.
+
+   FIGURES. Every figure sits in a fixed-ratio frame on a mat chosen for what it
+   holds: near-black behind a gel, white behind a plasmid map, blueprint behind a
+   photograph. That is what makes figures of wildly different pixel dimensions
+   present at the same size. Clicking one opens it at 80% of the window with its
+   caption on the same 80%.
+
+   THE DIAL is unchanged and still the page's signature: six cycles round a
+   circle with the DBTL loop at its centre, turning the short way to whichever
+   cycle you are reading.
    ========================================================================== */
 
 /* ============================================================== TOKENS ===== */
 
 .eng {
   /* grounds */
-  --paper:      #f6f6f2;   /* drafting stock: the reading ground */
-  --paper-2:    #eceee7;   /* a half-step down: figure mats, findings */
-  --vellum:     #fbfbf8;   /* a half-step up: boxed notes, open cycles */
+  --paper:      #f7f7f3;   /* drafting stock: the default reading ground */
+  --paper-2:    #ecebe3;   /* a half-step down: figure mats, findings */
+  --vellum:     #fdfdfa;   /* a half-step up: boxed notes, open cycles */
+  --tint-leaf:  #edf3ee;   /* pale leaf sheet */
+  --tint-sand:  #f8f3e7;   /* pale sand sheet */
   --blue-900:   #0c231a;   /* blueprint: cover and plates */
   --blue-800:   #10301f;
   --blue-700:   #16412c;
 
   /* ink */
   --ink:        #15201a;
-  --ink-2:      #3d4a43;
-  --graphite:   #5c6b62;   /* field lettering, dimension rules */
-  --graphite-2: #93a099;   /* rules only, never text: 2.5:1 on stock */
+  --ink-2:      #3a4841;
+  --graphite:   #57665d;
+  --graphite-2: #b3bdb6;   /* rules only, never text */
 
   --e-leaf-900: #14402b;
   --e-leaf-700: #23684a;
   --e-leaf-500: #4f9c6f;
   --e-leaf-200: #cfe4d8;
 
-  /* state, on stock */
-  --st-fail:    #8f6210;
+  /* assembly level: three steps of one ladder */
+  --lvl-0:      #2f6d8c;
+  --lvl-1:      #23684a;
+  --lvl-2:      #6b4a86;
+  --lvl-0-bg:   #e7f0f5;
+  --lvl-1-bg:   #e6f1ea;
+  --lvl-2-bg:   #efe9f4;
+
+  /* wavelength: the only two colours the circuit can tell apart */
+  --nm-535:     #2f9a58;
+  --nm-672:     #bf4438;
+
+  /* state */
+  --st-fail:    #8a5f10;
   --st-open:    #a33d21;
+  --st-fail-bg: #faf3e2;
+  --st-open-bg: #fbeee9;
 
   /* on blueprint */
-  --plate-ink:       #dfe9e2;
-  --plate-ink-muted: #8fae9d;
-  --plate-rule:      rgba(180,215,195,.34);
+  --plate-ink:       #e3ece6;
+  --plate-ink-muted: #97b4a3;
+  --plate-rule:      rgba(180,215,195,.32);
 
   --rule-heavy: 1.5px;
   --rule:       1px;
 
-  --max:     1560px;
-  --measure: 68ch;
-  --gutter:  clamp(1rem, .35rem + 2.4vw, 2.75rem);
+  --measure: 84ch;         /* the reading column */
+  --wide:    1180px;       /* what a table or a figure may break out to */
+  --gutter:  clamp(1.15rem, .5rem + 2.4vw, 2.5rem);
 
   --fld: 600 .6875rem/1.2 var(--font-display);
-  --lsp: .14em;
+  --lsp: .13em;
 
   background: var(--paper);
   color: var(--ink);
@@ -73,16 +101,17 @@
   font-family: var(--font-display);
   font-variation-settings: "opsz" 32;
   color: var(--e-leaf-900);
-  text-wrap: balance;
+  text-wrap: pretty;          /* pretty, never balance: balance breaks a heading
+                                 early to even its lines up */
 }
 .eng code {
   font-family: var(--font-mono);
   font-size: .875em;
-  background: var(--paper-2);
-  padding: .1em .3em;
-  color: var(--ink);
+  background: rgba(35,104,74,.09);
+  padding: .08em .32em;
+  color: var(--e-leaf-900);
 }
-.eng a { color: var(--e-leaf-700); }
+.eng a { color: var(--e-leaf-700); text-underline-offset: .18em; }
 .eng a:hover { color: var(--e-leaf-900); }
 .eng :focus-visible { outline: 2px solid var(--e-leaf-500); outline-offset: 2px; }
 .eng .sprite { position: absolute; width: 0; height: 0; overflow: hidden; }
@@ -91,7 +120,6 @@
   stroke-linecap: round; stroke-linejoin: round;
 }
 
-/* a drawing field: uppercase, tracked, tabular */
 .eng .field {
   font: var(--fld);
   letter-spacing: var(--lsp);
@@ -103,32 +131,42 @@
 
 /* ============================================================== SHEETS ===== */
 
-.eng .sheet {
-  padding: clamp(2.5rem, 1.4rem + 3.4vw, 5rem) 0;
-  border-bottom: var(--rule) solid var(--graphite-2);
-}
-.eng .sheet:last-of-type { border-bottom: 0; }
+.eng .sheet { padding: clamp(2.75rem, 1.4rem + 3.6vw, 5.25rem) 0; }
+.eng .sheet--tint  { background: var(--tint-leaf); }
+.eng .sheet--warm  { background: var(--tint-sand); }
+.eng .sheet--plate { background: var(--blue-900); color: var(--plate-ink); }
+.eng .sheet--plate h2, .eng .sheet--plate h3 { color: #fff; }
+.eng .sheet--plate .field { color: var(--plate-ink-muted); }
+.eng .sheet--plate a { color: var(--e-leaf-200); }
+.eng .sheet--plate p, .eng .sheet--plate li { color: var(--plate-ink); }
+
+/* The reading column sits in the middle of the sheet. Anything that wants more
+   room says so and breaks out, still centred, so the page is never lopsided. */
 .eng .sheet__inner {
-  max-width: var(--max);
+  max-width: var(--measure);
   margin-inline: auto;
   padding-inline: var(--gutter);
 }
-.eng .sheet--plate {
-  background: var(--blue-900);
-  color: var(--plate-ink);
-  border-bottom-color: transparent;
+/* A breakout stays centred on the same axis as the reading column, so the
+   sheet never looks lopsided: half the parent's content box, less half the
+   breakout's own width. */
+.eng .wide {
+  --w: min(var(--wide), calc(100vw - 2 * var(--gutter)));
+  width: var(--w);
+  margin-inline: calc(50% - var(--w) / 2);
+  max-width: none;
 }
-.eng .sheet--plate + .sheet { border-top: 0; }
-.eng .sheet--plate h2,
-.eng .sheet--plate h3 { color: #fff; }
-.eng .sheet--plate .field { color: var(--plate-ink-muted); }
-.eng .sheet--plate a { color: var(--e-leaf-200); }
+.eng .full {
+  --w: min(1560px, calc(100vw - 2 * var(--gutter)));
+  width: var(--w);
+  margin-inline: calc(50% - var(--w) / 2);
+  max-width: none;
+}
 
-/* a title block: mark, number, sentence */
 .eng .sheethead {
   display: grid;
   grid-template-columns: auto 1fr;
-  gap: var(--sp-4) var(--sp-5);
+  gap: .9rem 1.15rem;
   align-items: start;
   padding-bottom: var(--sp-4);
   border-bottom: var(--rule-heavy) solid var(--ink);
@@ -137,76 +175,87 @@
 .eng .sheet--plate .sheethead { border-bottom-color: var(--plate-rule); }
 .eng .sheethead h2 {
   margin: 0;
-  font-size: clamp(1.375rem, 1.05rem + 1.3vw, 2rem);
-  line-height: 1.15;
-  letter-spacing: -.02em;
-  max-width: 34ch;
+  font-size: clamp(1.5rem, 1.1rem + 1.5vw, 2.35rem);
+  line-height: 1.14;
+  letter-spacing: -.022em;
 }
 .eng .sheetmark {
-  display: flex; align-items: center; gap: .55rem;
-  color: var(--graphite);
+  display: flex; align-items: center; gap: .5rem;
+  padding-top: .3rem;
+  color: var(--e-leaf-700);
 }
-.eng .sheet--plate .sheetmark { color: var(--plate-ink-muted); }
+.eng .sheet--plate .sheetmark { color: var(--e-leaf-500); }
 .eng .sheetmark__ico { width: 30px; height: 30px; }
 .eng .sheetmark__no {
   font: var(--fld); letter-spacing: var(--lsp);
   font-size: .8125rem; font-variant-numeric: tabular-nums;
+  color: var(--graphite);
 }
+.eng .sheet--plate .sheetmark__no { color: var(--plate-ink-muted); }
 
 /* ============================================================== COVER ====== */
-/* The photograph is never cropped: the plate is sized to hold the whole 4:3
-   frame and the text sits over its lower half, where the bench is darkest. */
 
-.eng .cover { padding: 0; border-bottom: 0; }
+.eng .cover { padding: 0; }
 .eng .cover__plate {
   position: relative;
   background:
-    linear-gradient(180deg, rgba(12,35,26,.18) 0%, rgba(12,35,26,.52) 44%,
-                    rgba(12,35,26,.93) 82%, var(--blue-900) 100%),
+    linear-gradient(180deg, rgba(12,35,26,.22) 0%, rgba(12,35,26,.55) 26%,
+                    rgba(12,35,26,.84) 48%, rgba(12,35,26,.96) 72%, var(--blue-900) 100%),
     url("../assets/img/engineering/cover-rig.webp") center 22% / cover no-repeat,
     var(--blue-900);
   color: #fff;
-  min-height: min(82vh, 780px);
+  min-height: min(84vh, 800px);
   display: flex;
   align-items: flex-end;
 }
 .eng .cover__body {
-  max-width: var(--max);
+  position: relative;
+  max-width: 1560px;
   margin-inline: auto;
-  padding: clamp(3rem, 2rem + 6vw, 7rem) var(--gutter) clamp(1.75rem, 1rem + 2vw, 2.75rem);
+  padding: clamp(4rem, 2rem + 8vw, 9rem) var(--gutter) clamp(1.75rem, 1rem + 2vw, 2.75rem);
   width: 100%;
 }
+/* The plate gradient alone cannot beat a bright bench, so the text block carries
+   its own full-bleed scrim and the photograph above it stays legible. */
+.eng .cover__body::before {
+  content: ""; position: absolute; inset: 0;
+  left: 50%; width: 100vw; transform: translateX(-50%);
+  background: linear-gradient(180deg,
+    rgba(9,26,19,0) 0%, rgba(9,26,19,.46) 22%,
+    rgba(9,26,19,.78) 52%, rgba(9,26,19,.9) 100%);
+}
+.eng .cover__body > * { position: relative; }
 .eng .cover h1 {
   margin: 0 0 var(--sp-5);
   color: #fff;
-  font-size: clamp(2rem, 1.15rem + 3.6vw, 4.5rem);
+  text-shadow: 0 2px 10px rgba(6,18,13,.35);
+  font-size: clamp(2.1rem, 1.15rem + 3.8vw, 4.6rem);
   line-height: .98;
   letter-spacing: -.035em;
-  max-width: 17ch;
+  max-width: 22ch;
 }
 .eng .cover__lede {
   margin: 0 0 var(--sp-6);
-  max-width: 62ch;
-  font-size: clamp(1.0625rem, .98rem + .38vw, 1.25rem);
+  max-width: 74ch;
+  text-shadow: 0 1px 2px rgba(6,18,13,.45);
+  font-size: clamp(1.0625rem, .98rem + .4vw, 1.28rem);
   line-height: 1.55;
-  color: #e6efe9;
+  color: #e9f1ec;
 }
-
-/* the tally is a quantity schedule with ruled cells, not a row of hero cards */
 .eng .cover__tally {
   list-style: none; margin: 0; padding: 0;
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(8.5rem, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(9rem, 1fr));
   border: var(--rule) solid var(--plate-rule);
 }
 .eng .cover__tally li {
-  padding: .7rem clamp(.85rem, .5rem + 1vw, 1.5rem);
+  padding: .75rem clamp(.85rem, .5rem + 1vw, 1.5rem);
   border-right: var(--rule) solid var(--plate-rule);
 }
 .eng .cover__tally li:last-child { border-right: 0; }
 .eng .cover__tally b {
   display: block;
-  font-size: clamp(1.75rem, 1.4rem + 1.4vw, 2.5rem);
+  font-size: clamp(1.8rem, 1.4rem + 1.5vw, 2.6rem);
   line-height: 1; letter-spacing: -.02em;
   font-variant-numeric: tabular-nums;
 }
@@ -215,16 +264,15 @@
   font: var(--fld); letter-spacing: .1em; text-transform: uppercase;
   color: var(--plate-ink-muted);
 }
-.eng .cover__tally .is-open b, .eng .cover__tally .is-open span { color: #e3a887; }
+.eng .cover__tally .is-open b, .eng .cover__tally .is-open span { color: #e8a888; }
 
-/* the title-block strip along the foot of the cover */
 .eng .cover__strip {
   background: var(--blue-800);
   border-top: var(--rule) solid var(--plate-rule);
   padding: var(--sp-3) 0;
 }
 .eng .cover__strip dl {
-  max-width: var(--max); margin: 0 auto; padding-inline: var(--gutter);
+  max-width: 1560px; margin: 0 auto; padding-inline: var(--gutter);
   display: flex; flex-wrap: wrap; gap: .35rem 1.75rem;
   font: var(--fld); letter-spacing: .12em; text-transform: uppercase;
 }
@@ -233,106 +281,101 @@
 
 /* ============================================================ READING ====== */
 
-.eng .rd { display: grid; gap: var(--sp-6); }
-.eng .rd__main > * { max-width: var(--measure); }
-.eng .rd__main > .tablewrap,
-.eng .rd__main > .figs,
-.eng .rd__main > .fig,
-.eng .rd__main > .ladder { max-width: none; }
-.eng .rd p, .eng .rd li { color: var(--ink-2); }
-.eng .rd h3 {
+.eng .sheet p, .eng .sheet li { color: var(--ink-2); }
+.eng .sheet p { line-height: 1.7; }
+.eng .sheet h3 {
   margin: var(--sp-7) 0 var(--sp-3);
   padding-top: var(--sp-3);
   border-top: var(--rule) solid var(--graphite-2);
-  font-size: clamp(1.125rem, 1rem + .5vw, 1.4375rem);
-  line-height: 1.25;
-  max-width: 46ch;
+  font-size: clamp(1.2rem, 1.05rem + .6vw, 1.55rem);
+  line-height: 1.22;
 }
-.eng .rd h3:first-child { margin-top: 0; border-top: 0; padding-top: 0; }
+.eng .sheet h3.bare { border-top: 0; padding-top: 0; margin-top: var(--sp-6); }
+.eng .sheethead + h3 { margin-top: 0; border-top: 0; padding-top: 0; }
 
-.eng .rd__aside { align-self: start; }
-@media (min-width: 62rem) {
-  .eng .rd { grid-template-columns: minmax(0, var(--measure)) minmax(0, 20rem); gap: var(--sp-8); }
-  .eng .rd__aside { position: sticky; top: calc(var(--nav-h) + 1.5rem); }
-}
-
-/* a boxed drawing note in the margin */
-.eng .note {
-  background: var(--vellum);
-  border: var(--rule) solid var(--graphite-2);
-  padding: var(--sp-4);
-  font-size: var(--text-sm);
-  line-height: 1.55;
-  color: var(--ink-2);
-}
-.eng .note b { color: var(--e-leaf-900); display: block; margin-bottom: .35rem; }
-.eng .note + .note { margin-top: var(--sp-4); }
-
-/* one quotable sentence, on stock-shadow behind a graphite rule */
 .eng .finding {
-  background: var(--paper-2);
-  border-left: var(--rule) solid var(--graphite);
+  background: var(--lvl-1-bg);
+  border-left: 3px solid var(--e-leaf-700);
   padding: var(--sp-3) var(--sp-4);
-  margin: 0 0 var(--sp-4);
+  margin-block: 0 var(--sp-4);
   color: var(--e-leaf-900);
   font-weight: 600;
+  line-height: 1.5;
 }
+.eng .sheet--tint .finding { background: #e2ece5; }
 
-/* a two-column key: question left, answer right, neither past its measure */
-.eng .key { margin: 0; }
+.eng .key { margin-block: 0; }
 .eng .key > div {
   display: grid; gap: .2rem var(--sp-5);
-  padding: var(--sp-3) 0;
+  padding: var(--sp-4) 0;
   border-bottom: var(--rule) solid var(--graphite-2);
 }
 .eng .key dt { font-weight: 600; color: var(--e-leaf-900); }
-.eng .key dd { margin: 0; color: var(--ink-2); max-width: 62ch; }
-@media (min-width: 62rem) {
-  .eng .key > div { grid-template-columns: 24ch minmax(0, 62ch); }
+.eng .key dd { margin: 0; color: var(--ink-2); }
+@media (min-width: 52rem) {
+  .eng .key > div { grid-template-columns: 26ch minmax(0, 1fr); }
 }
 
-/* ============================================================= LADDER ====== */
-/* The one drawing that says what the cloning was for: parts in, modules out,
-   circuit joined. Drawn on blueprint because it is the page's map. */
+/* the level tag, wherever the page names an assembly level */
+.eng .lvl {
+  display: inline-flex; align-items: center; gap: .4em;
+  font: var(--fld); letter-spacing: var(--lsp); text-transform: uppercase;
+  padding: .22em .5em; border: var(--rule) solid currentColor;
+  white-space: nowrap;
+}
+.eng .lvl--0 { color: var(--lvl-0); background: var(--lvl-0-bg); }
+.eng .lvl--1 { color: var(--lvl-1); background: var(--lvl-1-bg); }
+.eng .lvl--2 { color: var(--lvl-2); background: var(--lvl-2-bg); }
 
-.eng .ladder { margin: 0; }
+/* the wavelength pair, the only place these two colours appear */
+.eng .nm { font-weight: 600; white-space: nowrap; }
+.eng .nm--g { color: var(--nm-535); }
+.eng .nm--r { color: var(--nm-672); }
+
+/* ============================================================= LADDER ====== */
+
+.eng .ladder { margin-block: 0; }
 .eng .ladder__scroll { overflow-x: auto; padding-bottom: var(--sp-2); }
-.eng .ladder__svg { display: block; min-width: 680px; width: 100%; height: auto; }
+.eng .ladder__svg { display: block; min-width: 720px; width: 100%; height: auto; }
 .eng .ladder__svg text { font-family: var(--font-display); }
 .eng .lad-lvl {
   font: var(--fld); letter-spacing: var(--lsp); text-transform: uppercase;
-  fill: var(--plate-ink-muted);
 }
-.eng .lad-box { fill: var(--blue-700); stroke: var(--plate-rule); stroke-width: 1; }
-.eng .lad-box--out { fill: none; stroke: var(--e-leaf-500); stroke-width: 1.4; }
+.eng .lad-lvl--0 { fill: #8fc4dc; }
+.eng .lad-lvl--1 { fill: #7fc9a2; }
+.eng .lad-lvl--2 { fill: #c3a8dc; }
+.eng .lad-box--0 { fill: #123443; stroke: #4d8ba8; stroke-width: 1.2; }
+.eng .lad-box--1 { fill: #12402b; stroke: #4f9c6f; stroke-width: 1.2; }
+.eng .lad-box--2 { fill: #2b2039; stroke: #9b7cbb; stroke-width: 1.2; }
+.eng .lad-box--ghost { fill: none; stroke: var(--plate-rule); stroke-width: 1.2; stroke-dasharray: 4 3.4; }
 .eng .lad-name { fill: #fff; font-size: 13px; font-weight: 600; }
 .eng .lad-sub  { fill: var(--plate-ink-muted); font-size: 11px; }
 .eng .lad-arrow { stroke: var(--plate-ink-muted); stroke-width: 1.3; fill: none; }
 .eng .lad-head  { fill: var(--plate-ink-muted); }
 .eng .lad-enz {
-  fill: var(--e-leaf-500); font-size: 10.5px; font-weight: 600;
+  fill: #7fc9a2; font-size: 10.5px; font-weight: 600;
   letter-spacing: .1em; text-transform: uppercase;
 }
 .eng .lad-rule { stroke: var(--plate-rule); stroke-width: 1; }
 .eng .ladder figcaption {
-  margin-top: var(--sp-4);
-  padding-left: var(--sp-3);
-  border-left: var(--rule) solid var(--plate-rule);
-  font-size: var(--text-sm);
+  margin: var(--sp-5) auto 0;
+  max-width: var(--measure);
+  padding-left: var(--sp-4);
+  border-left: 3px solid var(--e-leaf-500);
+  font-size: var(--text-sm); line-height: 1.6;
   color: var(--plate-ink-muted);
-  max-width: 68ch;
 }
 .eng .ladder figcaption b { color: var(--plate-ink); }
+.eng .sheet--plate code { background: rgba(207,228,216,.14); color: var(--plate-ink); }
 
 /* =============================================================== DIAL ====== */
-/* Six cycles round a circle, the DBTL loop drawn inside it, the whole ring
-   turning so the cycle you are reading sits at twelve o'clock. From the team's
-   own brainstorm sheet. Above 62rem it sticks beside the record; below that it
-   collapses to a row of six numbered chips, which is the same control. */
 
 .eng .record { display: grid; gap: var(--sp-6); }
 @media (min-width: 62rem) {
-  .eng .record { grid-template-columns: 15.5rem minmax(0, 1fr); gap: var(--sp-8); }
+  .eng .record {
+    grid-template-columns: 14rem minmax(0, 1fr);
+    gap: clamp(2rem, 1rem + 3vw, 3.5rem);
+  }
   .eng .dial { position: sticky; top: calc(var(--nav-h) + 2rem); align-self: start; }
 }
 
@@ -340,19 +383,20 @@
 .eng .dial__svg { display: block; width: 100%; height: auto; overflow: visible; }
 .eng .dial__svg text { font-family: var(--font-display); }
 .eng .dial-rim { fill: none; stroke: var(--graphite-2); stroke-width: 1; }
-.eng .dial-quad {
-  fill: none; stroke: var(--graphite-2); stroke-width: 3;
-  stroke-linecap: round;
-}
+.eng .dial-quad { fill: none; stroke: var(--graphite-2); stroke-width: 3.2; stroke-linecap: round; }
 .eng .dial-quad.is-lit { stroke: var(--e-leaf-700); }
+.eng .dial-quad[data-phase="d"].is-lit { stroke: var(--lvl-0); }
+.eng .dial-quad[data-phase="t"].is-lit { stroke: var(--st-fail); }
 .eng .dial-letter {
   font: var(--fld); letter-spacing: .08em; font-size: 8.5px;
   fill: var(--graphite); text-anchor: middle;
 }
 .eng .dial-letter.is-lit { fill: var(--e-leaf-900); }
+.eng .dial-letter[data-phase="d"].is-lit { fill: var(--lvl-0); }
+.eng .dial-letter[data-phase="t"].is-lit { fill: var(--st-fail); }
 .eng .dial-node { cursor: pointer; }
 .eng .dial-node circle {
-  fill: var(--paper); stroke: var(--graphite); stroke-width: 1.2;
+  fill: var(--vellum); stroke: var(--graphite); stroke-width: 1.2;
   transition: fill .16s ease, stroke .16s ease;
 }
 .eng .dial-node text {
@@ -364,23 +408,12 @@
 .eng .dial-node:hover circle { stroke: var(--e-leaf-700); }
 .eng .dial-node.is-current circle { fill: var(--e-leaf-900); stroke: var(--e-leaf-900); }
 .eng .dial-node.is-current text  { fill: #fff; }
-.eng .dial-node.is-fail circle   { stroke: var(--st-fail); stroke-dasharray: 3.4 2.6; }
-.eng .dial-hub-no {
-  font-size: 27px; font-weight: 700; fill: var(--e-leaf-900);
-  text-anchor: middle; letter-spacing: -.02em;
-  font-variant-numeric: tabular-nums;
-}
-.eng .dial-hub-lbl {
-  font: var(--fld); letter-spacing: .12em; font-size: 7.5px;
-  fill: var(--graphite); text-anchor: middle; text-transform: uppercase;
-}
 .eng .dial__cap {
   margin: var(--sp-4) 0 0;
   font-size: var(--text-sm); line-height: 1.5; color: var(--ink-2);
 }
-.eng .dial__cap b { display: block; color: var(--e-leaf-900); }
+.eng .dial__cap b { display: block; color: var(--e-leaf-900); margin-bottom: .2rem; }
 
-/* the small-screen form of the same control */
 .eng .dial__chips {
   display: flex; flex-wrap: wrap; gap: .4rem;
   margin: 0 0 var(--sp-5); padding: 0; list-style: none;
@@ -404,11 +437,10 @@
 /* ============================================================= CYCLES ====== */
 
 .eng .cycles { border-top: var(--rule-heavy) solid var(--ink); }
-.eng .cyc { border-bottom: var(--rule) solid var(--graphite-2); }
+.eng .cyc { --cyc-accent: var(--e-leaf-700); border-bottom: var(--rule) solid var(--graphite-2); }
+.eng .cyc--fail  { --cyc-accent: var(--st-fail); }
+.eng .cyc--draft { --cyc-accent: var(--graphite); }
 .eng .cyc[open] { background: var(--vellum); }
-/* Narrow: number and stamp share the top line and the title gets the full
-   width. Wide: the number moves into its own column and the stamp to the far
-   right, which is the revision-block layout. */
 .eng .cyc__head {
   display: grid;
   grid-template-columns: auto minmax(0, 1fr);
@@ -421,7 +453,7 @@
 .eng .cyc__title, .eng .cyc__who, .eng .cyc__out { grid-column: 1 / -1; }
 .eng .cyc__meta { grid-column: 2; justify-self: end; }
 @media (min-width: 48rem) {
-  .eng .cyc__head { grid-template-columns: 3.6rem minmax(0, 1fr) auto; }
+  .eng .cyc__head { grid-template-columns: 3.4rem minmax(0, 1fr) auto; }
   .eng .cyc__title, .eng .cyc__who, .eng .cyc__out { grid-column: 2; }
   .eng .cyc__meta { grid-column: 3; justify-self: auto; }
 }
@@ -430,25 +462,24 @@
 .eng .cyc__no {
   align-self: center;
   font: var(--fld); letter-spacing: .1em; font-size: .75rem;
-  color: var(--e-leaf-900);
-  border: var(--rule) solid var(--graphite-2);
-  padding: .3em .1em; text-align: center;
+  color: #fff; background: var(--cyc-accent);
+  border: var(--rule) solid var(--cyc-accent);
+  padding: .45em .1em; text-align: center;
   font-variant-numeric: tabular-nums;
 }
 .eng .cyc__title {
   margin: 0;
-  font-size: clamp(1.0625rem, 1rem + .35vw, 1.3125rem);
-  line-height: 1.3; letter-spacing: -.01em;
-  max-width: 44ch;
+  font-size: clamp(1.125rem, 1rem + .55vw, 1.45rem);
+  line-height: 1.28; letter-spacing: -.012em;
 }
 .eng .cyc__who {
-  margin: .3rem 0 0;
+  margin: .35rem 0 0;
   font: var(--fld); letter-spacing: var(--lsp); text-transform: uppercase;
   color: var(--graphite);
 }
 .eng .cyc__out {
-  margin: .6rem 0 0;
-  display: grid; gap: .3rem;
+  margin: .7rem 0 0;
+  display: grid; gap: .35rem;
   font-size: var(--text-sm); color: var(--ink-2);
 }
 .eng .cyc__out b {
@@ -458,7 +489,6 @@
 .eng .cyc__out i { font-style: normal; }
 .eng .cyc__meta { display: flex; align-items: center; gap: var(--sp-3); }
 
-/* the chevron is drawn, not glyphed */
 .eng .cyc__chev {
   width: 1.5rem; height: 1.5rem;
   border-right: var(--rule-heavy) solid var(--graphite);
@@ -472,13 +502,9 @@
 }
 
 .eng .cyc__body { padding: 0 var(--sp-3) var(--sp-6) 0; }
-@media (min-width: 62rem) { .eng .cyc__body { padding-left: calc(3.6rem + var(--sp-4)); } }
-.eng .cyc__body > * { max-width: var(--measure); }
-.eng .cyc__body > .figs,
-.eng .cyc__body > .fig,
-.eng .cyc__body > .tablewrap { max-width: none; }
+@media (min-width: 48rem) { .eng .cyc__body { padding-left: calc(3.4rem + var(--sp-4)); } }
 
-.eng .step { display: grid; gap: .3rem var(--sp-5); margin-bottom: var(--sp-5); }
+.eng .step { display: grid; gap: .3rem var(--sp-5); margin-bottom: var(--sp-6); }
 .eng .step h4 {
   margin: 0;
   font: var(--fld); letter-spacing: .16em; text-transform: uppercase;
@@ -491,14 +517,17 @@
   letter-spacing: 0; text-transform: none; font-weight: 400;
   color: var(--graphite);
 }
-.eng .step p, .eng .step li { margin-top: 0; color: var(--ink-2); }
+.eng .step p, .eng .step li { margin-top: 0; }
 .eng .step > :not(h4) { grid-column: 1; }
 @media (min-width: 48rem) {
-  .eng .step { grid-template-columns: 7rem minmax(0, 1fr); }
+  .eng .step { grid-template-columns: 7.5rem minmax(0, 1fr); }
   .eng .step h4 { grid-column: 1; border-bottom: 0; }
   .eng .step > :not(h4) { grid-column: 2; }
 }
-.eng .step--test h4  { color: var(--st-fail); }
+.eng .step--design h4   { color: var(--lvl-0); }
+.eng .step--build h4    { color: var(--lvl-1); }
+.eng .step--test h4     { color: var(--st-fail); }
+.eng .step--learn h4    { color: var(--e-leaf-900); }
 .eng .step--redesign h4 { color: var(--st-open); }
 
 /* ============================================================== STAMPS ===== */
@@ -507,63 +536,58 @@
   display: inline-flex; align-items: center; gap: .45em;
   font: var(--fld); letter-spacing: var(--lsp); text-transform: uppercase;
   border: var(--rule) solid currentColor;
-  padding: .25em .55em;
+  padding: .3em .6em;
   white-space: nowrap;
 }
-.eng .stamp::before {
-  content: ""; width: .5em; height: .5em; background: currentColor;
+.eng .stamp::before { content: ""; width: .5em; height: .5em; background: currentColor; }
+.eng .stamp--closed { color: var(--e-leaf-700); background: var(--lvl-1-bg); }
+.eng .stamp--fail   { color: var(--st-fail);    background: var(--st-fail-bg); }
+.eng .stamp--open   { color: var(--st-open);    background: var(--st-open-bg); }
+.eng .stamp--draft  { color: var(--graphite);   background: var(--paper-2); }
+
+.eng .statekey {
+  display: flex; flex-wrap: wrap; align-items: center; gap: .7rem 1.5rem;
+  margin-block: 0 var(--sp-5); padding: 0; list-style: none;
+  font-size: var(--text-sm); color: var(--ink-2);
 }
-.eng .stamp--closed { color: var(--e-leaf-700); }
-.eng .stamp--fail   { color: var(--st-fail); }
-.eng .stamp--open   { color: var(--st-open); }
-.eng .stamp--draft  { color: var(--graphite); }
+.eng .statekey li { display: flex; align-items: center; gap: .55rem; }
 
 /* ============================================================ MODULES ====== */
 
-.eng .mods { display: grid; gap: var(--sp-7); }
-.eng .mod {
-  border-top: var(--rule-heavy) solid var(--ink);
-  padding-top: var(--sp-4);
-}
-.eng .mod__head {
-  display: flex; flex-wrap: wrap; align-items: baseline; gap: .5rem var(--sp-4);
-  margin-bottom: var(--sp-4);
-}
+.eng .mods { display: grid; gap: var(--sp-8); }
+.eng .mod { border-top: 3px solid var(--lvl-1); padding-top: var(--sp-4); }
 .eng .mod__no {
+  display: block; margin-bottom: .45rem;
   font: var(--fld); letter-spacing: .12em; text-transform: uppercase;
-  color: var(--graphite);
+  color: var(--lvl-1);
 }
-.eng .mod__head h3 {
-  margin: 0; border: 0; padding: 0;
-  font-size: clamp(1.125rem, 1rem + .5vw, 1.4375rem);
-  line-height: 1.25;
+.eng .mod h3 {
+  margin: 0 0 var(--sp-5); border: 0; padding: 0;
+  font-size: clamp(1.2rem, 1.05rem + .65vw, 1.6rem);
+  line-height: 1.22;
 }
-.eng .mod__grid { display: grid; gap: var(--sp-5); }
-@media (min-width: 62rem) {
-  .eng .mod__grid { grid-template-columns: minmax(0, var(--measure)) minmax(0, 20rem); gap: var(--sp-6); }
+.eng .mod h4 {
+  margin: var(--sp-6) 0 var(--sp-3);
+  font-size: 1.0625rem; line-height: 1.3;
+  color: var(--e-leaf-900);
 }
-.eng .mod__grid > .unit { grid-column: 1 / -1; }
-.eng .mod__body > p:first-child { margin-top: 0; }
 
-/* a construct map: the generated SVG on a stock mat inside a hairline */
-.eng .unit { margin: 0 0 var(--sp-5); }
+/* a construct map: the generated SVG on a light mat inside a hairline */
+.eng .unit { margin-block: 0 var(--sp-5); }
 .eng .unit img {
-  width: 100%; height: auto;
-  background: var(--paper);
+  width: 100%; max-width: 46rem; height: auto;
+  background: var(--vellum);
   border: var(--rule) solid var(--graphite-2);
 }
 .eng .unit figcaption {
   margin-top: var(--sp-3);
-  padding-left: var(--sp-3);
-  border-left: var(--rule) solid var(--graphite);
-  font-size: var(--text-sm); color: var(--ink-2); max-width: 68ch;
+  padding-left: var(--sp-4);
+  border-left: 3px solid var(--e-leaf-500);
+  font-size: var(--text-sm); line-height: 1.6; color: var(--ink-2);
 }
 .eng .unit figcaption b { color: var(--e-leaf-900); }
 
 /* =========================================================== SCHEDULE ====== */
-/* What is still unwritten, and who owns it. This sheet comes off the page
-   before the wiki freeze; while the draft is live it is the most useful thing
-   on it. */
 
 .eng .sched { border-top: var(--rule-heavy) solid var(--ink); }
 .eng .sched__row {
@@ -572,69 +596,127 @@
   border-bottom: var(--rule) solid var(--graphite-2);
 }
 @media (min-width: 48rem) {
-  .eng .sched__row { grid-template-columns: 7rem 10rem minmax(0, 1fr); align-items: start; }
+  .eng .sched__row { grid-template-columns: 8rem 10rem minmax(0, 1fr); align-items: start; }
 }
 .eng .sched__who {
   font: var(--fld); letter-spacing: var(--lsp); text-transform: uppercase;
-  color: var(--e-leaf-900);
+  color: var(--st-open);
 }
 .eng .sched__where {
   font: var(--fld); letter-spacing: .1em; text-transform: uppercase;
   color: var(--graphite);
 }
-.eng .sched__what { margin: 0; color: var(--ink-2); font-size: var(--text-sm); }
+.eng .sched__what { margin: 0; font-size: var(--text-sm); }
 
-/* the same marker where the gap actually falls, inline in the record */
 .eng .todo {
-  border: var(--rule) solid var(--graphite-2);
-  background: var(--paper-2);
+  border: var(--rule) solid #ddcfae;
+  border-left: 3px solid var(--st-fail);
+  background: var(--st-fail-bg);
   padding: var(--sp-3) var(--sp-4);
-  margin: 0 0 var(--sp-4);
+  margin-block: 0 var(--sp-5);
   font-size: var(--text-sm);
-  color: var(--ink-2);
+  color: #55462a;
 }
 .eng .todo b {
-  display: block; margin-bottom: .25rem;
+  display: block; margin-bottom: .3rem;
   font: var(--fld); letter-spacing: var(--lsp); text-transform: uppercase;
-  color: var(--graphite);
+  color: var(--st-fail);
 }
 
 /* ============================================================ FIGURES ====== */
 
-.eng .fig { margin: 0 0 var(--sp-5); }
-.eng .fig img {
-  width: 100%; height: auto;
-  background: var(--paper-2);
+.eng .fig { margin-block: 0 var(--sp-6); }
+.eng .fig__frame {
+  --mat: var(--paper-2);
+  aspect-ratio: 16 / 10;
+  background: var(--mat);
   border: var(--rule) solid var(--graphite-2);
+  display: grid; place-items: center;
+  overflow: hidden;
+}
+.eng .fig__frame img {
+  max-width: 100%; max-height: 100%;
+  width: auto; height: auto;
+  object-fit: contain;
   cursor: zoom-in;
 }
+.eng .fig--gel   .fig__frame { --mat: #080b09; border-color: #080b09; }
+/* A plasmid map is about three times wider than it is tall, so in a uniform
+   16:10 frame it letterboxes. The mat is tinted a step off white so the map
+   reads as a white card on a mat rather than as an image that failed to load. */
+.eng .fig--map   .fig__frame { --mat: #eeeeea; }
+.eng .fig--map   .fig__frame img { box-shadow: 0 0 0 1px rgba(87,102,93,.18); }
+.eng .fig--photo .fig__frame { --mat: var(--blue-900); border-color: var(--blue-900); }
+.eng .fig--photo .fig__frame img { width: 100%; height: 100%; object-fit: cover; }
+.eng .fig--tall  .fig__frame { aspect-ratio: 4 / 5; }
+.eng .fig--art   .fig__frame { --mat: var(--vellum); aspect-ratio: 1 / 1; }
+.eng .fig--art   .fig__frame img { max-height: 86%; max-width: 86%; }
+
 .eng .fig figcaption {
   margin-top: var(--sp-3);
-  padding-left: var(--sp-3);
-  border-left: var(--rule) solid var(--graphite);
-  font-size: var(--text-sm); line-height: 1.55; color: var(--ink-2);
+  padding-left: var(--sp-4);
+  border-left: 3px solid var(--e-leaf-500);
+  font-size: var(--text-sm); line-height: 1.6; color: var(--ink-2);
 }
 .eng .fig figcaption b { color: var(--e-leaf-900); }
-.eng .prov { display: block; margin-top: .3rem; font-size: var(--text-xs); color: var(--graphite); }
-.eng .figs { display: grid; gap: var(--sp-5); margin-bottom: var(--sp-5); }
-@media (min-width: 48rem) {
+.eng .fig--gel   figcaption { border-left-color: var(--lvl-0); }
+.eng .fig--photo figcaption { border-left-color: var(--blue-700); }
+.eng .prov { display: block; margin-top: .35rem; font-size: var(--text-xs); color: var(--graphite); }
+
+.eng .figs { display: grid; gap: var(--sp-5); margin-bottom: var(--sp-6); }
+@media (min-width: 46rem) {
   .eng .figs--2 { grid-template-columns: repeat(2, minmax(0, 1fr)); }
-}
-@media (min-width: 62rem) {
   .eng .figs--3 { grid-template-columns: repeat(3, minmax(0, 1fr)); }
 }
 
+/* a photograph run as a band across the sheet */
+.eng .band { margin-block: 0 var(--sp-6); }
+.eng .band__frame {
+  aspect-ratio: 21 / 9;
+  background: var(--blue-900);
+  overflow: hidden;
+}
+.eng .band__frame img { width: 100%; height: 100%; object-fit: cover; cursor: zoom-in; }
+.eng .band figcaption {
+  margin: var(--sp-3) auto 0;
+  max-width: var(--measure);
+  font-size: var(--text-sm); line-height: 1.6; color: var(--ink-2);
+}
+.eng .band figcaption b { color: var(--e-leaf-900); }
+.eng .sheet--plate .band figcaption { color: var(--plate-ink-muted); }
+.eng .sheet--plate .band figcaption b { color: var(--plate-ink); }
+
+/* the mascot, dropped in at reading size with text flowing round it */
+.eng .mascot {
+  float: right;
+  width: clamp(7rem, 17vw, 11.5rem);
+  margin: -.5rem 0 var(--sp-4) var(--sp-5);
+  shape-outside: margin-box;
+}
+.eng .mascot img { width: 100%; height: auto; }
+@media (max-width: 34rem) {
+  .eng .mascot { float: none; margin: 0 auto var(--sp-4); display: block; width: 8rem; }
+}
+
+/* the lightbox: 80% of the window, caption on the same 80% */
 .eng .lightbox {
   position: fixed; inset: 0; z-index: 200;
-  background: rgba(12,35,26,.95);
-  display: none; align-items: center; justify-content: center;
-  padding: var(--sp-6);
+  background: rgba(8,20,15,.965);
+  display: none; flex-direction: column;
+  align-items: center; justify-content: center;
+  padding: 3vh 3vw;
 }
 .eng .lightbox.is-open { display: flex; }
-.eng .lightbox img { max-width: 94vw; max-height: 82vh; width: auto; margin-inline: auto; }
+.eng .lightbox figure { margin: 0; width: 80vw; display: grid; justify-items: center; }
+.eng .lightbox img {
+  max-width: 80vw; max-height: 78vh;
+  width: auto; height: auto; object-fit: contain;
+}
 .eng .lightbox figcaption {
-  color: var(--plate-ink); font-size: var(--text-sm);
-  max-width: 68ch; margin: var(--sp-4) auto 0; text-align: left;
+  width: 80vw; max-width: 80vw;
+  margin: var(--sp-4) 0 0;
+  color: var(--plate-ink); font-size: var(--text-sm); line-height: 1.6;
+  text-align: left;
 }
 .eng .lightbox__close {
   position: absolute; top: 1rem; right: 1rem;
@@ -645,7 +727,7 @@
 
 /* ============================================================= TABLES ====== */
 
-.eng .tablewrap { overflow-x: auto; margin: 0 0 var(--sp-5); }
+.eng .tablewrap { overflow-x: auto; margin-block: 0 var(--sp-6); }
 .eng table.data {
   border-collapse: collapse; width: 100%; min-width: 30rem;
   font-size: var(--text-sm); font-variant-numeric: tabular-nums;
@@ -654,65 +736,63 @@
   text-align: left; vertical-align: bottom;
   font: var(--fld); letter-spacing: var(--lsp); text-transform: uppercase;
   color: var(--graphite);
-  padding: 0 var(--sp-4) .45rem 0;
+  padding: 0 var(--sp-4) .5rem 0;
   border-bottom: var(--rule-heavy) solid var(--ink);
 }
 .eng table.data td {
-  vertical-align: top; padding: .6rem var(--sp-4) .6rem 0;
+  vertical-align: top; padding: .7rem var(--sp-4) .7rem 0;
   border-bottom: var(--rule) solid var(--graphite-2);
   color: var(--ink-2);
 }
 .eng table.data tbody tr:hover { background: var(--vellum); }
-.eng table.data td.chg { color: var(--e-leaf-900); font-weight: 600; }
-.eng table.data td.no  { color: var(--st-open); }
+.eng .sheet--tint table.data tbody tr:hover { background: #e5ece7; }
+.eng .sheet--warm table.data tbody tr:hover { background: #f2ecdb; }
+.eng table.data td.chg { color: var(--e-leaf-700); font-weight: 600; }
+.eng table.data td.no  { color: var(--st-open); font-weight: 600; }
 .eng table.data code { background: none; padding: 0; font-size: .8125rem; }
 .eng table.seq code { white-space: nowrap; letter-spacing: .02em; }
+.eng table.seq td:last-child { font-size: .78rem; }
 
 /* =========================================================== CALLOUTS ====== */
 
 .eng .callout {
   border: var(--rule) solid var(--graphite-2);
+  border-left: 3px solid var(--graphite);
   background: var(--vellum);
   padding: var(--sp-4);
-  margin: 0 0 var(--sp-5);
+  margin-block: 0 var(--sp-5);
 }
 .eng .callout__label {
-  display: block; margin-bottom: .35rem;
+  display: block; margin-bottom: .4rem;
   font: var(--fld); letter-spacing: var(--lsp); text-transform: uppercase;
   color: var(--graphite);
 }
-.eng .callout p { margin: 0 0 .6rem; font-size: var(--text-sm); color: var(--ink-2); }
+.eng .callout p { margin: 0 0 .6rem; font-size: var(--text-sm); }
 .eng .callout p:last-child { margin-bottom: 0; }
-.eng .callout--unproven { border-color: var(--st-open); background: #fcf1ed; }
+.eng .callout--unproven { border-color: #e2c6ba; border-left-color: var(--st-open); background: var(--st-open-bg); }
 .eng .callout--unproven .callout__label { color: var(--st-open); }
-.eng .callout--medal { border-color: var(--st-fail); background: #fdf8ec; }
-.eng .callout--medal .callout__label { color: var(--st-fail); }
-.eng .callout--borrowed { border-color: var(--slate-700); background: #eef2f6; }
-.eng .callout--borrowed .callout__label { color: var(--slate-700); }
+.eng .callout--note { border-color: #bcd4e0; border-left-color: var(--lvl-0); background: var(--lvl-0-bg); }
+.eng .callout--note .callout__label { color: var(--lvl-0); }
 
 .eng blockquote {
-  margin: 0 0 var(--sp-5);
+  margin-block: 0 var(--sp-5);
   padding-left: var(--sp-4);
-  border-left: var(--rule) solid var(--graphite);
+  border-left: 3px solid var(--e-leaf-500);
   color: var(--ink-2);
 }
 
 /* ============================================================== INDEX ====== */
 
 .eng .edge { display: none; }
-@media (min-width: 78rem) {
+@media (min-width: 86rem) {
   .eng .edge {
     display: block; position: fixed; z-index: 40;
-    left: max(1rem, calc((100vw - var(--max)) / 2 - 2.4rem));
-    top: 50%; transform: translateY(-50%);
+    left: 1.4rem; top: 50%; transform: translateY(-50%);
     transition: opacity .2s ease;
   }
   .eng .edge.is-hidden { opacity: 0; pointer-events: none; }
   .eng .edge ol { list-style: none; margin: 0; padding: 0; display: grid; gap: .55rem; }
-  .eng .edge a {
-    display: flex; align-items: center; gap: .55rem;
-    text-decoration: none; color: var(--graphite);
-  }
+  .eng .edge a { display: flex; align-items: center; gap: .55rem; text-decoration: none; color: var(--graphite); }
   .eng .edge .tick {
     display: block; width: 1.1rem; height: 2px;
     background: var(--graphite-2);
@@ -726,8 +806,6 @@
     font: var(--fld); letter-spacing: .1em; text-transform: uppercase;
     opacity: 0; transition: opacity .16s ease; white-space: nowrap;
   }
-  /* The label is a hover affordance and never a permanent state: a rail of
-     labels sitting over the sheet is worse than a tick you can point at. */
   .eng .edge a:hover .lbl, .eng .edge a:focus .lbl { opacity: 1; }
   .eng .edge.on-plate a { color: var(--plate-ink-muted); }
   .eng .edge.on-plate .tick { background: var(--plate-rule); }
@@ -735,18 +813,12 @@
   .eng .edge.on-plate a[aria-current="true"] .tick { background: var(--e-leaf-500); }
 }
 
-/* the scroll gauge down the right edge, from the brainstorm sheet */
 .eng .gauge {
   position: fixed; z-index: 40;
   right: 0; top: var(--nav-h); bottom: 0; width: 3px;
-  background: var(--graphite-2);
-  opacity: .35;
+  background: rgba(87,102,93,.18);
 }
-.eng .gauge i {
-  display: block; width: 100%; height: 0;
-  background: var(--e-leaf-700);
-  transform-origin: top;
-}
+.eng .gauge i { display: block; width: 100%; height: 0; background: var(--e-leaf-700); }
 @media (max-width: 48rem) { .eng .gauge { display: none; } }
 
 /* ============================================================= CLOSING ===== */
@@ -758,7 +830,6 @@
   padding: var(--sp-3) 0;
   border-bottom: var(--rule) solid var(--graphite-2);
   font-size: var(--text-sm); color: var(--ink-2);
-  max-width: 76ch;
 }
 .eng .refs li::before {
   content: "[" counter(ref) "]";
@@ -773,7 +844,7 @@
   .eng .dial__rotor { transition: none !important; }
 }
 @media (prefers-reduced-motion: no-preference) {
-  .eng .dial__rotor { transition: transform .5s cubic-bezier(.33, 1, .68, 1); }
+  .eng .dial__rotor,
   .eng .dial__counter { transition: transform .5s cubic-bezier(.33, 1, .68, 1); }
 }
 
@@ -781,31 +852,19 @@
 
 @media print {
   .eng .edge, .eng .gauge, .eng .dial, .eng .lightbox, .sitenav-spacer { display: none !important; }
-  .eng .sheet--plate, .eng .cover__plate, .eng .cover__strip {
-    background: #fff !important; color: #000 !important;
-  }
+  .eng .sheet--plate, .eng .sheet--tint, .eng .sheet--warm,
+  .eng .cover__plate, .eng .cover__strip { background: #fff !important; color: #000 !important; }
   .eng .cover h1, .eng .sheet--plate h2, .eng .sheet--plate h3 { color: #000 !important; }
   .eng .cyc { break-inside: avoid; }
   .eng .cyc__body { display: block !important; }
-  .eng .fig { break-inside: avoid; }
+  .eng .fig, .eng .band { break-inside: avoid; }
   .eng .record { display: block; }
 }
 
-/* Inline code on a blueprint plate: the stock-shadow chip is invisible there,
-   so it takes the plate's own hairline instead. */
-.eng .sheet--plate code,
-.eng .ladder figcaption code {
-  background: rgba(207,228,216,.1);
-  color: var(--plate-ink);
+/* Inside a cycle the record already spends width on the dial, so three gels
+   across would each land at about 300px. Two across is the readable size. */
+@media (min-width: 46rem) {
+  .eng .cyc__body .figs--3 { grid-template-columns: repeat(2, minmax(0, 1fr)); }
 }
-
-/* A construct map is drawn at about 550 units wide and is meant to be read at
-   roughly that size. Letting it stretch the full sheet doubles every label. */
-.eng .unit img { max-width: 44rem; }
-
-/* A primer sequence in the margin column has nowhere to run, so it wraps on the
-   spaces the tail architecture is already grouped by. */
-.eng .note table.data { min-width: 0; }
-.eng .note table.seq code { white-space: normal; overflow-wrap: anywhere; }
-.eng .note table.data td { padding-right: var(--sp-3); font-size: var(--text-xs); }
-.eng .note table.data td:first-child { white-space: nowrap; color: var(--e-leaf-900); font-weight: 600; }
+/* And the step column is wide enough at that point to need its own measure. */
+.eng .step > :not(h4) { max-width: 76ch; }

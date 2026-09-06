@@ -87,13 +87,23 @@
     }
 
     nodes.forEach(function (n) {
-      n.addEventListener("click", function () { go(n.dataset.cyc); });
+      n.addEventListener("click", function () { turnTo(n.dataset.cyc); go(n.dataset.cyc); });
       n.addEventListener("keydown", function (e) {
-        if (e.key === "Enter" || e.key === " ") { e.preventDefault(); go(n.dataset.cyc); }
+        if (e.key === "Enter" || e.key === " ") { e.preventDefault(); turnTo(n.dataset.cyc); go(n.dataset.cyc); }
       });
     });
 
-    if (!("IntersectionObserver" in window)) { turnTo(order[0]); return; }
+    /* A deep link to #d5 should arrive with the ring already on cycle 5, rather
+       than waiting for the first scroll to correct it. */
+    function fromHash() {
+      var id = location.hash.replace("#", "");
+      if (!id) return;
+      var el = document.getElementById(id);
+      var owner = el && (el.classList.contains("cyc") ? el : el.closest(".cyc"));
+      if (owner) turnTo(owner.id);
+    }
+
+    if (!("IntersectionObserver" in window)) { turnTo(order[0]); fromHash(); return; }
 
     /* Which cycle is being read: the topmost one whose box crosses the upper
        third of the window. A shut cycle is one row tall, so this also works
@@ -123,6 +133,8 @@
     }
 
     turnTo(order[0]);
+    fromHash();
+    window.addEventListener("hashchange", fromHash);
   }
 
   /* ---- 2. the record ---------------------------------------------------- */
