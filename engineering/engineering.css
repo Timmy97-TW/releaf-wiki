@@ -169,6 +169,18 @@
   border-bottom: var(--rule-heavy) solid var(--ink);
   margin-bottom: var(--sp-6);
 }
+/* A title is read in one sweep, not down a measure. So a sheet head breaks out
+   past the prose column to the same right edge a table or a figure takes, and
+   its rule draws the full width of the sheet rather than stopping short of it.
+   max() so the head never comes out narrower than the prose it sits over: below
+   the breakout width the first term wins and nothing moves. */
+@media (min-width: 62rem) {
+  .eng .sheethead {
+    width: max(100%, calc(
+      min(var(--wide), 100vw - var(--rail) - 2 * var(--gutter))
+      - var(--rail) - 2 * var(--gutter)));
+  }
+}
 .eng .sheet--plate .sheethead { border-bottom-color: var(--plate-rule); }
 .eng .sheethead h2 {
   margin: 0;
@@ -345,10 +357,29 @@
 .eng .record { display: grid; gap: var(--sp-6); }
 @media (min-width: 62rem) {
   .eng .record {
-    grid-template-columns: 14rem minmax(0, 1fr);
+    grid-template-columns: 13rem minmax(0, 1fr);
     gap: clamp(2rem, 1rem + 3vw, 3.5rem);
   }
   .eng .dial { position: sticky; top: calc(var(--nav-h) + 2rem); align-self: start; }
+}
+
+/* This sheet spends a fixed column on the dial before a word of the record is
+   read, and under the standard breakout cap that left the cycles themselves
+   reading down a 650px lane with 280px of empty sheet beside them: content
+   squeezed into the middle with margins on both sides. So Sheet 05 takes the
+   window the way the assembly plate does. Everything it gains goes to the
+   cycles column; the prose above the dial keeps its measure, because a
+   paragraph set 1,100px wide is not an improvement on one set at 84ch. */
+@media (min-width: 62rem) {
+  .eng #record .sheet__inner {
+    max-width: none;
+    padding-right: calc(2 * var(--gutter));
+  }
+  .eng #record .wide,
+  .eng #record .full { width: auto; max-width: none; }
+  .eng #record .sheethead { width: auto; }
+  .eng #record .sheet__inner > p,
+  .eng #record .statekey { max-width: var(--measure); }
 }
 
 .eng .dial__ring { display: none; }
@@ -827,18 +858,27 @@
 /* ============================================================= CLOSING ===== */
 
 .eng .refs { counter-reset: ref; list-style: none; padding: 0; margin: 0; }
+/* A hanging indent, not a two-column grid. A reference is one running sentence
+   with a journal name and a DOI inside it, and a grid container turns every
+   <i> and <a> in that sentence into a grid item of its own: the title breaks
+   away from the authors and the DOI comes down one character per line. The
+   number sits in the indent instead, which is what a numbered list wants
+   anyway. */
 .eng .refs li {
   counter-increment: ref;
-  display: grid; grid-template-columns: 2.5rem minmax(0, 1fr); gap: var(--sp-3);
-  padding: var(--sp-3) 0;
+  padding: var(--sp-3) 0 var(--sp-3) 3rem;
+  text-indent: -3rem;
   border-bottom: var(--rule) solid var(--graphite-2);
-  font-size: var(--text-sm); color: var(--ink-2);
+  font-size: var(--text-sm); line-height: 1.65; color: var(--ink-2);
 }
 .eng .refs li::before {
   content: "[" counter(ref) "]";
+  display: inline-block; width: 3rem; text-indent: 0;
   font: var(--fld); letter-spacing: .06em; color: var(--e-leaf-700);
   font-variant-numeric: tabular-nums;
 }
+/* A DOI is one long unbreakable token; let it wrap rather than push the column. */
+.eng .refs a { overflow-wrap: anywhere; }
 
 /* ============================================================== MOTION ===== */
 
