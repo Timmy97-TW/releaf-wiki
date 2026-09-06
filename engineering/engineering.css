@@ -87,6 +87,7 @@
   --measure: 84ch;         /* the reading column */
   --wide:    1180px;       /* what a table or a figure may break out to */
   --gutter:  clamp(1.15rem, .5rem + 2.4vw, 2.5rem);
+  --rail:    0px;          /* the lane the contents rail sits in; see INDEX */
 
   --fld: 600 .6875rem/1.2 var(--font-display);
   --lsp: .13em;
@@ -140,26 +141,22 @@
 .eng .sheet--plate a { color: var(--e-leaf-200); }
 .eng .sheet--plate p, .eng .sheet--plate li { color: var(--plate-ink); }
 
-/* The reading column sits in the middle of the sheet. Anything that wants more
-   room says so and breaks out, still centred, so the page is never lopsided. */
+/* Everything is left-aligned against one margin, and the contents rail lives in
+   the lane that margin reserves. A breakout keeps the same left edge and grows
+   to the right, so the page has one spine rather than a floating centre. */
 .eng .sheet__inner {
-  max-width: var(--measure);
-  margin-inline: auto;
-  padding-inline: var(--gutter);
+  max-width: calc(var(--rail) + var(--gutter) + var(--measure));
+  margin-inline: 0 auto;
+  padding-inline: calc(var(--rail) + var(--gutter)) var(--gutter);
 }
-/* A breakout stays centred on the same axis as the reading column, so the
-   sheet never looks lopsided: half the parent's content box, less half the
-   breakout's own width. */
 .eng .wide {
-  --w: min(var(--wide), calc(100vw - 2 * var(--gutter)));
-  width: var(--w);
-  margin-inline: calc(50% - var(--w) / 2);
+  width: min(var(--wide), calc(100vw - var(--rail) - 2 * var(--gutter)));
+  margin-inline: 0;
   max-width: none;
 }
 .eng .full {
-  --w: min(1560px, calc(100vw - 2 * var(--gutter)));
-  width: var(--w);
-  margin-inline: calc(50% - var(--w) / 2);
+  width: min(1560px, calc(100vw - var(--rail) - 2 * var(--gutter)));
+  margin-inline: 0;
   max-width: none;
 }
 
@@ -211,8 +208,9 @@
 .eng .cover__body {
   position: relative;
   max-width: 1560px;
-  margin-inline: auto;
-  padding: clamp(4rem, 2rem + 8vw, 9rem) var(--gutter) clamp(1.75rem, 1rem + 2vw, 2.75rem);
+  margin-inline: 0 auto;
+  padding: clamp(4rem, 2rem + 8vw, 9rem) var(--gutter)
+           clamp(2.5rem, 1.5rem + 3vw, 4.5rem) calc(var(--rail) + var(--gutter));
   width: 100%;
 }
 /* The plate gradient alone cannot beat a bright bench, so the text block carries
@@ -226,53 +224,32 @@
 }
 .eng .cover__body > * { position: relative; }
 .eng .cover h1 {
-  margin: 0 0 var(--sp-5);
+  margin: 0 0 .35em;
   color: #fff;
-  text-shadow: 0 2px 10px rgba(6,18,13,.35);
-  font-size: clamp(2.1rem, 1.15rem + 3.8vw, 4.6rem);
-  line-height: .98;
-  letter-spacing: -.035em;
-  max-width: 22ch;
+  text-shadow: 0 2px 14px rgba(6,18,13,.4);
+  font-size: clamp(3rem, 1rem + 9vw, 8.5rem);
+  line-height: .92;
+  letter-spacing: -.045em;
 }
-.eng .cover__lede {
-  margin: 0 0 var(--sp-6);
-  max-width: 74ch;
-  text-shadow: 0 1px 2px rgba(6,18,13,.45);
-  font-size: clamp(1.0625rem, .98rem + .4vw, 1.28rem);
-  line-height: 1.55;
-  color: #e9f1ec;
+.eng .cover__sub {
+  margin: 0;
+  text-shadow: 0 1px 3px rgba(6,18,13,.5);
+  max-width: 34ch;
+  font-size: clamp(1.15rem, .95rem + .95vw, 1.9rem);
+  line-height: 1.28;
+  letter-spacing: -.012em;
+  color: #eaf2ed;
+  padding-top: var(--sp-4);
+  border-top: 2px solid rgba(207,228,216,.4);
 }
-.eng .cover__tally {
-  list-style: none; margin: 0; padding: 0;
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(9rem, 1fr));
-  border: var(--rule) solid var(--plate-rule);
-}
-.eng .cover__tally li {
-  padding: .75rem clamp(.85rem, .5rem + 1vw, 1.5rem);
-  border-right: var(--rule) solid var(--plate-rule);
-}
-.eng .cover__tally li:last-child { border-right: 0; }
-.eng .cover__tally b {
-  display: block;
-  font-size: clamp(1.8rem, 1.4rem + 1.5vw, 2.6rem);
-  line-height: 1; letter-spacing: -.02em;
-  font-variant-numeric: tabular-nums;
-}
-.eng .cover__tally span {
-  display: block; margin-top: .35rem;
-  font: var(--fld); letter-spacing: .1em; text-transform: uppercase;
-  color: var(--plate-ink-muted);
-}
-.eng .cover__tally .is-open b, .eng .cover__tally .is-open span { color: #e8a888; }
-
 .eng .cover__strip {
   background: var(--blue-800);
   border-top: var(--rule) solid var(--plate-rule);
   padding: var(--sp-3) 0;
 }
 .eng .cover__strip dl {
-  max-width: 1560px; margin: 0 auto; padding-inline: var(--gutter);
+  max-width: 1560px; margin: 0 auto 0 0;
+  padding-inline: calc(var(--rail) + var(--gutter)) var(--gutter);
   display: flex; flex-wrap: wrap; gap: .35rem 1.75rem;
   font: var(--fld); letter-spacing: .12em; text-transform: uppercase;
 }
@@ -641,11 +618,18 @@
   cursor: zoom-in;
 }
 .eng .fig--gel   .fig__frame { --mat: #080b09; border-color: #080b09; }
-/* A plasmid map is about three times wider than it is tall, so in a uniform
-   16:10 frame it letterboxes. The mat is tinted a step off white so the map
-   reads as a white card on a mat rather than as an image that failed to load. */
-.eng .fig--map   .fig__frame { --mat: #eeeeea; }
-.eng .fig--map   .fig__frame img { box-shadow: 0 0 0 1px rgba(87,102,93,.18); }
+/* A gel letterboxes invisibly because its mat is the same near-black as the gel
+   itself. A plasmid map needs the same trick and the opposite colour: white mat,
+   white map, so a three-to-one drawing can sit beside a three-to-two gel in one
+   row without a slab of grey appearing under it. The frame keeps its hairline,
+   so the figure still reads as a framed object. */
+.eng .fig--map   .fig__frame,
+.eng .fig--strip .fig__frame { --mat: #fff; }
+/* Alone on a line a map has room to be cut to its own shape. */
+.eng .fig--map.wide   .fig__frame { aspect-ratio: 16 / 5; }
+.eng .fig--strip .fig__frame { aspect-ratio: 9 / 2; }
+.eng .fig--strip figcaption { border-left-color: var(--lvl-0); }
+
 .eng .fig--photo .fig__frame { --mat: var(--blue-900); border-color: var(--blue-900); }
 .eng .fig--photo .fig__frame img { width: 100%; height: 100%; object-fit: cover; }
 .eng .fig--tall  .fig__frame { aspect-ratio: 4 / 5; }
@@ -685,18 +669,6 @@
 .eng .band figcaption b { color: var(--e-leaf-900); }
 .eng .sheet--plate .band figcaption { color: var(--plate-ink-muted); }
 .eng .sheet--plate .band figcaption b { color: var(--plate-ink); }
-
-/* the mascot, dropped in at reading size with text flowing round it */
-.eng .mascot {
-  float: right;
-  width: clamp(7rem, 17vw, 11.5rem);
-  margin: -.5rem 0 var(--sp-4) var(--sp-5);
-  shape-outside: margin-box;
-}
-.eng .mascot img { width: 100%; height: auto; }
-@media (max-width: 34rem) {
-  .eng .mascot { float: none; margin: 0 auto var(--sp-4); display: block; width: 8rem; }
-}
 
 /* the lightbox: 80% of the window, caption on the same 80% */
 .eng .lightbox {
@@ -782,36 +754,55 @@
 }
 
 /* ============================================================== INDEX ====== */
+/* The contents rail is permanent from 62rem up, and the page reserves a lane for
+   it with --rail so it never sits over the prose. Below that it disappears and
+   the lane closes, which is why --rail is a variable and not a constant. */
 
 .eng .edge { display: none; }
-@media (min-width: 86rem) {
+@media (min-width: 62rem) {
+  .eng { --rail: 8.5rem; }
   .eng .edge {
     display: block; position: fixed; z-index: 40;
-    left: 1.4rem; top: 50%; transform: translateY(-50%);
-    transition: opacity .2s ease;
+    left: var(--gutter);
+    top: calc(var(--nav-h) + 3.5rem);
+    width: calc(8.5rem - .5rem);
+    max-height: calc(100vh - var(--nav-h) - 5rem);
+    overflow: hidden;
   }
-  .eng .edge.is-hidden { opacity: 0; pointer-events: none; }
-  .eng .edge ol { list-style: none; margin: 0; padding: 0; display: grid; gap: .55rem; }
-  .eng .edge a { display: flex; align-items: center; gap: .55rem; text-decoration: none; color: var(--graphite); }
+  .eng .edge ol { list-style: none; margin: 0; padding: 0; display: grid; gap: .5rem; }
+  .eng .edge a {
+    display: grid; grid-template-columns: 1.1rem minmax(0, 1fr);
+    align-items: center; gap: .5rem;
+    text-decoration: none; color: var(--graphite);
+  }
   .eng .edge .tick {
     display: block; width: 1.1rem; height: 2px;
     background: var(--graphite-2);
-    transform-origin: left center; transform: scaleX(.675);
+    transform-origin: left center; transform: scaleX(.6);
     transition: transform .16s ease, background .16s ease;
   }
   .eng .edge a:hover .tick,
   .eng .edge a[aria-current="true"] .tick { transform: scaleX(1); background: var(--e-leaf-700); }
   .eng .edge a[aria-current="true"] .tick { background: var(--e-leaf-900); }
   .eng .edge .lbl {
-    font: var(--fld); letter-spacing: .1em; text-transform: uppercase;
-    opacity: 0; transition: opacity .16s ease; white-space: nowrap;
+    font: var(--fld); letter-spacing: .09em; text-transform: uppercase;
+    font-size: .625rem; line-height: 1.25;
+    color: var(--graphite);
+    transition: color .16s ease;
   }
-  .eng .edge a:hover .lbl, .eng .edge a:focus .lbl { opacity: 1; }
-  .eng .edge.on-plate a { color: var(--plate-ink-muted); }
+  .eng .edge a:hover .lbl { color: var(--e-leaf-900); }
+  .eng .edge a[aria-current="true"] .lbl { color: var(--e-leaf-900); font-weight: 700; }
+  /* Over a blueprint plate, and over the cover photograph, the rail inverts and
+     takes a shadow, because a photograph is not a flat ground to letter on. */
+  .eng .edge.on-plate a, .eng .edge.on-plate .lbl { color: #cfe0d5; }
+  .eng .edge.on-plate .lbl { text-shadow: 0 1px 4px rgba(6,18,13,.9); }
   .eng .edge.on-plate .tick { background: var(--plate-rule); }
   .eng .edge.on-plate a:hover .tick,
   .eng .edge.on-plate a[aria-current="true"] .tick { background: var(--e-leaf-500); }
+  .eng .edge.on-plate a:hover .lbl,
+  .eng .edge.on-plate a[aria-current="true"] .lbl { color: #fff; }
 }
+@media (min-width: 78rem) { .eng { --rail: 10.5rem; } .eng .edge { width: 10rem; } }
 
 .eng .gauge {
   position: fixed; z-index: 40;
@@ -868,3 +859,7 @@
 }
 /* And the step column is wide enough at that point to need its own measure. */
 .eng .step > :not(h4) { max-width: 76ch; }
+
+/* A single figure in a row keeps the reading measure. Letting one gel stretch to
+   the full breakout width only buys it wider black bars. */
+.eng .figs:not([class*="figs--"]) { max-width: var(--measure); }

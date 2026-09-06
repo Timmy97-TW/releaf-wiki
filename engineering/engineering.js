@@ -204,7 +204,7 @@
       var h = $(".sheethead h2", s);
       var label = s.getAttribute("data-rail") ||
                   (h ? h.textContent.trim() : (s.id === "cover" ? "Cover" : s.id));
-      if (label.length > 34) label = label.slice(0, 32).trim() + "…";
+      if (label.length > 22) label = label.slice(0, 20).trim() + "…";
       var ico = s.getAttribute("data-ico");
       var mark = '<span class="mark"><span class="tick"></span>' +
                  (ico ? '<svg class="edge__ico" aria-hidden="true" width="0" height="0"><use href="#ico-' +
@@ -225,8 +225,10 @@
       links.forEach(function (a) {
         a.setAttribute("aria-current", String(a.getAttribute("href") === "#" + current));
       });
-      rail.classList.toggle("on-plate", !!node && node.classList.contains("sheet--plate"));
-      rail.classList.toggle("is-hidden", current === "cover" || !current);
+      /* The rail is permanent now, including over the cover; it only inverts its
+         palette when the sheet behind it is a blueprint plate. */
+      rail.classList.toggle("on-plate", !!node &&
+        (node.classList.contains("sheet--plate") || node.classList.contains("cover")));
     }, { rootMargin: "-25% 0px -60% 0px", threshold: 0 });
     sheets.forEach(function (s) { io.observe(s); });
   }
