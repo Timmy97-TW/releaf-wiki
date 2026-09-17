@@ -140,6 +140,10 @@
     };
   }
 
+  // Model files are addressed from the hardware folder. A page outside it (the
+  // homepage product section) sets DECK3D_BASE to the prefix that reaches it.
+  const BASE = window.DECK3D_BASE || "";
+
   // a card's picture frame, or an instrument's in the hub orbit (tools/build_orbit.py)
   const cards = Array.prototype.slice.call(document.querySelectorAll(".deck-media, .orb-media"));
   if (!cards.length || typeof THREE === "undefined") return;
@@ -302,9 +306,9 @@
 
     let loaded = 0, framed = false;
     // served from img/deck3d/_pack.bin (tools/pack_models.py), under the manifest's STL names
-    const loader = PackedModel.bundle("img/deck3d/");
+    const loader = PackedModel.bundle(BASE + "img/deck3d/");
     entries.forEach(function (e) {
-      loader.load("img/deck3d/" + e.file + (e.v ? "?v=" + e.v : ""), function (geo) {
+      loader.load(BASE + "img/deck3d/" + e.file + (e.v ? "?v=" + e.v : ""), function (geo) {
         if (ZUP[inst]) geo.rotateX(-Math.PI / 2);
         if (window.RQ) RQ.smoothNormals(geo); else geo.computeVertexNormals();
         const mesh = new THREE.Mesh(geo, inst === "bioreactor" ? bioMaterial(e.mat) : materialFor(e.mat));
@@ -491,7 +495,11 @@
     }
 
     // hover spins it; letting go unwinds to where it started
-    let angle = 0, vel = 0, hovering = false, raf = null, last = 0;
+    // On the hub a card turns while it is pointed at. data-deck-spin makes it
+    // turn by itself, for a figure that is the subject of its section rather
+    // than one of four things to choose between.
+    const always = media.hasAttribute("data-deck-spin");
+    let angle = 0, vel = 0, hovering = always, raf = null, last = 0;
     // The beam animates on its own, so the loop can no longer stop the moment
     // the card is at rest. It runs only while the card is actually on screen
     // and the tab is in front — a WebGL redraw per frame for a card nobody is
@@ -517,7 +525,9 @@
       if (!onScreen) { last = 0; return; }
       const dt = last && now ? Math.min(0.05, (now - last) / 1000) : 0;
       last = now || 0;
-      const want = hovering ? SPEED : 0;
+      // A card that turns on its own does it at a third of the hover speed: the
+      // hover turn is a quick look, this one has to be watchable for a while.
+      const want = hovering ? (always ? SPEED / 3 : SPEED) : 0;
       vel += (want - vel) * Math.min(1, dt * 4);
       if (hovering) angle += vel * dt;
       else if (Math.abs(angle % (Math.PI * 2)) > 0.001) {
@@ -598,7 +608,8 @@
     const card = media.closest("a.deck, a.orb-body") || media;
     // in the hub orbit only the model's disc answers the pointer; the words beside it are just the link
     const target = media.closest(".orb-core") || card;
-    if (!reduced) {
+    if (always) { hovering = !reduced; tick(); }
+    else if (!reduced) {
       target.addEventListener("pointerenter", function () { hovering = true; last = 0; tick(); });
       target.addEventListener("pointerleave", function () { hovering = false; tick(); });
       card.addEventListener("focusin", function () { hovering = true; last = 0; tick(); });
@@ -627,13 +638,17 @@
   function start() {
     if (started) return;
     started = true;
-    fetch("img/deck3d/_manifest.json", { cache: "no-cache" })
+    fetch(BASE + "img/deck3d/_manifest.json", { cache: "no-cache" })
       .then(function (r) { return r.json(); })
       .then(function (man) {
         cards.forEach(function (media) {
           const link = media.closest("a.deck, a.orb-body");
           const href = link ? link.getAttribute("href") || "" : "";
-          const inst = Object.keys(man).filter(function (k) { return href.indexOf(k) === 0; })[0];
+          // data-deck names the instrument where the href cannot: off the hub,
+          // the link to the same page is "hardware/bioreactor/", which starts
+          // with neither key.
+          const inst = media.getAttribute("data-deck") ||
+                       Object.keys(man).filter(function (k) { return href.indexOf(k) === 0; })[0];
           if (!inst) return;
           mount(media, inst, man[inst]);
         });

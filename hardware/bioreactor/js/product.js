@@ -223,7 +223,7 @@
   // from package/_pack.bin (tools/pack_models.py), under their STL names.
   // Embedded, the pack is fetched relative to the page, so a host outside this
   // folder (the homepage) says where it lives.
-  const DIR = embedded ? (window.PKG_DIR || "package/") : "placed/";
+  const DIR = embedded ? "package/" : "placed/";
   const loader = embedded ? PackedModel.bundle(DIR) : new THREE.STLLoader();
   fetch(DIR + "_manifest.json", { cache: "reload" })
     .then(function (r) { return r.json(); })
@@ -627,10 +627,6 @@
       }
     }
     setChannelFocus(idx, cap * 0.9);
-    // The record page holds the camera square to the machine so the three
-    // chambers read as one row. A host that wants the box to turn sets
-    // PKG_SPIN, in radians a second.
-    if (window.PKG_SPIN) yaw += window.PKG_SPIN * t;
     lookFrom(tgt, dist, yaw, pitch);
     renderer.render(scene, camera);
 

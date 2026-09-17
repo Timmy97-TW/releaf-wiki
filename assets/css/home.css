@@ -805,21 +805,45 @@ h2.band__title {
    for on the right. Under 1040px the model goes on top and the properties
    read as a list, which is the same information in the same order.
 
-   The canvas is driven by hardware/bioreactor/js/product.js, which sizes it
-   16:9 off its own parent's width, so the stage sets a width and lets the
-   height follow rather than the other way round. */
+   The model is mounted by hardware/js/deck3d.js, which sizes its canvas off
+   the media box, so that box carries the dimensions. */
 
 .pkg { display: grid; gap: var(--sp-6); margin-top: var(--sp-6); align-items: center; }
 @media (min-width: 1040px) { .pkg { grid-template-columns: minmax(0, 1.15fr) minmax(0, 1fr); gap: var(--sp-7); } }
 
 .pkg__fig { margin: 0; }
-.pkg__stage {
-  border-radius: var(--radius);
-  border: 1px solid rgb(255 255 255 / .12);
-  background: radial-gradient(120% 90% at 50% 20%, rgb(255 255 255 / .06), rgb(255 255 255 / 0) 70%), #06070a;
-  overflow: hidden;
+
+/* The hub's own card, borrowed: the blue halo, the dotted orbit and the live
+   model inside it. hardware/css/hub.css scopes those styles to body.hub, so
+   the few rules the card needs are restated here rather than pulling a
+   thousand-line stylesheet onto the homepage. Proportions are the hub's:
+   inside a 538-unit square the rim sits at r166 and the model's box is
+   262 x 322. */
+.pkgorb { position: relative; width: min(100%, 34rem); margin-inline: auto; aspect-ratio: 1; }
+.pkgorb__halo { position: absolute; inset: 0; width: 100%; height: 100%; overflow: visible; opacity: .9; }
+.pkgorb__rim   { fill: none; stroke-width: 1.6; }
+.pkgorb__dots  { fill: none; stroke-width: 1.2; transform-origin: 50% 50%; }
+.pkgorb__arc   { fill: none; stroke-width: 2.4; stroke-linecap: round; }
+.pkgorb__ticks { stroke-width: 1.2; stroke-opacity: .8; }
+@media (prefers-reduced-motion: no-preference) {
+  .pkgorb__dots { animation: pkgorb-turn 90s linear infinite; }
 }
-.pkg__stage canvas { display: block; width: 100%; }
+@keyframes pkgorb-turn { to { transform: rotate(360deg); } }
+
+.pkgorb__media {
+  position: absolute; left: 50%; top: 50%;
+  width: 48.7%; height: 59.9%;
+  translate: -50% -50%;
+}
+.pkgorb__media img {
+  display: block; width: 100%; height: 100%; object-fit: contain;
+  filter: drop-shadow(0 18px 26px rgb(0 0 0 / .6));
+  transition: opacity .5s ease;
+}
+/* deck3d.js inserts the canvas and raises this class once the model is framed */
+.pkgorb__media .deck-gl { position: absolute; inset: 0; width: 100%; height: 100%; opacity: 0; transition: opacity .5s ease; }
+.pkgorb__media.gl-ready .deck-gl { opacity: 1; }
+.pkgorb__media.gl-ready img { opacity: 0; pointer-events: none; }
 .pkg__fig figcaption { margin-top: var(--sp-3); font-size: var(--text-xs); line-height: 1.55; color: rgb(255 255 255 / .5); max-width: 52ch; }
 .pkg__fig a { color: rgb(255 255 255 / .8); }
 
