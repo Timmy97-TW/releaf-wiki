@@ -293,6 +293,13 @@
      where it always did. */
 
   (function () {
+    /* This block sits OUTSIDE the file's main closure, so it cannot see the
+       `reduced` declared at the top of it: as written it threw a ReferenceError
+       on every load and the dial never played its own first move. Reading the
+       media query here fixes it where it broke, and leaves the block where it
+       is. */
+    var reduced = window.matchMedia &&
+                  window.matchMedia("(prefers-reduced-motion: reduce)").matches;
     var input = document.getElementById("share");
     if (!input || reduced || !("IntersectionObserver" in window)) return;
 

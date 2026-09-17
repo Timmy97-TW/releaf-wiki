@@ -10,6 +10,8 @@
      3  parts       the five engineering highlights <-> the WebGL reactor
      4  doors       cross-highlighting between related pages in Explore
      5  timeline    show the iHP figure only if its artwork exists
+     6  chapters    marks the chapter the reader is in on the right-hand rail
+     7  dose        runs the green dashes in the vision schematics, on screen only
 
    THE RESTING STATE IS THE FINISHED STATE. Every default in home.css shows the
    final frame, and this file only moves things once it has taken control. With
@@ -318,6 +320,117 @@
       };
       probe.src = fig.getAttribute("data-art");
     });
+  })();
+
+  /* ═══════════════════════════════════════════════════════ 6  CHAPTERS ══ */
+  /* Marks which chapter the reader is in, and keeps the rail readable over
+     whatever is behind it. Both jobs are read-only: the links are in the
+     markup and work without this.
+
+     WHICH CHAPTER. The one whose section has crossed a line a third of the way
+     down the window, which is where a reader is actually looking, rather than
+     the topmost visible one (on this page the dark act is five screens tall
+     and would hand the mark to the next section far too early).
+
+     LIGHT OR DARK. The page changes ground four times and the rail sits over
+     all of it, so rather than hard-coding which sections are ink, it asks what
+     is actually painted behind the rail: the first element under that point
+     with an opaque background decides. Add a dark section later and this keeps
+     working with no edit here. */
+
+  (function chapters() {
+    var rail = document.getElementById("chapters");
+    var hero = document.querySelector(".hero");
+    if (!rail) return;
+
+    var links = [].slice.call(rail.querySelectorAll("a"));
+    var marks = links.map(function (a) {
+      return document.querySelector(a.getAttribute("href"));
+    });
+
+    var current = null, ink = null, ticking = false, still = 0;
+
+    function luminance(bg) {
+      var m = /rgba?\(([\d.]+)[,\s]+([\d.]+)[,\s]+([\d.]+)(?:[,/\s]+([\d.]+))?/.exec(bg || "");
+      if (!m || (m[4] !== undefined && Number(m[4]) < 0.5)) return null;   /* see-through: keep looking */
+      return (0.299 * +m[1] + 0.587 * +m[2] + 0.114 * +m[3]) / 255;
+    }
+
+    function onInk() {
+      if (!document.elementsFromPoint) return false;
+      var box = rail.getBoundingClientRect();
+      var stack = document.elementsFromPoint(box.left + box.width / 2, box.top + box.height / 2);
+      for (var i = 0; i < stack.length; i++) {
+        if (rail.contains(stack[i])) continue;
+        var l = luminance(window.getComputedStyle(stack[i]).backgroundColor);
+        if (l !== null) return l < 0.5;
+      }
+      return false;
+    }
+
+    function update() {
+      ticking = false;
+
+      var show = !hero || window.scrollY > hero.offsetHeight * 0.6;
+      rail.classList.toggle("is-shown", show);
+      if (!show) return;
+
+      var line = window.scrollY + window.innerHeight * 0.34;
+      var at = 0;
+      marks.forEach(function (el, i) {
+        if (el && el.getBoundingClientRect().top + window.scrollY <= line) at = i;
+      });
+      if (at !== current) {
+        current = at;
+        links.forEach(function (a, i) {
+          if (i === at) a.setAttribute("aria-current", "true");
+          else a.removeAttribute("aria-current");
+        });
+      }
+
+      var dark = onInk();
+      if (dark !== ink) { ink = dark; rail.classList.toggle("on-ink", dark); }
+    }
+
+    function queue() {
+      if (ticking) return;
+      ticking = true;
+      window.requestAnimationFrame(update);
+    }
+
+    /* the current chapter names itself while the page is moving and the name
+       fades once the reader settles, so it never sits on the figure beside it */
+    function moving() {
+      rail.classList.add("is-moving");
+      window.clearTimeout(still);
+      still = window.setTimeout(function () {
+        rail.classList.remove("is-moving");
+      }, 1100);
+      queue();
+    }
+
+    window.addEventListener("scroll", moving, { passive: true });
+    window.addEventListener("resize", queue);
+    update();
+  })();
+
+  /* ════════════════════════════════════════════════════ 7  THE DOSE RUNS ══ */
+  /* The two vision schematics have one moving part between them: the green
+     dashes that mark the protectant travelling in water the farm already
+     moves. It runs only while the figures are on screen, so nothing animates
+     in a tab nobody is looking at, and the CSS only opts in under
+     prefers-reduced-motion: no-preference. At rest the dashes are a dotted
+     green line, which makes the same point standing still. */
+
+  (function dose() {
+    var vision = document.querySelector(".vision");
+    if (!vision) return;
+    if (reduced || !("IntersectionObserver" in window)) return;
+    new IntersectionObserver(function (entries) {
+      entries.forEach(function (e) {
+        vision.classList.toggle("is-on", e.isIntersecting);
+      });
+    }, { rootMargin: "80px 0px" }).observe(vision);
   })();
 
 })();

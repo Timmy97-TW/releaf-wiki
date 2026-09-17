@@ -1,10 +1,12 @@
 /* =============================================================================
    ReLeaf: the homepage
    -----------------------------------------------------------------------------
-   The page is one argument told in ten beats, in this order:
+   The page is one argument told in eleven beats, in this order:
 
      1  first visual   two photographs, one farm and one reactor, and the
                        sentence that names the gap between them
+    1b  chapters       a dot rail in the right margin: which beat you are in,
+                       and a way to jump. Wide screens only
      2  problem        three beats in home-problem.css: the threat, the gap
                        between the routes in use today, and the years a new
                        biological spends before it reaches a farmer
@@ -14,9 +16,13 @@
      5  synbio         four modules from stress signal to secreted protein
      6  iHP            the people who changed the design
      7  product        the packaged design turning, five properties beside it
-     8  vision         where this goes next, in the systems farmers already run
-     9  reach          the same map as beat 2, read forward
-    10  explore        a map of the wiki, drawn as relationships
+     8  big picture    the whole year: five steps and the work that feeds them
+     9  reach          the same map as beat 2, read forward. It is JOINED to
+                       beat 8 by the trunk's tail and the two must stay adjacent
+    10  vision         where this goes next in the systems farmers already run,
+                       what makes it more than one machine, and the four things
+                       still standing between the bench and a farm
+    11  explore        a map of the wiki, drawn as relationships
 
    Rules that survived the redesign and should survive the next one:
 
@@ -278,6 +284,41 @@ h2.band__title {
   filter: drop-shadow(0 2px 18px rgb(7 11 9 / .55));
 }
 
+/* Credentials, one line, above the mark. Small enough that it costs the head
+   about 1.5rem of height, which the 1366 and 1280 crops both have to spare
+   (measured: the sub ends ~140px above Chen's hair at 1366x860). */
+.hero__team {
+  margin: 0 0 var(--sp-3);
+  font-size: .6875rem; font-weight: 700; letter-spacing: .14em; text-transform: uppercase;
+  color: rgb(255 255 255 / .72);
+  text-shadow: 0 1px 12px rgb(7 11 9 / .6);
+}
+.hero__team span { color: var(--sig-green); margin: 0 .2rem; }
+
+/* The way in. Bottom right, over the darkened foot of the lab photograph,
+   small enough to leave the lit bench readable above it. */
+.hero__cue {
+  grid-row: 3; align-self: end; justify-self: end;
+  display: inline-flex; align-items: center; gap: .55rem;
+  padding: .55rem .95rem .55rem 1.05rem;
+  border: 1px solid rgb(53 224 138 / .5); border-radius: 999px;
+  background: rgb(7 11 9 / .55);
+  -webkit-backdrop-filter: blur(6px); backdrop-filter: blur(6px);
+  font-size: var(--text-xs); font-weight: 650; letter-spacing: .02em;
+  color: var(--white); text-decoration: none;
+  transition: background .2s, border-color .2s;
+}
+.hero__cue::after {
+  content: ""; width: .5rem; height: .5rem; margin-top: -.25rem;
+  border-right: 2px solid var(--sig-green); border-bottom: 2px solid var(--sig-green);
+  transform: rotate(45deg);
+}
+.hero__cue:hover { background: rgb(27 127 77 / .55); border-color: var(--sig-green); }
+@media (prefers-reduced-motion: no-preference) {
+  .hero__cue::after { animation: cue-nudge 2.4s ease-in-out infinite; }
+}
+@keyframes cue-nudge { 0%, 60%, 100% { transform: rotate(45deg) translate(0, 0); } 30% { transform: rotate(45deg) translate(2px, 2px); } }
+
 .hero__sub {
   margin: var(--sp-4) 0 0;
   max-width: 44ch;
@@ -355,6 +396,81 @@ h2.band__title {
   }
   .hero__head { max-width: none; }
   .hero__note { max-width: none; }
+  /* stacked, the quote owns the whole bottom row, so the cue is not needed:
+     the next section is one thumb-flick away and the pill would sit on the quote */
+  .hero__cue { display: none; }
+}
+
+/* ========================================================= 1b  CHAPTERS === */
+/* A dot rail in the right margin. It has to survive white paper, the ink of
+   the dark act and a photograph, so it carries its own blurred pill rather
+   than a colour chosen for one of them.
+
+   ONLY THE CURRENT CHAPTER SPEAKS. Nine labels sitting open in the margin is a
+   second navigation bar competing with the real one; nine dots and one name is
+   a position indicator. The rest arrive on hover and on focus, so a keyboard
+   reader gets the same page a mouse does.
+
+   It appears after the hero and hides itself below 1180px, where the margin it
+   lives in does not exist. */
+
+.chapters {
+  position: fixed; z-index: 30;
+  right: clamp(.5rem, 1.1vw, 1rem); top: 50%; transform: translateY(-50%);
+  opacity: 0; pointer-events: none;
+  transition: opacity .35s ease;
+}
+.chapters.is-shown { opacity: 1; pointer-events: auto; }
+@media (max-width: 1179px) { .chapters { display: none; } }
+
+.chapters ol {
+  display: flex; flex-direction: column; gap: .1rem;
+  margin: 0; padding: .45rem .3rem; list-style: none;
+  border: 1px solid rgb(120 140 130 / .22); border-radius: 999px;
+  background: rgb(255 255 255 / .62);
+  -webkit-backdrop-filter: blur(10px) saturate(1.2);
+          backdrop-filter: blur(10px) saturate(1.2);
+  box-shadow: 0 8px 24px -18px rgb(7 11 9 / .8);
+}
+.chapters a {
+  position: relative; display: flex; align-items: center; justify-content: center;
+  width: 1.35rem; height: 1.35rem; text-decoration: none;
+}
+/* the dot */
+.chapters i {
+  width: .42rem; height: .42rem; border-radius: 50%;
+  background: var(--gray-400);
+  transition: background .2s, transform .2s;
+}
+.chapters a:hover i { background: var(--leaf-700); transform: scale(1.35); }
+.chapters [aria-current] i { background: var(--sig-dim); transform: scale(1.5); }
+
+/* the label, which rides out to the left of its own dot */
+.chapters span {
+  position: absolute; right: calc(100% + .3rem);
+  padding: .22rem .6rem; border-radius: 999px;
+  background: rgb(7 11 9 / .86); color: var(--white);
+  font-size: .6875rem; font-weight: 650; letter-spacing: .02em; white-space: nowrap;
+  opacity: 0; transform: translateX(4px); pointer-events: none;
+  transition: opacity .18s ease, transform .18s ease;
+}
+.chapters a:hover span, .chapters a:focus-visible span { opacity: 1; transform: none; }
+/* The chapter you are in names itself WHILE THE PAGE IS MOVING, and gets out
+   of the way when you stop to read. Left open permanently it sits on the
+   right-hand column of the big picture; shown only on hover it is not a
+   position indicator at all. Scrolling is exactly the moment you want it. */
+.chapters.is-moving [aria-current] span {
+  opacity: 1; transform: none;
+  background: transparent; color: var(--leaf-900);
+  font-weight: 700; text-shadow: 0 1px 8px var(--white), 0 1px 3px var(--white);
+}
+.chapters.is-moving.on-ink [aria-current] span { color: var(--white); text-shadow: 0 1px 10px rgb(7 11 9 / .95), 0 1px 3px rgb(7 11 9 / .9); }
+.chapters.on-ink i { background: rgb(255 255 255 / .38); }
+.chapters.on-ink [aria-current] i { background: var(--sig-green); }
+.chapters.on-ink ol { background: rgb(7 11 9 / .42); border-color: rgb(255 255 255 / .16); }
+
+@media (prefers-reduced-motion: reduce) {
+  .chapters, .chapters i, .chapters span { transition: none; }
 }
 
 /* ========================================================== 2  PROBLEM ==== */
@@ -903,6 +1019,111 @@ h2.band__title {
   font-style: normal; font-size: var(--text-xs); letter-spacing: .04em;
   color: var(--gray-500);
 }
+
+/* ---- the drawn frames ----
+   While a render is missing, the slot holds a schematic instead of an empty
+   box. The caption carries two labels and shows the one that matches what is
+   on screen: home.js removes the .artslot when the render loads, and :has()
+   flips the label with it. A browser without :has() shows both, which is
+   still true of the pair and never claims a drawing is a picture. */
+/* the drawing sets its own height (both are the same 4:3 viewBox, so the two
+   frames still line up), so the pending slot's fixed ratio comes off here */
+.artslot--drawn {
+  display: block; aspect-ratio: auto;
+  padding: var(--sp-4) var(--sp-4) var(--sp-2);
+  background: var(--white); border-bottom: 1px solid var(--gray-200);
+}
+.vision figure:has(.artslot) .vz-tag--render { display: none; }
+.vision figure:not(:has(.artslot)) .vz-tag--drawn { display: none; }
+
+.vz { display: block; width: 100%; height: auto; overflow: visible; }
+/* The captions are drawn in viewBox units, so they shrink with the frame. On a
+   phone the frame is about 310px wide against a 480 viewBox, which takes a
+   10px label down to under 7. These put it back. */
+@media (max-width: 899px) { .vz .art-cap { font-size: 13px; } }
+@media (max-width: 460px) { .vz .art-cap { font-size: 15px; } }
+.vz-pipe  { fill: none; stroke: var(--slate-100); stroke-width: 7; stroke-linecap: round; stroke-linejoin: round; }
+.vz-water { fill: #d9e4ee; }
+.vz-rx         { fill: var(--leaf-900); }
+.vz-rx__vessel { fill: #f2ddb0; }
+.vz-rx__col    { fill: rgb(255 255 255 / .82); }
+.vz-rx__out    { fill: var(--leaf-100); }
+.vz-rx__pump   { fill: none; stroke: rgb(255 255 255 / .6); stroke-width: 2; }
+.vz-rx__led    { fill: var(--sig-green); filter: drop-shadow(0 0 3px var(--sig-green)); }
+.vz-sun circle { fill: #f2ddb0; stroke: #d9a13c; stroke-width: 1.5; }
+.vz-sunray     { fill: none; stroke: #d9a13c; stroke-width: 2; stroke-linecap: round; }
+.vz-drip       { fill: none; stroke: #9fb3c4; stroke-width: 2; stroke-linecap: round; stroke-dasharray: 2 4; }
+
+/* The dose. The only green that moves on a white page, and it moves only
+   while the figure is on screen (home.js sets .is-on) and only with motion
+   allowed. At rest it is a dotted green line, which says the same thing. */
+.vz-flow {
+  fill: none; stroke: var(--sig-dim); stroke-width: 3;
+  stroke-linecap: round; stroke-linejoin: round; stroke-dasharray: .1 9;
+}
+@media (prefers-reduced-motion: no-preference) {
+  .vision.is-on .vz-flow { animation: vz-run 1.6s linear infinite; }
+}
+@keyframes vz-run { to { stroke-dashoffset: -18.2; } }
+
+/* ---- one box, three ways it grows ---- */
+.levers { margin-top: var(--sp-7); }
+.levers__title, .gates__lab {
+  margin: 0 0 var(--sp-4);
+  font-family: var(--font-display); font-size: var(--text-h3);
+  font-weight: 700; letter-spacing: -.012em; line-height: 1.2; color: var(--leaf-900);
+}
+.levers__list {
+  margin: 0; padding: 0; list-style: none; counter-reset: lever;
+  display: grid; gap: var(--sp-4);
+}
+@media (min-width: 900px) { .levers__list { grid-template-columns: repeat(3, minmax(0, 1fr)); } }
+.levers__list li {
+  counter-increment: lever;
+  display: flex; flex-direction: column;
+  padding: var(--sp-5);
+  background: var(--white);
+  border: 1px solid var(--leaf-200); border-top: 3px solid var(--leaf-700);
+  border-radius: var(--radius);
+}
+.levers__list b {
+  display: block; font-size: var(--text-base); line-height: 1.35; color: var(--leaf-900);
+}
+.levers__list b::before {
+  content: counter(lever, decimal-leading-zero);
+  display: block; margin-bottom: var(--sp-2);
+  font-size: .6875rem; font-weight: 700; letter-spacing: .12em; color: var(--leaf-500);
+}
+.levers__list p { margin: var(--sp-2) 0 var(--sp-4); font-size: var(--text-sm); line-height: 1.6; color: var(--gray-600); }
+.levers__list a { margin-top: auto; font-size: var(--text-sm); font-weight: 600; text-decoration: none; }
+.levers__list a:hover { text-decoration: underline; }
+
+/* ---- and what still stands in the way ----
+   Amber is the page's "open" colour on the plant and engineering pages, so the
+   four gaps wear it here. Same size as the claims above: nothing on this page
+   is small print. */
+.gates {
+  margin-top: var(--sp-6); padding: var(--sp-5) var(--sp-5) var(--sp-4);
+  background: var(--white);
+  border: 1px solid #ecd9ae; border-left: 4px solid var(--amber-700);
+  border-radius: var(--radius-sm);
+}
+.gates__list {
+  margin: 0; padding: 0; list-style: none; counter-reset: gate;
+  display: grid; gap: var(--sp-3) var(--sp-5);
+}
+@media (min-width: 720px)  { .gates__list { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+@media (min-width: 1120px) { .gates__list { grid-template-columns: repeat(4, minmax(0, 1fr)); } }
+.gates__list li { counter-increment: gate; font-size: var(--text-sm); line-height: 1.55; color: var(--gray-600); }
+.gates__list b { display: flex; align-items: center; gap: .5rem; margin-bottom: .2rem; color: var(--black); }
+.gates__list b::before {
+  content: counter(gate); flex: 0 0 auto;
+  display: inline-grid; place-items: center; width: 1.35rem; height: 1.35rem;
+  border: 1.5px solid var(--amber-700); border-radius: 50%;
+  font-size: .6875rem; font-weight: 700; color: var(--amber-700);
+}
+.gates__list span { display: block; }
+.gates__foot { margin: var(--sp-4) 0 0; font-size: var(--text-sm); color: var(--gray-500); }
 
 .vision__close {
   margin-top: var(--sp-7); padding: var(--sp-6);
