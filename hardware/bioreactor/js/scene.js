@@ -67,15 +67,20 @@
   // Clearcoat at construction, not as a later pass. Swapping materials after
   // the fact detaches every reference the scene already holds — which is how
   // the enclosure's ghosting stopped working on DiOPAL.
+  // Colours arrive as sRGB hex and are converted here rather than at each call
+  // site — r128 has no ColorManagement, so a hex handed straight to a material
+  // is read as linear and re-encoded on output, roughly ten times too bright
+  // for a dark value. Converting in the factory means every entry in MATERIALS
+  // below means what it says.
   const std = (c, m, r, e) => new THREE.MeshPhysicalMaterial({
-    color: c, metalness: m,
+    color: RQ.srgb(c), metalness: m,
     roughness: Math.max(0.18, r * 0.72), envMapIntensity: e * 1.35,
     clearcoat: 1, clearcoatRoughness: 0.09 });
   const glassy = (c, r, t, e, em, ei) => new THREE.MeshPhysicalMaterial({
-    color: c, metalness: 0, roughness: r, transmission: t, ior: 1.5,
+    color: RQ.srgb(c), metalness: 0, roughness: r, transmission: t, ior: 1.5,
     transparent: true, opacity: 1, envMapIntensity: e,
     clearcoat: 1, clearcoatRoughness: r * 1.4,
-    emissive: em, emissiveIntensity: ei,
+    emissive: RQ.srgb(em), emissiveIntensity: ei,
     side: THREE.DoubleSide, depthWrite: false });
   const MATERIALS = {
     blackPrint: () => std(0x1d2025, .16, .58, .8),
@@ -95,13 +100,13 @@
     frostBottle:() => glassy(0xeef2f4, .30, .62, 2.2, 0xaebfd0, .10),
     tube:       () => glassy(0xf0f4f6, .26, .70, 2.4, 0xa9c2d8, .10),
     beam: () => new THREE.MeshBasicMaterial({
-      color: 0xff8a1e, transparent: true, opacity: .22,
+      color: RQ.srgb(0xff8a1e), transparent: true, opacity: .22,
       blending: THREE.AdditiveBlending, depthWrite: false, depthTest: false }),
     amber: () => new THREE.MeshPhysicalMaterial({
-      color: 0xffab34, metalness: 0, roughness: .10, transmission: .62, ior: 1.55,
+      color: RQ.srgb(0xffab34), metalness: 0, roughness: .10, transmission: .62, ior: 1.55,
       transparent: true, opacity: 1, envMapIntensity: 1.5,
       clearcoat: 1, clearcoatRoughness: .04,
-      emissive: 0xff8a00, emissiveIntensity: .42,
+      emissive: RQ.srgb(0xff8a00), emissiveIntensity: .42,
       side: THREE.DoubleSide, depthWrite: false }),
   };
 
@@ -144,11 +149,11 @@
     });
     // membrane exchange: culture in the lumen, protectant crossing to the shell
     const core = new THREE.Mesh(new THREE.CylinderGeometry(4.4, 4.4, 200, 14),
-      new THREE.MeshBasicMaterial({ color: 0xff8a2e, transparent: true, opacity: .5,
+      new THREE.MeshBasicMaterial({ color: RQ.srgb(0xff8a2e), transparent: true, opacity: .5,
         blending: THREE.AdditiveBlending, depthWrite: false }));
     core.position.set(-405.3, 195.4, 0); core.renderOrder = 2; scene.add(core);
     const halo = new THREE.Mesh(new THREE.CylinderGeometry(6.6, 6.6, 285, 16),
-      new THREE.MeshBasicMaterial({ color: 0x3ddc8b, transparent: true, opacity: .22,
+      new THREE.MeshBasicMaterial({ color: RQ.srgb(0x3ddc8b), transparent: true, opacity: .22,
         blending: THREE.AdditiveBlending, depthWrite: false }));
     halo.position.set(-405.3, 195.4, 0); halo.renderOrder = 2; scene.add(halo);
   }
@@ -166,7 +171,7 @@
   }
   function buildStage() {
     const dark = std(0x0b0d12, .5, .42, .8);
-    const glow = (o) => new THREE.MeshBasicMaterial({ color: 0x5aa9ff, transparent: true,
+    const glow = (o) => new THREE.MeshBasicMaterial({ color: RQ.srgb(0x5aa9ff), transparent: true,
       opacity: o, blending: THREE.AdditiveBlending, depthWrite: false, side: THREE.DoubleSide });
 
     const slab = new THREE.Mesh(new THREE.ExtrudeGeometry(
@@ -244,7 +249,8 @@
   }
 
   /* ---------- load ---------- */
-  const stlLoader = new THREE.STLLoader();
+  // the parts are served from models/_pack.bin (tools/pack_models.py), under their STL names
+  const stlLoader = PackedModel.bundle("models/");
   const ROTOR = { x: -16.7, y: 0 };
   const rotors = [];
   let done = 0, ready = false;

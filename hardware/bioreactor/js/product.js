@@ -48,6 +48,10 @@
     blob(400, 90, 100, "#dfe8f4", 0.5);
     blob(256, 230, 220, "#2c3038", 0.8);
     const tex = new THREE.CanvasTexture(c);
+    // Painted sRGB artwork. Without this the PMREM consumes it as linear and
+    // the environment comes out several times too bright — the same fault that
+    // was making every material on this page photograph washed out.
+    tex.encoding = THREE.sRGBEncoding;
     tex.mapping = THREE.EquirectangularReflectionMapping;
     const pm = new THREE.PMREMGenerator(renderer);
     pm.compileEquirectangularShader();
@@ -77,15 +81,15 @@
     cable:     function () { return std(0x17181a, 0.05, 0.72, 0.60); },
     glass:     function () {
       return new THREE.MeshPhysicalMaterial({
-        color: 0xeaf4ff, metalness: 0, roughness: 0.02, transmission: 0.86, ior: 1.5,
+        color: RQ.srgb(0xeaf4ff), metalness: 0, roughness: 0.02, transmission: 0.86, ior: 1.5,
         transparent: true, opacity: 1, envMapIntensity: 3.4, clearcoat: 1,
-        emissive: 0x93bce4, emissiveIntensity: 0.30, side: THREE.DoubleSide, depthWrite: false });
+        emissive: RQ.srgb(0x93bce4), emissiveIntensity: 0.30, side: THREE.DoubleSide, depthWrite: false });
     },
     vessel:    function () {
       return new THREE.MeshPhysicalMaterial({
-        color: 0xbfd0e0, metalness: 0, roughness: 0.06, transmission: 0.92, ior: 1.5,
+        color: RQ.srgb(0xbfd0e0), metalness: 0, roughness: 0.06, transmission: 0.92, ior: 1.5,
         transparent: true, opacity: 1, envMapIntensity: 1.3, clearcoat: 1,
-        clearcoatRoughness: 0.08, emissive: 0x6d8ba8, emissiveIntensity: 0.04,
+        clearcoatRoughness: 0.08, emissive: RQ.srgb(0x6d8ba8), emissiveIntensity: 0.04,
         side: THREE.FrontSide, depthWrite: false });
     },
     // The protectant reservoir carries its channel's accent: a light tint in
@@ -96,7 +100,7 @@
       // nothing — the tint was applied and simply invisible. The glow has to
       // come from emissive, which transmission does not wash out, with the
       // transmission pulled back far enough for the hue to hold.
-      const base = new THREE.Color(0xbfd0e0).lerp(new THREE.Color(hex), 0.6);
+      const base = RQ.srgb(0xbfd0e0).lerp(RQ.srgb(hex), 0.6);
       return new THREE.MeshPhysicalMaterial({
         color: base, metalness: 0, roughness: 0.06, transmission: 0.80, ior: 1.5,
         transparent: true, opacity: 1, envMapIntensity: 1.2, clearcoat: 1,
@@ -109,7 +113,7 @@
     // reservoirs behind it would vanish.
     window:    function () {
       return new THREE.MeshPhysicalMaterial({
-        color: 0x5d6a79, metalness: 0, roughness: 0.07,
+        color: RQ.srgb(0x5d6a79), metalness: 0, roughness: 0.07,
         transparent: true, opacity: 0.10, envMapIntensity: 1.3,
         // depthWrite stays off so the panel can sit opaque over everything at
         // the start of the reveal and then clear without a depth pop
@@ -121,8 +125,8 @@
     },
     led:       function () {
       return new THREE.MeshStandardMaterial({
-        color: 0x2a1a08, metalness: 0.1, roughness: 0.35,
-        emissive: 0xff9024, emissiveIntensity: 1.6 });
+        color: RQ.srgb(0x2a1a08), metalness: 0.1, roughness: 0.35,
+        emissive: RQ.srgb(0xff9024), emissiveIntensity: 1.6 });
     },
   };
 
@@ -210,14 +214,15 @@
   const spinners = [];
   const dimReg = [];
   const parts = [];
-  const loader = new THREE.STLLoader();
   let showFasteners = false;
 
   // placed/ is 343 files and 96 MB and is gitignored, so it can only be used on
   // a local machine. package/ is the same assembly merged by (role, channel)
   // and decimated to something that fits the deploy budget; the manifest there
-  // already carries the role, so no name lookup is needed.
+  // already carries the role, so no name lookup is needed. Its parts are served
+  // from package/_pack.bin (tools/pack_models.py), under their STL names.
   const DIR = embedded ? "package/" : "placed/";
+  const loader = embedded ? PackedModel.bundle(DIR) : new THREE.STLLoader();
   fetch(DIR + "_manifest.json", { cache: "reload" })
     .then(function (r) { return r.json(); })
     .then(function (man) {
@@ -369,7 +374,7 @@
 
   function drawCard(g, w, h, idx, a, box) {
     const P3 = PROTECTANTS[idx];
-    const acc = new THREE.Color(PUMP_ACCENT[idx]);
+    const acc = RQ.srgb(PUMP_ACCENT[idx]);
     const rgb = [Math.round(acc.r * 255), Math.round(acc.g * 255), Math.round(acc.b * 255)];
     // the pump hues are deliberately dark; lift them for type and rules
     const bright = acc.clone().offsetHSL(0, 0.12, 0.30);
@@ -569,7 +574,7 @@
     }
     if (frontMat) {
       frontMat.opacity = 1 - 0.90 * openU;
-      frontMat.color.copy(new THREE.Color(0x0a0c10)).lerp(new THREE.Color(0x5d6a79), openU);
+      frontMat.color.copy(RQ.srgb(0x0a0c10)).lerp(RQ.srgb(0x5d6a79), openU);
       frontMat.roughness = 0.62 + (0.07 - 0.62) * openU;
       frontMat.metalness = 0.22 * (1 - openU);
       frontMat.clearcoat = openU;

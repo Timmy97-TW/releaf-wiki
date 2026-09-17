@@ -420,7 +420,7 @@
 // this makes the whole thing addressable from the keyboard, which matters most
 // to the exact audience that reads a hardware record end to end.
 (function () {
-  if (!document.querySelector(".doc") && !document.querySelector(".decks")) return;
+  if (!document.querySelector(".doc") && !document.querySelector(".decks, .orbit")) return;
 
   // Declared here like the three sibling IIFEs in this file. Without it the
   // reference below threw a ReferenceError, which aborted the handler and
@@ -428,12 +428,14 @@
   const reduced = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
 
   const here = location.pathname;
-  const rel = /\/(photometer|diopal|bioreactor)\//.test(here) ? "../" : "";
+  const rel = /\/(photometer|diopal|bioreactor|hydroponics|notebook)\//.test(here) ? "../" : "";
   const PAGES = [
-    { label: "Hardware hub", sub: "All three instruments", href: rel + "index.html" },
+    { label: "Hardware hub", sub: "All four instruments", href: rel + "index.html" },
+    { label: "Bioreactor", sub: "Perfusion loop", href: rel + "bioreactor/index.html" },
     { label: "Photometer", sub: "In-line OD600", href: rel + "photometer/index.html" },
     { label: "DiOPAL", sub: "Dual-wavelength LED array", href: rel + "diopal/index.html" },
-    { label: "Bioreactor", sub: "Perfusion loop", href: rel + "bioreactor/index.html" },
+    { label: "Hydroponics", sub: "Floating growth plate", href: rel + "hydroponics/index.html" },
+    { label: "Notebook", sub: "The engineering record, week by week", href: rel + "notebook/index.html" },
   ];
 
   const items = [];
@@ -573,7 +575,8 @@
   hint.className = "palette-hint";
   hint.innerHTML = 'Jump to <kbd>/</kbd>';
   hint.addEventListener("click", open);
-  document.body.appendChild(hint);
+  // On the hub it sits in the top bar, so the keyboard reaches it right after the bar's links rather than after the footer.
+  (document.querySelector("body.hub .topbar") || document.body).appendChild(hint);
 })();
 
 /* ---------- cursor follow-light ---------- */

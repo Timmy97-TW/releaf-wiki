@@ -88,9 +88,19 @@
     if (!W || !H) return;
     ctx.clearRect(0, 0, W, H);
     const sy = window.scrollY || 0;
+    // A page running a transparent WebGL story over this layer marks it with
+    // body.story-on. The traces are margin furniture for type pages; behind a
+    // product render they read as hairlines cut through the shot, and the pulse
+    // as a stray glowing dot, so they sit out while the story is on screen.
+    const storyOn = document.body.classList.contains("story-on");
+    // Optional sky mask that story publishes each frame: without it the stars
+    // show through translucent water as specks in the reservoir, and around the
+    // roots once the camera is under the surface.
+    const skyY = typeof window.__atmosSky === "number" ? window.__atmosSky * H : 1e9;
+    const wet = +window.__atmosWet || 0, deep = +window.__atmosDeep || 0;
 
     // --- circuit traces, drawn first so stars sit on top ---
-    traces.forEach(function (tr) {
+    if (!storyOn) traces.forEach(function (tr) {
       const off = (sy * 0.06) % H;
       ctx.strokeStyle = rgba(ACC, 0.10);
       ctx.lineWidth = 1;
@@ -127,7 +137,12 @@
       const y = (s.y * H - sy * s.p) % (H * 2);
       const py = y < 0 ? y + H * 2 : y;
       if (py > H + 4) return;
-      const tw = reduced ? 1 : 0.75 + 0.25 * Math.sin(t * 1.6 + s.tw);
+      let tw = reduced ? 1 : 0.75 + 0.25 * Math.sin(t * 1.6 + s.tw);
+      if (storyOn && (wet > 0 || deep > 0)) {
+        const below = Math.min(1, Math.max(0, (py - skyY + 4) / 18));
+        tw *= (1 - deep) * (1 - wet * below);
+        if (tw < 0.01) return;
+      }
       ctx.fillStyle = "rgba(226,236,248," + (s.a * tw).toFixed(3) + ")";
       ctx.beginPath();
       ctx.arc(s.x * W, py, s.s, 0, 6.283);

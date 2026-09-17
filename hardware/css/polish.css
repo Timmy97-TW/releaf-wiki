@@ -37,15 +37,6 @@
 ::-webkit-scrollbar-thumb:hover { background: rgba(255,255,255,.2); }
 
 /* ---- film grain ------------------------------------------------------ */
-/* The instrument pages already paint grain on `.grain` itself. Only the hub
-   needs it added, so this is scoped rather than global — applying it to every
-   `.grain` stacked a second layer on top of the existing one. */
-.hub .grain::after {
-  content: ""; position: fixed; inset: 0; pointer-events: none; z-index: 400;
-  opacity: .028;
-  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='140' height='140'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.85' numOctaves='3'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
-}
-
 /* ---- type stack --------------------------------------------------------
    One stack, everywhere. The instrument pages asked for "Inter" first and the
    hub asked for it fourth, behind the Apple system faces — so on any machine
@@ -74,9 +65,9 @@
   --c-photometer: #ffa23d;   /* PH */
   --c-diopal:     #3ddc8b;   /* LP, later DiOPAL */
   --c-reactor:    #5aa9ff;   /* BR */
-  --c-humidity:   #c48bff;   /* HB */
+  --c-humidity:   #4ad9d9;   /* HB */
   --c-imaging:    #ff6fb5;   /* IS */
-  --c-floating:   #4ad9d9;   /* FP */
+  --c-floating:   #b18cff;   /* FP: the hydroponics plate, in the hub's hydroponics purple */
   --c-other:      #8e9bab;   /* pre-pivot, before the instruments existed */
 }
 
@@ -312,16 +303,6 @@ table.bom tbody tr.hidden-row { display: none; }
 .bom-empty {
   padding: 1.2rem; text-align: center; color: var(--dim);
   font-size: .82rem; border: 1px dashed var(--line); border-radius: var(--r-sm);
-}
-
-/* ---- gradient-border card -------------------------------------------- */
-.gradcard {
-  border: 1px solid transparent; border-radius: var(--r-lg);
-  background:
-    linear-gradient(var(--bg), var(--bg)) padding-box,
-    linear-gradient(135deg,
-      color-mix(in srgb, var(--amber) 60%, transparent),
-      color-mix(in srgb, var(--amber) 5%, transparent) 60%) border-box;
 }
 
 /* ---- honour reduced motion everywhere -------------------------------- */
@@ -1065,11 +1046,6 @@ body.doc-light .topbar .brand i { color: rgba(234, 245, 239, .58); }
 body.doc-light .topbar-meta a:hover { color: #fff; text-decoration: underline; }
 /* the hairline was drawn for a transparent bar on black */
 body.doc-light .topbar::after { background: rgba(255, 255, 255, .16); opacity: 1; }
-body.doc-light .jump-btn {
-  background: #fff; color: var(--muted);
-  border-color: var(--line-2);
-  box-shadow: 0 2px 14px rgba(15, 19, 25, .10);
-}
 body.doc-light ::selection { background: var(--amber); color: #fff; }
 
 @media print { body { background: #fff !important; color: #000 !important; } }
@@ -1880,14 +1856,14 @@ body.doc-light table .num { font-variant-numeric: tabular-nums lining-nums; }
 .score-col {
   border: 1px solid var(--line); border-radius: var(--r-lg); overflow: hidden;
 }
-.score-col > h5 {
+.score-col > :is(h4, h5) {
   margin: 0; padding: .6rem .9rem;
   font-family: var(--mono); font-size: .55rem; letter-spacing: .18em;
   text-transform: uppercase; font-weight: 600;
   border-bottom: 1px solid var(--line);
 }
-.score-col.yes > h5 { color: #4ad98a; background: rgba(74, 217, 138, .10); }
-.score-col.no  > h5 { color: #ff8a6a; background: rgba(255, 138, 106, .10); }
+.score-col.yes > :is(h4, h5) { color: #4ad98a; background: rgba(74, 217, 138, .10); }
+.score-col.no  > :is(h4, h5) { color: #ff8a6a; background: rgba(255, 138, 106, .10); }
 .score-col ul { list-style: none; margin: 0; padding: .55rem 0; }
 .score-col li {
   position: relative; padding: .5rem .9rem .5rem 2rem;
@@ -1909,9 +1885,9 @@ body.doc-light table .num { font-variant-numeric: tabular-nums lining-nums; }
 .score-col li cite a:hover { color: var(--fg); }
 
 body.doc-light .score-col { border-color: var(--hair); background: #fff; }
-body.doc-light .score-col > h5 { border-bottom-color: var(--hair); }
-body.doc-light .score-col.yes > h5 { color: #12703f; background: rgba(18, 112, 63, .09); }
-body.doc-light .score-col.no  > h5 { color: #a83a1c; background: rgba(168, 58, 28, .09); }
+body.doc-light .score-col > :is(h4, h5) { border-bottom-color: var(--hair); }
+body.doc-light .score-col.yes > :is(h4, h5) { color: #12703f; background: rgba(18, 112, 63, .09); }
+body.doc-light .score-col.no  > :is(h4, h5) { color: #a83a1c; background: rgba(168, 58, 28, .09); }
 body.doc-light .score-col.yes li::before { color: #12703f; }
 body.doc-light .score-col.no  li::before { color: #a83a1c; }
 @media (max-width: 720px) { .score-cols { grid-template-columns: 1fr; } }
@@ -2004,8 +1980,8 @@ body.doc-light .bom-meter { background: rgba(15, 19, 25, .10); }
 
   .score-cols { grid-template-columns: 1fr 1fr !important; }
   .score-col { border: 1pt solid #bbb !important; }
-  .score-col.yes > h5 { color: #14532d !important; background: #eef6f0 !important; }
-  .score-col.no  > h5 { color: #7f1d1d !important; background: #fdf0ee !important; }
+  .score-col.yes > :is(h4, h5) { color: #14532d !important; background: #eef6f0 !important; }
+  .score-col.no  > :is(h4, h5) { color: #7f1d1d !important; background: #fdf0ee !important; }
 
   table { border-collapse: collapse !important; width: 100% !important; }
   table th, table td { border: .5pt solid #bbb !important; padding: 3pt 5pt !important; }
@@ -2120,7 +2096,9 @@ body.doc-light .bom-meter { background: rgba(15, 19, 25, .10); }
 @media (max-width: 900px) {
   /* No pinning on a small screen: the diagram sits above its own narration and
      each stage is simply read in turn. */
-  .syswalk-grid { grid-template-columns: 1fr; gap: 1.2rem; }
+  /* minmax(0, …): a plain 1fr track grows to the 640px diagram below 760px and
+     pushes the narration off the right edge; the figure scrolls on its own instead. */
+  .syswalk-grid { grid-template-columns: minmax(0, 1fr); gap: 1.2rem; }
   .syswalk-stage { position: static; height: auto; padding-bottom: 2.4rem; }
   .syswalk-step { min-height: 0; padding: .9rem 0; padding-left: 1rem; }
   .syswalk[data-active] .syswalk-step { opacity: 1; }
@@ -2138,3 +2116,9 @@ body.doc-light .bom-meter { background: rgba(15, 19, 25, .10); }
    licence and repository lines so it reads as a credit, not a notice. */
 .legal .credits { margin-top: .5rem; opacity: .78; }
 .legal .credits a { text-decoration: underline; text-underline-offset: 2px; }
+
+/* ---- page to page ------------------------------------------------------
+   Where the browser can carry one page into the next itself, it crossfades them, and js/hub.js and js/chrome.js skip
+   their own fade to black (the judge's pass, 13 Sep: it read as a blink). */
+@view-transition { navigation: auto; }
+@media (prefers-reduced-motion: reduce) { @view-transition { navigation: none; } }

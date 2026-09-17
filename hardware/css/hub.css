@@ -102,63 +102,6 @@ a { color: inherit; text-decoration: none; }
 }
 .eyebrow::after { background: linear-gradient(90deg, var(--line-2), transparent); }
 
-/* ---------- hero ---------- */
-.hero {
-  position: relative; z-index: 2; min-height: 100svh;
-  display: grid; place-content: center; text-align: center;
-  padding: 8rem 2rem 4rem;
-}
-.hero h1 {
-  font-size: clamp(2.9rem, 9.2vw, 7rem);
-  line-height: .95; margin-bottom: 2rem;
-}
-.hero h1 span {
-  background: linear-gradient(96deg, var(--c-photometer) 8%, var(--c-diopal) 78%);
-  -webkit-background-clip: text; background-clip: text; color: transparent;
-  /* a faint bloom under the gradient words */
-  filter: drop-shadow(0 0 26px rgba(61, 220, 139, .16));
-}
-.hero-lead {
-  max-width: 54ch; margin: 0 auto;
-  color: var(--muted); font-size: clamp(1rem, 1.35vw, 1.12rem); line-height: 1.72;
-  letter-spacing: -.005em;
-}
-.hero-lead b { color: var(--fg); font-weight: 600; }
-.hero-lead i { font-style: italic; }
-
-.hero-stats {
-  display: flex; flex-wrap: wrap; justify-content: center;
-  gap: clamp(1.4rem, 4.5vw, 3.6rem);
-  margin: 3.6rem auto 0; padding: 1.7rem 0 0;
-  border-top: 1px solid var(--line); max-width: 760px;
-}
-.hero-stats div { text-align: center; }
-.hero-stats dt {
-  font-family: var(--mono); font-size: .55rem;
-  letter-spacing: .2em; text-transform: uppercase;
-  color: var(--dim); margin-bottom: .55rem;
-}
-.hero-stats dd {
-  margin: 0; font-size: clamp(1.5rem, 2.5vw, 1.95rem);
-  font-weight: 600; letter-spacing: -.04em;
-}
-.hero-stats dd em { font-style: normal; color: var(--accent); font-size: .55em; margin-left: .06em; }
-
-.scroll-cue {
-  margin-top: 3.2rem;
-  font-family: var(--mono); font-size: .58rem;
-  letter-spacing: .32em; text-transform: uppercase; color: var(--dim);
-}
-.scroll-cue::after {
-  content: ""; display: block; width: 1px; height: 46px; margin: 16px auto 0;
-  background: linear-gradient(var(--accent), transparent);
-  animation: drop 2.6s var(--ease) infinite;
-}
-@keyframes drop {
-  0%, 100% { opacity: .18; transform: scaleY(.35); transform-origin: top; }
-  50%      { opacity: .9;  transform: scaleY(1);   transform-origin: top; }
-}
-
 /* ---------- instrument decks ---------- */
 .decks {
   position: relative; z-index: 2;
@@ -282,11 +225,6 @@ a.deck:focus-visible .deck-media img {
 }
 /* Once the real model is up, the render underneath is redundant — it was only
    ever the poster while the geometry loaded, and the fallback if WebGL is off. */
-/* The hub is neutral, so a mark here falls back to --accent — a pale grey that
-   reads as a text selection rather than a pen. These two questions are each
-   answered by a specific instrument, so they are marked in its colour. */
-.mark.mk-a { --mk: var(--c-photometer); }
-.mark.mk-b { --mk: var(--c-diopal); }
 
 .deck-gl {
   position: absolute; inset: 0; width: 100%; height: 100%;
@@ -301,13 +239,10 @@ a.deck:focus-visible .deck-media img {
   a.deck:hover .deck-media img,
   a.deck:focus-visible .deck-media img { animation: none; }
 }
-
-.deck-placeholder {
-  width: 60%; aspect-ratio: 1; border-radius: var(--r-lg);
-  border: 1px dashed rgba(255, 255, 255, .12);
-  background: repeating-linear-gradient(-45deg,
-    rgba(255, 255, 255, .014) 0 9px, transparent 9px 18px);
-}
+/* Once the model is up the poster is invisible, and it stops turning as well:
+   it went on spinning under the canvas for as long as the card was hovered or
+   focused, on screen or not. */
+a.deck .deck-media.gl-ready img { animation: none; }
 
 .deck-body {
   padding: 1.5rem 1.6rem 1.6rem; display: flex; flex-direction: column; flex: 1;
@@ -354,92 +289,6 @@ a.deck:focus-visible .deck-media img {
 }
 .deck-go i { font-style: normal; transition: transform .45s var(--ease-out); }
 a.deck:hover .deck-go i { transform: translateX(6px); }
-.deck-go.muted { color: var(--faint); }
-
-.deck.soon { opacity: .5; }
-.deck.soon .deck-media { background: none; }
-.deck.soon .deck-media::after { display: none; }
-
-/* ---------- how they relate ---------- */
-.relate {
-  position: relative; z-index: 2;
-  border-top: 1px solid var(--line);
-  padding: 6rem clamp(18px, 4vw, 44px) 7rem;
-}
-.relate-inner { max-width: 940px; margin: 0 auto; }
-.relate h3 {
-  font-size: clamp(1.35rem, 3vw, 2.15rem); line-height: 1.22;
-  margin-bottom: 2.8rem; max-width: 26ch; letter-spacing: -.035em;
-}
-.rel-map { display: flex; align-items: stretch; flex-wrap: wrap; margin-bottom: 1rem; }
-.rel-node {
-  --c: var(--accent);
-  flex: 1; min-width: 220px; position: relative;
-  border-radius: var(--r-lg); padding: 1.3rem 1.4rem;
-  background: linear-gradient(180deg, rgba(255,255,255,.028), rgba(255,255,255,.006));
-  box-shadow: 0 1px 0 rgba(255,255,255,.04) inset, 0 16px 34px -26px rgba(0,0,0,.9);
-}
-.rel-node::before {
-  content: ""; position: absolute; inset: 0; border-radius: inherit;
-  padding: 1px; pointer-events: none;
-  background: linear-gradient(180deg,
-    color-mix(in srgb, var(--c) 26%, transparent), rgba(255,255,255,.03) 55%);
-  -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
-  -webkit-mask-composite: xor; mask-composite: exclude;
-}
-.rel-node.a { --c: var(--c-photometer); }
-.rel-node.b { --c: var(--c-diopal); }
-.rel-node.c { --c: var(--c-reactor); }
-.rel-tag {
-  display: block; font-family: var(--mono); font-size: .55rem;
-  letter-spacing: .22em; color: var(--c); margin-bottom: .55rem;
-}
-.rel-node b { display: block; font-size: 1.02rem; font-weight: 600; margin-bottom: .35rem; letter-spacing: -.02em; }
-.rel-node p { margin: 0; font-size: .8rem; line-height: 1.62; color: var(--dim); }
-
-.rel-link {
-  display: flex; flex-direction: column; align-items: center; justify-content: center;
-  padding: 0 1.2rem; min-width: 130px;
-}
-.rel-link span {
-  font-family: var(--mono); font-size: .52rem;
-  letter-spacing: .2em; text-transform: uppercase; color: var(--dim);
-  margin-bottom: .6rem;
-}
-.rel-line {
-  width: 100%; height: 1px; position: relative;
-  background: linear-gradient(90deg, var(--c-reactor), var(--c-photometer));
-}
-/* a pulse travelling the link, so the direction of flow is unmistakable */
-.rel-line::before {
-  content: ""; position: absolute; top: -1.5px; left: 0;
-  width: 26%; height: 4px; border-radius: var(--r-xs);
-  background: linear-gradient(90deg, transparent, #fff, transparent);
-  opacity: .55; animation: flow 3.4s var(--ease) infinite;
-}
-@keyframes flow {
-  0%   { left: -26%; opacity: 0 }
-  22%  { opacity: .5 }
-  78%  { opacity: .5 }
-  100% { left: 100%; opacity: 0 }
-}
-.rel-line::after {
-  content: ""; position: absolute; right: -1px; top: -3px;
-  border-left: 6px solid var(--c-photometer);
-  border-top: 3.5px solid transparent; border-bottom: 3.5px solid transparent;
-}
-
-.rel-aside {
-  display: flex; gap: 1.6rem; align-items: flex-start; flex-wrap: wrap;
-  margin-top: 1.8rem; padding-top: 1.8rem;
-  border-top: 1px dashed rgba(255, 255, 255, .075);
-}
-.rel-aside .rel-node { flex: 0 1 320px; }
-.rel-note {
-  flex: 1; min-width: 250px; margin: 0;
-  font-size: .89rem; line-height: 1.78; color: var(--muted);
-}
-
 .hub-foot {
   position: relative; z-index: 2;
   border-top: 1px solid var(--line);
@@ -461,8 +310,6 @@ html.js .reveal.in {
 
 @media (max-width: 820px) {
   .topbar-meta { display: none; }
-  .hero { padding-top: 6.5rem; }
-  .rel-link { min-width: 100%; padding: 1rem 0; }
   .decks { padding-bottom: 4.5rem; perspective: none; }
   .deck-media img { transform: none; }
   a.deck:hover .deck-media img { transform: scale(1.03); }
@@ -470,7 +317,7 @@ html.js .reveal.in {
 
 @media (prefers-reduced-motion: reduce) {
   html { scroll-behavior: auto; }
-  .scroll-cue::after, .bg-glow, .rel-line::before { animation: none; }
+  .bg-glow { animation: none; }
   html.js .reveal { opacity: 1; transform: none; }
   a.deck:hover { transform: none !important; }
 }
@@ -499,22 +346,6 @@ html.js .reveal.in {
 .legal p { margin: 0 0 .3rem; }
 .legal a { color: var(--dim); }
 .legal a:hover { color: var(--c-photometer); }
-
-/* ---- hero constellation ------------------------------------------------ */
-/* A live map of the three instruments and how information moves between
-   them. Purely decorative, so it is aria-hidden and sits behind the type. */
-.hero { isolation: isolate; }
-#hero-fx {
-  position: absolute; inset: 0; width: 100%; height: 100%;
-  z-index: -1; pointer-events: none;
-  -webkit-mask-image: radial-gradient(70% 60% at 50% 50%, #000 35%, transparent 78%);
-          mask-image: radial-gradient(70% 60% at 50% 50%, #000 35%, transparent 78%);
-  opacity: .85;
-}
-.hero > *:not(#hero-fx) { position: relative; }
-
-/* ---- hero stats: give the numbers weight ------------------------------- */
-.hero-stats dd { font-variant-numeric: tabular-nums; }
 
 /* ==== deck cards, restated ============================================== */
 /* At rest the cards were rgba(255,255,255,.028) on near-black — effectively
@@ -586,30 +417,8 @@ a.deck:hover, a.deck:focus-visible {
     0 0 90px -26px color-mix(in srgb, var(--c) 80%, transparent);
 }
 
-/* the section gets a rule and a label instead of starting cold */
-.decks { position: relative; }
-.decks::before {
-  content: ""; position: absolute; left: 50%; top: -2.2rem;
-  transform: translateX(-50%);
-  width: min(1280px, 90vw); height: 1px;
-  background: linear-gradient(90deg, transparent,
-    rgba(255,255,255,.12) 20%, rgba(255,255,255,.12) 80%, transparent);
-}
-
 @media (prefers-reduced-motion: reduce) {
   .deck, .deck .deck-media::before { transition: none; }
-}
-
-/* The photometer and the reactor have not run together yet, so the link between
-   them is drawn as intent rather than as an existing connection. */
-.rel-line.dashed {
-  background: none;
-  border-top: 1px dashed color-mix(in srgb, var(--accent) 42%, transparent);
-}
-.rel-caveat {
-  margin-top: 1rem; padding-left: .9rem;
-  border-left: 2px solid color-mix(in srgb, var(--c-photometer) 45%, transparent);
-  font-size: .84rem; line-height: 1.6; color: var(--dim);
 }
 
 /* ---- build lanes ------------------------------------------------------- */
@@ -791,3 +600,593 @@ a.deck:hover, a.deck:focus-visible {
   .lane.in .lane-run { animation: none; }
   .lanes-cursor { transition: none; }
 }
+
+/* ═══ the instruments as a system ═══════════════════════════════════════════
+   The bioreactor runs across the top. The photometer sits inside its outline,
+   smaller than the cards either side, because it reads the culture in the
+   bioreactor's own loop; DiOPAL and the hydroponics plate are separate
+   instruments. The outline (fill, line and label) is traced from the live
+   layout by js/deck-frame.js.
+   The model is the card: one line of copy and a row of facts under it, and all
+   four cards still fit one laptop screen, so media heights come from the
+   viewport height rather than a fixed aspect ratio. */
+.decks {
+  grid-template-columns: minmax(0, 1fr) minmax(0, .9fr) minmax(0, 1fr);
+  grid-template-areas: "br br br" "dp ph hy";
+  gap: 2rem 2.1rem;
+  max-width: 1240px;
+  padding: 2rem clamp(18px, 4vw, 44px) 4.5rem;
+  align-items: start;
+}
+.deck-c { grid-area: br; }
+.deck-a { grid-area: ph; }
+.deck-b { grid-area: dp; }
+.deck-d { grid-area: hy; --c: #b18cff; }
+.decks > .deck { z-index: 2; }
+
+.decks .deck-media { aspect-ratio: auto; height: clamp(190px, 31vh, 320px); padding: .2rem; }
+.decks .deck-body { padding: .8rem 1.2rem .95rem; }
+.decks .deck-n { margin-bottom: .3rem; }
+.decks .deck h2 { font-size: 1.3rem; margin-bottom: .1rem; }
+.decks .deck-role { margin-bottom: .45rem; }
+.decks .deck p.deck-line { font-size: .8rem; line-height: 1.5; margin: 0 0 .5rem; }
+.decks .deck-facts-row { display: flex; flex-wrap: wrap; gap: .15rem 1.1rem; margin: 0 0 .5rem; }
+.decks .deck-facts li { font-size: .7rem; }
+.decks .deck-go { padding-top: .5rem; }
+
+/* the bioreactor: a strip, the model taking almost half of it */
+.deck-wide { flex-direction: row; }
+.deck-wide .deck-media { flex: 0 0 46%; height: clamp(210px, 31vh, 300px); }
+.deck-wide .deck-media::before { border-radius: 10px 0 0 0; }
+.deck-wide .deck-body { padding: 1rem 2.2rem; justify-content: center; }
+.decks .deck-wide h2 { font-size: 1.8rem; }
+.decks .deck-wide p.deck-line { font-size: .9rem; }
+.decks .deck-wide .deck-go { margin-top: .2rem; max-width: 46ch; }
+
+/* The bioreactor card as a drawing sheet. A faint grid in the reactor's blue
+   runs under the whole card, brackets either side mark the model, and where
+   there is room the loop as designed sits beside the copy: the culture vessel,
+   the pump, the photometer in the feed leg, the filter, and the protectant
+   drawn off outside it, as bioreactor/index.html draws it. All of it is
+   decoration (aria-hidden; the card carries the loop as a line of text for
+   assistive tech).
+   None of it can change the card's size. The grid and the drawing sit out of
+   flow, and the copy column narrows to make room instead of the card growing —
+   which matters, because js/deck-frame.js traces the outline from these rects.
+   The drawing moves only while the card is hovered or focused, the rule the
+   models' beams follow in js/deck3d.js, and never under reduced motion. */
+.bp-grid {
+  position: absolute; inset: 0; z-index: 0; pointer-events: none;
+  border-radius: inherit;
+  background-image:
+    linear-gradient(color-mix(in srgb, var(--c) 15%, transparent) 1px, transparent 1px),
+    linear-gradient(90deg, color-mix(in srgb, var(--c) 15%, transparent) 1px, transparent 1px),
+    linear-gradient(color-mix(in srgb, var(--c) 7%, transparent) 1px, transparent 1px),
+    linear-gradient(90deg, color-mix(in srgb, var(--c) 7%, transparent) 1px, transparent 1px);
+  background-size: 80px 80px, 80px 80px, 16px 16px, 16px 16px;
+  background-position: -1px -1px;
+  /* full under the model, faint behind the copy */
+  -webkit-mask-image: linear-gradient(90deg, #000, rgba(0,0,0,.7) 36%, rgba(0,0,0,.28) 50%);
+          mask-image: linear-gradient(90deg, #000, rgba(0,0,0,.7) 36%, rgba(0,0,0,.28) 50%);
+}
+/* Brackets at mid-height rather than corner marks: the tower takes nearly the
+   strip's whole height, so a closed frame would have the handle and feet
+   standing outside it. Either side there is room to spare. (A 1px arm at
+   calc(50% -/+ 12.5px) lands on the 26px bar's first and last rows.) */
+.deck-wide .deck-media {
+  --tk: color-mix(in srgb, var(--c) 62%, transparent);
+  background:
+    linear-gradient(var(--tk), var(--tk)) left 14px center / 1px 26px no-repeat,
+    linear-gradient(var(--tk), var(--tk)) left 14px top calc(50% - 12.5px) / 6px 1px no-repeat,
+    linear-gradient(var(--tk), var(--tk)) left 14px top calc(50% + 12.5px) / 6px 1px no-repeat,
+    linear-gradient(var(--tk), var(--tk)) right 14px center / 1px 26px no-repeat,
+    linear-gradient(var(--tk), var(--tk)) right 14px top calc(50% - 12.5px) / 6px 1px no-repeat,
+    linear-gradient(var(--tk), var(--tk)) right 14px top calc(50% + 12.5px) / 6px 1px no-repeat,
+    radial-gradient(62% 58% at 50% 46%, color-mix(in srgb, var(--c) 22%, transparent), transparent 72%),
+    radial-gradient(120% 80% at 50% 120%, color-mix(in srgb, var(--c) 10%, transparent), transparent 70%);
+}
+/* The platform is gone, so the floor line sits where the tower's own feet stand
+   at rest, and narrows to its footprint. As the model turns its nearest corner
+   dips below the line and passes in front of it: the canvas is above the line
+   (.deck-gl, z-index 1). */
+.deck-wide .deck-media::after { left: 26%; right: 26%; bottom: 7.5%; }
+/* The poster takes the canvas's box, unmagnified, so the tower is framed the
+   same before the model arrives as after it — and with WebGL off it no longer
+   spills out of the strip. */
+@media (min-width: 681px) {
+  .deck-wide .deck-media img {
+    position: absolute; inset: 0; width: 100%; height: 100%;
+    transform: none;
+  }
+}
+
+.bp-panel { display: none; }
+/* From 1120px wide. Past that the copy beside the drawing still keeps its facts
+   on one row, so it stays inside the strip's shortest height. The media gives up
+   width it was not using — the tower is tall and narrow, and height is what
+   bounds it — which keeps the swipe on one line at full width. */
+@media (min-width: 1120px) {
+  .deck-wide .deck-media { flex-basis: 42%; }
+  .deck-wide .deck-body { padding-right: calc(21% + 3rem); }
+  .bp-panel {
+    position: absolute; z-index: 4; top: 1rem; bottom: 1rem; right: 1.6rem;
+    width: 21%; box-sizing: border-box;
+    display: flex; flex-direction: column; justify-content: center; gap: .6rem;
+    padding-left: .9rem;
+    border-left: 1px dashed color-mix(in srgb, var(--c) 30%, transparent);
+  }
+  /* and the grid comes back up behind the drawing */
+  .bp-grid {
+    -webkit-mask-image: linear-gradient(90deg, #000, rgba(0,0,0,.7) 36%, rgba(0,0,0,.28) 48%, rgba(0,0,0,.28) 70%, #000);
+            mask-image: linear-gradient(90deg, #000, rgba(0,0,0,.7) 36%, rgba(0,0,0,.28) 48%, rgba(0,0,0,.28) 70%, #000);
+  }
+}
+/* stacked, the copy sits under the model rather than beside it */
+@media (max-width: 680px) {
+  .bp-grid {
+    -webkit-mask-image: linear-gradient(#000, #000 46%, rgba(0,0,0,.25) 62%);
+            mask-image: linear-gradient(#000, #000 46%, rgba(0,0,0,.25) 62%);
+  }
+}
+/* when the swipe has to wrap, it breaks between phrases, never inside one */
+.deck-line .clause { white-space: nowrap; }
+
+.bp-head {
+  display: flex; align-items: center; gap: .55rem;
+  font-family: var(--mono); font-size: .54rem; font-weight: 600;
+  letter-spacing: .22em; text-transform: uppercase; color: var(--c);
+}
+.bp-head::after {
+  content: ""; flex: 1; height: 1px; order: 1;
+  background: linear-gradient(90deg, color-mix(in srgb, var(--c) 45%, transparent), transparent);
+}
+/* The drawing is the loop as designed: the photometer and the membrane module
+   have not yet run together. The qualifier sits after the rule, quieter and
+   tighter, so the head still fits one line in the narrowest panel. */
+.bp-head .bp-as {
+  order: 2; white-space: nowrap;
+  font-weight: 500; letter-spacing: .1em; color: var(--muted);
+}
+.bp-loop { display: block; width: 100%; height: auto; min-height: 0; overflow: visible; }
+.bp-loop .bp-pipe {
+  fill: none; stroke: color-mix(in srgb, var(--c) 55%, transparent);
+  stroke-width: 1.4; stroke-linejoin: round;
+  transition: stroke .45s var(--ease);
+}
+a.deck:is(:hover, :focus-visible) .bp-loop .bp-pipe { stroke: color-mix(in srgb, var(--c) 85%, transparent); }
+.bp-loop .bp-harv {
+  fill: none; stroke: color-mix(in srgb, var(--fg) 50%, transparent);
+  stroke-width: 1.3; stroke-dasharray: 3 3;
+}
+.bp-loop .bp-arrow {
+  fill: none; stroke: color-mix(in srgb, var(--c) 85%, transparent);
+  stroke-width: 1.3; stroke-linecap: round; stroke-linejoin: round;
+}
+.bp-loop .bp-part {
+  fill: color-mix(in srgb, var(--c) 10%, #070a10);
+  stroke: color-mix(in srgb, var(--c) 80%, transparent); stroke-width: 1.3;
+}
+.bp-loop .bp-liquid { fill: color-mix(in srgb, var(--c) 18%, transparent); }
+.bp-loop .bp-bar, .bp-loop .bp-rotor circle { fill: var(--c); }
+.bp-loop .bp-fiber { fill: none; stroke: color-mix(in srgb, var(--c) 45%, transparent); stroke-width: 1; }
+/* the photometer in its own colour, as its card is below */
+.bp-loop .bp-od { fill: var(--c-photometer); }
+.bp-loop .bp-od-ring {
+  fill: none; stroke: var(--c-photometer); stroke-width: 1; opacity: .55;
+  transform-origin: 103px 20px;
+}
+.bp-loop .bp-rotor { transform-origin: 46px 52px; }
+.bp-loop text {
+  font-family: var(--mono); font-size: 10.5px; letter-spacing: .06em;
+  text-transform: uppercase; fill: var(--muted);
+}
+.bp-loop text.bp-t-od { fill: var(--c-photometer); }
+.bp-loop .bp-flow {
+  fill: none; stroke: #d6ebff; stroke-width: 1.8; stroke-linecap: round;
+  stroke-dasharray: 5 45; opacity: 0;
+}
+.bp-loop .bp-flow-glow { stroke: var(--c); stroke-width: 5; stroke-opacity: .35; }
+.bp-loop .bp-flow-h { stroke: var(--fg); stroke-dasharray: 20 80; }
+/* The fade is on the way in only: leaving, the pulse goes at once, so it never
+   jumps back to its start while still visible. Focus can outlast the card being
+   on screen, so js/hub.js marks the drawing .bp-away while it is out of view and
+   it holds still then — the on-screen condition js/deck3d.js puts on the beams. */
+@media (prefers-reduced-motion: no-preference) {
+  a.deck:is(:hover, :focus-visible) .bp-loop:not(.bp-away) .bp-flow {
+    opacity: 1; transition: opacity .45s var(--ease);
+    animation: bp-flow 7s linear infinite;
+  }
+  a.deck:is(:hover, :focus-visible) .bp-loop:not(.bp-away) .bp-flow-h { animation-duration: 2.8s; }
+  a.deck:is(:hover, :focus-visible) .bp-loop:not(.bp-away) .bp-rotor { animation: bp-spin 3s linear infinite; }
+  a.deck:is(:hover, :focus-visible) .bp-loop:not(.bp-away) .bp-od-ring { animation: bp-ping 3.5s var(--ease-out) infinite; }
+}
+@keyframes bp-flow { to { stroke-dashoffset: -100; } }
+@keyframes bp-spin { to { transform: rotate(360deg); } }
+@keyframes bp-ping {
+  from { transform: scale(.7); opacity: .85; }
+  60%, to { transform: scale(1.6); opacity: 0; }
+}
+
+/* the photometer: smaller, inset inside the outline */
+.deck-a { margin: .9rem .9rem 0; }
+.decks .deck-a .deck-media { height: clamp(160px, 27vh, 265px); }
+
+.sys-frame {
+  position: absolute; left: 0; top: 0; width: 100%; height: 100%;
+  overflow: visible; pointer-events: none; z-index: 1;
+}
+.sys-frame .sys-fill {
+  fill: color-mix(in srgb, var(--c-reactor) 6%, transparent);
+  stroke: none;
+  transition: opacity 1s var(--ease-out) .5s;
+}
+.sys-frame .sys-line {
+  fill: none;
+  stroke: color-mix(in srgb, var(--c-reactor) 88%, transparent);
+  stroke-width: 2.2; stroke-linejoin: round;
+  filter: drop-shadow(0 0 9px color-mix(in srgb, var(--c-reactor) 60%, transparent));
+}
+.sys-frame-armed .sys-line { stroke-dasharray: 1 99999; }
+.sys-frame-armed .sys-fill { opacity: 0; }
+.sys-tag {
+  position: absolute; z-index: 3; transform: translate(-50%, -50%);
+  font-family: var(--mono); font-size: .54rem; letter-spacing: .22em;
+  text-transform: uppercase; white-space: nowrap; pointer-events: none;
+  color: var(--c-reactor);
+  background: var(--bg);
+  border: 1px solid color-mix(in srgb, var(--c-reactor) 70%, transparent);
+  border-radius: 999px; padding: .28rem .75rem;
+  box-shadow: 0 0 14px -4px color-mix(in srgb, var(--c-reactor) 70%, transparent);
+}
+
+@media (max-width: 980px) {
+  .decks { grid-template-columns: repeat(2, minmax(0, 1fr)); grid-template-areas: "br br" "ph ph" "dp hy"; }
+  .deck-a { flex-direction: row; }
+  .deck-a .deck-media { flex: 0 0 46%; }
+  .deck-a .deck-media::before { border-radius: 10px 0 0 0; }
+  .deck-a .deck-body { justify-content: center; }
+}
+@media (max-width: 680px) {
+  .decks { grid-template-columns: minmax(0, 1fr); grid-template-areas: "br" "ph" "dp" "hy"; gap: 2.4rem; }
+  .deck-wide, .deck-a { flex-direction: column; }
+  .decks .deck-media, .decks .deck-wide .deck-media, .decks .deck-a .deck-media { flex: none; height: auto; aspect-ratio: 4 / 3; }
+  .deck-wide .deck-media::before, .deck-a .deck-media::before { border-radius: 10px 10px 0 0; }
+  .deck-wide .deck-body { padding: 1.1rem 1.3rem; }
+}
+
+/* ═══ hub: tokens, focus and selection ═══
+   Everything below is scoped to body.hub: this file also loads on the notebook reader. polish.css draws
+   focus and selection from --amber, which the hub never defines, so neither painted here before. */
+body.hub { --inset: clamp(20px, 4.4vw, 64px); --ink-2: #c5cdd7; --ink-3: #a3adb9; --ring: #9ccfff; --bus: rgba(156, 207, 255, .5); }
+body.hub :is(.i-br, .sys-br) { --c: var(--c-reactor); }
+body.hub .i-ph { --c: var(--c-photometer); }
+body.hub :is(.i-lp, .sys-dp) { --c: var(--c-diopal); }
+body.hub :is(.i-hy, .sys-hy) { --c: #b18cff; }
+body.hub :focus-visible { outline: 2px solid #f2f5f8; outline-offset: 3px; }
+body.hub a.deck:focus-visible { outline: 2px solid #fff; outline-offset: 5px; }
+body.hub .nb-sheet :focus-visible { outline-color: var(--nb-green-d); }
+body.hub .nb-sheet .nb-leaf:focus-visible { outline: 0; }
+body.hub .nb-go:focus-visible { outline-offset: 7px; }
+body.hub ::selection { background: rgba(90, 169, 255, .42); color: #fff; }
+body.hub .nb-sheet ::selection { background: rgba(36, 110, 62, .24); color: var(--nb-ink); }
+body.hub::before, body.hub::after { content: none; }
+body.hub #notebook { scroll-margin-top: 4rem; }
+
+/* ═══ hub: topbar ═══ solid once it leaves the film, so nothing ghosts through it */
+body.hub .topbar { justify-content: flex-start; gap: clamp(.9rem, 2vw, 1.6rem); padding: 14px var(--inset); font-size: .6875rem; letter-spacing: .2em; background: linear-gradient(rgba(5, 6, 10, .8), transparent); -webkit-backdrop-filter: none; backdrop-filter: none; }
+body.hub .topbar.stuck { background: #06070b; }
+body.hub :is(.brand, .topbar-meta, .tb-nav a) { white-space: nowrap; }
+body.hub .topbar-meta { color: var(--ink-3); }
+body.hub .tb-nav { display: flex; gap: clamp(1rem, 2.2vw, 2rem); margin: 0 7.4rem 0 auto; }
+body.hub .tb-nav a { padding: .55rem 0; color: #eef2f6; transition: color .25s var(--ease); }
+body.hub .tb-nav a:hover { color: #fff; }
+body.hub .palette-hint { top: 15px; bottom: auto; right: var(--inset); opacity: 1; color: var(--ink-2); font-size: .6875rem; padding: .42rem .72rem; background: #0a0d12; border-color: rgba(255, 255, 255, .22); -webkit-backdrop-filter: none; backdrop-filter: none; }
+body.hub .palette-hint kbd { color: var(--ink-2); border-color: rgba(255, 255, 255, .26); }
+@media (max-width: 760px) {
+  body.hub .palette-hint { display: none; }
+  body.hub .tb-nav { margin-right: 0; }
+}
+
+/* ═══ hub: hero ═══ the film near full bleed; the title upper-centre with a clear gap above the figures; entrances start legible */
+/* HARDWARE and the section titles are set in Unbounded Medium (SIL Open Font License, fonts/OFL.txt), trimmed to basic Latin, served from this repo */
+/* block, and preloaded from the head: with swap, HARDWARE painted first in the fallback face and jumped to this one ~20 ms later (13 Sep) */
+@font-face { font-family: "Unbounded Title"; src: url("../fonts/unbounded-500-latin.woff") format("woff"); font-weight: 500; font-style: normal; font-display: block; unicode-range: U+0020-007E, U+00B7, U+2013-2014, U+2018-2019, U+201C-201D, U+2026; }
+body.hub .hero { position: relative; z-index: 2; isolation: isolate; overflow-x: clip; min-height: max(100svh, 640px); display: grid; grid-template-rows: .45fr auto 1fr auto; justify-items: center; padding: 6rem var(--inset) clamp(3rem, 7vh, 4.5rem); text-align: center; }
+body.hub .hero > *:not(.hero-film) { position: relative; }
+body.hub .hero-film { position: absolute; inset: 0; z-index: -1; overflow: hidden; pointer-events: none; background: #05060a; }
+/* The clips begin on the poster's own frame (dev/film/rotate_start.py), so the video takes over from its poster with no
+   visible change and needs no fade: a fading video layer was one more thing to switch at the moment playback starts
+   (13 Sep). The poster is also a layer under the video, for a file that cannot load (.no-film, js/hero-film.js): the
+   video hides and the poster drifts slowly instead of standing frozen. */
+body.hub .hero-film::before { content: ""; position: absolute; inset: 0; background: url("../img/film/hub-film-poster.jpg") 50% 50% / cover no-repeat; }
+body.hub .hero-film video { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; display: block; }
+body.hub .hero-film.no-film video { visibility: hidden; }
+body.hub .hero-film::after { content: ""; position: absolute; inset: 0; background: linear-gradient(to top, #05060a, rgba(5, 6, 10, .88) 14%, rgba(5, 6, 10, .6) 32%, rgba(5, 6, 10, .18) 54%, transparent 68%), radial-gradient(60% 42% at 50% 44%, rgba(5, 6, 10, .5), transparent 74%), linear-gradient(rgba(5, 6, 10, .72), transparent 17%); }
+body.hub .hero-title { grid-row: 2; width: fit-content; max-width: 100%; margin: 0 0 clamp(1.6rem, 4.6vh, 3rem); }
+/* closest-side: the ground fades to nothing exactly at its own edge, so the box never shows as a line across the film */
+body.hub .hero-title::before { content: ""; position: absolute; z-index: -1; inset: -6rem -16vw -5rem; background: radial-gradient(closest-side, rgba(5, 6, 10, .55), rgba(5, 6, 10, .31) 64%, transparent); }
+/* the eyebrow as a dimension line across the headline */
+body.hub .hero .eyebrow { display: flex; align-items: center; justify-content: center; gap: .9rem; margin: 0 0 clamp(.7rem, 1.8vh, 1.2rem); font: .6875rem var(--mono); letter-spacing: .3em; text-transform: uppercase; color: #fff; }
+body.hub .hero .eyebrow::before, body.hub .hero .eyebrow::after { content: ""; display: block; flex: 1; width: auto; min-width: 20px; height: 9px; background: linear-gradient(rgba(255, 255, 255, .42), rgba(255, 255, 255, .42)) 0 50% / 100% 1px no-repeat; border: 0 solid rgba(255, 255, 255, .7); border-left-width: 1px; }
+body.hub .hero .eyebrow::after { border-width: 0 1px 0 0; }
+body.hub .hero h1 { margin: 0 0 clamp(.9rem, 2.6vh, 1.6rem); font-family: "Unbounded Title", var(--sans); font-weight: 500; font-size: clamp(1.9rem, 6.6vw, 6.95rem); line-height: .9; letter-spacing: .01em; color: #f2f5f8; }
+@supports ((-webkit-background-clip: text) or (background-clip: text)) {
+  body.hub .hero h1 { background: linear-gradient(#fff 15%, #e9eef3 60%, #cfd8e2); -webkit-background-clip: text; background-clip: text; -webkit-text-fill-color: transparent; }
+}
+body.hub .hero-lead { margin: 0 auto; max-width: 62ch; font-size: clamp(1rem, 1.2vw, 1.18rem); line-height: 1.6; color: var(--ink-2); text-wrap: balance; }
+body.hub .hero-lead b { font-weight: 600; color: var(--c); }
+/* a soft dark halo keeps the small type readable wherever the film runs bright behind it */
+body.hub :is(.hero .eyebrow, .hero-lead) { text-shadow: 0 0 18px rgba(5, 6, 10, .92), 0 0 5px rgba(5, 6, 10, .85); }
+body.hub .hero-rail { grid-row: 4; width: min(100%, 1040px); }
+/* the way down, between the lead and the figures: the line drops four times and then rests */
+body.hub .scroll-cue { grid-row: 3; align-self: center; display: grid; justify-items: center; gap: .65rem; margin: 1rem 0; font: .6875rem var(--mono); letter-spacing: .3em; text-transform: uppercase; color: #dfe5ec; text-shadow: 0 0 16px rgba(5, 6, 10, .95), 0 0 5px rgba(5, 6, 10, .9); }
+body.hub .scroll-cue::after { content: ""; width: 1px; height: 44px; background: linear-gradient(rgba(242, 245, 248, .75), transparent); transform-origin: top; }
+@media (prefers-reduced-motion: no-preference) { body.hub .scroll-cue::after { animation: hub-drop 2.6s var(--ease) 1.4s 4; } }
+@keyframes hub-drop { 0%, 100% { opacity: .3; transform: scaleY(.4); } 50% { opacity: 1; transform: scaleY(1); } }
+/* a looping film needs a way to stop it (WCAG 2.2.2): kept, but quiet, in the corner */
+body.hub .hero > .film-toggle { position: absolute; right: var(--inset); bottom: clamp(3rem, 7vh, 4.5rem); width: 44px; height: 44px; margin: 0; padding: 0; border-radius: 50%; font-size: 0; color: rgba(255, 255, 255, .6); cursor: pointer; background: rgba(5, 6, 10, .4); border: 1px solid rgba(255, 255, 255, .12); transition: color .25s var(--ease), border-color .25s var(--ease); }
+body.hub .hero > .film-toggle[hidden] { display: none; }
+/* the glyph is placed, not flowed: the button's hidden label is a grid item of its own and pushed a flowed glyph off centre */
+body.hub .hero > .film-toggle::before { content: ""; position: absolute; left: 50%; top: 50%; width: 10px; height: 12px; transform: translate(-50%, -50%); background: currentColor; clip-path: polygon(0 0, 34% 0, 34% 100%, 0 100%, 0 0, 66% 0, 100% 0, 100% 100%, 66% 100%, 66% 0); }
+body.hub .hero > .film-toggle[aria-pressed="true"]::before { width: 11px; transform: translate(-38%, -50%); clip-path: polygon(8% 0, 100% 50%, 8% 100%); }
+body.hub .hero > .film-toggle:is(:hover, :focus-visible) { color: #fff; border-color: rgba(255, 255, 255, .4); }
+@media (prefers-reduced-motion: no-preference) {
+  /* the film arrives as a fade only: a CSS zoom on top of the film's own camera move read as a stutter (13 Sep) */
+  body.hub .hero-film { animation: hub-film-in 2.4s var(--ease-out) both; }
+  body.hub .hero-film.no-film::before { animation: hub-drift 24s ease-in-out 1.2s infinite alternate; }
+  body.hub :is(.hero .eyebrow, .hero h1, .hero-lead, .hero-rail > li) { animation: hub-rise 1s var(--ease-out) both; }
+  body.hub .hero h1 { animation-duration: 1.3s; animation-delay: .12s; }
+  body.hub .hero-lead { animation-delay: .4s; }
+  body.hub .hero-rail > li:nth-child(1) { animation-delay: .55s; }
+  body.hub .hero-rail > li:nth-child(2) { animation-delay: .65s; }
+  body.hub .hero-rail > li:nth-child(3) { animation-delay: .75s; }
+  body.hub .hero-rail > li:nth-child(4) { animation-delay: .85s; }
+}
+@keyframes hub-film-in { from { opacity: .4; } }
+@keyframes hub-drift { to { transform: scale(1.08) translate(-1.2%, .8%); } }
+@keyframes hub-rise { from { opacity: .62; transform: translateY(18px); } }
+
+/* ═══ hub: hero-bare ═══ an experiment (13 Sep): the hero without its four figures, the title centred in the frame, the scroll
+   cue at its foot. The figures stay in the markup: delete the "hero-bare experiment" step in apply.py (or the class) to bring them back. */
+body.hub .hero.hero-bare { grid-template-rows: 1fr auto 1fr; padding-top: clamp(4.6rem, 10vh, 6rem); padding-bottom: clamp(4.6rem, 10vh, 6rem); }
+body.hub .hero.hero-bare .hero-title { grid-row: 2; margin: 0; }
+body.hub .hero.hero-bare .hero-rail { display: none; }
+body.hub .hero.hero-bare .scroll-cue { grid-row: 3; align-self: end; margin: 0 0 calc(-1 * clamp(2.4rem, 6vh, 3.4rem)); }
+body.hub .hero.hero-bare > .film-toggle { position: absolute; right: var(--inset); bottom: clamp(1.6rem, 4vh, 2.6rem); grid-row: auto; justify-self: auto; margin: 0; }
+
+/* ═══ hub: rail ═══ the hero's four readouts, each cell under a short tick of its instrument's colour */
+body.hub .rail { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); border-top: 1px solid rgba(255, 255, 255, .14); }
+body.hub .rail li { position: relative; min-width: 0; border-left: 1px solid rgba(255, 255, 255, .08); }
+body.hub .rail li:first-child { border-left: 0; }
+body.hub .rail li::before { content: ""; position: absolute; top: -1px; left: 0; width: 34px; height: 1px; background: var(--c); box-shadow: 0 0 10px var(--c); }
+body.hub .rl-k { font: .6875rem var(--mono); letter-spacing: .18em; text-transform: uppercase; color: var(--c); white-space: nowrap; }
+body.hub .rl-k i { font-style: normal; color: var(--ink-3); margin-right: .55em; }
+body.hub .rl-v { font-size: clamp(1.6rem, 2.4vw, 2.3rem); line-height: 1; font-weight: 500; letter-spacing: -.035em; }
+body.hub .rl-v em { font-style: normal; font-size: .46em; margin-left: .18em; letter-spacing: 0; color: var(--ink-2); }
+body.hub .rl-l { font-size: .8125rem; line-height: 1.35; color: var(--ink-3); text-wrap: balance; }
+@media (max-width: 1000px) {
+  body.hub .rail { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  body.hub .rail li:nth-child(odd) { border-left: 0; }
+  body.hub .rail li:nth-child(n+3) { border-top: 1px solid rgba(255, 255, 255, .08); }
+}
+/* in the hero the figures are plain text, centred cell by cell: nothing to click, so nothing reacts to the pointer */
+body.hub .hero-rail li { display: grid; align-content: start; justify-items: center; gap: .35rem; padding: .95rem clamp(.6rem, 1.2vw, 1.1rem) .2rem; }
+body.hub .hero-rail li::before { left: 50%; transform: translateX(-50%); }
+/* where the centred figures reach the corner, Pause takes its own row under them */
+@media (max-width: 1280px) {
+  body.hub .hero { grid-template-rows: .45fr auto 1fr auto auto; }
+  body.hub .hero > .film-toggle { position: relative; right: auto; bottom: auto; grid-row: 5; justify-self: end; margin-top: 1rem; }
+}
+@media (max-width: 760px) {
+  body.hub .hero { padding-top: 4.6rem; }
+  body.hub .hero h1 { font-size: clamp(1.65rem, 9.1vw, 2.9rem); }
+  body.hub .hero .eyebrow { letter-spacing: .18em; }
+  body.hub .hero-film::after { background: linear-gradient(to top, #05060a, rgba(5, 6, 10, .92) 38%, rgba(5, 6, 10, .7) 62%, rgba(5, 6, 10, .3) 80%, transparent 92%), linear-gradient(rgba(5, 6, 10, .85), transparent 30%); }
+}
+@media (max-width: 560px) { body.hub .hero .eyebrow::before, body.hub .hero .eyebrow::after { display: none; } }
+
+/* ═══ hub: orbit ═══ "Choose an instrument" and "How they fit together" as one drawing; tools/build_orbit.py writes the markup.
+   The stage is placed in its own units, 1440 × 800 (left: x / 14.4 %, top: y / 8 %), so the drawing, the models and the words
+   stay together at every width. Pointing at an instrument lights its ring and opens its details under the stage, in place of
+   the key and the note. Below 980px the same markup stacks into one column, in the order the culture moves. */
+body.hub :is(.orbit .dp, .orbit .light) { --c: var(--c-diopal); }
+body.hub :is(.orbit .br, .orbit .loop) { --c: var(--c-reactor); }
+body.hub .orbit .ph { --c: var(--c-photometer); }
+body.hub .orbit .hy { --c: #b18cff; }
+body.hub .orbit .prot { --c: #dfe6ee; }
+body.hub .orbit { position: relative; z-index: 2; padding: clamp(4.4rem, 8vh, 5.2rem) var(--inset) clamp(2.2rem, 4vh, 3rem); }
+body.hub .orbit::before { content: ""; position: absolute; top: 0; bottom: 0; left: 50%; width: 100vw; margin-left: -50vw; z-index: -1; pointer-events: none; background: radial-gradient(52% 40% at 50% 56%, rgba(60, 100, 170, .16), transparent 72%), linear-gradient(transparent, rgba(10, 16, 30, .55) 12%, rgba(8, 13, 24, .55) 88%, transparent); }
+
+/* The section title and the instrument names are set in Oxanium SemiBold (SIL Open Font License, fonts/OFL-oxanium.txt),
+   trimmed to basic Latin. Unbounded, HARDWARE's face, reads badly in lower case (the owner's call, 13 Sep). */
+@font-face { font-family: "Oxanium Title"; src: url("../fonts/oxanium-600-latin.woff") format("woff"); font-weight: 600; font-style: normal; font-display: block; unicode-range: U+0020-007E, U+00B7, U+2013-2014, U+2018-2019, U+201C-201D, U+2026; }
+
+/* the head: the section's title, as before */
+body.hub .orbit-head { position: relative; z-index: 2; width: min(100%, 1520px); margin: 0 auto; display: flex; align-items: flex-end; justify-content: space-between; gap: .8rem 2rem; }
+body.hub .orbit-head::after { content: ""; position: absolute; left: 0; right: 0; bottom: -1.3rem; height: 1px; background: linear-gradient(90deg, rgba(255, 255, 255, .34), rgba(255, 255, 255, .06) 60%, transparent); }
+body.hub .dh-t { font-family: "Oxanium Title", var(--sans); font-weight: 600; font-size: clamp(1.85rem, 3.8vw, 3.35rem); line-height: 1.02; letter-spacing: 0; color: #fff; }
+body.hub :is(.dh-k, .dh-hint) { font: .6875rem var(--mono); text-transform: uppercase; color: var(--ink-3); }
+body.hub .dh-k { margin: 0 0 .8rem; letter-spacing: .28em; }
+body.hub .dh-k b { margin-right: .8em; font-weight: 500; color: #fff; }
+body.hub .dh-hint { margin: 0 0 .3rem; letter-spacing: .14em; }
+@media (hover: none) { body.hub .dh-hint { display: none; } }
+
+/* the stage and its three drawn layers: the sky, the rings behind the instruments, the rings in front of them */
+/* The top of the stage is open sky, so it tucks up under the head: by 7.4rem on a wide screen, less as the stage narrows,
+   because the photometer's words keep their size while the sky they sit in shrinks. */
+body.hub .orbit-stage { position: relative; z-index: 1; width: min(100%, 1520px); aspect-ratio: 1440 / 800; margin: calc(-1 * clamp(0px, (100% - 900px) * .3, 7.4rem)) auto 0; container-type: inline-size; }
+body.hub :is(.orbit-sky, .orbit-back, .orbit-front) { position: absolute; inset: 0; width: 100%; height: 100%; overflow: visible; pointer-events: none; }
+body.hub .orbit-sky { z-index: 0; }
+body.hub .orbit-back { z-index: 1; }
+body.hub .orbit-front { z-index: 3; }
+body.hub .orb-grid { fill: none; stroke: #9cc0ff; stroke-width: 1; vector-effect: non-scaling-stroke; }
+body.hub .orb-dust circle { fill: #d6e4ff; }
+body.hub :is(.orb-ring, .orb-tick, .orb-loop, .orb-loop-glow, .orb-flowline, .lit, .orb-hand, .orb-hand-glow, .orb-arrow) { fill: none; }
+body.hub .orb-ring { stroke: rgba(196, 216, 255, .3); stroke-width: 1; vector-effect: non-scaling-stroke; }
+body.hub .orb-tick { stroke: rgba(196, 216, 255, .24); stroke-width: 1; vector-effect: non-scaling-stroke; }
+body.hub .orb-tick.mj { stroke: rgba(196, 216, 255, .46); }
+body.hub .orb-loop { stroke: color-mix(in srgb, var(--c-reactor) 80%, transparent); stroke-width: 1.8; }
+body.hub .orb-loop-glow { stroke: var(--c-reactor); stroke-width: 10; stroke-opacity: .09; }
+/* the culture moving round the loop: 24 dots a half, so the two halves meet without a jump. Each half is a layer only as
+   big as the loop, the back one under the instruments and the front one over them. */
+body.hub .orbit-flow { position: absolute; left: calc(var(--fx) / 14.4 * 1%); top: calc(var(--fy) / 8 * 1%); width: calc(var(--fw) / 14.4 * 1%); height: calc(var(--fh) / 8 * 1%); overflow: visible; pointer-events: none; will-change: transform; }
+body.hub .orbit-flow.b { z-index: 1; }
+body.hub .orbit-flow.f { z-index: 3; }
+body.hub .orb-flowline { stroke: #d4e8ff; stroke-width: 3.4; stroke-linecap: round; stroke-dasharray: .6 41.0667; }
+@media (prefers-reduced-motion: no-preference) {
+  body.hub .orb-flowline { animation: orb-flow 2.4s linear infinite; }
+  body.hub .orbit.is-away .orb-flowline { animation-play-state: paused; }
+}
+@keyframes orb-flow { to { stroke-dashoffset: -41.6667; } }
+body.hub .orb-station { fill: #06080d; stroke: var(--c-reactor); stroke-width: 1.8; }
+body.hub .orb-hand { stroke: var(--c); stroke-width: 1.6; stroke-dasharray: 7 6; }
+body.hub .orb-hand-glow { stroke: var(--c); stroke-width: 7; stroke-opacity: .08; }
+body.hub .orb-arrow { stroke: var(--c); stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
+body.hub .orb-hand-dot { fill: var(--c); }
+body.hub .lit { stroke-width: 3.4; opacity: 0; transition: opacity .5s var(--ease) .15s; }
+body.hub .lit-br { stroke: var(--c-reactor); stroke-width: 3.2; }
+body.hub :is(.orb-marks, .orb-hand-g) { transition: opacity .45s var(--ease) .15s; }
+
+/* the words on the drawing: the loop's stations and the two hand-offs */
+body.hub .orb-word { position: absolute; z-index: 4; left: calc(var(--x) / 14.4 * 1%); top: calc(var(--y) / 8 * 1%); margin: 0; white-space: nowrap; font: 500 clamp(.625rem, .74cqw, .75rem) / 1.4 var(--mono); letter-spacing: .14em; text-transform: uppercase; color: #aeb8c4; text-shadow: 0 0 10px #05070b, 0 0 3px #05070b; pointer-events: none; transition: opacity .45s var(--ease) .15s; }
+body.hub .orb-word[data-a="tc"] { translate: -50% 0; text-align: center; }
+body.hub .orb-word[data-a="bc"] { translate: -50% -100%; text-align: center; }
+body.hub .orb-word[data-a="tr"] { translate: -100% 0; text-align: right; }
+body.hub .orb-word[data-a="mr"] { translate: -100% -50%; text-align: right; }
+body.hub .orb-word[data-a="br"] { translate: -100% -100%; text-align: right; }
+body.hub .orb-word[data-a="bl"] { translate: 0 -100%; }
+/* the words keep a minimum size, so on a narrow stage they take up more of the drawing: tighter tracking there */
+@container (max-width: 1100px) { body.hub .orb-word { letter-spacing: .1em; } }
+body.hub .orb-word.hand b { display: block; font-weight: 500; color: var(--c); }
+
+/* an instrument: its model in a ringed disc, and its words beside it, all one link */
+body.hub .orb-body { position: absolute; left: calc((var(--x) - var(--r)) / 14.4 * 1%); top: calc((var(--y) - var(--r)) / 8 * 1%); width: calc(var(--r) / 7.2 * 1%); height: calc(var(--r) / 4 * 1%); color: inherit; text-decoration: none; -webkit-tap-highlight-color: transparent; }
+body.hub .orb-body:focus-visible { outline: 0; }
+body.hub .orb-core { position: absolute; inset: 0; z-index: 2; border-radius: 50%; transition: opacity .45s var(--ease) .15s, transform .7s var(--ease-out); }
+body.hub .orb-core::after { content: ""; position: absolute; inset: -6%; border-radius: 50%; box-shadow: 0 0 0 2px #fff; opacity: 0; pointer-events: none; }
+body.hub .orb-body:focus-visible .orb-core::after { opacity: 1; }
+body.hub .orb-halo { position: absolute; left: calc(var(--hp) * -1%); top: calc(var(--hp) * -1%); width: calc(100% + var(--hp) * 2%); height: calc(100% + var(--hp) * 2%); overflow: visible; pointer-events: none; opacity: .85; transition: opacity .45s var(--ease); }
+body.hub .orb-rim { fill: none; stroke-width: 1.6; }
+body.hub .orb-dots { fill: none; stroke-width: 1.2; }
+body.hub .orb-arc { fill: none; stroke-width: 2.4; stroke-linecap: round; }
+body.hub .orb-ticks { stroke-width: 1.2; stroke-opacity: .8; }
+body.hub .orb-media { position: absolute; left: 50%; top: 50%; width: calc(var(--bw) / var(--r) * 50%); height: calc(var(--bh) / var(--r) * 50%); translate: -50% -50%; }
+body.hub .orb-media img { display: block; width: 100%; height: 100%; object-fit: contain; filter: drop-shadow(0 18px 26px rgba(0, 0, 0, .6)); transition: opacity .5s var(--ease-out); }
+body.hub .orb-media.gl-ready .deck-gl { opacity: 1; }
+body.hub .orb-media.gl-ready img { opacity: 0; pointer-events: none; }
+body.hub .orb-tag { position: absolute; z-index: 5; left: calc(var(--tx) * 1%); top: calc(var(--ty) * 1%); width: calc(var(--tw) * 1cqw); text-shadow: 0 0 14px #04060a, 0 0 4px #04060a, 0 0 1px #04060a; transition: opacity .45s var(--ease) .15s; }
+body.hub .orb-tag[data-a="tc"] { translate: -50% 0; text-align: center; }
+body.hub .orb-tag[data-a="bl"] { translate: 0 -100%; }
+/* a dark ground under the words, so no ring or lit trail runs through them at any width */
+body.hub .orb-tag::before { content: ""; position: absolute; inset: -1.1rem -1.7rem; z-index: -1; pointer-events: none; background: radial-gradient(closest-side, rgba(5, 7, 11, .8), rgba(5, 7, 11, .5) 60%, transparent); }
+body.hub .orb-k { margin: 0; font: 500 clamp(.625rem, .76cqw, .75rem) / 1.3 var(--mono); letter-spacing: .18em; text-transform: uppercase; color: var(--c); }
+body.hub .orb-n { margin: .42em 0 .3em; font-family: "Oxanium Title", var(--sans); font-weight: 600; font-size: clamp(1.12rem, 1.56cqw, 1.6rem); line-height: 1.12; letter-spacing: 0; color: #f4f7fa; }
+body.hub .orb-body.br .orb-n { font-size: clamp(1.5rem, 2.45cqw, 2.45rem); }
+body.hub .orb-n::after { content: "\2192"; content: "\2192" / ""; display: inline-block; margin-left: .45em; font-family: var(--mono); font-size: .6em; vertical-align: .2em; color: var(--c); transition: translate .35s var(--ease-out); }
+body.hub .orb-body:is(:hover, :focus-visible) .orb-n::after { translate: .3em 0; }
+body.hub .orb-f { margin: 0; font-size: clamp(.8rem, .98cqw, .98rem); line-height: 1.45; color: #b3bcc7; text-wrap: balance; }
+body.hub .orb-f b { font-weight: 600; color: #fff; }
+
+/* Its details: a callout beside the model, joined to its rim by a short leader, so they open where the pointer already is.
+   The judge's pass (13 Sep) found the old strip under the drawing below the fold on a 1366×768 laptop. */
+body.hub .orb-more { position: absolute; z-index: 7; left: calc(var(--mx) * 1%); top: calc(var(--my) * 1%); width: clamp(14rem, 19cqw, 18.5rem); translate: 0 -50%; margin: 0; padding: .95rem 1.1rem 1rem; display: grid; gap: .55rem; text-align: left; background: linear-gradient(180deg, rgba(11, 14, 20, .97), rgba(6, 8, 12, .97)); border: 1px solid color-mix(in srgb, var(--c) 42%, transparent); border-radius: 12px; box-shadow: inset 0 1px 0 color-mix(in srgb, var(--c) 30%, transparent), 0 26px 60px -26px #000, 0 0 44px -20px color-mix(in srgb, var(--c) 55%, transparent); opacity: 0; transform: translateX(-10px); pointer-events: none; transition: opacity .28s var(--ease) .12s, transform .45s var(--ease-out) .12s; }
+body.hub .orb-more[data-ma="mr"] { translate: -100% -50%; transform: translateX(10px); }
+body.hub .orb-more::before { content: ""; position: absolute; top: 50%; right: 100%; width: 2.36cqw; height: 1px; background: linear-gradient(90deg, transparent, color-mix(in srgb, var(--c) 85%, transparent)); }
+body.hub .orb-more[data-ma="mr"]::before { right: auto; left: 100%; background: linear-gradient(270deg, transparent, color-mix(in srgb, var(--c) 85%, transparent)); }
+/* the photometer's callout hangs from its top edge, just under its words; the leader stays level with the model's centre, 60 stage units down */
+body.hub .orb-more[data-ma="tl"] { translate: 0 0; }
+body.hub .orb-more[data-ma="tl"]::before { top: 4.17cqw; }
+body.hub :is(.orb-core:hover ~ .orb-more, .orb-body:focus-visible .orb-more) { opacity: 1; transform: none; transition-delay: .05s; }
+body.hub .orb-more p { margin: 0; }
+body.hub .orb-line { font-size: clamp(.9rem, 1.02cqw, 1rem); line-height: 1.5; color: #e9eef3; }
+body.hub .orb-facts { display: flex; flex-wrap: wrap; gap: .3rem 1.1rem; font: .75rem / 1.5 var(--mono); letter-spacing: .04em; color: #a9b2bd; }
+body.hub .orb-facts span { white-space: nowrap; }
+body.hub .orb-facts span::before { content: ""; display: inline-block; width: 6px; height: 6px; margin-right: .55em; vertical-align: .08em; background: var(--c); }
+body.hub .orb-facts b { font-weight: 500; color: #fff; }
+body.hub .orb-pages { padding-top: .55rem; border-top: 1px solid rgba(255, 255, 255, .08); font: .6875rem / 1.6 var(--mono); letter-spacing: .04em; color: #b3bcc7; }
+body.hub .orb-pages span { display: block; margin-bottom: .1rem; letter-spacing: .18em; text-transform: uppercase; color: color-mix(in srgb, var(--c) 80%, #fff); }
+body.hub .orb-go { font: 500 .6875rem var(--mono); letter-spacing: .16em; text-transform: uppercase; color: var(--c); white-space: nowrap; }
+body.hub .orb-go i { margin-left: .55em; font-style: normal; }
+body.hub .orbit-notes { position: relative; z-index: 0; width: min(100%, 1520px); margin: 0 auto; display: grid; grid-template-columns: auto minmax(0, 1fr); gap: 1rem 3rem; padding-top: 1.2rem; border-top: 1px solid rgba(255, 255, 255, .1); }
+body.hub .orbit-legend { display: grid; align-content: start; gap: .55rem; margin: 0; padding: 0; list-style: none; font: .6875rem var(--mono); letter-spacing: .12em; text-transform: uppercase; color: var(--ink-2); }
+body.hub .orbit-legend li::before { content: ""; display: inline-block; width: 30px; margin: 0 .75rem .25em 0; border-top: 1.8px solid var(--c-reactor); }
+body.hub .orbit-legend .lg-hand::before { border-top: 1.6px dashed rgba(242, 245, 248, .6); }
+
+/* Pointing at a model's disc (not its words, which are only the link) or tabbing to the instrument: it comes forward,
+   the rest step back, its ring lights and its readout opens. The owner's call, 13 Sep. */
+body.hub :is(.orb-core:hover, .orb-body:focus-visible .orb-core) { transform: scale(1.05); }
+body.hub :is(.orb-core:hover, .orb-body:focus-visible .orb-core) .orb-halo { opacity: 1; }
+body.hub .orbit-stage:has(.orb-core:hover, .orb-body:focus-visible) .orb-body:not(:focus-visible):not(:has(> .orb-core:hover)) .orb-core { opacity: .28; transition-delay: 0s; }
+body.hub .orbit-stage:has(.orb-core:hover, .orb-body:focus-visible) .orb-body:not(:focus-visible):not(:has(> .orb-core:hover)) .orb-tag { opacity: .42; transition-delay: 0s; }
+body.hub .orbit-stage:has(.orb-core:hover, .orb-body:focus-visible) :is(.orb-word, .orb-marks, .orb-hand-g) { opacity: .4; transition-delay: 0s; }
+body.hub .orbit-stage:has(.orb-body.br > .orb-core:hover, .orb-body.br:focus-visible) :is(.orb-word, .orb-marks, .orb-hand-g),
+body.hub .orbit-stage:has(.orb-body.ph > .orb-core:hover, .orb-body.ph:focus-visible) :is(.orb-word.st, .orb-marks),
+body.hub .orbit-stage:has(.orb-body.dp > .orb-core:hover, .orb-body.dp:focus-visible) :is(.orb-word.light, .orb-hand-g.light),
+body.hub .orbit-stage:has(.orb-body.hy > .orb-core:hover, .orb-body.hy:focus-visible) :is(.orb-word.prot, .orb-hand-g.prot) { opacity: 1; }
+body.hub .orbit-stage:has(.orb-body.br > .orb-core:hover, .orb-body.br:focus-visible) .lit-br,
+body.hub .orbit-stage:has(.orb-body.ph > .orb-core:hover, .orb-body.ph:focus-visible) .lit-ph,
+body.hub .orbit-stage:has(.orb-body.dp > .orb-core:hover, .orb-body.dp:focus-visible) .lit-dp,
+body.hub .orbit-stage:has(.orb-body.hy > .orb-core:hover, .orb-body.hy:focus-visible) .lit-hy { opacity: 1; transition-delay: 0s; }
+body.hub .orb-loop-glow { transition: stroke-opacity .5s var(--ease); }
+body.hub .orbit-stage:has(.orb-body.br > .orb-core:hover, .orb-body.br:focus-visible) .orb-loop-glow { stroke-opacity: .2; }
+
+/* the intro (js/orbit.js): the rings open out of the core, the instruments arrive, then the words */
+@media (prefers-reduced-motion: no-preference) {
+  body.hub .orbit.is-armed:not(.is-in) :is(.orbit-back, .orbit-front) > g,
+  body.hub .orbit.is-armed:not(.is-in) :is(.orb-core, .orb-tag, .orb-word, .orbit-flow) { opacity: 0; }
+  /* under a second from first sight to done (the owner asked for it faster, 13 Sep; it took 2.1 s) */
+  body.hub .orbit.is-in :is(.orbit-back, .orbit-front) > g { transform-box: view-box; transform-origin: 720px 410px; animation: orb-open .85s var(--ease-out) both; }
+  body.hub .orbit.is-in .orbit-flow { animation: orb-fade .45s var(--ease-out) .45s both; }
+  body.hub .orbit.is-in .orb-core { animation: orb-arrive .55s var(--ease-out) calc(.12s + var(--i) * .06s) both; }
+  body.hub .orbit.is-in :is(.orb-tag, .orb-word) { animation: orb-fade .45s var(--ease-out) .42s both; }
+}
+@media (prefers-reduced-motion: reduce) { body.hub .orb-more, body.hub .orb-more[data-ma] { transform: none; transition-duration: .01s; } }
+@keyframes orb-open { from { opacity: 0; transform: scale(.4); } }
+@keyframes orb-arrive { from { opacity: 0; transform: scale(.82); } }
+@keyframes orb-fade { from { opacity: 0; } }
+
+/* the connectors between instruments belong to the column below; the orbit draws its own */
+body.hub .orb-flow { display: none; }
+
+/* phones and narrow windows: one column in the order the culture moves. The hand-offs run down a dashed spine; the
+   photometer hangs off the loop beside it, so the protectant is not drawn as coming out of the photometer. */
+@media (max-width: 979px) {
+  body.hub .orbit-stage { aspect-ratio: auto; container-type: normal; width: min(100%, 36rem); margin-top: 3.2rem; display: flex; flex-direction: column; --col: clamp(6.25rem, 28vw, 8.75rem); --gap: 1.1rem; --pc: calc(var(--col) / 2 + .9rem); --pd: calc(var(--col) * .56); }
+  body.hub :is(.orbit-sky, .orbit-back, .orbit-front, .orbit-flow, .orb-word) { display: none; }
+  body.hub .orb-body { position: relative; left: auto; top: auto; width: auto; height: auto; display: grid; grid-template-columns: var(--col) minmax(0, 1fr); grid-template-areas: "core tag" "core more"; column-gap: var(--gap); align-items: center; }
+  body.hub .orb-core { grid-area: core; position: relative; inset: auto; justify-self: center; width: calc(var(--col) * var(--s, .8)); aspect-ratio: 1; }
+  body.hub .orb-body.br { --s: 1; }
+  body.hub .orb-tag, body.hub .orb-tag[data-a] { grid-area: tag; align-self: end; position: static; width: auto; translate: none; text-align: left; text-shadow: none; }
+  body.hub .dh-hint { display: none; }
+  body.hub .orb-k { font-size: .6875rem; }
+  body.hub .orb-n { font-size: 1.22rem; }
+  body.hub .orb-body.br .orb-n { font-size: 1.6rem; }
+  body.hub .orb-f { font-size: .875rem; }
+  body.hub .orb-more, body.hub .orb-more[data-ma] { grid-area: more; align-self: start; position: static; width: auto; display: block; margin: 0; padding: .45rem 0 0; background: none; border: 0; border-radius: 0; box-shadow: none; opacity: 1; translate: none; transform: none; pointer-events: auto; }
+  body.hub .orb-more::before, body.hub :is(.orb-facts, .orb-pages) { display: none; }
+  body.hub .orb-line { font-size: .875rem; color: #c9d1da; }
+  body.hub .orb-go { margin-top: .55rem; font-size: .6875rem; }
+  body.hub .orb-body.ph { grid-template-columns: var(--pc) var(--pd) minmax(0, 1fr); grid-template-areas: "spine core tag" "spine core more"; }
+  body.hub .orb-body.ph .orb-core { width: var(--pd); }
+  body.hub .orb-body.ph::before { content: ""; grid-area: spine; justify-self: start; align-self: stretch; margin-left: calc(var(--col) / 2 - .75px); border-left: 1.5px dashed #dfe6ee; }
+  body.hub .orb-flow { position: relative; display: grid; grid-template-columns: var(--col) minmax(0, 1fr); column-gap: var(--gap); align-content: center; min-height: 5rem; margin: 0; font: .6875rem / 1.55 var(--mono); letter-spacing: .14em; text-transform: uppercase; color: #9aa4b0; }
+  body.hub .orb-flow::before { content: ""; grid-column: 1; grid-row: 1 / span 2; justify-self: center; align-self: stretch; border-left: 1.5px dashed var(--c); }
+  body.hub .orb-flow::after { content: ""; position: absolute; bottom: -1px; left: calc(var(--col) / 2 - 5px); border: 5px solid transparent; border-top: 7px solid var(--c); border-bottom: 0; }
+  body.hub .orb-flow b { grid-column: 2; font-weight: 500; color: var(--c); }
+  /* the loop leaves the bioreactor as a trace to the photometer, beside the protectant's dashed way down */
+  body.hub .orb-flow.loop { display: block; min-height: 3rem; background: linear-gradient(var(--c), var(--c)) calc(var(--col) / 2 + 8px) 0 / 1.5px 50% no-repeat, linear-gradient(var(--c), var(--c)) calc(var(--col) / 2 + 8px) 50% / calc(var(--pc) + var(--gap) + var(--pd) / 2 - var(--col) / 2 - 7.25px) 1.5px no-repeat, linear-gradient(var(--c), var(--c)) calc(var(--pc) + var(--gap) + var(--pd) / 2 - .75px) 100% / 1.5px 50% no-repeat; }
+  body.hub .orb-flow.loop::before { position: absolute; top: 0; bottom: 0; left: calc(var(--col) / 2 - .75px); border-left-color: #dfe6ee; }
+  body.hub .orb-flow.loop::after { left: calc(var(--pc) + var(--gap) + var(--pd) / 2 - 5px); }
+  body.hub .orbit-notes { width: min(100%, 36rem); margin-top: 2.6rem; grid-template-columns: minmax(0, 1fr); }
+}
+@media (max-width: 560px) { body.hub .orbit .dh-k { letter-spacing: .16em; } }
+
+/* ═══ hub: footer ═══ the same words and links, centred as one block */
+body.hub .hub-foot { position: relative; z-index: 2; display: grid; justify-items: center; gap: 1rem; padding: 2.2rem var(--inset) 2.6rem; border-top: 1px solid rgba(255, 255, 255, .08); text-align: center; }
+body.hub .outro-meta { font-size: .6875rem; color: var(--ink-3); }
+body.hub .legal { margin: 0; padding: 0; border: 0; max-width: 76ch; font-size: .78rem; color: var(--ink-3); }
+body.hub .legal a { color: var(--ink-2); text-decoration: underline; text-decoration-color: rgba(197, 205, 215, .4); text-underline-offset: 3px; }
+body.hub .legal a:hover { color: #fff; }
+body.hub .legal a[href*="gitlab"] { white-space: nowrap; }
+body.hub .legal .credits { opacity: 1; color: #8f99a6; }
+@media (max-width: 760px) { body.hub .outro-meta { letter-spacing: .08em; } }

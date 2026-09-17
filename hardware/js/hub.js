@@ -88,10 +88,23 @@
     });
   }
 
+  /* ---------- the bioreactor card's loop drawing ----------
+     Its flow pulse runs while the card is hovered or focused (css/hub.css).
+     Focus can outlast the card being on screen — tab to it, then scroll away —
+     so the drawing is marked while it is out of view, and the CSS holds it
+     still then. No observer, no mark: hover and focus work as they did. */
+  const loop = document.querySelector(".bp-loop");
+  if (loop && "IntersectionObserver" in window) {
+    new IntersectionObserver(function (es) {
+      es.forEach(function (e) { e.target.classList.toggle("bp-away", !e.isIntersecting); });
+    }).observe(loop);
+  }
+
   /* ---------- page hand-off ----------
      Fade out before navigating so the jump between hub and instrument reads as
      one continuous surface rather than a blink. */
-  if (!reduced) {
+  // where the browser carries one page into the next itself (@view-transition in css/polish.css), it crossfades them
+  if (!reduced && !("onpagereveal" in window)) {
     document.addEventListener("click", function (e) {
       const a = e.target.closest ? e.target.closest("a[href]") : null;
       if (!a) return;
@@ -175,8 +188,8 @@
       });
     }
 
-    // advance backwards so the cards slide left-to-right as they cycle
-    function tick() { go(page - 1); }
+    // forward, so the weeks run in time order: backwards, the build history read in reverse
+    function tick() { go(page + 1); }
     function start() {
       if (!timer && !reduced && !stopped) timer = setInterval(tick, 5200);
     }
@@ -195,6 +208,19 @@
         play.classList.toggle("paused", stopped);
         play.querySelector(".nb-reel-txt").textContent = stopped ? "Play" : "Pause";
         if (stopped) halt(); else start();
+      });
+    }
+
+    // Phones page one card at a time, so the dots are drawn as ticks there and
+    // these carry the tap (WCAG 2.5.8). notebook.css shows them at 760px and below.
+    if (play) {
+      [["prev", "Previous entries", -1], ["next", "Next entries", 1]].forEach(function (s) {
+        const b = document.createElement("button");
+        b.type = "button";
+        b.className = "nb-reel-step nb-reel-" + s[0];
+        b.setAttribute("aria-label", s[1]);
+        b.addEventListener("click", function () { go(page + s[2]); });
+        play.parentNode.insertBefore(b, s[2] < 0 ? play : play.nextSibling);
       });
     }
 

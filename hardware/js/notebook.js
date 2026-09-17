@@ -15,6 +15,7 @@
   });
 
   let ticking = false;
+  let lastIdx = 0;
   function update() {
     ticking = false;
     if (bar) {
@@ -23,14 +24,28 @@
       bar.style.width = (h > 0 ? Math.min(1, Math.max(0, window.scrollY / h)) * 100 : 0) + "%";
     }
     if (!items.length) return;
-    // the page whose top is nearest just above the middle of the screen
+    // The page whose top is nearest just above the middle of the screen.
+    //
+    // This used to restart the search at page 1 on every scroll frame and walk
+    // down until it found one below the line, so the work grew with how far you
+    // had read: about four getBoundingClientRect calls near the front, fifty by
+    // entry twenty-six, sixty-two at the end. Each one forces a synchronous
+    // layout of an 81,000px document holding 62 full-page scans, so the reader
+    // got heavier the longer you stayed in it — which is the wrong way round.
+    //
+    // Page tops increase down the document, and scrolling is near-monotonic, so
+    // walking out from wherever the answer was last time is the same answer for
+    // O(1) work in the common case.
     const mid = window.innerHeight * 0.42;
-    let current = 1;
-    for (let i = 0; i < pages.length; i++) {
-      if (pages[i].getBoundingClientRect().top <= mid) {
-        current = parseInt(pages[i].getAttribute("data-page"), 10);
-      } else break;
-    }
+    let i = Math.min(lastIdx, pages.length - 1);
+    while (i + 1 < pages.length &&
+           pages[i + 1].getBoundingClientRect().top <= mid) i++;
+    while (i > 0 && pages[i].getBoundingClientRect().top > mid) i--;
+    lastIdx = i;
+    const passed = pages[i].getBoundingClientRect().top <= mid;
+    const current = passed
+      ? parseInt(pages[i].getAttribute("data-page"), 10)
+      : 1;
     // an entry owns every page from its own up to the next entry's
     let active = items[0];
     for (let i = 0; i < items.length; i++) {

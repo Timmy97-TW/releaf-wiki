@@ -141,17 +141,26 @@
   scene.environment = RQ.studioEnv(renderer);
 
   // Light kit sits on top of the environment for shape definition only.
-  const key = new THREE.DirectionalLight(0xfff6ec, 0.38);
+  // Raised from 0.38 now the albedos are correct — but only to 0.9, where the
+  // photometer needed 2.40 off the same starting value. The sRGB-to-linear
+  // curve is steep near zero, so converting cost that instrument's near-black
+  // plastic far more than it costs DiOPAL's near-white enclosure. Same fault,
+  // same fix, different amount of light back: match the instrument, not the
+  // other page.
+  const key = new THREE.DirectionalLight(0xfff6ec, 0.90);
   key.position.set(80, 130, 150);
   scene.add(key);
   // Self-shadowing: parts shadow each other so crevices and overhangs read as
   // depth. No ground plane — that would light them better still but would
   // change compositions that are already framed.
   RQ.enableShadows(renderer, key);
-  const rimWarm = new THREE.DirectionalLight(0x46e08f, 0.30);
+  // Desaturated from #46e08f: a fully saturated green rim laid a wash down one
+  // side of the instrument. The accent belongs in the LEDs, which are actually
+  // green, not in the light bouncing off the chassis.
+  const rimWarm = new THREE.DirectionalLight(0xa8e6c4, 0.32);
   rimWarm.position.set(120, -40, -130);
   scene.add(rimWarm);
-  const rimCool = new THREE.DirectionalLight(0xbcd0e6, 0.30);
+  const rimCool = new THREE.DirectionalLight(0xc8d8ea, 0.39);
   rimCool.position.set(-110, 40, -140);
   scene.add(rimCool);
 
@@ -169,9 +178,14 @@
     g.fillStyle = rg;
     g.fillRect(0, 0, 256, 256);
     const tex = new THREE.CanvasTexture(c);
+    // Painted artwork, so sRGB. Read as linear and blended additively over a
+    // dark stage this pool saturated to white — on the photometer, whose glow
+    // is built the same way, it measured as clipping 30% of every lit pixel on
+    // the instrument.
+    tex.encoding = THREE.sRGBEncoding;
     const mat = new THREE.SpriteMaterial({
       map: tex, transparent: true, depthWrite: false, depthTest: false,
-      blending: THREE.AdditiveBlending, opacity: 0.9,
+      blending: THREE.AdditiveBlending, opacity: 0.42,
     });
     const s = new THREE.Sprite(mat);
     s.renderOrder = -1;
@@ -186,32 +200,37 @@
   // is dissolving.
   // Printed-part colours are the actual filaments: black box and LED holder,
   // grey base and sliders, white tube holder.
+  // Every colour below is an sRGB hex and goes through RQ.srgb(). r128 has no
+  // ColorManagement, so a hex handed straight to a material is consumed as
+  // linear and re-encoded on output — a dark value arrives about ten times too
+  // bright, which is why parts authored as dark plastic photographed grey and
+  // why the envMapIntensity numbers here had to be held down to compensate.
   const MATERIALS = {
     printed: function () { return MATERIALS.grey(); },
     black: function () {
       return { base: 1, glass: false, mat: new THREE.MeshPhysicalMaterial({
-        color: 0x121417, metalness: 0.10, roughness: 0.504, envMapIntensity: 0.810 , clearcoat: 1, clearcoatRoughness: 0.09 }) };
+        color: RQ.srgb(0x121417), metalness: 0.10, roughness: 0.504, envMapIntensity: 0.810 , clearcoat: 1, clearcoatRoughness: 0.09 }) };
     },
     grey: function () {
       return { base: 1, glass: false, mat: new THREE.MeshPhysicalMaterial({
-        color: 0x6a6f77, metalness: 0.12, roughness: 0.475, envMapIntensity: 0.972 , clearcoat: 1, clearcoatRoughness: 0.09 }) };
+        color: RQ.srgb(0x6a6f77), metalness: 0.12, roughness: 0.475, envMapIntensity: 0.972 , clearcoat: 1, clearcoatRoughness: 0.09 }) };
     },
     white: function () {
       return { base: 1, glass: false, mat: new THREE.MeshPhysicalMaterial({
-        color: 0xd9dbdd, metalness: 0.05, roughness: 0.533, envMapIntensity: 0.945 , clearcoat: 1, clearcoatRoughness: 0.09 }) };
+        color: RQ.srgb(0xd9dbdd), metalness: 0.05, roughness: 0.533, envMapIntensity: 0.945 , clearcoat: 1, clearcoatRoughness: 0.09 }) };
     },
     pcb: function () {
       return { base: 1, glass: false, mat: new THREE.MeshPhysicalMaterial({
-        color: 0x1d5c3a, metalness: 0.16, roughness: 0.396, envMapIntensity: 1.080 , clearcoat: 1, clearcoatRoughness: 0.09 }) };
+        color: RQ.srgb(0x1d5c3a), metalness: 0.16, roughness: 0.396, envMapIntensity: 1.080 , clearcoat: 1, clearcoatRoughness: 0.09 }) };
     },
     ledGreen: function () {
       return { base: 1, glass: false, mat: new THREE.MeshPhysicalMaterial({
-        color: 0x2f7a45, emissive: 0x38ff6a, emissiveIntensity: 0.7,
+        color: RQ.srgb(0x2f7a45), emissive: RQ.srgb(0x38ff6a), emissiveIntensity: 0.7,
         metalness: 0.0, roughness: 0.216, envMapIntensity: 0.675 , clearcoat: 1, clearcoatRoughness: 0.09 }) };
     },
     ledRed: function () {
       return { base: 1, glass: false, mat: new THREE.MeshPhysicalMaterial({
-        color: 0x8a3b32, emissive: 0xff5a4a, emissiveIntensity: 0.7,
+        color: RQ.srgb(0x8a3b32), emissive: RQ.srgb(0xff5a4a), emissiveIntensity: 0.7,
         metalness: 0.0, roughness: 0.216, envMapIntensity: 0.675 , clearcoat: 1, clearcoatRoughness: 0.09 }) };
     },
     // Real refraction rather than alpha blending. Against a dark background a
@@ -223,29 +242,29 @@
     // glass to reflect on its own.
     glass: function () {
       return { base: 1, glass: true, mat: new THREE.MeshPhysicalMaterial({
-        color: 0xeaf4ff, metalness: 0, roughness: 0.02,
+        color: RQ.srgb(0xeaf4ff), metalness: 0, roughness: 0.02,
         transmission: 0.86, ior: 1.5,
         transparent: true, opacity: 1, envMapIntensity: 3.4,
         clearcoat: 1, clearcoatRoughness: 0.02,
-        emissive: 0x93bce4, emissiveIntensity: 0.30,
+        emissive: RQ.srgb(0x93bce4), emissiveIntensity: 0.30,
         side: THREE.DoubleSide, depthWrite: false }) };
     },
     clear: function () {
       return { base: 1, glass: true, mat: new THREE.MeshPhysicalMaterial({
-        color: 0xf0f6ff, metalness: 0, roughness: 0.05,
+        color: RQ.srgb(0xf0f6ff), metalness: 0, roughness: 0.05,
         transmission: 0.92, ior: 1.46,
         transparent: true, opacity: 1, envMapIntensity: 3.0,
         clearcoat: 1, clearcoatRoughness: 0.03,
-        emissive: 0x9dc0e2, emissiveIntensity: 0.13,
+        emissive: RQ.srgb(0x9dc0e2), emissiveIntensity: 0.13,
         side: THREE.DoubleSide, depthWrite: false }) };
     },
     amber: function () {
       return { base: 1, glass: true, mat: new THREE.MeshPhysicalMaterial({
-        color: 0xffab34, metalness: 0, roughness: 0.10,
+        color: RQ.srgb(0xffab34), metalness: 0, roughness: 0.10,
         transmission: 0.62, ior: 1.55,
         transparent: true, opacity: 1, envMapIntensity: 1.5,
         clearcoat: 1, clearcoatRoughness: 0.04,
-        emissive: 0xff8a00, emissiveIntensity: 0.42,
+        emissive: RQ.srgb(0xff8a00), emissiveIntensity: 0.42,
         side: THREE.DoubleSide, depthWrite: false }) };
     },
   };
@@ -538,7 +557,7 @@
     for (let col = 0; col < 6; col++) {
       const x = -48 + col * 19.2;
       const hex = col % 2 ? 0xff5f4a : 0x3ddc8b;
-      const lin = new THREE.Color(hex).convertSRGBToLinear();
+      const lin = RQ.srgb(hex);
       // one material per column, so opacity is set six times a frame not 48
       // Additive, not alpha. Alpha-blending a colour over the white tube rack
       // darkens it — measured 118 down to 77 — which is the opposite of what a
@@ -892,7 +911,7 @@
       }
     }
 
-    glow.material.opacity = lerp(0.9, 0.55, big);
+    glow.material.opacity = lerp(0.42, 0.26, big);
 
     // hand the featured part to the annotation overlay, if one is attached
     if (annotFn) {

@@ -31,10 +31,10 @@
   --paper-2:    #f7f4ea;
   --nb-ink:     #26312a;
   --nb-ink-2:   #5d6b60;
-  /* 4.5:1 on the cream stock. Was #8d998f at 2.79:1 — below the AA floor,
-     and applied to the meaning-bearing micro-copy (the printed fields, the
-     fore-edge labels, the colour key, the card week/build lines). */
-  --nb-ink-3:   #6d7672;
+  /* 5.6:1 on the cream stock and 5.95:1 on the white cards. Was #8d998f at
+     2.79:1, then #6d7672 just under 4.5:1; it carries the meaning-bearing
+     micro-copy (the printed fields, the fore-edge labels, the card week lines). */
+  --nb-ink-3:   #5c6661;
   --nb-green:   #246e3e;
   --nb-green-d: #1b4d2e;
   --nb-gold:    #e3b13b;
@@ -61,14 +61,12 @@
     #120f0a   calc(100% - 110px),
     var(--bg) 100%);
 }
-/* and a bloom under the paper, so the warmth has a source */
+/* a lamp overhead: the one warm light in the dark, falling on the book */
 .nb-zone::after {
   content: ""; position: absolute; inset: 0; z-index: -2; pointer-events: none;
-  background:
-    repeating-linear-gradient(0deg, rgba(110, 220, 230, .035) 0 1px, transparent 1px 4px),
-    repeating-linear-gradient(90deg, rgba(110, 220, 230, .022) 0 1px, transparent 1px 60px);
-  -webkit-mask: linear-gradient(180deg, transparent, #000 12%, #000 88%, transparent);
-  mask: linear-gradient(180deg, transparent, #000 12%, #000 88%, transparent);
+  background: conic-gradient(at 50% -6%, transparent 156deg, rgba(255, 214, 140, .06) 168deg, rgba(255, 222, 160, .11) 180deg, rgba(255, 214, 140, .06) 192deg, transparent 204deg);
+  -webkit-mask: linear-gradient(transparent, #000 12%, #000 24%, transparent 70%);
+  mask: linear-gradient(transparent, #000 12%, #000 24%, transparent 70%);
 }
 .nb-zone::before {
   content: ""; position: absolute; inset: 0; z-index: -1; pointer-events: none;
@@ -92,15 +90,15 @@
    along with the ground it is drawn on. */
 .nb-signpost {
   display: flex; flex-direction: column; align-items: center; gap: .8rem;
-  padding: 5rem 1.5rem 0; margin: 0 auto; max-width: 1180px;
+  padding: 2.4rem 1.5rem 0; margin: 0 auto; max-width: 1180px;
   color: #8a7f63; text-decoration: none; position: relative;
 }
 .nb-signpost-l {
-  font-family: var(--mono); font-size: .6rem; letter-spacing: .22em;
-  text-transform: uppercase; transition: color .25s var(--ease);
+  font-family: var(--mono); font-size: .6875rem; letter-spacing: .22em;
+  text-transform: uppercase; color: #b8ad90; transition: color .25s var(--ease);
 }
 .nb-signpost-a {
-  display: block; width: 1px; height: 46px; position: relative;
+  display: block; width: 1px; height: 30px; position: relative;
   background: linear-gradient(180deg, transparent, rgba(227, 177, 59, .28) 35%, #a08f63);
 }
 .nb-signpost-a::after {
@@ -111,13 +109,6 @@
 }
 .nb-signpost:hover .nb-signpost-l,
 .nb-signpost:focus-visible .nb-signpost-l { color: var(--nb-gold); }
-@media (prefers-reduced-motion: no-preference) {
-  .nb-signpost-a { animation: nb-drift 2.6s var(--ease-io) infinite; }
-  @keyframes nb-drift {
-    0%, 100% { transform: translateY(0); opacity: .75; }
-    50%      { transform: translateY(6px); opacity: 1; }
-  }
-}
 
 /* ---- the sheet --------------------------------------------------------- */
 .nb-band {
@@ -152,43 +143,6 @@
 /* the frame is the sheet's positioning context and carries the brackets */
 .nb-frame { position: relative; }
 
-/* two lit columns in the dark either side of the book — the page framed like
-   an exhibit on a stand. Hidden when there is no room for them. */
-.nb-aside {
-  position: absolute; top: .4rem; bottom: 6rem; width: 46px; z-index: 1;
-  display: flex; flex-direction: column; align-items: center; justify-content: center;
-  gap: 1.1rem; pointer-events: none;
-}
-.nb-aside-l { left: -74px; }
-.nb-aside-r { right: -74px; }
-.nb-aside-line {
-  flex: 1; width: 1px;
-  background: linear-gradient(180deg, transparent, rgba(96, 216, 228, .5), transparent);
-  box-shadow: 0 0 7px rgba(96, 216, 228, .35);
-}
-.nb-aside span {
-  writing-mode: vertical-rl; font-family: var(--mono); font-size: .55rem;
-  letter-spacing: .34em; text-transform: uppercase; white-space: nowrap;
-  color: rgba(150, 205, 210, .62);
-}
-.nb-aside-r span { transform: rotate(180deg); }
-.nb-aside-node {
-  width: 7px; height: 7px; border-radius: 50%; background: rgba(120, 226, 236, .95);
-  box-shadow: 0 0 12px 2px rgba(96, 216, 228, .6), 0 0 3px #cffcff;
-  animation: nb-aside-pulse 3.2s var(--ease-io) infinite;
-}
-.nb-aside-mark {
-  font-family: var(--mono); font-size: .62rem; letter-spacing: .18em; font-style: normal;
-  color: rgba(227, 177, 59, .85); text-transform: uppercase;
-  padding: .3rem .4rem; border: 1px solid rgba(227, 177, 59, .3); border-radius: 3px;
-  writing-mode: vertical-rl;
-}
-@keyframes nb-aside-pulse {
-  0%, 100% { opacity: 1; box-shadow: 0 0 12px 2px rgba(96, 216, 228, .6), 0 0 3px #cffcff; }
-  50%      { opacity: .55; box-shadow: 0 0 6px 1px rgba(96, 216, 228, .3); }
-}
-@media (prefers-reduced-motion: reduce) { .nb-aside-node { animation: none; } }
-@media (max-width: 1380px) { .nb-aside { display: none; } }
 .nb-spine {
   position: absolute; left: 0; top: 0; bottom: 0; width: 11px; z-index: 3;
   pointer-events: none;
@@ -234,9 +188,8 @@
   background: url("data:image/svg+xml,%3Csvg%20xmlns='http://www.w3.org/2000/svg'%20width='56'%20height='34'%20viewBox='0 0 56 34'%3E%3Cg%20fill='none'%20stroke='%23ffffff'%20stroke-opacity='0.13'%20stroke-width='1.1'%3E%3Cpath%20d='M4 26 C10 26 15 22 17 16 C11 15 5 19 4 26 Z'/%3E%3Cpath%20d='M17 16 C17 10 22 5 28 4'/%3E%3Cpath%20d='M32 26 C38 26 43 22 45 16 C39 15 33 19 32 26 Z'/%3E%3Cpath%20d='M45 16 C45 10 50 5 56 4'/%3E%3C/g%3E%3C/svg%3E") repeat,
               linear-gradient(180deg, #2e8550 0%, var(--nb-green) 52%, #1c5c37 100%);
   color: #fff;
-  padding: .72rem 1.15rem;
-  display: grid; grid-template-columns: minmax(0,1fr) auto minmax(0,1fr);
-  align-items: center; gap: .9rem;
+  padding: 1.15rem 1.3rem;
+  display: flex; align-items: center; justify-content: center; gap: .9rem;
   box-shadow:
     inset 0 1px 0 rgba(255, 255, 255, .22),
     inset 0 -1px 0 rgba(0, 0, 0, .22),
@@ -252,72 +205,34 @@
   background: radial-gradient(circle 9px at 0 100%, transparent 0 9px, #1c5c37 9px); }
 .nb-headbar::after { right: 0;
   background: radial-gradient(circle 9px at 100% 100%, transparent 0 9px, #1c5c37 9px); }
-/* a slow iridescent sweep — holographic foil on the cover band */
-.nb-headbar::after {
-  content: ""; position: absolute; inset: 0; pointer-events: none; z-index: 0;
-  mix-blend-mode: screen; opacity: .16;
-  background: linear-gradient(100deg, transparent 34%,
-    rgba(90, 230, 220, .30) 44%, rgba(150, 170, 255, .26) 50%,
-    rgba(120, 255, 190, .24) 56%, transparent 66%);
-  transform: translateX(-60%);
-}
 .nb-headbar > * { position: relative; z-index: 1; }
-@keyframes nb-holo {
-  0%, 8% { transform: translateX(-70%); }
-  60%, 100% { transform: translateX(180%); }
-}
-@media (prefers-reduced-motion: reduce) { .nb-headbar::after { animation: none; opacity: 0; } }
 .nb-chip {
   display: inline-flex; align-items: center; justify-content: center;
-  justify-self: start;
+  position: absolute; left: 1.15rem; top: 50%; transform: translateY(-50%);
   min-width: 46px; height: 21px; padding: 0 .62rem; border-radius: 11px;
-  background: rgba(255, 255, 255, .17); color: #fff;
+  background: rgba(0, 0, 0, .2); color: #fff;
   font-family: var(--mono); font-size: .56rem; letter-spacing: .16em; font-weight: 600;
 }
+/* The masthead. This is the title of the thing, so it is the largest type in
+   the band — the headline below it now reads as the subtitle it always was. */
 .nb-headbar b {
-  font-family: var(--mono); font-size: .74rem; letter-spacing: .22em; font-weight: 600;
-  justify-self: center; white-space: nowrap;
-}
-.nb-headbar span {
-  justify-self: end; text-align: right; min-width: 0;
-  font-family: var(--mono); font-size: .57rem;
-  letter-spacing: .13em; color: rgba(255, 255, 255, .62);
-  overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
-}
-@media (max-width: 760px) {
-  .nb-headbar { grid-template-columns: auto 1fr; }
-  .nb-headbar b { justify-self: end; }
-  .nb-headbar span { grid-column: 1 / -1; justify-self: start; text-align: left; }
+  font-family: var(--sans);
+  font-size: clamp(1.6rem, 3.6vw, 2.75rem);
+  line-height: 1.02; letter-spacing: -.022em; font-weight: 600;
+  white-space: nowrap;
 }
 
-/* the printed folio at the foot of the page, the way their pages are set */
-.nb-folio {
-  position: absolute; left: 50%; transform: translateX(-50%); bottom: .55rem;
-  font-family: var(--mono); font-size: .5rem; letter-spacing: .22em;
-  text-transform: uppercase; color: var(--nb-ink-3); white-space: nowrap;
-  z-index: 2; pointer-events: none;
-}
 
 /* ---- head: the claim, and the printed fields --------------------------- */
 .nb-band-head {
   display: grid; grid-template-columns: minmax(0, 1.25fr) minmax(0, 300px);
-  gap: 1rem 3rem; align-items: start;
-  padding: 1rem 1.6rem 0;
-}
-/* the base eyebrow is flex-centred with flanking rules; here it is a printed
-   label, so it left-aligns with the heading and drops the decorative lines */
-.nb-band .eyebrow {
-  color: var(--nb-green); justify-content: flex-start; margin: 0;
-}
-.nb-band .eyebrow::before { display: none; }
-.nb-band .eyebrow::after {
-  background: linear-gradient(90deg, color-mix(in srgb, var(--nb-green) 30%, transparent), transparent);
-  width: clamp(24px, 6vw, 90px);
+  gap: .9rem 3rem; align-items: start;
+  padding: 1.15rem 1.6rem 0;
 }
 .nb-band h2 {
-  font-size: clamp(1.7rem, 3.2vw, 2.35rem); line-height: 1.1;
-  letter-spacing: -.025em; margin: .45rem 0 0; color: var(--nb-ink);
-  max-width: 19ch; text-wrap: balance;
+  font-size: clamp(1.18rem, 1.9vw, 1.5rem); line-height: 1.25;
+  letter-spacing: -.012em; margin: 0; color: var(--nb-ink);
+  max-width: 34ch; text-wrap: balance;
 }
 .nb-band h2 em {
   font-style: normal; color: var(--nb-green);
@@ -328,7 +243,7 @@
   margin: .55rem 1.6rem 0; max-width: 62ch; text-wrap: pretty;
 }
 .nb-lede .mark { color: var(--nb-ink); font-weight: 600; }
-.nb-lede .ann { color: #8a7534; font-style: italic; }
+.nb-lede .ann { color: #8a7534; font-style: italic; white-space: nowrap; }
 
 /* the footer fields off their own pages: label, dotted leader, value */
 .nb-fields { display: grid; gap: .32rem; padding-top: .2rem; }
@@ -342,8 +257,6 @@
   color: var(--nb-ink); font-weight: 600; font-variant-numeric: tabular-nums;
   letter-spacing: .1em;
 }
-/* the one field they left empty on purpose — it should read as a decision */
-.nb-field b.blank { color: #b8933a; }
 
 /* ---- the block: 62 leaves, edge-on -------------------------------------
    A notebook is a thickness. Seen from the fore-edge the whole year is legible
@@ -351,7 +264,7 @@
    plain ones are that week still running. */
 .nb-edge { margin: .9rem 1.6rem 0; position: relative; }
 .nb-edge-l {
-  display: flex; justify-content: space-between; gap: 1rem;
+  display: flex; justify-content: flex-end; gap: 1rem;
   font-family: var(--mono); font-size: .62rem; letter-spacing: .16em;
   text-transform: uppercase; color: var(--nb-ink-3); margin-bottom: .5rem;
 }
@@ -423,12 +336,8 @@
    timeline used to carry in its row labels; without it the colours are a
    pattern nobody can read. */
 .nb-key {
-  display: flex; flex-wrap: wrap; align-items: center; gap: .45rem 1.15rem;
+  display: flex; flex-wrap: wrap; align-items: center; gap: .45rem 1.2rem;
   margin-top: .7rem;
-}
-.nb-key-lead {
-  font-family: var(--mono); font-size: .62rem; letter-spacing: .12em;
-  text-transform: uppercase; color: var(--nb-ink-3); margin-right: .1rem;
 }
 .nb-key-i {
   display: inline-flex; align-items: center; gap: .4rem;
@@ -504,7 +413,6 @@
   .nb-block.dealt .nb-leaf i { animation: none; }
   .nb-block.dealt::after { animation: none; content: none; }
   .nb-leaf i, .nb-peek { transition: none; }
-  .nb-plate-s i { animation: none; }
 }
 
 /* ---- section bars, off their own pages --------------------------------- */
@@ -516,45 +424,11 @@
   font-family: var(--mono); font-size: .56rem; letter-spacing: .2em; font-weight: 600;
   box-shadow: inset 0 1px 0 rgba(255, 255, 255, .12);
 }
-.nb-sech em {
-  font-family: var(--mono); font-size: .55rem; letter-spacing: .13em;
-  color: var(--nb-ink-3); font-style: normal; margin-left: auto; white-space: nowrap;
-}
-
-/* ---- the timeline, on cream -------------------------------------------
-   Same markup and the same hub.js as the notebook reader, so the pointer
-   cursor, the week readout, the row dimming and the draw-in all still work —
-   only the surface under them is the notebook's cream. */
-.nb-sheet .lanes-head { margin: 0 0 .6rem; }
-.nb-sheet .lanes-head h3 { color: var(--nb-ink); }
-.nb-sheet .lanes-head p  { color: var(--nb-ink-2); }
-.nb-sheet .lanes-panel {
-  background: var(--paper-2); border: 1px solid var(--nb-line);
-  border-radius: 3px; color: var(--nb-ink);
-}
-.nb-sheet .lanes-panel::before, .nb-sheet .lanes-panel::after { color: #cfc8b3; }
-.nb-sheet .lanes-rule { border-bottom-color: var(--nb-line); color: var(--nb-ink-2); }
-.nb-sheet .lanes-rule-r { color: var(--nb-ink-3); }
-.nb-sheet .lanes-grid i { border-left-color: rgba(90, 80, 55, .09); }
-.nb-sheet .lanes-grid i:first-child { border-left-color: rgba(90, 80, 55, .18); }
-.nb-sheet .lanes-cursor { background: rgba(36, 110, 62, .09); }
-.nb-sheet .lanes-scale span { color: var(--nb-ink-3); }
-.nb-sheet .lanes-scale span.on { color: var(--nb-green); }
-.nb-sheet .lanes-readout-w { color: var(--nb-ink-3); }
-.nb-sheet .lanes-readout-t { color: var(--nb-ink-2); }
-.nb-sheet .lanes-panel.reading .lanes-readout-t { color: var(--nb-ink); }
-.nb-sheet .lane-name { color: var(--nb-ink-2); }
-.nb-sheet .lane-name a { color: var(--nb-green); }
-.nb-sheet .lane-track::before { background: #ece6d6; }
-.nb-sheet .lane-span { color: var(--nb-ink-3); }
-.nb-sheet .lane-dot:hover, .nb-sheet .lane-dot:focus-visible {
-  box-shadow: 0 0 0 3px var(--paper-2), 0 0 0 4px var(--c);
-}
 
 /* ---- the reel, on cream: every entry, three at a time -----------------
    Also unchanged in markup and hub.js: three at a time, paging through all of
    them, pausing the moment anyone reaches for one. */
-.nb-reel { margin: 0; overflow: hidden; }
+.nb-reel { margin: 0; overflow: hidden; overflow: clip; overflow-clip-margin: 8px; }
 .nb-reel-track {
   display: grid; grid-auto-flow: column;
   grid-auto-columns: calc((100% - 2 * 1.1rem) / 3);
@@ -568,7 +442,7 @@
 }
 /* the pause control the auto-advance needs to satisfy WCAG 2.2.2 */
 .nb-reel-play {
-  display: inline-flex; align-items: center; gap: .4rem;
+  display: inline-flex; align-items: center; gap: .4rem; min-height: 24px;
   border: 1px solid var(--nb-line); background: #fff; cursor: pointer;
   border-radius: var(--r-pill, 999px); padding: .28rem .62rem .28rem .5rem;
   font-family: var(--mono); font-size: .56rem; letter-spacing: .12em;
@@ -588,13 +462,19 @@
 /* At 1-up the reel builds 31 dots; unwrapped they overflowed the bar and were
    clipped by the sheet, unreachable. */
 .nb-reel-dots { display: flex; flex-wrap: wrap; justify-content: center;
-  gap: .38rem; row-gap: .34rem; max-width: 100%; }
+  gap: 0; max-width: 100%; }
+/* 24px targets, each carrying a 7px mark; the current group's mark is a 20px bar */
 .nb-reel-dots button {
-  width: 7px; height: 7px; padding: 0; border-radius: 50%; cursor: pointer;
-  border: 0; background: #d9d2be;
-  transition: background .25s var(--ease), width .25s var(--ease);
+  position: relative; width: 24px; height: 24px; padding: 0; cursor: pointer;
+  border: 0; background: none;
 }
-.nb-reel-dots button.on { width: 20px; border-radius: var(--r-sm); background: var(--nb-green); }
+.nb-reel-dots button::before {
+  content: ""; position: absolute; left: 50%; top: 50%; width: 7px; height: 7px;
+  margin: -3.5px 0 0 -3.5px; border-radius: 50%; background: #d9d2be;
+  transition: background .25s var(--ease), width .25s var(--ease), margin .25s var(--ease);
+}
+.nb-reel-dots button.on::before { width: 20px; margin-left: -10px; border-radius: var(--r-sm); background: var(--nb-green); }
+.nb-reel-dots button:focus-visible { outline-offset: -2px; border-radius: 50%; }
 .nb-pick {
   display: flex; flex-direction: column; gap: .4rem;
   padding: .7rem .9rem .75rem; text-decoration: none;
@@ -620,7 +500,7 @@
 .nb-pick b { font-size: .97rem; font-weight: 600; line-height: 1.32; letter-spacing: -.01em; color: var(--nb-ink); }
 .nb-pick p {
   margin: 0; font-size: .82rem; line-height: 1.55; color: var(--nb-ink-2);
-  display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;
+  display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden;
 }
 
 /* ---- the honest note + the way in -------------------------------------- */
@@ -663,20 +543,13 @@
     0 0 0 4px rgba(227, 177, 59, .62),
     0 22px 44px -14px rgba(27, 77, 46, .92);
 }
-@keyframes nb-cta-breathe {
-  0%, 100% { box-shadow: 0 0 0 1px var(--nb-green-d), 0 0 0 4px rgba(227,177,59,.5),
-    0 0 26px 2px rgba(120,226,236,.28), 0 18px 40px -12px rgba(27,77,46,.9); }
-  50% { box-shadow: 0 0 0 1px var(--nb-green-d), 0 0 0 4px rgba(227,177,59,.7),
-    0 0 34px 5px rgba(120,226,236,.45), 0 18px 40px -12px rgba(27,77,46,.9); }
-}
-@media (prefers-reduced-motion: reduce) { .nb-go { animation: none; } }
 .nb-go-main {
   display: block; font-size: 1.18rem; font-weight: 700; letter-spacing: -.015em;
 }
 .nb-go-sub {
   display: block; margin-top: .16rem;
   font-family: var(--mono); font-size: .55rem; letter-spacing: .14em;
-  text-transform: uppercase; color: rgba(255, 255, 255, .68);
+  text-transform: uppercase; color: rgba(255, 255, 255, .92);
 }
 .nb-go i {
   font-style: normal; font-size: 1.2rem; line-height: 1;
@@ -700,69 +573,9 @@
   .nb-go:hover, .nb-go:focus-visible { transform: none; }
 }
 
-/* ---- the plate caption ------------------------------------------------
-   Names the sheet the way a figure is captioned in a technical document, and
-   gives the framing a foot to stand on. */
-.nb-plate {
-  display: flex; align-items: baseline; gap: .8rem; flex-wrap: wrap;
-  max-width: 1180px; margin: 1.5rem auto 0; padding: 0 .3rem;
-  font-family: var(--mono);
-}
-.nb-plate-s {
-  display: inline-flex; align-items: center; gap: .4rem;
-  font-size: .58rem; letter-spacing: .2em; color: rgba(233, 190, 92, .9);
-}
-.nb-plate-s i {
-  width: 6px; height: 6px; border-radius: 50%; background: var(--nb-gold);
-  box-shadow: 0 0 7px rgba(227, 177, 59, .7);
-}
-@keyframes nb-blink { 0%, 62%, 100% { opacity: 1; } 78% { opacity: .25; } }
-.nb-plate-n {
-  font-size: .58rem; letter-spacing: .2em; color: rgba(233, 190, 92, .82);
-  border: 1px solid rgba(233, 190, 92, .34); border-radius: 2px;
-  padding: .18rem .5rem;
-}
-.nb-plate-t {
-  font-size: .62rem; letter-spacing: .04em; color: #9a927f; flex: 1; min-width: 12ch;
-}
-.nb-plate-r {
-  font-size: .58rem; letter-spacing: .16em; color: #7f7761; margin-left: auto;
-}
-
-
-@media (max-width: 900px) {
-  .nb-band-head { grid-template-columns: 1fr; }
-  .nb-foot { grid-template-columns: 1fr; }
-  .nb-cta { justify-self: start; }
-  .nb-block { height: 74px; }
-  .nb-reel-track { grid-auto-columns: calc(100% - 2rem); }
-}
-@media (min-width: 901px) and (max-width: 1180px) {
-  .nb-reel-track { grid-auto-columns: calc((100% - 1.1rem) / 2); }
-}
-@media (max-width: 640px) {
-  /* the meta is nowrap with a 232px min-content width, so below this it took
-     the whole row and crushed the green bar into a vertical slab */
-  .nb-sech { flex-wrap: wrap; }
-  .nb-sech em { margin-left: 0; white-space: normal; }
-}
-@media (max-width: 620px) {
-  /* the meta wraps onto its own line here, and margin-left:auto then reads as
-     a stray indent rather than as the right-hand end of a bar */
-  .nb-headbar span { margin-left: 0; }
-  /* the readout answers a pointer, and there is no pointer here */
-  .nb-edge-r { display: none; }
-  .nb-edge-l { display: block; }
-  .nb-band-head, .nb-edge, .nb-foot { margin-left: 1.1rem; margin-right: 1.1rem; }
-  .nb-band-head, .nb-foot { padding-left: 0; padding-right: 0; }
-  .nb-lede { margin-left: 1.1rem; margin-right: 1.1rem; }
-}
 /* ══════════════ notebook reader ══════════════ */
-/* The pages are the team's own artwork — cream stock, dark green header band,
-   gold annotations. Nothing here recolours or re-typesets them; the site only
-   supplies the surface they sit on and the way you move through them.
-   A PDF viewer paginates, and you lose your place in 62 pages. These stack and
-   scroll, with an index that stays put. */
+/* Restored in the wiki: upstream f563d94 dropped these three rules as dead,
+   but notebook/index.html still uses all of them. */
 
 .nbr-progress {
   position: fixed; top: 0; left: 0; right: 0; height: 2px; z-index: 60;
@@ -774,9 +587,7 @@
 }
 
 /* Top padding clears the wiki chrome: the 68px nav bar plus the 44px hardware
-   strip under it. The section used to carry a single 64px topbar, which 4.5rem
-   cleared; it does not clear both. Unlike the instrument pages there is no
-   full-height hero here to absorb them, so the heading starts right underneath.
+   strip under it. Upstream's 4.5rem cleared a single 64px topbar, not both.
    Keep this in step with --nv-h in assets/css/tokens.css and .hwnav in
    assets/css/nav-dark.css. */
 .nbr-head { max-width: 1080px; margin: 0 auto; padding: 9rem 1.5rem 2.4rem; }
@@ -865,28 +676,6 @@
   .nbr-page img { box-shadow: none; border-radius: 0; }
   .nbr-page figcaption { display: none; }
 }
-
-/* ---- timeline: month bands -------------------------------------------- */
-.nb-timeline { margin: 1.5rem 0 2.2rem; }
-.nb-months {
-  display: grid; grid-auto-flow: column; gap: 4px;
-  margin-bottom: .5rem;
-}
-.nb-month {
-  grid-column: span var(--span);
-  border-top: 1px solid var(--line-2);
-  padding-top: .35rem;
-  font-family: var(--mono); font-size: .52rem; letter-spacing: .18em;
-  text-transform: uppercase; color: var(--faint);
-  min-width: 0; overflow: hidden;
-}
-.nb-month span { white-space: nowrap; }
-.nb-strip-key {
-  margin: .8rem 0 0; font-size: .72rem; line-height: 1.6; color: var(--faint);
-  max-width: 62ch;
-}
-/* an empty week should read as "nothing here", not as a broken cell */
-.nb-wk.empty .nb-cell { border-style: dashed; opacity: .5; }
 
 /* ---- notebook search --------------------------------------------------- */
 /* The pages are images, so their text is invisible to the browser's find and
@@ -979,3 +768,41 @@
   margin: 0 0 .3rem; font-size: 1.02rem; font-weight: 600; letter-spacing: -.015em;
 }
 .nbr-map .lanes-head p { margin: 0; font-size: .84rem; color: var(--dim); }
+
+/* ══════════════ the band on phones ══════════════
+   Same sheet, stacked. The head drops to one column, the reel pages one card at
+   a time with two 44px step buttons (js/hub.js), and its 31 dots become one row
+   of ticks. */
+.nb-reel-step { display: none; }
+@media (max-width: 760px) {
+  .nb-signpost { padding-top: 1.8rem; }
+  .nb-band { margin-top: 1.6rem; padding: 0 1.5rem 2.8rem; }
+  .nb-pick-w, .nb-go-sub { font-size: .6875rem; }
+  .nb-sheet { box-shadow: 0 0 40px -26px rgba(233, 190, 92, .7), 3px 4px 0 rgb(239, 232, 216), 5px 8px 0 rgb(225, 217, 196), 7px 12px 0 rgb(210, 201, 176), 0 26px 44px -24px rgba(0, 0, 0, .8), 0 0 0 1px rgba(255, 255, 255, .09); }
+  .nb-spine { width: 8px; }
+  .nb-headbar, .nb-rule { margin-left: 12px; margin-right: 8px; }
+  .nb-headbar { padding: .85rem 1rem; }
+  .nb-chip { display: none; }
+  .nb-headbar b { font-size: clamp(1.2rem, 6.4vw, 1.9rem); }
+  .nb-band-head { grid-template-columns: minmax(0, 1fr); gap: 1rem; padding: 1rem 1.1rem 0 1.25rem; }
+  .nb-lede, .nb-edge, .nb-sec { margin-left: 1.25rem; margin-right: 1.1rem; }
+  .nb-lede { font-size: .9rem; }
+  .nb-edge-l { justify-content: flex-start; }
+  .nb-reel-track { grid-auto-columns: 100%; }
+  .nb-reel-bar { flex-wrap: wrap; row-gap: .5rem; }
+  .nb-reel-dots { order: 3; flex-basis: 100%; }
+  .nb-reel-dots button { width: 9px; pointer-events: none; }
+  .nb-reel-dots button.on { width: 20px; }
+  .nb-reel-dots button::before, .nb-reel-dots button.on::before { inset: 8.5px 1.5px; width: auto; height: auto; margin: 0; border-radius: 2px; }
+  .nb-reel-step { display: inline-grid; place-items: center; width: 44px; height: 44px; padding: 0; border-radius: 50%; border: 1px solid var(--nb-line); background: #fff; color: var(--nb-ink); font-size: 1.25rem; line-height: 1; cursor: pointer; }
+  .nb-reel-prev::before { content: "\2039"; }
+  .nb-reel-next::before { content: "\203A"; }
+  .nb-foot { grid-template-columns: minmax(0, 1fr); gap: 1.1rem; padding: .9rem 1.1rem 1.1rem 1.25rem; }
+  .nb-cta { justify-self: stretch; }
+  .nb-go { display: flex; justify-content: space-between; }
+}
+/* on touch there is no pointing, so no "point at a tab" and no 5 px tabs to hit by accident */
+@media (hover: none) {
+  .nb-edge-r { display: none; }
+  .nb-leaf { pointer-events: none; }
+}

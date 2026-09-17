@@ -1,0 +1,1061 @@
+/* Hydroponics floating plate — page chrome and stage.
+   Base tokens (--bg, --fg, --sans, --mono, --line, --dim, --faint, --r-lg,
+   --ease) come from ../css/polish.css, which is shared by every instrument.
+   Only the accent and the page's own layout live here. */
+:root {
+  /* The accent slot is named --amber across the instrument pages. Green is
+     DiOPAL's and blue is the bioreactor's, so this one takes violet — the
+     fourth hue that still clears AA on the page's near-black background. */
+  --amber: #b18cff;
+  --amber-deep: #5b31a8;
+}
+
+* { box-sizing: border-box; }
+
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--fg);
+  font-family: var(--sans);
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+  /* `clip`, not `hidden` — a non-visible value on one axis forces the other to
+     `auto`, which quietly makes <body> a scroll container and kills every
+     window-level scroll listener on the page. */
+  overflow-x: clip;
+  font-feature-settings: "tnum" 1, "ss01" 1;
+}
+
+h1, h2 { font-weight: 600; letter-spacing: -0.035em; margin: 0; }
+
+/* ---------- atmosphere ---------- */
+.bg-glow, .grid-lines, .grain, .vignette { position: fixed; inset: 0; pointer-events: none; }
+.bg-glow {
+  z-index: 0;
+  background:
+    radial-gradient(52% 40% at 50% 38%, rgba(177, 140, 255, .07), transparent 72%),
+    radial-gradient(90% 60% at 50% 110%, rgba(38, 62, 104, .18), transparent 70%);
+}
+.grid-lines {
+  z-index: 0; opacity: .16;
+  background-image:
+    linear-gradient(var(--line) 1px, transparent 1px),
+    linear-gradient(90deg, var(--line) 1px, transparent 1px);
+  background-size: 80px 80px;
+  mask-image: radial-gradient(66% 56% at 50% 42%, #000 30%, transparent 100%);
+  -webkit-mask-image: radial-gradient(66% 56% at 50% 42%, #000 30%, transparent 100%);
+}
+.grain {
+  z-index: 45; opacity: .30; mix-blend-mode: overlay;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='140' height='140'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='3'/%3E%3C/filter%3E%3Crect width='140' height='140' filter='url(%23n)' opacity='.5'/%3E%3C/svg%3E");
+}
+.vignette { z-index: 44; box-shadow: inset 0 0 min(16vw, 190px) rgba(0, 0, 0, .38); }
+
+/* ---------- chrome ---------- */
+.topbar {
+  position: fixed; top: 0; left: 0; right: 0; z-index: 50;
+  display: flex; justify-content: space-between; align-items: center;
+  padding: 20px clamp(18px, 3.2vw, 34px);
+  font-family: var(--mono); font-size: .62rem;
+  letter-spacing: .22em; text-transform: uppercase;
+}
+.backbtn { color: var(--dim); text-decoration: none; }
+.backbtn:hover { color: var(--fg); }
+.backbtn i { font-style: normal; margin-right: .5em; }
+.topbar-meta { color: var(--dim); }
+.topbar-meta span { color: var(--faint); margin: 0 .35em; }
+.skip-link {
+  position: absolute; left: -9999px; top: 0; z-index: 60;
+  background: var(--fg); color: var(--bg); padding: .6rem 1rem;
+}
+.skip-link:focus { left: 8px; top: 8px; }
+
+/* ---------- intro ---------- */
+.intro {
+  position: relative; z-index: 2;
+  display: grid; place-content: center; text-align: center;
+  padding: 7rem 2rem 3rem;
+}
+.eyebrow {
+  font-family: var(--mono); font-size: .65rem;
+  letter-spacing: .3em; text-transform: uppercase;
+  color: var(--amber); margin-bottom: 1.6rem;
+}
+.intro h1 { font-size: clamp(2.2rem, 6vw, 4.2rem); line-height: 1.04; margin-bottom: 1.5rem; }
+.intro h1 span { color: var(--amber); }
+.intro > p.lede {
+  max-width: 56ch; margin: 0 auto;
+  color: var(--muted); font-size: 1rem; line-height: 1.7;
+}
+.working-name {
+  display: inline-block; margin-top: 1.4rem;
+  font-family: var(--mono); font-size: .58rem; letter-spacing: .18em;
+  text-transform: uppercase; color: var(--faint);
+  border: 1px dashed var(--line); border-radius: 999px; padding: .45rem .9rem;
+}
+
+/* ---------- the scroll story ----------
+   A tall track with a sticky stage inside it. Scroll position through the
+   track is the animation's only input, so the whole thing is deterministic:
+   the same scroll offset always draws the same frame, forwards or backwards. */
+.story { position: relative; height: 900vh; z-index: 2; }
+.story-stage {
+  position: sticky; top: 0; height: 100vh; width: 100%;
+  overflow: hidden;
+}
+.story-stage #gl { position: absolute; inset: 0; width: 100%; height: 100%; display: block; }
+
+.loader {
+  position: absolute; inset: 0; display: grid; place-content: center;
+  font-family: var(--mono); font-size: .6rem; letter-spacing: .24em;
+  text-transform: uppercase; color: var(--dim);
+  background: var(--bg); transition: opacity .6s var(--ease), color .16s linear; z-index: 6;
+  /* "Loading " and the percentage are two grid items: in one row they read
+     as one line. The trailing .24em of tracking is given back on the left,
+     as on the title eyebrow, so the line sits on the true centre. */
+  grid-auto-flow: column; gap: .6em; padding-left: .24em;
+}
+/* The words leave first. With only the veil fading, "Loading 100%" hung
+   across the centre bores for ~300 ms while the plate came up behind it. */
+.loader.hide { opacity: 0; color: transparent; pointer-events: none; }
+
+/* ---- arrival ----
+   As the veil lifts the title rises in, a line at a time, and the scroll cue
+   comes last, instead of being uncovered already set. Only on the CHILDREN:
+   story.js owns #title's and #cue's inline opacity and transform, and a CSS
+   animation outranks inline style while it runs. `backwards` only, so nothing
+   is held once it has played and the scroll fade is untouched from then on.
+   Keyed on the loader's own .hide, so the error path (no .hide) keeps its
+   static title under the error text. One-shot on load; no per-frame cost. */
+@keyframes titleRise { from { opacity: 0; transform: translateY(14px); } }
+@keyframes cueIn { from { opacity: 0; } }
+.story-stage:has(.loader.hide) .story-title > * { animation: titleRise .95s var(--ease) backwards; }
+.story-stage:has(.loader.hide) .story-title > h1 { animation-delay: .07s; }
+.story-stage:has(.loader.hide) .story-title > .title-rule { animation-delay: .16s; }
+.story-stage:has(.loader.hide) .scroll-cue > span { animation: titleRise .8s var(--ease) .34s backwards; }
+/* The cue's line keeps its pulse; the fade-in is listed after it so it wins
+   while it runs, and its open end hands over to whatever the pulse is doing. */
+.story-stage:has(.loader.hide) .scroll-cue > i {
+  animation: cuedrop 2.4s var(--ease) infinite, cueIn .8s var(--ease) .42s backwards;
+}
+@media (prefers-reduced-motion: reduce) {
+  /* the global rule shortens durations but keeps delays: without this the
+     h1 and rule would blink in 70-160 ms after the (instant) veil */
+  .story-stage:has(.loader.hide) .story-title > *,
+  .story-stage:has(.loader.hide) .scroll-cue > span { animation: none; }
+  .story-stage:has(.loader.hide) .scroll-cue > i { animation: cuedrop 2.4s var(--ease) infinite; }
+}
+
+/* ---- title card ---- */
+.story-title {
+  position: absolute; left: 50%; top: clamp(84px, 11%, 130px); transform: translateX(-50%);
+  text-align: center; z-index: 4; pointer-events: none; width: min(90vw, 900px);
+}
+.story-title .eyebrow {
+  font-family: var(--mono); font-size: .64rem; letter-spacing: .42em;
+  text-transform: uppercase; color: var(--amber); margin-bottom: calc(.8rem * var(--ck, 1));
+  /* tracking leaves .42em after the last letter; this re-centres the caps */
+  padding-left: .42em;
+}
+/* Scaled with the stage height like the captions (--ck, written on #story by
+   story.js; 1 without it). The plate scales with height, so a fixed-px card
+   overlapped it by 18 px at 720 tall and 25 at 680. The top is clamped so the
+   eyebrow stays 9 px clear of the 75 px topbar on short windows. */
+.story-title h1 {
+  font-size: clamp(calc(2.2rem * var(--ck, 1)), 6.4vw, calc(4.6rem * var(--ck, 1))); line-height: 1.02;
+  letter-spacing: -.028em; margin: 0 0 calc(.9rem * var(--ck, 1));
+}
+.title-rule {
+  display: flex; align-items: center; justify-content: center; gap: 1rem;
+  font-family: var(--mono); font-size: .58rem; letter-spacing: .34em;
+  text-transform: uppercase; color: var(--amber);
+}
+.title-rule i {
+  display: block; width: clamp(28px, 6vw, 74px); height: 1px;
+  background: linear-gradient(90deg, transparent, var(--amber));
+}
+.title-rule i:last-child { background: linear-gradient(90deg, var(--amber), transparent); }
+
+/* ---- scroll cue ---- */
+.scroll-cue {
+  position: absolute; left: 50%; bottom: 22px; transform: translateX(-50%);
+  z-index: 4; pointer-events: none; text-align: center;
+  font-family: var(--mono); font-size: .58rem; letter-spacing: .34em;
+  text-transform: uppercase; color: var(--amber);
+}
+.scroll-cue i {
+  display: block; width: 1px; height: 30px; margin: 9px auto 0;
+  background: linear-gradient(var(--amber), transparent);
+  animation: cuedrop 2.4s var(--ease) infinite;
+}
+@keyframes cuedrop {
+  0%, 100% { opacity: .25; transform: scaleY(.4); transform-origin: top; }
+  50%      { opacity: 1;   transform: scaleY(1);  transform-origin: top; }
+}
+/* A phone on its side (~390 px tall). --ck bottoms out at .78 and the headline
+   runs on 6.4vw, so the title card was 99 px of a 390 px frame (47% with the
+   topbar) and the hero band left the part 130 px wide, 15% of the frame. On
+   short landscape windows the headline also stops at 9.2vh (its 1440x810
+   proportion) and the cue's pulse line is shorter; every taller window is
+   untouched (9.2vh is above the clamp's own max from 632 px tall up). */
+@media (orientation: landscape) and (max-height: 540px) {
+  .story-title h1 {
+    font-size: min(clamp(calc(2.2rem * var(--ck, 1)), 6.4vw, calc(4.6rem * var(--ck, 1))), 9.2vh);
+  }
+  .scroll-cue i { height: 14px; margin-top: 6px; }
+}
+
+/* ---- captions ----
+   The same side-panel treatment the photometer and DiOPAL pages use: an
+   outlined tag number, a name, a mono role line in the accent, then the copy.
+   No boxes and no leader lines — the type sits on the frame. */
+.hud { position: absolute; inset: 0; z-index: 3; pointer-events: none; }
+/* Centred at the TOP of the frame, with the model dropped out from under it.
+   The side column cost a third of the frame width and forced the model
+   sideways to dodge it; a top band costs a quarter of the height, which the
+   camera can simply give back by lowering the horizon. */
+.panel {
+  /* `top` is written per act by story.js — this is only the fallback */
+  /* No transition on `top`: the seat is rewritten only when the caption's
+     content swaps, which happens while it is faded out, so an animated move
+     buys nothing and can leave the type under the fixed topbar in transit. */
+  position: absolute; top: 5%; left: 50%;
+  width: min(62ch, 84vw);
+  transform: translateX(-50%);
+  text-align: center;
+  opacity: 0;
+  /* One eyebrow line (number, hairline, role), then the name, then the copy.
+     The DOM order is tag, name, role, rule, body; flex order seats the role
+     beside the number without touching the script. */
+  display: flex; flex-wrap: wrap; justify-content: center; align-items: center;
+  /* story.js writes opacity and transform on every frame; on its own layer
+     neither repaints the type or its shadow */
+  will-change: opacity, transform;
+  /* a soft dark halo, not a box: it holds the copy where it crosses lit water
+     or leaves without drawing an edge anyone could read as a label panel */
+  text-shadow: 0 1px 2px rgba(3, 4, 8, .6), 0 0 18px rgba(3, 4, 8, .55);
+}
+.panel.right { text-align: center; }
+.panel .tag {
+  /* The number is the eyebrow's first word, solid. It was a hollow 1px stroke
+     of --amber-deep on near-black (2.3:1), and the record's bare .tag rule
+     below drew a full-width outlined bar around it. Every property that rule
+     sets is restated here, so it cannot leak back in. */
+  order: 0; flex: none;
+  display: inline-flex; align-items: center; gap: .8em;
+  font-family: var(--mono); font-size: .66rem; font-weight: 600;
+  letter-spacing: .2em; line-height: 1; text-transform: none;
+  color: var(--fg); -webkit-text-stroke: 0;
+  border: 0; border-radius: 0; padding: 0; max-width: none;
+  margin: 0 .8em .8rem 0;
+}
+.panel .tag::after {
+  content: ""; width: 26px; height: 1px;
+  background: linear-gradient(90deg, var(--amber), color-mix(in srgb, var(--amber) 25%, transparent));
+}
+.panel .pname {
+  order: 2; flex: 0 0 100%;
+  font-size: clamp(1.25rem, 1.95vw, 1.7rem); line-height: 1.12; font-weight: 500;
+  letter-spacing: -.022em; margin-bottom: .55rem; color: var(--fg);
+}
+.panel .prole {
+  order: 1; flex: none;
+  font-family: var(--mono); font-size: .66rem; line-height: 1;
+  letter-spacing: .2em; text-transform: uppercase;
+  /* the tracking trails the last letter; pulled back so the line centres */
+  color: var(--amber); margin: 0 -.2em .8rem 0;
+}
+.panel p {
+  order: 4; flex: 0 0 100%;
+  margin: 0 auto; font-size: .84rem; line-height: 1.66;
+  max-width: 54ch; color: #cbb9f2;
+  text-wrap: balance;
+}
+.panel .nw { white-space: nowrap; }
+/* the eyebrow's hairline does this job now; a second rule under the name
+   cost a line of height in a band that is always short of it */
+.panel .rule { display: none; }
+.panel.right .rule { margin: 0 auto 1rem; background: linear-gradient(90deg, transparent, var(--amber), transparent); }
+
+/* the ring that marks a bore in act 2 */
+.mark-ring {
+  position: absolute; border: 1px solid var(--amber); border-radius: 50%;
+  transform: translate(-50%, -50%); opacity: 0;
+  box-shadow: 0 0 14px rgba(177, 140, 255, .35), inset 0 0 10px rgba(177, 140, 255, .18);
+}
+
+/* ---------- mobile ---------- */
+@media (max-width: 900px) {
+  .topbar { font-size: .55rem; padding: 14px 16px; }
+  .topbar-meta { display: none; }
+  .intro { padding: 5.5rem 1.2rem 2rem; }
+  .stage { aspect-ratio: 4 / 3; margin-top: 2rem; }
+  .legend-row { gap: 1rem; }
+}
+
+/* A 30vw column on a phone is four words wide. Below this the caption stops
+   being a side panel and becomes a band across the foot of the frame; the
+   script still sets left/right, so both are overridden here. */
+@media (max-width: 720px) {
+  .panel, .panel.right {
+    width: calc(100% - 40px);
+  }
+  .panel .tag, .panel .prole { font-size: .62rem; margin-bottom: .7rem; }
+  .panel .pname { font-size: 1.2rem; }
+  .panel p { font-size: .8rem; line-height: 1.6; max-width: none; }
+  .story-title { top: 15%; }
+}
+/* ---- caption scale ----
+   The model's size on screen is a fixed fraction of the stage HEIGHT (the fov
+   is vertical); the caption type was fixed px, so a short window gave the same
+   block a bigger bite of the frame. story.js writes --ck = clamp(h/810, .78, 1)
+   on #story (measureCaps), and every caption size and gap is multiplied by it:
+   the block keeps the proportion it has at 1440x810 and never grows past it.
+   The width is in ch of the scaled font, so lines break in the same places.
+   Floors keep it legible: body copy 12 px, the mono eyebrow 9 px. This block
+   replaces the old max-height: 720px tightening, which it makes redundant. It
+   comes after the mobile block on purpose and restates its sizes with --ck. */
+.panel { font-size: calc(1rem * var(--ck, 1)); }
+.panel .tag {
+  font-size: max(9px, calc(.66rem * var(--ck, 1)));
+  margin: 0 .8em calc(.8rem * var(--ck, 1)) 0;
+}
+.panel .tag::after { width: calc(26px * var(--ck, 1)); }
+.panel .prole {
+  font-size: max(9px, calc(.66rem * var(--ck, 1)));
+  margin: 0 -.2em calc(.8rem * var(--ck, 1)) 0;
+}
+.panel .pname {
+  font-size: clamp(calc(1.25rem * var(--ck, 1)), 1.95vw, calc(1.7rem * var(--ck, 1)));
+  margin-bottom: calc(.55rem * var(--ck, 1));
+}
+.panel p { font-size: max(12px, calc(.84rem * var(--ck, 1))); }
+@media (max-width: 720px) {
+  .panel .tag, .panel .prole {
+    font-size: max(9px, calc(.62rem * var(--ck, 1)));
+    margin-bottom: calc(.7rem * var(--ck, 1));
+  }
+  .panel .pname { font-size: calc(1.2rem * var(--ck, 1)); }
+  .panel p { font-size: max(12px, calc(.8rem * var(--ck, 1))); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  * { animation-duration: .001ms !important; transition-duration: .001ms !important; }
+}
+
+/* The story canvas is transparent, so the page graticule reads THROUGH the
+   render — most visibly as fixed horizontal rules lying across the reservoir.
+   It is page furniture, not part of the shot. */
+body.story-on .grid-lines { opacity: 0; }
+.grid-lines { transition: opacity .45s ease; }
+
+/* The grain is a full-viewport layer with mix-blend-mode: overlay sitting ON
+   TOP of the canvas. A blend mode forces the compositor to read the backdrop
+   back for that layer on every composited frame, which is a cost no JS-side
+   frame timing can see — and over a full-screen WebGL canvas it is the most
+   expensive thing on the page that is not the render itself. The scene has its
+   own dust and its own film grain in the floor shader; this layer earns its
+   keep over the written record below, not over the story. */
+body.story-on .grain { opacity: 0; }
+.grain { transition: opacity .45s ease; }
+
+/* The record's light theme switches on while the bottom third of the stage is
+   still on screen. The canvas is transparent, so that band became a grey slab
+   of water with a curtain of roots drawn on white paper. The stage keeps its
+   own night instead (the dark theme's --bg) and leaves the screen as a dark
+   band above the white record. It turns on at once with the theme; on the way
+   back it is held until the body's .55s fade to night has finished, so the
+   band never shows the page mid-fade behind the water either. */
+.story-stage { transition: background-color 0s linear .55s; }
+body.doc-light .story-stage { background-color: #05060a; transition: none; }
+/* polish.js drops the body fade under reduced motion, so there is nothing to wait out */
+@media (prefers-reduced-motion: reduce) { .story-stage { transition: none; } }
+
+/* Over the live canvas the topbar's backdrop blur is re-sampled on every frame
+   the render changes, and over the night sky it has nothing to soften: the bar
+   keeps its gradient scrim and gets the blur back on the record. The jump hint
+   sat on the frame's corner; it fades out for the story and returns on the
+   record, and the "/" key works throughout. */
+body.story-on:not(.doc-light) .topbar { -webkit-backdrop-filter: none; backdrop-filter: none; }
+body.story-on:not(.doc-light) .palette-hint {
+  opacity: 0; visibility: hidden;
+  transition: opacity .3s var(--ease-io), visibility 0s linear .3s;
+}
+/* On the white record the pill kept its night fill (rgba(10,13,18,.82)) at
+   .55 opacity: a grey smudge whose own label measured 1.1:1. Over paper it
+   takes the light surface the record's other controls use (.jump-btn). */
+body.doc-light .palette-hint {
+  background: #fff; color: var(--muted); opacity: 1;
+  border-color: var(--line-2);
+  box-shadow: 0 2px 14px rgba(15, 19, 25, .10);
+  -webkit-backdrop-filter: none; backdrop-filter: none;
+}
+body.doc-light .palette-hint:hover, body.doc-light .palette-hint:focus-visible { color: var(--fg); }
+
+/* ---- section map ------------------------------------------------------ */
+/* Built by js/toc.js from the document's own parts. Doubles as the table of
+   contents below 1100px, where the sticky rail is hidden. */
+.doc-map {
+  display: grid; gap: .8rem;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 220px), 1fr));
+  margin: 0 0 4.5rem;
+}
+.map-card {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  grid-template-areas: "n t" ". s";
+  column-gap: .75rem; row-gap: .5rem;
+  padding: 1.05rem 1.1rem 1.15rem;
+  border: 1px solid var(--line); border-radius: var(--r-md);
+  background: rgba(255,255,255,.015);
+  text-decoration: none; color: inherit;
+  transition: border-color .3s var(--ease), background .3s var(--ease),
+              transform .3s var(--ease);
+}
+.map-card:hover, .map-card:focus-visible {
+  border-color: color-mix(in srgb, var(--amber) 34%, transparent);
+  background: color-mix(in srgb, var(--amber) 4%, transparent);
+  transform: translateY(-2px);
+}
+.map-n {
+  grid-area: n;
+  font-family: var(--mono); font-size: .6rem; letter-spacing: .14em;
+  color: var(--amber); padding-top: .2em;
+}
+.map-t {
+  grid-area: t;
+  font-size: .92rem; font-weight: 600; line-height: 1.3;
+  letter-spacing: -.012em;
+}
+.map-sub {
+  grid-area: s;
+  display: flex; flex-direction: column; gap: .28rem;
+}
+.map-sub > span {
+  font-size: .72rem; line-height: 1.45; color: var(--dim);
+  padding-left: .72rem; position: relative;
+}
+.map-sub > span::before {
+  content: ""; position: absolute; left: 0; top: .62em;
+  width: 3px; height: 1px; background: var(--faint);
+}
+.map-more { color: var(--faint) !important; font-family: var(--mono);
+            font-size: .6rem !important; letter-spacing: .1em; }
+
+@media (prefers-reduced-motion: reduce) {
+  .map-card { transition: none; }
+  .map-card:hover, .map-card:focus-visible { transform: none; }
+}
+
+/* ═══ technical record ═══════════════════════════════════════════════
+   Ported verbatim from the DiOPAL stylesheet so this page's record matches
+   the other instrument pages. The story above keeps its own rules: the only
+   selector these share is a bare .tag, which .panel .tag outranks. ═══ */
+
+/* --- record layout, header, sections and components --- */
+.doc-wrap {
+  position: relative; z-index: 2;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 760px) minmax(0, 1fr);
+  padding: 0 clamp(18px, 4vw, 48px) 6rem;
+  border-top: 1px solid var(--line);
+}
+
+/* sticky contents rail */
+.doc-nav {
+  grid-column: 1;
+  position: sticky; top: 0; height: 100vh;
+  display: flex; flex-direction: column; justify-content: center;
+  padding-right: 2rem;
+}
+.doc-nav-label {
+  font-family: var(--mono); font-size: .55rem;
+  letter-spacing: .26em; text-transform: uppercase;
+  color: var(--faint); margin-bottom: 1.1rem;
+}
+.doc-nav ol { list-style: none; margin: 0; padding: 0; }
+.doc-nav li { margin-bottom: .7rem; }
+.doc-nav a {
+  display: flex; gap: .7rem; align-items: baseline;
+  text-decoration: none; color: var(--dim);
+  font-size: .8rem; line-height: 1.3;
+  transition: color .25s var(--ease);
+  border-left: 1px solid transparent; padding-left: .8rem;
+  margin-left: -.8rem;
+}
+.doc-nav a b {
+  font-family: var(--mono); font-size: .62rem; color: var(--faint);
+  transition: color .25s var(--ease);
+}
+.doc-nav a:hover { color: var(--fg); }
+.doc-nav a.on { color: var(--fg); border-left-color: var(--amber); }
+.doc-nav a.on b { color: var(--amber); }
+
+.doc { grid-column: 2; padding-top: 5rem; }
+
+/* ---- document header ---- */
+.doc-head { margin-bottom: 5rem; }
+.doc-head h1 {
+  font-size: clamp(2rem, 5vw, 3.4rem);
+  line-height: 1.03; margin-bottom: 1.6rem;
+}
+.standfirst {
+  font-size: 1.1rem; line-height: 1.62; color: var(--fg);
+  margin: 0 0 1.4rem; font-weight: 350;
+}
+.doc-aim {
+  color: var(--muted); line-height: 1.75; font-size: .95rem;
+  margin: 0 0 2rem; padding-left: 1.1rem;
+  border-left: 2px solid var(--line);
+}
+.status {
+  display: flex; align-items: flex-start; gap: .7rem;
+  font-size: .82rem; line-height: 1.6; color: var(--muted);
+  background: rgba(61, 220, 139, .05);
+  border: 1px solid rgba(61, 220, 139, .16);
+  border-radius: var(--r-xs); padding: .85rem 1rem;
+}
+.status-dot {
+  width: 6px; height: 6px; border-radius: 50%;
+  background: var(--amber); flex: none; margin-top: .5rem;
+}
+
+/* ---- part dividers ---- */
+.part {
+  margin: 7rem 0 3rem; padding-top: 2.2rem;
+  border-top: 1px solid var(--line);
+}
+.part:first-of-type { margin-top: 0; }
+.part-mark {
+  display: flex; align-items: baseline; gap: .6rem; margin-bottom: .7rem;
+}
+.part-mark span {
+  font-family: var(--mono); font-size: .58rem;
+  letter-spacing: .26em; text-transform: uppercase; color: var(--faint);
+}
+.part-mark b {
+  font-family: var(--mono); font-size: 1.1rem; color: var(--amber); font-weight: 600;
+}
+.part h2 { font-size: clamp(1.6rem, 3.4vw, 2.4rem); line-height: 1.08; }
+
+/* ---- sections ---- */
+.sec { margin-bottom: 3.4rem; }
+.sec h3 {
+  font-size: 1.42rem; font-weight: 600; letter-spacing: -.02em;
+  margin: 0 0 1.1rem; line-height: 1.3;
+  display: flex; gap: .75rem; align-items: baseline;
+}
+.sec h3 i, .sec h4 i {
+  font-family: var(--mono); font-style: normal;
+  font-size: .72em; color: var(--amber); font-weight: 500;
+  flex: none;
+}
+.sec h3 em, .sec h4 em { font-style: normal; color: var(--dim); font-weight: 400; }
+.sec h4 {
+  font-size: 1.1rem; font-weight: 600; margin: 2.2rem 0 .8rem;
+  display: flex; gap: .7rem; align-items: baseline;
+}
+.sec h5 { font-size: .87rem; font-weight: 600; margin: 0 0 .4rem; }
+.sec p {
+  /* Body was .95rem/68ch, which measures 15.2px at 70 characters — small for
+     long-form and at the top of the readable range. 1.06rem is about 17px, and
+     because the cap is in ch it has to come down with it or the measure just
+     stays where it was: 64ch lands near the 66-character optimum. */
+  color: var(--muted); line-height: 1.8; font-size: 1.05rem;
+  margin: 0 0 1.25rem; max-width: 64ch;
+}
+.sec p b, .sec li b { color: var(--fg); font-weight: 600; }
+.sec li { font-size: 1.05rem; line-height: 1.8; }
+.sec a { color: var(--amber); text-decoration: none; border-bottom: 1px solid rgba(61,220,139,.3); }
+.sec a:hover { border-bottom-color: var(--amber); }
+.sec abbr { text-decoration: none; border-bottom: 1px dotted var(--dim); cursor: help; }
+.lead-note {
+  font-size: 1.02rem !important; color: var(--fg) !important;
+  border-left: 2px solid var(--amber); padding-left: 1.1rem;
+}
+.fineprint { font-size: .85rem !important; color: var(--dim) !important; }
+
+/* ---- pending value chip ---- */
+.pending {
+  display: inline-block; vertical-align: baseline;
+  min-width: 4.4em; height: 1.05em;
+  border: 1px dashed rgba(61, 220, 139, .42);
+  border-radius: var(--r-xs);
+  background: repeating-linear-gradient(-45deg,
+    rgba(61,220,139,.05) 0 4px, transparent 4px 8px);
+}
+.pending.s { min-width: 2.4em; }
+.pending.eq { min-width: 12em; height: 1.5em; }
+
+/* ---- open item ---- */
+.openitem {
+  display: flex; gap: .9rem; align-items: flex-start;
+  border: 1px solid rgba(255,255,255,.08);
+  border-left: 2px solid var(--amber-deep);
+  border-radius: var(--r-xs); padding: .9rem 1.1rem;
+  margin: 1.4rem 0; background: rgba(255,255,255,.017);
+}
+.openitem.tight { margin: .9rem 0 0; padding: .7rem .9rem; }
+.openitem-tag {
+  font-family: var(--mono); font-size: .55rem;
+  letter-spacing: .2em; text-transform: uppercase;
+  color: var(--amber); flex: none; margin-top: .28rem;
+}
+.openitem p, .openitem ul { margin: 0; font-size: .85rem !important; line-height: 1.65; }
+.openitem ul { padding-left: 1.1rem; color: var(--muted); }
+.openitem li { margin-bottom: .3rem; font-size: .85rem; line-height: 1.6; }
+
+/* ---- blank slot ---- */
+.blank-slot {
+  border: 1px dashed rgba(255,255,255,.11);
+  border-radius: var(--r-sm); min-height: 130px;
+  display: grid; place-content: center;
+  margin: 1.2rem 0;
+  background: repeating-linear-gradient(-45deg,
+    rgba(255,255,255,.012) 0 8px, transparent 8px 16px);
+}
+.blank-slot::after {
+  content: attr(data-label) " — to be written";
+  font-family: var(--mono); font-size: .6rem;
+  letter-spacing: .2em; text-transform: uppercase; color: var(--faint);
+}
+
+/* ---- keynote ---- */
+.keynote {
+  display: flex; gap: 1.6rem; align-items: center;
+  margin: 2rem 0; padding: 1.4rem 1.6rem;
+  border: 1px solid var(--line); border-radius: var(--r-sm);
+  background: linear-gradient(100deg, rgba(61,220,139,.06), transparent 60%);
+}
+.keynote-fig {
+  font-size: 2.6rem; font-weight: 650; letter-spacing: -.04em;
+  color: var(--amber); line-height: 1; flex: none;
+}
+/* The unit suffix rides on the keynote's dark panel, so it cannot use the
+   deep variant — that is tuned for white and lands near 2.9:1 here. Use
+   --amber: the light theme already promotes it to --amber-deep. */
+.keynote-fig em { font-style: normal; font-size: .38em; margin-left: .12em; color: var(--amber); }
+.keynote p { margin: 0 !important; font-size: .9rem !important; }
+
+/* ---- tables ---- */
+.table-scroll { overflow-x: auto; margin: 1.6rem 0; }
+table { border-collapse: collapse; width: 100%; font-size: .84rem; min-width: 560px; }
+table caption {
+  text-align: left; font-family: var(--mono); font-size: .55rem;
+  letter-spacing: .22em; text-transform: uppercase; color: var(--faint);
+  padding-bottom: .7rem;
+}
+table th {
+  text-align: left; font-family: var(--mono); font-size: .56rem;
+  letter-spacing: .16em; text-transform: uppercase; color: var(--dim);
+  font-weight: 500; padding: .6rem .8rem; border-bottom: 1px solid var(--line);
+}
+table td {
+  padding: .72rem .8rem; border-bottom: 1px solid rgba(255,255,255,.05);
+  color: var(--muted); line-height: 1.5; vertical-align: top;
+}
+table tbody tr:hover td { background: rgba(255,255,255,.017); }
+table td:first-child { color: var(--fg); font-weight: 500; }
+table .num { text-align: right; white-space: nowrap; }
+table tfoot td {
+  border-bottom: none; border-top: 1px solid var(--line);
+  color: var(--fg); font-weight: 600; padding-top: .9rem;
+}
+.compare tr.ours td { background: rgba(61,220,139,.05); }
+.compare tr.ours td:first-child { color: var(--amber); }
+
+/* ---- spec card ---- */
+.spec-card {
+  border: 1px solid var(--line); border-radius: var(--r-sm);
+  padding: 1.3rem 1.5rem; margin: 1.8rem 0;
+}
+.spec-card-title {
+  font-family: var(--mono); font-size: .56rem;
+  letter-spacing: .22em; text-transform: uppercase;
+  color: var(--amber); margin-bottom: 1rem;
+}
+.spec-card dl {
+  display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+  gap: .9rem 1.6rem; margin: 0 0 1rem;
+}
+.spec-card dt {
+  font-family: var(--mono); font-size: .55rem;
+  letter-spacing: .16em; text-transform: uppercase; color: var(--dim);
+  margin-bottom: .25rem;
+}
+.spec-card dd { margin: 0; font-size: .87rem; font-weight: 500; }
+.spec-note { font-size: .84rem !important; color: var(--dim) !important; margin: 0 !important; }
+
+/* ---- iterations ---- */
+.iters { list-style: none; margin: 2rem 0; padding: 0; }
+.iters li { display: flex; gap: 1.4rem; padding-bottom: 2.2rem; position: relative; }
+.iters li::before {
+  content: ""; position: absolute; left: 17px; top: 40px; bottom: 0;
+  width: 1px; background: var(--line);
+}
+.iters li:last-child::before { display: none; }
+.iter-n {
+  font-family: var(--mono); font-size: .68rem; font-weight: 600;
+  color: var(--amber); flex: none;
+  width: 35px; height: 35px; border-radius: 50%;
+  border: 1px solid rgba(61,220,139,.3);
+  display: grid; place-content: center;
+  background: var(--bg); position: relative; z-index: 1;
+}
+.iter-body { flex: 1; min-width: 0; }
+.iter-body h4 { margin: .35rem 0 .6rem; font-size: 1rem; }
+.iter-cause { font-size: .87rem !important; color: var(--dim) !important; }
+
+/* delta */
+.delta {
+  display: flex; align-items: center; gap: 1.1rem; flex-wrap: wrap;
+  border: 1px solid var(--line); border-radius: var(--r-sm);
+  padding: 1rem 1.2rem; margin: 1.1rem 0;
+}
+.delta > div { text-align: center; }
+.delta span {
+  display: block; font-family: var(--mono); font-size: .52rem;
+  letter-spacing: .18em; text-transform: uppercase; color: var(--faint);
+  margin-bottom: .25rem;
+}
+.delta b { font-size: 1.5rem; font-weight: 650; letter-spacing: -.03em; color: var(--muted); }
+.delta b.good { color: var(--amber); }
+.delta-arrow { color: var(--faint); font-size: 1.1rem; }
+.delta p {
+  flex: 1; min-width: 190px; margin: 0 !important;
+  font-size: .78rem !important; color: var(--dim) !important; line-height: 1.55;
+}
+
+/* ---- callout ---- */
+.callout {
+  border: 1px solid var(--line); border-radius: var(--r-sm);
+  padding: 1.2rem 1.4rem; margin: 2rem 0;
+  background: rgba(255,255,255,.017);
+}
+.callout h5 { color: var(--fg); font-size: .92rem; margin-bottom: .5rem; }
+.callout h5 em { font-style: italic; color: var(--amber); }
+.callout p { margin: 0 !important; font-size: .89rem !important; }
+.callout.warn { border-color: rgba(61,220,139,.22); background: rgba(61,220,139,.045); }
+
+/* ---- filter steps ---- */
+.filter-steps {
+  display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+  gap: 1px; background: var(--line);
+  border: 1px solid var(--line); border-radius: var(--r-sm); overflow: hidden;
+  margin: 1.6rem 0;
+}
+.filter-steps > div { background: var(--bg); padding: 1rem; }
+.filter-steps b {
+  display: block; font-family: var(--mono); font-size: .62rem;
+  color: var(--amber); margin-bottom: .5rem;
+}
+.filter-steps p { margin: 0 !important; font-size: .82rem !important; line-height: 1.55; }
+
+/* ---- protocol ---- */
+.protocol { counter-reset: p; list-style: none; margin: 1.4rem 0; padding: 0; }
+.protocol li {
+  counter-increment: p; position: relative;
+  padding-left: 2.4rem; margin-bottom: 1.5rem;
+}
+.protocol li::before {
+  content: counter(p); position: absolute; left: 0; top: 0;
+  font-family: var(--mono); font-size: .62rem; color: var(--amber);
+  width: 1.5rem; height: 1.5rem; border-radius: 50%;
+  border: 1px solid rgba(61,220,139,.28);
+  display: grid; place-content: center;
+}
+.protocol p { margin: 0 !important; font-size: .9rem !important; }
+
+/* ---- equation ---- */
+.equation {
+  display: flex; align-items: center; gap: .9rem; flex-wrap: wrap;
+  border: 1px solid var(--line); border-radius: var(--r-sm);
+  padding: 1.3rem 1.5rem; margin: 1.4rem 0;
+  background: rgba(255,255,255,.017);
+  font-family: var(--mono);
+}
+.eq-lhs { font-size: 1.05rem; color: var(--fg); }
+.eq-eq { color: var(--dim); }
+.eq-range { font-size: .85rem !important; color: var(--dim) !important; }
+
+/* ---- metrics ---- */
+.metrics { display: flex; gap: 2.4rem; flex-wrap: wrap; margin: 1.2rem 0 1.4rem; }
+.metrics > div { display: flex; align-items: baseline; gap: .55rem; }
+.metrics span {
+  font-family: var(--mono); font-size: .58rem;
+  letter-spacing: .16em; text-transform: uppercase; color: var(--dim);
+}
+.metrics b { font-size: 1.15rem; font-weight: 600; }
+.metrics em { font-style: normal; font-size: .72rem; color: var(--faint); }
+
+/* ---- figures ---- */
+.fig { margin: 2rem 0; }
+.fig-slot {
+  border: 1px dashed rgba(255,255,255,.11); border-radius: var(--r-sm);
+  min-height: 230px; display: grid; place-content: center;
+  background: repeating-linear-gradient(-45deg,
+    rgba(255,255,255,.012) 0 8px, transparent 8px 16px);
+}
+.fig-slot span {
+  font-family: var(--mono); font-size: .6rem;
+  letter-spacing: .2em; text-transform: uppercase; color: var(--faint);
+}
+.fig figcaption {
+  font-size: .82rem; color: var(--dim); line-height: 1.6;
+  padding-top: .8rem; max-width: 62ch;
+}
+
+/* ---- flow path ---- */
+.flow { color: var(--fg); font-weight: 500; white-space: nowrap; }
+.flow i { color: var(--amber); font-style: normal; margin: 0 .18em; }
+
+/* ---- parameters ---- */
+.params { display: grid; gap: 1rem; margin: 1.6rem 0; }
+.param {
+  border: 1px solid var(--line); border-radius: var(--r-sm); padding: 1.2rem 1.4rem;
+}
+.param.prio { border-color: rgba(61,220,139,.24); background: rgba(61,220,139,.035); }
+.param-head {
+  display: flex; align-items: baseline; justify-content: space-between;
+  gap: 1rem; margin-bottom: .7rem; flex-wrap: wrap;
+}
+.param-head h4 { margin: 0; font-size: 1rem; }
+/* scoped to the record: bare, it also matched the story's #panel .tag */
+.doc .tag {
+  font-family: var(--mono); font-size: .52rem;
+  letter-spacing: .18em; text-transform: uppercase;
+  color: var(--dim); border: 1px solid var(--line);
+  border-radius: var(--r-xs); padding: .22rem .5rem;
+  /* `flex: none` here used to let a long tag ("Highest priority", widened by the
+     .18em tracking) push past the page edge on a phone. Shrinkable, and allowed
+     to wrap, so it can never be the widest thing on the page. */
+  flex: 0 1 auto; max-width: 100%;
+}
+.tag.hot { color: var(--amber); border-color: rgba(61,220,139,.32); }
+.param p { margin: 0 0 .7rem !important; font-size: .89rem !important; }
+.param-note { color: var(--dim) !important; font-size: .84rem !important; }
+
+/* ---- headline stats ---- */
+.headline-stats {
+  display: grid; grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+  gap: 1px; background: var(--line);
+  border: 1px solid var(--line); border-radius: var(--r-sm); overflow: hidden;
+  margin: 1.8rem 0;
+}
+.headline-stats > div { background: var(--bg); padding: 1.2rem 1rem; text-align: center; }
+.headline-stats b {
+  display: block; font-size: 1.7rem; font-weight: 650;
+  letter-spacing: -.04em; color: var(--amber); line-height: 1;
+}
+.headline-stats b em { font-style: normal; font-size: .45em; margin-left: .06em; }
+.headline-stats span {
+  display: block; margin-top: .5rem;
+  font-family: var(--mono); font-size: .52rem;
+  letter-spacing: .16em; text-transform: uppercase; color: var(--dim);
+}
+
+/* ---- phases ---- */
+.phases {
+  display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+  gap: 1px; background: var(--line);
+  border: 1px solid var(--line); border-radius: var(--r-sm); overflow: hidden;
+  margin: 1.6rem 0;
+}
+.phases > div { background: var(--bg); padding: .9rem 1rem; }
+.phases span {
+  display: block; font-family: var(--mono); font-size: .55rem;
+  letter-spacing: .14em; color: var(--amber); margin-bottom: .35rem;
+}
+.phases b { font-size: .85rem; font-weight: 500; color: var(--muted); }
+
+/* ---- limits ---- */
+.limits { display: grid; gap: 1.4rem; margin: 1.4rem 0 1.6rem; }
+.limits > div { padding-left: 1.1rem; border-left: 2px solid var(--line); }
+.limits h4 { margin: 0 0 .45rem; font-size: .95rem; }
+.limits p { margin: 0 !important; font-size: .89rem !important; }
+
+/* ---- pull quote ---- */
+.pull {
+  margin: 2rem 0; padding: 1.6rem 0;
+  border-top: 1px solid var(--line); border-bottom: 1px solid var(--line);
+  font-size: clamp(1.05rem, 2vw, 1.35rem); line-height: 1.5;
+  font-weight: 350; color: var(--fg); letter-spacing: -.015em;
+}
+.pull b { color: var(--amber); font-weight: 650; }
+
+.doc-foot { margin-top: 5rem; padding-top: 2rem; border-top: 1px solid var(--line); }
+
+/* ---- condition matrix ---- */
+.matrix {
+  display: grid;
+  grid-template-columns: auto repeat(3, 1fr);
+  gap: 1px; background: var(--line);
+  border: 1px solid var(--line); border-radius: var(--r-sm); overflow: hidden;
+  margin: 1.8rem 0;
+}
+.matrix > div { background: var(--bg); padding: .75rem .9rem; }
+.mx-corner { background: var(--bg); }
+.mx-h {
+  font-family: var(--mono); font-size: .55rem;
+  letter-spacing: .2em; text-transform: uppercase;
+  color: var(--dim); text-align: center;
+}
+.mx-w {
+  display: flex; align-items: center; gap: .5rem;
+  font-family: var(--mono); font-size: .58rem;
+  letter-spacing: .12em; color: var(--muted); white-space: nowrap;
+}
+.mx-w span { width: 7px; height: 7px; border-radius: 50%; box-shadow: 0 0 8px currentColor; }
+.mx-w.green span { background: #4dff7a; color: #4dff7a; }
+.mx-w.red span { background: #ff5f4a; color: #ff5f4a; }
+.mx-c { text-align: center; }
+.mx-dots { display: flex; gap: 4px; justify-content: center; margin-bottom: .4rem; }
+.mx-dots i { width: 7px; height: 7px; border-radius: 50%; display: block; }
+.mx-c.green .mx-dots i { background: #4dff7a; }
+.mx-c.red .mx-dots i { background: #ff5f4a; }
+.mx-c.low .mx-dots i { opacity: .28 }
+.mx-c.mid .mx-dots i { opacity: .60 }
+.mx-c.high .mx-dots i { opacity: 1; box-shadow: 0 0 8px currentColor; }
+.mx-c.green.high .mx-dots i { color: #4dff7a }
+.mx-c.red.high .mx-dots i { color: #ff5f4a }
+.mx-v { font-family: var(--mono); font-size: .68rem; color: var(--fg); }
+.mx-v em { font-style: normal; color: var(--dim); font-size: .8em; margin-left: .2em; }
+.mx-note {
+  grid-column: 1 / -1; text-align: center;
+  font-size: .68rem; color: var(--dim);
+}
+
+/* ---- I² chart ---- */
+#i2-chart { display: grid; gap: 1.4rem; }
+.i2-panel {
+  border: 1px solid var(--line); border-radius: var(--r-sm);
+  padding: 1rem 1.1rem .4rem;
+}
+.i2-h {
+  display: flex; align-items: center; gap: .55rem;
+  font-family: var(--mono); font-size: .6rem;
+  letter-spacing: .14em; text-transform: uppercase; color: var(--muted);
+  margin-bottom: .5rem;
+}
+.i2-sw { width: 8px; height: 8px; border-radius: 50%; box-shadow: 0 0 8px currentColor; }
+.i2-panel.green .i2-sw { background: #4dff7a; color: #4dff7a; }
+.i2-panel.red .i2-sw { background: #ff5f4a; color: #ff5f4a; }
+.i2-h b { margin-left: auto; color: var(--fg); font-weight: 600; }
+.i2-h i { font-style: normal; color: var(--faint); }
+svg.i2 { width: 100%; height: auto; display: block; overflow: visible; }
+.i2-ax { stroke: rgba(255, 255, 255, .12); stroke-width: 1; }
+.i2-tick { fill: var(--dim); font-family: var(--mono); font-size: 9px; text-anchor: middle; }
+.i2-unit { fill: var(--faint); font-family: var(--mono); font-size: 8px; text-anchor: end; }
+.i2-band { fill: rgba(255, 255, 255, .035); stroke: rgba(255, 255, 255, .07); }
+.i2-band-l {
+  font-family: var(--mono); font-size: 8.5px; text-anchor: middle;
+  letter-spacing: .12em; text-transform: uppercase; fill: var(--dim);
+}
+.i2-dot.rej { fill: rgba(255, 255, 255, .14); }
+.i2-panel.green .i2-dot.sel { fill: #4dff7a; }
+.i2-panel.red .i2-dot.sel { fill: #ff5f4a; }
+.i2-dot.sel.t0 { opacity: .42 }
+.i2-dot.sel.t1 { opacity: .72 }
+.i2-dot.sel.t2 { opacity: 1 }
+
+/* misc */
+.swatch {
+  display: inline-block; width: 9px; height: 9px; border-radius: var(--r-xs);
+  margin-right: .5rem; vertical-align: -1px;
+  border: 1px solid rgba(255, 255, 255, .16);
+}
+.swatch.black { background: #16181b }
+.swatch.grey { background: #6a6f77 }
+.swatch.white { background: #d9dbdd }
+ul.tight { margin: .4rem 0 .9rem; padding-left: 1.1rem; color: var(--muted); }
+ul.tight li { font-size: .9rem; line-height: 1.7; margin-bottom: .2rem; }
+
+/* --- photo frames --- */
+/* ---- photo frames ---- */
+.frames {
+  display: grid; gap: 1rem;
+  /* capped, not 1fr — a lone portrait frame stretched to the full column runs
+     most of a screen tall */
+  grid-template-columns: repeat(auto-fit, minmax(220px, 330px));
+  justify-content: start;
+  margin: 1.6rem 0;
+}
+.frame { margin: 1.6rem 0; }
+.frames .frame { margin: 0; }
+.frame-img {
+  position: relative; overflow: hidden;
+  border: 1px solid var(--line); border-radius: var(--r-sm);
+  background: #0b0d10;
+  /* the real photos are portrait phone shots, so portrait is the default —
+     cropping them into a landscape box throws most of the device away */
+  aspect-ratio: 3 / 4;
+}
+.frame-img img {
+  width: 100%; height: 100%; object-fit: cover; display: block;
+  filter: saturate(.92) contrast(1.04);
+  object-position: center 45%;
+}
+.frame.land .frame-img { aspect-ratio: 4 / 3; }
+.frame.wide .frame-img { aspect-ratio: 16 / 9; }
+.frame.square .frame-img { aspect-ratio: 1 / 1; }
+/* a single feature photo should not run the full column height */
+.frame.hero { max-width: 430px; margin-left: auto; margin-right: auto; }
+
+/* empty state — a labelled slot, so a gap reads as deliberate */
+.frame.empty .frame-img {
+  border-style: dashed; border-color: rgba(255,255,255,.11);
+  background: repeating-linear-gradient(-45deg,
+    rgba(255,255,255,.012) 0 8px, transparent 8px 16px);
+  display: grid; place-content: center; text-align: center; padding: 1rem;
+}
+.frame.empty .frame-img::after {
+  content: attr(data-label);
+  font-family: var(--mono); font-size: .58rem;
+  letter-spacing: .18em; text-transform: uppercase;
+  color: var(--faint); line-height: 1.9; max-width: 26ch;
+}
+.frame figcaption {
+  padding-top: .65rem; font-size: .78rem; line-height: 1.6; color: var(--dim);
+}
+.frame figcaption b {
+  color: var(--muted); font-weight: 600; font-family: var(--mono);
+  font-size: .62rem; letter-spacing: .16em; text-transform: uppercase;
+  margin-right: .5rem;
+}
+/* a frame sitting inside an iteration entry */
+.iter-body .frames { margin: 1.1rem 0 .2rem; }
+.iter-body .frame figcaption { font-size: .72rem; }
+
+/* upload reminder for iGEM */
+.frame-note {
+  font-family: var(--mono); font-size: .55rem;
+  letter-spacing: .16em; text-transform: uppercase;
+  color: var(--faint); margin-top: .3rem;
+}
+
+/* --- figure and table numbering --- */
+/* ---- figure & table numbering ---------------------------------------- */
+/* Numbers come from js/figures.js, in document order. The rule above the
+   caption is what makes a figure read as a figure rather than a stray image. */
+.frame figcaption {
+  border-top: 1px solid var(--line);
+  margin-top: .55rem;
+}
+.fignum {
+  font-family: var(--mono); font-size: .58rem;
+  letter-spacing: .17em; text-transform: uppercase;
+  color: var(--amber); font-weight: 600;
+  margin-right: .1rem;
+}
+.fignum::after { content: "."; }
+table caption .fignum { color: var(--amber); }
+
+/* a cross-reference in the prose: "as ⟨Figure 4⟩ shows" */
+a.xref {
+  color: var(--amber); text-decoration: none;
+  border-bottom: 1px solid color-mix(in srgb, var(--amber) 34%, transparent);
+}
+a.xref:hover { border-bottom-color: var(--amber); }
+/* a reference whose target vanished should be loud in review, not silent */
+a.xref-broken { color: #ff5f56; }
+a.xref-broken::after { content: "[missing figure]"; }

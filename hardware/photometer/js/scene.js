@@ -42,6 +42,13 @@
   const CAM_ELEV = 0.175;
 
   const BEAT = 0.38;          // viewport-heights of scroll per beat
+  // How a featured part is sized. FEAT_FILL is the share of frame height a
+  // large part takes; FEAT_MAX_MAG caps how far a small one may be blown up
+  // beyond its assembled scale, so the 11 mm bezel no longer presents at the
+  // same size as the 298 mm column.
+  const FEAT_FILL = 0.40;
+  const FEAT_MAX_MAG = 8;
+
   const HERO = 0.9;
   const PART_START = HERO + 0.7;
   const N = PARTS.length;
@@ -120,17 +127,29 @@
   scene.environment = RQ.studioEnv(renderer);
 
   // Light kit sits on top of the environment for shape definition only.
-  const key = new THREE.DirectionalLight(0xfff6ec, 0.38);
+  //
+  // The key carries the modelling, and it needs to be this strong because the
+  // albedos above are now correct: a genuinely near-black plastic returns very
+  // little, so what makes it read is direct light landing on the faces the
+  // camera can see, not more environment. Measured over the subject pixels,
+  // multiplying the environment from 1x to 2.2x moved the 75th percentile by
+  // four points; the key moved it by twenty. It also verifiably points the
+  // right way — it dots +0.80 against a face turned toward this camera, where
+  // the two rims dot -0.74 and -0.72 and are doing the job rims should.
+  const key = new THREE.DirectionalLight(0xfff6ec, 2.40);
   key.position.set(80, 130, 150);
   scene.add(key);
   // Self-shadowing: parts shadow each other so crevices and overhangs read as
   // depth. No ground plane — that would light them better still but would
   // change compositions that are already framed.
   RQ.enableShadows(renderer, key);
-  const rimWarm = new THREE.DirectionalLight(0xff9d2e, 0.35);
+  // Both rims desaturated. At #ff9d2e the warm rim laid a gold wash down one
+  // whole side of a black instrument — the tint belongs in the highlight, not
+  // in the paint.
+  const rimWarm = new THREE.DirectionalLight(0xffd2a8, 0.35);
   rimWarm.position.set(120, -40, -130);
   scene.add(rimWarm);
-  const rimCool = new THREE.DirectionalLight(0xbcd0e6, 0.30);
+  const rimCool = new THREE.DirectionalLight(0xc8d8ea, 0.39);
   rimCool.position.set(-110, 40, -140);
   scene.add(rimCool);
 
@@ -148,9 +167,16 @@
     g.fillStyle = rg;
     g.fillRect(0, 0, 256, 256);
     const tex = new THREE.CanvasTexture(c);
+    // Painted amber, so sRGB. Read as linear it came out roughly twice as
+    // bright as authored, and additively blended over a dark scene that pushed
+    // it to pure white: measured, this one sprite was clipping 30% of every lit
+    // pixel on the instrument. With the encoding right it is a warm pool again
+    // rather than a white blob, and it no longer has to carry the contact
+    // shadow on its own — the shadow map does that.
+    tex.encoding = THREE.sRGBEncoding;
     const mat = new THREE.SpriteMaterial({
       map: tex, transparent: true, depthWrite: false, depthTest: false,
-      blending: THREE.AdditiveBlending, opacity: 0.9,
+      blending: THREE.AdditiveBlending, opacity: 0.42,
     });
     const s = new THREE.Sprite(mat);
     s.renderOrder = -1;
@@ -163,6 +189,13 @@
   // `base` is the material's own opacity. Anything below 1 is glass-like and
   // always goes through the transparent pass; the rest only do so while a part
   // is dissolving.
+  // Every colour below is an sRGB hex and goes through RQ.srgb(). r128 has no
+  // ColorManagement, so a hex handed straight to a material is consumed as
+  // linear and re-encoded on output — #101317 arrives as an albedo ten times
+  // too bright. That is why parts authored as black printed plastic
+  // photographed as mid-grey clay, and why the envMapIntensity values below had
+  // to be pulled down to compensate. With the conversion in place they mean
+  // what they say.
   const MATERIALS = {
     printed: function () {
       // The real parts are printed in black. They were grey here only because
@@ -173,23 +206,23 @@
       return { base: 1, glass: false, mat: new THREE.MeshPhysicalMaterial({
         // metalness stays low: plastic is a dielectric, and metalness draws
         // colour from reflections, which is the other way a black part turns grey
-        color: 0x101317, metalness: 0.08, roughness: 0.317, envMapIntensity: 0.567 , clearcoat: 1, clearcoatRoughness: 0.09 }) };
+        color: RQ.srgb(0x101317), metalness: 0.08, roughness: 0.317, envMapIntensity: 0.567 , clearcoat: 1, clearcoatRoughness: 0.09 }) };
     },
     black: function () {
       return { base: 1, glass: false, mat: new THREE.MeshPhysicalMaterial({
-        color: 0x0f1114, metalness: 0.18, roughness: 0.446, envMapIntensity: 1.013 , clearcoat: 1, clearcoatRoughness: 0.09 }) };
+        color: RQ.srgb(0x0f1114), metalness: 0.18, roughness: 0.446, envMapIntensity: 1.013 , clearcoat: 1, clearcoatRoughness: 0.09 }) };
     },
     pcb: function () {
       return { base: 1, glass: false, mat: new THREE.MeshPhysicalMaterial({
-        color: 0x14306b, metalness: 0.18, roughness: 0.374, envMapIntensity: 1.147 , clearcoat: 1, clearcoatRoughness: 0.09 }) };
+        color: RQ.srgb(0x14306b), metalness: 0.18, roughness: 0.374, envMapIntensity: 1.147 , clearcoat: 1, clearcoatRoughness: 0.09 }) };
     },
     chipGrey: function () {
       return { base: 1, glass: false, mat: new THREE.MeshPhysicalMaterial({
-        color: 0x9ba1a9, metalness: 0.72, roughness: 0.245, envMapIntensity: 1.350 , clearcoat: 1, clearcoatRoughness: 0.09 }) };
+        color: RQ.srgb(0x9ba1a9), metalness: 0.72, roughness: 0.245, envMapIntensity: 1.350 , clearcoat: 1, clearcoatRoughness: 0.09 }) };
     },
     chipBlack: function () {
       return { base: 1, glass: false, mat: new THREE.MeshPhysicalMaterial({
-        color: 0x141619, metalness: 0.25, roughness: 0.418, envMapIntensity: 0.945 , clearcoat: 1, clearcoatRoughness: 0.09 }) };
+        color: RQ.srgb(0x141619), metalness: 0.25, roughness: 0.418, envMapIntensity: 0.945 , clearcoat: 1, clearcoatRoughness: 0.09 }) };
     },
     // Real refraction rather than alpha blending. Against a dark background a
     // half-opaque object just reads as dim grey — and because `opacity` scales
@@ -200,29 +233,29 @@
     // glass to reflect on its own.
     glass: function () {
       return { base: 1, glass: true, mat: new THREE.MeshPhysicalMaterial({
-        color: 0xeaf4ff, metalness: 0, roughness: 0.02,
+        color: RQ.srgb(0xeaf4ff), metalness: 0, roughness: 0.02,
         transmission: 0.86, ior: 1.5,
         transparent: true, opacity: 1, envMapIntensity: 3.4,
         clearcoat: 1, clearcoatRoughness: 0.02,
-        emissive: 0x93bce4, emissiveIntensity: 0.30,
+        emissive: RQ.srgb(0x93bce4), emissiveIntensity: 0.30,
         side: THREE.DoubleSide, depthWrite: false }) };
     },
     clear: function () {
       return { base: 1, glass: true, mat: new THREE.MeshPhysicalMaterial({
-        color: 0xf0f6ff, metalness: 0, roughness: 0.05,
+        color: RQ.srgb(0xf0f6ff), metalness: 0, roughness: 0.05,
         transmission: 0.92, ior: 1.46,
         transparent: true, opacity: 1, envMapIntensity: 3.0,
         clearcoat: 1, clearcoatRoughness: 0.03,
-        emissive: 0x9dc0e2, emissiveIntensity: 0.13,
+        emissive: RQ.srgb(0x9dc0e2), emissiveIntensity: 0.13,
         side: THREE.DoubleSide, depthWrite: false }) };
     },
     amber: function () {
       return { base: 1, glass: true, mat: new THREE.MeshPhysicalMaterial({
-        color: 0xffab34, metalness: 0, roughness: 0.10,
+        color: RQ.srgb(0xffab34), metalness: 0, roughness: 0.10,
         transmission: 0.62, ior: 1.55,
         transparent: true, opacity: 1, envMapIntensity: 1.5,
         clearcoat: 1, clearcoatRoughness: 0.04,
-        emissive: 0xff8a00, emissiveIntensity: 0.42,
+        emissive: RQ.srgb(0xff8a00), emissiveIntensity: 0.42,
         side: THREE.DoubleSide, depthWrite: false }) };
     },
   };
@@ -344,7 +377,7 @@
     // depthTest off so the beam reads through the housing that encloses it —
     // otherwise it is only visible once the shells have been taken off.
     const mat = new THREE.MeshBasicMaterial({
-      color: 0xffa63f, transparent: true, opacity: 0.13,
+      color: RQ.srgb(0xffa63f), transparent: true, opacity: 0.13,
       blending: THREE.AdditiveBlending,
       depthWrite: false, depthTest: false,
       side: THREE.DoubleSide,
@@ -572,8 +605,13 @@
       it.anchor.getWorldPosition(wPos);
       it.anchor.getWorldQuaternion(wQuat);
 
-      // every part presents the same widest extent, so all read at one size
-      const featScale = (H * 0.40) / it.span;
+      // Parts present at a common size so each one reads clearly — but not at
+      // any cost. Filling the frame unconditionally magnified the smallest
+      // parts about 26x relative to the chassis (the 11 mm LED bezel came up
+      // the same size as the 298 mm column), which read as wrong rather than
+      // as legible. The fill is capped at a multiple of the assembled scale, so
+      // small parts still enlarge enough to see and stay in proportion.
+      const featScale = Math.min((H * FEAT_FILL) / it.span, rigS * FEAT_MAX_MAG);
       const featY = H * 0.21;
 
       it.obj.position.set(
@@ -613,7 +651,7 @@
       }
     }
 
-    glow.material.opacity = lerp(0.9, 0.55, big);
+    glow.material.opacity = lerp(0.42, 0.26, big);
 
     // hand the featured part to the annotation overlay, if one is attached
     if (annotFn) {

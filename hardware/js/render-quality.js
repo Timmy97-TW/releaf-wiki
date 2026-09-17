@@ -65,6 +65,17 @@ window.RQ = (function () {
     return geo;
   }
 
+  // ------------------------------------------------------------------ colour
+  // Every colour written in this codebase is an sRGB hex, because that is what
+  // a colour picker, a screenshot and a palette measurement all give you. r128
+  // has no ColorManagement: it treats a THREE.Color as linear and re-encodes on
+  // output, so handing it an sRGB hex directly is an albedo far too bright —
+  // #101317 is 0.0902 as sRGB against a true linear 0.0086. Route every
+  // material colour through here.
+  function srgb(hex) {
+    return (hex && hex.isColor ? hex.clone() : new THREE.Color(hex)).convertSRGBToLinear();
+  }
+
   // ------------------------------------------------------------ environment
   // The old environment was three blurred blobs. Reflections need structure
   // to read as a room: rectangular softboxes give the long, straight
@@ -106,6 +117,14 @@ window.RQ = (function () {
     g.restore();
 
     const tex = new THREE.CanvasTexture(c);
+    // The canvas above is painted in sRGB — #495260, #8d99a8, white softboxes.
+    // r128 has no ColorManagement, so without this the PMREM consumes those
+    // values as if they were already linear and the whole environment comes out
+    // several times too bright. Every scene that uses this was then hand-tuned
+    // against the wrong number: envMapIntensity values were pulled down to
+    // compensate, and dark albedos still photographed grey. This is the single
+    // change that makes a measured dark colour render as that colour.
+    tex.encoding = THREE.sRGBEncoding;
     tex.mapping = THREE.EquirectangularReflectionMapping;
     const pm = new THREE.PMREMGenerator(renderer);
     pm.compileEquirectangularShader();
@@ -174,6 +193,7 @@ window.RQ = (function () {
 
   return {
     smoothNormals: smoothNormals,
+    srgb: srgb,
     studioEnv: studioEnv,
     enableShadows: enableShadows,
     fitShadow: fitShadow,
