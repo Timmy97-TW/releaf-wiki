@@ -109,7 +109,7 @@
       var img = document.createElement("img");
       img.className = "evo__face" + (cls || "");
       img.src = IMG + e.face + ".webp";
-      img.alt = "From our meeting with " + e.name + ", " + longDate(e.date) + ".";
+      img.alt = (e.kind === "expert" || e.kind === "farmer" ? "From our meeting with " : "Photograph from ") + e.name + ", " + longDate(e.date) + ".";
       img.loading = "lazy";
       img.width = 360; img.height = 360;
       return img;
@@ -200,7 +200,7 @@
     sheetCard.appendChild(close);
     sheet.addEventListener("click", function (ev) { if (ev.target === sheet) closeSheet(); });
     document.addEventListener("keydown", function (ev) {
-      if (ev.key === "Escape" && !sheet.hidden) closeSheet();
+      if (ev.key === "Escape" && !sheet.hidden && (!lb || lb.hidden)) closeSheet();
     });
 
     root.textContent = "";
@@ -238,12 +238,15 @@
 
   function card(e, i) {
     var lp = loopOf[e.id];
-    var c = el("button", "evo__card");
-    c.type = "button";
+    var c = el("article", "evo__card");
     c.dataset.id = e.id;
     if (lp) c.classList.add("evo__card--thread");
     if (e.pending) c.classList.add("evo__card--pending");
-    c.addEventListener("click", function () { openSheet(e.id); });
+    /* the whole card opens the record, except where a photo was clicked */
+    c.addEventListener("click", function (ev) {
+      if (ev.target.closest(".evo__thumb")) return;
+      openSheet(e.id);
+    });
 
     var head = el("div", "evo__head");
     head.appendChild(face(e));
@@ -257,47 +260,131 @@
     if (lp) sub.appendChild(el("span", "evo__visit", "Visit " + lp.n + " of " + lp.loop.count));
     if (e.role) sub.appendChild(el("span", null, e.role));
     who.appendChild(sub);
+    if (e.logo) who.appendChild(logo(e));
     head.appendChild(who);
     c.appendChild(head);
 
     var said = el("p", "evo__said");
-    if (e.suggestion || e.quote) {
-      said.appendChild(el("b", null, e.quote ? "In their words " : "They told us "));
-      said.appendChild(document.createTextNode(e.quote ? "“" + e.quote + "”" : e.suggestion));
-    } else if (e.pending) {
-      said.appendChild(el("b", null, "Write-up owed "));
-      said.appendChild(document.createTextNode("It is on the map because it happened, not because we can report it yet."));
+    if (e.quote) {
+      said.appendChild(el("b", null, "In their words "));
+      said.appendChild(document.createTextNode("\u201c" + e.quote + "\u201d"));
+    } else if (e.keyPoint || e.suggestion) {
+      said.appendChild(el("b", null, "Key suggestion "));
+      said.appendChild(document.createTextNode(e.keyPoint || e.suggestion));
     } else if (e.summary) {
       said.appendChild(document.createTextNode(e.summary));
     }
     if (said.childNodes.length) c.appendChild(said);
 
-    if (e.evidence && e.evidence.length) {
-      var th = el("div", "evo__thumbs");
-      e.evidence.slice(0, 3).forEach(function (ev) {
-        var img = document.createElement("img");
-        img.src = IMG + ev.src + ".webp";
-        img.alt = ev.cap;
-        img.loading = "lazy";
-        th.appendChild(img);
-      });
-      if (e.evidence.length > 3) th.appendChild(el("span", null, "+" + (e.evidence.length - 3)));
-      c.appendChild(th);
-    }
+    if (e.evidence && e.evidence.length) c.appendChild(thumbs(e.evidence));
 
     var ch = changedLine(e);
     var foot = el("div", "evo__foot");
+    var d = el("div", "evo__changed");
     if (ch) {
-      var d = el("div", "evo__changed");
       d.appendChild(el("b", null, ch.label));
       d.appendChild(document.createTextNode(ch.text));
-      foot.appendChild(d);
-    } else {
-      foot.appendChild(el("div", "evo__changed", ""));
     }
-    foot.appendChild(el("span", "evo__open", "Record →"));
+    foot.appendChild(d);
+    var open = el("button", "evo__open", "Full record \u2192");
+    open.type = "button";
+    open.addEventListener("click", function (ev) { ev.stopPropagation(); openSheet(e.id); });
+    foot.appendChild(open);
     c.appendChild(foot);
     return c;
+  }
+
+  function logo(e) {
+    var img = document.createElement("img");
+    img.className = "evo__logo";
+    img.src = IMG + e.logo + ".webp";
+    img.alt = e.name + " logo";
+    img.loading = "lazy";
+    return img;
+  }
+
+  /* four photographs, each one opening the viewer */
+  function thumbs(list) {
+    var box = el("div", "evo__thumbs");
+    list.slice(0, 4).forEach(function (p, n) {
+      var b = el("button", "evo__thumb");
+      b.type = "button";
+      b.setAttribute("aria-label", "Enlarge: " + p.cap);
+      var img = document.createElement("img");
+      img.src = IMG + p.src + ".webp";
+      img.alt = "";
+      img.loading = "lazy";
+      b.appendChild(img);
+      b.addEventListener("click", function (ev) { ev.stopPropagation(); viewer(list, n, b); });
+      box.appendChild(b);
+    });
+    return box;
+  }
+
+  /* ---- the photo viewer --------------------------------------------------- */
+  /* Black ground, the photograph as large as the window allows, its caption,
+     and arrows through the set it came from. */
+
+  var lb, lbImg, lbCap, lbCount, lbSet = [], lbAt = 0, lbFrom = null;
+
+  function viewer(list, n, from) {
+    if (!lb) {
+      lb = el("div", "evo-lb");
+      lb.setAttribute("role", "dialog");
+      lb.setAttribute("aria-modal", "true");
+      lb.setAttribute("aria-label", "Photograph");
+      var fig = el("figure", "evo-lb__fig");
+      lbImg = document.createElement("img");
+      lbCap = el("figcaption");
+      lbCount = el("span", "evo-lb__count");
+      fig.appendChild(lbImg);
+      fig.appendChild(lbCap);
+      var prev = el("button", "evo-lb__nav evo-lb__nav--prev");
+      var next = el("button", "evo-lb__nav evo-lb__nav--next");
+      var close = el("button", "evo-lb__close", "\u2715");
+      prev.type = next.type = close.type = "button";
+      prev.setAttribute("aria-label", "Previous photograph");
+      next.setAttribute("aria-label", "Next photograph");
+      close.setAttribute("aria-label", "Close");
+      prev.addEventListener("click", function (ev) { ev.stopPropagation(); step(-1); });
+      next.addEventListener("click", function (ev) { ev.stopPropagation(); step(1); });
+      close.addEventListener("click", shut);
+      lb.addEventListener("click", function (ev) { if (ev.target === lb || ev.target === fig) shut(); });
+      document.addEventListener("keydown", function (ev) {
+        if (!lb || lb.hidden) return;
+        if (ev.key === "Escape") { ev.stopPropagation(); shut(); }
+        if (ev.key === "ArrowRight") step(1);
+        if (ev.key === "ArrowLeft") step(-1);
+      }, true);
+      lb.appendChild(fig);
+      lb.appendChild(prev);
+      lb.appendChild(next);
+      lb.appendChild(close);
+      lb.appendChild(lbCount);
+      lb.hidden = true;
+      document.body.appendChild(lb);
+    }
+    lbSet = list; lbAt = n; lbFrom = from;
+    show();
+    lb.hidden = false;
+    document.body.style.overflow = "hidden";
+    lb.querySelector(".evo-lb__close").focus();
+  }
+  function show() {
+    var p = lbSet[lbAt];
+    lbImg.src = IMG + p.src + ".webp";
+    lbImg.alt = p.cap;
+    lbCap.textContent = p.cap;
+    lbCount.textContent = (lbAt + 1) + " / " + lbSet.length;
+  }
+  function step(d) {
+    lbAt = (lbAt + d + lbSet.length) % lbSet.length;
+    show();
+  }
+  function shut() {
+    lb.hidden = true;
+    if (sheet.hidden) document.body.style.overflow = "";
+    if (lbFrom && lbFrom.focus) lbFrom.focus();
   }
 
   /* ---- the record --------------------------------------------------------- */
@@ -322,6 +409,7 @@
       (e.role ? "  ·  " + e.role : "") + (e.where ? "  ·  " + e.where : "")));
     col.appendChild(meta);
     if (e.dateNote) col.appendChild(el("p", "evo__meta", e.dateNote));
+    if (e.logo) col.appendChild(logo(e));
     head.appendChild(col);
     sheetCard.appendChild(head);
 
@@ -343,6 +431,10 @@
     if (e.quote) {
       sheetCard.appendChild(el("h4", null, "In their words"));
       sheetCard.appendChild(el("p", null, "“" + e.quote + "”"));
+    }
+    if (e.keyPoint) {
+      sheetCard.appendChild(el("h4", null, "Key suggestion"));
+      sheetCard.appendChild(el("p", null, e.keyPoint));
     }
     if (e.suggestion) {
       sheetCard.appendChild(el("h4", null, "What they told us"));
@@ -376,13 +468,18 @@
     if (e.evidence && e.evidence.length) {
       sheetCard.appendChild(el("h4", null, "What changed, in photographs"));
       var ev = el("div", "evo__ev");
-      e.evidence.forEach(function (p) {
+      e.evidence.forEach(function (p, n) {
         var f = el("figure");
+        var b = el("button", "evo__evbtn");
+        b.type = "button";
+        b.setAttribute("aria-label", "Enlarge: " + p.cap);
         var img = document.createElement("img");
         img.src = IMG + p.src + ".webp";
         img.alt = p.cap;
         img.loading = "lazy";
-        f.appendChild(img);
+        b.appendChild(img);
+        b.addEventListener("click", function () { viewer(e.evidence, n, b); });
+        f.appendChild(b);
         f.appendChild(el("figcaption", null, p.cap + " Scaled only."));
         ev.appendChild(f);
       });
