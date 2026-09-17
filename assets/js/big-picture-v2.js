@@ -284,3 +284,42 @@
     if (!spine.contains(e.relatedTarget)) clear();
   });
 })();
+
+  /* ────────────────────────────────────────────────── 3c  dial autoplay ── */
+  /* The map above the fold showed where the damage lands; this one answers it,
+     so it plays its own first move: on arrival the dial walks from nothing to
+     its resting quarter, which is the reading the copy describes. Any touch of
+     the control stops it for good, and with motion reduced it simply starts
+     where it always did. */
+
+  (function () {
+    var input = document.getElementById("share");
+    if (!input || reduced || !("IntersectionObserver" in window)) return;
+
+    var target = Number(input.value) || 25;
+    var stopped = false;
+    function stop() { stopped = true; }
+    ["pointerdown", "keydown", "input"].forEach(function (ev) {
+      input.addEventListener(ev, function (e) { if (e.isTrusted) stop(); });
+    });
+
+    function set(v) {
+      input.value = String(Math.round(v));
+      input.dispatchEvent(new Event("input", { bubbles: true }));
+    }
+
+    var io = new IntersectionObserver(function (entries) {
+      if (!entries[0].isIntersecting) return;
+      io.disconnect();
+      set(0);
+      var t0 = 0;
+      requestAnimationFrame(function step(t) {
+        if (stopped) return;
+        if (!t0) t0 = t;
+        var k = Math.min(1, (t - t0) / 2200);
+        set(target * (k * k * (3 - 2 * k)));
+        if (k < 1) requestAnimationFrame(step);
+      });
+    }, { threshold: 0.4 });
+    io.observe(document.getElementById("reach") || input);
+  })();

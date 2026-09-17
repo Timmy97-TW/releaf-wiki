@@ -221,7 +221,9 @@
   // and decimated to something that fits the deploy budget; the manifest there
   // already carries the role, so no name lookup is needed. Its parts are served
   // from package/_pack.bin (tools/pack_models.py), under their STL names.
-  const DIR = embedded ? "package/" : "placed/";
+  // Embedded, the pack is fetched relative to the page, so a host outside this
+  // folder (the homepage) says where it lives.
+  const DIR = embedded ? (window.PKG_DIR || "package/") : "placed/";
   const loader = embedded ? PackedModel.bundle(DIR) : new THREE.STLLoader();
   fetch(DIR + "_manifest.json", { cache: "reload" })
     .then(function (r) { return r.json(); })
@@ -625,6 +627,10 @@
       }
     }
     setChannelFocus(idx, cap * 0.9);
+    // The record page holds the camera square to the machine so the three
+    // chambers read as one row. A host that wants the box to turn sets
+    // PKG_SPIN, in radians a second.
+    if (window.PKG_SPIN) yaw += window.PKG_SPIN * t;
     lookFrom(tgt, dist, yaw, pitch);
     renderer.render(scene, camera);
 
@@ -705,7 +711,11 @@
     const label = host.querySelector(".triple-label");
     const scrub = host.querySelector(".triple-scrub");
     const bar = host.querySelector(".triple-bar");
-    let clock = 0, playing = true, held = false, lastNow = 0, ready = false;
+    // The reveal is a camera move, so it answers prefers-reduced-motion: the
+    // tour is built either way, it simply holds on its opening frame.
+    const calm = window.matchMedia &&
+                 window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    let clock = 0, playing = !calm, held = false, lastNow = 0, ready = false;
 
     function size2() {
       const w = Math.max(2, Math.round(canvas.parentElement.getBoundingClientRect().width));
@@ -775,6 +785,7 @@
       });
     });
     const play = host.querySelector(".triple-play");
+    if (play && calm) { play.textContent = "Play"; play.setAttribute("aria-pressed", "false"); }
     if (play) play.addEventListener("click", function () {
       playing = !playing;
       play.setAttribute("aria-pressed", String(playing));

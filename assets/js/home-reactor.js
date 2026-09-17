@@ -370,7 +370,12 @@ window.__homeRx = (function () {
     if (booted) return;
     booted = true;
     if (loadEl) loadEl.hidden = false;
-    var stl = new THREE.STLLoader();
+    // The record page moved its geometry into models/_pack.json + _pack.bin;
+    // the 55 .stl files this used to read no longer exist, which is why the
+    // canvas fell back to the poster on every load. PackedModel.bundle() is a
+    // drop-in for THREE.STLLoader: same load(url, ok, progress, fail) shape,
+    // resolved by basename, one 2.4 MB fetch for the whole assembly.
+    var stl = PackedModel.bundle(MODEL_BASE);
     BIO_PARTS.forEach(function (p) {
       stl.load(MODEL_BASE + p.file + ".stl", function (geo) {
         RQ.smoothNormals(geo);

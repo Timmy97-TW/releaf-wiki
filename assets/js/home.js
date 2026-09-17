@@ -7,7 +7,7 @@
 
      1  reveal      one-shot fade-and-rise for .rise and the pathway
      2  darkact     scroll progress -> CSS custom properties on .stagewrap
-     3  parts       the component list <-> the WebGL reactor
+     3  parts       the five engineering highlights <-> the WebGL reactor
      4  doors       cross-highlighting between related pages in Explore
      5  timeline    show the iHP figure only if its artwork exists
 
