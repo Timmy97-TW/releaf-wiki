@@ -2,13 +2,14 @@
    ReLeaf: Engineering Success — wet lab record, sheet behaviour
    -----------------------------------------------------------------------------
    Six jobs, all additive. With JavaScript off the page is still a complete
-   document: the cycles are <details> that open on click, the dial is a static
-   ring of six anchors, the ladder is a static SVG with a written caption, and
-   every cycle and every DBTL step is reachable by its own anchor.
+   document: the six cycles are <details open>, so the whole record is flat on
+   arrival and nothing has to be clicked to be read, the dial is a static ring
+   of six anchors, the ladder is a static SVG, and every cycle and every DBTL
+   step is reachable by its own anchor.
 
      1. the dial: turn the ring so the cycle you are reading sits at the top,
         and light the quadrant of the DBTL loop whose step is on screen
-     2. the record: fold cycles open, open all, deep links
+     2. the record: the cycles start open; close all, deep links
      3. the sheet-edge index, which follows the scroll
      4. the scroll gauge down the right edge
      5. figures open full-window
@@ -232,7 +233,10 @@
         a.setAttribute("aria-current", String(a.getAttribute("href") === "#" + current));
       });
       rail.classList.toggle("on-plate", !!node && node.classList.contains("sheet--plate"));
-      rail.classList.toggle("is-hidden", !current || QUIET[current] === 1);
+      rail.classList.toggle(
+        "is-hidden",
+        !current || QUIET[current] === 1 ||
+        (!!node && node.classList.contains("sheet--plate")));
     }, { rootMargin: "-25% 0px -60% 0px", threshold: 0 });
     all.forEach(function (s) { io.observe(s); });
   }
@@ -261,6 +265,9 @@
   /* ---- 5. figures open full-window --------------------------------------- */
 
   function lightbox() {
+    /* Every figure on the page is a .fig, so this is every image on it: gels,
+       blots, plate counts, photographs, plasmid maps and construct maps. The
+       inline frame crops or contains; the full image is in here. */
     var imgs = $$(".fig img");
     if (!imgs.length) return;
     var box = document.createElement("div");

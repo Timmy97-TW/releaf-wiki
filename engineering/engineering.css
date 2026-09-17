@@ -19,15 +19,22 @@
       State keeps amber and rust. Nothing else is coloured, and no colour is
       decorative.
 
-   3. GROUNDS ALTERNATE. Drafting stock, a pale leaf tint and a pale sand tint,
-      with blueprint for plates. Four grounds instead of two, so a ten-sheet page
-      has a rhythm you can feel while scrolling.
+   3. ONE GROUND. Every sheet is white. The one exception is Sheet 04, the
+      assembly plate, which is a blueprint drawing and is drawn on blueprint.
+      The alternating leaf and sand tints this page used to carry are gone: on a
+      page this long they read as clutter rather than rhythm, and the sheet
+      number, the icon and the heading rule are enough to mark a new sheet.
 
-   FIGURES. Every figure sits in a fixed-ratio frame on a mat chosen for what it
-   holds: near-black behind a gel, white behind a plasmid map, blueprint behind a
-   photograph. That is what makes figures of wildly different pixel dimensions
-   present at the same size. Clicking one opens it at 80% of the window with its
-   caption on the same 80%.
+   FIGURES. One component, two frames, nothing sized by hand. Every figure is
+   .fig / .fig__frame / img / figcaption, and the frame is a fixed box with a
+   white mat and a hairline, which is what makes images of wildly different
+   pixel dimensions present at the same size. A plate is 4:3 and holds a
+   photograph, a gel, a blot or a plate count; a strip is 7:2 and holds line
+   work — plasmid maps, transcription-unit maps, amplicon diagrams — which is
+   drawn wide and short and must never be cropped. Photographs fill their plate
+   and crop to it. Nothing else is cropped and nothing is upscaled: a 296px gel
+   sits at 296px in the middle of its frame. Every figure opens full-window on
+   click, which is where the detail is.
 
    THE DIAL is unchanged and still the page's signature: six cycles round a
    circle with the DBTL loop at its centre, turning the short way to whichever
@@ -38,12 +45,10 @@
 
 .eng {
   /* grounds */
-  --paper:      #f7f7f3;   /* drafting stock: the default reading ground */
-  --paper-2:    #ecebe3;   /* a half-step down: figure mats, findings */
-  --vellum:     #fdfdfa;   /* a half-step up: boxed notes, open cycles */
-  --tint-leaf:  #edf3ee;   /* pale leaf sheet */
-  --tint-sand:  #f8f3e7;   /* pale sand sheet */
-  --blue-900:   #0c231a;   /* blueprint: cover and plates */
+  --paper:      #ffffff;   /* the one reading ground */
+  --paper-2:    #f1f2ee;   /* the only tinted chip left: an inert stamp */
+  --vellum:     #ffffff;   /* boxed notes and open cycles: white, ruled */
+  --blue-900:   #0c231a;   /* blueprint: cover and Sheet 04 only */
   --blue-800:   #10301f;
   --blue-700:   #16412c;
 
@@ -83,6 +88,7 @@
 
   --rule-heavy: 1.5px;
   --rule:       1px;
+  --rule-soft:  #dde2dd;   /* hairline round a figure frame or a boxed note */
 
   --measure: 84ch;         /* the reading column */
   --wide:    1180px;       /* what a table or a figure may break out to */
@@ -132,9 +138,7 @@
 
 /* ============================================================== SHEETS ===== */
 
-.eng .sheet { padding: clamp(2.75rem, 1.4rem + 3.6vw, 5.25rem) 0; }
-.eng .sheet--tint  { background: var(--tint-leaf); }
-.eng .sheet--warm  { background: var(--tint-sand); }
+.eng .sheet { padding: clamp(2.75rem, 1.4rem + 3.6vw, 5.25rem) 0; background: #fff; }
 .eng .sheet--plate { background: var(--blue-900); color: var(--plate-ink); }
 .eng .sheet--plate h2, .eng .sheet--plate h3 { color: #fff; }
 .eng .sheet--plate .field { color: var(--plate-ink-muted); }
@@ -272,18 +276,25 @@
 
 .eng .sheet p, .eng .sheet li { color: var(--ink-2); }
 .eng .sheet p { line-height: 1.7; }
+/* Every h3 on the page is the same object: no rule above it, one space above
+   it, one size. The page used to have two kinds, ruled and .bare, and a reader
+   cannot tell what the difference is meant to mean because there isn't one. */
 .eng .sheet h3 {
   margin: var(--sp-7) 0 var(--sp-3);
-  padding-top: var(--sp-3);
-  border-top: var(--rule) solid var(--graphite-2);
   font-size: clamp(1.2rem, 1.05rem + .6vw, 1.55rem);
   line-height: 1.22;
 }
-.eng .sheet h3.bare { border-top: 0; padding-top: 0; margin-top: var(--sp-6); }
-.eng .sheethead + h3 { margin-top: 0; border-top: 0; padding-top: 0; }
+.eng .sheethead + h3, .eng .sheet h3:first-child { margin-top: 0; }
+.eng .sheethead + p.lede { margin-top: 0; }
+.eng p.lede { font-size: 1.0625rem; }
 
+/* Every boxed note on the page — a finding, a todo, a callout — is the same
+   object: white ground, hairline, and a 3px left edge in the colour of what it
+   is. The tinted grounds these used to carry are what made the page look like
+   six different documents. */
 .eng .finding {
-  background: var(--lvl-1-bg);
+  background: #fff;
+  border: var(--rule) solid var(--rule-soft);
   border-left: 3px solid var(--e-leaf-700);
   padding: var(--sp-3) var(--sp-4);
   margin-block: 0 var(--sp-4);
@@ -291,7 +302,6 @@
   font-weight: 600;
   line-height: 1.5;
 }
-.eng .sheet--tint .finding { background: #e2ece5; }
 
 .eng .key { margin-block: 0; }
 .eng .key > div {
@@ -443,7 +453,10 @@
 .eng .cyc { --cyc-accent: var(--e-leaf-700); border-bottom: var(--rule) solid var(--graphite-2); }
 .eng .cyc--fail  { --cyc-accent: var(--st-fail); }
 .eng .cyc--draft { --cyc-accent: var(--graphite); }
-.eng .cyc[open] { background: var(--vellum); }
+/* Every cycle is open when the page loads, so the record reads as one
+   document. The box is white either way: an open cycle is not a different
+   kind of thing from a shut one. */
+.eng .cyc[open] { background: #fff; }
 .eng .cyc__head {
   display: grid;
   grid-template-columns: auto minmax(0, 1fr);
@@ -461,7 +474,7 @@
   .eng .cyc__meta { grid-column: 3; justify-self: auto; }
 }
 .eng .cyc__head::-webkit-details-marker { display: none; }
-.eng .cyc__head:hover { background: var(--vellum); }
+.eng .cyc__head:hover { background: #f6f8f6; }
 .eng .cyc__no {
   align-self: center;
   font: var(--fld); letter-spacing: .1em; font-size: .75rem;
@@ -555,6 +568,9 @@
 }
 .eng .statekey li { display: flex; align-items: center; gap: .55rem; }
 
+.eng .cycles__ctl { margin: 0 0 var(--sp-5); }
+.eng button.stamp { cursor: pointer; font-family: inherit; }
+
 /* ============================================================ MODULES ====== */
 
 .eng .mods { display: grid; gap: var(--sp-8); }
@@ -574,21 +590,6 @@
   font-size: 1.0625rem; line-height: 1.3;
   color: var(--e-leaf-900);
 }
-
-/* a construct map: the generated SVG on a light mat inside a hairline */
-.eng .unit { margin-block: 0 var(--sp-5); }
-.eng .unit img {
-  width: 100%; max-width: 46rem; height: auto;
-  background: var(--vellum);
-  border: var(--rule) solid var(--graphite-2);
-}
-.eng .unit figcaption {
-  margin-top: var(--sp-3);
-  padding-left: var(--sp-4);
-  border-left: 3px solid var(--e-leaf-500);
-  font-size: var(--text-sm); line-height: 1.6; color: var(--ink-2);
-}
-.eng .unit figcaption b { color: var(--e-leaf-900); }
 
 /* =========================================================== SCHEDULE ====== */
 
@@ -612,13 +613,13 @@
 .eng .sched__what { margin: 0; font-size: var(--text-sm); }
 
 .eng .todo {
-  border: var(--rule) solid #ddcfae;
+  border: var(--rule) solid var(--rule-soft);
   border-left: 3px solid var(--st-fail);
-  background: var(--st-fail-bg);
+  background: #fff;
   padding: var(--sp-3) var(--sp-4);
   margin-block: 0 var(--sp-5);
   font-size: var(--text-sm);
-  color: #55462a;
+  color: var(--ink-2);
 }
 .eng .todo b {
   display: block; margin-bottom: .3rem;
@@ -626,49 +627,75 @@
   color: var(--st-fail);
 }
 
-/* ============================================================ FIGURES ====== */
+/* ============================================================ FIGURES ======
+   TWO FRAMES, AND NOTHING SIZED BY HAND.
 
-.eng .fig { margin-block: 0 var(--sp-6); }
+     .fig          a plate: a 4:3 box, white mat, hairline. Gels, blots, plate
+                   counts, photographs. Capped at 32rem on its own so a 500px
+                   gel is not floated in the middle of an 800px box; in a row
+                   it takes the row's column, and every box in a row is equal.
+     .fig--photo   a photograph. It fills its plate and crops to it.
+     .fig--strip   line work: plasmid maps, transcription-unit maps, amplicon
+                   diagrams. A 7:2 box, because that is the shape the drawings
+                   are, and contained so no label is ever cut off.
+     .wide         the breakout width, shared with tables and rows.
+
+   Nothing is upscaled except an SVG, which loses nothing by it. Everything
+   opens full-window on click.                                               */
+
+.eng .fig { margin-block: 0 var(--sp-6); max-width: 32rem; }
+.eng .fig.wide, .eng .figs .fig { max-width: none; }
+
 .eng .fig__frame {
-  --mat: var(--paper-2);
-  aspect-ratio: 16 / 10;
-  background: var(--mat);
-  border: var(--rule) solid var(--graphite-2);
+  position: relative;
+  aspect-ratio: var(--fr, 4 / 3);
+  background: #fff;
+  border: var(--rule) solid var(--rule-soft);
   display: grid; place-items: center;
   overflow: hidden;
+  padding: var(--sp-3);
 }
+/* A gel, a blot or a plate count sits in the flow at its own size, centred, and
+   is never blown up: these are 300 to 600px crops and enlarging one to fill the
+   frame only enlarges the grain. */
 .eng .fig__frame img {
   max-width: 100%; max-height: 100%;
   width: auto; height: auto;
   object-fit: contain;
   cursor: zoom-in;
 }
-.eng .fig--gel   .fig__frame { --mat: #080b09; border-color: #080b09; }
-/* A gel is a photograph and lives in a frame. A plasmid map is a line drawing on
-   white, and a frame does nothing for it but add filler above and below. So maps
-   and amplicon strips drop the fixed box entirely and take their own height:
-   full width, hairline round the drawing, nothing else. */
-.eng .fig--map   .fig__frame,
-.eng .fig--strip .fig__frame {
-  aspect-ratio: auto;
-  background: none;
-  border: 0;
-  display: block;
-  overflow: visible;
-}
-.eng .fig--map   .fig__frame img,
-.eng .fig--strip .fig__frame img {
-  width: 100%; max-width: none; max-height: none; height: auto;
-  border: var(--rule) solid var(--graphite-2);
-  background: #fff;
-}
-.eng .fig--strip figcaption { border-left-color: var(--lvl-0); }
 
-.eng .fig--photo .fig__frame { --mat: var(--blue-900); border-color: var(--blue-900); }
-.eng .fig--photo .fig__frame img { width: 100%; height: 100%; object-fit: cover; }
-.eng .fig--tall  .fig__frame { aspect-ratio: 4 / 5; }
-.eng .fig--art   .fig__frame { --mat: var(--vellum); aspect-ratio: 1 / 1; }
-.eng .fig--art   .fig__frame img { max-height: 86%; max-width: 86%; }
+/* A photograph and a line drawing both fill the frame, and object-fit decides
+   what that means: crop for the photograph, letterbox for the drawing. Both are
+   positioned rather than sized in percentages, because a percentage height
+   against a box whose height comes from aspect-ratio is not a constraint the
+   browser applies — sized that way, a photograph runs 884px tall inside a 492px
+   frame and is cropped from the top instead of the middle. */
+.eng .fig--photo .fig__frame img,
+.eng .fig--strip .fig__frame img {
+  position: absolute;
+  width: auto; height: auto;
+  max-width: none; max-height: none;
+}
+.eng .fig--photo .fig__frame { padding: 0; }
+.eng .fig--photo .fig__frame img {
+  inset: 0; width: 100%; height: 100%;
+  object-fit: cover; object-position: center;
+}
+/* A photograph run wide across the sheet keeps a shallower box, so a bench shot
+   does not lose the heads out of the top of it. */
+.eng .fig--photo.wide { --fr: 12 / 5; }
+
+/* Line work: wide, short, scaled to the frame, and never cropped. The inset is
+   padding on the image itself, since an absolutely positioned child sits over
+   its container's padding rather than inside it. */
+.eng .fig--strip { --fr: 7 / 2; }
+.eng .fig--strip .fig__frame { padding: 0; }
+.eng .fig--strip .fig__frame img {
+  inset: 0; width: 100%; height: 100%;
+  padding: var(--sp-3); box-sizing: border-box;
+  object-fit: contain;
+}
 
 .eng .fig figcaption {
   margin-top: var(--sp-3);
@@ -677,32 +704,26 @@
   font-size: var(--text-sm); line-height: 1.6; color: var(--ink-2);
 }
 .eng .fig figcaption b { color: var(--e-leaf-900); }
-.eng .fig--gel   figcaption { border-left-color: var(--lvl-0); }
-.eng .fig--photo figcaption { border-left-color: var(--blue-700); }
 .eng .prov { display: block; margin-top: .35rem; font-size: var(--text-xs); color: var(--graphite); }
 
-.eng .figs { display: grid; gap: var(--sp-5); margin-bottom: var(--sp-6); }
+/* A row of figures: equal columns, so equal frames. Captions are not equal
+   length, so the row puts every frame on one grid row and every caption on the
+   next — the images sit on a shared floor and the captions all start on the
+   same line, however long they run. */
+.eng .figs { display: grid; gap: var(--sp-5); margin-bottom: var(--sp-6); align-items: start; }
 @media (min-width: 46rem) {
   .eng .figs--2 { grid-template-columns: repeat(2, minmax(0, 1fr)); }
   .eng .figs--3 { grid-template-columns: repeat(3, minmax(0, 1fr)); }
 }
-
-/* a photograph run as a band across the sheet */
-.eng .band { margin-block: 0 var(--sp-6); }
-.eng .band__frame {
-  aspect-ratio: 21 / 9;
-  background: var(--blue-900);
-  overflow: hidden;
+.eng .figs .fig { margin-bottom: 0; }
+@supports (grid-template-rows: subgrid) {
+  @media (min-width: 46rem) {
+    .eng .figs[class*="figs--"] { grid-template-rows: auto auto; }
+    .eng .figs[class*="figs--"] .fig {
+      display: grid; grid-row: span 2; grid-template-rows: subgrid;
+    }
+  }
 }
-.eng .band__frame img { width: 100%; height: 100%; object-fit: cover; cursor: zoom-in; }
-.eng .band figcaption {
-  margin: var(--sp-3) auto 0;
-  max-width: var(--measure);
-  font-size: var(--text-sm); line-height: 1.6; color: var(--ink-2);
-}
-.eng .band figcaption b { color: var(--e-leaf-900); }
-.eng .sheet--plate .band figcaption { color: var(--plate-ink-muted); }
-.eng .sheet--plate .band figcaption b { color: var(--plate-ink); }
 
 /* the lightbox: 80% of the window, caption on the same 80% */
 .eng .lightbox {
@@ -717,6 +738,7 @@
 .eng .lightbox img {
   max-width: 80vw; max-height: 78vh;
   width: auto; height: auto; object-fit: contain;
+  background: #fff;
 }
 .eng .lightbox figcaption {
   width: 80vw; max-width: 80vw;
@@ -750,9 +772,7 @@
   border-bottom: var(--rule) solid var(--graphite-2);
   color: var(--ink-2);
 }
-.eng table.data tbody tr:hover { background: var(--vellum); }
-.eng .sheet--tint table.data tbody tr:hover { background: #e5ece7; }
-.eng .sheet--warm table.data tbody tr:hover { background: #f2ecdb; }
+.eng table.data tbody tr:hover { background: #f6f8f6; }
 .eng table.data td.chg { color: var(--e-leaf-700); font-weight: 600; }
 .eng table.data td.no  { color: var(--st-open); font-weight: 600; }
 .eng table.data code { background: none; padding: 0; font-size: .8125rem; }
@@ -762,9 +782,9 @@
 /* =========================================================== CALLOUTS ====== */
 
 .eng .callout {
-  border: var(--rule) solid var(--graphite-2);
+  border: var(--rule) solid var(--rule-soft);
   border-left: 3px solid var(--graphite);
-  background: var(--vellum);
+  background: #fff;
   padding: var(--sp-4);
   margin-block: 0 var(--sp-5);
 }
@@ -775,9 +795,9 @@
 }
 .eng .callout p { margin: 0 0 .6rem; font-size: var(--text-sm); }
 .eng .callout p:last-child { margin-bottom: 0; }
-.eng .callout--unproven { border-color: #e2c6ba; border-left-color: var(--st-open); background: var(--st-open-bg); }
+.eng .callout--unproven { border-left-color: var(--st-open); }
 .eng .callout--unproven .callout__label { color: var(--st-open); }
-.eng .callout--note { border-color: #bcd4e0; border-left-color: var(--lvl-0); background: var(--lvl-0-bg); }
+.eng .callout--note { border-left-color: var(--lvl-0); }
 .eng .callout--note .callout__label { color: var(--lvl-0); }
 
 .eng blockquote {
@@ -895,12 +915,12 @@
 
 @media print {
   .eng .edge, .eng .gauge, .eng .dial, .eng .lightbox, .sitenav-spacer { display: none !important; }
-  .eng .sheet--plate, .eng .sheet--tint, .eng .sheet--warm,
+  .eng .sheet--plate,
   .eng .cover__plate, .eng .cover__strip { background: #fff !important; color: #000 !important; }
   .eng .cover h1, .eng .sheet--plate h2, .eng .sheet--plate h3 { color: #000 !important; }
   .eng .cyc { break-inside: avoid; }
   .eng .cyc__body { display: block !important; }
-  .eng .fig, .eng .band { break-inside: avoid; }
+  .eng .fig { break-inside: avoid; }
   .eng .record { display: block; }
 }
 
@@ -912,9 +932,9 @@
 /* And the step column is wide enough at that point to need its own measure. */
 .eng .step > :not(h4) { max-width: 76ch; }
 
-/* A single figure in a row keeps the reading measure. Letting one gel stretch to
-   the full breakout width only buys it wider black bars. */
-.eng .figs:not([class*="figs--"]) { max-width: var(--measure); }
+/* A .figs with no column count is one figure, which is a plate, and a plate is
+   already capped at its own width. */
+.eng .figs:not([class*="figs--"]) { max-width: 32rem; }
 
 /* ======================================================= LADDER, SHEET 04 ===
    The plate is still one drawing read bottom to top, and it is still the same
