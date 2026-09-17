@@ -26,11 +26,13 @@ assets/
          team.css         the members page
          home.css         the homepage
          big-picture-v2.css  the big-picture figure and map on the homepage
+         home-problem.css  the homepage problem section (01 threat, 02 gap, 03 distance)
   js/    nav.js           builds the navigation from the data file
          nav-rail.js      builds the left rail from NAV plus the page's own h2s
          page.js          numbering, contents rail, citations, tabs, lightbox
          team.js          builds the member cards and profiles
          big-picture-v2.js   the figure's highlighting, the map legend, the dial
+         home-problem.js     the problem section: map toggle, 03 journey, sources
   data/  site-nav.js      every page address, in one place
          roster.js        the forty-seven people
   img/   logo, group shot, members/, home/, tab-icons/, bigpicture/
