@@ -4,7 +4,7 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>Software | ReLeaf &middot; iGEM 2026</title>
-  <meta name="description" content="The operator interface that runs the BR-01 bioreactor, embedded in the page: ten process channels with their provenance on their face, eleven models of which two are calibrated and none validated, and the digital-twin claim scored against the literature rather than asserted." />
+  <meta name="description" content="The BR-01 operator interface, the criteria it must meet to be called a digital twin, the results measured so far, and the eight-step validation programme that decides the claim." />
   <link rel="icon" href="../assets/img/logo.png" />
   <link rel="stylesheet" href="../assets/css/tokens.css" />
   <link rel="stylesheet" href="../assets/css/nav.css" />
@@ -13,24 +13,19 @@
 </head>
 <body class="sw">
 <!--
-  SCOPE. The software that runs the reactor and the software that reasons about
-  it: the BR-01 operator interface, the eleven models behind it, and the
-  off-board Python stack that fits them. The reactor itself is on Hardware, the
-  transport and sizing calculations are on Bioreactor Calculations, and the
-  cloning record is on Engineering. The interface is checked into this wiki at
-  software/ui/0906UI.html and embedded on this page, so the page and the thing
-  it documents cannot drift apart.
+  SCOPE. This page defines what a digital twin is, states where the ReLeaf
+  software stands against that definition, reports the measured results that
+  exist, and specifies the experiments (DT-0 to DT-7) that decide the claim.
+  It is written as a protocol: a student should be able to run every
+  experiment from this page alone.
 
-  THESIS. The software is twin-shaped and its models are not validated, and both
-  sentences have to be readable at once. The comparison the page is built on is
-  the cable: with no board attached nothing flows in either direction; with one
-  attached, four of five tests pass and the fifth still fails.
-
-  JAVASCRIPT OFF. Every fact is in the markup. Without scripts you lose the
-  contents rail, the heading numbers, the citation links and the lightbox; the
-  layer rail shows its first layer, the twin matrix shows its first verdict, and
-  the measurement register lists all eighteen rows with the filter chips inert.
-  Nothing is hidden behind a click that is not also written on the page.
+  RULES. Every number resolves to a named file in the project. The four result
+  figures and every number quoted with them are produced by
+  software/figures/build_software_figures.py, which also writes
+  software/figures/numbers.json. Figures marked MOCK show the form of a result
+  that does not exist yet; they contain no data. Nothing is called validated
+  unless it was scored on data it was not fitted to.
+  Rewritten 18 September 2026; the previous version is in git history.
 -->
 
   <div id="site-nav" data-base="../" data-tab="drylab" data-page="software"></div>
@@ -53,13 +48,13 @@
     </div>
 
     <div class="pagehead__inner">
-      <p class="pagehead__herocap"><b>Cable out, cable in.</b> This is the comparison the whole page is built on. With no board attached nothing flows in either direction and the honest description is an operator interface with a simulator behind it. With a board attached, four of five digital-twin tests pass and the fifth still fails.</p>
-      <p class="pagehead__lede">The operator interface that runs the BR-01 reactor, embedded below and editable in one file. Ten process channels with their provenance on their face, eleven models of which two are calibrated and none validated, and eighteen measurements the wet lab still owes.</p>
+      <p class="pagehead__herocap"><b>A digital twin is a claim about evidence, not about software.</b> The ReLeaf interface has the architecture of a twin. Whether it earns the name depends on eight experiments, specified on this page in enough detail to be run without further instruction.</p>
+      <p class="pagehead__lede">The operator interface for the BR-01 hollow-fibre bioreactor; the definition it is judged against; the four results measured so far; five known defects; and the validation programme, with acceptance criteria fixed before any data are collected.</p>
       <ul class="pagehead__meta">
         <li><b>Section</b><span>Dry Lab</span></li>
         <li><b>Written by</b><span>Dry lab, software sub-team</span></li>
-        <li><b>Last updated</b><span>7 September 2026</span></li>
-        <li><b>Status</b><span>Built, documented, unvalidated</span></li>
+        <li><b>Last updated</b><span>18 September 2026</span></li>
+        <li><b>Status</b><span>Link implemented; no model validated</span></li>
       </ul>
     </div>
   </header>
@@ -72,74 +67,47 @@
 
     <main class="pagebody">
 
-      <!-- ==================================================== 1 · OVERVIEW == -->
-      <section class="sec" id="overview">
-        <h2>Overview and design</h2>
-        <p class="stand">A reactor standing in a shed has no technician on call, so the interface has to be one. <b>Eleven models sit behind that screen, two of them calibrated and none of them validated</b>, and the page says so before it says anything else.</p>
+      <!-- ============================================== 1 · DEFINITION ===== -->
+      <section class="sec" id="definition">
+        <h2>Definition and target</h2>
+        <p class="stand">A digital twin needs three components: a physical asset, a virtual asset, and <b>automated dataflow in both directions between them</b>. Its models must also be validated.</p>
 
-        <p>Biomanufacturing is gated. To obtain a useful protein you buy it from somebody who owns a fermenter, a cold chain and a registration dossier. ReLeaf's answer is a reactor a grower can own and run beside the crop, and that answer creates a software problem immediately. Commercial bioprocess control software assumes a trained operator, a validated facility and a technician on call. A reactor on a smallholding has none of those.</p>
+        <p>We adopt the definition of Portela et&nbsp;al.&nbsp;[1]: a digital twin is an in-silico replica of an existing physical asset, connected to it. It comprises three parts: the physical asset, the virtual asset, and the bidirectional connectivity that carries data from the asset to the model and returns model-derived actions to the asset. Portela et&nbsp;al. identify the mathematical models as the heart of the twin. A twin is therefore only as useful as its predictive capability, and predictive capability exists only once a model has been validated against data it was not fitted to.</p>
 
-        <p>The connection between the reactor and the software is real: sensor lines come in at 1&nbsp;Hz and command frames go out. But of eleven models, two are calibrated and none is validated against data it was not fitted to. So the defensible sentence is not the short one, and this page states the weakest part of its own claim first, because that is the part a judge finds anyway.</p>
-
-        <ul class="keyfacts">
-          <li><b>11</b><span>Models behind the screen</span></li>
-          <li><b>2</b><span>Calibrated against our own rig data</span></li>
-          <li><b>0</b><span>Validated against held-out data</span></li>
-          <li><b>18</b><span>Measurements still missing</span></li>
-        </ul>
-
-        <h3 id="the-claim">The wording we will defend</h3>
-
-        <aside class="callout callout--unproven">
-          <b class="callout__label">The wording we will defend</b>
-          <p>ReLeaf BR-01 runs a <b>digital twin at the soft-sensing and virtual-experiment level</b>, with bidirectional connectivity to the physical skid implemented and demonstrable: sensor telemetry in at 1&nbsp;Hz, command frames out. Of its eleven models, two are calibrated against measured rig data and <b>none is yet validated against held-out data</b>. The interface marks every unvalidated model as unvalidated on its own face, together with the experiment that would falsify it.</p>
-        </aside>
-
-        <p>Against the nine-step build list of Portela et&nbsp;al.&nbsp;[4] the project scores <b>one step done, five partial and three not done</b>. The three not done are model validation, model predictive control, and integration into a wider data strategy.</p>
+        <p>The literature distinguishes levels of maturity by the direction of automated dataflow&nbsp;[2,&nbsp;3]. We use them as the rungs of our claim and tie each rung to the experiment that establishes it.</p>
 
         <div class="tablewrap">
           <table class="data">
-            <thead><tr><th scope="col">Claim</th><th scope="col">Where it is checkable</th></tr></thead>
+            <thead><tr><th scope="col">Tier</th><th scope="col">Operational criterion</th><th scope="col">Established by</th><th scope="col">Wording permitted on this wiki</th></tr></thead>
             <tbody>
-              <tr>
-                <td><b>A working operator interface, offline, in two languages</b><br /><code>software/ui/0906UI.html</code></td>
-                <td>The file is in this wiki and runs in the frame below: eight views, five one-touch recipes, an alarm model, a batch recorder and a serial link, with no build step and no network call.</td>
-              </tr>
-              <tr>
-                <td><b>Every number on the screen carries its provenance</b></td>
-                <td>Ten process channels, classified on their face: four IN-LINE, one AT-LINE, three SOFT, two PLANNED.</td>
-              </tr>
-              <tr>
-                <td><b>Bidirectional connectivity, implemented</b></td>
-                <td>The firmware has emitted <code>PV</code> lines at 1&nbsp;Hz since day one; since 6&nbsp;September&nbsp;2026 the page parses them and measured values overwrite the model. <code>SET</code> frames go out on every state change. True only while a board is plugged in, and the interface says which.</td>
-              </tr>
-              <tr>
-                <td><b>Two models calibrated against our own measured data</b><br />the pump curve and the membrane pressure drop</td>
-                <td>Models M1 and M2 in the register, with the fit statistics and the range each is valid over.</td>
-              </tr>
-              <tr>
-                <td><b>No model validated against held-out data</b></td>
-                <td>Seven of the eleven rows in the interface's own model register read NOT VALIDATED, on the table rather than in a footnote.</td>
-              </tr>
-              <tr>
-                <td><b>One result that is genuinely demonstrated</b><br />26.7&nbsp;h of warning before an instrument failed</td>
-                <td>Trained on the first 120&nbsp;h of the 434-hour run only, alarm limit fixed before any result was inspected. Two events in one run, so no error rate is reportable.</td>
-              </tr>
+              <tr><td><b>Digital model</b></td><td>A process model exists. Data move between asset and model only by hand.</td><td>Existing code and calibrations</td><td>&ldquo;An operator interface with an embedded process model.&rdquo; <span class="stamp stamp--done">Permitted now</span></td></tr>
+              <tr><td><b>Digital shadow</b></td><td>Measurements flow automatically from the asset into the model, with documented loss and latency. Actions return manually.</td><td>DT-0, DT-1, DT-2</td><td>&ldquo;A digital shadow of the BR-01 hydraulic loop.&rdquo; <span class="stamp stamp--open">After DT-2</span></td></tr>
+              <tr><td><b>Predictive twin</b></td><td>As above, with commands flowing automatically back to the asset, and at least one model validated on held-out data.</td><td>DT-3, DT-4, DT-5, DT-6</td><td>&ldquo;A digital twin of the BR-01 hydraulic loop, validated for &hellip;&rdquo;, naming only the experiments passed. <span class="stamp stamp--open">After DT-3</span></td></tr>
+              <tr><td><b>Closed-loop twin</b></td><td>A model-derived decision is applied to the asset automatically and outperforms a fixed schedule under the same disturbance.</td><td>DT-7</td><td>&ldquo;A closed-loop digital twin.&rdquo; <span class="stamp stamp--void">Not before DT-7</span></td></tr>
             </tbody>
           </table>
         </div>
 
-        <aside class="callout callout--medal">
-          <b class="callout__label">Best Software Tool &middot; what iGEM asks for</b>
-          <p>To be eligible, your software has to be documented and made available under an OSI-approved open-source license.</p>
-          <p>Teams applying for the Software award must host the source on iGEM's GitLab at <code>gitlab.igem.org/2026/software-tools/</code>. Code on any other host cannot be judged. The code is MIT-licensed and documented; the GitLab mirror is not pushed yet, and this page says so rather than letting a judge find it. <a href="https://competition.igem.org/judging/awards/special" target="_blank" rel="noopener">What iGEM asks for &rarr;</a></p>
+        <aside class="callout callout--unproven">
+          <b class="callout__label">Position on 18 September 2026</b>
+          <p>ReLeaf BR-01 is a <b>digital model</b>. Bidirectional connectivity is implemented in code, but it has not been demonstrated on the rig with a recorded loss rate and latency, and two defects (D1, D2 below) prevent a valid demonstration. Two models are calibrated. None is validated.</p>
         </aside>
 
-        <h4>Software is not one of our three Special Awards, and the page is written to its rubric anyway</h4>
-        <p>ReLeaf's three Special Award selections are Measurement, Hardware and Integrated Human Practices. Software is not one of them and we are not claiming it as one. This page exists because the software carries a large part of the Measurement and Hardware cases, and because Project ballot question&nbsp;4 asks how well engineering principles were used. It is written to the Best Software rubric because that rubric is the right checklist for judging whether a tool is documented, reusable and validated, whether or not the award is being contested. The six aspects are scored below, including the one we fail outright.</p>
+        <h3 id="scope">Scope of the claim</h3>
+        <p>The twin is scoped to the <b>hollow-fibre hydraulic loop</b>, because it is the only subsystem with in-line instruments on the rig. The loop pump P-01 and the four pressure transducers PT-01, PT-03, PT-04 and PT-05 are built, and the loop already has a calibrated model. Cell density is measured at-line from samples; the pH probe, the temperature probe and the light panel are designed but not built. The growth model is included as a secondary target (DT-5) because its validation needs only off-line OD<sub>600</sub> samples. Portela et&nbsp;al. recommend this order, from simple process steps to complex ones&nbsp;[1].</p>
 
-        <h3 id="the-interface">The interface, on this page</h3>
-        <p class="stand">The thing itself, not a link to it. <b>One HTML file, no build step, no network call</b>, running here in a frame.</p>
+        <ul class="keyfacts">
+          <li><b>2</b><span>Models calibrated on rig data</span></li>
+          <li><b>0</b><span>Models validated on held-out data</span></li>
+          <li><b>5</b><span>Known software and firmware defects</span></li>
+          <li><b>8</b><span>Experiments that decide the claim</span></li>
+        </ul>
+      </section>
+
+      <!-- ================================================ 2 · SOFTWARE ===== -->
+      <section class="sec" id="software">
+        <h2>The software</h2>
+        <p class="stand">One HTML file, no dependencies, no network calls. <b>The interlocks run on the microcontroller</b>, so no browser failure can leave a pump running.</p>
 
         <figure class="embed">
           <div class="embed__frame">
@@ -147,842 +115,479 @@
                     title="ReLeaf BR-01 operator interface, 6 September 2026 build, running on demo data"></iframe>
           </div>
           <div class="embed__bar">
-            <span class="microlabel">0906UI.html &middot; 4,165 lines &middot; MIT</span>
-            <span><a href="ui/0906UI.html" target="_blank" rel="noopener">Open full screen &rarr;</a> &middot; <a href="https://github.com/Timmy97-TW/releaf-wiki-software" target="_blank" rel="noopener">Standalone repository &rarr;</a></span>
+            <span class="microlabel">0906UI.html &middot; MIT licence</span>
+            <span><a href="ui/0906UI.html" target="_blank" rel="noopener">Open full screen &rarr;</a></span>
           </div>
-          <figcaption><b>6 September.</b> The BR-01 operator interface, live in this page. Use the nav rail down the left to move between the eight views; the Twin view is the one that scores this project against the digital-twin literature. <b>It is running on demo data and no board is attached</b>, so every process value you see moving is produced by the model inside the file, and the interface says so in a yellow banner on its own Twin view. Pressing <b>Connect board</b> is what makes the link two-way: telemetry in at 1&nbsp;Hz, command frames out. That button needs Web Serial, which means Chrome or Edge and a page served over HTTP rather than opened from a file, and it needs a board on the other end of the cable. Everything else on the screen works without one.</figcaption>
+          <figcaption><b>The interface, running in this page on simulated data.</b> No board is attached, so every process value is produced by the model in the file, and the interface says so on its own Twin view. Connecting a board requires Chrome or Edge (Web Serial) and a page served over HTTP; see <a href="#running">Running the software</a>.</figcaption>
         </figure>
 
-        <h3 id="two-users">Who it is written for</h3>
-        <p>A student operator can be told what a trans-membrane pressure is. A micro-farmer in a 產銷班, a local production-and-marketing group, cannot be assumed to have been told anything, and will be looking at the screen because something is already wrong. So every reading carries three things at once: the number, its analog context &mdash; the normal band, both alarm limits, the setpoint &mdash; and a plain-language line underneath saying what the reading means and why it is there. The plain-language layer can be switched off for expert use. The whole interface exists in English and Traditional Chinese, and the Chinese is a real translation written for a Chinese-reading grower rather than a gloss of the English.</p>
-
-        <p>Eight views: Overview, Flow&nbsp;path (a real P&amp;ID), Trends, Alarms, Data, Setup, Environment and Twin. Four display levels in the ISA-101 sense&nbsp;[8], from a single overview tile down to a per-device faceplate. The Twin view carries a connectivity ledger, a what-if runner, a model register, the nine-step checklist, a quality-by-design frame, the induction decision, the lead-time chain and the yield ceiling.</p>
-
-        <p>It runs a what-if before you commit to it. The Twin view runs the page's own model forward, faster than real time, from the current state under a changed pump setting, light state or rainfall. It uses the same engine as the live view, not a second one, so what the operator sees predicted is the model that would run the plant. It snapshots the state, runs on throwaway history and log containers, and restores every field afterwards. Recording is off during the run, no alarm fires, and no command goes out.</p>
-
-        <p>It drives the rig: pump outputs, stirrer speed, valve positions and the green/red light panel, sent to the board as one serial line per state change, with five one-touch recipes &mdash; Idle, Grow, Induce, Perfuse and Clean &mdash; each of which sets every actuator correctly in one press. And it records: one row per 30&nbsp;minutes of process time, exported as a three-sheet <code>.xlsx</code> (Readings, Run&nbsp;info, Alarm&nbsp;log) or a UTF-8 CSV with a byte-order mark so Excel opens Chinese headers correctly. The workbook writer is a small ZIP and OOXML encoder inside the page, so there is no library to install and no upload.</p>
-
-        <h3 id="the-stack">Five layers</h3>
-        <p class="stand">The interlocks sit on the microcontroller, so <b>a closed browser tab cannot move a pump</b>.</p>
-
-        <div class="rail" data-rail>
-          <div class="rail__strip" role="tablist" aria-label="Layers of the software stack">
-            <button class="rail__btn" role="tab" type="button" id="rt-field" aria-controls="rp-field" aria-selected="true">
-              <span class="rail__no">01</span><span class="rail__name">Field</span><span class="rail__when">Sensors, pumps, module</span>
-            </button>
-            <button class="rail__btn" role="tab" type="button" id="rt-mcu" aria-controls="rp-mcu" aria-selected="false">
-              <span class="rail__no">02</span><span class="rail__name">MCU</span><span class="rail__when">1&nbsp;Hz scan, interlocks</span>
-            </button>
-            <button class="rail__btn" role="tab" type="button" id="rt-linux" aria-controls="rp-linux" aria-selected="false">
-              <span class="rail__no">03</span><span class="rail__name">Linux</span><span class="rail__when">Serves the page</span>
-            </button>
-            <button class="rail__btn" role="tab" type="button" id="rt-browser" aria-controls="rp-browser" aria-selected="false">
-              <span class="rail__no">04</span><span class="rail__name">Browser</span><span class="rail__when">The whole application</span>
-            </button>
-            <button class="rail__btn" role="tab" type="button" id="rt-offboard" aria-controls="rp-offboard" aria-selected="false">
-              <span class="rail__no">05</span><span class="rail__name">Off-board</span><span class="rail__when">Python, on a laptop</span>
-            </button>
-          </div>
-
-          <div class="rail__panel" role="tabpanel" id="rp-field" aria-labelledby="rt-field" tabindex="0">
-            <div class="rail__body">
-            <h4>Field</h4>
-            <p>Four pressure transducers PT-01, PT-03, PT-04 and PT-05 on 0 to 30&nbsp;psi analog inputs. Three manual three-way valves in series on the lumen loop. Two peristaltic pumps. A hollow-fibre module: PES, 0.2&nbsp;&micro;m, 0.02&nbsp;m&sup2;, 11 fibres, 1.0&nbsp;mm bore, 0.60&nbsp;m effective length.</p>
-            <p><b>Planned and drawn dashed orange, not built:</b> pH probe AT-02, temperature probe TT-01, base dosing P-03 with TK-04, the green and red light panel L-01, and stirrer M-01. The light panel is the one that matters most and it does not exist, which is why no calibrated photon flux exists anywhere in this project.</p>
-            <dl class="rail__spec">
-              <dt>Built</dt><dd>4 pressure transducers, 3 valves, 2 pumps, 1 module, 4 sterile filters</dd>
-              <dt>Planned</dt><dd>AT-02, TT-01, P-03, TK-04, L-01, M-01</dd>
-              <dt>Deleted</dt><dd>Tank level sensor LT-01, and the dry-running interlock that read it</dd>
-            </dl>
-            </div>
-          </div>
-
-          <div class="rail__panel" role="tabpanel" id="rp-mcu" aria-labelledby="rt-mcu" tabindex="0" hidden>
-            <div class="rail__body">
-            <h4>MCU</h4>
-            <p>Arduino Uno&nbsp;Q, STM32U585 side. Owns the pumps, the valves, a 1&nbsp;Hz sensor scan and all three interlocks. 146 lines of C, in <code>firmware/releaf_br01.ino</code>.</p>
-            <p>Serial at 115200 baud, newline terminated. In: <code>SET P01=12.0 P02=0.0 P03=0.0 STIR=300 LIGHT=GREEN V=111</code>. Out: <code>PV PH=7.02 T=37.0 PT1=2.69 PT3=1.31 PT4=0.42 PT5=0.93</code>. The trans-membrane pressure is computed here, on the board, from the four transducers, because the 0.50&nbsp;bar interlock has to be able to act on it with no browser in the loop.</p>
-            <dl class="rail__spec">
-              <dt>Interlocks</dt><dd>Any lumen valve shut &rarr; loop pump 0. TMP above 0.50&nbsp;bar &rarr; loop pump 0. No <code>SET</code> for 5&nbsp;s &rarr; loop pump 0.</dd>
-              <dt>Constants</dt><dd><code>float ph = 7</code> and <code>float tempC = 25</code>, because neither probe is fitted</dd>
-            </dl>
-            </div>
-          </div>
-
-          <div class="rail__panel" role="tabpanel" id="rp-linux" aria-labelledby="rt-linux" tabindex="0" hidden>
-            <div class="rail__body">
-            <h4>Linux</h4>
-            <p>Arduino Uno&nbsp;Q, Dragonwing side. Serves the page over HTTP, keeps the data log, holds the Wi-Fi. <code>python3 -m http.server 8080</code> is the whole server.</p>
-            <p>Serving over HTTP rather than <code>file://</code> is what enables Web Serial, so the <b>Connect board</b> button only works this way. Note that this layer is <b>not</b> on the measurement path: the telemetry goes from the board to the browser directly.</p>
-            <dl class="rail__spec">
-              <dt>Server</dt><dd><code>python3 -m http.server 8080</code></dd>
-              <dt>Not on</dt><dd>The measurement path. Board to browser is direct.</dd>
-            </dl>
-            </div>
-          </div>
-
-          <div class="rail__panel" role="tabpanel" id="rp-browser" aria-labelledby="rt-browser" tabindex="0" hidden>
-            <div class="rail__body">
-            <h4>Browser</h4>
-            <p>The whole application, one HTML file. Vanilla JavaScript, no framework, no bundler, no dependency. Two builds from one source: a fluid desktop build for laptops and judging, and a fixed 1024&nbsp;&times;&nbsp;600 kiosk build that scales itself to whatever the 7-inch panel negotiates over HDMI, generated by <code>python3 build_kiosk.py</code>. Never edit the kiosk file by hand.</p>
-            <p>Three of the ten process channels are computed here and have no root in the field at all: loop flow off the measured pump curve, the fouling ratio, and the yield ceiling. Those are the soft sensors, and they are the reason the provenance badges exist.</p>
-            <dl class="rail__spec">
-              <dt>Builds</dt><dd>Fluid desktop; fixed 1024&nbsp;&times;&nbsp;600 kiosk from <code>build_kiosk.py</code></dd>
-              <dt>Dependencies</dt><dd>None. Zero external requests; the team logo is a base64 data URI.</dd>
-            </dl>
-            </div>
-          </div>
-
-          <div class="rail__panel" role="tabpanel" id="rp-offboard" aria-labelledby="rt-offboard" tabindex="0" hidden>
-            <div class="rail__body">
-            <h4>Off-board</h4>
-            <p>A separate Python stack, <code>Math Model/releaf-model/</code>, that does the fitting, the identifiability analysis, the transport calculations and the anomaly detection, and emits tagged JSON. It runs on a laptop, not on the board.</p>
-            <p>Everything it produces reaches the interface as a constant, not as a live call: the pump curve, the two pressure-drop coefficients, the calibration fit and the trust-layer thresholds are all numbers written into the file. That is a deliberate limit, because the device may have no network and nothing on screen may depend on a laptop being reachable. It is also why <b>the trust layer is not on the board</b> &mdash; the interface uses a hand-written stand-in scoring function, and the code comment says so.</p>
-            <dl class="rail__spec">
-              <dt>Runs</dt><dd>Fitting, identifiability, transport, anomaly detection</dd>
-              <dt>Reaches the page as</dt><dd>Constants, never a live call</dd>
-              <dt>Not on the board</dt><dd>The trust layer. The 26.7&nbsp;h lead time is retrospective, on a completed log.</dd>
-            </dl>
-            </div>
-          </div>
+        <div class="tablewrap">
+          <table class="data">
+            <thead><tr><th scope="col">Layer</th><th scope="col">Implementation</th><th scope="col">Role in the twin</th></tr></thead>
+            <tbody>
+              <tr><td><b>Field</b></td><td>Hollow-fibre module HFM-01 (PES, 0.2&nbsp;&micro;m, 0.02&nbsp;m&sup2;, 11 fibres, 1.0&nbsp;mm bore, 0.60&nbsp;m); pumps P-01 and P-02; lumen valves V-01, V-02, V-04 in series; transducers PT-01, 03, 04, 05 (0&ndash;30&nbsp;psi).</td><td>Physical asset</td></tr>
+              <tr><td><b>MCU</b></td><td>Arduino Uno&nbsp;Q, STM32U585 side, <code>firmware/releaf_br01.ino</code>. 1&nbsp;Hz scan; three interlocks (any lumen valve shut, TMP &gt; 0.50&nbsp;bar, or no command for 5&nbsp;s each force P-01 to zero).</td><td>Asset-side end of the link; safety</td></tr>
+              <tr><td><b>Protocol</b></td><td>115&nbsp;200&nbsp;baud, newline-terminated ASCII. Out: <code>PV PT1=&hellip; PT3=&hellip; PT4=&hellip; PT5=&hellip;</code> at 1&nbsp;Hz. In: <code>SET P01=&hellip; P02=&hellip; LIGHT=&hellip; V=111</code>.</td><td>Bidirectional connectivity</td></tr>
+              <tr><td><b>Browser</b></td><td><code>software/ui/0906UI.html</code>. Parses <code>PV</code> lines, overwrites the model with measured values channel by channel, sends <code>SET</code> frames, records the batch, exports XLSX and CSV.</td><td>Virtual asset; operator interface</td></tr>
+              <tr><td><b>Off-board</b></td><td><code>Math&nbsp;Model/releaf-model/</code> (Python, numpy, scipy). Model fitting, identifiability, the measurement trust layer.</td><td>Model fitting and validation</td></tr>
+            </tbody>
+          </table>
         </div>
 
-        <h4>One interlock was deleted rather than left blind, and that is recorded</h4>
-        <p>The interlocks live on the MCU, not in the browser. There are three, and they override the commanded value on every loop rather than advising it: the three lumen valves are in series, so any one shut forces the loop pump to zero; a trans-membrane pressure above 0.50&nbsp;bar forces it to zero; and no <code>SET</code> line for 5&nbsp;seconds forces it to zero. A browser crash, a closed tab or a dropped Wi-Fi link therefore cannot move a pump or leave one running. The page is a window onto the controller, not the controller.</p>
-
-        <p>The fourth interlock is gone. The dry-running rule went when the tank level sensor LT-01 was removed from the design, because a rule that cannot see its own input is worse than no rule: people keep trusting it. That deletion is written into the equipment register rather than quietly done.</p>
-
-        <h4>One file with no build step removes the failures that happen in a field and creates the ones that happen at a desk</h4>
-        <p>This looks like a shortcut and is not. Four constraints forced it, and all four come from where the thing has to run. <b>The device may have no network:</b> anything fetched from a CDN is a failure mode with no recovery path in the field, so there are zero external requests in the file &mdash; no font host, no chart library, no telemetry, and the team logo inlined as a base64 data URI. <b>The person who has to fix it is a high-school student in two years' time:</b> a build step is a second thing that can break, and it breaks silently and off-device. <b>Reproducibility:</b> the iGEM Software rubric asks for reproducible build and run instructions and pinned dependencies&nbsp;[9], and a file with no dependencies is trivially reproducible. <b>The wiki freeze:</b> iGEM wikis block external font and script hosts, so anything needing a CDN would have to be rewritten before upload anyway.</p>
-
-        <p>The cost is real and should be said. 4,165 lines in one file is past the point where a newcomer can hold it in their head, there are no unit tests, and the numbered section banners inside the file are doing the job a module boundary would do in a larger project. We took that trade because the failure modes it removes happen in a field and the failure modes it creates happen at a desk.</p>
-
-        <h3 id="how-it-got-here">How it got here</h3>
-        <p class="stand">Five dates. <b>Two of them are failures</b>, and both are on the page because they are the reason a later number can be trusted.</p>
-
-        <div class="story">
-          <div class="story__beat">
-            <span class="story__when">12 July</span>
-            <h4>Pressure on a screen, for the first time</h4>
-            <p>Two transducers on the loop, streaming to a computer in real time. The regular oscillation on both traces is the peristaltic pump's own pulsation, and it is the reason the interface reports a median over a window rather than an instantaneous reading. That decision was made here and has not changed since.</p>
-            <figure class="fig fig--plain">
-              <img src="../assets/img/software/first-live-pressure-20260712.jpg" alt="A lab bench with a peristaltic pump, a breadboard, a pressure transducer inline on clear tubing, and a laptop showing two oscillating pressure traces." loading="lazy" width="1600" height="1205" />
-              <figcaption><b>12 July.</b> The pump is at 050. What this does not show is the BR-01 operator interface: this is an earlier logging dashboard, on the pressure channel only, with no biology and no cell density.</figcaption>
-            </figure>
-          </div>
-
-          <div class="story__beat">
-            <span class="story__when">19 July</span>
-            <h4>The photometer overestimated by four-fold, and that is why calibration stopped being optional</h4>
-            <p>Our in-line photometer read OD600 roughly four times high against a BioDrop. The tile reads a sample-to-reference ratio of 8.18 times where the software expects about 10 to 1, and the rejection rate is 14.3%. The negative excursion to &minus;0.19 near 1.4&nbsp;h is a bubble in the flow cell.</p>
-            <figure class="fig fig--plain">
-              <img src="../assets/img/software/photometer-4fold-20260719.png" alt="A screenshot of the OD600 Live Monitor showing a flat trace with two spikes then a step, with a sample to reference ratio of 8.18 times against an expected 10 to 1." loading="lazy" width="1600" height="981" />
-              <figcaption><b>19 July.</b> A native screenshot, not a photo of a screen. This figure is on the page because it is a failure: it is the measurement that told us calibration was not optional. What it does not show is a corrected instrument. The calibration that answered it is five weeks later.</figcaption>
-            </figure>
-          </div>
-
-          <div class="story__beat">
-            <span class="story__when">20 to 21 July</span>
-            <h4>The rig that produced the 434-hour run</h4>
-            <p>Amber culture on a magnetic stirrer, the 3D-printed photometer column in the loop with the culture flowing straight through the cuvette. Nothing is opened and nothing is drawn off for the optical reading, which is the whole point of an in-line instrument. The log that came off this rig is still the best data the project owns.</p>
-            <figure class="fig fig--plain">
-              <img src="../assets/img/software/reactor-running-20260720.jpg" alt="The bioreactor running inside a growth chamber: an amber culture bottle on a stirrer, the black 3D-printed photometer column, tubing and a breadboard." loading="lazy" width="1050" height="1400" />
-              <figcaption><b>20 July.</b> A breadboard on a chipboard offcut, plants on the shelf above. What it does not show is the BR-01 with its full instrument set: the pH probe, the temperature probe, the stirrer and the light panel are not in this frame because they are not built.</figcaption>
-            </figure>
-          </div>
-
-          <div class="story__beat">
-            <span class="story__when">23 August</span>
-            <h4>Calibration against a known dose, rather than against another instrument</h4>
-            <p>Cumulative 1&nbsp;mg TiO&#8322; additions from 2 to 60&nbsp;mg into a stirred 400&nbsp;mL recirculating loop, our in-line photometer on the loop and a BioDrop read in parallel to 46&nbsp;mg. Scoring both instruments against a known dose rather than against each other is what reversed the conclusion of the earlier report: above 30&nbsp;mg it is the BioDrop that misbehaves.</p>
-            <figure class="fig fig--plain">
-              <img src="../assets/img/software/tio2-calibration-20260823.jpg" alt="A student in a lab coat adding suspension to a stirred bottle connected by tubing to a photometer and a breadboard, with an instructor seated beside a handwritten data sheet." loading="lazy" width="1600" height="1192" />
-              <figcaption><b>23 August.</b> The readings are being written down by hand on the sheet at right. What it does not show is replicates: one reading per point, no repeats, and the additions are cumulative so error accumulates along the series. TiO&#8322; gives linearity, not cell count.</figcaption>
-            </figure>
-          </div>
-
-          <div class="story__beat">
-            <span class="story__when">6 September</span>
-            <h4>The day the link became two-way</h4>
-            <p>The firmware had emitted <code>PV</code> lines at 1&nbsp;Hz since day one. The page never read them. From the 6 September build it parses that stream, and measured pH, temperature and the four pressures overwrite the model. <code>SET</code> frames were already going out on every state change, so this is the date the connectivity triad closed &mdash; and the date on which four of the five twin tests started passing, while the fifth carried on failing.</p>
-          </div>
-        </div>
-      </section>
-
-      <!-- =============================================== 2 · PROVENANCE ===== -->
-      <section class="sec" id="provenance">
-        <h2>Provenance of the numbers</h2>
-        <p class="stand">Ten process channels reach the screen. <b>Four of them are measurements.</b> The interface says which four on the face of every reading, using the FDA's PAT classes plus one more for values with no instrument at all.</p>
-
-        <p>Four <span class="pv pv--in">in-line</span>, one <span class="pv pv--at">at-line</span>, three <span class="pv pv--soft">soft</span>, two <span class="pv pv--plan">planned</span>. Before the 6 September build the interface did not distinguish them, and the P&amp;ID drew four pressure bubbles while leaving loop flow and trans-membrane pressure off the diagram entirely &mdash; so an operator saw instruments and inferred instruments. That was the quiet dishonesty in the old drawing.</p>
-
-        <p>The two soft sensors are now drawn on the P&amp;ID as the ISA-5.1 symbol for a function performed in software, a circle inscribed in a square, because a different shape and not just a different colour is what stops an operator reading a calculation as a measurement. Planned equipment is drawn dashed orange, which is the interface's own convention on its own P&amp;ID.</p>
+        <h3 id="provenance">Provenance of each channel</h3>
+        <p>Every value on the screen is labelled with its origin, using the process analytical technology (PAT) classes in-line, at-line and off-line&nbsp;[5], plus two classes of our own: <i>soft</i>, for values computed from other measurements, and <i>planned</i>, for values with no instrument behind them.</p>
 
         <div class="tablewrap">
           <table class="data chan">
-            <thead><tr><th scope="col">Tag</th><th scope="col">Channel</th><th scope="col">Class</th><th scope="col">Path into the software, and status</th></tr></thead>
+            <thead><tr><th scope="col">Tag</th><th scope="col">Channel</th><th scope="col">Class</th><th scope="col">Status</th></tr></thead>
             <tbody>
-              <tr><td>PT-01</td><td>Lumen inlet pressure</td><td><span class="pv pv--in">in-line</span></td><td>0&ndash;30&nbsp;psi on MCU A1, into the <code>PV</code> line at 1&nbsp;Hz. Built and reporting. Reported as a median over a window, because the peristaltic pump pulses.</td></tr>
-              <tr><td>PT-03</td><td>Lumen outlet pressure</td><td><span class="pv pv--in">in-line</span></td><td>0&ndash;30&nbsp;psi on MCU A2. Sits under the module on the lumen side, where the 2026-08-16 relocation put it. Built.</td></tr>
-              <tr><td>PT-04</td><td>Shell top pressure</td><td><span class="pv pv--in">in-line</span></td><td>0&ndash;30&nbsp;psi on MCU A3. Built, and <b>uncharacterised</b>: currently derived from the lumen pump curve, because the shell side has never been characterised on the rig. Experiment E9 fixes it.</td></tr>
-              <tr><td>PT-05</td><td>Shell bottom pressure</td><td><span class="pv pv--in">in-line</span></td><td>0&ndash;30&nbsp;psi on MCU A4. Built and uncharacterised, on the same footing as PT-04. Treat both as indicative.</td></tr>
-              <tr><td>&mdash;</td><td>Optical density at 600&nbsp;nm</td><td><span class="pv pv--at">at-line</span></td><td>A sample taken off the rig and typed in, tagged LAB on every screen it appears on. The team's own in-line photometer exists and produced the 434-hour run, but it is a separate instrument and is not wired into this interface.</td></tr>
-              <tr><td>&mdash;</td><td>Loop flow</td><td><span class="pv pv--soft">soft</span></td><td>Read off the measured pump curve, model M1. Tagged CALC and never FT-01, because there is no flow meter anywhere on the skid.</td></tr>
-              <tr><td>&mdash;</td><td>Trans-membrane &Delta;P</td><td><span class="pv pv--soft">soft</span></td><td>Mean lumen pressure minus mean shell pressure, computed on the MCU, and the input to the 0.50&nbsp;bar interlock. An audit on 2026-09-02 found the displayed value <b>not distinguishable from zero</b> under either error model. Experiment E10 zeroes the transducers and repeats it.</td></tr>
-              <tr><td>&mdash;</td><td>Fouling, &times; baseline</td><td><span class="pv pv--soft">soft</span></td><td>&Delta;P<sub>net</sub> divided by flow, relative to the clean baseline at 263&nbsp;mL/min. Clean the module before 2.00&times;. The rate law behind it is invented, and it drives the only maintenance decision in the product. Experiment E17.</td></tr>
-              <tr><td>AT-02</td><td>pH</td><td><span class="pv pv--plan">planned</span></td><td>An I&sup2;C front end into <code>PV PH=</code>. The probe is not fitted, and the firmware declares <code>float ph = 7</code> as a constant. It is not a measurement and the interface labels it Planned on every screen it appears on.</td></tr>
-              <tr><td>TT-01</td><td>Temperature</td><td><span class="pv pv--plan">planned</span></td><td>A DS18B20 on 1-Wire, pin 2. Not fitted. Firmware constant <code>float tempC = 25</code>.</td></tr>
-            </tbody>
-          </table>
-        </div>
-
-        <p class="aside">Three more channels leave the software rather than enter it, and they are not measurements either. <b>Actuator command frames</b> go out as one <code>SET</code> line per state change, carrying interlock-effective values only: a pump held off by an interlock is transmitted as <code>0.0</code> and never as its raw slider position. <b>The light state</b> is two digital pins &mdash; green switches the CcaS/CcaR system on in <i>B. subtilis</i>, red switches it off. <b>The batch record</b> is one row per 30 minutes of process time. Two further screen values have no instrument behind them at all: the field weather is a manual snapshot pasted into the source and flagged <code>live: false</code>, and the crop stress risk band is the maximum of four indices derived from it.</p>
-
-        <figure class="fig">
-          <img src="../assets/img/software/ui-flow-path.png" alt="The Flow path view of the operator interface: a piping and instrumentation diagram of the hollow-fibre loop with provenance badges on every readout and a legend distinguishing measured, at-line and model-computed values." loading="lazy" width="1440" height="900" />
-          <figcaption><b>6 September.</b> The Flow path view at 1440&nbsp;&times;&nbsp;900, a real P&amp;ID rather than a decorative diagram. The readout strip across the top carries a provenance badge on every value: SOFT on loop flow and trans-membrane pressure, IN-LINE on the four pressures, AT-LINE on cell density, PLANNED on pH, temperature, the light panel and the stirrer. Dashed orange is equipment that is designed and not built. What it does not show is a live rig: the label at the bottom left of the nav rail reads DEMO DATA, because no board is connected in this frame and every number on it is produced by the model inside the page.</figcaption>
-        </figure>
-
-        <h3 id="light-parameters">Light-induction parameters</h3>
-        <p class="stand">Every light parameter in the specification is Castillo-Hair's. <b>Not one of them is ours.</b></p>
-
-        <p>The light-induction half of this specification is anchored on Castillo-Hair et&nbsp;al. 2019&nbsp;[1], which characterised the CcaS/CcaR green-light system using the Light Plate Apparatus of Gerhardt et&nbsp;al. 2016&nbsp;[2]. That paper is the reason the specification can be written at all: it gives a steady-state transfer function with fitted parameters and a kinetic model with measured time constants, so light intensity in and promoter output out is a defined mapping rather than a hand wave. It is also literature, not our data, and every row taken from it is marked as such.</p>
-
-        <p>The transfer function, verbatim. Steady state is a Hill function, <i>y</i> = <i>y</i><sub>0</sub> + &Delta;<i>y</i> &middot; <i>x</i><sup><i>n</i></sup> / (<i>x</i><sup><i>n</i></sup> + <i>K</i><sub>&frac12;</sub><sup><i>n</i></sup>), where <i>y</i> is sfGFP fluorescence in MEFL and <i>x</i> is light intensity in &micro;mol&middot;m<sup>&minus;2</sup>&middot;s<sup>&minus;1</sup>. The response to a step change in intensity is a third-order delayed differential system: production rate, to immature reporter, to mature reporter. Both are given in Castillo-Hair's own appendix, the copy of which this project holds at <code>Opto_Math/2019_Castillo_Math.pdf</code>.</p>
-
-        <aside class="callout callout--borrowed">
-          <b class="callout__label">Borrowed across chassis, and it must be labelled wherever it appears</b>
-          <p>The Hill parameters this page uses &mdash; <i>n</i>&nbsp;1.88&nbsp;&plusmn;&nbsp;0.16, <i>K</i><sub>&frac12;</sub>&nbsp;4.66&nbsp;&plusmn;&nbsp;0.63&nbsp;&micro;mol&middot;m<sup>&minus;2</sup>&middot;s<sup>&minus;1</sup>, <i>t</i><sub>&frac12;on</sub>&nbsp;105.1&nbsp;&plusmn;&nbsp;1.5&nbsp;min and <i>t</i><sub>&frac12;off</sub>&nbsp;74.97&nbsp;&plusmn;&nbsp;0.39&nbsp;min &mdash; are recorded in the team's 2026-07-04 spec freeze as <b>measured in <i>E. coli</i> at 526&nbsp;nm</b>, and the model applies them to a <b><i>B. subtilis</i></b> culture.</p>
-          <p>This is not a naming error and should not be read as one. ReLeaf uses two organisms on purpose: <i>B. subtilis</i> is the committed production chassis and <i>E. coli</i> K-12 is the cloning host, so <i>E. coli</i> appearing in project documents is intentional. What is being assumed is narrower and it is a real assumption: <b>that a promoter dose-response measured in one chassis transfers to another</b>. Experiment E1, our own LPA dose-response fit in the production strain, is what retires it. Until then, any page that uses these numbers has to say they are borrowed in the same sentence.</p>
-        </aside>
-
-        <p>There is a second, narrower discrepancy in our own records and it is unresolved. Our LEDs are 520&nbsp;nm. The CcaS absorption maximum is 535&nbsp;nm&nbsp;[3] and the source paper's <i>K</i><sub>&frac12;</sub> is quoted at 526&nbsp;nm. The correction between those three wavelengths has not been made. It is written here rather than quietly resolved in whichever direction suits us.</p>
-
-        <p>Twelve inputs describe the light layer. Six are Castillo-Hair's, none is measured here, and the first two are blocked outright because L-01 does not exist.</p>
-
-        <div class="tablewrap">
-          <table class="data">
-            <thead><tr><th scope="col">Variable</th><th scope="col">Symbol</th><th scope="col">Value or range</th><th scope="col">Source and status</th></tr></thead>
-            <tbody>
-              <tr><td>Green photon flux at the culture</td><td><i>I</i><sub>G</sub></td><td>0.1&ndash;50&nbsp;&micro;mol&middot;m<sup>&minus;2</sup>&middot;s<sup>&minus;1</sup></td><td>Light panel L-01 duty cycle, or the LPA. <b>Not built</b> &mdash; L-01 does not exist, and no calibrated flux exists in the project.</td></tr>
-              <tr><td>Green wavelength</td><td>&lambda;<sub>G</sub></td><td>520&nbsp;nm</td><td>LED specification. Offset unreconciled: ours 520&nbsp;nm, CcaS maximum 535&nbsp;nm&nbsp;[3], source <i>K</i><sub>&frac12;</sub> at 526&nbsp;nm.</td></tr>
-              <tr><td>Red photon flux (reset)</td><td><i>I</i><sub>R</sub></td><td>20&nbsp;&micro;mol&middot;m<sup>&minus;2</sup>&middot;s<sup>&minus;1</sup></td><td>Light panel L-01. Not built.</td></tr>
-              <tr><td>Red wavelength</td><td>&lambda;<sub>R</sub></td><td>660&nbsp;nm</td><td>LED specification. Offset unreconciled: the source paper uses 672&nbsp;nm.</td></tr>
-              <tr><td>Duty cycle of the light program</td><td><i>D</i></td><td>0&ndash;100%</td><td>Recipe or schedule chosen in the interface. Uncharacterised: pulsatile versus static induction is known to change output; we have measured nothing.</td></tr>
-              <tr><td>Induction onset</td><td><i>t</i><sub>on</sub></td><td>h of batch</td><td>Operator, recipe, or the Twin view's policy. Policy exists, unvalidated.</td></tr>
-              <tr><td>Hill coefficient</td><td><i>n</i></td><td>1.88&nbsp;&plusmn;&nbsp;0.16</td><td>Castillo-Hair 2019&nbsp;[1]. <b>Literature, borrowed, not ours.</b></td></tr>
-              <tr><td>Half-maximal intensity</td><td><i>K</i><sub>&frac12;</sub></td><td>4.66&nbsp;&plusmn;&nbsp;0.63&nbsp;&micro;mol&middot;m<sup>&minus;2</sup>&middot;s<sup>&minus;1</sup></td><td>Castillo-Hair 2019, at 526&nbsp;nm&nbsp;[1]. Literature.</td></tr>
-              <tr><td>Time to half-on</td><td><i>t</i><sub>&frac12;on</sub></td><td>105.1&nbsp;&plusmn;&nbsp;1.5&nbsp;min</td><td>Castillo-Hair 2019&nbsp;[1]. Literature.</td></tr>
-              <tr><td>Time to half-off</td><td><i>t</i><sub>&frac12;off</sub></td><td>74.97&nbsp;&plusmn;&nbsp;0.39&nbsp;min</td><td>Castillo-Hair 2019&nbsp;[1]. Literature.</td></tr>
-              <tr><td>Basal output</td><td><i>y</i><sub>0</sub></td><td>1997.6&nbsp;MEFL</td><td>Castillo-Hair 2019&nbsp;[1]. Literature.</td></tr>
-              <tr><td>Output span</td><td>&Delta;<i>y</i></td><td>106740.5&nbsp;MEFL</td><td>Castillo-Hair 2019&nbsp;[1]. Literature.</td></tr>
+              <tr><td>PT-01, PT-03</td><td>Lumen inlet and outlet pressure</td><td><span class="pv pv--in">in-line</span></td><td>Built and reporting. Lumen &Delta;P = PT-01 &minus; PT-03 is the primary observable of the hydraulic twin.</td></tr>
+              <tr><td>PT-04, PT-05</td><td>Shell pressures</td><td><span class="pv pv--in">in-line</span></td><td>Built, not characterised on the shell side. Treat as indicative until DT-2.</td></tr>
+              <tr><td>&mdash;</td><td>OD<sub>600</sub></td><td><span class="pv pv--at">at-line</span></td><td>Sample off the rig, entered by hand. The team's in-line photometer is a separate logger and is not wired to this interface.</td></tr>
+              <tr><td>&mdash;</td><td>Loop flow</td><td><span class="pv pv--soft">soft</span></td><td>Read from the measured pump curve (model M1). No flow meter on BR-01.</td></tr>
+              <tr><td>&mdash;</td><td>Trans-membrane pressure</td><td><span class="pv pv--soft">soft</span></td><td>Difference of four transducers. Not resolvable at the operating point (Result R4).</td></tr>
+              <tr><td>&mdash;</td><td>Fouling ratio</td><td><span class="pv pv--soft">soft</span></td><td>&Delta;P/Q relative to the clean baseline. The rate law is assumed, not fitted (DT-4).</td></tr>
+              <tr><td>AT-02, TT-01</td><td>pH, temperature</td><td><span class="pv pv--plan">planned</span></td><td>Probes not fitted. The firmware transmits the constants 7.00 and 25.0 (defect D2).</td></tr>
             </tbody>
           </table>
         </div>
       </section>
 
-      <!-- =================================================== 3 · MODELS ===== -->
-      <section class="sec" id="models">
-        <h2>The model register</h2>
-        <p class="stand">Eleven models. <b>Two calibrated, and none validated against data it was not fitted to.</b> Seven of the eleven rows in the interface's own register say so on their face.</p>
+      <!-- ================================================= 3 · RESULTS ===== -->
+      <section class="sec" id="results">
+        <h2>Results to date</h2>
+        <p class="stand">Four measured results. <b>All four are calibrations or retrospective analyses</b>; none is a prospective validation.</p>
 
-        <p>Zobel-Roos et&nbsp;al.&nbsp;[5] sort process models by whether they extrapolate. Rigorous physico-chemical models, which separate fluid dynamics, phase equilibrium and mass transfer and parameterise each independently, are the only class they call predictive in scale, and only once validated. Short-cut models are non-predictive in scale and dimensions. Statistical models and neural networks are non-predictive outside their training range. Hybrid models are demoted to non-predictive because of the statistical part, on the argument that combining a mechanistic model with a fitted one reduces predictability to the weakest part. That last position is contested &mdash; Portela et&nbsp;al.&nbsp;[4] in the same volume treat hybrid modelling more favourably &mdash; so it is presented here as one group's falsification-based ranking rather than a settled consensus.</p>
-
-        <p>Applying that ruler to ReLeaf honestly: most of what the software computes is short-cut or statistical, and therefore does not extrapolate. The one genuinely mechanistic layer, the light-to-promoter transfer function, has not been fitted in our hands at all.</p>
-
-        <p><b>Calibrated is not validated, and the difference is the whole section.</b> Sargent's criterion, quoted by Zobel-Roos et&nbsp;al.&nbsp;[5], is blunt: a model has no benefit in industrial application if it is not validated by comprehensible quantitative criteria. Validation means scoring against data the model was not fitted to. The pump curve is fitted on the same nine points it interpolates. The membrane pressure drop is fitted on one clean module at one temperature with water. Neither has a held-out set.</p>
+        <p>Every number in this section is computed by <code>software/figures/build_software_figures.py</code> from the file named beside it and written to <code>software/figures/numbers.json</code>, which records the source of each value.</p>
 
         <div class="tablewrap">
           <table class="data models">
-            <thead><tr><th scope="col">#</th><th scope="col">Model, class and range</th><th scope="col">State</th><th scope="col">What is behind it, and what would falsify it</th></tr></thead>
+            <thead><tr><th scope="col">#</th><th scope="col">Result</th><th scope="col">Status</th><th scope="col">Key numbers</th></tr></thead>
             <tbody>
               <tr>
-                <td>M1</td>
-                <td><b>Pump curve</b><small>Short-cut, measured lookup with interpolation. P-01&nbsp;% &rarr; mL/min, valid 0&ndash;24%, 0&ndash;450&nbsp;mL/min</small></td>
+                <td>R1</td>
+                <td><b>Module pressure drop</b><small>16 August 2026, water, 22&nbsp;&deg;C, 8 pump settings (10&ndash;24%), <i>n</i>&nbsp;=&nbsp;1 per point; <code>260816 pressure to flow rate.xlsx</code></small></td>
                 <td><span class="stamp stamp--done">Calibrated</span></td>
-                <td>Nine settings, <i>n</i>&nbsp;=&nbsp;1 each, 22&nbsp;&deg;C, water. Fitted on the same nine points it interpolates, with no held-out set. 12% gives 163.3&nbsp;mL/min at 1.494&nbsp;psi; the operating point of 263&nbsp;mL/min sits at 16%. <i>Falsified by</i> fitting a flow meter and comparing, or running medium instead of water at a different viscosity.</td>
+                <td>&Delta;P = <i>aQ</i> + <i>bQ</i>&sup2; through the origin. Module fitted: R&sup2;&nbsp;0.9954, residual SD 10.1&nbsp;mbar. Jumper only: R&sup2;&nbsp;0.9950, SD 5.7&nbsp;mbar. Net module: <i>a</i>&nbsp;=&nbsp;2.427&nbsp;&times;&nbsp;10<sup>&minus;4</sup>&nbsp;bar&middot;min&middot;mL<sup>&minus;1</sup>, <i>b</i>&nbsp;=&nbsp;4.605&nbsp;&times;&nbsp;10<sup>&minus;7</sup>&nbsp;bar&middot;min&sup2;&middot;mL<sup>&minus;2</sup>. The rig without the module accounts for 43&ndash;56% of the measured total. At 263&nbsp;mL/min the total is 0.197&nbsp;bar and the net module 0.096&nbsp;bar, 1.03 times the Hagen&ndash;Poiseuille value for 11 open fibres of 0.5&nbsp;mm radius (0.093&nbsp;bar).</td>
               </tr>
               <tr>
-                <td>M2</td>
-                <td><b>Membrane pressure drop</b><small>Short-cut with a mechanistic form, &Delta;P = aQ + bQ&sup2;. Valid 113&ndash;263&nbsp;mL/min, 22&nbsp;&deg;C, water, clean module</small></td>
+                <td>R2</td>
+                <td><b>Photometer linearity</b><small>23 August 2026, cumulative TiO&#8322; additions 2&ndash;60&nbsp;mg in 400&nbsp;mL, BioDrop in parallel to 46&nbsp;mg; <code>Inline photometer to biodrop.xlsx</code></small></td>
                 <td><span class="stamp stamp--done">Calibrated</span></td>
-                <td>&Delta;P<sub>net</sub>(Q) = 2.427&nbsp;&times;&nbsp;10<sup>&minus;4</sup>&nbsp;Q + 4.604&nbsp;&times;&nbsp;10<sup>&minus;7</sup>&nbsp;Q&sup2; bar, forced through the origin, R&sup2;&nbsp;0.9954, residual SD 0.0101&nbsp;bar, background subtracted using a jumper configuration. The rig accounts for 46&ndash;55% of total &Delta;P. Two routes to wall shear agree to 2.8%. No held-out set. <i>Falsified by</i> repeating with a fouled module or with medium; net &Delta;P is 0.90&ndash;0.96&times; Hagen-Poiseuille, so a large deviation would say a fibre is blocked.</td>
+                <td>Against the BioDrop where it reads below 1.2 (<i>n</i>&nbsp;=&nbsp;20): ours&nbsp;=&nbsp;1.018&nbsp;&times;&nbsp;BioDrop&nbsp;&minus;&nbsp;0.031, R&sup2;&nbsp;0.995, residual SD 0.024; bias &minus;0.019, 95% limits of agreement &minus;0.066 to +0.028. Against dose over 31&ndash;46&nbsp;mg, the range both instruments cover (<i>n</i>&nbsp;=&nbsp;16 each): ours R&sup2;&nbsp;0.9901, SD 0.022; BioDrop R&sup2;&nbsp;0.8501, SD 0.120. One reading per point, no replicates. TiO&#8322; establishes linearity, not cell number.</td>
               </tr>
               <tr>
-                <td>M3</td>
-                <td><b>Trans-membrane pressure</b><small>Direct balance arithmetic. PT-01, 03, 04, 05 &rarr; TMP. Needs zeroed sensors</small></td>
-                <td><span class="stamp stamp--void">Arithmetic only</span></td>
-                <td>An audit of the live dashboard on 2026-09-02 found the displayed TMP <b>not distinguishable from zero</b> under either error model. A &plusmn;0.055&nbsp;bar interval on a 0.30&nbsp;bar design point is not good enough to control on. <i>Falsified by</i> zeroing all four transducers against atmosphere and repeating: E10.</td>
+                <td>R3</td>
+                <td><b>Measurement trust layer, 434-hour run</b><small>21 July&ndash;8 August 2026, 22&nbsp;&deg;C, 2,671 valid rows at 10&nbsp;min; <code>out/sentinel.json</code>, <code>out/sentinel_series.json</code></small></td>
+                <td><span class="stamp stamp--partial"><i>n</i> = 2 events</span></td>
+                <td>Trained on <i>t</i>&nbsp;&lt;&nbsp;120&nbsp;h only (601 samples); alarm limit fixed in advance at the 99.5th percentile of the training score. Sensor alarm at 216.3&nbsp;h; OD channel unusable from 243.0&nbsp;h; <b>lead time 26.7&nbsp;h</b>. The layer separates a process event (120&ndash;160&nbsp;h, no alarm) from an instrument event (215&ndash;300&nbsp;h), which a |dOD| threshold cannot. False-alarm rate on the unseen quiet window 160&ndash;220&nbsp;h: 6.1%. Two events in one run: no detection error rate is reportable.</td>
               </tr>
               <tr>
-                <td>M4</td>
-                <td><b>Fouling rate law</b><small>Short-cut, ratio to a clean baseline. &Delta;P<sub>net</sub>/Q &rarr; &times; baseline</small></td>
-                <td><span class="stamp stamp--void">Not validated</span></td>
-                <td>None. The module has never been run to fouling. The 2.00&times; cleaning threshold is a design rule, not an observation, and the coefficient was chosen so a demonstration reaches it at a plausible time. Normalise to 25&nbsp;&deg;C. <i>Falsified by</i> running a culture to fouling and recording the trajectory: E17. If resistance jumps rather than creeping, a ratio threshold is the wrong instrument entirely.</td>
-              </tr>
-              <tr>
-                <td>M5</td>
-                <td><b>Growth curve</b><small>Unstructured kinetic, mechanistic form, fitted parameters. <i>t</i> &rarr; OD600, valid over the exact condition fitted</small></td>
-                <td><span class="stamp stamp--void">Not validated</span></td>
-                <td>None. At 37&nbsp;&deg;C: &micro;&nbsp;0.92&nbsp;h<sup>&minus;1</sup> log-linear over 0&ndash;3&nbsp;h, 1.31&nbsp;h<sup>&minus;1</sup> logistic, X<sub>max</sub>&nbsp;1.54&nbsp;OD. At 22&nbsp;&deg;C: &micro;&nbsp;0.0329&nbsp;h<sup>&minus;1</sup> over 7&ndash;40&nbsp;h. <i>n</i>&nbsp;=&nbsp;1. <i>Falsified by</i> a 22&nbsp;&deg;C batch run alongside a 37&nbsp;&deg;C one; whether the 37&nbsp;&deg;C parameters transfer to 22&nbsp;&deg;C ambient operation is an open biological question, not an engineering one.</td>
-              </tr>
-              <tr>
-                <td>M6</td>
-                <td><b>CcaSR steady state</b><small>Rigorous form, literature parameters. <i>I</i><sub>G</sub> &rarr; MEFL, valid 0.1&ndash;50&nbsp;&micro;mol&middot;m<sup>&minus;2</sup>&middot;s<sup>&minus;1</sup>, 526&nbsp;nm</small></td>
-                <td><span class="stamp stamp--partial">Literature only</span></td>
-                <td>Literature only&nbsp;[1]. Not fitted in our hands. No induction curve exists in this project. The parameters are recorded as measured in <i>E. coli</i> and applied to a <i>B. subtilis</i> culture, which is a parameter-provenance assumption and is labelled as one above. <i>Falsified by</i> the LPA dose-response, E1: if our <i>n</i> and <i>K</i><sub>&frac12;</sub> come back different, every downstream number moves with them, M8 included.</td>
-              </tr>
-              <tr>
-                <td>M7</td>
-                <td><b>CcaSR dynamics</b><small>Rigorous, third-order delayed ODE system. Light step &rarr; output over time</small></td>
-                <td><span class="stamp stamp--partial">Literature only</span></td>
-                <td>Literature only&nbsp;[1]. <i>t</i><sub>&frac12;on</sub>&nbsp;105.1&nbsp;min and <i>t</i><sub>&frac12;off</sub>&nbsp;74.97&nbsp;min. The 105.1&nbsp;min is <b>the only latency number the project has</b>, and any page using it must say it is borrowed in the same sentence. <i>Falsified by</i> a step change from red to green sampled every 15&nbsp;min for 6&nbsp;h, in our strain and vessel: E5.</td>
-              </tr>
-              <tr>
-                <td>M8</td>
-                <td><b>Yield ceiling</b><small>Short-cut stoichiometric bound. MEFL &rarr; molecules per cell &rarr; nM</small></td>
-                <td><span class="stamp stamp--partial">A bound</span></td>
-                <td>103,006&nbsp;MEFL under saturating green from Castillo-Hair 2019 figure&nbsp;5&nbsp;[1], <i>n</i>&nbsp;=&nbsp;3, spread 89,769&ndash;127,842; converted by the sfGFP-to-fluorescein brightness ratio 0.761 to 135,323 molecules per cell; multiplied by a cells-per-OD figure of 3.5&nbsp;&times;&nbsp;10<sup>8</sup> that is literature, not measured by us; at OD&nbsp;1.4 that lands at <b>110&nbsp;nM</b>, the literature spread on cells per OD alone giving 63&ndash;157&nbsp;nM. The published effective dose of BoPep4 is 100&nbsp;nM&nbsp;[7], so the ceiling sits at roughly 0.6&ndash;1.6 times the dose. It is a ceiling because sfGFP is intracellular, stable and never secreted, while BoPep4 is a 23-residue peptide that has to cross the Sec pathway into a broth containing at least eight extracellular proteases; a real yield one to two orders of magnitude below this is entirely reasonable. Four of the five chain steps are tagged <code>verify</code>. <b>It must never be quoted as a prediction.</b> <i>Falsified by</i> any measured titre at all: E6.</td>
-              </tr>
-              <tr>
-                <td>M9</td>
-                <td><b>Weather stress indices</b><small>Short-cut empirical correlations, Tetens and Hargreaves. Valid for Taipei, cool-season crop thresholds</small></td>
-                <td><span class="stamp stamp--void">Not validated</span></td>
-                <td>None. Extra-terrestrial radiation is assumed at 35&nbsp;MJ for 25&deg;&nbsp;N and tagged as an assumption in the code. The weather itself is a manual snapshot flagged <code>live: false</code>, not a feed. <i>Falsified by</i> a season of soil sensor data against the index; the crop thresholds are cool-season-crop values, so a different crop invalidates them directly.</td>
-              </tr>
-              <tr>
-                <td>M10</td>
-                <td><b>Measurement trust layer</b><small>Artificial intelligence and statistical, PCA-MSPC plus an autoencoder. OD and reference channel &rarr; sensor fault versus process event</small></td>
-                <td><span class="stamp stamp--partial"><i>n</i> too small</span></td>
-                <td>Trained on the first 120&nbsp;h of the 434-hour run only, alarm limit fixed at the 99.5th percentile of the training score before any result was looked at. Sensor alarm at 216.3&nbsp;h; the OD channel became unusable at 243.0&nbsp;h. Lead time 26.7&nbsp;h. An autoencoder and a PCA-based method tie on the sensor axis; the autoencoder beats it on the process axis, 72.9% against 11.3%, which is the only place the neural model earns its keep. A plain threshold on |dOD|&nbsp;&gt;&nbsp;0.05 fires on 23.1% of the sensor event and 0.8% of the process event and cannot tell you which is which. <b>No error rate is reportable from two events</b>, and it is not on the board: it is Python on a laptop, and the interface uses a hand-written stand-in scoring function in its place. <i>Falsified by</i> manufacturing faults deliberately, three of each kind: E13.</td>
-              </tr>
-              <tr>
-                <td>M11</td>
-                <td><b>Photometer calibration</b><small>Statistical: a linear fit in use, a Gaussian process with input-dependent noise as the audit. Valid OD&nbsp;&lt;&nbsp;1.2 by hand, OD&nbsp;&lt;&nbsp;1.55 learned</small></td>
-                <td><span class="stamp stamp--partial">45 points, no replicates</span></td>
-                <td>45 paired points, no replicates. The linear fit wins inside its own range, RMSE 0.0235 against the GP's 0.0254. <i>Falsified by</i> extrapolating it: past OD&nbsp;1.2 the same linear fit goes from RMSE 0.0235 to 0.1715, which is exactly what happens in a run nobody is watching.</td>
+                <td>R4</td>
+                <td><b>102-hour perfusion run</b><small>2&ndash;6 September 2026, 12,259 rows of 30&nbsp;s medians from a separate logging dashboard, 11,493 kept after filtering; <code>record_20260906_090304.csv</code></small></td>
+                <td><span class="stamp stamp--partial">Retrospective</span></td>
+                <td>Hourly-median OD<sub>600</sub> 0.84 &rarr; 3.77. Linear fit 0.0298&nbsp;OD&middot;h<sup>&minus;1</sup>, R&sup2;&nbsp;0.988; exponential fit R&sup2;&nbsp;0.956. Growth at constant rate without a plateau is consistent with feed limitation. The rate is not constant in detail: 0.041&nbsp;OD&middot;h<sup>&minus;1</sup> in the first 20&nbsp;h against 0.017 in the last 20&nbsp;h. TMP was not resolvable: its full excursion (0.060&nbsp;bar) lies within one accuracy unit of that logger's gauges (1% FS = 0.1&nbsp;bar). The TMP trend bounds fouling at 12&nbsp;mbar over 102&nbsp;h, against a quiet-window SD of 5.9&nbsp;mbar.</td>
               </tr>
             </tbody>
           </table>
         </div>
 
         <figure class="fig">
-          <img src="../assets/img/software/ui-model-register.png" alt="The model register inside the Twin view: a table of eleven models with their model class, status and the experiment that would falsify each." loading="lazy" width="1440" height="900" />
-          <figcaption><b>6 September.</b> The same inventory, inside the interface. The model register is a view in the running software, not a slide about it: each row carries the model's class under the Zobel-Roos taxonomy&nbsp;[5], its status, and the experiment that would falsify it. Seven rows read NOT VALIDATED. Putting that on the table rather than in a footnote is deliberate, because a judge who finds it themselves concludes we did not know. What it does not show is any validation. That is the point of the screen.</figcaption>
+          <img src="../assets/img/software/fig-r1-hydraulics.svg" alt="Pressure drop against loop flow. Module-fitted points rise from 0.06 bar at 113 mL/min to 0.45 bar at 450 mL/min; jumper-only points rise from 0.02 to 0.24 bar. Both follow quadratic fits through the origin, and a dashed net-module curve lies below the module-fitted curve." loading="lazy" width="880" height="440" />
+          <figcaption><b>R1.</b> Pressure drop with the module fitted (filled) and with a jumper only (open), each fitted with &Delta;P = <i>aQ</i> + <i>bQ</i>&sup2; through the origin. The dashed net-module curve is the difference of the two fits. Source: <code>260816 pressure to flow rate.xlsx</code>.</figcaption>
         </figure>
-
-        <h4>The growth curve is the weakest link and it looks like the strongest</h4>
-        <p>A real 434-hour run is genuinely good data. Replaying it is not a model. Everything downstream of the OD channel &mdash; readiness, time to ready, the yield estimate and the induction decision &mdash; inherits <i>n</i>&nbsp;=&nbsp;1.</p>
-
-        <h4>The fouling rate is invented, and it drives the only maintenance decision in the product</h4>
-        <p>The rate law is assumed, with a coefficient chosen so that a demonstration reaches the 2&times; cleaning threshold at a plausible time. One perfusion run logging membrane resistance against time fixes it, and it is the cheapest high-value experiment on the whole list: E17.</p>
-
-        <h3 id="the-434-hour-run">The 434-hour run</h3>
-        <p class="stand">The best data the project owns, and <b>the method behind it is not written down anywhere</b>.</p>
-
-        <p>The source is <code>Bioreactor_UI/data/od600_growth_run_20260721.csv</code>: 221 points binned to roughly two-hour means from 2,671 valid rows of a 10-minute log, 2026-07-21 03:46 UTC to 2026-08-08 05:58 UTC, at 22&nbsp;&deg;C. Nothing is smoothed, resampled or invented, and two features in it carry the software argument.</p>
-
-        <p><b>The dip between 120 and 160&nbsp;h is a process event.</b> The reference channel was healthy at 26.69&nbsp;lux and the scatter was normal, yet OD fell through what should have been growth. It is still unattributed. <b>The scatter blow-up after 240&nbsp;h is an instrument event.</b> The reference channel had already stepped from 26.67 to 25.83&nbsp;lux and then collapsed, and it never recovered, sitting at 21.5&nbsp;lux after 300&nbsp;h. Telling those two apart, ahead of time, is the only thing the trust layer has genuinely demonstrated.</p>
-
         <figure class="fig">
-          <img src="../assets/img/software/od600-live-monitor-20260803.jpg" alt="A laptop showing the OD600 Live Monitor page mid-run, with a growth curve that dips and then recovers." loading="lazy" width="1600" height="900" />
-          <figcaption><b>3 August.</b> The same run mid-flight. Elapsed time reads 12&nbsp;d 22&nbsp;h 50&nbsp;m, which is 310.8&nbsp;h, so this is a snapshot part-way through: current OD600 1.4450, 1,980 data points, reference 22.5&nbsp;lux against the 26.67&nbsp;lux the instrument started at. The dip and the spiky region are both already visible. What it does not show is the 434-hour run complete, and it should not be captioned as that. &ldquo;Unbroken&rdquo; also describes the log, not the culture: the medium, the inoculum and which compartment the culture sat in are not written down anywhere in the project. That is E15.</figcaption>
+          <img src="../assets/img/software/fig-r2-photometer.svg" alt="Reported OD against cumulative TiO2 dose. Both instruments rise together to about 30 mg. Above 30 mg, in a shaded region, the in-line photometer stays close to a straight line while the BioDrop scatters, including a reading of 2.5 at 37 mg." loading="lazy" width="880" height="440" />
+          <figcaption><b>R2.</b> The in-line photometer (filled) and the BioDrop (open) against TiO&#8322; dose. Above 30&nbsp;mg (shaded) each is scored against the dose, not against the other instrument. Source: <code>Inline photometer to biodrop.xlsx</code>.</figcaption>
         </figure>
+        <figure class="fig">
+          <img src="../assets/img/software/fig-r3-run434.svg" alt="Two panels over 434 hours. Top: OD600 rises to about 0.95, dips to about 0.7 between 120 and 160 h, rises to a plateau near 1.5 and declines to about 1.1; the scatter increases between 243 and 300 h. Bottom: the reference channel holds near 27 lux, steps down at 216 h, collapses between 250 and 290 h and settles near 21.5 lux." loading="lazy" width="880" height="480" />
+          <figcaption><b>R3.</b> OD<sub>600</sub> (top) and the photometer reference channel (bottom) over the 434-hour run. Shaded: the process event (120&ndash;160&nbsp;h) and the instrument event (215&ndash;300&nbsp;h). Dashed: sensor alarm at 216.3&nbsp;h. Dotted: OD unusable from 243.0&nbsp;h. Source: <code>out/sentinel_series.json</code>, <code>out/sentinel.json</code>.</figcaption>
+        </figure>
+        <figure class="fig">
+          <img src="../assets/img/software/fig-r4-run0902.svg" alt="Hourly median OD600 over 102 hours rising from 0.84 to 3.77, with a stall between about 20 and 36 hours. A straight line follows the points closely; an exponential curve undershoots in the middle and overshoots at the end." loading="lazy" width="880" height="440" />
+          <figcaption><b>R4.</b> Hourly medians of in-line OD<sub>600</sub> after keeping rows with <code>od600_valid</code> true and bubble fraction &le;&nbsp;20%, with a linear fit (solid) and an exponential fit (dashed). Source: <code>record_20260906_090304.csv</code>.</figcaption>
+        </figure>
+
+        <h3 id="lessons">Three consequences for the validation programme</h3>
+        <ol>
+          <li><b>Use lumen &Delta;P, not TMP, as the hydraulic observable.</b> The loop &Delta;P at 263&nbsp;mL/min is 0.197&nbsp;bar (R1), about 100 times the 2.0&nbsp;mbar resolution of one ADC count (30&nbsp;psi / 1023 in <code>releaf_br01.ino</code>). TMP is not resolvable (R4).</li>
+          <li><b>Zero the transducers at the start and end of every run.</b> Without a no-flow zero check, 12&nbsp;mbar of drift over 102&nbsp;h cannot be separated from fouling (R4).</li>
+          <li><b>Re-measure the photometer blank after every intervention.</b> In R4, a &minus;3.07% step in the reference channel at 29&nbsp;h injected &minus;0.068&nbsp;OD into every later reading.</li>
+        </ol>
       </section>
 
-      <!-- ==================================================== 4 · TWIN ====== -->
-      <section class="sec" id="twin">
-        <h2>Digital twin scorecard</h2>
-        <p class="stand">Four plumbing tests pass, the validation test fails. <b>That is what a twin-shaped object looks like</b>, and it is why nothing on this system closes a loop.</p>
-
-        <p>Portela et&nbsp;al.&nbsp;[4] define a digital twin as three things together: the physical asset, the virtual asset, and the bidirectional connectivity between them that enables continuous communication, data and information exchange, and implementation of the twin-induced actions. Gargalo et&nbsp;al.&nbsp;[6], in the same volume, draw the boundary that separates a twin from a shadow, and it is about direction of dataflow: in a shadow the flow from physical to digital is automated and the flow back is not; in a twin both are. Collapsed into five yes-or-no tests, four of them are about plumbing and can be answered with a cable. The fifth is about experiments and cannot be shortcut.</p>
-
-        <p>Select a verdict for what it rests on. The two columns are the same five tests asked twice: once with the cable out, once with a board plugged in.</p>
-
-        <div class="matrix" data-matrix>
-          <div class="tablewrap">
-            <table>
-              <thead>
-                <tr><th scope="col">Test</th><th scope="col">Cable out</th><th scope="col">Board connected</th></tr>
-              </thead>
-              <tbody>
-                <tr>
-                  <th scope="row">T1 <small>A physical asset exists</small></th>
-                  <td><button class="cell" type="button" aria-controls="matrix-detail"
-                        data-title="T1 &middot; a physical asset exists"
-                        data-meta="Cable out &middot; Pass"
-                        data-body="&lt;p&gt;BR-01: the hollow-fibre module, the loop and shell pumps, three valves, four pressure transducers, four sterile filters. Listed with build status in the interface&rsquo;s equipment register.&lt;/p&gt;&lt;p&gt;The cable makes no difference to this one. The rig exists on the bench whether or not anything is reading it, and the equipment register is equally clear about what does not exist: the pH probe, the temperature probe, the base dosing line, the light panel and the stirrer are all drawn dashed orange and listed as not built.&lt;/p&gt;">
-                      <span class="stamp stamp--done">Pass</span><span class="cell__note">Rig on the bench</span></button></td>
-                  <td><button class="cell" type="button" aria-controls="matrix-detail"
-                        data-title="T1 &middot; a physical asset exists"
-                        data-meta="Board connected &middot; Pass"
-                        data-body="&lt;p&gt;Unchanged. A cable does not build equipment. Four pressure transducers, two pumps, three valves and the module are on the rig; L-01, AT-02, TT-01, M-01 and the P-03/TK-04 dosing pair are not.&lt;/p&gt;">
-                      <span class="stamp stamp--done">Pass</span><span class="cell__note">Unchanged</span></button></td>
-                </tr>
-                <tr>
-                  <th scope="row">T2 <small>A virtual asset exists</small></th>
-                  <td><button class="cell" type="button" aria-controls="matrix-detail"
-                        data-title="T2 &middot; a virtual asset carrying a process model"
-                        data-meta="Cable out &middot; Pass"
-                        data-body="&lt;p&gt;Eleven models, listed in the register above and in the interface&rsquo;s own model register, plus a step loop that can be run forward faster than real time. That is a process model and not just a screen, which is the distinction the test is drawing.&lt;/p&gt;&lt;p&gt;It passes on existence, not on quality. Two of the eleven are calibrated and none is validated, which is what T5 is for.&lt;/p&gt;">
-                      <span class="stamp stamp--done">Pass</span><span class="cell__note">Eleven models</span></button></td>
-                  <td><button class="cell" type="button" aria-controls="matrix-detail"
-                        data-title="T2 &middot; a virtual asset carrying a process model"
-                        data-meta="Board connected &middot; Pass"
-                        data-body="&lt;p&gt;Unchanged. The same eleven models and the same forward step loop; the what-if runner in the Twin view uses that engine and not a second one, so what an operator sees predicted is the model that would run the plant.&lt;/p&gt;">
-                      <span class="stamp stamp--done">Pass</span><span class="cell__note">Unchanged</span></button></td>
-                </tr>
-                <tr>
-                  <th scope="row">T3 <small>Data flows asset &rarr; model</small></th>
-                  <td><button class="cell" type="button" aria-controls="matrix-detail"
-                        data-title="T3 &middot; data flows automatically from the asset into the model"
-                        data-meta="Cable out &middot; No flow"
-                        data-body="&lt;p&gt;Nothing arrives. Every process value on screen is then demo data produced by the model inside the page, and the interface prints a yellow banner on the Twin view saying so rather than leaving a visitor to guess.&lt;/p&gt;&lt;p&gt;This is the cell that decides what the object is called. With no inbound flow it is not a digital twin and not a digital shadow either, and the honest description is an operator interface with a simulator behind it, which is a respectable thing to be.&lt;/p&gt;">
-                      <span class="stamp stamp--void">No flow</span><span class="cell__note">Demo data only</span></button></td>
-                  <td><button class="cell" type="button" aria-controls="matrix-detail"
-                        data-title="T3 &middot; data flows automatically from the asset into the model"
-                        data-meta="Board connected &middot; Pass"
-                        data-body="&lt;p&gt;The firmware has emitted &lt;code&gt;PV&lt;/code&gt; lines at 1&nbsp;Hz since day one. The page never read them until 6 September 2026. It now parses that stream, and measured pH, temperature and the four pressures overwrite the model.&lt;/p&gt;&lt;p&gt;Two of those six are not measurements even so: pH and temperature arrive as firmware constants, &lt;code&gt;float ph = 7&lt;/code&gt; and &lt;code&gt;float tempC = 25&lt;/code&gt;, because neither probe is fitted. The flow is real; two of the values inside it are placeholders and are labelled Planned on every screen.&lt;/p&gt;">
-                      <span class="stamp stamp--done">Pass</span><span class="cell__note">1&nbsp;Hz telemetry in</span></button></td>
-                </tr>
-                <tr>
-                  <th scope="row">T4 <small>Actions flow model &rarr; asset</small></th>
-                  <td><button class="cell" type="button" aria-controls="matrix-detail"
-                        data-title="T4 &middot; actions flow automatically from the model back to the asset"
-                        data-meta="Cable out &middot; No flow"
-                        data-body="&lt;p&gt;Nothing leaves. Sliders and recipes still move the numbers on screen, and the connectivity card records that a command last went out &lsquo;never in this session&rsquo;.&lt;/p&gt;&lt;p&gt;This is the direction that separates a twin from a shadow in Gargalo et&nbsp;al.&nbsp;[6]: in a shadow the flow from physical to digital is automated and the flow back is not. With the cable out we have neither direction.&lt;/p&gt;">
-                      <span class="stamp stamp--void">No flow</span><span class="cell__note">Nothing leaves</span></button></td>
-                  <td><button class="cell" type="button" aria-controls="matrix-detail"
-                        data-title="T4 &middot; actions flow automatically from the model back to the asset"
-                        data-meta="Board connected &middot; Pass"
-                        data-body="&lt;p&gt;&lt;code&gt;SET&lt;/code&gt; frames are written on every state change, carrying interlock-effective values only: a pump held off by an interlock is transmitted as &lt;code&gt;0.0&lt;/code&gt; and never as its raw slider position.&lt;/p&gt;&lt;p&gt;What flows back is a command, not a decision. The induction decision in the Twin view advises and never actuates, and nothing on this system optimises anything over a prediction horizon.&lt;/p&gt;">
-                      <span class="stamp stamp--done">Pass</span><span class="cell__note">SET frames out</span></button></td>
-                </tr>
-                <tr>
-                  <th scope="row">T5 <small>Models validated on held-out data</small></th>
-                  <td><button class="cell" type="button" aria-controls="matrix-detail"
-                        data-title="T5 &middot; the models are validated against data they were not fitted to"
-                        data-meta="Cable out &middot; Fail &middot; no cable changes this one"
-                        data-body="&lt;p&gt;Two models are calibrated, the pump curve and the membrane pressure drop. None is validated. Seven of eleven rows in the model register say so on their face.&lt;/p&gt;&lt;p&gt;This is the test the switch cannot touch, and it is the reason the defended sentence keeps its qualifiers. A project that passes the four plumbing tests and fails this one has built a twin-shaped object whose predictions nobody should act on.&lt;/p&gt;">
-                      <span class="stamp stamp--void">Fail</span><span class="cell__note">No cable changes it</span></button></td>
-                  <td><button class="cell" type="button" aria-controls="matrix-detail"
-                        data-title="T5 &middot; the models are validated against data they were not fitted to"
-                        data-meta="Board connected &middot; Fail"
-                        data-body="&lt;p&gt;Still fails, and will keep failing until a wet-lab result arrives. Validation means scoring against data the model was not fitted to; the pump curve is fitted on the same nine points it interpolates and the membrane pressure drop on one clean module at one temperature with water.&lt;/p&gt;&lt;p&gt;Three things would let us drop the qualifiers: validate the fouling law and the growth model against held-out data, obtain any assay at all for the critical quality attribute, and measure the end-to-end lead time. Nothing else on the list is close in value.&lt;/p&gt;">
-                      <span class="stamp stamp--void">Fail</span><span class="cell__note">Still fails</span></button></td>
-                </tr>
-              </tbody>
-            </table>
-          </div>
-
-          <div class="matrix__out" id="matrix-detail" role="region" aria-live="polite" aria-label="Detail for the selected test and cable state">
-            <h4>T1 &middot; a physical asset exists</h4>
-            <span class="microlabel">Cable out &middot; Pass</span>
-            <div class="matrix__out-body">
-              <p>BR-01: the hollow-fibre module, the loop and shell pumps, three valves, four pressure transducers, four sterile filters. Listed with build status in the interface's equipment register.</p>
-              <p>The cable makes no difference to this one. The rig exists on the bench whether or not anything is reading it, and the equipment register is equally clear about what does not exist: the pH probe, the temperature probe, the base dosing line, the light panel and the stirrer are all drawn dashed orange and listed as not built.</p>
-            </div>
-          </div>
-        </div>
-
-        <p class="aside"><b>Read the two columns together.</b> With the cable out this is not a digital twin, and not a digital shadow either, because nothing flows in either direction; the interface says so in a yellow banner rather than leaving a visitor to guess. With a board connected it is a digital twin at the soft-sensing and virtual-experiment level, with bidirectional connectivity implemented and demonstrable. And T5 still fails. That is the situation we are in, and it is why nothing on this system closes a loop.</p>
-
-        <figure class="fig">
-          <img src="../assets/img/software/ui-twin-connectivity.png" alt="The Twin view of the interface, showing a connectivity card with physical asset, data in, action out and virtual asset panels, a yellow banner saying no board is connected, the induction decision, and a what-if simulation plot." loading="lazy" width="1440" height="900" />
-          <figcaption><b>6 September.</b> The connectivity ledger, and the banner it prints when the cable is out. The card shows when data last came in and when a command last went out; in this frame both read &ldquo;never in this session&rdquo;, and the banner underneath says in plain words that this is therefore not a digital twin, that every number on screen is demo data, and that the honest description is an operator interface with a simulator behind it. Below it, the induction decision states that it comes from a deterministic rule &mdash; not a neural network and not a language model &mdash; four lines auditable line by line. Below that, the what-if runner, labelled SIMULATION, with the note that nothing on the rig moved. What it does not show is the twin working: precisely the opposite. This frame is the interface being honest about a disconnected cable.</figcaption>
-        </figure>
-
-        <p>What would let us drop the qualifiers: validate two models against data they were not fitted to, the fouling law and the growth model being the two that matter; obtain any assay at all for the critical quality attribute; and measure the end-to-end lead time. Nothing else on the list is close in value.</p>
-
-        <h3 id="autonomy">Autonomy rungs</h3>
-        <p class="stand">What the system <i>can</i> do is a different question from what it is <b>allowed to move</b>.</p>
-        <p>For honesty: none of the source chapters supplies a numbered autonomy ladder. The rungs below are assembled from the volume's own vocabulary, not quoted from a table. What the machine is allowed to move is a separate table in the interface, gated by a sensor-confidence score, and it is currently pinned at tier 0 or 1 by design.</p>
+      <!-- ================================================= 4 · DEFECTS ===== -->
+      <section class="sec" id="defects">
+        <h2>Known defects</h2>
+        <p class="stand">Five defects in the 6 September build. <b>D1 and D2 invalidate any experiment run before they are fixed.</b></p>
 
         <div class="tablewrap">
           <table class="data">
-            <thead><tr><th scope="col">Rung</th><th scope="col">ReLeaf</th></tr></thead>
+            <thead><tr><th scope="col">ID</th><th scope="col">Defect</th><th scope="col">Consequence</th><th scope="col">Required fix</th><th scope="col">Blocks</th></tr></thead>
             <tbody>
-              <tr><td>Monitoring</td><td><span class="stamp stamp--done">Have</span></td></tr>
-              <tr><td>Soft sensing</td><td><span class="stamp stamp--done">Have</span></td></tr>
-              <tr><td>What-if, virtual experiment</td><td><span class="stamp stamp--done">Have</span> added 6 September 2026</td></tr>
-              <tr><td>Bidirectional connectivity</td><td><span class="stamp stamp--partial">Have</span> only while a board is plugged in</td></tr>
-              <tr><td>Advanced or model predictive control</td><td><span class="stamp stamp--void">Not built</span> blocked on the fouling model and on the lead time</td></tr>
-              <tr><td>Autonomous</td><td><span class="stamp stamp--void">Not built</span> deliberately: the critical quality attribute is unmeasurable, so there is nothing to close a loop on</td></tr>
+              <tr><td><b>D1</b></td><td>The interface sends <code>SET</code> only when the operator changes a setting; the firmware stops P-01 after 5&nbsp;s without a <code>SET</code>.</td><td>On a real board the loop pump stops 5&nbsp;s after the last operator input.</td><td>Re-send the current <code>SET</code> at 1&nbsp;Hz while linked (heartbeat). Keep the 5&nbsp;s watchdog.</td><td>DT-1 to DT-7</td></tr>
+              <tr><td><b>D2</b></td><td>The firmware transmits <code>PH=7.00</code> and <code>T=25.0</code> as constants; the interface displays them as live measurements.</td><td>Two fabricated measurements on screen and in every export.</td><td>Omit PH and T from <code>PV</code> until the probes are fitted; ignore them in the interface unless a <i>fitted</i> flag is set.</td><td>DT-1, DT-2</td></tr>
+              <tr><td><b>D3</b></td><td>The process clock runs at 900&times; real time even when live data are arriving.</td><td>Timestamps in the batch record of a real run are wrong.</td><td>Advance the clock at 1&times; while live data are arriving.</td><td>DT-1, DT-4, DT-7</td></tr>
+              <tr><td><b>D4</b></td><td>No raw link log, no line counter, no command acknowledgement.</td><td>Loss rate and latency cannot be computed from a file.</td><td>Firmware: add a counter <code>N=</code> to each <code>PV</code> line and reply <code>ACK SEQ=</code> to each <code>SET</code>. Interface: log every line with wall-clock milliseconds and export as CSV.</td><td>DT-1 (interim method available)</td></tr>
+              <tr><td><b>D5</b></td><td>The export labels the whole file &ldquo;Arduino Uno Q (live)&rdquo;.</td><td>Modelled channels (flow, fouling, OD) appear measured.</td><td>State the source per channel in the export header.</td><td>Reporting only</td></tr>
             </tbody>
           </table>
         </div>
+      </section>
 
-        <h3 id="nine-steps">Portela's nine steps</h3>
-        <p class="stand">One done, five partial, three not done. <b>The one not done that matters is step 4</b>, which Portela calls the heart of the twin.</p>
-        <p>Portela notes the nine steps are not entirely sequential, so this is not a progress bar. Note also that the paper contradicts itself on step numbering between its section&nbsp;2 list and its worked example; the list below is quoted from section&nbsp;2, which is the canonical one. The same checklist, with the same scores, is a live view inside the interface, so a judge can check it against the running software rather than against this page.</p>
+      <!-- ============================================ 5 · PROGRAMME ======== -->
+      <section class="sec" id="programme">
+        <h2>Validation programme</h2>
+        <p class="stand">Eight experiments, in order. <b>Acceptance criteria are fixed here, before any data are collected</b>, and may not be changed after the results are seen.</p>
 
         <div class="tablewrap">
           <table class="data">
-            <thead><tr><th scope="col">Step</th><th scope="col">Score</th><th scope="col">Honest answer</th></tr></thead>
+            <thead><tr><th scope="col">ID</th><th scope="col">Question</th><th scope="col">Tier</th><th scope="col">Duration</th><th scope="col">Acceptance criterion</th></tr></thead>
             <tbody>
-              <tr><td>1. Define the needs and functionalities through multi-disciplinary workshops</td><td><span class="stamp stamp--partial">Partial</span></td><td>The need is stated and narrow: decide when to switch the light green. No workshop record, no user research with an actual grower, and no functional specification.</td></tr>
-              <tr><td>2. Develop PAT</td><td><span class="stamp stamp--partial">Partial</span></td><td>Four in-line pressure transducers built, pH and temperature planned, OD at-line only. There is no analytic for the product, in-line or off-line.</td></tr>
-              <tr><td>3. Design, implement and validate the DT infrastructure</td><td><span class="stamp stamp--partial">Partial</span></td><td>The Uno&nbsp;Q split is real and documented: Linux serves and logs, the MCU owns the IO and the interlocks. No historian, no time synchronisation, and the infrastructure itself has never been validated.</td></tr>
-              <tr><td>4. Develop, train and validate the mathematical models</td><td><span class="stamp stamp--void">Not done</span></td><td>Two models are calibrated. None is validated against data it was not fitted to. Portela calls this <b>the heart of the twin</b>, because the twin's operational capacity is a strong function of the predictive capability of its models&nbsp;[4].</td></tr>
-              <tr><td>5. Ensure real-time data processing and data integrity</td><td><span class="stamp stamp--partial">Partial</span></td><td>One row per 30&nbsp;min of process time, units on every column, alarm log exported alongside. No audit trail, no operator identity, no tamper evidence. Nothing in the record would survive an ALCOA+ question.</td></tr>
-              <tr><td>6. Build the automation and model predictive control</td><td><span class="stamp stamp--void">Not done</span></td><td>No model predictive control and no advanced process control. There is a deterministic rule, and the interlocks run on the MCU, but nothing optimises anything over a prediction horizon.</td></tr>
-              <tr><td>7. Design the user interface</td><td><span class="stamp stamp--done">Done</span></td><td>ISA-101 high-performance HMI&nbsp;[8], four-level hierarchy, faceplates, a plain-language layer, English and Traditional Chinese, running offline on a 7-inch panel. It is also the step the source volume itself asks for when it says model-based decision-making that the people running the plant cannot understand is unlikely to be supported&nbsp;[6].</td></tr>
-              <tr><td>8. Document the efforts</td><td><span class="stamp stamp--partial">Partial</span></td><td>A README, a written digital-twin audit in the repository that scores the project rather than describing it, and the on-screen model register. No model qualification report, no validation protocol, no change control.</td></tr>
-              <tr><td>9. Integrate into a broader digital and data strategy</td><td><span class="stamp stamp--void">Not done</span></td><td>Portela warns specifically that leaving integration to the end is how components end up impossible to integrate. Honest answer: one HTML file and a folder of CSVs, and there is no organisation here to integrate with.</td></tr>
+              <tr><td><b>DT-0</b></td><td>Is the rig in a state that can produce valid data?</td><td>Prerequisite</td><td>1 day</td><td>D1&ndash;D3 fixed and verified; zero SD &le;&nbsp;3 ADC counts per transducer; metadata sheet complete</td></tr>
+              <tr><td><b>DT-1</b></td><td>Does data flow reliably in both directions?</td><td>Shadow</td><td>1 day</td><td>Loss &lt;&nbsp;1%; no gap &gt;&nbsp;5&nbsp;s; fail-safe stop &le;&nbsp;6&nbsp;s in 3 of 3 trials; median step latency &le;&nbsp;10&nbsp;s</td></tr>
+              <tr><td><b>DT-2</b></td><td>Do the channels agree with reference instruments?</td><td>Shadow</td><td>1 day</td><td>Pressure: |bias| &le;&nbsp;0.15&nbsp;psi, 95% limits within &plusmn;0.30&nbsp;psi. Flow: limits within &plusmn;10%</td></tr>
+              <tr><td><b>DT-3</b></td><td>Does the hydraulic model predict a new session without refitting?</td><td>Predictive</td><td>2 days</td><td>RPD &ge;&nbsp;3 and RMSEP &le;&nbsp;20&nbsp;mbar on the held-out session</td></tr>
+              <tr><td><b>DT-4</b></td><td>Can the model forecast fouling ahead of time?</td><td>Predictive</td><td>3 days</td><td>On an informative run, 12&nbsp;h-ahead RMSE &le;&nbsp;10&nbsp;mbar and lower than persistence</td></tr>
+              <tr><td><b>DT-5</b></td><td>Does the growth model predict a held-out batch?</td><td>Predictive</td><td>3 days</td><td>RPD &ge;&nbsp;3 for 4&nbsp;h-ahead OD<sub>600</sub> on the held-out batch</td></tr>
+              <tr><td><b>DT-6</b></td><td>Do the forecasts survive realistic sensor noise and line loss?</td><td>Predictive</td><td>1 day</td><td>Median RPD &ge;&nbsp;2.5 (DT-5) and median 12&nbsp;h RMSE &le;&nbsp;15&nbsp;mbar (DT-4) under 10% perturbation</td></tr>
+              <tr><td><b>DT-7</b></td><td>Does a model-triggered action beat a fixed schedule?</td><td>Closed loop</td><td>10 days</td><td>Less time above 1.5&nbsp;&times;&nbsp;<i>R</i><sub>0</sub>, paired 95% CI excluding 0, no more Clean cycles</td></tr>
             </tbody>
           </table>
         </div>
 
-        <figure class="fig">
-          <img src="../assets/img/software/ui-nine-steps.png" alt="The nine-step build checklist inside the Twin view, each step scored partial, not done or done, above a quality-by-design frame naming the critical quality attribute and showing an empty design space." loading="lazy" width="1440" height="900" />
-          <figcaption><b>6 September.</b> The checklist and the quality-by-design frame, in the software rather than in a slide about it. Above the checklist, the interface states its own conclusion: seven of eleven model rows say NOT VALIDATED, on the table rather than in a footnote. Below it, the QbD card names the critical quality attribute as BoPep4 in the harvested permeate at 100&nbsp;nM or more at the point of application, states that it is currently unmeasurable, and draws the design space as empty beside a tested space of 0 to 24% on the loop pump. What it does not show is a design space. Drawing an empty one rather than passing the tested space off as one is the specific overclaim this card exists to avoid.</figcaption>
+        <p>DT-0 to DT-4 and DT-7 run on BR-01 and must be done in order. DT-5 needs only shake flasks and can run in parallel. DT-6 is computation on the DT-4 and DT-5 data. The BR-01 sequence takes 17 to 18 working days; the wiki freezes on 21 October 2026.</p>
+
+        <h3 id="conventions">Conventions shared by every experiment</h3>
+        <ol>
+          <li><b>One folder per run</b>, named <code>DT-&lt;n&gt;_&lt;YYYYMMDD&gt;_&lt;run&gt;</code>, holding every file listed below. Nothing is deleted from it, including failed runs.</li>
+          <li><b>Freeze before measuring.</b> Any model, coefficient or threshold used for a prediction is written to a JSON file and committed to the repository before the data it will be scored on are collected. The commit time is the proof.</li>
+          <li><b>Pressure units.</b> Raw values are in psi, as sent by the firmware. Analyses are in bar or mbar (1&nbsp;psi = 68.948&nbsp;mbar). One ADC count is 30/1023&nbsp;psi = 2.02&nbsp;mbar.</li>
+          <li><b>Zero correction.</b> Every pressure is corrected by subtracting that transducer's zero offset, interpolated linearly in time between the start and end zero checks (DT-0, steps 7&ndash;8).</li>
+          <li><b>Interventions.</b> Any unplanned action (opening the reservoir, re-seating a tube, restarting the browser) is written in <code>sheet.csv</code> with its wall-clock time. The 60&nbsp;min after it are excluded from analysis.</li>
+        </ol>
+
+        <div class="tablewrap">
+          <table class="data">
+            <thead><tr><th scope="col">File</th><th scope="col">Produced by</th><th scope="col">Columns</th></tr></thead>
+            <tbody>
+              <tr><td><code>meta.csv</code></td><td>Operator, by hand; two columns, <code>key,value</code></td><td><code>experiment_id</code>, <code>run</code>, <code>date</code>, <code>operator</code>, <code>fluid</code>, <code>fluid_volume_mL</code>, <code>temp_start_C</code>, <code>temp_end_C</code>, <code>room_temp_C</code>, <code>module_id</code>, <code>module_install_date</code>, <code>firmware_commit</code>, <code>interface_sha256</code>, <code>zero_start_PT1_psi</code> &hellip; <code>zero_start_PT5_psi</code>, <code>zero_end_PT1_psi</code> &hellip; <code>zero_end_PT5_psi</code>, <code>zero_sd_PT1_counts</code> &hellip; <code>zero_sd_PT5_counts</code>. For cultures, also <code>strain</code>, <code>medium</code>, <code>inoculum_mL</code>, <code>inoculum_OD600</code>, <code>compartment</code> (lumen or reservoir).</td></tr>
+              <tr><td><code>link.csv</code></td><td>Interface, after D4</td><td><code>wall_ms</code> (Unix time, ms), <code>dir</code> (<code>RX</code> or <code>TX</code>), <code>line</code> (the raw text). Parsed by the analysis script into <code>N</code>, <code>PT1</code>&ndash;<code>PT5</code>, <code>seq</code>, <code>P01</code>, <code>P02</code>.</td></tr>
+              <tr><td><code>batch.csv</code></td><td>Interface export</td><td>As exported, with the per-channel source header required by D5.</td></tr>
+              <tr><td><code>sheet.csv</code></td><td>Operator, by hand</td><td>Specified per experiment below. Every row carries <code>wall_time</code> in ISO 8601 local time, read from the same laptop clock as the interface.</td></tr>
+            </tbody>
+          </table>
+        </div>
+
+        <!-- ------------------------------------------------------ DT-0 -- -->
+        <h3 id="dt-0">DT-0 &middot; Rig readiness</h3>
+        <p><b>Aim.</b> Bring the rig and the software into a state in which DT-1 to DT-7 can produce valid data, and record that state so every later run can be traced to it.</p>
+        <p><b>Materials.</b> BR-01 with HFM-01 fitted, P-01, P-02, PT-01, PT-03, PT-04, PT-05; Arduino Uno&nbsp;Q with <code>releaf_br01.ino</code>; laptop with Chrome or Edge; 1&nbsp;L deionised water; thermometer (&plusmn;0.5&nbsp;&deg;C); stopwatch.</p>
+        <p><b>Procedure.</b></p>
+        <ol>
+          <li>Implement fixes D1, D2 and D3 (and D4 if possible). Commit the firmware and the interface. Write the firmware commit hash and the SHA-256 of the interface file (<code>shasum -a 256 0906UI.html</code>) into <code>meta.csv</code>.</li>
+          <li>Fill the loop with water. Run P-01 at 20% for 5&nbsp;min and tap the module housing to release trapped air.</li>
+          <li><i>Check D1.</i> Link the interface, set P-01 to 16%, and do not touch the laptop for 120&nbsp;s. P-01 must keep running for the whole period, with PT-01 staying at its running value.</li>
+          <li><i>Check D2.</i> Read ten <code>PV</code> lines in <code>link.csv</code> or the serial monitor. None may contain <code>PH=</code> or <code>T=</code>. The interface must show pH and temperature as <i>planned</i>.</li>
+          <li><i>Check D3.</i> Start a batch record and a stopwatch together. After 600&nbsp;s on the stopwatch, the batch record's elapsed time must read 600&nbsp;&plusmn;&nbsp;2&nbsp;s.</li>
+          <li>Stop all pumps, leave V-01, V-02 and V-04 open, and wait 5&nbsp;min for the pressures to settle.</li>
+          <li><i>Start zero.</i> Record 120 consecutive <code>PV</code> lines (2&nbsp;min) with all pumps stopped.</li>
+          <li><i>End zero</i>, at the end of every later experiment day. Repeat step 7 with the loop in the same state.</li>
+          <li>Complete every field of <code>meta.csv</code>. Where a past run's details were never recorded (the medium, inoculum and compartment of the 434-hour run in R3, for example), write <code>not recorded</code> rather than reconstructing them.</li>
+        </ol>
+        <p><b>Data to record.</b> <code>meta.csv</code>; <code>link.csv</code> covering steps 3&ndash;7; <code>sheet.csv</code> with columns <code>check</code> (D1, D2 or D3), <code>observed</code>, <code>pass</code> (<code>yes</code> or <code>no</code>), <code>wall_time</code>.</p>
+        <p><b>Analysis.</b> For each transducer, zero offset = median of the 120 values; zero noise = their SD, expressed in ADC counts (value in psi &times; 1023/30).</p>
+        <aside class="callout">
+          <b class="callout__label">Acceptance criterion &middot; fixed 18 September 2026</b>
+          <p>All three checks pass; zero SD &le;&nbsp;3 counts (6&nbsp;mbar) for every transducer; no blank field in <code>meta.csv</code>. A transducer that fails the zero criterion is rewired or replaced before DT-1.</p>
+        </aside>
+
+        <!-- ------------------------------------------------------ DT-1 -- -->
+        <h3 id="dt-1">DT-1 &middot; Link loss, latency and fail-safe</h3>
+        <p><b>Aim.</b> Measure the loss rate and latency of both directions of the link, and show that losing the link stops the loop pump.</p>
+        <p><b>Materials.</b> The rig as left by DT-0, filled with water; laptop with the patched interface; stopwatch; a phone to film the fail-safe trials.</p>
+        <p><b>Procedure.</b></p>
+        <ol>
+          <li>Start zero (DT-0, step 7).</li>
+          <li>Link the interface, start the batch record and the link log, and set P-01 to 16%.</li>
+          <li><i>Step test.</i> Every 3&nbsp;min, change P-01 from 16% to 24% or back, using only the interface control. Make 20 steps up and 20 down (2&nbsp;h). Do not touch the rig.</li>
+          <li><i>Endurance.</i> Leave P-01 at 16% for 6&nbsp;h with nobody touching the laptop. Disable sleep and screen lock beforehand.</li>
+          <li><i>Fail-safe, three trials.</i> With P-01 at 16%, film the pump and a stopwatch, pull the USB cable and start the stopwatch at the same moment. Stop the stopwatch when the pump head stops turning. Reconnect and re-link between trials.</li>
+          <li>End zero.</li>
+        </ol>
+        <p><b>Data to record.</b> <code>link.csv</code>; <code>batch.csv</code>; <code>sheet.csv</code> with columns <code>trial</code>, <code>wall_time</code>, <code>t_stop_s</code>, <code>video_file</code>.</p>
+        <p><b>Analysis.</b></p>
+        <ol>
+          <li>Expected <code>PV</code> lines = elapsed seconds between the first and last <code>PV</code> line + 1. With D4, lost lines = gaps in <code>N</code>; without D4 (interim method), lost lines = expected &minus; received. Loss = lost / expected.</li>
+          <li>Gap = difference in <code>wall_ms</code> between consecutive <code>PV</code> lines. Report the maximum.</li>
+          <li>With D4, acknowledgement latency = <code>wall_ms</code> of <code>ACK SEQ=</code><i>k</i> &minus; <code>wall_ms</code> of the <code>SET</code> with sequence <i>k</i>. Report the median and interquartile range (IQR).</li>
+          <li>Step latency: for each step, initial = median PT-01 over the 30&nbsp;s before the <code>SET</code>; final = median over 60&ndash;170&nbsp;s after it; <i>t</i><sub>63</sub> = first time PT-01 passes initial + 0.63&nbsp;&times;&nbsp;(final &minus; initial). Report median and IQR separately for up and down steps. <code>PV</code> arrives at 1&nbsp;Hz, so <i>t</i><sub>63</sub> is resolved to 1&nbsp;s.</li>
+          <li>Draw Figure E1 (<a href="#evidence">section 6</a>).</li>
+        </ol>
+        <aside class="callout">
+          <b class="callout__label">Acceptance criterion &middot; fixed 18 September 2026</b>
+          <p>Loss &lt;&nbsp;1%; no gap &gt;&nbsp;5&nbsp;s; pump stopped within 6&nbsp;s (the 5&nbsp;s watchdog plus one 1&nbsp;s scan) in 3 of 3 trials; median <i>t</i><sub>63</sub> &le;&nbsp;10&nbsp;s in both directions. With D4, all 40 <code>SET</code> frames acknowledged.</p>
+        </aside>
+
+        <!-- ------------------------------------------------------ DT-2 -- -->
+        <h3 id="dt-2">DT-2 &middot; Agreement with reference instruments</h3>
+        <p><b>Aim.</b> Estimate the bias and the 95% limits of agreement&nbsp;[6] of each pressure channel, and of the soft flow channel, against independent references.</p>
+        <p><b>Materials.</b> Reference digital pressure gauge, range 0&ndash;1&nbsp;bar (0&ndash;15&nbsp;psi), accuracy &le;&nbsp;&plusmn;0.25% FS, with a calibration certificate, and a tee fitting for the transducer lines; balance (&plusmn;1&nbsp;g) with a 1&nbsp;L beaker; stopwatch; thermometer; water.</p>
+        <p><b>Procedure: pressure.</b></p>
+        <ol>
+          <li>Start zero. Zero the reference gauge at the same moment, at atmospheric pressure.</li>
+          <li>Tee the reference gauge into the PT-01 line, with its port within 1&nbsp;cm of the height of PT-01.</li>
+          <li>Set P-01 to 0, 10, 12, 14, 16, 18, 20, 22 and 24%, then back down. At each level wait 120&nbsp;s, then read the reference gauge three times at 20&nbsp;s intervals and write each reading with its <code>wall_time</code>.</li>
+          <li>Repeat steps 2&ndash;3 with the gauge on PT-03.</li>
+          <li>Repeat with the gauge on PT-04 and then on PT-05, stepping P-02 through the same levels with P-01 at 16%.</li>
+        </ol>
+        <p><b>Procedure: flow.</b></p>
+        <ol start="6">
+          <li>Move the loop return line from the reservoir into the tared beaker, keeping its outlet at the height of the reservoir inlet. Keep the reservoir topped up.</li>
+          <li>At each P-01 level from 10% to 24% in steps of 2%, wait 60&nbsp;s, then collect for exactly 60.0&nbsp;s and weigh. Make three collections per level. Record the water temperature.</li>
+          <li>End zero.</li>
+        </ol>
+        <p><b>Data to record.</b> <code>sheet.csv</code>, pressure rows: <code>channel</code>, <code>actuator</code>, <code>level_pct</code>, <code>direction</code>, <code>rep</code>, <code>wall_time</code>, <code>ref_psi</code>. Flow rows: <code>level_pct</code>, <code>rep</code>, <code>wall_time</code>, <code>t_collect_s</code>, <code>mass_g</code>, <code>temp_C</code>. Also <code>link.csv</code> and <code>batch.csv</code>.</p>
+        <p><b>Analysis.</b></p>
+        <ol>
+          <li>For each reference reading, the rig value = median of the zero-corrected channel over <code>wall_time</code>&nbsp;&plusmn;&nbsp;5&nbsp;s.</li>
+          <li>Difference <i>d</i> = rig &minus; reference. Bias = mean(<i>d</i>); 95% limits of agreement = bias &plusmn; 1.96&nbsp;SD(<i>d</i>). Plot <i>d</i> against the mean of the two measurements (Bland&ndash;Altman plot), one panel per channel, and regress <i>d</i> on the mean to detect proportional bias.</li>
+          <li>Reference flow = mass / (0.998&nbsp;g&middot;mL<sup>&minus;1</sup> &times; <code>t_collect_s</code>/60), using the density of water at 22&nbsp;&deg;C from <code>rig_constants.csv</code>. Soft flow = the interface's pump-curve value at that P-01 setting. Express <i>d</i> as a percentage of the reference.</li>
+          <li>Keep the reference flows: they are the pump curve for DT-3 session A.</li>
+        </ol>
+        <aside class="callout">
+          <b class="callout__label">Acceptance criterion &middot; fixed 18 September 2026</b>
+          <p>For each of PT-01, PT-03, PT-04 and PT-05: |bias| &le;&nbsp;0.15&nbsp;psi and both limits of agreement within &plusmn;0.30&nbsp;psi (1% of the 30&nbsp;psi full scale). For flow: both limits within &plusmn;10% of the reference. A channel that fails keeps its current status and may not be used as a model input in DT-3 to DT-7.</p>
+        </aside>
+
+        <!-- ------------------------------------------------------ DT-3 -- -->
+        <h3 id="dt-3">DT-3 &middot; Held-out hydraulic session</h3>
+        <p><b>Aim.</b> Test whether model M1 (pump setting &rarr; flow &rarr; lumen &Delta;P), calibrated in one session, predicts lumen &Delta;P in a second session without refitting.</p>
+        <p><b>Materials.</b> As for DT-2, without the reference gauge; the balance and beaker are needed for session A only.</p>
+        <p><b>Procedure.</b></p>
+        <ol>
+          <li><i>Session A (calibration)</i>, which may be the DT-2 day. Start zero. Use water at 22&nbsp;&plusmn;&nbsp;1&nbsp;&deg;C.</li>
+          <li>Step P-01 through 10, 12, &hellip;, 24% and back down, 180&nbsp;s per level. If DT-2 did not already do so, measure the flow at each level by timed collection (DT-2, step 7). End zero.</li>
+          <li>Fit the model (analysis step 1) and commit <code>dt3_model.json</code> containing the pump curve and <i>a</i>, <i>b</i>. Do not look at session B data before this commit.</li>
+          <li><i>Session B (validation)</i>, on a different day. Drain the loop, disconnect and reconnect both module fittings, refill with fresh water, and purge air (DT-0, step 2).</li>
+          <li>Start zero. Repeat step 2 without flow collection. End zero.</li>
+        </ol>
+        <p><b>Data to record.</b> <code>link.csv</code>, <code>batch.csv</code> and <code>meta.csv</code> for each session; <code>sheet.csv</code> with <code>session</code>, <code>level_pct</code>, <code>direction</code>, <code>wall_time_start</code>, <code>wall_time_end</code>; <code>dt3_model.json</code>.</p>
+        <p><b>Analysis.</b></p>
+        <ol>
+          <li>Session A: lumen &Delta;P at each level = median of zero-corrected (PT-01 &minus; PT-03) over the last 60&nbsp;s, in bar. Flow at each level from the reference collections, linearly interpolated between levels. Fit &Delta;P = <i>aQ</i> + <i>bQ</i>&sup2; through the origin by least squares.</li>
+          <li>Session B: for each of the 16 points, predicted &Delta;P from the frozen pump curve and coefficients; measured &Delta;P as in step 1.</li>
+          <li>On session B only: R&sup2;<sub>p</sub>; RMSEP, the root mean squared prediction error; bias = mean(predicted &minus; measured); RPD = SD(measured) / RMSEP. These are the statistics reported by Zhao et&nbsp;al.&nbsp;[4].</li>
+          <li>Compare the session A coefficients with R1 and report the change since 16 August.</li>
+          <li>Draw Figure E2 (<a href="#evidence">section 6</a>).</li>
+        </ol>
+        <aside class="callout">
+          <b class="callout__label">Acceptance criterion &middot; fixed 18 September 2026</b>
+          <p>On session B: RPD &ge;&nbsp;3 and RMSEP &le;&nbsp;20&nbsp;mbar, twice the residual SD of the R1 fit. RPD &ge;&nbsp;3 means the prediction error is at most one third of the spread of the quantity predicted.</p>
+        </aside>
+
+        <!-- ------------------------------------------------------ DT-4 -- -->
+        <h3 id="dt-4">DT-4 &middot; Fouling forecast during a culture</h3>
+        <p><b>Aim.</b> Test whether a fouling model fitted to the first part of a culture run forecasts lumen &Delta;P up to 12&nbsp;h ahead better than assuming no change.</p>
+        <p><b>Model, frozen now.</b> At a constant P-01 setting the flow is constant, so the resistance ratio is <i>R</i>/<i>R</i><sub>0</sub> = &Delta;P(<i>t</i>)/&Delta;P<sub>0</sub>. The forecast model is <i>R</i>/<i>R</i><sub>0</sub> = 1 + <i>k</i>&thinsp;<i>t</i>, with <i>k</i> fitted by least squares on all data from 0&nbsp;h to the forecast origin. The baseline is persistence: the forecast equals the value at the origin.</p>
+        <p><b>Materials.</b> <i>B. subtilis</i> 168 overnight culture (25&nbsp;mL); 300&nbsp;mL sterile LB; 70% ethanol and sterile water for sanitising the loop; BioDrop and cuvettes; 1.5&nbsp;mL tubes; the lab's BSL-1 decontamination materials.</p>
+        <p><b>Procedure.</b></p>
+        <ol>
+          <li>Day 1. Circulate 70% ethanol through the loop for 30&nbsp;min, then sterile water twice. Start zero with sterile water.</li>
+          <li>Replace the water with 300&nbsp;mL sterile LB. Run P-01 at 16% (263&nbsp;mL/min) for 10&nbsp;min. &Delta;P<sub>0</sub> = median lumen &Delta;P over the last 5&nbsp;min.</li>
+          <li>Add the 25&nbsp;mL inoculum to the reservoir (<i>t</i>&nbsp;=&nbsp;0) and record <code>compartment</code> in <code>meta.csv</code>. Leave P-01 at 16% for 48&nbsp;h at room temperature and change nothing.</li>
+          <li>At 0, 12, 24, 36 and 48&nbsp;h take 1&nbsp;mL from the sampling port and read OD<sub>600</sub> on the BioDrop, diluted with sterile LB so the reading lies between 0.1 and 1.0.</li>
+          <li>Day 3, at 48&nbsp;h. Stop P-01, wait 10&nbsp;min, and record the end zero.</li>
+          <li>Decontaminate the loop according to the lab's BSL-1 procedure, then rinse with water three times.</li>
+        </ol>
+        <p><b>Data to record.</b> <code>link.csv</code>, <code>batch.csv</code>, <code>meta.csv</code>; <code>sheet.csv</code> with <code>wall_time</code>, <code>event</code> (inoculation, sample or intervention), <code>od600_reading</code>, <code>dilution_factor</code>, <code>note</code>.</p>
+        <p><b>Analysis.</b></p>
+        <ol>
+          <li>Lumen &Delta;P as 10&nbsp;min medians of zero-corrected (PT-01 &minus; PT-03), with the zero interpolated between the start and end checks.</li>
+          <li>End zero minus start zero, per transducer. If PT-01 or PT-03 drifted by more than 6&nbsp;mbar, the run is invalid.</li>
+          <li>Rise = &Delta;P(47&ndash;48&nbsp;h) &minus; &Delta;P(0&ndash;1&nbsp;h), each a 1&nbsp;h median. If the rise is below 30&nbsp;mbar (three times the R1 residual SD), the run is <i>not informative</i>: record the result, then repeat with the inoculum grown to OD<sub>600</sub>&nbsp;&ge;&nbsp;2.</li>
+          <li>Rolling origins <i>t</i><sub>0</sub> = 24, 25, &hellip;, 36&nbsp;h. At each, fit <i>k</i> on [0,&nbsp;<i>t</i><sub>0</sub>] and forecast &Delta;P at <i>t</i><sub>0</sub>&nbsp;+&nbsp;<i>h</i> for <i>h</i> = 1, 3, 6 and 12&nbsp;h. Error = forecast &minus; observed 10&nbsp;min median.</li>
+          <li>RMSE(<i>h</i>) over the 13 origins, for the model and for persistence.</li>
+          <li>Draw Figure E3 (<a href="#evidence">section 6</a>).</li>
+        </ol>
+        <aside class="callout">
+          <b class="callout__label">Acceptance criterion &middot; fixed 18 September 2026</b>
+          <p>On a valid, informative run: RMSE(12&nbsp;h) &le;&nbsp;10&nbsp;mbar and lower than the persistence RMSE(12&nbsp;h). One passing run permits the wording &ldquo;validated on one held-out culture run&rdquo; and no more.</p>
+        </aside>
+
+        <!-- ------------------------------------------------------ DT-5 -- -->
+        <h3 id="dt-5">DT-5 &middot; Held-out growth batch</h3>
+        <p><b>Aim.</b> Test whether the logistic growth model, fitted to four batches, predicts OD<sub>600</sub> 4&nbsp;h ahead in a fifth batch it was not fitted to. The design follows Zhao et&nbsp;al.: five batches, four for training and one held out&nbsp;[4].</p>
+        <p><b>Scope.</b> DT-5 runs in shake flasks at 37&nbsp;&deg;C, not in BR-01, because one BR-01 batch at 22&nbsp;&deg;C lasts about 18 days (R3). A pass validates the growth model under flask conditions only.</p>
+        <p><b>Materials.</b> <i>B. subtilis</i> 168; LB; five 250&nbsp;mL baffled flasks; shaking incubator at 37&nbsp;&deg;C and 200&nbsp;rpm; BioDrop and cuvettes; sterile LB for blanks and dilution; a six-sided die.</p>
+        <p><b>Procedure.</b></p>
+        <ol>
+          <li>Before the first batch, roll the die until it shows a number from 1 to 5. That number is the held-out batch. Write it in <code>meta.csv</code> and commit.</li>
+          <li>For each batch, start a fresh overnight culture from a single colony. Run the batches on at least three different days.</li>
+          <li>Inoculate 50&nbsp;mL LB in a flask to OD<sub>600</sub>&nbsp;0.05. Incubate at 37&nbsp;&deg;C and 200&nbsp;rpm.</li>
+          <li>Every 30&nbsp;min from 0 to 10&nbsp;h (21 samples), take 200&nbsp;&micro;L and read OD<sub>600</sub>, blanked on sterile LB. Dilute with sterile LB so the reading lies between 0.1 and 1.0; the BioDrop loses linearity above that range (R2).</li>
+          <li>After the four training batches, fit the model (analysis step 1) and commit <code>dt5_model.json</code>. The person who fits it does not open the held-out batch file before the commit.</li>
+        </ol>
+        <p><b>Data to record.</b> <code>meta.csv</code> per batch; <code>sheet.csv</code> with <code>batch</code>, <code>t_h</code>, <code>wall_time</code>, <code>od600_reading</code>, <code>dilution_factor</code>, <code>od600</code> (reading &times; dilution factor), <code>incubator_temp_C</code>.</p>
+        <p><b>Analysis.</b></p>
+        <ol>
+          <li>Fit <i>X</i>(<i>t</i>) = <i>K</i> / (1 + (<i>K</i>/<i>X</i><sub>0</sub> &minus; 1)&thinsp;e<sup>&minus;<i>rt</i></sup>) to the four training batches pooled, with <i>X</i><sub>0</sub> fixed to each batch's measured value at 0&nbsp;h, using <code>src/fit_growth.py</code>. Report <i>r</i> and <i>K</i> with their standard errors.</li>
+          <li>For each held-out sample time <i>t</i><sub>0</sub> from 0 to 6&nbsp;h (13 points), start the model from the measured OD<sub>600</sub>(<i>t</i><sub>0</sub>) and predict OD<sub>600</sub>(<i>t</i><sub>0</sub>&nbsp;+&nbsp;4&nbsp;h) with the frozen <i>r</i> and <i>K</i>.</li>
+          <li>Compute R&sup2;<sub>p</sub>, RMSEP and RPD on the 13 held-out predictions, as in DT-3. Report the same statistics on the training batches (RMSEC) for comparison.</li>
+          <li>Draw the DT-5 panel of Figure E2 (<a href="#evidence">section 6</a>).</li>
+        </ol>
+        <aside class="callout">
+          <b class="callout__label">Acceptance criterion &middot; fixed 18 September 2026</b>
+          <p>RPD &ge;&nbsp;3 for 4&nbsp;h-ahead OD<sub>600</sub> on the held-out batch.</p>
+        </aside>
+
+        <!-- ------------------------------------------------------ DT-6 -- -->
+        <h3 id="dt-6">DT-6 &middot; Robustness to sensor noise and line loss</h3>
+        <p><b>Aim.</b> Quantify how much the DT-4 and DT-5 forecasts degrade when their measured inputs are perturbed. The test follows the sensor-noise analysis of Zhao et&nbsp;al., who added random perturbations of 10% of each input's range&nbsp;[4].</p>
+        <p><b>Materials.</b> The DT-4 and DT-5 data and frozen models; Python&nbsp;3 with numpy and scipy; random seed 20260918.</p>
+        <p><b>Procedure.</b></p>
+        <ol>
+          <li><i>DT-5 inputs.</i> Add to each starting OD<sub>600</sub>(<i>t</i><sub>0</sub>) of the held-out batch independent uniform noise on [&minus;0.05<i>W</i>,&nbsp;+0.05<i>W</i>], where <i>W</i> is the range of measured OD<sub>600</sub> in that batch, so the full width is 10% of <i>W</i>. Recompute the 13 predictions and the RPD. Repeat 1,000 times. Measured targets are not perturbed.</li>
+          <li><i>DT-4 inputs.</i> Perturb each 10&nbsp;min median &Delta;P used to fit <i>k</i> in the same way, with <i>W</i> the range of &Delta;P over the run. Recompute RMSE(12&nbsp;h). Repeat 1,000 times.</li>
+          <li><i>Line loss.</i> Delete 5% of the <code>PV</code> lines in the DT-4 <code>link.csv</code> at random, rebuild the 10&nbsp;min medians, and recompute RMSE(12&nbsp;h). Repeat 100 times.</li>
+        </ol>
+        <p><b>Data to record.</b> <code>dt6_results.csv</code> with <code>test</code>, <code>repeat</code>, <code>seed</code>, <code>metric</code> (<code>RPD</code> or <code>RMSE12_mbar</code>), <code>value</code>; the script, committed.</p>
+        <p><b>Analysis.</b> Median and 2.5th&ndash;97.5th percentile interval of each metric across repeats, beside the unperturbed value.</p>
+        <aside class="callout">
+          <b class="callout__label">Acceptance criterion &middot; fixed 18 September 2026</b>
+          <p>DT-5: median RPD &ge;&nbsp;2.5. DT-4: median RMSE(12&nbsp;h) &le;&nbsp;15&nbsp;mbar. Line loss: median RMSE(12&nbsp;h) within 1&nbsp;mbar of the unperturbed value. DT-6 is scored only for models that passed DT-4 or DT-5.</p>
+        </aside>
+
+        <!-- ------------------------------------------------------ DT-7 -- -->
+        <h3 id="dt-7">DT-7 &middot; Model-triggered cleaning against a fixed schedule</h3>
+        <p><b>Aim.</b> Test whether cleaning triggered automatically by the fouling forecast keeps module resistance lower than a fixed cleaning schedule under the same fouling disturbance.</p>
+        <p><b>Arms, frozen now.</b> Both arms run P-01 at 16% and P-02 at 0 except during cleaning. A Clean cycle is the interface's Clean recipe (P-01 10%, P-02 10%) held for 10&nbsp;min.</p>
+        <ul>
+          <li><i>Fixed schedule:</i> Clean at 6, 12 and 18&nbsp;h.</li>
+          <li><i>Closed loop:</i> every 10&nbsp;min the interface fits the DT-4 model to the data since the last Clean cycle and sends a Clean cycle automatically when it forecasts <i>R</i>/<i>R</i><sub>0</sub>&nbsp;&ge;&nbsp;1.5 within the next 2&nbsp;h. At most one Clean cycle per hour.</li>
+        </ul>
+        <p><b>Materials.</b> The rig after DT-1 to DT-4 have passed; water; active dry baker's yeast (<i>Saccharomyces cerevisiae</i>) as a model foulant, 4&nbsp;g per run; a coin; the module manufacturer's cleaning instructions.</p>
+        <p><b>Procedure.</b></p>
+        <ol>
+          <li>Eight runs of 24&nbsp;h, in four pairs. Toss a coin for each pair to decide which arm runs first, and record the order before the first run.</li>
+          <li>Start zero. Fill with 325&nbsp;mL water. Run P-01 at 16% for 10&nbsp;min; &Delta;P<sub>0</sub> = median lumen &Delta;P over the last 5&nbsp;min.</li>
+          <li>At 1, 7, 13 and 19&nbsp;h, add 1&nbsp;g of yeast rehydrated for 15&nbsp;min in 50&nbsp;mL water at 30&nbsp;&deg;C. Withdraw 50&nbsp;mL from the reservoir beforehand to keep the volume constant.</li>
+          <li>Run the assigned arm for 24&nbsp;h without manual intervention.</li>
+          <li>End zero. Drain, rinse three times with water, and run one 30&nbsp;min Clean cycle. Measure &Delta;P<sub>0</sub> again with water. If it exceeds 1.2 times the first run's &Delta;P<sub>0</sub>, clean the module chemically according to the manufacturer's instructions, record the cleaning, and re-measure before the next run.</li>
+        </ol>
+        <p><b>Data to record.</b> <code>link.csv</code>, <code>batch.csv</code> and <code>meta.csv</code> per run, with <code>arm</code> and <code>pair</code> added to <code>meta.csv</code>; <code>sheet.csv</code> with <code>wall_time</code>, <code>event</code> (yeast addition or manual action), <code>mass_g</code>. Clean cycles are read from the <code>TX</code> lines of <code>link.csv</code>, not from notes.</p>
+        <p><b>Analysis.</b></p>
+        <ol>
+          <li><i>R</i>/<i>R</i><sub>0</sub>(<i>t</i>) = lumen &Delta;P / &Delta;P<sub>0</sub> as 1&nbsp;min medians, excluding each Clean cycle and the 5&nbsp;min after it.</li>
+          <li>Per run: hours with <i>R</i>/<i>R</i><sub>0</sub>&nbsp;&gt;&nbsp;1.5; number of Clean cycles; mean <i>R</i>/<i>R</i><sub>0</sub> over 0&ndash;24&nbsp;h.</li>
+          <li>Per pair: difference, closed loop minus fixed. Mean difference over the four pairs, with a paired 95% confidence interval (<i>t</i> distribution, 3 degrees of freedom).</li>
+          <li>Draw Figure E4 (<a href="#evidence">section 6</a>).</li>
+        </ol>
+        <aside class="callout">
+          <b class="callout__label">Acceptance criterion &middot; fixed 18 September 2026</b>
+          <p>The closed-loop arm spends less time above 1.5&nbsp;&times;&nbsp;<i>R</i><sub>0</sub>, the paired 95% confidence interval of the difference excludes 0, and the closed-loop arm uses on average no more Clean cycles per run than the fixed arm (three). With four pairs, only a large effect can meet this criterion; a null result is reported as such.</p>
+        </aside>
+      </section>
+
+      <!-- ============================================== 6 · EVIDENCE ====== -->
+      <section class="sec" id="evidence">
+        <h2>Minimal evidence package</h2>
+        <p class="stand">Four figures and one table are enough to decide the claim. <b>None exists yet</b>, so each is shown as a MOCK: the axes, the statistics and the criterion, without data.</p>
+
+        <p>Each figure is produced from the files of the experiment it names, by a script committed alongside them. Failed results are shown in the same place and at the same size as passed ones. When real data exist, the MOCK figure is replaced, and its caption keeps the experiment ID and names the data folder.</p>
+
+        <figure class="fig fig--pending">
+          <img src="../assets/img/software/fig-e1-link.svg" alt="MOCK template, no data. Axes for PT-01 pressure against time from the SET command, with the command time marked, the link statistics to report and the DT-1 acceptance criterion." loading="lazy" width="880" height="495" />
+          <figcaption><b>MOCK &middot; E1, from DT-1.</b> Forty P-01 steps overlaid on time from command, with <i>t</i><sub>63</sub>, loss, longest gap and acknowledgement latency. With E5, decides the digital-shadow tier.</figcaption>
+        </figure>
+        <figure class="fig fig--pending">
+          <img src="../assets/img/software/fig-e2-parity.svg" alt="MOCK template, no data. A parity plot of predicted against measured lumen pressure drop from 0 to 0.5 bar with a 1:1 line, the held-out statistics to report and the DT-3 and DT-5 acceptance criteria." loading="lazy" width="880" height="495" />
+          <figcaption><b>MOCK &middot; E2, from DT-3 and DT-5.</b> Predicted against measured on held-out data only, with R&sup2;<sub>p</sub>, RMSEP, bias and RPD printed on the figure. One panel per model.</figcaption>
+        </figure>
+        <figure class="fig fig--pending">
+          <img src="../assets/img/software/fig-e3-horizon.svg" alt="MOCK template, no data. Axes for forecast RMSE in mbar against forecast horizon at 1, 3, 6 and 12 hours, with a 10 mbar line and the DT-4 acceptance criterion." loading="lazy" width="880" height="495" />
+          <figcaption><b>MOCK &middot; E3, from DT-4.</b> Forecast RMSE against horizon for the fouling model and for persistence, with the 10&nbsp;mbar criterion. The useful horizon ends where the model curve crosses the line.</figcaption>
+        </figure>
+        <figure class="fig fig--pending">
+          <img src="../assets/img/software/fig-e4-closedloop.svg" alt="MOCK template, no data. Axes for resistance ratio R over R0 against time over 24 hours, with the clean-before limit at twice baseline and the DT-7 acceptance criterion." loading="lazy" width="880" height="495" />
+          <figcaption><b>MOCK &middot; E4, from DT-7.</b> <i>R</i>/<i>R</i><sub>0</sub> over 24&nbsp;h for both arms, one line per run, with Clean cycles marked, and the paired differences with their 95% confidence interval.</figcaption>
         </figure>
 
-        <h3 id="qbd">Quality by design</h3>
-        <p class="stand">The critical quality attribute is unmeasurable, <b>so the design space is drawn empty</b> rather than passing the tested space off as one.</p>
+        <h3 id="summary-table">E5 &middot; Summary table</h3>
+        <p>One row per experiment, filled only from the analysis outputs; no cell is edited by hand. The rows below are a <b>MOCK</b>: the criteria are final and the results do not exist.</p>
 
         <div class="tablewrap">
           <table class="data">
-            <thead><tr><th scope="col">Link in the chain</th><th scope="col">ReLeaf</th><th scope="col">Note</th></tr></thead>
+            <thead><tr><th scope="col">ID</th><th scope="col">Criterion</th><th scope="col">Measured</th><th scope="col">Verdict</th><th scope="col">Data folder</th></tr></thead>
             <tbody>
-              <tr><td>Risk assessment</td><td><span class="stamp stamp--void">Not done</span></td><td>None has been done in the Ishikawa, FMEA or risk-priority-number sense. The three interlocks are a control strategy arrived at by engineering judgement, not by risk ranking. The source volume's warning applies directly to us: risk assessment should not exclude risks based on presumptions&nbsp;[5].</td></tr>
-              <tr><td>Critical quality attribute</td><td><span class="stamp stamp--void">Unmeasurable</span></td><td>Defined: BoPep4 concentration in the harvested permeate, at least 100&nbsp;nM at the point of application, which is the published effective dose against 200&nbsp;mM NaCl&nbsp;[7]. There is no assay for the peptide, in-line or off-line. <b>This is the largest hole in the whole frame.</b> A secondary attribute, permeate bioburden, is controlled by design through two 0.22&nbsp;&micro;m filters, which is a design control and not real-time release.</td></tr>
-              <tr><td>Critical process parameters</td><td><span class="stamp stamp--partial">Partial</span></td><td>Five: green-light irradiance and duration; cross-flow through the loop pump, which sets both wall shear and trans-membrane pressure; 37&nbsp;&deg;C; pH&nbsp;7.0; and OD at induction. Only cross-flow has calibration data behind it. The other four are setpoints, not controlled variables, until their probes exist.</td></tr>
-              <tr><td>Design space</td><td><span class="stamp stamp--void">Empty</span></td><td>The tested space on the loop-pump axis is 0 to 24%, which is the calibration range, and the operating point is 16% or 263&nbsp;mL/min. A design space requires a critical quality attribute to risk-assess against, and we cannot measure ours. Passing a tested space off as a design space is the most common way student projects overclaim quality by design.</td></tr>
-              <tr><td>Control strategy</td><td><span class="stamp stamp--partial">Partial</span></td><td>Three MCU interlocks, alarm bands on every tag, five recipes. All protective or preset. None of it closes a loop on a quality attribute, because there is no quality attribute to close on.</td></tr>
-              <tr><td>PAT</td><td><span class="stamp stamp--partial">Partial</span></td><td>Four in-line measurements, one at-line, three soft sensors and two planned instruments. The source volume itself notes that biomass and metabolite concentration are reachable only through a model or a soft sensor&nbsp;[5]. That is the field's constraint, not only ours. The product assay is the gap that is ours.</td></tr>
-              <tr><td>Real-time release and advanced process control</td><td><span class="stamp stamp--void">Not done</span></td><td>Neither exists, and neither can exist before a product measurement does.</td></tr>
+              <tr><td><b>DT-0</b></td><td>Checks D1&ndash;D3 pass; zero SD &le;&nbsp;3 counts</td><td>&mdash;</td><td><span class="stamp stamp--open">Pending</span></td><td>&mdash;</td></tr>
+              <tr><td><b>DT-1</b></td><td>Loss &lt;&nbsp;1%; gap &le;&nbsp;5&nbsp;s; stop &le;&nbsp;6&nbsp;s (3/3); <i>t</i><sub>63</sub> &le;&nbsp;10&nbsp;s</td><td>&mdash;</td><td><span class="stamp stamp--open">Pending</span></td><td>&mdash;</td></tr>
+              <tr><td><b>DT-2</b></td><td>|bias| &le;&nbsp;0.15&nbsp;psi, limits &plusmn;0.30&nbsp;psi; flow limits &plusmn;10%</td><td>&mdash;</td><td><span class="stamp stamp--open">Pending</span></td><td>&mdash;</td></tr>
+              <tr><td><b>DT-3</b></td><td>RPD &ge;&nbsp;3; RMSEP &le;&nbsp;20&nbsp;mbar</td><td>&mdash;</td><td><span class="stamp stamp--open">Pending</span></td><td>&mdash;</td></tr>
+              <tr><td><b>DT-4</b></td><td>RMSE(12&nbsp;h) &le;&nbsp;10&nbsp;mbar and below persistence</td><td>&mdash;</td><td><span class="stamp stamp--open">Pending</span></td><td>&mdash;</td></tr>
+              <tr><td><b>DT-5</b></td><td>RPD &ge;&nbsp;3 at 4&nbsp;h</td><td>&mdash;</td><td><span class="stamp stamp--open">Pending</span></td><td>&mdash;</td></tr>
+              <tr><td><b>DT-6</b></td><td>Median RPD &ge;&nbsp;2.5; median RMSE(12&nbsp;h) &le;&nbsp;15&nbsp;mbar</td><td>&mdash;</td><td><span class="stamp stamp--open">Pending</span></td><td>&mdash;</td></tr>
+              <tr><td><b>DT-7</b></td><td>Less time above 1.5&nbsp;<i>R</i><sub>0</sub>; CI excludes 0; Clean cycles &le;&nbsp;3</td><td>&mdash;</td><td><span class="stamp stamp--open">Pending</span></td><td>&mdash;</td></tr>
             </tbody>
           </table>
         </div>
 
-        <h4>On our own 434-hour run, a threshold closed loop is not better than a fixed recipe</h4>
-        <p>Applying two induction policies retrospectively to the 434-hour run: a fixed clock at 100&nbsp;h and a live trigger on &micro; falling below 0.006&nbsp;h<sup>&minus;1</sup> both fire at about 100 to 103&nbsp;h, at OD around 0.90. The culture then falls to OD&nbsp;0.629, grows for another hundred hours, and settles at a clean plateau of 1.473. Both policies therefore induce at 61% of final biomass. The reference channel reads 26.67 to 26.69&nbsp;lux throughout that window, so it is not a sensor artefact.</p>
-
-        <p>A threshold closed loop is not better than a fixed recipe here; it is wrong in a different way. The hard part of closing the loop is not the actuator, it is deciding whether the measured state is real and whether it will hold. That is one counterexample from one run, not an error rate.</p>
+        <p>The wording used anywhere on this wiki follows from this table through the tier definitions in <a href="#definition">section 1</a>. If DT-2 passes and DT-3 fails, for example, the correct description is &ldquo;a digital shadow of the BR-01 hydraulic loop&rdquo;.</p>
       </section>
 
-      <!-- ================================================= 5 · MISSING ====== -->
-      <section class="sec" id="missing">
-        <h2>Missing measurements</h2>
-        <p class="stand">Eighteen measurements are missing, and <b>the two cheapest are the two worth doing first</b>: E17, membrane resistance against time, and E18, the end-to-end lead time.</p>
-
-        <h3 id="calibrated">What is calibrated</h3>
-        <p class="stand">The word is calibrated, not validated. <b>Nothing below has been scored against data it was not fitted to.</b></p>
-
-        <p><b>The pump curve.</b> Nine settings from 0 to 24% against measured flow and system pressure drop at 22&nbsp;&deg;C. 12% gives 163.3&nbsp;mL/min at 1.494&nbsp;psi; the recommended operating point of 263&nbsp;mL/min sits at 16%.</p>
-
-        <p><b>The membrane pressure drop.</b> &Delta;P<sub>net</sub>(Q) = 2.427&nbsp;&times;&nbsp;10<sup>&minus;4</sup>&nbsp;Q + 4.604&nbsp;&times;&nbsp;10<sup>&minus;7</sup>&nbsp;Q&sup2; bar, forced through the origin, R&sup2;&nbsp;0.9954, residual SD 0.0101&nbsp;bar. The rig itself accounts for 46 to 55% of total &Delta;P, so without the background subtraction the module's resistance would be overstated about twofold. Two independent routes to wall shear, one needing the fibre count and one not, agree to 2.8%.</p>
-
-        <p><b>Photometer linearity.</b> Against known TiO&#8322; dose, our instrument gives R&sup2;&nbsp;0.9967 below 30&nbsp;mg and R&sup2;&nbsp;0.9901 above it. Against a BioDrop below OD&nbsp;1.2, <i>y</i> = 1.018<i>x</i> &minus; 0.031, R&sup2;&nbsp;0.995, residual SD 0.024. Scored against known dose rather than against each other, the instrument that misbehaves above 30&nbsp;mg is the BioDrop, R&sup2;&nbsp;0.8501 and residual SD 0.116 against our 0.9901 and 0.0209. An earlier internal report said neither instrument was usable above OD&nbsp;1.2; that was not accurate enough and has been corrected here.</p>
-
-        <p><b>That the instrument can say when to distrust itself.</b> Trained on the first 120&nbsp;h of the 434-hour run only, with the alarm limit fixed at the 99.5th percentile of the training score before any result was looked at, the trust layer raised a sensor alarm at 216.3&nbsp;h. The OD channel became unusable at 243.0&nbsp;h. Lead time 26.7&nbsp;h. An autoencoder and a PCA-based method tie on the sensor axis; the autoencoder beats it on the process axis, 72.9% against 11.3%, which is the only place the neural model earns its keep. A plain threshold on |dOD|&nbsp;&gt;&nbsp;0.05 fires on 23.1% of the sensor event and 0.8% of the process event and cannot tell you which is which. Two events in one run, so no error rate is reportable.</p>
-
-        <h3 id="register">The register</h3>
-        <p class="stand">Eighteen rows, ordered by how many models each unblocks. <b>Read it as a work list, not a wish list.</b></p>
-
-        <div data-ledger>
-          <div class="filters">
-            <span class="filters__lab">Show</span>
-            <button class="chip" type="button" data-filter="all" aria-pressed="true">All eighteen</button>
-            <button class="chip" type="button" data-filter="first" aria-pressed="false">Do these first</button>
-            <button class="chip" type="button" data-filter="light" aria-pressed="false">Light and yield</button>
-            <button class="chip" type="button" data-filter="rig" aria-pressed="false">Rig and hydraulics</button>
-            <button class="chip" type="button" data-filter="record" aria-pressed="false">Write it down</button>
-          </div>
-
-          <div class="tablewrap">
-            <table class="ledger">
-              <thead>
-                <tr><th>ID</th><th>What is missing</th><th>Unit</th><th>State</th><th>What it unblocks, and how it is done</th></tr>
-              </thead>
-              <tbody>
-                <tr data-tags="light">
-                  <td class="ledger__set">E1</td>
-                  <td>Our own Hill fit for CcaSR, in our strain</td>
-                  <td class="ledger__when">&mdash;, &micro;mol&middot;m<sup>&minus;2</sup>&middot;s<sup>&minus;1</sup></td>
-                  <td><span class="stamp stamp--void">Missing</span></td>
-                  <td>Unblocks M6 and everything downstream of it, M8 included, and retires the cross-chassis assumption. The single highest-value experiment on the list. LPA dose-response: nine green intensities log-spaced 0.1 to 50&nbsp;&micro;mol&middot;m<sup>&minus;2</sup>&middot;s<sup>&minus;1</sup> around the literature <i>K</i><sub>&frac12;</sub> of 4.7, two wells each, red-only and dark controls, three independent runs. Red preconditioning 0 to 3 to 5&nbsp;h, then green induction to 8 to 10&nbsp;h while still exponential. Harvest by ice quench at OD&nbsp;0.08 to 0.15, lyse, normalise load to OD, SDS-PAGE, anti-His&#8326; immunoblot, densitometry, fit the Hill function.</td>
-                </tr>
-                <tr data-tags="light">
-                  <td class="ledger__set">E2</td>
-                  <td>Calibrated photon flux at the well and at the vessel wall</td>
-                  <td class="ledger__when">&micro;mol&middot;m<sup>&minus;2</sup>&middot;s<sup>&minus;1</sup></td>
-                  <td><span class="stamp stamp--void">Missing</span></td>
-                  <td>Unblocks the x-axis of E1; without it the dose-response has no units and cannot be compared to anyone else's. Without a calibrated flux every optimiser is turning an unmarked dial. Buy a PAR or quantum sensor, measure each LPA well and the L-01 panel at the vessel at several duty cycles, store the per-well calibration file. Saturating targets computed from Castillo-Hair&nbsp;[1] convert to about 1.12&nbsp;mW/cm&sup2; green and 0.36&nbsp;mW/cm&sup2; red, which is trivially low power.</td>
-                </tr>
-                <tr data-tags="light">
-                  <td class="ledger__set">E3</td>
-                  <td>Cells per mL per OD, on our photometer, for our strain</td>
-                  <td class="ledger__when">cells&middot;mL<sup>&minus;1</sup>&middot;OD<sup>&minus;1</sup></td>
-                  <td><span class="stamp stamp--void">Missing</span></td>
-                  <td>The largest single multiplier in the yield chain is currently a literature number, not ours. Unblocks M8, and converts the TiO&#8322; calibration from a linearity check into a cell-density calibration, which is what a Measurement claim actually needs. A cell dilution series against plate counts and against dry cell weight, <i>n</i>&nbsp;=&nbsp;3 per point, with a stated limit of detection, run on the in-line photometer and not only on a benchtop instrument. The literature figure in use is 2 to 5&nbsp;&times;&nbsp;10<sup>8</sup>.</td>
-                </tr>
-                <tr data-tags="light">
-                  <td class="ledger__set">E4</td>
-                  <td>Dry cell weight per OD</td>
-                  <td class="ledger__when">g&middot;L<sup>&minus;1</sup>&middot;OD<sup>&minus;1</sup></td>
-                  <td><span class="stamp stamp--void">Missing</span></td>
-                  <td>Unblocks every mass balance. Carried as <code>null</code> in the parameter file, with the note that it must be measured on our own spectrophotometer, and the literature spans a factor of three, 0.25 to 0.85. The same dilution series as E3, filtered and dried to constant mass.</td>
-                </tr>
-                <tr data-tags="light">
-                  <td class="ledger__set">E5</td>
-                  <td>Induction kinetics in our system, <i>t</i><sub>&frac12;</sub> on and off</td>
-                  <td class="ledger__when">min</td>
-                  <td><span class="stamp stamp--void">Missing</span></td>
-                  <td>Unblocks M7 and the lead-time chain. The borrowed 105.1&nbsp;min is the only latency the project has. Step change red to green, then green to red, sampling every 15&nbsp;min for 6&nbsp;h, same readout as E1. Any page using the borrowed number must say it is borrowed in the same sentence.</td>
-                </tr>
-                <tr data-tags="light">
-                  <td class="ledger__set">E6</td>
-                  <td>The product, measured</td>
-                  <td class="ledger__when">&micro;g&middot;mL<sup>&minus;1</sup></td>
-                  <td><span class="stamp stamp--void">Missing</span></td>
-                  <td>Any measured titre at all turns M8 from a bound into a comparison, and it is the only thing that creates a quality attribute to control. Anti-His&#8326; Western on permeate and on lysate, with a dilution series first to fix the linear range. An orthogonal readout &mdash; ACC to &alpha;-ketobutyrate derivatised with DNPH and read at A&#8325;&#8324;&#8320; &mdash; has a wider linear range and should anchor the blot.</td>
-                </tr>
-                <tr data-tags="light">
-                  <td class="ledger__set">E7</td>
-                  <td>Secretion parameters q<sub>P</sub>, &alpha;, &beta; and k<sub>deg</sub></td>
-                  <td class="ledger__when">&micro;g&middot;mL<sup>&minus;1</sup>&middot;OD<sup>&minus;1</sup>&middot;h<sup>&minus;1</sup>, h<sup>&minus;1</sup></td>
-                  <td><span class="stamp stamp--void">Missing</span></td>
-                  <td>Every parameter in the secretion layer is tagged <code>verify</code>. A permeate time course during a batch, sampled often enough to separate the growth-associated term from the non-growth term in a Luedeking-Piret fit. Report q<sub>P</sub> at three assumed k<sub>deg</sub> values &mdash; 0.01, 0.03 and 0.1&nbsp;h<sup>&minus;1</sup> &mdash; until k<sub>deg</sub> itself is measured.</td>
-                </tr>
-                <tr data-tags="rig">
-                  <td class="ledger__set">E8</td>
-                  <td>Membrane porosity, tortuosity and wall thickness</td>
-                  <td class="ledger__when">&mdash;, &mdash;, &micro;m</td>
-                  <td><span class="stamp stamp--void">Missing</span></td>
-                  <td>Unblocks diffusive transport, which is what carries the product when trans-membrane pressure is unresolvable. The current estimate spans a factor of eighteen, 0.045 to 0.817&nbsp;mL/min equivalent at 22&nbsp;&deg;C. Ask the supplier first; these were not supplied for this module. Failing that, measure the wall on a cut fibre and back out the pair from a diffusion experiment with a tracer of known diffusivity.</td>
-                </tr>
-                <tr data-tags="rig">
-                  <td class="ledger__set">E9</td>
-                  <td>Shell-side hydraulic characterisation</td>
-                  <td class="ledger__when">mL/min, bar</td>
-                  <td><span class="stamp stamp--void">Missing</span></td>
-                  <td>PT-04 and PT-05 are derived from the lumen pump curve, which is what makes the displayed TMP indicative. Two of the four pressure channels stop being derived. Repeat the 2026-08-16 lumen protocol on the shell loop: eight pump settings, module fitted and module replaced by a jumper, background subtracted.</td>
-                </tr>
-                <tr data-tags="rig">
-                  <td class="ledger__set">E10</td>
-                  <td>Zero all four transducers, then re-measure TMP</td>
-                  <td class="ledger__when">bar</td>
-                  <td><span class="stamp stamp--void">Missing</span></td>
-                  <td>Unblocks M3 and the permeate flow that depends on it. A &plusmn;0.055&nbsp;bar interval on a 0.30&nbsp;bar design point is not good enough to control on. Open every transducer to atmosphere, record the offset, apply it, and repeat a steady-state reading at the operating point with the loop actually steady rather than during a transient.</td>
-                </tr>
-                <tr data-tags="rig">
-                  <td class="ledger__set">E11</td>
-                  <td>Permeate flow at the operating point</td>
-                  <td class="ledger__when">mL/min</td>
-                  <td><span class="stamp stamp--void">Missing</span></td>
-                  <td>Unblocks the litres of root-zone solution a reactor can dose. The daily harvest volume is currently a design specification, not a measurement: the parameter file records Q<sub>p</sub> as 0.0, with the note that the 2.5&nbsp;mL/min used elsewhere is a specification. Collect and weigh permeate over a fixed interval at 263&nbsp;mL/min cross-flow.</td>
-                </tr>
-                <tr data-tags="rig record">
-                  <td class="ledger__set">E12</td>
-                  <td>Operating mode, lumen volume V<sub>L</sub>, shell volume V<sub>S</sub></td>
-                  <td class="ledger__when">&mdash;, mL</td>
-                  <td><span class="stamp stamp--void">Missing</span></td>
-                  <td>Not an experiment. Which mode each run used was never written down, so the mass balance cannot be closed at all, and V<sub>S</sub> dominates the diffusive equilibration time. Measure the volumes and write down which of closed, harvest or dead-end mode each run used.</td>
-                </tr>
-                <tr data-tags="rig">
-                  <td class="ledger__set">E13</td>
-                  <td>Fault labels for the trust layer</td>
-                  <td class="ledger__when">events</td>
-                  <td><span class="stamp stamp--void">Missing</span></td>
-                  <td>Unblocks M10 and the first false-positive rate the project could report. Two events in one run cannot support an error rate, so the trust layer cannot be wired in as an interlock. Manufacture faults deliberately, three of each kind: occlude the light path, swap the light source, foul the membrane. That takes the event count from 2 to 18.</td>
-                </tr>
-                <tr data-tags="rig">
-                  <td class="ledger__set">E14</td>
-                  <td>Volumetric oxygen mass transfer coefficient k<sub>L</sub>a</td>
-                  <td class="ledger__when">h<sup>&minus;1</sup></td>
-                  <td><span class="stamp stamp--void">Missing</span></td>
-                  <td>The growth model assumes the chamber is not oxygen limited, and that has never been checked. Gassing-in method. Not yet run.</td>
-                </tr>
-                <tr data-tags="record">
-                  <td class="ledger__set">E15</td>
-                  <td>Method metadata for the 434-hour run</td>
-                  <td class="ledger__when">&mdash;</td>
-                  <td><span class="stamp stamp--void">Missing</span></td>
-                  <td>Not an experiment. Write down the medium, the inoculum, whether light control was running, and which compartment the culture sat in. None of it is recorded. It unblocks the comparison between this run and the 2026-06-10 lumen null result: against the measured &micro;, that 10 June null could only have gained 0.027&nbsp;OD in 4.5&nbsp;h, below its own 0.033&nbsp;SD, and 13.8&nbsp;h were needed for three standard deviations. That null was underpowered, not negative, and the argument cannot be made airtight without the method.</td>
-                </tr>
-                <tr data-tags="record">
-                  <td class="ledger__set">E16</td>
-                  <td>Which strain it actually is</td>
-                  <td class="ledger__when">&mdash;</td>
-                  <td><span class="stamp stamp--void">Missing</span></td>
-                  <td>Not an experiment. The strain is named three different ways across our own documents: 168 on the growth curves, PY79 or 168 in the invariants dossier, and WB800 &mdash; a protease-deficient derivative of 168 &mdash; in the hydraulics report. Unblocks the protease question in M8 and any comparison between runs. Ask, then write it in one place. <b>Nothing that names the strain should be published until this is settled.</b></td>
-                </tr>
-                <tr data-tags="first rig">
-                  <td class="ledger__set">E17</td>
-                  <td>Membrane resistance against time, under a real culture</td>
-                  <td class="ledger__when">bar&middot;min&middot;mL<sup>&minus;1</sup>, h</td>
-                  <td><span class="stamp stamp--open">Do first</span></td>
-                  <td>Unblocks M4 and the only maintenance decision in the product. <b>Needs no new hardware:</b> the four transducers and the pump curve already produce the number, and the interface already records it every 30&nbsp;minutes. One perfusion run at the operating point, logging &Delta;P<sub>net</sub> divided by flow from a clean start until the resistance reaches twice baseline, normalised to 25&nbsp;&deg;C. The rate law is currently assumed, with a coefficient chosen so a demonstration reaches the 2&times; threshold at a plausible time. The cheapest high-value experiment on the list.</td>
-                </tr>
-                <tr data-tags="first light">
-                  <td class="ledger__set">E18</td>
-                  <td>The end-to-end lead time <i>L</i></td>
-                  <td class="ledger__when">h</td>
-                  <td><span class="stamp stamp--open">Do first</span></td>
-                  <td>Unblocks the difference between a dashboard and a controller, and closes the question of whether forecast lead time exceeds end-to-end latency &mdash; the argument the whole prediction case rests on, and which has never been checked. Not one experiment but a chain, measured link by link and then end to end: induction to expression, expression to secretion into the permeate, permeate to the collected volume needed, and application to the plant. Four of the five links in the interface's lead-time chain currently read <code>verify</code>, and the only number in it is the borrowed 105.1&nbsp;min.</td>
-                </tr>
-              </tbody>
-            </table>
-          </div>
-          <p class="ledger__none" hidden>No measurements match that filter.</p>
-        </div>
-
-        <h4>If only two of these are ever done, do E17 and E18</h4>
-        <p>E17, one perfusion run logging membrane resistance against time, turns the fouling law from an invented assumption into a calibrated short-cut model, and it unblocks the only maintenance decision in the whole product. It needs no new hardware: the four transducers and the pump curve already produce the number, and the interface already records it every 30&nbsp;minutes. E18, the end-to-end lead time, is what separates a dashboard from a controller: &ldquo;when do we switch the light on&rdquo; means &ldquo;this long before it is needed&rdquo;, and four of the five cells in the interface's lead-time chain still read <code>verify</code>. Neither is at the top of the register, because the register is ordered by how many models each unblocks rather than by value for effort.</p>
-
-        <div class="figs figs--2">
-          <figure class="fig fig--plain">
-            <img src="../assets/img/software/lpa-dose-response-protocol.png" alt="A four-panel protocol schematic for a green-light dose-response experiment: strain design, culture and LPA hardware, the light program and dose ladder, and the harvest to immunoblot to Hill fit workflow." loading="lazy" width="2000" height="1506" />
-            <figcaption><b>6 September.</b> E1 and E2 drawn out: the experiment that would replace the borrowed Hill parameters with ours. Panel&nbsp;A is the strain design, B the culture set-up and the LPA cross-section, C the dose ladder of nine green intensities log-spaced around <i>K</i><sub>&frac12;</sub>, and D the harvest through anti-His&#8326; immunoblot to the Hill fit. The schematic was drawn in-house for this wiki from original vector shapes. What it does not show is any result: panels C and D depict a planned protocol and an illustrative fit, the bands in the blot panel are drawn rather than densitometry, and the curve is the published Castillo-Hair fit shown as the target this experiment would replace. No induction curve exists in our hands.</figcaption>
-          </figure>
-          <figure class="fig fig--plain">
-            <img src="../assets/img/software/lpa-assembled-20260717.jpg" alt="A black 3D-printed Light Plate Apparatus base with a white 24-well adapter on top, wells lit alternately green and red." loading="lazy" width="900" height="1200" />
-            <figcaption><b>17 July.</b> The instrument that would run E1, assembled for the first time: a Light Plate Apparatus built to the open-hardware design of Gerhardt et&nbsp;al. 2016&nbsp;[2], with the 3D-printed parts made in house. Twenty-four wells, each with a paired green and red LED, individually addressable so every well can hold a different intensity while sharing one harvest time. What it does not show is a calibrated device or a culture: the per-well photon flux has not been measured, which is E2, and no dose-response has been run in it.</figcaption>
-          </figure>
-        </div>
-
-        <h3 id="batch-time">Why the biology gets fitted at 37&nbsp;&deg;C</h3>
-        <p class="stand">A batch at 22&nbsp;&deg;C takes eighteen days. <b>The bottleneck is not the software.</b></p>
-        <p>One constraint shapes all of this, and it is not a software constraint. A batch at 22&nbsp;&deg;C takes 434&nbsp;h, which is 18.1&nbsp;days; five batches is 90&nbsp;days. Growth at 37&nbsp;&deg;C is measured at &micro;&nbsp;0.92&nbsp;h<sup>&minus;1</sup> against 0.0329&nbsp;h<sup>&minus;1</sup> at 22&nbsp;&deg;C, a factor of 28, so OD&nbsp;0.08 to 1.4 takes 3.1&nbsp;h and a round is about 12&nbsp;h. The plan is therefore to fit the biology on parallel small vessels at 37&nbsp;&deg;C, take the hardware layer from existing reactor data, and validate once on BR-01, keeping one or two batches at 22&nbsp;&deg;C as an explicit transfer test. Modelling, fitting, state estimation and the trust layer are days of work on top of what already exists. Thirty to forty batches are weeks of wet lab and cannot be compressed or simulated.</p>
-      </section>
-
-      <!-- =================================================== 6 · REUSE ====== -->
-      <section class="sec" id="reuse">
-        <h2>Reuse and documentation</h2>
-        <p class="stand">The shell generalises and the process model does not, and the page says so wherever the model appears. <b>No other team has used it yet</b>, so reusability here is a designed-for claim, not a demonstrated one.</p>
-
-        <p>The honest scope first. This is not a general-purpose bioprocess platform and does not pretend to be. What generalises is the shell: an offline, single-file, bilingual, ISA-101 operator interface with an alarm model, a batch recorder, a serial link and a device register, into which another team drops their own tags and their own board. What does not generalise is the process model, which is ours.</p>
-
-        <h3 id="running-it">Three commands, and no install</h3>
+      <!-- =============================================== 7 · RUNNING ====== -->
+      <section class="sec" id="running">
+        <h2>Running the software</h2>
+        <p class="stand">The interface needs a browser and nothing else. <b>Connecting a board needs Chrome or Edge and a local web server</b>, because Web Serial does not work from <code>file://</code>.</p>
 
         <div class="windows">
           <div class="window">
             <span class="microlabel">To look at it</span>
             <h4>Open the file</h4>
-            <p>Open <code>ui/0906UI.html</code> in Chrome or Edge. That is the whole instruction. Process values are simulated so the interface can be demonstrated with no rig attached.</p>
+            <p>Open <code>software/ui/0906UI.html</code> in any current browser. With no board attached, every process value is simulated, and the interface says so.</p>
           </div>
           <div class="window">
             <span class="microlabel">To connect a board</span>
             <h4>Serve it over HTTP</h4>
-            <p><code>python3 -m http.server 8080</code>, open <code>http://localhost:8080/</code>, and press <b>Connect board</b>. Web Serial does not work from <code>file://</code>, which is the one thing that trips everybody up.</p>
+            <p>In <code>software/ui/</code>, run <code>python3 -m http.server 8080</code>, open <code>http://localhost:8080/0906UI.html</code> in Chrome or Edge, press <b>Connect board</b> and choose the Uno&nbsp;Q's serial port (115&nbsp;200&nbsp;baud).</p>
           </div>
           <div class="window">
-            <span class="microlabel">To build the panel version</span>
-            <h4>Run the kiosk build</h4>
-            <p><code>python3 build_kiosk.py</code>. Never edit the kiosk file by hand; the next build overwrites it.</p>
+            <span class="microlabel">To flash the board</span>
+            <h4>Upload the firmware</h4>
+            <p>Open <code>Bioreactor_UI/firmware/releaf_br01.ino</code> in the Arduino IDE, select the Arduino Uno&nbsp;Q, and upload. Keep the pin map in step with the interface's Setup view.</p>
           </div>
         </div>
 
-        <h3 id="edit-points">Nine places to edit</h3>
-        <p class="stand">The interlocks are <b>not one of them</b>. They belong on the microcontroller.</p>
-
+        <h3 id="reproduce">Reproducing the numbers on this page</h3>
         <div class="tablewrap">
           <table class="data">
-            <thead><tr><th scope="col">To change</th><th scope="col">Edit</th><th scope="col">Notes</th></tr></thead>
+            <thead><tr><th scope="col">To reproduce</th><th scope="col">Run</th><th scope="col">Needs</th></tr></thead>
             <tbody>
-              <tr><td>Your sensors and their units</td><td><code>TAGS</code></td><td>One entry per measured value, carrying its unit, decimal places, normal band, low and high alarm limits, a plain-language line, a why line, a planned flag, and a <code>zh</code> twin holding the Chinese strings. Every view reads from here, so adding a tag adds it to the overview, the trends, the alarm evaluator and the export at once.</td></tr>
-              <tr><td>Your equipment</td><td><code>DEVICES</code></td><td>Pumps, valves, probes, the light panel. The planned flag is what draws an item dashed orange on the flow path and lists it as not built in the equipment register.</td></tr>
-              <tr><td>Your one-touch modes</td><td><code>RECIPES</code></td><td>Each recipe sets every actuator, so a half-specified recipe is a bug. Ours are Idle, Grow, Induce, Perfuse and Clean.</td></tr>
-              <tr><td>Your language</td><td><code>DICT</code></td><td>Every operator-visible string is a two-element array, English then Traditional Chinese. Replacing the second element gives you your own second language; the switch, the persistence and the font stack already work.</td></tr>
-              <tr><td>Your rig constants</td><td><code>data/rig_constants.csv</code></td><td>Membrane area, fibre count and bore, working volumes, viscosity, the two pressure-drop coefficients, the TMP ceiling and floor, the fouling multiple and the recommended operating point. Mirrored in the page; keep the two in step.</td></tr>
-              <tr><td>Your pump</td><td><code>data/hfm_pump_calibration.csv</code></td><td>Measure your own curve. Ours is nine points at 22&nbsp;&deg;C with water and does not transfer to a different pump, a different tube or a different fluid.</td></tr>
-              <tr><td>Your board and protocol</td><td><code>firmware/releaf_br01.ino</code></td><td>146 lines. Change the pin map, the <code>SET</code> keys and the <code>PV</code> keys, and change the matching parser in the page. The pin map is duplicated in the interface's Setup view on purpose so the two can be checked against each other; edit both together.</td></tr>
-              <tr><td>Your interlocks</td><td><code>interlockedP01()</code>, <code>interlockedP02()</code></td><td>Put them on the microcontroller, not in the browser. Each one mirrors a row of the interface's safety table; change them together. If you delete a sensor, delete the interlock that reads it rather than leaving a rule that cannot see its input.</td></tr>
-              <tr><td>Your panel size</td><td><code>build_kiosk.py</code></td><td>The stage is 1024&nbsp;&times;&nbsp;600 and scales to fill any viewport. A different panel means changing the stage constants and re-running the build.</td></tr>
+              <tr><td>Figures R1&ndash;R4, E1&ndash;E4 and <code>numbers.json</code></td><td><code>python3 software/figures/build_software_figures.py</code> from the wiki root. <code>--downloads</code> and <code>--project</code> point to the folders holding the source files.</td><td>Python&nbsp;3.10+, numpy, openpyxl</td></tr>
+              <tr><td>R3, the measurement trust layer</td><td><code>./py src/sentinel.py</code> in <code>Math&nbsp;Model/releaf-model/</code>; writes <code>out/sentinel.json</code> and <code>out/sentinel_series.json</code>.</td><td>Python&nbsp;3.13, numpy, scipy</td></tr>
+              <tr><td>The growth fits used by DT-5</td><td><code>./py src/build_outputs.py</code> in <code>Math&nbsp;Model/releaf-model/</code>; writes <code>out/growth_fits.json</code>.</td><td>As above</td></tr>
+              <tr><td>The 7-inch panel build</td><td><code>python3 build_kiosk.py</code> in <code>Bioreactor_UI/</code>. Never edit the kiosk file by hand.</td><td>Python&nbsp;3</td></tr>
             </tbody>
           </table>
         </div>
 
-        <figure class="fig">
-          <img src="../assets/img/software/ui-flow-path-zh.png" alt="The same Flow path view rendered in Traditional Chinese, with every label, badge, legend entry and hint translated." loading="lazy" width="1440" height="900" />
-          <figcaption><b>6 September.</b> The same view, one <code>DICT</code> swap later. This is what a second language costs in this codebase: replacing the second element of every pair. Our Chinese is a rewrite for a Chinese-reading grower rather than a transliteration, and a third language should be treated the same way. What it does not show is a translated process: the tag names, the units and the ISA symbols are international and are deliberately not translated.</figcaption>
-        </figure>
+        <h3 id="adapting">Adapting it to another rig</h3>
+        <p>Every operator-visible value is declared in five places in <code>0906UI.html</code>: <code>TAGS</code> (sensors, units, alarm limits, provenance flag), <code>DEVICES</code> (equipment and build status), <code>RECIPES</code> (one-touch settings for every actuator), <code>DICT</code> (English and Traditional Chinese strings), and the <code>PV</code>/<code>SET</code> parser, which must match the firmware. Rig constants are in <code>Bioreactor_UI/data/rig_constants.csv</code> and the pump curve in <code>hfm_pump_calibration.csv</code>; both are specific to BR-01 and must be re-measured on any other rig. Interlocks belong in the firmware, never in the browser.</p>
 
-        <p><b>Hardware assumed.</b> A microcontroller speaking a newline-delimited ASCII protocol at 115200&nbsp;baud &mdash; ours is the STM32U585 side of an Arduino Uno&nbsp;Q, but nothing in the page is specific to it. A browser with Web Serial, which today means Chrome or Edge on desktop or Linux; everything except the board connection works in any browser, including offline from a file. Anything that can serve a directory over HTTP: a Raspberry Pi, a laptop, the Linux side of a Uno&nbsp;Q. Optionally a 7-inch panel; ours has 1024&nbsp;&times;&nbsp;600 physical pixels but accepts 1920&nbsp;&times;&nbsp;1080 over HDMI, which is why the kiosk build scales a fixed stage rather than laying out fluidly.</p>
-
-        <p>What we would tell a team starting from this: take the shell and throw away our numbers. The parts worth copying are the conventions, not the constants. Tag every value the rig cannot actually measure so nobody mistakes a calculation for a measurement. Keep the interlocks on the microcontroller. Alarm only on equipment that is supposed to be running. And write the plain-language line for every reading before you write the code that displays it, because that is the line that tells you whether you understand your own process.</p>
-
-        <h3 id="handbook">Where the code must live</h3>
-        <p class="stand">Every handbook requirement is met except the one that decides eligibility: <b>the code is not on iGEM's GitLab</b>.</p>
-
-        <p>The 2026 Judge Handbook&nbsp;[9] requires software competing for Best Software to be hosted on iGEM's GitLab, at <code>gitlab.igem.org/2026/software-tools/</code>. A GitHub repository does not satisfy it and does not substitute for it. The working repository is a GitHub draft, and the mirror must be pushed before the wiki freeze on 21 October 2026. We are stating this rather than letting a judge discover it.</p>
-
-        <div class="tablewrap">
-          <table class="data">
-            <thead><tr><th scope="col">Requirement</th><th scope="col">ReLeaf</th><th scope="col">Where</th></tr></thead>
-            <tbody>
-              <tr><td>A README explaining what the software does, who it is for, how to install and run it, and how to reproduce the main results, written so a stranger can follow it</td><td><span class="stamp stamp--done">Met</span></td><td>The repository README, plus <code>Bioreactor_UI/README.md</code> carrying the serial protocol, the pin map, the process-model constants, the design basis and the equipment register with build status, plus <code>Bioreactor_UI/docs/DIGITAL_TWIN_CRITERIA.md</code>, a written audit of the software against the digital-twin literature that scores the project rather than describing it.</td></tr>
-              <tr><td>An OSI-approved licence such as Apache&nbsp;2.0, MIT or GPL-3.0. Code without a licence is legally unusable by other teams.</td><td><span class="stamp stamp--done">Met</span></td><td>MIT. The team's earlier public reports carry CC&nbsp;BY&nbsp;4.0, which is a documentation licence and is not OSI-approved, so the code is licensed separately and explicitly.</td></tr>
-              <tr><td>Reproducible build and run instructions. The source must produce the output; compiled binaries are not acceptable in place of source.</td><td><span class="stamp stamp--done">Met</span></td><td>Three commands, above. There is no binary anywhere in the repository.</td></tr>
-              <tr><td>Pinned dependencies, a committed lockfile, so the project installs exactly as tested</td><td><span class="stamp stamp--partial">Partial</span></td><td>The interface has no dependencies to pin, which satisfies the requirement in the strongest possible way: there is nothing to resolve. The Python model stack does have dependencies, numpy and scipy, and does not yet have a lockfile. That is a real gap.</td></tr>
-              <tr><td>A repository under 50&nbsp;MB</td><td><span class="stamp stamp--done">Met</span></td><td>Under 5&nbsp;MB, most of it photographs.</td></tr>
-              <tr><td>Hosted on iGEM's GitLab. Code hosted anywhere else is not eligible for evaluation.</td><td><span class="stamp stamp--void">Not yet</span></td><td>The mirror to <code>gitlab.igem.org/2026/software-tools/</code> is outstanding, and it gates eligibility rather than quality. Before 21 October 2026.</td></tr>
-            </tbody>
-          </table>
-        </div>
-
-        <p><code>software/ui/0906UI.html</code> is a copy of the live source at <code>Bioreactor_UI/0906UI.html</code>, taken 2026-09-06 at 18:49 CST, 4,165 lines, SHA-256 <code>4f3a9733&hellip;9dc9875ba</code>. It is the build audited in the written digital-twin criteria document, and the build in which the page first reads the firmware's <code>PV</code> telemetry, which is the date the link between rig and software became two-way. Because the interface is a single file with no dependencies, dropping in a newer version is one file replaced and one line of the README changed.</p>
-
-        <h3 id="aspects">Against the six Best Software aspects</h3>
-        <p class="stand">One is strong. <b>One we fail outright</b>, and it is aspect&nbsp;1.</p>
-
-        <div class="tablewrap">
-          <table class="data">
-            <thead><tr><th scope="col">Aspect</th><th scope="col">ReLeaf</th><th scope="col">Honest answer</th></tr></thead>
-            <tbody>
-              <tr><td>1. Compatibility with, and leverage of, existing synthetic biology standards</td><td><span class="stamp stamp--void">Weak</span></td><td>This is our weakest line and we are not going to dress it up. There is no SBOL, no SynBioHub integration and no standard interchange format. The standards this tool follows are industrial rather than synthetic-biological: ISA-101 for the interface&nbsp;[8], and the Castillo-Hair parameterisation of CcaSR as the common vocabulary for the light layer&nbsp;[1]. Export is XLSX and CSV, which is interoperable but not a synbio standard.</td></tr>
-              <tr><td>2. Validated by experimental work</td><td><span class="stamp stamp--partial">Partial</span></td><td>Two models calibrated against our own measured data. None validated against data it was not fitted to. The register above lists exactly which experiments close the gap. The strongest experimental result the software has produced is not a model fit at all: the measurement trust layer found a real instrument failure in a real run, 26.7&nbsp;h before that instrument's output became unusable.</td></tr>
-              <tr><td>3. Useful to other projects</td><td><span class="stamp stamp--partial">Partial</span></td><td>This section is written to make it answerable rather than asserted. The shell generalises; the process model does not, and does not claim to. No other team has used it yet, so this is a designed-for claim.</td></tr>
-              <tr><td>4. Integration with external tools</td><td><span class="stamp stamp--partial">Partial</span></td><td>Two integration surfaces exist and are documented: a serial protocol any microcontroller can implement, and a batch export that opens directly in Excel with units on every column and numbers stored as numbers. There is no API and no container, because the deployment target is a device with no network.</td></tr>
-              <tr><td>5. User-friendly</td><td><span class="stamp stamp--done">Strong</span></td><td>This is the aspect the whole project bends toward, because the user is a grower and not a scientist. Plain-language subtitles under every reading, analog context so that &ldquo;is 6.4 good?&rdquo; is answerable without training, one-touch recipes, an alarm model designed to avoid the nuisance alarms that teach people to ignore alarm lists, full Traditional Chinese, and touch targets sized for a panel. It has not been tested with an actual farmer.</td></tr>
-              <tr><td>6. Written and documented for future groups to extend</td><td><span class="stamp stamp--partial">Partial</span></td><td>Documented: yes, thoroughly, including the reasoning behind decisions rather than only their outcome. Written to extend: partly. One 4,165-line file with numbered section banners is navigable but it is not modular, and there are no tests. We chose that deliberately, and the cost is stated above.</td></tr>
-            </tbody>
-          </table>
-        </div>
-
-        <h3 id="limits">Limits, corrections and open questions</h3>
-        <p class="stand">Four things on this page are not what they look like, and <b>this list is not exhaustive</b>. Absence from it proves nothing.</p>
-
-        <ul>
-          <li><b>The process values in the demonstration build are simulated.</b> Open the file on a laptop &mdash; or scroll back up to the frame &mdash; and the numbers move, but they are a simulation so the interface can be shown without a rig. Real values require a board on the other end of the serial link.</li>
-          <li><b>The weather is a manual snapshot, not a live feed.</b> The Environment view computes real indices from real numbers, but somebody pasted those numbers in. The code flags this with <code>live: false</code>.</li>
-          <li><b>The trust layer is not on the board.</b> It is Python on a laptop. The interface uses a hand-written stand-in scoring function in its place, and the code comment says so. The 26.7&nbsp;h lead time is a retrospective result on a completed log, not something the reactor did live.</li>
-          <li><b>PT-04 and PT-05 are derived, not characterised.</b> They come off the lumen pump curve. The shell side has never been characterised on this rig, so treat both as indicative.</li>
-        </ul>
-
-        <h4>The omission we are least comfortable with is that a file which can move a pump has no tests</h4>
-        <p>No unit tests, no continuous integration, no static analysis. Alongside it: no lockfile for the Python model stack, which does have dependencies, so the model half is not reproducible to the standard the handbook asks for; no SBOL, no SynBioHub, no Registry integration; no closed loop, no model predictive control and no optimiser wired to an actuator, which is deliberate because a threshold closed loop on our own data is not better than a fixed recipe; no accessibility audit, since focus states and touch targets were designed for and contrast was checked by eye, but neither was tested with assistive technology or with a colour-vision-deficient reader; and no user testing with a farmer, so until a grower has sat in front of it, every usability claim on this page is a design intention.</p>
-
-        <h4>Three things we got wrong, and the corrections</h4>
-        <p><b>The light direction was reversed in an earlier draft.</b> Green switches the CcaS/CcaR system on in <i>B. subtilis</i> and red switches it off. An early version of the interface had it the other way round, which would have driven the panel red on the Induce recipe. It is now stated in the README, in the firmware comment beside the two digital writes, and in the interface, because it is the single easiest thing on this project to get backwards.</p>
-
-        <p><b>An earlier internal report said neither our photometer nor the BioDrop was usable above OD&nbsp;1.2.</b> Scored against known TiO&#8322; dose rather than against each other, the instrument that misbehaves at high concentration is the BioDrop. The old sentence put both in the same basket and was not accurate enough.</p>
-
-        <p><b>A dry-running interlock was deleted rather than left blind</b> when the tank level sensor was removed from the design. Deleting a safety rule is uncomfortable and is recorded rather than quietly done.</p>
-
-        <h4>Six questions about the rig itself are still open</h4>
-        <p>V-03 had no remaining function once the shell loop lost its valves and was removed; it was not on the removal list, and whether it should come back somewhere is unconfirmed. PT-03 appeared on both the removal list and the relocation instruction, and is kept and moved under the module on the lumen side, which is what the relocation asked for; if it should be gone entirely, that has not been said. The orange circle marked D on the whiteboard schematic is currently drawn as D-01, a bubble trap or pulsation damper, and is unconfirmed. The membrane cutoff decision is not a note-keeping discrepancy: 0.2&nbsp;&micro;m and 50&nbsp;kDa are two different devices with opposite consequences, and only one of them makes &ldquo;passes only protein&rdquo; true; the module fitted is 0.2&nbsp;&micro;m microfiltration. Which organism goes where: the interface, its README and the equipment register all say <i>B. subtilis</i>, and that is correct, because it is the production chassis and it is what runs in the reactor, while <i>E. coli</i> K-12 appears elsewhere in the project on purpose as the cloning host. And the fibre bore: the interface carries a standing comment that its fibre radius constant is used as 0.5&nbsp;mm, and if 0.5&nbsp;mm is actually the bore diameter, then wall shear, which goes as the inverse cube of the radius, is eight times low and the Reynolds number is two times low. Both numbers appear on the Overview. Confirm against the physical module before either is quoted anywhere.</p>
-
-        <h4>Every number on this page resolves to a named file in the project</h4>
-        <p class="aside"><code>Bioreactor_UI/README.md</code> holds the design basis, the serial protocol, the pin map, the equipment register and the process-model constants. <code>Bioreactor_UI/0906UI.html</code> is the interface, copied into this wiki as <code>software/ui/0906UI.html</code> and embedded above. <code>Bioreactor_UI/firmware/releaf_br01.ino</code> is the interlocks and the 1&nbsp;Hz scan, 146 lines. <code>Bioreactor_UI/data/od600_growth_run_20260721.csv</code> is the 434-hour run, 221 binned points. <code>Bioreactor_UI/data/hfm_pump_calibration.csv</code> is the measured pump curve, model M1, and <code>data/rig_constants.csv</code> the membrane geometry, fit coefficients and limits. <code>Math&nbsp;Model/releaf-model/params/parameters.yaml</code> carries every parameter with a <code>fixed</code>, <code>lit</code>, <code>calc</code> or <code>verify</code> tag, and nothing tagged <code>verify</code> may be reported as a result. <code>Math&nbsp;Model/releaf-model/out/sentinel.json</code> is the trust layer, the lead time and the calibration audit, over <code>data/photometer_20260721.csv</code> and its 2,671 valid rows. <code>Opto_Math/2019_Castillo_Math.pdf</code> is the Hill function and the kinetic model as written by the original author. <code>Bioreactor_UI/docs/DIGITAL_TWIN_CRITERIA.md</code> is the written audit the scorecard above follows, and <code>WikiHomepage/PROJECT_BRIEF.md</code> the rules this page was written under, including the prohibition on any cost claim.</p>
-
-        <p>The reactor this software drives is on <a href="../hardware/">Hardware</a>; the transport, sizing and membrane calculations behind models M2 to M4 are on <a href="../bioreactor-calculations/">Bioreactor Calculations</a>; the peptide the yield chain is bounding is on <a href="../peptide-design/">Peptide Design</a>; the cloning record for the CcaS/CcaR circuit the light layer models is on <a href="../engineering/">Engineering</a>; and the day-to-day record of this work is in the <a href="../drylab-notebook/">Dry Lab Notebook</a>.</p>
+        <p><code>software/ui/0906UI.html</code> is the 6 September 2026 build, 4,165 lines, SHA-256 <code>4f3a9733&hellip;9dc9875ba</code>, licensed MIT. The 2026 Judge Handbook requires competing software to be hosted on iGEM's GitLab&nbsp;[7]; the mirror to <code>gitlab.igem.org/2026/software-tools/</code> is outstanding and will be made before the wiki freeze. The reactor is described on <a href="../hardware/">Hardware</a>, and the transport and membrane calculations on <a href="../bioreactor-calculations/">Bioreactor Calculations</a>.</p>
       </section>
 
       <section class="refs" id="references">
         <h2 data-no-toc>References</h2>
         <ol>
-          <li>Castillo-Hair, S.&nbsp;M., Baerman, E.&nbsp;A., Fujita, M., Igoshin, O.&nbsp;A., &amp; Tabor, J.&nbsp;J. (2019). Optogenetic control of <i>Bacillus subtilis</i> gene expression. <i>Nature Communications</i> <b>10</b>, 3099. Source of the CcaSR Hill parameters, the time constants and the MEFL figures. <a href="https://doi.org/10.1038/s41467-019-10906-6" target="_blank" rel="noopener">doi:10.1038/s41467-019-10906-6</a></li>
-          <li>Gerhardt, K.&nbsp;P., Olson, E.&nbsp;J., Castillo-Hair, S.&nbsp;M., Hartsough, L.&nbsp;A., Landry, B.&nbsp;P., Ekness, F., Yokoo, R., Gomez, E.&nbsp;J., Ramakrishnan, P., Suh, J., Savage, D.&nbsp;F., &amp; Tabor, J.&nbsp;J. (2016). An open-hardware platform for optogenetics and photobiology. <i>Scientific Reports</i> <b>6</b>, 35363. The Light Plate Apparatus design our light hardware is built to. <a href="https://doi.org/10.1038/srep35363" target="_blank" rel="noopener">doi:10.1038/srep35363</a></li>
-          <li>Haller, D.&nbsp;J., Castillo-Hair, S.&nbsp;M., &amp; Tabor, J.&nbsp;J. (2025). Optogenetic control of <i>B. subtilis</i> gene expression using the CcaSR system. In A. Baumschlager (Ed.), <i>Optogenetics: Methods and Protocols</i> (Methods in Molecular Biology, Vol.&nbsp;2840, ch.&nbsp;1). Source of the 535&nbsp;nm CcaS absorption maximum and the protocols behind experiment E1. <a href="https://doi.org/10.1007/978-1-0716-4047-0_1" target="_blank" rel="noopener">doi:10.1007/978-1-0716-4047-0_1</a></li>
-          <li>Portela, R.&nbsp;M.&nbsp;C., Varsakelis, C., Richelle, A., Giannelos, N., Pence, J., Dessoy, S., &amp; von&nbsp;Stosch, M. (2021). When is an in silico representation a digital twin? A biopharmaceutical industry approach to the digital twin concept. <i>Advances in Biochemical Engineering/Biotechnology</i> <b>176</b>, 35&ndash;56. The connectivity triad and the nine-step build list. <a href="https://doi.org/10.1007/10_2020_138" target="_blank" rel="noopener">doi:10.1007/10_2020_138</a></li>
-          <li>Zobel-Roos, S., Schmidt, A., Uhlenbrock, L., Ditz, R., K&ouml;ster, D., &amp; Strube, J. (2021). Digital twins in biomanufacturing. <i>Advances in Biochemical Engineering/Biotechnology</i> <b>176</b>, 181&ndash;262. The model-type taxonomy, the QbD and PAT chain, and the Sargent validation criterion. <a href="https://doi.org/10.1007/10_2020_146" target="_blank" rel="noopener">doi:10.1007/10_2020_146</a></li>
-          <li>Gargalo, C.&nbsp;L., Ca&ntilde;o de las Heras, S., Jones, M.&nbsp;N., Udugama, I., Mansouri, S.&nbsp;S., Kr&uuml;hne, U., &amp; Gernaey, K.&nbsp;V. (2021). Towards the development of digital twins for the bio-manufacturing industry. <i>Advances in Biochemical Engineering/Biotechnology</i> <b>176</b>, 1&ndash;34. The digital shadow definition: one-way automated dataflow, physical to digital only. <a href="https://doi.org/10.1007/10_2020_142" target="_blank" rel="noopener">doi:10.1007/10_2020_142</a></li>
-          <li>Wang, X., Yu, H., Zhang, X., <i>et al.</i> (2022). PAMP-induced secreted peptide 3 modulates salt tolerance through receptor-like kinase 7 in plants. <i>International Journal of Molecular Sciences</i> <b>23</b>, 3090. Source of the BoPep4 sequence, its 2408.3&nbsp;Da mass, and the 100&nbsp;nM effective dose against 200&nbsp;mM NaCl that model M8 is compared to.</li>
-          <li>ISA-101, <i>Human Machine Interfaces for Process Automation Systems</i>. The high-performance HMI standard behind Emerson DeltaV Live, Sartorius Biostat and Eppendorf BioFlo, and the design basis for the whole interface.</li>
-          <li>iGEM Foundation. (2026). <i>2026 Judge Handbook</i>. The software requirements and the six Best Software aspects, and the hosting rule the GitLab mirror answers to.</li>
+          <li>Portela, R.&nbsp;M.&nbsp;C., Varsakelis, C., Richelle, A., Giannelos, N., Pence, J., Dessoy, S., &amp; von&nbsp;Stosch, M. (2021). When is an in silico representation a digital twin? A biopharmaceutical industry approach to the digital twin concept. <i>Advances in Biochemical Engineering/Biotechnology</i> <b>176</b>, 35&ndash;56. <a href="https://doi.org/10.1007/10_2020_138" target="_blank" rel="noopener">doi:10.1007/10_2020_138</a></li>
+          <li>Kritzinger, W., Karner, M., Traar, G., Henjes, J., &amp; Sihn, W. (2018). Digital twin in manufacturing: A categorical literature review and classification. <i>IFAC-PapersOnLine</i> <b>51</b>(11), 1016&ndash;1022. <a href="https://doi.org/10.1016/j.ifacol.2018.08.474" target="_blank" rel="noopener">doi:10.1016/j.ifacol.2018.08.474</a></li>
+          <li>Gargalo, C.&nbsp;L., Ca&ntilde;o de las Heras, S., Jones, M.&nbsp;N., Udugama, I., Mansouri, S.&nbsp;S., Kr&uuml;hne, U., &amp; Gernaey, K.&nbsp;V. (2021). Towards the development of digital twins for the bio-manufacturing industry. <i>Advances in Biochemical Engineering/Biotechnology</i> <b>176</b>, 1&ndash;34. <a href="https://doi.org/10.1007/10_2020_142" target="_blank" rel="noopener">doi:10.1007/10_2020_142</a></li>
+          <li>Zhao, S., Jiao, T., Adade, S.&nbsp;Y.-S.&nbsp;S., Wang, Z., Ouyang, Q., &amp; Chen, Q. (2025). Digital twin for predicting and controlling food fermentation: A case study of kombucha fermentation. <i>Journal of Food Engineering</i> <b>393</b>, 112467. <a href="https://doi.org/10.1016/j.jfoodeng.2025.112467" target="_blank" rel="noopener">doi:10.1016/j.jfoodeng.2025.112467</a></li>
+          <li>Satwekar, A., Gracieux-Singleton, M.&nbsp;C., Cummings, C., Horton, J.&nbsp;A.&nbsp;R., Accerbi, M., Palakollu, V., Barton, R.&nbsp;R., Kedia, S., Cornish, T., Yandrofski, K.&nbsp;S., Hart, R., Berlinghieri, D., Saylor, J., &amp; Lee, K.&nbsp;H. (2026). Operationalizing digital twins in biomanufacturing through interoperable process analytical technology. <i>Bioprocess and Biosystems Engineering</i> <b>49</b>, 2061&ndash;2083. <a href="https://doi.org/10.1007/s00449-026-03369-9" target="_blank" rel="noopener">doi:10.1007/s00449-026-03369-9</a></li>
+          <li>Bland, J.&nbsp;M., &amp; Altman, D.&nbsp;G. (1986). Statistical methods for assessing agreement between two methods of clinical measurement. <i>The Lancet</i> <b>327</b>(8476), 307&ndash;310. <a href="https://doi.org/10.1016/S0140-6736(86)90837-8" target="_blank" rel="noopener">doi:10.1016/S0140-6736(86)90837-8</a></li>
+          <li>iGEM Foundation. (2026). <i>2026 Judge Handbook</i>. Software hosting and documentation requirements.</li>
         </ol>
       </section>
 
