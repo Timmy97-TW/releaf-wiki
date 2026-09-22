@@ -219,7 +219,24 @@
     wake();
   }
 
+  /* A keyboard user's first Tab lands here, not on the links of the
+     navigation. It points at the page's <main>, giving it an id if it has
+     none; pages with their own skip link (hardware) or no <main> are left
+     alone. Styled in nav-rail.css, off-screen until focused. */
+  function skipLink() {
+    var main = document.querySelector("main");
+    if (!main || document.querySelector(".skip-link, .sitenav-skip")) return;
+    if (!main.id) main.id = "main";
+    if (!main.hasAttribute("tabindex")) main.setAttribute("tabindex", "-1");
+    var a = document.createElement("a");
+    a.className = "sitenav-skip";
+    a.href = "#" + main.id;
+    a.textContent = "Skip to content";
+    document.body.prepend(a);
+  }
+
   document.addEventListener("DOMContentLoaded", function () {
+    skipLink();
     var mount = document.getElementById("nav-rail");
     if (mount) build(mount);
   });
