@@ -18,9 +18,11 @@
                    page's own `data-base`, so the same file works at any depth.
    To add an icon: add a key to ICONS in nav.js (inner SVG markup, stroked,
                    24x24 viewBox) and reference it with `icon:`.
-   Tab artwork:    each tab looks for assets/img/tab-icons/<id>.png (or .svg, set
-                   `art:` to override). Missing files are skipped silently, so
-                   the nav stays clean until the drawings arrive.
+   Tab artwork:    drop the drawing into assets/img/tab-icons/<id>.png and set
+                   `art: true` on that tab, or `art: "assets/img/tab-icons/x.svg"`
+                   (a path from the wiki root) for another name. Tabs without
+                   `art` request nothing, so the console stays clean until the
+                   drawings arrive.
    ========================================================================== */
 
 const NAV = [

@@ -114,13 +114,18 @@
 
       const rail = el("div", "sitenav__rail");
 
-      /* student artwork, if it has been dropped into assets/img/tab-icons/ */
-      const art = document.createElement("img");
-      art.className = "sitenav__railart";
-      art.src = tab.art || BASE + "assets/img/tab-icons/" + tab.id + ".png";
-      art.alt = "";
-      art.onerror = () => art.remove();
-      rail.appendChild(art);
+      /* student artwork, only for tabs that name it in site-nav.js: `art: true`
+         means assets/img/tab-icons/<id>.png, a string is a path from the wiki
+         root. Probing for files that are not there would put five 404s in the
+         console of every page. */
+      if (tab.art) {
+        const art = document.createElement("img");
+        art.className = "sitenav__railart";
+        art.src = BASE + (tab.art === true ? "assets/img/tab-icons/" + tab.id + ".png" : tab.art);
+        art.alt = "";
+        art.onerror = () => art.remove();
+        rail.appendChild(art);
+      }
 
       rail.appendChild(el("h2", "sitenav__railtitle", tab.name));
       rail.appendChild(el("p", "sitenav__railblurb", tab.blurb));
