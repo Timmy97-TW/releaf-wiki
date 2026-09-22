@@ -1036,7 +1036,7 @@ JS = r"""
         });
       });
     });
-    readRung(9);
+    readRung(Number(slider.value) || 9);   /* Firefox restores the slider on reload */
   }
 
   /* ---- 4. the benchmark view -------------------------------------------- */
