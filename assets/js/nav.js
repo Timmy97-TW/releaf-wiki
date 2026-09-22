@@ -77,6 +77,11 @@
     const currentPage = root.dataset.page || "";
 
     root.classList.add("sitenav");
+    /* a landmark, so screen readers can jump to it and nothing in it sits
+       outside every landmark. The tabs are disclosure buttons (aria-expanded),
+       not a menubar: a menubar promises menuitems and arrow-key menus. */
+    root.setAttribute("role", "navigation");
+    root.setAttribute("aria-label", "Site");
     root.innerHTML =
       '<div class="sitenav__bar">' +
         '<div class="sitenav__inner">' +
@@ -84,7 +89,7 @@
             '<img class="sitenav__logo" src="' + logo + '" alt="ReLeaf team logo" />' +
             '<span class="sitenav__word">ReLeaf</span>' +
           "</a>" +
-          '<div class="sitenav__tabs" role="menubar"></div>' +
+          '<div class="sitenav__tabs"></div>' +
           '<button class="sitenav__burger" aria-expanded="false" aria-label="Open menu">' +
             "<span></span><span></span><span></span></button>" +
         "</div>" +
@@ -319,6 +324,60 @@
     document.body.prepend(a);
   }
 
+  /* A box that scrolls on its own (a wide table on a phone, a wide figure)
+     has to be reachable from the keyboard, or whatever sits past its edge can
+     only be seen with a mouse or a finger. While, and only while, such a box
+     overflows and holds nothing focusable, it gets a tab stop and a name
+     (role="group", not "region", so thirty tables do not become thirty
+     landmarks). The same function sits in nav-rail.js. */
+  function scrollRegions() {
+    const FOCUSABLE = 'a[href], button, input, select, textarea, summary, iframe, ' +
+                      '[contenteditable], [tabindex]:not([tabindex="-1"])';
+    const scrolls = (v) => v === "auto" || v === "scroll";
+    const name = (el, sideways) => {
+      const cap = el.querySelector("caption, figcaption");
+      let t = cap ? cap.textContent.replace(/¶/g, "").replace(/\s+/g, " ").trim() : "";
+      if (t.length > 90) t = t.slice(0, 88).replace(/\s\S*$/, "") + "…";
+      return (t || (el.querySelector("table") ? "Table" : el.querySelector("svg, canvas, img") ? "Figure" : "Content")) +
+             (sideways ? ", scrolls sideways" : ", scrolls");
+    };
+    const unmark = (el) => {
+      (el.dataset.scrollstop || "").split(" ").forEach((a) => a && el.removeAttribute(a));
+      delete el.dataset.scrollstop;
+    };
+    const check = () => {
+      const keep = new Set();
+      document.querySelectorAll("body *").forEach((el) => {
+        const wide = el.scrollWidth > el.clientWidth + 1;
+        const tall = el.scrollHeight > el.clientHeight + 1;
+        if (!wide && !tall) return;
+        const cs = getComputedStyle(el);
+        const sideways = wide && scrolls(cs.overflowX);
+        if (!sideways && !(tall && scrolls(cs.overflowY))) return;
+        if (el.dataset.scrollstop != null) { keep.add(el); return; }   /* already ours */
+        if (el.hasAttribute("tabindex")) return;       /* someone already chose */
+        if (el.querySelector(FOCUSABLE) || el.closest('[aria-hidden="true"], [inert]')) return;
+        const added = ["tabindex"];
+        el.tabIndex = 0;
+        if (!el.hasAttribute("aria-label") && !el.hasAttribute("aria-labelledby")) {
+          if (!el.hasAttribute("role")) { el.setAttribute("role", "group"); added.push("role"); }
+          el.setAttribute("aria-label", name(el, sideways)); added.push("aria-label");
+        }
+        el.dataset.scrollstop = added.join(" ");
+        keep.add(el);
+      });
+      document.querySelectorAll("[data-scrollstop]").forEach((el) => { if (!keep.has(el)) unmark(el); });
+    };
+    let timer = null;
+    const soon = () => { clearTimeout(timer); timer = setTimeout(check, 250); };
+    if (document.readyState === "complete") soon();
+    else window.addEventListener("load", soon);
+    window.addEventListener("resize", soon);
+    /* tabs, <details> and accordions change what overflows */
+    document.addEventListener("click", soon);
+    document.addEventListener("toggle", soon, true);
+  }
+
   /* Demo wiki only: outline what breaks an iGEM rule (assets/js/rulecheck.js).
      Switched off with window.RULECHECK = false in assets/data/site-nav.js. */
   function ruleCheck(base) {
@@ -333,6 +392,7 @@
     const root = document.getElementById("site-nav");
     if (root) build(root);
     skipLink();
+    scrollRegions();
     ruleCheck(root && root.dataset.base != null ? root.dataset.base : "");
   });
 })();
