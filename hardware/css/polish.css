@@ -2122,3 +2122,104 @@ body.doc-light .bom-meter { background: rgba(15, 19, 25, .10); }
    their own fade to black (the judge's pass, 13 Sep: it read as a blink). */
 @view-transition { navigation: auto; }
 @media (prefers-reduced-motion: reduce) { @view-transition { navigation: none; } }
+
+
+/* ---- reading-label floor (accessibility, Sep 2026) ----------------------
+   The section set many of its uppercase mono labels at 7-10px. This block
+   raises every label a reader has to read to 11px, and table headers,
+   captions and definition terms to 12px. It changes size only: colour,
+   tracking, case and layout are left as they were.
+
+   Scope. Floored: labels, tags, figure and table numbers, step numbers,
+   captions, control labels, hints and the notebook's page/week labels.
+   Left alone on purpose, as decoration or as parts of a larger figure:
+     · SVG chart text (.i2-*, .od-grid, .od-xt, .od-ax, .od-phase, .bp-loop,
+       .autodraw/.syswalk text.dim): it scales with its viewBox, so its
+       declared size is not its drawn size;
+     · unit suffixes set in em inside a big number (.stats dd em,
+       .headline-stats b em, .keynote-fig em, .rl-v em, .mx-v em);
+     · the week ruler on the notebook's build timeline below 760px, where
+       21 ticks share a phone's width (the lane spans and readout carry the
+       same weeks); it is floored at wider widths;
+     · the transient 3D loader ("Loading 100%");
+     · the 3D panels' outlined part number (.panel > .tag). It is meant to be
+       2.3rem, but the record's later `.tag` pill rule (.52rem) wins at
+       desktop widths, so it draws at 8.3px there. The HUD counter carries the
+       same number (floored above); fixing the number is a design call left
+       to upstream.
+
+   Each selector repeats the original with `:root body` in front, so it wins
+   on specificity whatever order the page loads its sheets in (the notebook
+   page loads notebook.css after this file). Two originals are !important,
+   so their floor is too. When carrying this upstream, the cleaner fix is to
+   edit the size at each original rule; this list names every one of them. */
+
+/* 11px: labels */
+:root body :is(
+  .eyebrow, .stats dt, .scroll-cue, .prole, .spec-k, .build-n, .legend-h,
+  .ch-name, .ch-val, .legend-f, .counter, .doc-nav-label,
+  .doc-nav a b, .part-mark span, .openitem-tag, .spec-card-title, .iter-n,
+  .delta span, .filter-steps b, .metrics span, .fig-slot span,
+  .headline-stats span, .phases span, .mx-h, .mx-w, .mx-v, .mx-note, .mx-hint,
+  .i2-h, .frame figcaption b, .frame-note, .fignum, .cad-dl, .map-n,
+  .stage-hint, .lg, .circuit-tag, .rel-n, .iter-date, .pick-role,
+  .pick-link, .pick-clear, .pick-list-head, .pick-role-sm, .planned b,
+  .working-name, .title-rule span, .od-read span, .od-hint,
+  /* polish.css */
+  .bom-count, .onward-k, .p-kind, .p-sub, .palette-foot, .palette-hint,
+  .palette-foot kbd, .palette-hint kbd, .wipe-tag,
+  .wipe-vs, .wipe-picks button, .autodraw figcaption b,
+  .syswalk-fig figcaption b, .backbtn, .triple-label b, .triple figcaption b,
+  .feature-tag, .triple-play, .triple-jump button, .demo-head b,
+  .demo-controls label, .demo-controls button, .demo figcaption b,
+  .score-col > h4, .score-col > h5, .score-col li cite, .syswalk-readout,
+  .syswalk-step-n,
+  /* hub.css */
+  .deck-n, .deck-role, .deck-go, .lanes-rule, .lanes-readout-w, .lane-name,
+  .lane-span, .bp-head, .sys-tag,
+  /* notebook.css */
+  .nb-chip, .nb-field, .nb-edge-l, .nb-key-i, .nb-bar, .nb-reel-play,
+  .nb-pick-w, .nb-go-sub, .nbr-rail-h, .nbr-rail a b, .nbr-page figcaption,
+  .nbr-hit-w
+) { font-size: .6875rem; }
+
+/* hydroponics leaves these two unstyled (16px); only the pages that shrank them */
+:root body:not([data-instrument="hydroponics"]) :is(.outro-meta, .skip-link) { font-size: .6875rem; }
+
+:root body :is(.protocol li)::before,
+:root body :is(.blank-slot, .frame.empty .frame-img)::after,
+:root body.doc-light :is(.frame, .frames .frame)::after,
+:root body.doc-light .frame.empty .frame-img::before,
+:root body :is(.autodraw.scrolls, .syswalk-fig.scrolls)::after { font-size: .6875rem; }
+:root body.doc-light .frame figcaption b { font-size: .6875rem; }
+:root body .specgrid h4, :root body .map-more { font-size: .6875rem !important; }
+
+/* The record's tag pills. Not the 3D panels' big outlined part number, which
+   is also .tag (2.3rem, a direct child of .panel). This also undoes an upstream
+   slip: the instrument pages' `@media (max-width: 900px) { .tag { font-size:
+   1.8rem } }` was meant for that number and blew the pills up to 28.8px on a
+   phone; they now read 11px at every width. */
+:root body :not(.panel) > .tag { font-size: .6875rem; }
+
+/* the hydroponics story cards scale their tag with the card (--ck) */
+:root body[data-instrument="hydroponics"] .panel :is(.tag, .prole) { font-size: max(.6875rem, calc(.66rem * var(--ck, 1))); }
+
+/* the hub's orbit labels keep their container-width scaling above 11px */
+:root body.hub .orb-word { font-size: clamp(.6875rem, .74cqw, .75rem); }
+:root body.hub .orb-k { font-size: clamp(.6875rem, .76cqw, .75rem); }
+
+@media (min-width: 761px) { :root body .lanes-scale { font-size: .6875rem; } }
+/* on a phone the lane names had 6.5rem and already clipped three of seven;
+   1rem more keeps the same names readable at the larger size */
+@media (max-width: 760px) { :root body .lanes-panel { --nx-l: 7.5rem; } }
+
+/* 12px: table headers, captions, definition terms. 11px on a phone, where
+   12px tracked capitals squeezed the tables' text columns (the DiOPAL bill of
+   materials grew a sixth of its height) and sat level with the values under
+   them. */
+:root body :is(table caption, table th, .spec-card dt, .demo-read dt, .bom-facts dt),
+:root body.doc-light table.bom caption { font-size: .75rem; }
+@media (max-width: 600px) {
+  :root body :is(table caption, table th, .spec-card dt, .demo-read dt, .bom-facts dt),
+  :root body.doc-light table.bom caption { font-size: .6875rem; }
+}
