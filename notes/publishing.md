@@ -38,6 +38,14 @@ have to change:
 
 ## Before the freeze, in order
 
+Run `python3 build/audit.py` first, and again after every batch of changes. It
+reads every page and lists what would break or be blocked on the iGEM wiki:
+resources from outside iGEM, links to files or anchors that do not exist, paths
+that only work on a case-insensitive disk, standard addresses without a page,
+and every scaffold, status, pending and placeholder marker still on a page. It
+changes nothing, needs only Python, and exits non-zero while anything blocking
+remains.
+
 - [ ] Every page's Status reads Final, and Last updated is a real date
 - [ ] No `scaffold` or `status` blocks left anywhere
 - [ ] Every figure placeholder replaced or the figure removed
