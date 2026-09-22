@@ -252,6 +252,18 @@ window.__homeRx = (function () {
   var comps = {};          // id -> [{ mat, hex, ei }]
   var ACCENT = { lumen: 0xff8a2e, shell: 0x3ddc8b, both: 0x5aa9ff };
   var litIds = [];
+  // What the parts list last asked for. A part can be pointed at while the
+  // model is still loading; the request is kept and applied once it is ready.
+  var wantIds = [];
+
+  function applyHighlight() {
+    if (!ready) return;
+    if (wantIds.join(" ") === litIds.join(" ")) return;
+    litIds.forEach(function (x) { paint(x, 0); });
+    litIds = wantIds.slice();
+    litIds.forEach(function (x) { paint(x, 0.45); });
+    if (reduced) render();
+  }
 
   function indexComponents() {
     if (typeof BIO_COMPONENTS === "undefined") return;
@@ -363,6 +375,7 @@ window.__homeRx = (function () {
     indexComponents();
     if (loadEl) loadEl.hidden = true;
     ready = true;
+    applyHighlight();
     run();
   }
 
@@ -403,14 +416,9 @@ window.__homeRx = (function () {
     // together — so this takes an id, a space-separated list of ids, or an
     // array, and lights the whole set.
     highlight: function (id) {
-      if (!ready) return;
-      var next = (id == null ? [] : (Array.isArray(id) ? id : String(id).split(/\s+/)))
-                   .filter(Boolean);
-      if (next.join(" ") === litIds.join(" ")) return;
-      litIds.forEach(function (x) { paint(x, 0); });
-      litIds = next;
-      litIds.forEach(function (x) { paint(x, 0.45); });
-      if (reduced) render();
+      wantIds = (id == null ? [] : (Array.isArray(id) ? id : String(id).split(/\s+/)))
+                  .filter(Boolean);
+      applyHighlight();
     },
   };
 })();
