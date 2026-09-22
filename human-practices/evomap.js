@@ -153,7 +153,7 @@
       b.type = "button";
       b.addEventListener("click", function () {
         var h = grid.querySelector('[data-month="' + k + '"]');
-        if (h) h.scrollIntoView({ behavior: "smooth", block: "start" });
+        if (h) h.scrollIntoView({ behavior: matchMedia("(prefers-reduced-motion: reduce)").matches ? "auto" : "smooth", block: "start" });
       });
       r2.appendChild(b);
     });
