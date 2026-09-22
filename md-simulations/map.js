@@ -605,7 +605,7 @@
 
     return '<figure class="hero__panel">' +
       '<svg viewBox="0 0 ' + B.w + " " + B.h + '" role="img" aria-label="' +
-        esc(L(meta.title)) + '">' + o.join("") + "</svg>" +
+        esc(S(meta.title)) + '">' + o.join("") + "</svg>" +   // S, not L: meta.title is a key
       "<figcaption>" +
         '<b class="hero__name">' + S(meta.title) + "</b>" +
         '<span class="hero__bident is-' + meta.tone + '">' +
