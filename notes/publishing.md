@@ -18,8 +18,16 @@ only copy that gets judged. Content on any other host is outside the
 competition and cannot be scored, which includes this GitHub repository once
 the season is running.
 
-Moving over is mostly a copy, because there is no build step. The things that
-have to change:
+Moving over is not just a copy. iGEM's GitLab limits (checked on
+gitlab.igem.org/help/instance_configuration, 23 September 2026): a push can be at
+most **11 MiB** and a CI job artifact, which is what GitLab Pages deploys, at most
+**10 MiB**. This repository is about 150 MB, nearly all of it images, video,
+PDFs and 3D models, so every one of those files has to move to
+`static.igem.wiki` (video to `video.igem.org`) and only the code goes into the
+GitLab repository, pushed in pieces under 11 MiB. The official template builds
+into `public/` with its own `.gitlab-ci.yml`, so a job that copies this site into
+`public/` is needed too. The Releaf-Actual repository is a worked draft of that
+packaging. The things that have to change:
 
 1. **Re-host every image and the typeface on `static.igem.wiki`.** The wiki
    blocks resources served from another server, so a page whose photographs
@@ -30,13 +38,23 @@ have to change:
    - the two `@font-face` rules, in `assets/css/tokens.css` and
      `assets/css/team.css`
 2. **Put the real team number in the attributions iframe.** Replace `0000` in
-   `attributions/index.html`.
+   `attributions/index.html` with **6072** (GEMS Taiwan's 2026 team ID). The 2026
+   template also shows attributions on the team page itself; check it first.
 3. **Check every slug survived.** `notes/structure.md` has the table. This is
    the step that costs awards if it is skipped.
 4. **Delete every scaffold note.** Search for `class="scaffold"` and for
    `class="status"`; nothing carrying either should be on a published page.
 
 ## Before the freeze, in order
+
+The dates, from competition.igem.org/calendar (read 23 September 2026), all at
+23:00 Taipei time (GMT+8):
+
+| Date | What freezes or is due |
+|---|---|
+| 7 October | Project Safety Form, final version, submitted by a PI. Teams that miss it may be disqualified |
+| 21 October | Wiki, Attributions Form, Judging Form, Registry contributions, Software. No extensions; no Judging Form means no medals or awards |
+
 
 Run `python3 build/audit.py` first, and again after every batch of changes. It
 reads every page and lists what would break or be blocked on the iGEM wiki:
@@ -51,8 +69,14 @@ remains.
 - [ ] Every figure placeholder replaced or the figure removed
 - [ ] Every image and font served from `static.igem.wiki`
 - [ ] Attributions form filled in on teams.igem.org and embedding correctly
-- [ ] Software repository on `gitlab.igem.org/2026/software-tools/` under an
-      OSI-approved licence, if competing for Best Software
+- [ ] Software repository on `gitlab.igem.org/2026/software/<team>/` (the
+      2026 group; `2026/software-tools` does not exist) under an OSI-approved
+      licence, with a README and pinned dependencies, under 50 MB, if competing
+      for Best Software
+- [ ] The iGEM rule check (bottom-right button on every page of the demo wiki)
+      reads "clear" on every page, then `window.RULECHECK = false` in
+      `assets/data/site-nav.js` for the copy that goes to GitLab
+- [ ] Claude Code / AI use disclosed in the Attributions Form's AI section
 - [ ] Part documentation on the Registry, linked from `/parts` and
       `/contribution`
 - [ ] Safety forms filed, and `/safety-and-security` says which and when

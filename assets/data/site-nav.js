@@ -6,7 +6,7 @@
 
    THE `slug` FIELD IS THE URL AND IS NOT FREE TO CHANGE.
    iGEM fixes the URL of every judged page (2026 Judge Handbook, "Standard Pages
-   for Awards", p.28). A team is evaluated for a medal or a special award only if
+   for Awards", p.29). A team is evaluated for a medal or a special award only if
    the work sits at the standard address. Slugs marked STANDARD below are those
    addresses. Rename one and the award goes unjudged.
 

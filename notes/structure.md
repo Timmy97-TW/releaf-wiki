@@ -5,7 +5,7 @@
 The five tabs are a reading order. They are not part of any address.
 
 The 2026 Judge Handbook fixes the URL of every judged page ("Standard Pages for
-Awards", p.28): a team is evaluated for a medal or a special award only if the
+Awards", p.29): a team is evaluated for a medal or a special award only if the
 work sits at the standard address. So `human-practices` reads under the
 Engagement tab but lives at `/human-practices`, not `/engagement/human-practices`.
 
@@ -20,7 +20,7 @@ team three awards.
 | Results | `/results` | — |
 | Experiments | `/experiments` | — |
 | Parts | `/parts` | — |
-| Plants | `/plant` | Best Plant Synthetic Biology |
+| Plants | `/plant` | — (see below: no Plant award in 2026) |
 | Measurement | `/measurement` | Best Measurement |
 | Safety | `/safety-and-security` | Safety and Security Award |
 | Notebook | `/notebook` | — |
@@ -38,7 +38,7 @@ team three awards.
 | Geospatial Analysis | `/geospatial-analysis` | — |
 | Data Physicalization | `/data-physicalization` | — |
 | Inclusivity | `/inclusivity` | Inclusivity Award |
-| Members | `/team` | Bronze #1 (wiki) |
+| Members | `/team` | — (Bronze #1 is completing the deliverables; no URL) |
 | Attribution | `/attributions` | Bronze #2 |
 | Milestone | `/milestone` | — |
 | Gallery | `/gallery` | — |
@@ -47,6 +47,15 @@ team three awards.
 three special awards; if Inclusivity becomes one of the three, add it to the
 Engagement tab in `assets/data/site-nav.js`. If it does not, the page can be
 deleted, but leaving it costs nothing.
+
+**There is no Plant award in 2026.** Best Plant Synthetic Biology was folded
+into **Best Alternative Platform**, judged only at `/alternative-platform`
+(Judge Handbook p.48, p.83). That award covers "anything that is not E. coli,
+S. cerevisiae, and B. subtilis", so a *B. subtilis* project would have to argue
+its plant work as the platform. `/plant` stays on the wiki as the team's plant
+record, but no ballot links to it. If the team wants Alternative Platform as
+one of its Gold awards, the argument has to live at `/alternative-platform`.
+Checked against the 2026 handbook (v3) on 23 September 2026.
 
 ## How a page knows where it is
 
