@@ -346,7 +346,17 @@
   }, { passive: false });
   window.addEventListener("resize", render);
   if (embedded && "ResizeObserver" in window) {
-    new ResizeObserver(render).observe(canvas.parentElement);
+    /* render() sets the canvas height, which resizes this same parent (and
+       can bring in a scrollbar that changes its width) inside the observer's
+       own callback: Safari reported that as a "ResizeObserver loop" error.
+       Rendering on the next frame, and only when the width moved, breaks it. */
+    var lastW = 0, queued = false;
+    new ResizeObserver(function (entries) {
+      var w = entries[0].contentRect.width;
+      if (w === lastW || queued) return;
+      lastW = w; queued = true;
+      requestAnimationFrame(function () { queued = false; render(); });
+    }).observe(canvas.parentElement);
   }
 
   // 40 RPM puts exactly 4 revolutions in 6 seconds, and a 3-roller head repeats

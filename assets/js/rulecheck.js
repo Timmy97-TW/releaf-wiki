@@ -118,9 +118,9 @@
   font: 700 11px/1.3 system-ui, -apple-system, "Segoe UI", sans-serif; letter-spacing: .04em;
   color: #fff; background: var(--rc); padding: 3px 7px; border-radius: 4px; pointer-events: none;
   white-space: nowrap; box-shadow: 0 2px 6px rgb(0 0 0 / .2); }
-.rulecheck { position: fixed; right: 16px; bottom: 16px; z-index: 900; max-width: min(420px, calc(100vw - 32px));
+.rulecheck { position: fixed; left: 16px; bottom: 16px; z-index: 900; max-width: min(420px, calc(100vw - 32px));
   font: 14px/1.45 system-ui, -apple-system, "Segoe UI", sans-serif; color: #1d1d1f; }
-.rulecheck__btn { display: flex; align-items: center; gap: 8px; margin-left: auto; border: 0; cursor: pointer;
+.rulecheck__btn { display: flex; align-items: center; gap: 8px; margin-right: auto; border: 0; cursor: pointer;
   background: #b3261e; color: #fff; font: inherit; font-weight: 700; padding: 10px 14px; border-radius: 999px;
   box-shadow: 0 6px 20px rgb(0 0 0 / .25); }
 .rulecheck__btn[data-ok] { background: #23684a; }
@@ -141,6 +141,9 @@
 .rc-hidden .rc-mark { outline: none !important; }
 .rc-hidden .rc-tag { display: none; }
 .rc-hidden .rc-mark.rc-flash { outline: 3px dashed var(--rc) !important; }
+/* bottom-left: bottom-right is where the pages keep their own controls (the
+   hardware film's pause button); clear the Bioreactor Calculations rail */
+body:has(aside.rail) .rulecheck { left: 64px; }
 @media print { .rulecheck, .rc-tag { display: none !important; } .rc-mark { outline: none !important; } }`;
     document.head.appendChild(s);
   }
