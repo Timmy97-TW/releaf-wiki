@@ -408,13 +408,18 @@
     document.getElementById("bio-modal").classList.remove("is-open");
     document.body.style.overflow = "";
     if (lastFocus) lastFocus.focus();
+    lastFocus = null;
   }
 
   function wireModal() {
     const modal = document.getElementById("bio-modal");
     modal.querySelector(".modal__close").addEventListener("click", closeModal);
     modal.addEventListener("click", (e) => { if (e.target === modal) closeModal(); });
-    document.addEventListener("keydown", (e) => { if (e.key === "Escape") closeModal(); });
+    /* only when a profile is open: Escape also closes the nav, and must not
+       pull focus back to a card that was opened minutes ago */
+    document.addEventListener("keydown", (e) => {
+      if (e.key === "Escape" && modal.classList.contains("is-open")) closeModal();
+    });
   }
 
   /* ---------------------------------------------------------- mobile nav - */
