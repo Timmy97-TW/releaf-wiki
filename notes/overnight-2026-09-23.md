@@ -38,7 +38,7 @@ of `assets/data/site-nav.js`, which is how Releaf-Actual ships.
 
 ---
 
-## 2. What changed (37 commits)
+## 2. What changed (49 commits)
 
 **Navigation and every page**
 - `b2c11a0` The five-tab menu: hover-then-click closed the panel, a tap on a
@@ -85,6 +85,18 @@ of `assets/data/site-nav.js`, which is how Releaf-Actual ships.
 - Peptide Design, Team, Human Practices: small fixes (`b813f05`, `d68953e`,
   `a8b39dd`, `c648cd0`, `d2424ce`).
 - `9744690` The notes now match the 2026 rules (see section 4).
+
+**Accessibility scan (axe-core, 56 pages at two widths, plus menus and the
+lightbox open)**: failing checks went from 1,811 to about 1,050, and
+critical ones from 50 to 2. The site nav is a proper navigation landmark,
+sideways-scrolling tables can be scrolled from the keyboard, unnamed
+buttons, selects and links have names, `--gray-500` is a shade darker so
+grey text passes on tinted panels, and the footer links are underlined
+(`004252f` to `e611b11`, `b1f6c20`, `127b6da`). Most of what remains is in
+the ported education website's own design, which was left alone.
+- `238fb9c` Engineering: the intro and hint on the dark assembly-ladder plate
+  were drawn in dark ink (1.7:1, practically invisible). A CSS ordering slip;
+  they are readable again in the colours the design specified.
 
 ---
 
@@ -144,8 +156,14 @@ here.
    Education, and species names not in italics) and `links.md` (no dead
    links; three references on Plants to open by hand once).
 10. **Accessibility left for the page owners**: some pages skip a heading
-    level (h2 to h4), and the four instrument pages have two `<h1>`s each.
+    level (h2 to h4: Dry Lab Notebook, Entrepreneurship, Plants, Software,
+    Peptide Design), and the four instrument pages have two `<h1>`s each.
     Changing these moves the contents numbering, so they are not automatic.
+    Colours a designer should decide: white on the mid-green segment in
+    Human Practices (3.3:1), the SDG colours on Sustainability, the module
+    colours on the homepage, the task chips on Team. Empty corner `<th>`
+    cells in Laws and Peptide Design tables. The listening page and the
+    education website keep their own low-contrast greys.
 11. **Not tested**: Firefox would not start on this Mac, so the pages were
     checked in Chrome and WebKit only. Open the homepage once in real Safari
     to confirm the black box is gone.
