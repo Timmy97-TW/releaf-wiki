@@ -47,7 +47,17 @@
       /* an h3 before any h2 has nothing to hang off, so it stays unnumbered */
       const no = isSub ? (major ? major + "." + minor : "") : major + ".";
 
-      if (!h.id) h.id = slug(h.textContent);
+      /* Two headings with the same words ("The problem" under three goals)
+         would share an id, and every contents link after the first would jump
+         to the first one. The second becomes the-problem-2, and so on. A
+         clash with the heading's own <section id> is left alone: both are
+         the same place on the page. */
+      if (!h.id) {
+        const base = slug(h.textContent) || "section";
+        let id = base, k = 2, other;
+        while ((other = document.getElementById(id)) && !other.contains(h)) id = base + "-" + k++;
+        h.id = id;
+      }
 
       if (no) {
         const tag = document.createElement("span");
@@ -261,8 +271,9 @@
       if (opener) opener.focus();
     };
 
-    imgs.forEach((img) => {
-      img.addEventListener("click", () => {
+    /* The images are the buttons, so they have to take focus and answer to
+       Enter and Space, or a keyboard user can never open a figure. */
+    const open = (img) => {
         opener = img;
         big.src = img.currentSrc || img.src;
         big.alt = img.alt;
@@ -271,11 +282,24 @@
         box.classList.add("is-open");
         document.body.style.overflow = "hidden";
         $(".lightbox__close", box).focus();
+    };
+    imgs.forEach((img) => {
+      img.tabIndex = 0;
+      img.setAttribute("role", "button");
+      img.setAttribute("aria-label", "Enlarge figure" + (img.alt ? ": " + img.alt : ""));
+      img.addEventListener("click", () => open(img));
+      img.addEventListener("keydown", (e) => {
+        if (e.key === "Enter" || e.key === " ") { e.preventDefault(); open(img); }
       });
     });
 
     box.addEventListener("click", (e) => { if (e.target === box || e.target.closest(".lightbox__close")) close(); });
-    document.addEventListener("keydown", (e) => { if (e.key === "Escape" && box.classList.contains("is-open")) close(); });
+    document.addEventListener("keydown", (e) => {
+      if (!box.classList.contains("is-open")) return;
+      if (e.key === "Escape") close();
+      /* the close button is the dialog's only control, so Tab stays on it */
+      else if (e.key === "Tab") { e.preventDefault(); $(".lightbox__close", box).focus(); }
+    });
   }
 
   const start = () => { outline(); citations(); tabs(); lightbox(); };
