@@ -144,9 +144,12 @@ here.
    `gitlab.igem.org/2026/software/<team>/` (`2026/software-tools` does not
    exist).
 7. **Hardware upstream**: the hardware section is synced from its own
-   repository. Carry these fixes there or the next sync undoes them:
-   `1973312`, `54d95e0`, `99ec82e`, `50e5bf2` (hardware CSS lines),
-   `2945826`.
+   repository, so the next sync would undo tonight's hardware fixes. All of
+   them are in one patch, `notes/hardware-upstream-2026-09-23.patch`, with
+   paths relative to the `hardware/` folder. In the upstream repository, from
+   the folder that holds `index.html`, `bioreactor/`, `css/` and `js/`:
+   `git apply /path/to/hardware-upstream-2026-09-23.patch` (tested: it applies
+   cleanly to the hardware folder as it was before tonight).
 8. **Unfinished content** (`python3 build/audit.py` lists it per page):
    scaffold notes on 10 pages, a status box on 19, 208 pending values, 62 open
    items and 19 empty photo frames across the four instrument pages.

@@ -1,0 +1,462 @@
+diff --git a/bioreactor/css/style.css b/bioreactor/css/style.css
+index 37b3375..10e602e 100644
+--- a/bioreactor/css/style.css
++++ b/bioreactor/css/style.css
+@@ -1111,7 +1111,7 @@ stroke='white' stroke-width='2' stroke-linecap='round'>\
+   display: grid; place-items: center;
+   padding: clamp(16px, 4vw, 54px);
+   background: rgba(6,7,9,.93);
+-  backdrop-filter: blur(7px);
++  -webkit-backdrop-filter: blur(7px); backdrop-filter: blur(7px);
+   opacity: 0; transition: opacity .22s var(--ease);
+   cursor: zoom-out;
+ }
+@@ -1420,7 +1420,7 @@ ul.checks li b { color: var(--fg); font-weight: 600; }
+   padding: .95rem 1.05rem 1.05rem;
+   border-radius: var(--r-md); border: 1px solid var(--line);
+   background: rgba(8,12,18,.82);
+-  backdrop-filter: blur(10px);
++  -webkit-backdrop-filter: blur(10px); backdrop-filter: blur(10px);
+   box-shadow: 0 18px 40px -16px rgba(0,0,0,.75);
+   animation: pickIn .28s var(--ease) both;
+ }
+diff --git a/bioreactor/index.html b/bioreactor/index.html
+index 0238e3b..e5d8243 100644
+--- a/bioreactor/index.html
++++ b/bioreactor/index.html
+@@ -6,8 +6,8 @@
+ <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='7' fill='%2305060a'/%3E%3Ccircle cx='16' cy='16' r='9.5' fill='none' stroke='%235aa9ff' stroke-width='2.5'/%3E%3Ccircle cx='16' cy='16' r='3.6' fill='%23ffa23d'/%3E%3C/svg%3E" />
+ <title>Perfusion Bioreactor — Anatomy</title>
+ <meta name="description" content="An interactive walkthrough of the GEMS-Taiwan perfusion bioreactor: a hollow-fiber membrane loop built to grow B. subtilis and let protectant out while keeping the organism in the culture loop." />
+-<link rel="stylesheet" href="css/style.css?v=009c4b52" />
+-<link rel="stylesheet" href="../css/polish.css?v=183edfdf" />
++<link rel="stylesheet" href="css/style.css?v=56c1f33a" />
++<link rel="stylesheet" href="../css/polish.css?v=30e17a50" />
+ <link rel="stylesheet" href="../../assets/css/nav.css" />
+ <link rel="stylesheet" href="../../assets/css/nav-dark.css" />
+ <script>document.documentElement.className+=' js'</script>
+@@ -819,7 +819,6 @@
+           <button type="button" data-seek="0.82">3</button>
+         </div>
+       </div>
+-</main>
+       <figcaption>
+         <b>Three-channel package</b> The lid lifts, the front window clears, and the camera
+         moves down the three chambers in turn. Nothing here has been built &mdash; it is the
+@@ -871,6 +870,7 @@
+ 
+ </article>
+ </div>
++</main>
+ 
+ <script src="../js/vendor/three.min.js?v=9274bbce"></script>
+ <script src="../js/vendor/STLLoader.js?v=c392b93d"></script>
+@@ -880,7 +880,7 @@
+ <script src="js/components.js?v=2ca4b6aa"></script>
+ <script src="js/flow-paths.js?v=13350b69"></script>
+ <script src="js/scene.js?v=fae8ff6c"></script>
+-<script src="js/product.js?v=620418fa"></script>
++<script src="js/product.js?v=6728df4c"></script>
+ <script src="js/doc.js?v=bd14e050"></script>
+ <script src="../js/toc.js?v=3c82154c"></script>
+ <script src="../js/figures.js?v=ba34987a"></script>
+@@ -889,7 +889,7 @@
+ <script src="../js/atmos.js?v=15acf0e1"></script>
+ <script src="../js/autodraw.js?v=7d624cdf"></script>
+ <script src="../js/syswalk.js?v=02ebc8bb"></script>
+-<script src="../js/polish.js?v=4bc62c3e"></script>
++<script src="../js/polish.js?v=ec7c1a03"></script>
+ <script src="../../assets/data/site-nav.js"></script>
+ <script src="../../assets/js/nav.js"></script>
+ </body>
+diff --git a/bioreactor/js/product.js b/bioreactor/js/product.js
+index dd1a77a..a39c5fb 100644
+--- a/bioreactor/js/product.js
++++ b/bioreactor/js/product.js
+@@ -346,7 +346,17 @@
+   }, { passive: false });
+   window.addEventListener("resize", render);
+   if (embedded && "ResizeObserver" in window) {
+-    new ResizeObserver(render).observe(canvas.parentElement);
++    /* render() sets the canvas height, which resizes this same parent (and
++       can bring in a scrollbar that changes its width) inside the observer's
++       own callback: Safari reported that as a "ResizeObserver loop" error.
++       Rendering on the next frame, and only when the width moved, breaks it. */
++    var lastW = 0, queued = false;
++    new ResizeObserver(function (entries) {
++      var w = entries[0].contentRect.width;
++      if (w === lastW || queued) return;
++      lastW = w; queued = true;
++      requestAnimationFrame(function () { queued = false; render(); });
++    }).observe(canvas.parentElement);
+   }
+ 
+   // 40 RPM puts exactly 4 revolutions in 6 seconds, and a 3-roller head repeats
+diff --git a/css/hub.css b/css/hub.css
+index 904fd89..dcd610f 100644
+--- a/css/hub.css
++++ b/css/hub.css
+@@ -880,7 +880,9 @@ body.hub .topbar-meta { color: var(--ink-3); }
+ body.hub .tb-nav { display: flex; gap: clamp(1rem, 2.2vw, 2rem); margin: 0 7.4rem 0 auto; }
+ body.hub .tb-nav a { padding: .55rem 0; color: #eef2f6; transition: color .25s var(--ease); }
+ body.hub .tb-nav a:hover { color: #fff; }
+-body.hub .palette-hint { top: 15px; bottom: auto; right: var(--inset); opacity: 1; color: var(--ink-2); font-size: .6875rem; padding: .42rem .72rem; background: #0a0d12; border-color: rgba(255, 255, 255, .22); -webkit-backdrop-filter: none; backdrop-filter: none; }
++/* 124px: below the wiki nav (0-69px) and the fixed hardware strip (68-112px).
++   At 15px it sat on top of the nav's Team tab; the .topbar it was meant for is gone. */
++body.hub .palette-hint { top: 124px; bottom: auto; right: var(--inset); opacity: 1; color: var(--ink-2); font-size: .6875rem; padding: .42rem .72rem; background: #0a0d12; border-color: rgba(255, 255, 255, .22); -webkit-backdrop-filter: none; backdrop-filter: none; }
+ body.hub .palette-hint kbd { color: var(--ink-2); border-color: rgba(255, 255, 255, .26); }
+ @media (max-width: 760px) {
+   body.hub .palette-hint { display: none; }
+@@ -1015,6 +1017,11 @@ body.hub .dh-hint { margin: 0 0 .3rem; letter-spacing: .14em; }
+ /* The top of the stage is open sky, so it tucks up under the head: by 7.4rem on a wide screen, less as the stage narrows,
+    because the photometer's words keep their size while the sky they sit in shrinks. */
+ body.hub .orbit-stage { position: relative; z-index: 1; width: min(100%, 1520px); aspect-ratio: 1440 / 800; margin: calc(-1 * clamp(0px, (100% - 900px) * .3, 7.4rem)) auto 0; container-type: inline-size; }
++/* The sky's grid ellipses run far past the stage. body's overflow-x: clip hides
++   them on desktop, but mobile browsers still widen the layout viewport to fit
++   them (397px on a 390px phone), which shifts the whole page and the fixed nav.
++   Clipping here is pixel-identical on desktop, where the stage spans the window. */
++body.hub .orbit-stage { overflow-x: clip; }
+ body.hub :is(.orbit-sky, .orbit-back, .orbit-front) { position: absolute; inset: 0; width: 100%; height: 100%; overflow: visible; pointer-events: none; }
+ body.hub .orbit-sky { z-index: 0; }
+ body.hub .orbit-back { z-index: 1; }
+diff --git a/css/polish.css b/css/polish.css
+index 8d2b266..cf6cb02 100644
+--- a/css/polish.css
++++ b/css/polish.css
+@@ -441,7 +441,7 @@ table .num, ul.mini li b, .bom-count { font-variant-numeric: tabular-nums; }
+ .palette[hidden] { display: none; }
+ .palette-scrim {
+   position: absolute; inset: 0;
+-  background: rgba(4,6,9,.72); backdrop-filter: blur(6px);
++  background: rgba(4,6,9,.72); -webkit-backdrop-filter: blur(6px); backdrop-filter: blur(6px);
+   animation: palFade .18s var(--ease-io) both;
+ }
+ @keyframes palFade { from { opacity: 0 } to { opacity: 1 } }
+@@ -500,7 +500,7 @@ table .num, ul.mini li b, .bom-count { font-variant-numeric: tabular-nums; }
+   display: inline-flex; align-items: center; gap: .4rem;
+   padding: .5rem .7rem; border-radius: var(--r-pill);
+   border: 1px solid var(--line); background: rgba(10,13,18,.82);
+-  backdrop-filter: blur(8px); cursor: pointer;
++  -webkit-backdrop-filter: blur(8px); backdrop-filter: blur(8px); cursor: pointer;
+   color: var(--dim); font-family: var(--mono);
+   font-size: .55rem; letter-spacing: .16em; text-transform: uppercase;
+   transition: color .25s var(--ease-io), border-color .25s var(--ease-io), opacity .3s var(--ease-io);
+@@ -1356,7 +1356,7 @@ html.js body.doc-light .sec > h3.in::after { transform: scaleX(1); }
+   letter-spacing: .16em; text-transform: uppercase;
+   padding: .32em .6em; border-radius: var(--r-xs);
+   background: rgba(8, 10, 14, .74); color: #eef3f8;
+-  backdrop-filter: blur(3px);
++  -webkit-backdrop-filter: blur(3px); backdrop-filter: blur(3px);
+ }
+ .wipe-tag-a { left: 10px; }
+ .wipe-tag-b { right: 10px; }
+@@ -1909,7 +1909,7 @@ body.doc-light .score-col.no  li::before { color: #a83a1c; }
+   background: linear-gradient(90deg,
+     color-mix(in srgb, var(--amber) 55%, transparent), var(--amber));
+ }
+-.bom-facts { display: grid; grid-template-columns: repeat(4, 1fr); gap: .7rem; }
++.bom-facts { display: grid; grid-template-columns: repeat(4, 1fr); gap: .7rem; margin: 0; }
+ .bom-facts div { display: flex; flex-direction: column; gap: .15rem; }
+ .bom-facts dt {
+   font-family: var(--mono); font-size: .5rem; letter-spacing: .16em;
+@@ -2122,3 +2122,104 @@ body.doc-light .bom-meter { background: rgba(15, 19, 25, .10); }
+    their own fade to black (the judge's pass, 13 Sep: it read as a blink). */
+ @view-transition { navigation: auto; }
+ @media (prefers-reduced-motion: reduce) { @view-transition { navigation: none; } }
++
++
++/* ---- reading-label floor (accessibility, Sep 2026) ----------------------
++   The section set many of its uppercase mono labels at 7-10px. This block
++   raises every label a reader has to read to 11px, and table headers,
++   captions and definition terms to 12px. It changes size only: colour,
++   tracking, case and layout are left as they were.
++
++   Scope. Floored: labels, tags, figure and table numbers, step numbers,
++   captions, control labels, hints and the notebook's page/week labels.
++   Left alone on purpose, as decoration or as parts of a larger figure:
++     · SVG chart text (.i2-*, .od-grid, .od-xt, .od-ax, .od-phase, .bp-loop,
++       .autodraw/.syswalk text.dim): it scales with its viewBox, so its
++       declared size is not its drawn size;
++     · unit suffixes set in em inside a big number (.stats dd em,
++       .headline-stats b em, .keynote-fig em, .rl-v em, .mx-v em);
++     · the week ruler on the notebook's build timeline below 760px, where
++       21 ticks share a phone's width (the lane spans and readout carry the
++       same weeks); it is floored at wider widths;
++     · the transient 3D loader ("Loading 100%");
++     · the 3D panels' outlined part number (.panel > .tag). It is meant to be
++       2.3rem, but the record's later `.tag` pill rule (.52rem) wins at
++       desktop widths, so it draws at 8.3px there. The HUD counter carries the
++       same number (floored above); fixing the number is a design call left
++       to upstream.
++
++   Each selector repeats the original with `:root body` in front, so it wins
++   on specificity whatever order the page loads its sheets in (the notebook
++   page loads notebook.css after this file). Two originals are !important,
++   so their floor is too. When carrying this upstream, the cleaner fix is to
++   edit the size at each original rule; this list names every one of them. */
++
++/* 11px: labels */
++:root body :is(
++  .eyebrow, .stats dt, .scroll-cue, .prole, .spec-k, .build-n, .legend-h,
++  .ch-name, .ch-val, .legend-f, .counter, .doc-nav-label,
++  .doc-nav a b, .part-mark span, .openitem-tag, .spec-card-title, .iter-n,
++  .delta span, .filter-steps b, .metrics span, .fig-slot span,
++  .headline-stats span, .phases span, .mx-h, .mx-w, .mx-v, .mx-note, .mx-hint,
++  .i2-h, .frame figcaption b, .frame-note, .fignum, .cad-dl, .map-n,
++  .stage-hint, .lg, .circuit-tag, .rel-n, .iter-date, .pick-role,
++  .pick-link, .pick-clear, .pick-list-head, .pick-role-sm, .planned b,
++  .working-name, .title-rule span, .od-read span, .od-hint,
++  /* polish.css */
++  .bom-count, .onward-k, .p-kind, .p-sub, .palette-foot, .palette-hint,
++  .palette-foot kbd, .palette-hint kbd, .wipe-tag,
++  .wipe-vs, .wipe-picks button, .autodraw figcaption b,
++  .syswalk-fig figcaption b, .backbtn, .triple-label b, .triple figcaption b,
++  .feature-tag, .triple-play, .triple-jump button, .demo-head b,
++  .demo-controls label, .demo-controls button, .demo figcaption b,
++  .score-col > h4, .score-col > h5, .score-col li cite, .syswalk-readout,
++  .syswalk-step-n,
++  /* hub.css */
++  .deck-n, .deck-role, .deck-go, .lanes-rule, .lanes-readout-w, .lane-name,
++  .lane-span, .bp-head, .sys-tag,
++  /* notebook.css */
++  .nb-chip, .nb-field, .nb-edge-l, .nb-key-i, .nb-bar, .nb-reel-play,
++  .nb-pick-w, .nb-go-sub, .nbr-rail-h, .nbr-rail a b, .nbr-page figcaption,
++  .nbr-hit-w
++) { font-size: .6875rem; }
++
++/* hydroponics leaves these two unstyled (16px); only the pages that shrank them */
++:root body:not([data-instrument="hydroponics"]) :is(.outro-meta, .skip-link) { font-size: .6875rem; }
++
++:root body :is(.protocol li)::before,
++:root body :is(.blank-slot, .frame.empty .frame-img)::after,
++:root body.doc-light :is(.frame, .frames .frame)::after,
++:root body.doc-light .frame.empty .frame-img::before,
++:root body :is(.autodraw.scrolls, .syswalk-fig.scrolls)::after { font-size: .6875rem; }
++:root body.doc-light .frame figcaption b { font-size: .6875rem; }
++:root body .specgrid h4, :root body .map-more { font-size: .6875rem !important; }
++
++/* The record's tag pills. Not the 3D panels' big outlined part number, which
++   is also .tag (2.3rem, a direct child of .panel). This also undoes an upstream
++   slip: the instrument pages' `@media (max-width: 900px) { .tag { font-size:
++   1.8rem } }` was meant for that number and blew the pills up to 28.8px on a
++   phone; they now read 11px at every width. */
++:root body :not(.panel) > .tag { font-size: .6875rem; }
++
++/* the hydroponics story cards scale their tag with the card (--ck) */
++:root body[data-instrument="hydroponics"] .panel :is(.tag, .prole) { font-size: max(.6875rem, calc(.66rem * var(--ck, 1))); }
++
++/* the hub's orbit labels keep their container-width scaling above 11px */
++:root body.hub .orb-word { font-size: clamp(.6875rem, .74cqw, .75rem); }
++:root body.hub .orb-k { font-size: clamp(.6875rem, .76cqw, .75rem); }
++
++@media (min-width: 761px) { :root body .lanes-scale { font-size: .6875rem; } }
++/* on a phone the lane names had 6.5rem and already clipped three of seven;
++   1rem more keeps the same names readable at the larger size */
++@media (max-width: 760px) { :root body .lanes-panel { --nx-l: 7.5rem; } }
++
++/* 12px: table headers, captions, definition terms. 11px on a phone, where
++   12px tracked capitals squeezed the tables' text columns (the DiOPAL bill of
++   materials grew a sixth of its height) and sat level with the values under
++   them. */
++:root body :is(table caption, table th, .spec-card dt, .demo-read dt, .bom-facts dt),
++:root body.doc-light table.bom caption { font-size: .75rem; }
++@media (max-width: 600px) {
++  :root body :is(table caption, table th, .spec-card dt, .demo-read dt, .bom-facts dt),
++  :root body.doc-light table.bom caption { font-size: .6875rem; }
++}
+diff --git a/diopal/css/style.css b/diopal/css/style.css
+index 4915389..8dd8aae 100644
+--- a/diopal/css/style.css
++++ b/diopal/css/style.css
+@@ -1109,7 +1109,7 @@ stroke='white' stroke-width='2' stroke-linecap='round'>\
+   display: grid; place-items: center;
+   padding: clamp(16px, 4vw, 54px);
+   background: rgba(6,7,9,.93);
+-  backdrop-filter: blur(7px);
++  -webkit-backdrop-filter: blur(7px); backdrop-filter: blur(7px);
+   opacity: 0; transition: opacity .22s var(--ease);
+   cursor: zoom-out;
+ }
+diff --git a/diopal/index.html b/diopal/index.html
+index 7cfc486..0d22880 100644
+--- a/diopal/index.html
++++ b/diopal/index.html
+@@ -6,8 +6,8 @@
+ <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='7' fill='%2305060a'/%3E%3Ccircle cx='16' cy='16' r='9.5' fill='none' stroke='%235aa9ff' stroke-width='2.5'/%3E%3Ccircle cx='16' cy='16' r='3.6' fill='%23ffa23d'/%3E%3C/svg%3E" />
+ <title>DiOPAL — Anatomy</title>
+ <meta name="description" content="An interactive teardown of DiOPAL, the GEMS-Taiwan dual-wavelength optogenetic LED array." />
+-<link rel="stylesheet" href="css/style.css?v=4b599649" />
+-<link rel="stylesheet" href="../css/polish.css?v=183edfdf" />
++<link rel="stylesheet" href="css/style.css?v=2f4d83fd" />
++<link rel="stylesheet" href="../css/polish.css?v=30e17a50" />
+ <link rel="stylesheet" href="../../assets/css/nav.css" />
+ <link rel="stylesheet" href="../../assets/css/nav-dark.css" />
+ <script>document.documentElement.className+=' js'</script>
+@@ -732,7 +732,7 @@
+ <script src="../js/atmos.js?v=15acf0e1"></script>
+ <script src="../js/wipe.js?v=2ead4af6"></script>
+ <script src="../js/autodraw.js?v=7d624cdf"></script>
+-<script src="../js/polish.js?v=4bc62c3e"></script>
++<script src="../js/polish.js?v=ec7c1a03"></script>
+ <script src="../../assets/data/site-nav.js"></script>
+ <script src="../../assets/js/nav.js"></script>
+ </body>
+diff --git a/hydroponics/index.html b/hydroponics/index.html
+index 87c092f..22ffacb 100644
+--- a/hydroponics/index.html
++++ b/hydroponics/index.html
+@@ -7,7 +7,7 @@
+ <title>Hydroponics Growth Plate — Final build</title>
+ <meta name="description" content="The GEMS-Taiwan hydroponics growth plate: a printed floating raft that seats thirteen seed holders over a deep water culture reservoir, shown as a scroll-driven 3D walkthrough." />
+ <link rel="stylesheet" href="css/style.css?v=5114ac8e" />
+-<link rel="stylesheet" href="../css/polish.css?v=183edfdf" />
++<link rel="stylesheet" href="../css/polish.css?v=30e17a50" />
+ <link rel="stylesheet" href="../../assets/css/nav.css" />
+ <link rel="stylesheet" href="../../assets/css/nav-dark.css" />
+ <script>document.documentElement.className+=' js'</script>
+@@ -444,14 +444,14 @@
+ <script src="../js/vendor/three.min.js?v=9274bbce"></script>
+ <script src="../js/render-quality.js?v=6cd0d091"></script>
+ <script src="../js/packed-loader.js?v=eb28100c"></script>
+-<script src="js/story.js?v=05c8465e"></script>
++<script src="js/story.js?v=3e788464"></script>
+ <script src="../js/annot.js?v=73ef5082"></script>
+ <script src="../js/toc.js?v=3c82154c"></script>
+ <script src="../js/figures.js?v=ba34987a"></script>
+ <script src="../js/chrome.js?v=27d9c2d1"></script>
+ <script src="../js/atmos.js?v=15acf0e1"></script>
+ <script src="../js/wipe.js?v=2ead4af6"></script>
+-<script src="../js/polish.js?v=4bc62c3e"></script>
++<script src="../js/polish.js?v=ec7c1a03"></script>
+ <script src="../../assets/data/site-nav.js"></script>
+ <script src="../../assets/js/nav.js"></script>
+ </body>
+diff --git a/index.html b/index.html
+index 15f6845..7123c7b 100644
+--- a/index.html
++++ b/index.html
+@@ -8,9 +8,9 @@
+ <meta name="description" content="The four instruments GEMS-Taiwan built for RELEAF: a perfusion bioreactor, an in-line photometer, a dual-wavelength LED array and a hydroponics growth plate." />
+ <link rel="preload" href="fonts/unbounded-500-latin.woff" as="font" type="font/woff" crossorigin />
+ <link rel="preload" href="fonts/oxanium-600-latin.woff" as="font" type="font/woff" crossorigin />
+-<link rel="stylesheet" href="css/hub.css?v=afcc02e8" />
+-<link rel="stylesheet" href="css/notebook.css?v=299e33d9" />
+-<link rel="stylesheet" href="css/polish.css?v=183edfdf" />
++<link rel="stylesheet" href="css/hub.css?v=03b01ea3" />
++<link rel="stylesheet" href="css/notebook.css?v=188ba08c" />
++<link rel="stylesheet" href="css/polish.css?v=30e17a50" />
+ <link rel="stylesheet" href="../assets/css/nav.css" />
+ <link rel="stylesheet" href="../assets/css/nav-dark.css" />
+ <script>document.documentElement.className+=' js'</script>
+@@ -454,11 +454,11 @@
+ <script src="js/vendor/STLLoader.js?v=c392b93d"></script>
+ <script src="js/render-quality.js?v=6cd0d091"></script>
+ <script src="js/packed-loader.js?v=eb28100c"></script>
+-<script src="js/deck3d.js?v=e831e36b"></script>
++<script src="js/deck3d.js?v=a7461f37"></script>
+ <script src="js/orbit.js?v=1c6341a1"></script>
+ <script src="js/hub.js?v=13f4a84f"></script>
+ <script src="js/ledger.js?v=8e68d730"></script>
+-<script src="js/polish.js?v=4bc62c3e"></script>
++<script src="js/polish.js?v=ec7c1a03"></script>
+ <script src="../assets/data/site-nav.js"></script>
+ <script src="../assets/js/nav.js"></script>
+ </body>
+diff --git a/js/lanes.js b/js/lanes.js
+index 793c35e..99327e5 100644
+--- a/js/lanes.js
++++ b/js/lanes.js
+@@ -100,7 +100,9 @@
+   panel.querySelectorAll(".lane-dot").forEach(function (dot) {
+     dot.addEventListener("pointerenter", function () { say(dot); });
+     dot.addEventListener("focus", function () { say(dot); });
+-    // the native tooltip duplicates the readout and arrives a second late
++    // the native tooltip duplicates the readout and arrives a second late;
++    // its words stay on as the link's name, the dot has no text of its own
++    if (dot.title && !dot.hasAttribute("aria-label")) dot.setAttribute("aria-label", dot.title);
+     dot.removeAttribute("title");
+   });
+ })();
+diff --git a/js/polish.js b/js/polish.js
+index cb54155..dc38c85 100644
+--- a/js/polish.js
++++ b/js/polish.js
+@@ -258,13 +258,13 @@
+       bar.className = "bom-summary";
+       bar.innerHTML =
+         '<div class="bom-meter"><span style="width:' + pct + '%"></span></div>' +
+-        '<div class="bom-facts">' +
++        '<dl class="bom-facts">' +
+           "<div><dt>Line items</dt><dd>" + rows.length + "</dd></div>" +
+           "<div><dt>With a part number</dt><dd>" + identified + " / " + rows.length + "</dd></div>" +
+           "<div><dt>Costed</dt><dd>" + priced + " / " + rows.length + "</dd></div>" +
+           "<div><dt>Priced so far</dt><dd>" +
+             (priced ? sum.toFixed(2) : "&mdash;") + "</dd></div>" +
+-        "</div>" +
++        "</dl>" +
+         '<p class="bom-note">' + (
+           priced === rows.length
+             ? "Every line is costed, so the figure above is the build cost."
+diff --git a/notebook/index.html b/notebook/index.html
+index 8338e1a..145df83 100644
+--- a/notebook/index.html
++++ b/notebook/index.html
+@@ -6,9 +6,9 @@
+ <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='7' fill='%2305060a'/%3E%3Ccircle cx='16' cy='16' r='9.5' fill='none' stroke='%235aa9ff' stroke-width='2.5'/%3E%3Ccircle cx='16' cy='16' r='3.6' fill='%23ffa23d'/%3E%3C/svg%3E" />
+ <title>Hardware Notebook — GEMS-Taiwan</title>
+ <meta name="description" content="The GEMS-Taiwan hardware notebook: 31 weekly entries across 62 pages, 23 March to 13 August 2026, covering the photometer, DiOPAL, the perfusion bioreactor and five earlier builds." />
+-<link rel="stylesheet" href="../css/hub.css?v=afcc02e8" />
+-<link rel="stylesheet" href="../css/polish.css?v=183edfdf" />
+-<link rel="stylesheet" href="../css/notebook.css?v=299e33d9" />
++<link rel="stylesheet" href="../css/hub.css?v=03b01ea3" />
++<link rel="stylesheet" href="../css/polish.css?v=30e17a50" />
++<link rel="stylesheet" href="../css/notebook.css?v=188ba08c" />
+ <link rel="stylesheet" href="../../assets/css/nav.css" />
+ <link rel="stylesheet" href="../../assets/css/nav-dark.css" />
+ <script>document.documentElement.className+=' js'</script>
+@@ -572,7 +572,7 @@
+   </div>
+ </footer>
+ 
+-<script src="../js/lanes.js?v=2bbfed06"></script>
++<script src="../js/lanes.js?v=7e3907e6"></script>
+ <script src="../js/notebook.js?v=ad8dce9e"></script>
+ <script src="../../assets/data/site-nav.js"></script>
+ <script src="../../assets/js/nav.js"></script>
+diff --git a/photometer/css/style.css b/photometer/css/style.css
+index dd703b8..109d455 100644
+--- a/photometer/css/style.css
++++ b/photometer/css/style.css
+@@ -1040,7 +1040,7 @@ stroke='white' stroke-width='2' stroke-linecap='round'>\
+   display: grid; place-items: center;
+   padding: clamp(16px, 4vw, 54px);
+   background: rgba(6,7,9,.93);
+-  backdrop-filter: blur(7px);
++  -webkit-backdrop-filter: blur(7px); backdrop-filter: blur(7px);
+   opacity: 0; transition: opacity .22s var(--ease);
+   cursor: zoom-out;
+ }
+diff --git a/photometer/index.html b/photometer/index.html
+index 848e96c..589bbdd 100644
+--- a/photometer/index.html
++++ b/photometer/index.html
+@@ -6,8 +6,8 @@
+ <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='7' fill='%2305060a'/%3E%3Ccircle cx='16' cy='16' r='9.5' fill='none' stroke='%235aa9ff' stroke-width='2.5'/%3E%3Ccircle cx='16' cy='16' r='3.6' fill='%23ffa23d'/%3E%3C/svg%3E" />
+ <title>Photometer — Anatomy</title>
+ <meta name="description" content="An interactive teardown of the GEMS-Taiwan ratiometric photometer." />
+-<link rel="stylesheet" href="css/style.css?v=7ed56c7c" />
+-<link rel="stylesheet" href="../css/polish.css?v=183edfdf" />
++<link rel="stylesheet" href="css/style.css?v=46ecbb45" />
++<link rel="stylesheet" href="../css/polish.css?v=30e17a50" />
+ <link rel="stylesheet" href="../../assets/css/nav.css" />
+ <link rel="stylesheet" href="../../assets/css/nav-dark.css" />
+ <script>document.documentElement.className+=' js'</script>
+@@ -1228,7 +1228,7 @@
+ <script src="../js/wipe.js?v=2ead4af6"></script>
+ <script src="../js/autodraw.js?v=7d624cdf"></script>
+ <script src="../js/mad-demo.js?v=90133c1f"></script>
+-<script src="../js/polish.js?v=4bc62c3e"></script>
++<script src="../js/polish.js?v=ec7c1a03"></script>
+ <script src="../../assets/data/site-nav.js"></script>
+ <script src="../../assets/js/nav.js"></script>
+ </body>
