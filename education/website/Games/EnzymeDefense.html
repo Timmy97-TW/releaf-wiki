@@ -1,0 +1,1246 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Enzyme-Substrate Match Defense</title>
+
+  <link rel="stylesheet" href="../fonts/fonts.css" /> <!-- ReLeaf port: Google Fonts link replaced by local copies in fonts/ (iGEM wikis may not load files from outside iGEM). -->
+
+  <style>
+:root {
+  --primary-blue: #658fff;
+  --secondary-blue: #2a78c3bb;
+  --accent-yellow: #ffd75c;
+  --bg-start: #22294b;
+  --bg-mid: #121629;
+  --overlay-bg: rgba(20, 25, 40, 0.9);
+}
+
+@keyframes gradientShift {
+  0%,
+  100% {
+    background-position: 0% 50%;
+  }
+  50% {
+    background-position: 100% 50%;
+  }
+}
+
+/* hide game & panels in menu/slides/countdown */
+body.gamemenu #gamesidebar,
+body.gamemenu #gamedescription,
+body.gamemenu #gameviewport canvas {
+  display: none;
+}
+
+#gamecontainer {
+  display: flex;
+  align-items: flex-start;
+  justify-content: center;
+  width: 95%;
+  max-width: 1600px;
+  height: 600px;
+  margin: 0 auto;
+}
+
+#gamesidebar,
+#gamedescription {
+  background: rgba(33, 35, 64, 0.6);
+  backdrop-filter: blur(10px);
+  border-radius: 20px;
+  box-shadow: 0 8px 34px rgba(17, 21, 34, 0.14);
+  color: #e8eefa;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin: 0 12px;
+}
+
+#gamesidebar {
+  width: 280px;
+  min-width: 280px;
+  padding: 20px;
+  overflow: hidden;
+}
+
+#gamedescription {
+  width: 280px;
+  min-width: 280px;
+  padding: 20px;
+  font-size: 0.9rem;
+  line-height: 1.4;
+  overflow: hidden;
+}
+
+#gamesidebar h3,
+#gamedescription h3 {
+  font-weight: 900;
+  color: var(--primary-blue);
+  border-bottom: 2px solid #5b7fe6;
+  padding-bottom: 6px;
+  margin-bottom: 15px;
+  font-size: 1.1rem;
+}
+
+#gamesidebar p,
+#gamedescription li {
+  font-size: 0.95rem;
+  color: #ffe6a0;
+  font-weight: 500;
+  margin-bottom: 8px;
+}
+
+#gamedescription ul {
+  padding-left: 1.2em;
+  margin-bottom: 12px;
+  list-style: disc;
+}
+
+#gameviewport {
+  position: relative;
+  width: 800px;
+  height: 600px;
+  background: #15182a;
+  border-radius: 20px;
+  border: 2px solid var(--primary-blue);
+  box-shadow: 0 0 30px var(--secondary-blue);
+  overflow: hidden;
+  flex-shrink: 0;
+}
+
+#gameviewport canvas {
+  width: 100%;
+  height: 100%;
+  display: block;
+}
+
+.overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: var(--overlay-bg);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  color: #fff9c6;
+  text-align: center;
+  visibility: hidden;
+  pointer-events: none;
+  border-radius: 20px;
+  padding: 20px;
+  opacity: 0;
+  transition: opacity 0.4s ease;
+}
+
+.overlay.visible {
+  visibility: visible;
+  pointer-events: auto;
+  opacity: 1;
+}
+
+.overlay h1 {
+  font-size: 3rem;
+  margin-bottom: 10px;
+}
+
+.overlay p {
+  margin: 6px 0;
+  font-size: 1.2rem;
+}
+
+.overlay input,
+.overlay button {
+  margin-top: 10px;
+  padding: 8px;
+  font-size: 1rem;
+}
+
+.overlay button {
+  background: var(--accent-yellow);
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: transform 0.2s;
+}
+
+.overlay button:hover {
+  transform: scale(1.1);
+  background: #fff9c6;
+  color: #263548;
+}
+
+/* language selector */
+.lang-select {
+  position: absolute;
+  top: 20px;
+  right: 20px;
+  display: flex;
+  align-items: center;
+}
+
+.lang-select label {
+  color: #fff9c6;
+  margin-right: 6px;
+}
+
+.lang-select select {
+  padding: 6px;
+  font-size: 1rem;
+  border: none;
+  border-radius: 6px;
+}
+
+#homeOverlay {
+  background: #15182a;
+}
+
+@keyframes flash {
+  0%,
+  100% {
+    background-color: rgba(255, 0, 0, 0);
+  }
+  50% {
+    background-color: rgba(255, 0, 0, 0.4);
+  }
+}
+
+@keyframes shake {
+  0%,
+  100% {
+    transform: translate(0, 0);
+  }
+  25% {
+    transform: translate(-5px, 0);
+  }
+  75% {
+    transform: translate(5px, 0);
+  }
+}
+
+#gameviewport.flash::after {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  animation: flash 0.3s ease-out;
+  pointer-events: none;
+}
+
+#gameviewport.shake {
+  animation: shake 0.3s ease-out;
+}
+
+@keyframes enzymePulse {
+  0%,
+  100% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.15);
+  }
+}
+
+.enzyme-pulse {
+  animation: enzymePulse 0.3s ease-in-out;
+}
+
+@media (max-width: 1200px) {
+  #gamecontainer {
+    flex-direction: column;
+    height: auto;
+  }
+
+  #gamesidebar,
+  #gamedescription {
+    width: 100%;
+    max-width: 800px;
+    margin: 6px auto;
+  }
+
+  #gameviewport {
+    width: 100%;
+    max-width: 800px;
+    aspect-ratio: 4/3;
+    height: auto;
+  }
+}
+
+/* ========================================
+   GAME PAGE OVERRIDES - Add to game1.css
+ ======================================== */
+
+/* Force black background on entire page */
+body {
+  background: #000000 !important;
+  background-image: none !important;
+}
+
+/* Wrapper for game page content */
+.game-page-wrapper {
+  background-color: #000000 !important;
+  min-height: 100vh;
+  padding: 20px 0;
+  margin: 0;
+}
+
+/* Reset cursor for game page */
+.game-page-wrapper * {
+  cursor: default !important;
+}
+
+/* Back button container */
+.back-button-container {
+  max-width: 1400px;
+  margin: 0 auto 30px;
+  padding: 0 20px;
+}
+
+/* Back button styling */
+.arcade-back-btn {
+  display: inline-block;
+  padding: 12px 24px;
+  background: linear-gradient(
+    135deg,
+    var(--primary-blue),
+    var(--accent-yellow)
+  );
+  color: #000;
+  text-decoration: none;
+  font-weight: 700;
+  font-size: 14px;
+  border-radius: 8px;
+  border: 2px solid var(--primary-blue);
+  box-shadow: 0 0 20px var(--secondary-blue);
+  transition: all 0.3s ease;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+}
+
+.arcade-back-btn:hover {
+  background: linear-gradient(
+    135deg,
+    var(--accent-yellow),
+    var(--primary-blue)
+  );
+  box-shadow: 0 0 30px var(--accent-yellow);
+  transform: translateY(-2px);
+  color: #000;
+  text-decoration: none;
+}
+
+/* Game description section */
+.game-description-section {
+  max-width: 1200px;
+  margin: 0 auto 50px;
+  padding: 0 20px;
+}
+
+.arcade-panel {
+  background: linear-gradient(
+    135deg,
+    rgba(34, 41, 75, 0.95),
+    rgba(18, 22, 41, 0.95)
+  );
+  border: 3px solid var(--primary-blue);
+  border-radius: 20px;
+  padding: 40px;
+  box-shadow: 0 0 30px var(--secondary-blue), inset 0 0 50px rgba(0, 0, 0, 0.5);
+  position: relative;
+  overflow: hidden;
+}
+
+.arcade-panel::before {
+  content: "";
+  position: absolute;
+  top: -50%;
+  left: -50%;
+  width: 200%;
+  height: 200%;
+  background: repeating-linear-gradient(
+    0deg,
+    transparent,
+    transparent 2px,
+    rgba(101, 143, 255, 0.03) 2px,
+    rgba(101, 143, 255, 0.03) 4px
+  );
+  animation: scan 8s linear infinite;
+  pointer-events: none;
+}
+
+@keyframes scan {
+  0% {
+    transform: translateY(0);
+  }
+  100% {
+    transform: translateY(50px);
+  }
+}
+
+.arcade-title {
+  font-family: "Orbitron", "Rubik", sans-serif;
+  font-size: 32px;
+  font-weight: 900;
+  color: var(--accent-yellow);
+  text-align: center;
+  margin-bottom: 30px;
+  text-shadow: 0 0 10px var(--accent-yellow), 0 0 20px var(--accent-yellow);
+  line-height: 1.4;
+}
+
+.arcade-subtitle {
+  font-family: "Orbitron", "Rubik", sans-serif;
+  font-size: 22px;
+  color: var(--primary-blue);
+  margin-top: 30px;
+  margin-bottom: 15px;
+  text-shadow: 0 0 10px var(--primary-blue);
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+}
+
+.arcade-text {
+  font-size: 16px;
+  line-height: 1.8;
+  color: #e8eefa;
+  margin-bottom: 20px;
+}
+
+.arcade-text strong {
+  color: var(--accent-yellow);
+  font-weight: 700;
+}
+
+.arcade-list {
+  list-style: none;
+  padding-left: 0;
+  margin-bottom: 25px;
+}
+
+.arcade-list li {
+  font-size: 15px;
+  line-height: 1.7;
+  color: #e8eefa;
+  margin-bottom: 12px;
+  padding-left: 30px;
+  position: relative;
+}
+
+.arcade-list li::before {
+  content: "▶";
+  position: absolute;
+  left: 0;
+  color: var(--accent-yellow);
+  font-size: 14px;
+}
+
+.arcade-list li strong {
+  color: var(--accent-yellow);
+  font-weight: 700;
+}
+
+/* Neon title for "Play the Game" */
+.neon-text-small {
+  font-family: "Orbitron", "Rubik", sans-serif;
+  font-size: 28px;
+  font-weight: 900;
+  color: var(--accent-yellow);
+  text-align: center;
+  margin: 40px 0 30px;
+  text-shadow: 0 0 10px var(--accent-yellow), 0 0 20px var(--accent-yellow),
+    0 0 30px var(--primary-blue);
+}
+
+/* Center the game container */
+.oscargame {
+  max-width: 100%;
+  margin: 0 auto;
+  display: flex;
+  justify-content: center;
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+  .arcade-panel {
+    padding: 25px 20px;
+  }
+
+  .arcade-title {
+    font-size: 24px;
+  }
+
+  .arcade-subtitle {
+    font-size: 18px;
+  }
+
+  .arcade-text,
+  .arcade-list li {
+    font-size: 14px;
+  }
+
+  .neon-text-small {
+    font-size: 20px;
+  }
+}
+
+code {
+  background-color: #0d1117;
+  color: #00ff00;
+  padding: 2px 6px;
+  border-radius: 3px;
+  font-family: "Courier New", monospace;
+  font-weight: bold;
+}
+
+pre {
+  background-color: #0d1117;
+  color: #00ff00;
+  padding: 15px;
+  border-radius: 5px;
+  overflow-x: auto;
+  border: 1px solid #30363d;
+}
+
+pre code {
+  background-color: transparent;
+  padding: 0;
+  color: #00ff00;
+}
+
+
+
+/* Extra fixes for single-file version */
+* { box-sizing: border-box; }
+#oscargame.menu #gamesidebar,
+#oscargame.menu #gamedescription,
+#oscargame.menu #gameviewport canvas {
+  display: none;
+}
+#oscargame.menu #gamecontainer {
+  justify-content: center;
+}
+body {
+  margin: 0;
+  font-family: "DM Sans", "Poppins", Arial, sans-serif;
+}
+
+  </style>
+</head>
+<body>
+<!-- ReLeaf port: link back to the wiki's Education page. -->
+<div id="releaf-wiki-bar" style="align-self:stretch;width:100%;box-sizing:border-box;margin:0;padding:6px 16px;background:#1b2e26;font:500 13px/1.5 system-ui,-apple-system,'Segoe UI',sans-serif;text-align:left;"><a href="../../" style="color:#fff;text-decoration:none;cursor:pointer;">&larr; ReLeaf wiki &middot; Education</a></div>
+
+  <main class="game-page-wrapper">
+    <div class="back-button-container">
+      <a class="arcade-back-btn" href="../play.html">← Return to Games</a>
+    </div>
+<div class="game-description-section">
+    <div class="arcade-panel">
+      <h1 class="arcade-title">Enzyme-Substrate Match Defense</h1>
+      <p class="arcade-text">
+        Enzyme Defense is an educational mini-game designed to illustrate the
+        concept of enzyme specificity and our project’s application in degrading
+        PET plastic via TfCut2. Players control an enzyme with shape-specific
+        active sites, catching matching substrates (representing PET molecules)
+        to degrade them and prevent landfill buildup.
+      </p>
+
+      <h2 class="arcade-subtitle">This game aims to:</h2>
+      <ul class="arcade-list">
+        <li>
+          Demonstrate enzyme-substrate specificity through the lock-and-key
+          mechanism.
+        </li>
+        <li>
+          Simulate real-world PET degradation by showing the accumulation of
+          plastic waste if not degraded efficiently.
+        </li>
+        <li>
+          Engage players interactively to understand how engineered enzymes like
+          TfCut2 work in breaking down PET for recycling.
+        </li>
+      </ul>
+
+      <h2 class="arcade-subtitle">Gameplay Mechanics:</h2>
+      <ul class="arcade-list">
+        <li>
+          <strong>Controls:</strong>
+          Use <strong>←</strong> and <strong>→</strong> arrow keys to move.
+        </li>
+        <li>
+          <strong>Objective:</strong> Catch only matching substrates to degrade
+          them.
+        </li>
+        <li>
+          <strong>Challenge:</strong> Missing substrates increases landfill
+          buildup; catching the wrong shape stuns the enzyme temporarily.
+        </li>
+        <li>
+          <strong>End Condition:</strong> The game ends after 3 levels (20
+          seconds each).
+        </li>
+      </ul>
+
+      <h2 class="arcade-subtitle">Educational Impact:</h2>
+      <p class="arcade-text">
+        By visualizing how enzymatic degradation works in an entertaining way,
+        <strong>Enzyme-Substrate Match Defense</strong> educates the general
+        public on:
+      </p>
+      <ul class="arcade-list">
+        <li>
+          The importance of enzyme engineering in environmental biotechnology
+        </li>
+        <li>The urgency of PET pollution and landfill overflow</li>
+        <li>
+          The potential of synthetic biology in creating circular solutions for
+          plastic waste
+        </li>
+      </ul>
+    </div>
+  </div>
+
+  <h2 class="neon-text-small">🕹️ Play the Game:</h2>
+
+  <div id="oscargame" class="oscargame menu">
+    <div id="gamecontainer">
+      <!-- Impact sidebar -->
+      <div id="gamesidebar">
+        <h3 id="impactLabel">Impact</h3>
+        <p id="impCount">0 degraded</p>
+        <p id="impGrams">0 g PET</p>
+        <p id="impBottles">~0 bottles</p>
+        <p>
+          <span id="storedLabel">Stored:</span>
+          <span id="gamesidebarStored">None</span>
+        </p>
+        <p>
+          <span id="shapeLabel">Shape:</span>
+          <span id="gamesidebarShape">●</span>
+        </p>
+      </div>
+
+      <!-- Game viewport -->
+      <div id="gameviewport">
+        <canvas id="game" width="800" height="600"></canvas>
+
+        <!-- Home Overlay -->
+        <div id="homeOverlay" class="overlay visible">
+          <div class="lang-select">
+            <label for="langSelect">Language</label>
+            <select id="langSelect">
+              <option value="en">English</option>
+              <option value="tc">繁體中文</option>
+            </select>
+          </div>
+          <h1 id="homeTitle">Enzyme Match Defense</h1>
+          <p id="menuHighScore">High Score: 0</p>
+          <input
+            type="text"
+            id="playerNameInput"
+            placeholder="Enter your name"
+          />
+          <button id="btnStart" disabled>Start</button>
+          <div id="leaderboard">
+            <h3 id="lbTitle">Top 5</h3>
+            <ol id="leaderboardList"></ol>
+          </div>
+        </div>
+
+        <!-- Instructions Overlay -->
+        <div id="instructionsOverlay" class="overlay">
+          <div id="instructionContent"></div>
+          <button id="btnNext">Next</button>
+        </div>
+
+        <!-- Countdown Overlay -->
+        <div id="countdownOverlay" class="overlay">
+          <h1 id="countdownText">3</h1>
+        </div>
+
+        <!-- Game Over Overlay -->
+        <div id="gameOver" class="overlay">
+          <h1 id="gameOverTitle">Game Over</h1>
+          <p id="finalScore">Final Score: 0</p>
+          <button id="btnHome">Return Home</button>
+        </div>
+      </div>
+
+      <!-- How-To Panel -->
+      <div id="gamedescription">
+        <h3 id="descTitle">How To Play</h3>
+        <ul>
+          <li id="desc1">Use ← → to move your enzyme</li>
+          <li id="desc2">Match falling substrates by shape</li>
+          <li id="desc3">3 levels × 20 s each</li>
+        </ul>
+      </div>
+    </div>
+
+    <script>
+      // translations
+      const TEXT = {
+        en: {
+          impact: "Impact",
+          degradedSuffix: " degraded",
+          gramsSuffix: " g PET",
+          bottlesSuffix: " bottles",
+          storedLabel: "Stored:",
+          shapeLabel: "Shape:",
+          homeTitle: "Enzyme Match Defense",
+          high: "High Score: ",
+          placeholder: "Enter your name",
+          start: "Start",
+          lb: "Top 5",
+          slides: [
+            `<h1>Objective</h1>
+      <p>In this game, you're helping an enzyme break down PET plastic by catching the right substrates. Just like in real life, enzymes only work on specific shapes — this is called <strong>substrate specificity</strong>.</p>
+      <p>Our iGEM project uses enzymes like TfCut2 to degrade PET in textiles. By matching shapes in the game, you're learning how these enzymes work to help reduce plastic waste.</p>`,
+            `<h1>How To Play</h1>
+      <p>Use the ← and → arrow keys to move your enzyme.</p>
+      <p>Catch substrates that <strong>match your enzyme's shape</strong>: ● Circle, ▲ Triangle, or ■ Square. If you catch the wrong shape, your enzyme gets stunned and can't move for a moment.</p>`,
+            `<h1>Levels and Tips</h1>
+      <p>The game has <strong>3 levels</strong>, each lasting 20 seconds. As you move through the levels, things speed up — so stay focused!</p>
+      <p>Get combos by catching the right shapes in a row to score more points. Each successful match helps you understand how real enzymes break down plastic.</p>`,
+          ],
+          desc: [
+            "Use ← → to move your enzyme",
+            "Match falling substrates by shape",
+            "3 levels×20s",
+          ],
+          over: "Game Over",
+          final: "Final Score: ",
+          home: "Return Home",
+        },
+        tc: {
+          impact: "影響",
+          degradedSuffix: " 次降解",
+          gramsSuffix: " 克 PET",
+          bottlesSuffix: "瓶",
+          storedLabel: "儲存：",
+          shapeLabel: "形狀：",
+          homeTitle: "酵素配對防禦",
+          high: "最高分數：",
+          placeholder: "輸入您的名稱",
+          start: "開始",
+          lb: "前五名",
+          slides: [
+            "<h1>如何遊玩</h1><p>使用 ← → 移動您的酵素。</p>",
+            "<h1>配對形狀</h1><p>只捕捉與酵素形狀相符的基質。錯誤會暫停動作。</p>",
+            "<h1>三關卡</h1><p>每個 20 秒都會變快！</p>",
+          ],
+          desc: ["使用 ← → 移動您的酵素", "配對下落的基質形狀", "3 關卡×20秒"],
+          over: "遊戲結束",
+          final: "最終分數：",
+          home: "回主頁",
+        },
+      };
+
+      // preload assets
+      const assetList = [
+        {
+          id: "circleEnzyme",
+          src: "https://static.igem.wiki/teams/5729/enzymematchgame/circleenzyme.webp",
+        },
+        {
+          id: "triangleEnzyme",
+          src: "https://static.igem.wiki/teams/5729/enzymematchgame/triangleenzyme.webp",
+        },
+        {
+          id: "squareEnzyme",
+          src: "https://static.igem.wiki/teams/5729/enzymematchgame/squareenzyme.webp",
+        },
+        {
+          id: "circleSubstrate",
+          src: "https://static.igem.wiki/teams/5729/enzymematchgame/circlesubstrate.webp",
+        },
+        {
+          id: "triangleSubstrate",
+          src: "https://static.igem.wiki/teams/5729/enzymematchgame/triangle-substrate.webp",
+        },
+        {
+          id: "squareSubstrate",
+          src: "https://static.igem.wiki/teams/5729/enzymematchgame/squaresubstrate.webp",
+        },
+      ];
+      const imgs = {},
+        SHAPES = ["circle", "triangle", "square"];
+      let loaded = 0;
+      assetList.forEach((a) => {
+        const img = new Image();
+        img.src = a.src;
+        img.onload = () => {
+          if (++loaded === assetList.length) init();
+        };
+        img.onerror = () => {
+          console.warn("Could not load asset:", a.src);
+          if (++loaded === assetList.length) init();
+        };
+        imgs[a.id] = img;
+      });
+
+      // state
+      const PET_PER = 50,
+        GRAMS_PER_BOTTLE = 30,
+        LEVEL_DURATION = 20000;
+      let mode,
+        score,
+        highScore,
+        degraded,
+        level,
+        combo,
+        maxCombo,
+        comboTimer,
+        fallSpeed,
+        spawnInterval,
+        fallTimer,
+        enzyme,
+        substrates,
+        stored,
+        particles,
+        levelStart,
+        enzymeShape = "circle",
+        playerName = "",
+        lang = "en";
+
+      // DOM refs
+      const gamecanvas = document.getElementById("game"),
+        ctx = gamecanvas.getContext("2d"),
+        gameviewport = document.getElementById("gameviewport"),
+        gamesidebar = document.getElementById("gamesidebar"),
+        descPanel = document.getElementById("gamedescription"),
+        homeOv = document.getElementById("homeOverlay"),
+        nameInput = document.getElementById("playerNameInput"),
+        btnStart = document.getElementById("btnStart"),
+        langSelect = document.getElementById("langSelect"),
+        menuHigh = document.getElementById("menuHighScore"),
+        lbList = document.getElementById("leaderboardList"),
+        instrOv = document.getElementById("instructionsOverlay"),
+        instrCont = document.getElementById("instructionContent"),
+        btnNext = document.getElementById("btnNext"),
+        cntOv = document.getElementById("countdownOverlay"),
+        cntText = document.getElementById("countdownText"),
+        overGame = document.getElementById("gameOver"),
+        gameOverTitle = document.getElementById("gameOverTitle"),
+        finalScore = document.getElementById("finalScore"),
+        btnHome = document.getElementById("btnHome"),
+        impactLabel = document.getElementById("impactLabel"),
+        impCount = document.getElementById("impCount"),
+        impGrams = document.getElementById("impGrams"),
+        impBottles = document.getElementById("impBottles"),
+        storedLabel = document.getElementById("storedLabel"),
+        gamesidebarStored = document.getElementById("gamesidebarStored"),
+        shapeLabel = document.getElementById("shapeLabel"),
+        gamesidebarShape = document.getElementById("gamesidebarShape"),
+        descTitle = document.getElementById("descTitle"),
+        desc1 = document.getElementById("desc1"),
+        desc2 = document.getElementById("desc2"),
+        desc3 = document.getElementById("desc3"),
+        oscarGame = document.getElementById("oscargame");
+
+      let slides = TEXT.en.slides,
+        slideIndex = 0;
+
+      function init() {
+        mode = "menu";
+        renderMenu();
+        nameInput.addEventListener("input", () => {
+          btnStart.disabled = !nameInput.value.trim();
+        });
+        btnStart.onclick = onStart;
+        langSelect.onchange = () => {
+          lang = langSelect.value;
+          slides = TEXT[lang].slides;
+          renderMenu();
+        };
+        btnNext.onclick = nextSlide;
+        btnHome.onclick = returnHome;
+        setupInput();
+        loop();
+      }
+
+      function renderMenu() {
+        const t = TEXT[lang];
+        highScore = +localStorage.getItem("highScore") || 0;
+        impactLabel.textContent = t.impact;
+        storedLabel.textContent = t.storedLabel;
+        shapeLabel.textContent = t.shapeLabel;
+        impCount.textContent = `0${t.degradedSuffix}`;
+        impGrams.textContent = `0${t.gramsSuffix}`;
+        impBottles.textContent = `~0${t.bottlesSuffix}`;
+        document.getElementById("homeTitle").textContent = t.homeTitle;
+        menuHigh.textContent = t.high + highScore;
+        nameInput.placeholder = t.placeholder;
+        btnStart.textContent = t.start;
+        document.getElementById("lbTitle").textContent = t.lb;
+        document.getElementById("descTitle").textContent =
+          t.descTitle || "How To Play";
+        desc1.textContent = t.desc[0];
+        desc2.textContent = t.desc[1];
+        desc3.textContent = t.desc[2];
+        gameOverTitle.textContent = t.over;
+        finalScore.textContent = t.final + "0";
+        btnHome.textContent = t.home;
+        const lb = JSON.parse(localStorage.getItem("leaderboard") || "[]");
+        lbList.innerHTML = "";
+        lb.forEach((e) => {
+          const li = document.createElement("li");
+          li.textContent = `${e.name}: ${e.score}`;
+          lbList.appendChild(li);
+        });
+        slideIndex = 0;
+        langSelect.value = lang;
+      }
+
+      function onStart() {
+        const v = nameInput.value.trim();
+        if (v.toLowerCase() === "reset") {
+          localStorage.removeItem("leaderboard");
+          localStorage.removeItem("highScore");
+          renderMenu();
+          nameInput.value = "";
+          btnStart.disabled = true;
+          return;
+        }
+        playerName = v;
+        showSlide();
+      }
+
+      function returnHome() {
+        overGame.classList.remove("visible");
+        instrOv.classList.remove("visible");
+        cntOv.classList.remove("visible");
+        oscarGame.classList.add("menu");
+        gameviewport.classList.remove("flash", "shake");
+        homeOv.classList.add("visible");
+        gamesidebar.style.display = descPanel.style.display = "none";
+        renderMenu();
+      }
+
+      function showSlide() {
+        homeOv.classList.remove("visible");
+        instrOv.classList.add("visible");
+        instrCont.innerHTML = slides[slideIndex];
+      }
+
+      function nextSlide() {
+        slideIndex++;
+        if (slideIndex < slides.length) {
+          instrCont.innerHTML = slides[slideIndex];
+        } else {
+          instrOv.classList.remove("visible");
+          startCountdown();
+        }
+      }
+
+      function startCountdown() {
+        cntOv.classList.add("visible");
+        let cnt = 3;
+        cntText.textContent = cnt;
+        const iv = setInterval(() => {
+          cnt--;
+          if (cnt > 0) {
+            cntText.textContent = cnt;
+          } else {
+            clearInterval(iv);
+            cntText.textContent = "Go!";
+            setTimeout(() => {
+              cntOv.classList.remove("visible");
+              startGame();
+            }, 1000);
+          }
+        }, 1000);
+      }
+
+      function startGame() {
+        oscarGame.classList.remove("menu");
+        score = degraded = 0;
+        level = 1;
+        combo = maxCombo = 0;
+        comboTimer = 0;
+        fallSpeed = 4;
+        spawnInterval = 50;
+        fallTimer = spawnInterval;
+        enzyme = {
+          x: (800 - 85) / 2,
+          y: 440,
+          w: 85,
+          h: 55,
+          speed: 8,
+          isStunned: false,
+          isDegrading: false,
+          timer: 0,
+          duration: 600,
+          glowTimer: 0,
+        };
+        substrates = [];
+        particles = [];
+        stored = null;
+        gamesidebar.style.display = descPanel.style.display = "flex";
+        levelStart = Date.now();
+        mode = "play";
+        updateHUD();
+        playLoop();
+      }
+
+      function updateHUD() {
+        impCount.textContent = `${degraded}${TEXT[lang].degradedSuffix}`;
+        impGrams.textContent = `${degraded * PET_PER}${TEXT[lang].gramsSuffix}`;
+        impBottles.textContent = `~${Math.round(
+          (degraded * PET_PER) / GRAMS_PER_BOTTLE
+        )}${TEXT[lang].bottlesSuffix}`;
+        gamesidebarStored.textContent = stored ? symbol(stored.key) : "None";
+        gamesidebarShape.textContent = symbol(enzymeShape);
+      }
+
+      function randomShape() {
+        const key = SHAPES[Math.floor(Math.random() * 3)];
+        return {
+          key,
+          x: Math.random() * (800 - 40),
+          y: -30,
+          w: key === "square" ? 35 : 40,
+          h: 30,
+          sp: fallSpeed,
+        };
+      }
+
+      function spawnParticles(x, y, c) {
+        for (let i = 0; i < 20; i++) {
+          const ang = Math.random() * 2 * Math.PI,
+            s = Math.random() * 2 + 1;
+          particles.push({
+            x,
+            y,
+            vx: Math.cos(ang) * s,
+            vy: Math.sin(ang) * s,
+            size: Math.random() * 3 + 1,
+            alpha: 1,
+            color: c,
+          });
+        }
+      }
+
+      function playLoop() {
+        if (mode !== "play") return;
+        const elapsed = Date.now() - levelStart;
+        if (elapsed >= LEVEL_DURATION) {
+          if (level < 3) {
+            level++;
+            levelStart = Date.now();
+            fallSpeed *= 1.5;
+            spawnInterval = Math.max(60, spawnInterval - 15);
+          } else {
+            return endGame();
+          }
+        }
+
+        const grad = ctx.createLinearGradient(0, 0, 0, 600);
+        grad.addColorStop(0, "#8fd6ff");
+        grad.addColorStop(1, "#387bb5");
+        ctx.fillStyle = grad;
+        ctx.fillRect(0, 0, 800, 600);
+        ctx.fillStyle = "#444";
+        ctx.fillRect(0, 550, 800, 50);
+
+        if (--fallTimer <= 0) {
+          substrates.push(randomShape());
+          fallTimer = spawnInterval;
+        }
+
+        if (!enzyme.isStunned) {
+          if (keys.ArrowLeft) enzyme.x = Math.max(0, enzyme.x - enzyme.speed);
+          if (keys.ArrowRight)
+            enzyme.x = Math.min(800 - enzyme.w, enzyme.x + enzyme.speed);
+        }
+
+        substrates.forEach((s, i) => {
+          s.y += s.sp;
+          const hit =
+            s.x < enzyme.x + enzyme.w &&
+            s.x + s.w > enzyme.x &&
+            s.y + s.h > enzyme.y;
+          if (hit) {
+            substrates.splice(i, 1);
+            if (s.key === enzymeShape) {
+              stored = s;
+              enzyme.isDegrading = true;
+              enzyme.timer = 0;
+              enzyme.glowTimer = 300;
+              combo++;
+              maxCombo = Math.max(maxCombo, combo);
+              score += 3 * Math.min(combo, 6);
+              comboTimer = 1000;
+              spawnParticles(
+                enzyme.x + enzyme.w / 2,
+                enzyme.y + enzyme.h / 2,
+                "#ffd75c"
+              );
+              gamecanvas.classList.add("enzyme-pulse");
+              setTimeout(
+                () => gamecanvas.classList.remove("enzyme-pulse"),
+                300
+              );
+            } else {
+              enzyme.isStunned = true;
+              gameviewport.classList.add("flash", "shake");
+              setTimeout(() => {
+                enzyme.isStunned = false;
+                gameviewport.classList.remove("flash", "shake");
+              }, 300);
+              combo = 0;
+            }
+          } else if (s.y + s.h >= 550) {
+            substrates.splice(i, 1);
+          } else {
+            ctx.save();
+            ctx.filter =
+              s.key === "triangle"
+                ? "drop-shadow(0 0 12px yellow)"
+                : "drop-shadow(0 0 12px purple)";
+            ctx.drawImage(imgs[s.key + "Substrate"], s.x, s.y, s.w, s.h);
+            ctx.filter = "none";
+            ctx.restore();
+          }
+        });
+
+        if (enzyme.isDegrading) {
+          enzyme.timer += 16;
+          if (enzyme.timer >= enzyme.duration) {
+            stored = null;
+            enzyme.isDegrading = false;
+            const idx = SHAPES.indexOf(enzymeShape);
+            enzymeShape = SHAPES[(idx + 1) % 3];
+            gamesidebarShape.textContent = symbol(enzymeShape);
+            degraded++;
+            updateHUD();
+          }
+        }
+
+        particles.forEach((p, i) => {
+          p.x += p.vx;
+          p.y += p.vy;
+          p.alpha -= 0.03;
+          if (p.alpha <= 0) {
+            particles.splice(i, 1);
+          } else {
+            ctx.globalAlpha = p.alpha;
+            ctx.fillStyle = p.color;
+            ctx.beginPath();
+            ctx.arc(p.x, p.y, p.size, 0, 2 * Math.PI);
+            ctx.fill();
+            ctx.globalAlpha = 1;
+          }
+        });
+
+        drawEnzyme();
+        drawHUD(elapsed);
+        requestAnimationFrame(playLoop);
+      }
+
+      function drawEnzyme() {
+        const { x, y, w, h, isStunned, glowTimer } = enzyme;
+        if (isStunned && Date.now() % 300 < 150) {
+          ctx.save();
+          ctx.strokeStyle = "red";
+          ctx.lineWidth = 5;
+          ctx.strokeRect(x, y, w, h);
+          ctx.restore();
+        }
+        ctx.save();
+        if (glowTimer > 0) {
+          ctx.shadowColor = "rgba(255,255,150,0.6)";
+          ctx.shadowBlur = 15;
+          enzyme.glowTimer -= 16;
+        }
+        ctx.drawImage(imgs[enzymeShape + "Enzyme"], x, y, w, h);
+        ctx.restore();
+
+        if (stored && enzyme.isDegrading) {
+          const t = enzyme.timer / enzyme.duration;
+          const size = stored.w * (1 - t);
+          ctx.globalAlpha = 1 - t;
+          ctx.drawImage(
+            imgs[stored.key + "Substrate"],
+            x + (w - size) / 2,
+            y + h * 0.35 - size / 2,
+            size,
+            size
+          );
+          ctx.globalAlpha = 1;
+        }
+      }
+
+      function drawHUD(elapsed) {
+        const timeLeft = Math.ceil((LEVEL_DURATION - elapsed) / 1000);
+        ctx.fillStyle = "#ffd75c";
+        ctx.font = "20px Poppins";
+        ctx.textAlign = "left";
+        ctx.fillText(`Time L${level}: ${timeLeft}s`, 20, 30);
+        ctx.fillStyle = "#fff";
+        ctx.font = "20px Poppins";
+        ctx.textAlign = "right";
+        ctx.fillText(`Score: ${score}`, 780, 30);
+        ctx.fillText(`High: ${highScore}`, 780, 55);
+        if (combo > 1 && comboTimer > 0) {
+          ctx.fillStyle = "#ffd75c";
+          ctx.font = "28px Poppins";
+          ctx.textAlign = "center";
+          ctx.fillText(`${combo}× Combo!`, 400, 140);
+          comboTimer -= 16;
+        }
+      }
+
+      function endGame() {
+        mode = "ended";
+        const t = TEXT[lang];
+        finalScore.textContent = t.final + score;
+        let lb = JSON.parse(localStorage.getItem("leaderboard") || "[]");
+        lb.push({ name: playerName, score });
+        lb.sort((a, b) => b.score - a.score);
+        lb = lb.slice(0, 5);
+        localStorage.setItem("leaderboard", JSON.stringify(lb));
+        localStorage.setItem("highScore", lb[0].score);
+        overGame.classList.add("visible");
+      }
+
+      const keys = {};
+      function setupInput() {
+        window.addEventListener("keydown", (e) => {
+          if (mode === "play") {
+            if (e.key === "ArrowLeft") keys.ArrowLeft = true;
+            if (e.key === "ArrowRight") keys.ArrowRight = true;
+          }
+        });
+        window.addEventListener("keyup", (e) => {
+          if (e.key === "ArrowLeft") keys.ArrowLeft = false;
+          if (e.key === "ArrowRight") keys.ArrowRight = false;
+        });
+      }
+      function symbol(k) {
+        return k === "circle" ? "●" : k === "triangle" ? "▲" : "■";
+      }
+      function loop() {
+        requestAnimationFrame(loop);
+      }
+    </script>
+  </div>
+  </main>
+
+<!-- ReLeaf port: the wiki's licence and repository notice (wording from education/index.html). -->
+<footer id="releaf-wiki-footer" style="align-self:stretch;width:100%;box-sizing:border-box;margin:0;padding:14px 16px;background:#f3f2ee;color:#333;border-top:1px solid #d9d6cc;font:13px/1.55 system-ui,-apple-system,'Segoe UI',sans-serif;text-align:center;">
+  <p style="margin:2px 0;"><b>ReLeaf</b> &middot; GEMS Taiwan &middot; iGEM 2026 &middot; Biomanufacturing Village</p>
+  <p style="margin:2px 0;">&copy; 2026 &middot; Content on this wiki is licensed under a <a href="https://creativecommons.org/licenses/by/4.0/" rel="license" style="color:inherit;">Creative Commons Attribution 4.0 International license</a>.</p>
+  <p style="margin:2px 0;">The repository used to create this website is available at <a href="https://gitlab.igem.org/2026/gems-taiwan" style="color:inherit;">gitlab.igem.org/2026/gems-taiwan</a>.</p>
+</footer>
+<!-- ReLeaf port: nav.js inserts the site's own header and footer on DOMContentLoaded; keep the wiki bar above and the licence footer below them. -->
+<script>window.addEventListener('DOMContentLoaded',function(){var b=document.getElementById('releaf-wiki-bar'),f=document.getElementById('releaf-wiki-footer');if(b)document.body.insertBefore(b,document.body.firstChild);if(f)document.body.appendChild(f);});</script>
+<script src="../../../assets/data/site-nav.js"></script><script src="../../../assets/js/rulecheck.js?v=3" defer></script>
+</body>
+</html>
