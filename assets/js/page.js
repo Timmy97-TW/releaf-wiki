@@ -87,6 +87,13 @@
     if (!toc) return;
     const inner = $(".toc__inner", toc) || toc;
     inner.appendChild(list);
+    /* a navigation landmark, so the contents are not loose outside <main>
+       (the <details> itself cannot take the role) */
+    if (inner !== toc && !inner.hasAttribute("role")) {
+      const title = $(".toc__title", inner);
+      inner.setAttribute("role", "navigation");
+      inner.setAttribute("aria-label", (title && title.textContent.trim()) || "On this page");
+    }
 
     /* The markup ships the contents open, so a reader with JavaScript off
        still gets it. On a narrow screen it is a wall between the header and
@@ -264,6 +271,7 @@
     box.className = "lightbox";
     box.setAttribute("role", "dialog");
     box.setAttribute("aria-modal", "true");
+    box.setAttribute("aria-label", "Enlarged figure");
     box.innerHTML =
       '<button class="lightbox__close" aria-label="Close">×</button>' +
       '<figure style="margin:0;text-align:center"><img alt="" /><figcaption></figcaption></figure>';
