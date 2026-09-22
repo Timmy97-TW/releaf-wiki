@@ -60,7 +60,8 @@ SKIN = """<style id="releaf-skin">
    nothing is fetched from outside iGEM. The Chinese faces stay in the stack:
    Inter has no CJK coverage and the reports are bilingual. */
 @font-face{font-family:"Inter";font-style:normal;font-weight:100 900;
-  font-display:swap;src:url("../assets/fonts/inter-variable.ttf") format("truetype")}
+  font-display:swap;src:url("../assets/fonts/inter-variable.woff2") format("woff2"),
+  url("../assets/fonts/inter-variable.ttf") format("truetype")}
 body{font-family:"Inter",-apple-system,BlinkMacSystemFont,"Segoe UI",
   "PingFang TC","Noto Sans TC",sans-serif}
 /* One accent that the palette swap cannot reach: links inherit --rec, but the
@@ -140,10 +141,15 @@ def reskin(path, slug):
                        "--%s:%s" % (name, value), block)
     src = src[:i] + block + src[j:]
 
-    # 3. the wiki typeface, injected after the page's own stylesheet
+    # 3. the wiki typeface, injected after the page's own stylesheet; on a
+    #    re-run the block is replaced, so a change to SKIN reaches every report
     if 'id="releaf-skin"' not in src:
         k = src.find("</style>")
         src = src[:k + len("</style>")] + "\n" + SKIN + src[k + len("</style>"):]
+    else:
+        a = src.find('<style id="releaf-skin">')
+        b = src.find("</style>", a) + len("</style>\n")
+        src = src[:a] + SKIN + src[b:]
 
     # 4. favicon and title suffix
     m = re.search(r"<title>(.*?)</title>", src, re.S)
