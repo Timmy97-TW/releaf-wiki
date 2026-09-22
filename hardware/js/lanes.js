@@ -100,7 +100,9 @@
   panel.querySelectorAll(".lane-dot").forEach(function (dot) {
     dot.addEventListener("pointerenter", function () { say(dot); });
     dot.addEventListener("focus", function () { say(dot); });
-    // the native tooltip duplicates the readout and arrives a second late
+    // the native tooltip duplicates the readout and arrives a second late;
+    // its words stay on as the link's name, the dot has no text of its own
+    if (dot.title && !dot.hasAttribute("aria-label")) dot.setAttribute("aria-label", dot.title);
     dot.removeAttribute("title");
   });
 })();

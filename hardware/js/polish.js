@@ -258,13 +258,13 @@
       bar.className = "bom-summary";
       bar.innerHTML =
         '<div class="bom-meter"><span style="width:' + pct + '%"></span></div>' +
-        '<div class="bom-facts">' +
+        '<dl class="bom-facts">' +
           "<div><dt>Line items</dt><dd>" + rows.length + "</dd></div>" +
           "<div><dt>With a part number</dt><dd>" + identified + " / " + rows.length + "</dd></div>" +
           "<div><dt>Costed</dt><dd>" + priced + " / " + rows.length + "</dd></div>" +
           "<div><dt>Priced so far</dt><dd>" +
             (priced ? sum.toFixed(2) : "&mdash;") + "</dd></div>" +
-        "</div>" +
+        "</dl>" +
         '<p class="bom-note">' + (
           priced === rows.length
             ? "Every line is costed, so the figure above is the build cost."
