@@ -28,6 +28,29 @@
   var span = function (v, a, b) { return clamp01((v - a) / (b - a)); };
   var ease = function (t) { return t * t * (3 - 2 * t); };
 
+  /* ONE FRAME, TWO PHASES. Everything on this page that follows the scroll
+     measures in the first phase and writes in the second, across files, so the
+     browser lays the page out once a frame rather than once for every script
+     that reads after another one wrote. A job's read() returns what its
+     write() needs, or undefined to skip the frame. home-problem.js uses the
+     same object; whichever file runs first creates it. */
+  var homeFrame = window.__homeFrame || (window.__homeFrame = (function () {
+    var jobs = [], queued = false;
+    function run() {
+      queued = false;
+      var seen = jobs.map(function (j) { return j.read(); });
+      jobs.forEach(function (j, i) { if (seen[i] !== undefined) j.write(seen[i]); });
+    }
+    return {
+      add: function (read, write) { jobs.push({ read: read, write: write }); },
+      request: function () {
+        if (queued) return;
+        queued = true;
+        requestAnimationFrame(run);
+      }
+    };
+  })());
+
   /* ══════════════════════════════════════════════════════════ 1  REVEAL ══ */
 
   (function reveal() {
@@ -73,15 +96,36 @@
       return Math.max(1, end - docTop(wrap) - window.innerHeight);
     }
 
-    function set(name, v) { wrap.style.setProperty(name, String(v)); }
+    // what each property last got, so a frame that changes nothing writes
+    // nothing and the style is left alone
+    var written = {};
+    function set(name, v) {
+      var s = String(v);
+      if (written[name] === s) return;
+      written[name] = s;
+      wrap.style.setProperty(name, s);
+    }
 
-    function frame() {
-      var top = docTop(wrap);
-      var p = clamp01((window.scrollY - top) / runway());
+    // Measure first. None of the properties below moves anything in the
+    // layout (they are all opacity and transform), so reading the parts
+    // section here gives the same answer as reading it after the writes.
+    function measure() {
+      return {
+        y: window.scrollY,
+        h: window.innerHeight,
+        top: docTop(wrap),
+        runway: runway(),
+        partsTop: parts ? parts.getBoundingClientRect().top : null
+      };
+    }
+
+    function frame(m) {
+      var top = m.top;
+      var p = clamp01((m.y - top) / m.runway);
 
       // wake the reactor a screen before it is needed, so the fade-in is not
       // also a loading spinner
-      if (!started && rx && !rx.failed && window.scrollY > top - window.innerHeight * 1.6) {
+      if (!started && rx && !rx.failed && m.y > top - m.h * 1.6) {
         started = true;
         rx.start();
       }
@@ -123,8 +167,7 @@
       // pointing at and it needs the right half to itself
       var q = 0;
       if (parts) {
-        var pr = parts.getBoundingClientRect();
-        q = ease(clamp01((window.innerHeight * 0.9 - pr.top) / (window.innerHeight * 0.6)));
+        q = ease(clamp01((m.h * 0.9 - m.partsTop) / (m.h * 0.6)));
       }
 
       set("--rxShift", shift * (1 + q * 0.35));
@@ -152,15 +195,30 @@
       return;
     }
 
-    var queued = false;
-    function onScroll() {
-      if (queued) return;
-      queued = true;
-      requestAnimationFrame(function () { queued = false; frame(); });
+    // Away from the act the progress is pinned at 0 (above it) or 1 (past
+    // it), and so is every value in frame(), so the work stops there. The
+    // observer's margin reaches 1.6 screens below the viewport because that is
+    // where the reactor is woken. Off it, one rect says which end the act is
+    // pinned at; a frame runs only when that changes, which is the first frame
+    // after leaving and any jump straight across the act. A resize always runs.
+    var near = true, pinnedAt = null;
+    if ("IntersectionObserver" in window) {
+      new IntersectionObserver(function (entries) {
+        near = entries[entries.length - 1].isIntersecting;
+        homeFrame.request();
+      }, { rootMargin: "0px 0px 160% 0px" }).observe(wrap);
     }
-    window.addEventListener("scroll", onScroll, { passive: true });
-    window.addEventListener("resize", onScroll);
-    frame();
+
+    homeFrame.add(function () {
+      if (near) { pinnedAt = null; return measure(); }
+      var end = wrap.getBoundingClientRect().top > 0 ? 0 : 1;
+      if (end === pinnedAt) return;
+      pinnedAt = end;
+      return measure();
+    }, frame);
+    window.addEventListener("scroll", homeFrame.request, { passive: true });
+    window.addEventListener("resize", function () { pinnedAt = null; homeFrame.request(); });
+    frame(measure());
   })();
 
   /* ═══════════════════════════════════════════════════════════ 3  PARTS ══ */
@@ -348,7 +406,7 @@
       return document.querySelector(a.getAttribute("href"));
     });
 
-    var current = null, ink = null, ticking = false, still = 0;
+    var current = null, ink = null, shown = null, still = 0;
 
     function luminance(bg) {
       var m = /rgba?\(([\d.]+)[,\s]+([\d.]+)[,\s]+([\d.]+)(?:[,/\s]+([\d.]+))?/.exec(bg || "");
@@ -356,9 +414,8 @@
       return (0.299 * +m[1] + 0.587 * +m[2] + 0.114 * +m[3]) / 255;
     }
 
-    function onInk() {
+    function onInk(box) {
       if (!document.elementsFromPoint) return false;
-      var box = rail.getBoundingClientRect();
       var stack = document.elementsFromPoint(box.left + box.width / 2, box.top + box.height / 2);
       for (var i = 0; i < stack.length; i++) {
         if (rail.contains(stack[i])) continue;
@@ -368,50 +425,56 @@
       return false;
     }
 
-    function update() {
-      ticking = false;
+    // Read phase: which chapter, and what is painted behind the rail. Below
+    // 1180 px the rail is display: none and has no ground to read, so the hit
+    // test is skipped there and on-ink keeps its last value.
+    function measure() {
+      var y = window.scrollY;
+      var m = { show: !hero || y > hero.offsetHeight * 0.6 };
+      if (!m.show) return m;
 
-      var show = !hero || window.scrollY > hero.offsetHeight * 0.6;
-      rail.classList.toggle("is-shown", show);
-      if (!show) return;
-
-      var line = window.scrollY + window.innerHeight * 0.34;
+      var line = y + window.innerHeight * 0.34;
       var at = 0;
       marks.forEach(function (el, i) {
-        if (el && el.getBoundingClientRect().top + window.scrollY <= line) at = i;
+        if (el && el.getBoundingClientRect().top + y <= line) at = i;
       });
-      if (at !== current) {
-        current = at;
+      m.at = at;
+      var box = rail.getBoundingClientRect();
+      m.dark = box.width ? onInk(box) : ink;
+      return m;
+    }
+
+    // Write phase: only what changed.
+    function update(m) {
+      if (m.show !== shown) { shown = m.show; rail.classList.toggle("is-shown", m.show); }
+      if (!m.show) return;
+
+      if (m.at !== current) {
+        current = m.at;
         links.forEach(function (a, i) {
-          if (i === at) a.setAttribute("aria-current", "true");
+          if (i === m.at) a.setAttribute("aria-current", "true");
           else a.removeAttribute("aria-current");
         });
       }
 
-      var dark = onInk();
-      if (dark !== ink) { ink = dark; rail.classList.toggle("on-ink", dark); }
-    }
-
-    function queue() {
-      if (ticking) return;
-      ticking = true;
-      window.requestAnimationFrame(update);
+      if (m.dark !== ink) { ink = m.dark; rail.classList.toggle("on-ink", m.dark); }
     }
 
     /* the current chapter names itself while the page is moving and the name
        fades once the reader settles, so it never sits on the figure beside it */
     function moving() {
-      rail.classList.add("is-moving");
+      if (!rail.classList.contains("is-moving")) rail.classList.add("is-moving");
       window.clearTimeout(still);
       still = window.setTimeout(function () {
         rail.classList.remove("is-moving");
       }, 1100);
-      queue();
+      homeFrame.request();
     }
 
+    homeFrame.add(measure, update);
     window.addEventListener("scroll", moving, { passive: true });
-    window.addEventListener("resize", queue);
-    update();
+    window.addEventListener("resize", homeFrame.request);
+    update(measure());
   })();
 
   /* ════════════════════════════════════════════════════ 7  THE DOSE RUNS ══ */
