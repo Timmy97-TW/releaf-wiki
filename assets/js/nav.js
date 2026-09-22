@@ -180,10 +180,12 @@
   function wire(root) {
     const btns   = [...root.querySelectorAll(".sitenav__tab")];
     const panels = [...root.querySelectorAll(".sitenav__panel")];
-    let openId = null, closeTimer = null;
+    const burger = root.querySelector(".sitenav__burger");
+    let openId = null, closeTimer = null, shownAt = 0;
 
     const show = (id) => {
       clearTimeout(closeTimer);
+      if (id !== openId) shownAt = performance.now();
       openId = id;
       btns.forEach((b) => {
         const on = b.dataset.tab === id;
@@ -196,21 +198,88 @@
     const hide = () => show(null);
     const hideSoon = () => { clearTimeout(closeTimer); closeTimer = setTimeout(hide, 160); };
 
-    btns.forEach((b) => {
+    /* Hover opens a panel, and so does the click that usually follows the
+       hover, or the tap on a touch screen (which fires mouseenter first). A
+       click only closes a panel that has been open for a moment. Focus alone
+       does not open anything: the panels sit after the whole tab bar, so
+       opening on focus swapped the panel under every Tab press and left only
+       Team's links reachable. Enter, Space or ArrowDown opens a panel and Tab
+       then walks into it; tabbing out of its last link moves to the next tab. */
+    const entries = (id) => {
+      const p = panels.find((x) => x.dataset.tab === id);
+      return p ? [...p.querySelectorAll("a[href]")] : [];
+    };
+    btns.forEach((b, i) => {
       b.addEventListener("mouseenter", () => show(b.dataset.tab));
-      b.addEventListener("focus", () => show(b.dataset.tab));
       b.addEventListener("click", (e) => {
         e.preventDefault();
-        openId === b.dataset.tab ? hide() : show(b.dataset.tab);
+        openId === b.dataset.tab && performance.now() - shownAt > 400 ? hide() : show(b.dataset.tab);
+      });
+      b.addEventListener("keydown", (e) => {
+        const id = b.dataset.tab;
+        if (e.key === "ArrowDown") {
+          e.preventDefault();
+          show(id);
+          const first = entries(id)[0];
+          if (first) first.focus();
+        } else if (e.key === "ArrowRight" || e.key === "ArrowLeft") {
+          e.preventDefault();
+          const next = btns[(i + (e.key === "ArrowRight" ? 1 : btns.length - 1)) % btns.length];
+          if (openId) show(next.dataset.tab);
+          next.focus();
+        } else if (e.key === "Tab" && !e.shiftKey && openId === id) {
+          const first = entries(id)[0];
+          if (first) { e.preventDefault(); first.focus(); }
+        }
       });
     });
     panels.forEach((p) => {
       p.addEventListener("mouseenter", () => clearTimeout(closeTimer));
       p.addEventListener("mouseleave", hideSoon);
+      p.addEventListener("keydown", (e) => {
+        if (e.key !== "Tab") return;
+        const list = entries(p.dataset.tab);
+        const i = btns.findIndex((b) => b.dataset.tab === p.dataset.tab);
+        if (!e.shiftKey && document.activeElement === list[list.length - 1] && btns[i + 1]) {
+          /* past the last link: on to the next tab. After Team the browser's own
+             order already leads into the page, and focusout closes the panel. */
+          e.preventDefault();
+          hide();
+          btns[i + 1].focus();
+        } else if (e.shiftKey && document.activeElement === list[0]) {
+          e.preventDefault();
+          btns[i].focus();
+        }
+      });
     });
     root.querySelector(".sitenav__tabs").addEventListener("mouseleave", hideSoon);
-    document.addEventListener("keydown", (e) => { if (e.key === "Escape") hide(); });
-    document.addEventListener("click", (e) => { if (!root.contains(e.target)) hide(); });
+    /* focus leaving the navigation closes whatever it left open */
+    root.addEventListener("focusout", (e) => {
+      if (e.relatedTarget && !root.contains(e.relatedTarget)) hide();
+    });
+    document.addEventListener("keydown", (e) => {
+      if (e.key !== "Escape") return;
+      const inPanel = openId && root.contains(document.activeElement) &&
+        !document.activeElement.classList.contains("sitenav__tab");
+      const back = inPanel ? btns.find((b) => b.dataset.tab === openId) : null;
+      hide();
+      if (back) back.focus();
+      if (root.classList.contains("drawer-open")) {
+        root.classList.remove("drawer-open");
+        burger.setAttribute("aria-expanded", "false");
+        burger.setAttribute("aria-label", "Open menu");
+        burger.focus();
+      }
+    });
+    document.addEventListener("click", (e) => {
+      if (root.contains(e.target)) return;
+      hide();
+      if (root.classList.contains("drawer-open")) {
+        root.classList.remove("drawer-open");
+        burger.setAttribute("aria-expanded", "false");
+        burger.setAttribute("aria-label", "Open menu");
+      }
+    });
 
     /* The dark bar over a hero is transparent until the page moves, so it needs
        to know. Cheap enough to run everywhere; only nav-dark.css styles it. */
@@ -226,10 +295,10 @@
     }, { passive: true });
     mark();
 
-    const burger = root.querySelector(".sitenav__burger");
     burger.addEventListener("click", () => {
       const open = root.classList.toggle("drawer-open");
       burger.setAttribute("aria-expanded", String(open));
+      burger.setAttribute("aria-label", open ? "Close menu" : "Open menu");
     });
   }
 
