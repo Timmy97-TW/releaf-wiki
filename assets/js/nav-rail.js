@@ -291,7 +291,7 @@
   function ruleCheck(base) {
     if (window.RULECHECK === false) return;
     var s = document.createElement("script");
-    s.src = base + "assets/js/rulecheck.js?v=4";   /* bump when rulecheck.js changes: Pages lets browsers cache it for 10 minutes */
+    s.src = base + "assets/js/rulecheck.js?v=5";   /* bump when rulecheck.js changes: Pages lets browsers cache it for 10 minutes */
     s.defer = true;
     document.body.appendChild(s);
   }

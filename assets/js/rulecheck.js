@@ -121,7 +121,7 @@
 .rulecheck { position: fixed; left: 16px; bottom: 16px; z-index: 900; max-width: min(420px, calc(100vw - 32px));
   font: 14px/1.45 system-ui, -apple-system, "Segoe UI", sans-serif; color: #1d1d1f; }
 .rulecheck__btn { display: flex; align-items: center; gap: 8px; margin-right: auto; border: 0; cursor: pointer;
-  background: #b3261e; color: #fff; font: inherit; font-weight: 700; padding: 10px 14px; border-radius: 999px;
+  background: #b3261e; color: #fff; font: inherit; font-weight: 700; padding: 7px 12px; min-width: 38px; justify-content: center; border-radius: 999px; opacity: .92;
   box-shadow: 0 6px 20px rgb(0 0 0 / .25); }
 .rulecheck__btn[data-ok] { background: #23684a; }
 .rulecheck__btn:focus-visible { outline: 3px solid #1d1d1f; outline-offset: 2px; }
@@ -188,7 +188,11 @@ body:has(aside.rail) .rulecheck { left: 64px; }
       '<button type="button" class="rulecheck__btn" aria-expanded="false" aria-controls="rulecheck-panel"></button>';
     const btn = box.querySelector(".rulecheck__btn");
     const panel = box.querySelector(".rulecheck__panel");
-    btn.textContent = n ? "⚠ iGEM rule check · " + n : "✓ iGEM rule check · clear";
+    /* compact, so it hides as little of the page as possible; the words are
+       in its label and tooltip, and in the panel it opens */
+    btn.textContent = n ? "⚠ " + n : "✓";
+    btn.title = n ? "iGEM rule check: " + n + " issue" + (n > 1 ? "s" : "") + " on this page" : "iGEM rule check: clear";
+    btn.setAttribute("aria-label", btn.title);
     if (!n) btn.dataset.ok = "";
     box.querySelector(".rulecheck__head b").textContent = n
       ? n + " issue" + (n > 1 ? "s" : "") + " on this page: " + counts.map(([k, c]) => c + " " + k.toLowerCase()).join(", ")
