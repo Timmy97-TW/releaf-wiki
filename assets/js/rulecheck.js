@@ -7,17 +7,17 @@
    window.RULECHECK === false (set in assets/data/site-nav.js). The copy that
    goes to gitlab.igem.org must ship with it switched off.
 
-   Three kinds of finding:
+   Two kinds of finding:
 
      BLOCKED     the page loads something from a server outside iGEM (image,
                  script, stylesheet, font, iframe, video). iGEM requires every
                  file to come from igem.wiki / igem.org; hosting elsewhere "may
                  result in no medal" (Rules & Policies, Communication).
-     NOT JUDGED  a link to evidence kept on another site: GitHub, Google Drive,
-                 Docs, Forms, Canva, YouTube... "Content on external sites
-                 cannot be judged" (2026 Judge Handbook p.29). Citations to
-                 papers, laws and databases are fine and are not flagged.
-     TO FINISH   scaffold notes and status boxes still on the page.
+     TO FINISH   scaffold notes, status boxes, placeholders, pending values
+                 and open items still on the page.
+
+   Links out to other sites are deliberately not flagged: the team will point
+   them at its official iGEM pages itself.
 
    Plus page notes from PAGE_NOTES below, for what a scan cannot see.
    Nothing here changes content; it only draws outlines and a panel.
@@ -28,32 +28,20 @@
   window.__rulecheck = true;
 
   const IGEM = /(^|\.)igem\.(wiki|org)$/i;
-  /* hosts where evidence lives but cannot be judged */
-  const EVIDENCE = /(^|\.)(github\.io|github\.com|gitlab\.com|drive\.google\.com|docs\.google\.com|forms\.gle|sites\.google\.com|canva\.com|youtube\.com|youtu\.be|vimeo\.com|notion\.so|notion\.site|figma\.com|dropbox\.com|onedrive\.live\.com|sharepoint\.com|1drv\.ms|padlet\.com|bit\.ly)$/i;
 
   /* Things a scan cannot see, keyed by the page's folder. Keep each one
      short, factual and tied to a rule; delete the entry once it is fixed. */
   const PAGE_NOTES = {
-    "plant": [
-      ["NOT JUDGED", "In 2026 there is no Best Plant Synthetic Biology award. It became Best Alternative Platform, judged only at /alternative-platform, and that award excludes E. coli, S. cerevisiae and B. subtilis (Judge Handbook p.48, p.83). Keep this page, but do not count on it for an award."]
-    ],
     "geospatial-analysis": [
       ["BLOCKED", "The interactive routing map (loaded below on click) draws its basemap from tile.openstreetmap.org and asks router.project-osrm.org for every route. Both are outside iGEM. Precompute the routes into a data file and use a basemap image hosted on static.igem.wiki."]
     ],
     "attributions": [
       ["TO FINISH", "The form iframe still points at team 0000. Team GEMS Taiwan is 6072. The 2026 template also shows attributions on the team page itself; check the current template before keeping this page."]
-    ],
-    "software": [
-      ["NOT JUDGED", "Best Software is judged from the team's repository on gitlab.igem.org (2026/software/<team>), with an OSI licence and a README. Code kept only on GitHub is not judged."]
-    ],
-    "md-simulations": [
-      ["NOT JUDGED", "The MD pipeline lives on github.com. If it is software the team wants credit for, it has to be on gitlab.igem.org."]
     ]
   };
 
   const COLORS = {
     "BLOCKED":    "#b3261e",
-    "NOT JUDGED": "#9a5b00",
     "TO FINISH":  "#5b4bb3"
   };
 
@@ -102,20 +90,7 @@
       });
     } catch (e) { /* cross-origin sheets are already reported above */ }
 
-    /* 2. evidence links to sites that cannot be judged */
-    const linked = new Map();
-    document.querySelectorAll("a[href]").forEach((a) => {
-      if (a.closest(".rulecheck, .refs, footer, .footer2, .legal")) return;
-      const h = hostOf(a.getAttribute("href"));
-      if (!h || !EVIDENCE.test(h)) return;
-      if (/(^|\.)gitlab\.igem\.org$/i.test(h)) return;
-      const key = a.href;
-      if (linked.has(key)) return;
-      linked.set(key, a);
-      add("NOT JUDGED", "Links to " + short(a.href) + ". Judges only score what is on the wiki itself: bring this content onto a wiki page (and its files onto static.igem.wiki or video.igem.org).", visible(a) ? a : null);
-    });
-
-    /* 3. unfinished markers */
+    /* 2. unfinished markers */
     const sc = [...document.querySelectorAll("p.scaffold, .scaffold")].filter(visible);
     if (sc.length) add("TO FINISH", sc.length + " scaffold note" + (sc.length > 1 ? "s" : "") + " still on the page. Replace each with real prose or delete it.", sc[0]);
     const st = [...document.querySelectorAll(".status")].filter(visible);
@@ -127,7 +102,7 @@
     const open = [...document.querySelectorAll(".openitem")].filter(visible);
     if (open.length) add("TO FINISH", open.length + " open item" + (open.length > 1 ? "s" : "") + " still listed as unresolved.", open[0]);
 
-    /* 4. notes for this page */
+    /* 3. notes for this page */
     const slug = (document.querySelector("#site-nav, #nav-rail") || {}).dataset
       ? (document.querySelector("#site-nav, #nav-rail").dataset.page || "") : "";
     (PAGE_NOTES[slug] || []).forEach(([kind, text]) => add(kind, text, null));
@@ -200,7 +175,7 @@
       '<div class="rulecheck__panel" id="rulecheck-panel" hidden role="region" aria-label="iGEM rule check">' +
         '<div class="rulecheck__head"><b></b><span>Demo wiki only: shows what would break the iGEM 2026 wiki rules on this page. Click an item to jump to it.</span></div>' +
         '<ul class="rulecheck__list"></ul>' +
-        '<div class="rulecheck__foot">Rules: 2026 Judge Handbook p.29 (standard pages, external content), Rules &amp; Policies (iGEM servers only). ' +
+        '<div class="rulecheck__foot">Rule: every file must load from iGEM servers (Rules &amp; Policies). ' +
           '<button type="button" class="rc-toggle"></button></div>' +
       "</div>" +
       '<button type="button" class="rulecheck__btn" aria-expanded="false" aria-controls="rulecheck-panel"></button>';
