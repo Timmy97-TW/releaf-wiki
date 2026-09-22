@@ -319,9 +319,20 @@
     document.body.prepend(a);
   }
 
+  /* Demo wiki only: outline what breaks an iGEM rule (assets/js/rulecheck.js).
+     Switched off with window.RULECHECK = false in assets/data/site-nav.js. */
+  function ruleCheck(base) {
+    if (window.RULECHECK === false) return;
+    const s = document.createElement("script");
+    s.src = base + "assets/js/rulecheck.js";
+    s.defer = true;
+    document.body.appendChild(s);
+  }
+
   document.addEventListener("DOMContentLoaded", () => {
     const root = document.getElementById("site-nav");
     if (root) build(root);
     skipLink();
+    ruleCheck(root && root.dataset.base != null ? root.dataset.base : "");
   });
 })();

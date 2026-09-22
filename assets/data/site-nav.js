@@ -128,3 +128,9 @@ const NAV_UNLISTED = [
   { title: "Inclusivity", slug: "inclusivity",
     caption: "Who the project is built for, and who it would leave out." }
 ];
+
+/* iGEM rule check (assets/js/rulecheck.js): outlines on every page whatever
+   would break an iGEM 2026 wiki rule, with a panel listing them. It is a
+   teaching aid for this demo copy. Set to false in the copy that goes to
+   gitlab.igem.org, or delete the line and the file.                        */
+window.RULECHECK = true;

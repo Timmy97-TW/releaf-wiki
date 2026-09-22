@@ -235,9 +235,20 @@
     document.body.prepend(a);
   }
 
+  /* Demo wiki only: outline what breaks an iGEM rule (assets/js/rulecheck.js).
+     Switched off with window.RULECHECK = false in assets/data/site-nav.js. */
+  function ruleCheck(base) {
+    if (window.RULECHECK === false) return;
+    var s = document.createElement("script");
+    s.src = base + "assets/js/rulecheck.js";
+    s.defer = true;
+    document.body.appendChild(s);
+  }
+
   document.addEventListener("DOMContentLoaded", function () {
     skipLink();
     var mount = document.getElementById("nav-rail");
     if (mount) build(mount);
+    ruleCheck(mount && mount.dataset.base != null ? mount.dataset.base : "");
   });
 })();
