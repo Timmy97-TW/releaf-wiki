@@ -140,13 +140,17 @@
 .rulecheck__foot button { font: inherit; color: #23684a; background: none; border: 0; padding: 0; text-decoration: underline; cursor: pointer; }
 .rc-hidden .rc-mark { outline: none !important; }
 .rc-hidden .rc-tag { display: none; }
+.rc-hidden .rc-mark.rc-flash { outline: 3px dashed var(--rc) !important; }
 @media print { .rulecheck, .rc-tag { display: none !important; } .rc-mark { outline: none !important; } }`;
     document.head.appendChild(s);
   }
 
   function draw() {
     css();
-    const hidden = (() => { try { return localStorage.getItem("rulecheck-marks") === "off"; } catch (e) { return false; } })();
+    /* Outlines are off unless the viewer turns them on: the page should read
+       as the page, and the button in the corner already says how many issues
+       there are. The choice is remembered per browser. */
+    const hidden = (() => { try { return localStorage.getItem("rulecheck-outlines") !== "on"; } catch (e) { return true; } })();
     if (hidden) document.documentElement.classList.add("rc-hidden");
 
     /* outline each element and pin a label above it */
@@ -197,7 +201,12 @@
       if (f.target) {
         li.dataset.go = "";
         li.tabIndex = 0;
-        const go = () => { f.target.scrollIntoView({ block: "center", behavior: matchMedia("(prefers-reduced-motion: reduce)").matches ? "auto" : "smooth" }); };
+        /* jump to it, and outline it for a moment even when outlines are off */
+        const go = () => {
+          f.target.scrollIntoView({ block: "center", behavior: matchMedia("(prefers-reduced-motion: reduce)").matches ? "auto" : "smooth" });
+          f.target.classList.add("rc-flash");
+          setTimeout(() => f.target.classList.remove("rc-flash"), 2500);
+        };
         li.addEventListener("click", go);
         li.addEventListener("keydown", (e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); go(); } });
       }
@@ -208,7 +217,7 @@
     label();
     tog.addEventListener("click", () => {
       const off = document.documentElement.classList.toggle("rc-hidden");
-      try { localStorage.setItem("rulecheck-marks", off ? "off" : "on"); } catch (e) { /* private mode */ }
+      try { localStorage.setItem("rulecheck-outlines", off ? "off" : "on"); } catch (e) { /* private mode */ }
       label();
     });
     btn.addEventListener("click", () => {
