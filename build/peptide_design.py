@@ -477,7 +477,7 @@ def ladder_block():
         '  </div>')
 
     return "\n".join([
-        '<div class="pd-ladder" id="ladder">',
+        '<div class="pd-ladder" id="ladder-chart">',
         '  <div class="pd-aln__bar">',
         '    <span class="pd-aln__legend">Y axis:</span>',
         '    <button type="button" class="pd-chip is-on" data-lad="raw" aria-pressed="true">docking score</button>',
@@ -996,7 +996,7 @@ JS = r"""
 
   /* ---- 3. truncation ladder --------------------------------------------- */
   var LAD = __LAD__;
-  var ladder = $("#ladder");
+  var ladder = $("#ladder-chart");
   if (ladder) {
     var slider = $("#lad-slider", ladder);
     var mark = $("#lad-mark", ladder);
