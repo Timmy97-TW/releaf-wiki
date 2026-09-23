@@ -1,0 +1,329 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Protein Design | ReLeaf &middot; iGEM 2026</title>
+  <meta name="description" content="The five-step GRAFT pipeline ReLeaf used to take a plant elicitor peptide from a family alignment to a DNA order: generate, restraints, assembly, flex, triage, and packaging for the wet lab." />
+  <link rel="icon" href="../assets/img/logo.png" />
+  <link rel="stylesheet" href="../assets/css/tokens.css" />
+  <link rel="stylesheet" href="../assets/css/nav.css" />
+  <link rel="stylesheet" href="../assets/css/page.css" />
+  <link rel="stylesheet" href="protein.css?v=202609231" />
+</head>
+<body class="pd">
+<!--
+  SOURCE. Built 23 September 2026 from the agreed page outline in
+  "0923 Wiki Subpage Structures.docx" (the Protein Design block) and from the
+  team's own writing in Wiki 2/Drylab/Protein Design/: "Protein Design
+  Writing.docx", "Protein Design Page Layout.docx", "Protein Design & Docking
+  Methodology.docx", "HADDOCK_Optimization.docx" and "Codon Opt ViennaRNA.docx".
+
+  WHAT THIS HUB IS. The outline for Protein Design is one deeply nested page.
+  Rendered as one page it runs past any reasonable length, and its own method
+  names spell GRAFT, so the section is split along those names: three new
+  method pages before MD, one after it, one for packaging, and the two pages
+  that already existed keep their URLs and become steps inside the section.
+
+  WHAT IS DELIBERATELY NOT HERE. No HADDOCK score difference is quoted as
+  evidence anywhere in this section. Five claims retracted in writing on
+  30 July and 16 August do not reappear. The worked case, including the
+  retraction ledger, stays on /peptide-design/ and is linked, not copied.
+
+  The boxes marked "To fix" run P1 to P10 across the whole section. Delete each
+  one when it is resolved, and delete the status box at the foot of its page
+  when that page has none left. Raw sources stay out of git.
+-->
+
+  <div id="site-nav" data-base="../" data-tab="drylab" data-page="protein-design"></div>
+  <div class="sitenav-spacer"></div>
+
+  <header class="pagehead">
+    <div class="pagehead__inner">
+      <p class="pagehead__eyebrow">
+        <a href="../">ReLeaf</a> <i>/</i> Dry Lab <i>/</i> Protein Design
+      </p>
+      <h1 class="pagehead__title">Protein Design</h1>
+      <p class="pagehead__lede">A twenty-three residue plant peptide had to become an order form. This section is the record of how, step by step: where the candidate came from, what the docking was allowed to assume, how the models were built and shaken, what the scoring step could and could not decide, and what was finally written into DNA.</p>
+      <ul class="pagehead__meta">
+        <li><b>Section</b><span>Dry Lab</span></li>
+        <li><b>Written by</b><span>Dry lab, protein design</span></li>
+        <li><b>Last updated</b><span>23 September 2026</span></li>
+        <li><b>Status</b><span>Draft, 10 fixes open across the section</span></li>
+      </ul>
+    </div>
+  </header>
+
+  <nav class="stepnav" aria-label="Protein Design section">
+    <div class="stepnav__inner">
+      <a class="stepnav__home" href="./" aria-current="page">Protein Design</a>
+      <a class="step" href="./generate/"><span class="step__k">G</span>Generate</a>
+      <a class="step" href="./restraints/"><span class="step__k">R</span>Restraints</a>
+      <a class="step" href="./assembly/"><span class="step__k">A</span>Assembly</a>
+      <a class="step" href="../md-simulations/"><span class="step__k">F</span>Flex</a>
+      <a class="step" href="./triage/"><span class="step__k">T</span>Triage</a>
+      <a class="step" href="./packaging/"><span class="step__k" data-off>&middot;</span>Packaging</a>
+      <!-- not a GRAFT step: the pipeline run once end to end -->
+      <a class="step" href="../peptide-design/"><span class="step__k" data-off>&middot;</span>Worked case</a>
+    </div>
+  </nav>
+
+  <div class="pagewrap">
+    <details class="toc" open>
+      <summary>Contents</summary>
+      <div class="toc__inner"><p class="toc__title">On this page</p></div>
+    </details>
+
+    <main class="pagebody">
+
+      <!-- ============================================ 1 · PROCESS ========= -->
+      <section class="sec" id="method-pages">
+        <h2>Method pages</h2>
+
+        <p>This section describes the process, not the results. Every page in it is a method page. It says what was done, on what input, under what assumption, and what the answer was allowed to settle. The numbers those methods produced live in two places that were written first and are linked from here: <a href="../peptide-design/">Peptide Design</a>, which runs BoPep4 end to end and carries the ledger of what we later took back, and <a href="../md-simulations/">MD Simulations</a>, which holds nine trajectories and their reports.</p>
+
+        <p>The separation is deliberate. A method can be judged before anyone knows what it returned, and several of ours do not survive that reading. Where a step could not decide the thing it was built to decide, the page for that step says so in its own voice instead of leaving the reader to work it out from a results table.</p>
+
+        <p>The section also carries gaps. Nineteen of the outline's subsections have no written source yet. Each one appears in the place it belongs, with a note saying what goes there and what evidence would close it, in the shape the <a href="../engineering/">Engineering</a> page uses. Nothing is filled in with plausible method prose to hide a hole.</p>
+      </section>
+
+      <!-- ============================================ 2 · DIRECTION ======= -->
+      <section class="sec" id="secretion-and-production">
+        <h2>Secretion and production</h2>
+
+        <p>ReLeaf competes in the Biomanufacturing Village, and the village sets the question the design has to answer. A protectant that binds its receptor beautifully and never leaves the cell is not a product. So every design axis in this section was judged on two axes at once: whether the receptor still reads the molecule, and whether <i>Bacillus subtilis</i> can make it, export it and keep it intact in a protease-rich supernatant.</p>
+
+        <p>That constraint is why the section ends at an order form rather than at a docking pose. The truncation work exists because a shorter chain is cheaper to synthesise and export. The codon work exists because a sequence the receptor accepts is worth nothing if the chassis will not initiate translation on its messenger RNA. The tag geometry question, which cost the project a DNA order in August, is a secretion question that turned out to be a binding question.</p>
+      </section>
+
+      <!-- ============================================ 3 · BOPEP4 ========== -->
+      <section class="sec" id="focus-on-bopep4">
+        <h2>Focus on BoPep4</h2>
+
+        <p>Four protectant families were on the table at the start of the year and one of them took nearly all of the modelling effort. The reasons, as far as they are written down, are these. BoPep4 sits in the PROPEP family, whose members are read by the same pair of receptor kinases, so a receptor model built for one candidate is worth something for the others&nbsp;[3]. The family has a solved complex, PDB&nbsp;5GR8, which fixes the binding register instead of asking a prediction to guess it&nbsp;[1]. And it has a published structure to activity series, Pearce&nbsp;2008, which is the only dataset in reach that can tell a scoring function it is wrong&nbsp;[2].</p>
+
+        <p>Those three are conditions for doing the work at all. None of them is a reason to prefer BoPep4 over the LEA family on the biology, and the section does not pretend otherwise.</p>
+
+        <div class="gap">
+          <b class="gap__label">Declared gap</b>
+          <p>The outline asks <q>why did we focus on BoPep4 the most</q> and no document answers it. The honest current answer is that the peptide was tractable, not that it was shown to be the better protectant. Closing this needs one of two things: a written record of the decision meeting where the effort was allocated, or a side-by-side statement of what each candidate would have cost to model and what each would have returned. Neither exists in the source folder.</p>
+        </div>
+      </section>
+
+      <!-- ============================================ 4 · PIPELINE ======== -->
+      <section class="sec" id="the-graft-pipeline">
+        <h2>The GRAFT pipeline</h2>
+
+        <p>The workflow was drawn before it was written, and the drawing is still the clearest statement of it. Literature and a stress protectant scan feed a candidate sequence; the sequence feeds mutation ideation on three axes; restraint mapping and a conformer ensemble feed docking; docking feeds molecular dynamics and structure scoring; scoring feeds a verdict that is checked back against the literature.</p>
+
+        <figure class="fig fig--chart wide">
+          <div class="fig__frame">
+            <img src="../assets/img/protein-design/graft-pipeline.webp"
+                 alt="Flow chart of the protein design workflow, from literature and protectant families through mutation ideation, restraint mapping, conformer ensemble and receptor preparation, into binary and ternary docking and AI co-folding, then molecular dynamics and structure scoring against HADDOCK score, CAPRI, PRODIGY, MolProbity and a literature check."
+                 width="1002" height="577" loading="lazy" decoding="async" />
+          </div>
+          <figcaption>
+            <b>Figure 1.</b> The workflow as the team drew it. Each box on this chart is
+            a heading somewhere in this section, and the tool names in small type are the
+            software that box was run with. Molecular dynamics appears twice because it
+            was treated as an optional pass, once before docking and once after.
+            <span class="prov">Source: &ldquo;Protein Design &amp; Docking Methodology.docx&rdquo;, Felix&nbsp;Y. Converted, not retouched.</span>
+          </figcaption>
+        </figure>
+
+        <p>Read as an acronym, the method names spell the order they run in. That is the spine this section is built on, and each letter is a page.</p>
+
+        <div class="steps">
+          <a class="stepcard" href="./generate/">
+            <span class="stepcard__k">G</span>
+            <span class="stepcard__name">Generate</span>
+            <p class="stepcard__what">Decides which molecule is worth modelling, and which of its residues are allowed to change.</p>
+            <span class="stepcard__state" data-state="framework">Framework</span>
+          </a>
+          <a class="stepcard" href="./restraints/">
+            <span class="stepcard__k">R</span>
+            <span class="stepcard__name">Restraints</span>
+            <p class="stepcard__what">Decides what the docking is permitted to assume before it starts searching.</p>
+            <span class="stepcard__state" data-state="framework">Framework</span>
+          </a>
+          <a class="stepcard" href="./assembly/">
+            <span class="stepcard__k">A</span>
+            <span class="stepcard__name">Assembly</span>
+            <p class="stepcard__what">Decides how a two-body model becomes a three-body signalling complex.</p>
+            <span class="stepcard__state" data-state="framework">Framework</span>
+          </a>
+          <a class="stepcard" href="../md-simulations/">
+            <span class="stepcard__k">F</span>
+            <span class="stepcard__name">Flex</span>
+            <p class="stepcard__what">Decides whether a pose survives being shaken, or only survives being scored.</p>
+            <span class="stepcard__state" data-state="written">Written</span>
+          </a>
+          <a class="stepcard" href="./triage/">
+            <span class="stepcard__k">T</span>
+            <span class="stepcard__name">Triage</span>
+            <p class="stepcard__what">Decides which models are kept, and admits which of those decisions the score could not make.</p>
+            <span class="stepcard__state" data-state="framework">Framework</span>
+          </a>
+          <a class="stepcard stepcard--aside" href="./packaging/">
+            <span class="stepcard__k">&middot;</span>
+            <span class="stepcard__name">Packaging</span>
+            <p class="stepcard__what">Decides what a surviving design looks like as DNA the chassis will translate and export.</p>
+            <span class="stepcard__state" data-state="framework">Framework</span>
+          </a>
+        </div>
+
+        <p>Packaging falls outside the acronym, and the card shows it that way on purpose. It is the step that turns a model into something a wet lab can hold, and it is the only step in this section whose output has left the building.</p>
+
+        <aside class="callout callout--borrowed">
+          <b class="callout__label">The worked case</b>
+          <p><a href="../peptide-design/">Peptide Design</a> is the whole pipeline run once, on BoPep4, with the numbers attached and the retractions recorded. Read a method page here for how a step works; read that page for what happened when it was run.</p>
+        </aside>
+      </section>
+
+      <!-- ============================================ 5 · LIMITS ========== -->
+      <section class="sec" id="limits-of-this-section">
+        <h2>Limits of this section</h2>
+
+        <p>Three standing limits apply to every page below, and they are stated once here so no page has to relitigate them.</p>
+
+        <h3>The docking score</h3>
+        <p>A HADDOCK score difference is never used on this wiki as evidence that one design binds better than another. Re-running the same complex at a different random seed moves the score by 13 to 36 units, which is larger than any difference this project ever reported. Of the 121 docking runs on record, 113 begin from the pose they are meant to be testing and take their restraints from that same pose, so they cannot reject their own input. And the one benchmark with measured activity attached, the sixteen equal-length analogues in Pearce&nbsp;2008, returns a rank correlation of about +0.05 at p&nbsp;&gt;&nbsp;0.8&nbsp;[2]. <a href="./triage/">Triage</a> works through all three in detail, because that page exists to say what the scoring step could not do.</p>
+
+        <h3>Withdrawn claims</h3>
+        <p>An audit of the docking pipeline on 30&nbsp;July, and a structural review on 16&nbsp;August, retracted five claims the project had made. They are listed with their evidence in the ledger on <a href="../peptide-design/#audit">Peptide Design</a>, and they do not reappear anywhere in this section. One of them, K18R as an affinity lead, was pulled out of a DNA order on the morning it was due to ship.</p>
+
+        <h3>No plant evidence</h3>
+        <p>Neither BoPep4 nor LEA14 has been applied to a plant by this team. Every statement in this section is about a molecule, a model or a sequence. The assay that would test any of it is on the wet lab's list and has not run.</p>
+      </section>
+
+      <!-- ============================================ 6 · FUTURE ========== -->
+      <section class="sec" id="future-work">
+        <h2>Future work</h2>
+
+        <h3>Co-immunoprecipitation</h3>
+        <p>Everything in this section that concerns the ternary complex rests on structural compatibility: BAK1 can be placed against a PEPR1 and BoPep4 model without clashing. That is a statement about geometry and it cannot become a statement about association without a physical pull-down. Co-immunoprecipitation of a tagged receptor from tissue treated with the peptide is the experiment that would do it, and it is the one that would turn the <a href="./assembly/">Assembly</a> page from a modelling exercise into a claim.</p>
+
+        <div class="gap">
+          <b class="gap__label">Declared gap</b>
+          <p>No protocol, antibody or tissue source has been chosen for this. It needs a tagged PEPR1 construct, a plant system that expresses it, and an antibody pair, none of which the project holds.</p>
+        </div>
+
+        <h3>Receptor abundance model</h3>
+        <p>A docking model treats the receptor as present. A field does not. The proposal is to read PEPR1 transcript abundance out of ePlant&nbsp;[4], which aggregates <i>Arabidopsis</i> expression data across tissues and treatments, and use it to ask a question this section never asks: at what applied concentration does the peptide stop being limited by its own affinity and start being limited by how much receptor is on the surface of a leaf. That number would set the dose the bioreactor has to deliver, which is the link between this section and <a href="../model/">Math Model</a>.</p>
+
+        <div class="gap">
+          <b class="gap__label">Declared gap</b>
+          <p>This is a written intention and nothing else. There is no extracted expression table, no chosen tissue or stress condition, and no statement of how a transcript level would be converted into a surface receptor density. The first step is small: pull PEPR1 and PEPR2 expression for leaf tissue under salt treatment, and see whether the data is even resolved enough to carry the argument.</p>
+        </div>
+      </section>
+
+      <!-- ============================================ 7 · REFERENCES ====== -->
+      <section class="refs" id="references">
+        <h2 data-no-toc>References</h2>
+        <ol>
+          <li>Tang, J., Han, Z., Sun, Y., Zhang, H., Gong, X. &amp; Chai, J. Structural basis for recognition of an endogenous peptide by the plant receptor kinase PEPR1. <i>Cell Research</i> 25, 110&ndash;120 (2015). PDB&nbsp;5GR8.</li>
+          <li>Pearce, G., Yamaguchi, Y., Munske, G. &amp; Ryan, C. A. Structure&ndash;activity studies of AtPep1, a plant peptide signal involved in the innate immune response. <i>Peptides</i> 29, 2083&ndash;2089 (2008).</li>
+          <li>Yamaguchi, Y., Huffaker, A., Bryan, A. C., Tax, F. E. &amp; Ryan, C. A. PEPR2 is a second receptor for the Pep1 and Pep2 peptides and contributes to defense responses in <i>Arabidopsis</i>. <i>Plant Cell</i> 22, 508&ndash;522 (2010).</li>
+          <li>Waese, J. et al. ePlant: visualizing and exploring multiple levels of data for hypothesis generation in plant biology. <i>Plant Cell</i> 29, 1806&ndash;1821 (2017).</li>
+        </ol>
+        <p class="refs__note">Each step page carries the references its own method rests on: the docking and
+        clustering papers on <a href="./assembly/">Assembly</a>, the interface and validation tools on
+        <a href="./triage/">Triage</a>, the alignment and family literature on <a href="./generate/">Generate</a>,
+        and the translation and secretion papers on <a href="./packaging/">Packaging</a>.</p>
+      </section>
+
+      <div class="status">
+        <b>This section is a draft with ten fixes open and nineteen sections declared empty.</b>
+        <b><a href="./generate/">Generate</a></b> P1, a truncation plateau read off
+        docking scores that sit inside seed noise; P2, point substitutions still
+        written as wins after they were retracted; P3, two incompatible folds for
+        AtLEA14. <b><a href="./restraints/">Restraints</a></b> P4, three programs
+        named as the source of one conformer ensemble; P5, an AlphaFold confidence
+        check the outline declares and the audit did not find; P6, a restraint
+        workflow described as governing the whole campaign when it describes eight
+        runs of 121. <b><a href="./triage/">Triage</a></b> P7, clustering described as
+        informative where every structure landed in one cluster.
+        <b><a href="./packaging/">Packaging</a></b> P8, candidate ranking on a sum
+        against ranking on the worse of two terms; P9, two different number sets for
+        the selected BoPep4 variant; P10, a C-terminal tag in the codon workflow
+        against the N-terminal tags actually ordered. P10 is the urgent one, because
+        it is a check on DNA that has already shipped. Each box sits on the page it
+        belongs to. Delete a box when it is resolved, and delete that page's status
+        box when it has none left.
+      </div>
+    </main>
+  </div>
+
+  <nav class="pagenav" aria-label="Neighbouring pages">
+    <a class="is-prev" href="../software/"><b>Previous</b><span>Software</span></a>
+    <a class="is-next" href="./generate/"><b>Next</b><span>Generate</span></a>
+  </nav>
+
+  <footer class="footer2">
+    <div class="footer2__inner">
+        <div>
+          <h3>Project</h3>
+          <ul>
+          <li><a href="../description/">Description</a></li>
+          <li><a href="../engineering/">Engineering</a></li>
+          <li><a href="../contribution/">Contribution</a></li>
+          <li><a href="../results/">Results</a></li>
+          </ul>
+        </div>
+        <div>
+          <h3>Wet Lab</h3>
+          <ul>
+          <li><a href="../experiments/">Experiments</a></li>
+          <li><a href="../parts/">Parts</a></li>
+          <li><a href="../plant/">Plants</a></li>
+          <li><a href="../measurement/">Measurement</a></li>
+          <li><a href="../safety-and-security/">Safety</a></li>
+          <li><a href="../notebook/">Notebook</a></li>
+          </ul>
+        </div>
+        <div>
+          <h3>Dry Lab</h3>
+          <ul>
+          <li><a href="../model/">Math Model</a></li>
+          <li><a href="../bioreactor-calculations/">Bioreactor Calculations</a></li>
+          <li><a href="../hardware/">Hardware</a></li>
+          <li><a href="../software/">Software</a></li>
+          <li><a href="../protein-design/">Protein Design</a></li>
+          <li><a href="../drylab-notebook/">Dry Lab Notebook</a></li>
+          </ul>
+        </div>
+        <div>
+          <h3>Engagement</h3>
+          <ul>
+          <li><a href="../human-practices/">Integrated Human Practices</a></li>
+          <li><a href="../education/">Education</a></li>
+          <li><a href="../entrepreneurship/">Entrepreneurship</a></li>
+          <li><a href="../sustainability/">Sustainability</a></li>
+          <li><a href="../laws-and-regulations/">Laws and Regulations</a></li>
+          <li><a href="../geospatial-analysis/">Geospatial Analysis</a></li>
+          <li><a href="../data-physicalization/">Data Physicalization</a></li>
+          </ul>
+        </div>
+        <div>
+          <h3>Team</h3>
+          <ul>
+          <li><a href="../team/">Members</a></li>
+          <li><a href="../attributions/">Attribution</a></li>
+          <li><a href="../milestone/">Milestone</a></li>
+          <li><a href="../gallery/">Gallery</a></li>
+          </ul>
+        </div>
+      <div class="footer2__legal">
+        <p><b>ReLeaf</b> &middot; GEMS Taiwan &middot; iGEM 2026 &middot; Biomanufacturing Village</p>
+        <p>&copy; 2026 &middot; Content on this wiki is licensed under a <a href="https://creativecommons.org/licenses/by/4.0/" rel="license">Creative Commons Attribution 4.0 International license</a>.</p>
+        <p>The repository used to create this website is available at <a href="https://gitlab.igem.org/2026/gems-taiwan">gitlab.igem.org/2026/gems-taiwan</a>.</p>
+        <p>Nothing on this wiki is fetched from a server outside iGEM. Before the wiki freeze, every image and font has to be re-hosted on <code>static.igem.wiki</code>.</p>
+      </div>
+    </div>
+  </footer>
+
+  <script src="../assets/data/site-nav.js"></script>
+  <script src="../assets/js/nav.js"></script>
+  <script src="../assets/js/page.js"></script>
+</body>
+</html>

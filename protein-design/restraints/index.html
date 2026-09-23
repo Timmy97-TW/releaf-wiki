@@ -1,0 +1,319 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Restraints | Protein Design &middot; ReLeaf &middot; iGEM 2026</title>
+  <meta name="description" content="Step R of the GRAFT pipeline: the three-state peptide conformer ensemble, the receptor and co-receptor structures behind PEPR1, PEPR2 and BAK1, and the cross-checked residue lists that told the docking where it was allowed to look." />
+  <link rel="icon" href="../../assets/img/logo.png" />
+  <link rel="stylesheet" href="../../assets/css/tokens.css" />
+  <link rel="stylesheet" href="../../assets/css/nav.css" />
+  <link rel="stylesheet" href="../../assets/css/page.css" />
+  <link rel="stylesheet" href="../protein.css?v=202609231" />
+</head>
+<body class="pd">
+<!--
+  SOURCE. "Protein Design Writing.docx" (Structure and Docking Prep: peptide
+  conformer ensemble, receptor and co-receptor structures, receptor restraint
+  mapping), the annotations on the workflow chart in "Protein Design & Docking
+  Methodology.docx", and the agreed outline in "0923 Wiki Subpage
+  Structures.docx".
+
+  The last section of this page exists because the restraints are the single
+  most consequential input in the whole section and the audit found they were
+  not derived the way the writing describes. That has to be on the page that
+  describes them, not only in the ledger on /peptide-design/.
+-->
+
+  <div id="site-nav" data-base="../../" data-tab="drylab" data-page="protein-design"></div>
+  <div class="sitenav-spacer"></div>
+
+  <header class="pagehead">
+    <div class="pagehead__inner">
+      <p class="pagehead__eyebrow">
+        <a href="../../">ReLeaf</a> <i>/</i> Dry Lab <i>/</i> <a href="../">Protein Design</a> <i>/</i> Restraints
+      </p>
+      <h1 class="pagehead__title">Restraints</h1>
+      <p class="pagehead__lede">Docking does not search everywhere. It searches where it is told to, and what it is told is a list of residues someone decided are at the interface. This page is about how that list was made, which is the most consequential decision in the pipeline and the easiest one to make circular.</p>
+      <ul class="pagehead__meta">
+        <li><b>Section</b><span>Dry Lab &middot; Protein Design</span></li>
+        <li><b>Step</b><span>R, the second of five</span></li>
+        <li><b>Last updated</b><span>23 September 2026</span></li>
+        <li><b>Status</b><span>Draft, 3 fixes open</span></li>
+      </ul>
+    </div>
+  </header>
+
+  <nav class="stepnav" aria-label="Protein Design section">
+    <div class="stepnav__inner">
+      <a class="stepnav__home" href="../">Protein Design</a>
+      <a class="step" href="../generate/"><span class="step__k">G</span>Generate</a>
+      <a class="step" href="../restraints/" aria-current="page"><span class="step__k">R</span>Restraints</a>
+      <a class="step" href="../assembly/"><span class="step__k">A</span>Assembly</a>
+      <a class="step" href="../../md-simulations/"><span class="step__k">F</span>Flex</a>
+      <a class="step" href="../triage/"><span class="step__k">T</span>Triage</a>
+      <a class="step" href="../packaging/"><span class="step__k" data-off>&middot;</span>Packaging</a>
+      <!-- not a GRAFT step: the pipeline run once end to end -->
+      <a class="step" href="../../peptide-design/"><span class="step__k" data-off>&middot;</span>Worked case</a>
+    </div>
+  </nav>
+
+  <div class="pagewrap">
+    <details class="toc" open>
+      <summary>Contents</summary>
+      <div class="toc__inner"><p class="toc__title">On this page</p></div>
+    </details>
+
+    <main class="pagebody">
+
+      <aside class="callout callout--borrowed">
+        <b class="callout__label">Why this step gets its own page</b>
+        <p>HADDOCK has no search box to report. Its search space <i>is</i> the list of residues declared active at the interface&nbsp;[6]. Every number this section produced is conditional on that list, so the list is the method and it belongs in the open.</p>
+      </aside>
+
+      <!-- ============================================ 1 · CONFORMERS ====== -->
+      <section class="sec" id="peptide-conformer-ensemble">
+        <h2>Peptide conformer ensemble</h2>
+
+        <p>A twenty-three residue peptide has no single structure in solution. It samples a range of backbone geometries, and which one is presented to a docking program changes the answer, so the input is an ensemble and not a structure.</p>
+
+        <p>The shape of the ensemble was chosen from the crystal. Tang&nbsp;et&nbsp;al. show AtPep1 bound to the PEPR1 ectodomain in an extended conformation, threaded along the inner face of the leucine-rich-repeat solenoid&nbsp;[1]. BoPep4 comes from the same family, carries the same conserved C-terminal motif, and is read by the same receptor, so an extended conformation is the one the bound state is most likely to need. The ensemble does not assume it. It contains the extended state alongside two alternatives, a compact helical state and a polyproline&nbsp;II state, so that the docking is given a real choice and the extended state has to earn its place.</p>
+
+        <p>Three states is the number the peptide-docking literature asks for. The recommended protocol for protein to peptide docking with this software supplies three unbound conformers, precisely so that the result is not a restatement of the conformation the modeller picked&nbsp;[12].</p>
+
+        <div class="fix" id="p4">
+          <b class="fix__label">To fix &middot; P4</b>
+          <p>Three sources name three different programs as the one that generated these conformers, and a reader cannot reproduce the input without knowing which.</p>
+          <ul>
+            <li><i>AlphaFold web server</i>: the agreed outline, under Peptide Conformer Ensemble.</li>
+            <li><i>AlphaFold&nbsp;3</i>: &ldquo;Protein Design Writing.docx&rdquo;, which states the structures were generated with AlphaFold&nbsp;3 and cross-checked against 5GR8.</li>
+            <li><i>PyMOL three-conformer ensemble, plus PEP-FOLD3/4</i>: the annotation on the workflow chart in &ldquo;Protein Design &amp; Docking Methodology.docx&rdquo;, which also names the three states differently, as compact helix, default disorder and stretched out.</li>
+          </ul>
+          <p>These are not the same operation. A folded prediction, a manually built ensemble and a dedicated peptide-structure server produce different backbones, and the docking inputs came from one of them. Whoever built the ensemble should name the program and the version and attach the three coordinate files.</p>
+        </div>
+      </section>
+
+      <!-- ============================================ 2 · RECEPTORS ======= -->
+      <section class="sec" id="receptors-and-co-receptors">
+        <h2>Receptors and co-receptors</h2>
+
+        <p>Three protein chains make up the signalling complex this section models: one primary receptor, one alternative receptor and one shared co-receptor. They are held to very different standards of evidence, and the page says which is which, because the confidence in a docking result cannot exceed the confidence in its inputs.</p>
+
+        <div class="tablewrap">
+          <table class="data">
+            <thead><tr><th>Chain</th><th>Source</th><th>Basis</th><th>Standing</th></tr></thead>
+            <tbody>
+              <tr>
+                <td><b>PEPR1</b></td>
+                <td>PDB&nbsp;5GR8, chain&nbsp;A</td>
+                <td>Crystal structure of the ectodomain with AtPep1 bound&nbsp;[1].</td>
+                <td>Experimental.</td>
+              </tr>
+              <tr>
+                <td><b>PEPR2</b></td>
+                <td>SWISS-MODEL homology model on PEPR1, with an AlphaFold model alongside</td>
+                <td>No experimental structure of the PEPR2 ectodomain exists. The model is built on the PEPR1 template&nbsp;[4,&nbsp;5].</td>
+                <td class="open">Model-based. Every PEPR2 number is a hypothesis.</td>
+              </tr>
+              <tr>
+                <td><b>BAK1</b></td>
+                <td>PDB&nbsp;4MN8, chain&nbsp;B</td>
+                <td>Crystal structure of the FLS2 and BAK1 ectodomains with flg22 bound&nbsp;[2]. BAK1 is not bound to PEPR1 in it.</td>
+                <td>Experimental chain, borrowed from a different complex.</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+
+        <h3>PEPR1 and PEPR2</h3>
+        <p>PEPR1 is a leucine-rich-repeat receptor-like kinase and an innate-immunity pattern recognition receptor in <i>Arabidopsis</i>. The 5GR8 ectodomain is the docking receptor for almost everything in this section, and it does double duty: it is the input, and re-docking its own ligand into it is the positive control that says the pipeline can find a known answer.</p>
+
+        <p>PEPR2 was carried as an alternative because the two receptors overlap. PEPR2 is the more specific of the pair toward AtPep ligands and PEPR1 has broader Pep recognition&nbsp;[3]. PEPR1 was kept as primary for one reason only, which is that it has a solved structure and PEPR2 does not, and PEPR2 results are reported throughout as complementary.</p>
+
+        <div class="fix" id="p5">
+          <b class="fix__label">To fix &middot; P5</b>
+          <p>The outline declares an AlphaFold confidence evaluation as a step in preparing PEPR2. The pipeline audit found no per-residue confidence filter was applied to the PEPR2 model before it was docked.</p>
+          <ul>
+            <li>Step declared: the agreed outline, PEPR2 &rarr; Homology Modeling, SWISS-MODEL &rarr; Alphafold Confidence Evaluation.</li>
+            <li>Step not found: the 30&nbsp;July pipeline audit, recorded as a qualification on <a href="../../peptide-design/#audit">Peptide Design</a>: <q>no per-residue confidence filter was applied before docking it</q>.</li>
+          </ul>
+          <p>This is cheap to settle and worth settling, because it decides how the PEPR2 numbers should be labelled. Either the confidence evaluation was run and the output was never saved, in which case rerun it and save the per-residue scores over the interface, or it was planned and skipped, in which case it comes out of the outline and the PEPR2 rows stay labelled as model-based.</p>
+        </div>
+
+        <h3>BAK1</h3>
+        <p>BAK1 is the awkward one, and the reasoning behind using it is worth stating plainly. 4MN8 is a flagellin receptor complex. It does not contain PEPR1, and nothing in it involves a Pep peptide. What it does contain is an experimentally resolved BAK1 leucine-rich-repeat ectodomain, and BAK1 acts as a shared co-receptor for several plant immune receptors including the PEPRs. The conserved architecture of that ectodomain is what makes the borrowed chain usable as a structural stand-in for BAK1's part in a PEPR1 complex.</p>
+
+        <p>The limits of that borrowing are real. A co-receptor that is experimentally resolved in one complex is not thereby positioned in another, so everything the <a href="../assembly/">Assembly</a> page does with BAK1 is about whether a placement is compatible, and never about whether it happens.</p>
+      </section>
+
+      <!-- ============================================ 3 · MAPPING ========= -->
+      <section class="sec" id="restraint-mapping">
+        <h2>Restraint mapping</h2>
+
+        <p>Restraints mark the residues expected to take part in the interaction, and they push the search toward interfaces that are physically and biologically plausible. The evidence available for the four chains in this complex is uneven, so no single method was trusted on its own. Each chain's list was assembled from a primary source and then cross-checked against an independent one.</p>
+
+        <div class="tablewrap">
+          <table class="data">
+            <thead><tr><th>Chain</th><th>Primary source of residues</th><th>Cross-check</th></tr></thead>
+            <tbody>
+              <tr><td><b>BoPep4</b></td><td>Residues within 5&nbsp;&Aring; of the receptor in the 5GR8 alignment, with Asn23 given priority as the anchor.</td><td>The conserved motif from the family alignment on <a href="../generate/#sequence-alignment">Generate</a>.</td></tr>
+              <tr><td><b>PEPR1</b></td><td>Residues within 5&nbsp;&Aring; of the bound peptide in 5GR8.</td><td>WHISCY and CPORT interface prediction&nbsp;[7,&nbsp;8].</td></tr>
+              <tr><td><b>PEPR2</b></td><td>Transferred from PEPR1 by sequence alignment.</td><td>WHISCY and CPORT on the PEPR2 model.</td></tr>
+              <tr><td><b>BAK1</b></td><td>Residues within 5&nbsp;&Aring; of the receptor in the 4MN8 alignment, plus conservation-based prediction.</td><td class="open">Marked <q>potential</q> on the workflow chart. Unconfirmed.</td></tr>
+            </tbody>
+          </table>
+        </div>
+
+        <h3>Sequence alignment</h3>
+        <p>MUSCLE was used to align the receptor sequences&nbsp;[9], and its job here is narrow and important: PEPR2 has no structure of its own, so its restraint list is PEPR1's list mapped across an alignment. The alignment is what makes that mapping defensible, and it is also where the mapping can silently fail, because an identical residue at an aligned position is not necessarily in the same place in three dimensions.</p>
+
+        <h3>Interface prediction</h3>
+        <p>WHISCY predicts interface residues from evolutionary conservation in a sequence alignment combined with structural information&nbsp;[7]. CPORT combines several predictors into a consensus and was written specifically to feed prediction-driven docking with this software&nbsp;[8]. Both were run as checks on lists that had already been derived from the crystal, which is the right order: the structural evidence leads, and the predictors either corroborate it or flag a residue worth a second look.</p>
+
+        <h3>Structural superposition</h3>
+        <p>US-align was used to superpose structures across the two crystals&nbsp;[10], and it is what makes the BAK1 borrowing operational. Placing the 4MN8 BAK1 ectodomain in a sensible orientation against the 5GR8 PEPR1 ectodomain is a superposition problem before it is a docking problem, and the receptor to co-receptor geometry that comes out of it is what the ternary assembly starts from.</p>
+
+        <div class="gap">
+          <b class="gap__label">Declared gap</b>
+          <p>The superposition is described and never quantified. A structural alignment produces a score and a residue-level correspondence, and neither is recorded, so nobody can tell how good the PEPR1 to BAK1 pairing was. What is needed is the TM-score and the aligned length for the 5GR8 and 4MN8 superposition, and the list of PEPR1 positions that the 4MN8 FLS2 interface maps onto.</p>
+        </div>
+
+        <h3>Accessible space</h3>
+        <p>DisVis asks a different question from a docking program, and that is why it is here. Given a set of distance restraints, it computes the space the second molecule can occupy without violating them, and it will report when a set of restraints is inconsistent&nbsp;[11]. Run before docking, it is a check on the restraint list itself. A list that leaves no accessible space is wrong, and finding that out costs minutes instead of a docking campaign.</p>
+
+        <div class="gap">
+          <b class="gap__label">Declared gap</b>
+          <p>The screen is named in the outline and its result is not written down anywhere. The useful output is one sentence per complex: how much of the accessible interaction space survived the restraints, and whether any restraint was flagged as false positive. Without it the word <q>screen</q> is doing work the evidence does not support.</p>
+        </div>
+      </section>
+
+      <!-- ============================================ 4 · PROVENANCE ====== -->
+      <section class="sec" id="provenance-of-the-restraints">
+        <h2>Provenance of the restraints</h2>
+
+        <p>Everything above describes how restraints should be built, and it is how the founding campaign built them. It is not how most of the runs in this project built them, and that difference is the reason this page ends here instead of at the DisVis screen.</p>
+
+        <p>The founding campaign, eight runs, took its restraints from the 5GR8 crystal interface and threaded the peptide on the crystal backbone. It re-docked AtPep1 as a positive control and recovered the crystal pose at 0.77&nbsp;&Aring;, which is the pipeline working as advertised. The five later campaigns, 113 runs, started from the pose being tested and derived their restraints by measuring which residues touch in that same pose.</p>
+
+        <p>A run built that way cannot reject its own input. It is a legitimate operation with a name, restrained refinement, and it is useful for relaxing a model under a force field. It is not a test of the pose it started from, and for a while it was described in downstream reports as though it were. That description was withdrawn on 30&nbsp;July.</p>
+
+        <div class="fix" id="p6">
+          <b class="fix__label">To fix &middot; P6</b>
+          <p>The methodology section still describes the restraint workflow as if it governed the whole campaign.</p>
+          <ul>
+            <li>As written: &ldquo;Protein Design Writing.docx&rdquo;, Receptor Restraint Mapping, which describes <q>a rigorous cross-validation workflow across multiple computational tools to identify and corroborate potential interaction residues before incorporating them as docking restraints</q>.</li>
+            <li>As audited: 113 of 121 runs derived their restraints from the pose under test. The cross-validated workflow describes the eight founding runs. Recorded in the 30&nbsp;July audit and on <a href="../../peptide-design/#audit">Peptide Design</a>.</li>
+          </ul>
+          <p>Both statements can stand if the document says which campaign it is describing. As it reads now, a reader will apply the founding campaign's rigour to results that do not have it. The fix is one clause, and it should go into the source document as well as onto this page.</p>
+        </div>
+
+        <aside class="callout callout--unproven">
+          <b class="callout__label">What this means downstream</b>
+          <p>Where a result on <a href="../assembly/">Assembly</a> or <a href="../triage/">Triage</a> comes from a restrained refinement run, it is evidence about geometry under a force field and not evidence that the starting pose is correct. The pages say so where it applies.</p>
+        </aside>
+      </section>
+
+      <!-- ============================================ 5 · REFERENCES ====== -->
+      <section class="refs" id="references">
+        <h2 data-no-toc>References</h2>
+        <ol>
+          <li>Tang, J., Han, Z., Sun, Y., Zhang, H., Gong, X. &amp; Chai, J. Structural basis for recognition of an endogenous peptide by the plant receptor kinase PEPR1. <i>Cell Research</i> 25, 110&ndash;120 (2015). PDB&nbsp;5GR8.</li>
+          <li>Sun, Y. et al. Structural basis for flg22-induced activation of the <i>Arabidopsis</i> FLS2&ndash;BAK1 immune complex. <i>Science</i> 342, 624&ndash;628 (2013). PDB&nbsp;4MN8.</li>
+          <li>Yamaguchi, Y., Huffaker, A., Bryan, A. C., Tax, F. E. &amp; Ryan, C. A. PEPR2 is a second receptor for the Pep1 and Pep2 peptides and contributes to defense responses in <i>Arabidopsis</i>. <i>Plant Cell</i> 22, 508&ndash;522 (2010).</li>
+          <li>Waterhouse, A. et al. SWISS-MODEL: homology modelling of protein structures and complexes. <i>Nucleic Acids Research</i> 46, W296&ndash;W303 (2018).</li>
+          <li>Abramson, J. et al. Accurate structure prediction of biomolecular interactions with AlphaFold&nbsp;3. <i>Nature</i> 630, 493&ndash;500 (2024).</li>
+          <li>Dominguez, C., Boelens, R. &amp; Bonvin, A. M. J. J. HADDOCK: a protein&ndash;protein docking approach based on biochemical or biophysical information. <i>J. Am. Chem. Soc.</i> 125, 1731&ndash;1737 (2003).</li>
+          <li>de Vries, S. J., van Dijk, A. D. J. &amp; Bonvin, A. M. J. J. WHISCY: what information does surface conservation yield? <i>Proteins</i> 63, 479&ndash;489 (2006).</li>
+          <li>de Vries, S. J. &amp; Bonvin, A. M. J. J. CPORT: a consensus interface predictor and its performance in prediction-driven docking with HADDOCK. <i>PLoS ONE</i> 6, e17695 (2011).</li>
+          <li>Edgar, R. C. MUSCLE: multiple sequence alignment with high accuracy and high throughput. <i>Nucleic Acids Research</i> 32, 1792&ndash;1797 (2004).</li>
+          <li>Zhang, C., Shine, M., Pyle, A. M. &amp; Zhang, Y. US-align: universal structure alignments of proteins, nucleic acids, and macromolecular complexes. <i>Nature Methods</i> 19, 1109&ndash;1115 (2022).</li>
+          <li>van Zundert, G. C. P. &amp; Bonvin, A. M. J. J. DisVis: quantifying and visualizing accessible interaction space of distance-restrained biomolecular complexes. <i>Bioinformatics</i> 31, 3222&ndash;3224 (2015).</li>
+          <li>Trellet, M., Melquiond, A. S. J. &amp; Bonvin, A. M. J. J. A unified conformational selection and induced fit approach to protein&ndash;peptide docking. <i>PLoS ONE</i> 8, e58769 (2013).</li>
+        </ol>
+      </section>
+
+      <div class="status">
+        <b>This page is a draft with three fixes open, and two sections declared empty.</b>
+        P4 three sources name three different programs as the source of the conformer
+        ensemble; P5 an AlphaFold confidence evaluation the outline declares and the
+        audit did not find; P6 a restraint workflow described as governing the whole
+        campaign when it describes eight runs of 121. The declared gaps are the
+        US-align superposition numbers and the DisVis screen result. Delete each box
+        as it is resolved, and delete this box when none are left.
+      </div>
+    </main>
+  </div>
+
+  <nav class="pagenav" aria-label="Neighbouring pages">
+    <a class="is-prev" href="../generate/"><b>Previous</b><span>Generate</span></a>
+    <a class="is-next" href="../assembly/"><b>Next</b><span>Assembly</span></a>
+  </nav>
+
+  <footer class="footer2">
+    <div class="footer2__inner">
+        <div>
+          <h3>Project</h3>
+          <ul>
+          <li><a href="../../description/">Description</a></li>
+          <li><a href="../../engineering/">Engineering</a></li>
+          <li><a href="../../contribution/">Contribution</a></li>
+          <li><a href="../../results/">Results</a></li>
+          </ul>
+        </div>
+        <div>
+          <h3>Wet Lab</h3>
+          <ul>
+          <li><a href="../../experiments/">Experiments</a></li>
+          <li><a href="../../parts/">Parts</a></li>
+          <li><a href="../../plant/">Plants</a></li>
+          <li><a href="../../measurement/">Measurement</a></li>
+          <li><a href="../../safety-and-security/">Safety</a></li>
+          <li><a href="../../notebook/">Notebook</a></li>
+          </ul>
+        </div>
+        <div>
+          <h3>Dry Lab</h3>
+          <ul>
+          <li><a href="../../model/">Math Model</a></li>
+          <li><a href="../../bioreactor-calculations/">Bioreactor Calculations</a></li>
+          <li><a href="../../hardware/">Hardware</a></li>
+          <li><a href="../../software/">Software</a></li>
+          <li><a href="../../protein-design/">Protein Design</a></li>
+          <li><a href="../../drylab-notebook/">Dry Lab Notebook</a></li>
+          </ul>
+        </div>
+        <div>
+          <h3>Engagement</h3>
+          <ul>
+          <li><a href="../../human-practices/">Integrated Human Practices</a></li>
+          <li><a href="../../education/">Education</a></li>
+          <li><a href="../../entrepreneurship/">Entrepreneurship</a></li>
+          <li><a href="../../sustainability/">Sustainability</a></li>
+          <li><a href="../../laws-and-regulations/">Laws and Regulations</a></li>
+          <li><a href="../../geospatial-analysis/">Geospatial Analysis</a></li>
+          <li><a href="../../data-physicalization/">Data Physicalization</a></li>
+          </ul>
+        </div>
+        <div>
+          <h3>Team</h3>
+          <ul>
+          <li><a href="../../team/">Members</a></li>
+          <li><a href="../../attributions/">Attribution</a></li>
+          <li><a href="../../milestone/">Milestone</a></li>
+          <li><a href="../../gallery/">Gallery</a></li>
+          </ul>
+        </div>
+      <div class="footer2__legal">
+        <p><b>ReLeaf</b> &middot; GEMS Taiwan &middot; iGEM 2026 &middot; Biomanufacturing Village</p>
+        <p>&copy; 2026 &middot; Content on this wiki is licensed under a <a href="https://creativecommons.org/licenses/by/4.0/" rel="license">Creative Commons Attribution 4.0 International license</a>.</p>
+        <p>The repository used to create this website is available at <a href="https://gitlab.igem.org/2026/gems-taiwan">gitlab.igem.org/2026/gems-taiwan</a>.</p>
+        <p>Nothing on this wiki is fetched from a server outside iGEM. Before the wiki freeze, every image and font has to be re-hosted on <code>static.igem.wiki</code>.</p>
+      </div>
+    </div>
+  </footer>
+
+  <script src="../../assets/data/site-nav.js"></script>
+  <script src="../../assets/js/nav.js"></script>
+  <script src="../../assets/js/page.js"></script>
+</body>
+</html>

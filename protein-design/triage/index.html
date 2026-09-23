@@ -1,0 +1,271 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Triage | Protein Design &middot; ReLeaf &middot; iGEM 2026</title>
+  <meta name="description" content="Step T of the GRAFT pipeline: how docked models were kept or discarded, why the HADDOCK score could not rank our designs, and the CAPRI, PDBePISA, MolProbity and literature checks that had to do the work instead." />
+  <link rel="icon" href="../../assets/img/logo.png" />
+  <link rel="stylesheet" href="../../assets/css/tokens.css" />
+  <link rel="stylesheet" href="../../assets/css/nav.css" />
+  <link rel="stylesheet" href="../../assets/css/page.css" />
+  <link rel="stylesheet" href="../protein.css?v=202609231" />
+</head>
+<body class="pd">
+<!--
+  SOURCE. The agreed outline in "0923 Wiki Subpage Structures.docx" (Triage -
+  Structure Scoring), the workflow chart in "Protein Design & Docking
+  Methodology.docx", and the 30 July pipeline audit with the alanine-scan
+  benchmark, both recorded on /peptide-design/.
+
+  THE POINT OF THIS PAGE. The outline itself asks "why is this not fully
+  applicable?" under the HADDOCK score. That question is the page. Section 2
+  answers it in the project's own voice, because a reader who arrives here
+  expecting a scoring step to rank designs has to be told plainly that it did
+  not, before any of the other checks make sense.
+
+  No score difference anywhere in this section is used as evidence.
+-->
+
+  <div id="site-nav" data-base="../../" data-tab="drylab" data-page="protein-design"></div>
+  <div class="sitenav-spacer"></div>
+
+  <header class="pagehead">
+    <div class="pagehead__inner">
+      <p class="pagehead__eyebrow">
+        <a href="../../">ReLeaf</a> <i>/</i> Dry Lab <i>/</i> <a href="../">Protein Design</a> <i>/</i> Triage
+      </p>
+      <h1 class="pagehead__title">Triage</h1>
+      <p class="pagehead__lede">Docking returns hundreds of models and a number attached to each one. This page is about what that number can be used for. On this project it turned out to answer a question about geometry well and a question about ranking not at all, and the second half of that sentence is the more useful finding.</p>
+      <ul class="pagehead__meta">
+        <li><b>Section</b><span>Dry Lab &middot; Protein Design</span></li>
+        <li><b>Step</b><span>T, the fifth of five</span></li>
+        <li><b>Last updated</b><span>23 September 2026</span></li>
+        <li><b>Status</b><span>Draft, 1 fix open</span></li>
+      </ul>
+    </div>
+  </header>
+
+  <nav class="stepnav" aria-label="Protein Design section">
+    <div class="stepnav__inner">
+      <a class="stepnav__home" href="../">Protein Design</a>
+      <a class="step" href="../generate/"><span class="step__k">G</span>Generate</a>
+      <a class="step" href="../restraints/"><span class="step__k">R</span>Restraints</a>
+      <a class="step" href="../assembly/"><span class="step__k">A</span>Assembly</a>
+      <a class="step" href="../../md-simulations/"><span class="step__k">F</span>Flex</a>
+      <a class="step" href="../triage/" aria-current="page"><span class="step__k">T</span>Triage</a>
+      <a class="step" href="../packaging/"><span class="step__k" data-off>&middot;</span>Packaging</a>
+      <!-- not a GRAFT step: the pipeline run once end to end -->
+      <a class="step" href="../../peptide-design/"><span class="step__k" data-off>&middot;</span>Worked case</a>
+    </div>
+  </nav>
+
+  <div class="pagewrap">
+    <details class="toc" open>
+      <summary>Contents</summary>
+      <div class="toc__inner"><p class="toc__title">On this page</p></div>
+    </details>
+
+    <main class="pagebody">
+
+      <!-- ============================================ 1 · SCORE =========== -->
+      <section class="sec" id="score-and-clustering">
+        <h2>Score and clustering</h2>
+
+        <p>The HADDOCK score is a weighted sum of energy terms computed on a refined model: van der Waals and electrostatic interaction energies, a desolvation term, and a penalty for violating the restraints the run was given&nbsp;[1,&nbsp;2]. It is reported in arbitrary units and lower is better. It was built to separate near-native models from wrong ones inside a single docking run, and the people who wrote it have published on how far it can be pushed beyond that&nbsp;[5].</p>
+
+        <p>Clustering is the second half of the step and it is meant to carry most of the weight. Models that are structurally similar are grouped, each group gets a mean score over its best members with a spread, and the unit of analysis becomes the cluster and not any individual structure. A cluster that is large, tight and well separated from the next one is a result. One structure with a good number is not.</p>
+
+        <p>One further tool sits on the workflow chart and carries no claim anywhere on this wiki. PRODIGY estimates binding affinity from the contacts in a complex&nbsp;[10], which makes it the obvious candidate to do the ranking job the HADDOCK score could not. It has not been run on any model in this section.</p>
+
+        <div class="fix" id="p7">
+          <b class="fix__label">To fix &middot; P7</b>
+          <p>The methodology text describes clustering as though it had discriminated between binding modes, and in the runs that produced most of this project's numbers it did not.</p>
+          <ul>
+            <li>As written: &ldquo;Protein Design Writing.docx&rdquo;, Binary Docking, which states that models <q>were clustered according to structural similarity</q> and that <q>structurally plausible clusters</q> were retained for comparison.</li>
+            <li>As audited: the later campaigns produced a single cluster containing every structure, so clustering carried no information in them. Recorded in the 30&nbsp;July audit and on <a href="../../peptide-design/#audit">Peptide Design</a>.</li>
+          </ul>
+          <p>The likely cause is on <a href="../assembly/#binary-docking">Assembly</a>: forty rigid-body models and a loose contact-similarity cutoff&nbsp;[9]. Rerunning one representative complex at the recommended sampling with a geometric cutoff would settle whether the single cluster is a property of the system or of the settings, and that is a single run, not a campaign.</p>
+        </div>
+      </section>
+
+      <!-- ============================================ 2 · LIMITS ========== -->
+      <section class="sec" id="limits-of-the-score">
+        <h2>Limits of the score</h2>
+
+        <p>The scoring step is where a reader expects the answer to come from. On this project it could not give one, and there are three independent reasons, each of which would be enough on its own.</p>
+
+        <h3>Seed-to-seed spread</h3>
+        <p>Docking is stochastic. Run the same complex again with a different random seed and the reported score changes. On this pipeline that seed-to-seed movement is between 13 and 36 units. Every score difference this project ever quoted as meaningful is smaller than that. A difference inside the noise of the method is not a finding, whatever direction it points in, so no comparison of two HADDOCK scores appears anywhere on this wiki as evidence.</p>
+
+        <h3>Circular runs</h3>
+        <p>Of 121 docking runs on record, 113 started from the pose they were meant to be testing and took their restraints from measurements on that same pose. That operation relaxes a model under a force field, which is a real and useful thing to do, and it cannot reject the model it started from. Results from those runs are evidence about geometry under a force field. They are not independent confirmation of anything, and the claim that they confirmed the co-folding predictions was withdrawn on 30&nbsp;July. The provenance is set out on <a href="../restraints/#provenance-of-the-restraints">Restraints</a>.</p>
+
+        <h3>The activity benchmark</h3>
+        <p>The project did run the test that would settle whether its scoring could rank designs, which is the part of this story worth being proud of. Pearce&nbsp;et&nbsp;al. measured half-maximal activity for an alanine scan on this peptide family&nbsp;[3]. Sixteen of those analogues share the same 9 to 23 scaffold, so length and buried surface are near-constant and the substitution is the only large variable. Docking all sixteen against their measured activities is about as clean a test of a scoring function as a project of this size can build.</p>
+
+        <p>The rank correlation came back at about +0.05 with p&nbsp;&gt;&nbsp;0.8. That is no relationship at all. An earlier internal report gave +0.237, and the difference is that the earlier figure included the wild-type reference point inside its own correlation, which inflates it. The corrected number stands, the claim that our docking reproduces the Pearce activity trend is retracted, and the full benchmark with its chart is on <a href="../../peptide-design/#benchmark">Peptide Design</a>.</p>
+
+        <p>Two further observations came out of the project's own tables with no new computation. In the founding campaign's mutant table every point mutant scores better than wild type, and the two mutants the literature calls most damaging score best of all. And on the wild-type run the top-ranked cluster is a non-native pose 5.80&nbsp;&Aring; from the crystal. Both point the same way.</p>
+
+        <aside class="callout callout--unproven">
+          <b class="callout__label">What the score is still good for</b>
+          <p>Two things, and they are worth keeping. Inside a single run it separates near-native models from wrong ones, which is what it was designed for, and the positive control demonstrates it: re-docking AtPep1 into its own receptor returns the crystal pose at 0.77&nbsp;&Aring;, top ranked, with a 35-unit gap to the first non-native pose. That gap is a within-run separation and is not a comparison between designs. The other use is as a cheap filter for models that are physically broken. Neither of those is a ranking of sequences by affinity, and neither is reported as one.</p>
+        </aside>
+      </section>
+
+      <!-- ============================================ 3 · CAPRI ========== -->
+      <section class="sec" id="capri-criteria">
+        <h2>CAPRI criteria</h2>
+
+        <p>CAPRI is the community assessment that sets the standard vocabulary for how close a predicted complex is to a reference structure&nbsp;[4]. It compares on three measures at once: the fraction of native contacts recovered, the root-mean-square deviation over the interface, and the deviation of the ligand after superposing the receptor. Those three together sort a prediction into incorrect, acceptable, medium or high quality. The value of the scheme here is that it is about distance from a known answer and contains no energy term, so it is untouched by everything in <a href="#limits-of-the-score">section&nbsp;2</a>.</p>
+
+        <p>It can only be applied where a reference structure exists, which on this project means the AtPep1 re-docking control against 5GR8. That control lands in the top band.</p>
+
+        <div class="gap">
+          <b class="gap__label">Declared gap</b>
+          <p>The control is reported through one number, a ligand deviation of 0.77&nbsp;&Aring;, and CAPRI wants three. The fraction of native contacts recovered and the interface deviation are not recorded, and both come out of the same comparison at no extra cost. The section needs all three for the positive control, and a sentence saying explicitly that no BoPep4 model can be assessed this way, because there is no BoPep4 crystal to assess it against.</p>
+        </div>
+      </section>
+
+      <!-- ============================================ 4 · PISA =========== -->
+      <section class="sec" id="interface-analysis">
+        <h2>Interface analysis</h2>
+
+        <p>PDBePISA takes a structure and describes its interfaces in physical terms: buried surface area, the residues on each side, hydrogen bonds and salt bridges, and an estimate of how much of the assembly is likely to be real rather than a crystal-packing artefact&nbsp;[6]. On this pipeline it is the measurement that does the work the score cannot. Buried area per residue and a list of contacting residues are geometric quantities, they are stable across seeds, and the two results in this section that survived every audit are both of that kind: the tandem sweep on <a href="../generate/#engineering-axes">Generate</a>, and the finding that residues 1 to 6 bury zero area on either receptor.</p>
+
+        <p>The 5GR8 interface list is the reference the modelled interfaces are compared against, because it is the one interface in this system that was measured rather than predicted.</p>
+
+        <div class="gap">
+          <b class="gap__label">Declared gap</b>
+          <p>The 5GR8 interface list is named in the outline and is not in the source folder. It is a table anyone can generate in a few minutes, and the section cannot make its main argument without it: the PEPR1 residues contacting AtPep1 in the crystal, each with its buried area, and the hydrogen bonds and salt bridges across the interface. Put beside the same table for a BoPep4 model, it becomes the comparison this page is for.</p>
+        </div>
+      </section>
+
+      <!-- ============================================ 5 · GEOMETRY ======= -->
+      <section class="sec" id="geometry-validation">
+        <h2>Geometry validation</h2>
+
+        <p>The checks above ask whether a model is right. This one asks something cruder and prior to it: whether the model is a physically possible protein. MolProbity scores all-atom contacts and covalent and dihedral geometry against high-resolution reference data, and returns clashes, rotamer outliers and a Ramachandran analysis&nbsp;[7]. A backbone conformation in a disallowed region of the Ramachandran plot is a structure the software built, not a structure a peptide would adopt.</p>
+
+        <p>This matters more for a docked flexible peptide than for a crystal structure. The peptide's backbone is rebuilt during refinement, so it is exactly the part of the model most able to end up in impossible geometry, and it is also the part every conclusion in this section depends on. The workflow chart describes the target as 5GR8-style verification: hold our models to the standard a deposited structure is held to, using the validation reports the wwPDB publishes.</p>
+
+        <div class="gap">
+          <b class="gap__label">Declared gap</b>
+          <p>No validation report has been run on any model in this section. This is the largest single gap on the page and the easiest to close, because it needs no new modelling: upload the canonical wild-type complex, the truncation lead and the ternary model, and record the clash score, the Ramachandran favoured and outlier percentages, and the rotamer outliers for each. If a model that carried a conclusion turns out to have outliers at the interface, that conclusion needs revisiting, and it is better to find that out here than after the freeze.</p>
+        </div>
+      </section>
+
+      <!-- ============================================ 6 · LITERATURE ===== -->
+      <section class="sec" id="literature-check">
+        <h2>Literature check</h2>
+
+        <p>The last filter is reading. A model is checked against what is already known about this receptor and this family, and where the two disagree the literature wins, because it rests on measurements and the model does not.</p>
+
+        <p>Three checks carried real weight this year. The <b>anchor</b>: Tang&nbsp;et&nbsp;al. show the C-terminal asparagine carboxylate held by an arginine in a bidentate salt bridge, 2.40 and 2.80&nbsp;&Aring; in the crystal, and it is the most buried residue of the peptide&nbsp;[8]. A model that does not reproduce that contact is wrong regardless of its score, and the residue is given priority in the restraint mapping for that reason. The <b>base rate</b>: three AtPep family members carry natural C-terminal extensions past that asparagine, two of them fail to bind PEPR1 at all, the third binds and cannot recruit the co-receptor, and truncating the extension restores activity in all three&nbsp;[8]. That published pattern, and not any run of ours, is what condemned the C-terminally tagged constructs on <a href="../packaging/#tag-geometry">Packaging</a>. The <b>dead controls</b>: Pearce measured which single substitutions destroy activity&nbsp;[3], which gives a table of answers the pipeline is supposed to already know, and using them that way is how the scoring failure was found.</p>
+
+        <p>The general form of the check is worth stating, because it is the most transferable thing on this page. Find a case where the answer is already published, run the pipeline on it blind, and compare. A pipeline that cannot recover a known answer is not ready to produce an unknown one.</p>
+      </section>
+
+      <!-- ============================================ 7 · REFERENCES ===== -->
+      <section class="refs" id="references">
+        <h2 data-no-toc>References</h2>
+        <ol>
+          <li>Dominguez, C., Boelens, R. &amp; Bonvin, A. M. J. J. HADDOCK: a protein&ndash;protein docking approach based on biochemical or biophysical information. <i>J. Am. Chem. Soc.</i> 125, 1731&ndash;1737 (2003).</li>
+          <li>Honorato, R. V. et al. The HADDOCK2.4 web server for integrative modeling of biomolecular complexes. <i>Nature Protocols</i> (2024).</li>
+          <li>Pearce, G., Yamaguchi, Y., Munske, G. &amp; Ryan, C. A. Structure&ndash;activity studies of AtPep1, a plant peptide signal involved in the innate immune response. <i>Peptides</i> 29, 2083&ndash;2089 (2008).</li>
+          <li>Lensink, M. F., M&eacute;ndez, R. &amp; Wodak, S. J. Docking and scoring protein complexes: CAPRI 3rd edition. <i>Proteins</i> 69, 704&ndash;718 (2007).</li>
+          <li>Kastritis, P. L. &amp; Bonvin, A. M. J. J. Are scoring functions in protein&ndash;protein docking ready to predict interactomes? <i>J. Proteome Research</i> 9, 2216&ndash;2225 (2010).</li>
+          <li>Krissinel, E. &amp; Henrick, K. Inference of macromolecular assemblies from crystalline state. <i>J. Molecular Biology</i> 372, 774&ndash;797 (2007). PDBePISA.</li>
+          <li>Williams, C. J. et al. MolProbity: more and better reference data for improved all-atom structure validation. <i>Protein Science</i> 27, 293&ndash;315 (2018).</li>
+          <li>Tang, J., Han, Z., Sun, Y., Zhang, H., Gong, X. &amp; Chai, J. Structural basis for recognition of an endogenous peptide by the plant receptor kinase PEPR1. <i>Cell Research</i> 25, 110&ndash;120 (2015). PDB&nbsp;5GR8.</li>
+          <li>Rodrigues, J. P. G. L. M. et al. Clustering biomolecular complexes by residue contacts similarity. <i>Proteins</i> 80, 1810&ndash;1817 (2012).</li>
+          <li>Vangone, A. &amp; Bonvin, A. M. J. J. Contacts-based prediction of binding affinity in protein&ndash;protein complexes. <i>eLife</i> 4, e07454 (2015). PRODIGY, named on the workflow chart and not used for any claim on this wiki.</li>
+        </ol>
+      </section>
+
+      <div class="status">
+        <b>This page is a draft with one fix open and three sections declared empty.</b>
+        P7 clustering is described as informative where every structure landed in one
+        cluster. The declared gaps are the two missing CAPRI measures for the positive
+        control, the 5GR8 PDBePISA interface list, and MolProbity validation of the
+        three models that carry conclusions. The last of those needs no new modelling
+        and should be done first. Delete each box as it is resolved, and delete this
+        box when none are left.
+      </div>
+    </main>
+  </div>
+
+  <nav class="pagenav" aria-label="Neighbouring pages">
+    <a class="is-prev" href="../../md-simulations/"><b>Previous</b><span>Flex, MD Simulations</span></a>
+    <a class="is-next" href="../packaging/"><b>Next</b><span>Packaging</span></a>
+  </nav>
+
+  <footer class="footer2">
+    <div class="footer2__inner">
+        <div>
+          <h3>Project</h3>
+          <ul>
+          <li><a href="../../description/">Description</a></li>
+          <li><a href="../../engineering/">Engineering</a></li>
+          <li><a href="../../contribution/">Contribution</a></li>
+          <li><a href="../../results/">Results</a></li>
+          </ul>
+        </div>
+        <div>
+          <h3>Wet Lab</h3>
+          <ul>
+          <li><a href="../../experiments/">Experiments</a></li>
+          <li><a href="../../parts/">Parts</a></li>
+          <li><a href="../../plant/">Plants</a></li>
+          <li><a href="../../measurement/">Measurement</a></li>
+          <li><a href="../../safety-and-security/">Safety</a></li>
+          <li><a href="../../notebook/">Notebook</a></li>
+          </ul>
+        </div>
+        <div>
+          <h3>Dry Lab</h3>
+          <ul>
+          <li><a href="../../model/">Math Model</a></li>
+          <li><a href="../../bioreactor-calculations/">Bioreactor Calculations</a></li>
+          <li><a href="../../hardware/">Hardware</a></li>
+          <li><a href="../../software/">Software</a></li>
+          <li><a href="../../protein-design/">Protein Design</a></li>
+          <li><a href="../../drylab-notebook/">Dry Lab Notebook</a></li>
+          </ul>
+        </div>
+        <div>
+          <h3>Engagement</h3>
+          <ul>
+          <li><a href="../../human-practices/">Integrated Human Practices</a></li>
+          <li><a href="../../education/">Education</a></li>
+          <li><a href="../../entrepreneurship/">Entrepreneurship</a></li>
+          <li><a href="../../sustainability/">Sustainability</a></li>
+          <li><a href="../../laws-and-regulations/">Laws and Regulations</a></li>
+          <li><a href="../../geospatial-analysis/">Geospatial Analysis</a></li>
+          <li><a href="../../data-physicalization/">Data Physicalization</a></li>
+          </ul>
+        </div>
+        <div>
+          <h3>Team</h3>
+          <ul>
+          <li><a href="../../team/">Members</a></li>
+          <li><a href="../../attributions/">Attribution</a></li>
+          <li><a href="../../milestone/">Milestone</a></li>
+          <li><a href="../../gallery/">Gallery</a></li>
+          </ul>
+        </div>
+      <div class="footer2__legal">
+        <p><b>ReLeaf</b> &middot; GEMS Taiwan &middot; iGEM 2026 &middot; Biomanufacturing Village</p>
+        <p>&copy; 2026 &middot; Content on this wiki is licensed under a <a href="https://creativecommons.org/licenses/by/4.0/" rel="license">Creative Commons Attribution 4.0 International license</a>.</p>
+        <p>The repository used to create this website is available at <a href="https://gitlab.igem.org/2026/gems-taiwan">gitlab.igem.org/2026/gems-taiwan</a>.</p>
+        <p>Nothing on this wiki is fetched from a server outside iGEM. Before the wiki freeze, every image and font has to be re-hosted on <code>static.igem.wiki</code>.</p>
+      </div>
+    </div>
+  </footer>
+
+  <script src="../../assets/data/site-nav.js"></script>
+  <script src="../../assets/js/nav.js"></script>
+  <script src="../../assets/js/page.js"></script>
+</body>
+</html>

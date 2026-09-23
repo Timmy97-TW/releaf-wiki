@@ -1,0 +1,237 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Assembly | Protein Design &middot; ReLeaf &middot; iGEM 2026</title>
+  <meta name="description" content="Step A of the GRAFT pipeline: how two-body docking of BoPep4 against PEPR1 was run, how a binary complex was threaded into a three-body model with the BAK1 co-receptor, and where AI co-folding sits beside both." />
+  <link rel="icon" href="../../assets/img/logo.png" />
+  <link rel="stylesheet" href="../../assets/css/tokens.css" />
+  <link rel="stylesheet" href="../../assets/css/nav.css" />
+  <link rel="stylesheet" href="../../assets/css/page.css" />
+  <link rel="stylesheet" href="../protein.css?v=202609231" />
+</head>
+<body class="pd">
+<!--
+  SOURCE. "Protein Design Writing.docx" (Structural Docking Assembly: binary
+  docking, threaded ternary docking), the workflow chart annotations in
+  "Protein Design & Docking Methodology.docx", and the parameter table
+  reconstructed by the 30 July pipeline audit, which is on /peptide-design/.
+
+  AI co-folding is a heading with nothing under it in every source. It is on
+  the page as a declared gap and not filled in.
+-->
+
+  <div id="site-nav" data-base="../../" data-tab="drylab" data-page="protein-design"></div>
+  <div class="sitenav-spacer"></div>
+
+  <header class="pagehead">
+    <div class="pagehead__inner">
+      <p class="pagehead__eyebrow">
+        <a href="../../">ReLeaf</a> <i>/</i> Dry Lab <i>/</i> <a href="../">Protein Design</a> <i>/</i> Assembly
+      </p>
+      <h1 class="pagehead__title">Assembly</h1>
+      <p class="pagehead__lede">A peptide and a receptor is a two-body problem. Plant Pep signalling is a three-body one, and the third body has no crystal with our receptor in it. This page is how the models were put together, in what order, and what each stage was allowed to conclude.</p>
+      <ul class="pagehead__meta">
+        <li><b>Section</b><span>Dry Lab &middot; Protein Design</span></li>
+        <li><b>Step</b><span>A, the third of five</span></li>
+        <li><b>Last updated</b><span>23 September 2026</span></li>
+        <li><b>Status</b><span>Draft, no fixes open, two sections declared empty</span></li>
+      </ul>
+    </div>
+  </header>
+
+  <nav class="stepnav" aria-label="Protein Design section">
+    <div class="stepnav__inner">
+      <a class="stepnav__home" href="../">Protein Design</a>
+      <a class="step" href="../generate/"><span class="step__k">G</span>Generate</a>
+      <a class="step" href="../restraints/"><span class="step__k">R</span>Restraints</a>
+      <a class="step" href="../assembly/" aria-current="page"><span class="step__k">A</span>Assembly</a>
+      <a class="step" href="../../md-simulations/"><span class="step__k">F</span>Flex</a>
+      <a class="step" href="../triage/"><span class="step__k">T</span>Triage</a>
+      <a class="step" href="../packaging/"><span class="step__k" data-off>&middot;</span>Packaging</a>
+      <!-- not a GRAFT step: the pipeline run once end to end -->
+      <a class="step" href="../../peptide-design/"><span class="step__k" data-off>&middot;</span>Worked case</a>
+    </div>
+  </nav>
+
+  <div class="pagewrap">
+    <details class="toc" open>
+      <summary>Contents</summary>
+      <div class="toc__inner"><p class="toc__title">On this page</p></div>
+    </details>
+
+    <main class="pagebody">
+
+      <!-- ============================================ 1 · BINARY ========== -->
+      <section class="sec" id="binary-docking">
+        <h2>Binary docking</h2>
+
+        <p>Almost everything in this section is a two-body run. Reducing the complex to a pair strips out the variables that the project could not control and leaves the one it wanted to change, which is the peptide sequence. The alanine scans, the truncation ladders and the tandem sweep are all binary runs, and they exist in that form because a two-body model is cheap enough to repeat across dozens of variants.</p>
+
+        <p>The primary pairing is BoPep4 against the PEPR1 ectodomain, run in HADDOCK&nbsp;2.4&nbsp;[1,&nbsp;2]. The three conformers built in <a href="../restraints/#peptide-conformer-ensemble">Restraints</a> go in as alternative representations of the same flexible peptide, so the program chooses between them instead of being handed one. The active and passive residues from the restraint mapping define the search. The same pairing was run against the PEPR2 model as a complement, with the model-based caveat that page carries.</p>
+
+        <h3>Sampling and clustering settings</h3>
+        <p>The pipeline audit reconstructed the settings from the run trees and put them beside the software's own recommendations for peptide docking, which is the comparison that makes a parameter meaningful. Two of them are worth naming here because they shape what the later pages can say.</p>
+
+        <div class="tablewrap">
+          <table class="data">
+            <thead><tr><th>Setting</th><th>Founding campaign, 8 runs</th><th>Later campaigns, 113 runs</th><th>Recommended for peptides</th></tr></thead>
+            <tbody>
+              <tr><td>Rigid-body sampling</td><td>800</td><td class="open">40</td><td>1000&nbsp;[3]</td></tr>
+              <tr><td>Clustering</td><td>RMSD at 5.0&nbsp;&Aring;</td><td class="open">Fraction of common contacts at 0.60&nbsp;[6]</td><td>RMSD at 5.0&nbsp;&Aring; for peptides&nbsp;[4]</td></tr>
+              <tr><td>Peptide starting coordinates</td><td>Threaded on the crystal backbone</td><td class="open">The bound pose</td><td>Three unbound conformers&nbsp;[3]</td></tr>
+              <tr><td>Positive control</td><td>AtPep1 re-docked, 0.77&nbsp;&Aring;</td><td class="open">None</td><td>Required&nbsp;[1]</td></tr>
+            </tbody>
+          </table>
+        </div>
+
+        <p>Forty rigid-body models is a small pool for a molecule with this many accessible backbone states&nbsp;[7], and clustering on contact similarity at a loose cutoff will merge poses that a geometric cutoff would separate. Together those two choices are why the later runs returned a single cluster containing every structure, which is dealt with on <a href="../triage/">Triage</a>.</p>
+
+        <h3>Output of a binary run</h3>
+        <p>Models are grouped by structural similarity and each group is assessed. The working rule was to keep the plausible clusters for comparison and not to treat the top-scoring structure as the answer, and that rule earned its keep: on the wild-type run the top-ranked cluster is a non-native pose 5.80&nbsp;&Aring; from the crystal, and the complex carried forward as canonical is the third of four clusters, chosen because it matches the crystal. That choice is defensible and it is stated on <a href="../../peptide-design/#audit">Peptide Design</a> for what it is, which is a homology-guided selection and not a blind prediction.</p>
+
+        <p>The useful question a binary run can answer is convergence. If three different starting conformations settle into the same binding mode, that agreement is information about the mode. If they do not, the spread is information too. What a binary run cannot answer is which of two sequences binds more tightly, and no page in this section asks it to.</p>
+      </section>
+
+      <!-- ============================================ 2 · TERNARY ========= -->
+      <section class="sec" id="threaded-ternary-docking">
+        <h2>Threaded ternary docking</h2>
+
+        <p>BoPep4's biological effect does not stop at PEPR1. Pep perception involves a receptor and a co-receptor together, and BAK1 is the kinase that sits at the junction between growth signalling and immune signalling, which makes it part of any honest model of what the peptide does. So the question becomes whether a predicted BoPep4 and PEPR1 interface can be accommodated inside a PEPR1, BoPep4 and BAK1 complex.</p>
+
+        <p>The three components were not docked simultaneously. A selected binary complex was held as established, and the BAK1 ectodomain was then introduced against it, positioned from the receptor to co-receptor interface worked out during restraint mapping. Threading it this way preserves the ligand and receptor geometry already modelled while the search looks only for a BAK1 orientation compatible with it. The resulting models were assessed for steric clashes, for interface plausibility, and for consistency with the structural information the restraints came from.</p>
+
+        <aside class="callout callout--unproven">
+          <b class="callout__label">What a ternary run may be reported as</b>
+          <p>Restrained two-body docking cannot fail to make contact. Told where the interface is, it will place the molecules there. So the informative measurement out of the ternary runs is not that an interface formed, it is the clash count, and the clash count is zero. The claim this supports is that a tandem or ternary arrangement is <b>not sterically excluded</b>. It is never that BoPep4 bridges the two receptors, and that wording is retired across this wiki.</p>
+        </aside>
+
+        <p>Turning compatibility into association needs an experiment, not a model. Co-immunoprecipitation is the one, and it is on the hub under <a href="../#future-work">future work</a>.</p>
+      </section>
+
+      <!-- ============================================ 3 · CO-FOLDING ====== -->
+      <section class="sec" id="ai-co-folding">
+        <h2>AI co-folding</h2>
+
+        <p>Co-folding takes a different route to the same object. Instead of docking two solved structures together, a structure predictor is given both chains at once and asked to fold them as a complex, so the interface comes out of the prediction rather than out of a search over a fixed pair of surfaces&nbsp;[5]. On this pipeline it is the independent check on the docking, and it is the reason the section has two methods for one question.</p>
+
+        <div class="gap">
+          <b class="gap__label">Declared gap</b>
+          <p>This section is a heading in every source document and has no prose anywhere. The workflow chart names two outputs, multimer prediction and interface confidence, and nothing says what was run or what came back. What the section needs is short and specific: which predictor and which version, which chain combinations were folded together, the per-interface confidence score for each, and whether the predicted interface agrees with the docking interface residue for residue. The last of those is the whole point of running it, and it is a table with two columns.</p>
+          <p>One warning belongs in that text when it is written. Confidence scores from a structure predictor and scores from a docking program are different quantities and cannot be compared or combined. One retracted claim on this project came from treating a low confidence value and a normal docking score as if they were two methods disagreeing, and they were not. That is in the ledger on <a href="../../peptide-design/#audit">Peptide Design</a>.</p>
+        </div>
+      </section>
+
+      <!-- ============================================ 4 · HANDOVER ======== -->
+      <section class="sec" id="handover-to-dynamics">
+        <h2>Handover to dynamics</h2>
+
+        <p>Everything above produces a static model, and a static model of a short flexible peptide is a snapshot of something that does not hold still. The next step shakes it. Molecular dynamics appears twice on the workflow chart, once before docking and once after, and it was treated as an optional pass in both places.</p>
+
+        <p><a href="../../md-simulations/">MD Simulations</a> is step F and it is already written. Nine all-atom trajectories of BoPep4 on the PEPR1 ectodomain, covering the wild type, three truncations, a C-terminal tag, a low-pH pair and an unliganded receptor as a noise floor. The results worth carrying back into this page are the ones no single run could give: a set of receptor residues that stay in contact across every trajectory, and a measured floor for how much the apo receptor moves on its own, which is what tells you whether a difference between two bound runs means anything.</p>
+
+        <div class="gap">
+          <b class="gap__label">Declared gap</b>
+          <p>The pre-docking dynamics pass, the first of the two on the workflow chart, is undocumented. If conformers were relaxed before they went into docking, that changes the input and needs saying. If the pass was drawn and never run, the chart should lose the box.</p>
+        </div>
+      </section>
+
+      <!-- ============================================ 5 · REFERENCES ====== -->
+      <section class="refs" id="references">
+        <h2 data-no-toc>References</h2>
+        <ol>
+          <li>Dominguez, C., Boelens, R. &amp; Bonvin, A. M. J. J. HADDOCK: a protein&ndash;protein docking approach based on biochemical or biophysical information. <i>J. Am. Chem. Soc.</i> 125, 1731&ndash;1737 (2003).</li>
+          <li>Honorato, R. V. et al. The HADDOCK2.4 web server for integrative modeling of biomolecular complexes. <i>Nature Protocols</i> (2024).</li>
+          <li>Trellet, M., Melquiond, A. S. J. &amp; Bonvin, A. M. J. J. A unified conformational selection and induced fit approach to protein&ndash;peptide docking. <i>PLoS ONE</i> 8, e58769 (2013).</li>
+          <li>Bonvin Lab. HADDOCK best practice guide, peptide docking. <a href="https://www.bonvinlab.org/software/bpg/peptides/" target="_blank" rel="noopener">bonvinlab.org/software/bpg/peptides</a>.</li>
+          <li>Abramson, J. et al. Accurate structure prediction of biomolecular interactions with AlphaFold&nbsp;3. <i>Nature</i> 630, 493&ndash;500 (2024).</li>
+          <li>Rodrigues, J. P. G. L. M. et al. Clustering biomolecular complexes by residue contacts similarity. <i>Proteins</i> 80, 1810&ndash;1817 (2012).</li>
+          <li>Ciemny, M. et al. Protein&ndash;peptide docking: opportunities and challenges. <i>Drug Discovery Today</i> 23, 1530&ndash;1537 (2018).</li>
+        </ol>
+      </section>
+
+      <div class="status">
+        <b>This page is a draft with no fixes open and two sections declared empty.</b>
+        AI co-folding has no prose in any source and needs the predictor, the chain
+        combinations, the per-interface confidence and a residue-level comparison
+        against the docking interface. The pre-docking dynamics pass on the workflow
+        chart is undocumented and either needs writing up or needs removing from the
+        chart. Delete this box when both are settled.
+      </div>
+    </main>
+  </div>
+
+  <nav class="pagenav" aria-label="Neighbouring pages">
+    <a class="is-prev" href="../restraints/"><b>Previous</b><span>Restraints</span></a>
+    <a class="is-next" href="../../md-simulations/"><b>Next</b><span>Flex, MD Simulations</span></a>
+  </nav>
+
+  <footer class="footer2">
+    <div class="footer2__inner">
+        <div>
+          <h3>Project</h3>
+          <ul>
+          <li><a href="../../description/">Description</a></li>
+          <li><a href="../../engineering/">Engineering</a></li>
+          <li><a href="../../contribution/">Contribution</a></li>
+          <li><a href="../../results/">Results</a></li>
+          </ul>
+        </div>
+        <div>
+          <h3>Wet Lab</h3>
+          <ul>
+          <li><a href="../../experiments/">Experiments</a></li>
+          <li><a href="../../parts/">Parts</a></li>
+          <li><a href="../../plant/">Plants</a></li>
+          <li><a href="../../measurement/">Measurement</a></li>
+          <li><a href="../../safety-and-security/">Safety</a></li>
+          <li><a href="../../notebook/">Notebook</a></li>
+          </ul>
+        </div>
+        <div>
+          <h3>Dry Lab</h3>
+          <ul>
+          <li><a href="../../model/">Math Model</a></li>
+          <li><a href="../../bioreactor-calculations/">Bioreactor Calculations</a></li>
+          <li><a href="../../hardware/">Hardware</a></li>
+          <li><a href="../../software/">Software</a></li>
+          <li><a href="../../protein-design/">Protein Design</a></li>
+          <li><a href="../../drylab-notebook/">Dry Lab Notebook</a></li>
+          </ul>
+        </div>
+        <div>
+          <h3>Engagement</h3>
+          <ul>
+          <li><a href="../../human-practices/">Integrated Human Practices</a></li>
+          <li><a href="../../education/">Education</a></li>
+          <li><a href="../../entrepreneurship/">Entrepreneurship</a></li>
+          <li><a href="../../sustainability/">Sustainability</a></li>
+          <li><a href="../../laws-and-regulations/">Laws and Regulations</a></li>
+          <li><a href="../../geospatial-analysis/">Geospatial Analysis</a></li>
+          <li><a href="../../data-physicalization/">Data Physicalization</a></li>
+          </ul>
+        </div>
+        <div>
+          <h3>Team</h3>
+          <ul>
+          <li><a href="../../team/">Members</a></li>
+          <li><a href="../../attributions/">Attribution</a></li>
+          <li><a href="../../milestone/">Milestone</a></li>
+          <li><a href="../../gallery/">Gallery</a></li>
+          </ul>
+        </div>
+      <div class="footer2__legal">
+        <p><b>ReLeaf</b> &middot; GEMS Taiwan &middot; iGEM 2026 &middot; Biomanufacturing Village</p>
+        <p>&copy; 2026 &middot; Content on this wiki is licensed under a <a href="https://creativecommons.org/licenses/by/4.0/" rel="license">Creative Commons Attribution 4.0 International license</a>.</p>
+        <p>The repository used to create this website is available at <a href="https://gitlab.igem.org/2026/gems-taiwan">gitlab.igem.org/2026/gems-taiwan</a>.</p>
+        <p>Nothing on this wiki is fetched from a server outside iGEM. Before the wiki freeze, every image and font has to be re-hosted on <code>static.igem.wiki</code>.</p>
+      </div>
+    </div>
+  </footer>
+
+  <script src="../../assets/data/site-nav.js"></script>
+  <script src="../../assets/js/nav.js"></script>
+  <script src="../../assets/js/page.js"></script>
+</body>
+</html>

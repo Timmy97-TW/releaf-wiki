@@ -1144,6 +1144,9 @@ def build():
     A('  <link rel="stylesheet" href="../assets/css/tokens.css" />')
     A('  <link rel="stylesheet" href="../assets/css/nav.css" />')
     A('  <link rel="stylesheet" href="../assets/css/page.css" />')
+    # only the unscoped .stepnav rules in this file apply here; the rest
+    # of it is scoped under .pd, which this page does not carry.
+    A('  <link rel="stylesheet" href="../protein-design/protein.css?v=202609231" />')
     A('  <style>' + CSS + '  </style>')
     A('</head>')
     A('<body>')
@@ -1155,7 +1158,7 @@ def build():
     A('    <div class="pagehead__hero">')
     A('      <div class="pagehead__bg">' + BANNER + '</div>')
     A('      <div class="pagehead__heroinner">')
-    A('        <p class="pagehead__eyebrow"><a href="../">ReLeaf</a> <i>/</i> Dry Lab <i>/</i> Peptide Design</p>')
+    A('        <p class="pagehead__eyebrow"><a href="../">ReLeaf</a> <i>/</i> Dry Lab <i>/</i> <a href="../protein-design/">Protein Design</a> <i>/</i> Peptide Design</p>')
     A('        <h1 class="pagehead__title">Peptide Design</h1>')
     A('      </div>')
     A('    </div>')
@@ -1170,6 +1173,24 @@ def build():
     A('    </div>')
     A('  </header>')
     A('')
+    # Since 23 September 2026 this page is the worked case inside the Protein
+    # Design section. Its URL has not changed; this strip is how a reader moves
+    # between the steps without going back to the hub.
+    A('  <nav class="stepnav" aria-label="Protein Design section">')
+    A('    <div class="stepnav__inner">')
+    A('      <a class="stepnav__home" href="../protein-design/">Protein Design</a>')
+    A('      <a class="step" href="../protein-design/generate/"><span class="step__k">G</span>Generate</a>')
+    A('      <a class="step" href="../protein-design/restraints/"><span class="step__k">R</span>Restraints</a>')
+    A('      <a class="step" href="../protein-design/assembly/"><span class="step__k">A</span>Assembly</a>')
+    A('      <a class="step" href="../md-simulations/"><span class="step__k">F</span>Flex</a>')
+    A('      <a class="step" href="../protein-design/triage/"><span class="step__k">T</span>Triage</a>')
+    A('      <a class="step" href="../protein-design/packaging/"><span class="step__k" data-off>&middot;</span>Packaging</a>')
+    # this page is not a GRAFT step, it is the pipeline run once end to end, so
+    # it gets its own entry at the end of the strip rather than a letter
+    A('      <a class="step" href="./" aria-current="page"><span class="step__k" data-off>&middot;</span>Worked case</a>')
+    A('    </div>')
+    A('  </nav>')
+    A('')
     A('  <div class="pagewrap">')
     A('    <details class="toc" open>')
     A('      <summary>Contents</summary>')
@@ -1182,8 +1203,8 @@ def build():
     A('  </div>')
     A('')
     A('  <nav class="pagenav" aria-label="Neighbouring pages">')
-    A('    <a class="is-prev" href="../software/"><b>Previous</b><span>Software</span></a>')
-    A('    <a class="is-next" href="../md-simulations/"><b>Next</b><span>MD Simulations</span></a>')
+    A('    <a class="is-prev" href="../protein-design/packaging/"><b>Previous</b><span>Packaging</span></a>')
+    A('    <a class="is-next" href="../drylab-notebook/"><b>Next</b><span>Dry Lab Notebook</span></a>')
     A('  </nav>')
     A(FOOTER)
     A('  <script src="../assets/data/site-nav.js"></script>')
@@ -1225,8 +1246,7 @@ FOOTER = """
           <li><a href="../bioreactor-calculations/">Bioreactor Calculations</a></li>
           <li><a href="../hardware/">Hardware</a></li>
           <li><a href="../software/">Software</a></li>
-          <li><a href="../peptide-design/">Peptide Design</a></li>
-          <li><a href="../md-simulations/">MD Simulations</a></li>
+          <li><a href="../protein-design/">Protein Design</a></li>
           <li><a href="../drylab-notebook/">Dry Lab Notebook</a></li>
           </ul>
         </div>
