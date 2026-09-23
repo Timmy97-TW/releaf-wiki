@@ -19,6 +19,15 @@
   const initials = (name) =>
     name.trim().split(/\s+/).slice(0, 2).map((w) => w[0]).join("").toUpperCase();
 
+  /* An empty frame for a profile photo not sent yet: a pale 4:3 tile with a
+     faint camera, so two of them fill the row the way two photos would. */
+  const EMPTY_SHOT = "data:image/svg+xml;charset=utf-8," + encodeURIComponent(
+    '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 300">' +
+    '<rect width="400" height="300" fill="#f1f5f2"/>' +
+    '<g fill="none" stroke="#b9cfc1" stroke-width="5" stroke-linejoin="round">' +
+    '<path d="M162 126h14l9-14h30l9 14h14a8 8 0 0 1 8 8v52a8 8 0 0 1-8 8h-76a8 8 0 0 1-8-8v-52a8 8 0 0 1 8-8z"/>' +
+    '<circle cx="200" cy="159" r="18"/></g></svg>');
+
   /* Generated placeholder portrait, keeps the page whole until a photo lands. */
   const placeholder = (name) => {
     const hues = ["#e3f0e8", "#e8eef3", "#f2ece2", "#eee7f2", "#e6f1f2"];
@@ -392,14 +401,8 @@
     document.getElementById("modal-frame").style.setProperty("--frame", frameGradient(palette));
     document.getElementById("modal-sprig").innerHTML = sprigSVG(palette);
 
-    /* Working photo left, goofy right, the bio in a box underneath. Until
-       someone's pair arrives, the profile keeps the official portrait beside
-       the bio, so an unfinished profile never shows two empty frames. */
-    const paired = !!(m.workPhoto || m.goofyPhoto);
-    modal.querySelector(".modal__panel").classList.toggle("modal__panel--pair", paired);
-    const single = modal.querySelector(".modal__media");
-    if (paired) single.removeAttribute("src"); else single.src = photo(m);
-    single.alt = paired ? "" : m.name;
+    /* Working photo left, goofy right, the bio in a box underneath. Everyone
+       gets the pair; a photo not sent yet is an empty frame. */
     const pair = modal.querySelector(".modal__pair");
     const shots = [...pair.querySelectorAll(".modal__shot-img")];
     /* Nothing is cropped. Both photos share one height and keep their own
@@ -416,9 +419,7 @@
       .forEach(([src, alt], n) => {
         const img = shots[n];
         img.onload = fit;
-        /* one of the pair missing: an initials tile holds its place, not the
-           official portrait, which would pass for the missing photo */
-        img.src = src ? BASE + src : placeholder(m.name);
+        img.src = src ? BASE + src : EMPTY_SHOT;
         img.alt = src ? m.name + alt : "";
       });
     fit();

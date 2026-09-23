@@ -8,8 +8,9 @@
               Students carry no role badge: the roster is a team, not a ladder
      photo    official portrait on the card; "" falls back to an initials tile
      workPhoto   profile view, left: the person at work
-     goofyPhoto  profile view, right: the goofy one. With neither set, the
-                 profile shows the official portrait beside the bio instead
+     goofyPhoto  profile view, right: the goofy one. Either one left "" shows
+                 as an empty frame. Put the files in assets/img/members/work/
+                 and assets/img/members/goofy/, named like the portrait
      grade / school         the small meta line under the name
      track    subteam only ("Wet Lab", "Dry Lab", "Human Practices")
      bio      shown under the photo; clicking the card opens the full view
@@ -374,9 +375,7 @@ const SECTIONS = [
       },
       {
         name: "Chars Hsieh", role: "Wet Lab Instructor",
-        photo: "assets/img/members/chars-hsieh.jpg",
-        workPhoto: "assets/img/members/work/chars-hsieh.jpg",
-        goofyPhoto: "assets/img/members/goofy/chars-hsieh.jpg",
+        photo: "assets/img/members/chars-hsieh.jpg", workPhoto: "", goofyPhoto: "",
         grade: "", school: "", track: "",
         bio: "Chars Hsieh, an experienced researcher with over ten years of expertise in molecular and cell biology. I train and empower students at GEMS Academy, journeying with them to explore the frontiers of synthetic biology.",
         tasks: []
