@@ -375,28 +375,36 @@ const SECTIONS = [
       },
       {
         name: "Chars Hsieh", role: "Wet Lab Instructor",
-        photo: "assets/img/members/chars-hsieh.jpg", workPhoto: "", goofyPhoto: "",
+        photo: "assets/img/members/chars-hsieh.jpg",
+        workPhoto: "assets/img/members/work/chars-hsieh.jpg",
+        goofyPhoto: "assets/img/members/goofy/chars-hsieh.jpg",
         grade: "", school: "", track: "",
         bio: "Chars Hsieh, an experienced researcher with over ten years of expertise in molecular and cell biology. I train and empower students at GEMS Academy, journeying with them to explore the frontiers of synthetic biology.",
         tasks: []
       },
       {
         name: "Gabriel Ng", role: "Wet Lab Instructor",
-        photo: "assets/img/members/gabriel-ng.jpg", workPhoto: "", goofyPhoto: "",
+        photo: "assets/img/members/gabriel-ng.jpg",
+        workPhoto: "assets/img/members/work/gabriel-ng.jpg",
+        goofyPhoto: "assets/img/members/goofy/gabriel-ng.jpg",
         grade: "", school: "", track: "",
         bio: "Hey everyone, I’m Gabriel, wet lab instructor. I’ll be guiding the biology experiments this year. Looking forward to learning a lot together over the coming months!",
         tasks: []
       },
       {
         name: "Jessie Lau", role: "Human Practices Instructor",
-        photo: "assets/img/members/jessie-lau.jpg", workPhoto: "", goofyPhoto: "",
+        photo: "assets/img/members/jessie-lau.jpg",
+        workPhoto: "assets/img/members/work/jessie-lau.jpg",
+        goofyPhoto: "assets/img/members/goofy/jessie-lau.jpg",
         grade: "", school: "", track: "",
         bio: "Hello! I am Jessie, HP instructor. I've spent years teaching Chemistry and guiding various science projects. I enjoyed so much seeing students apply what they've learned to the real world, can't wait to see the impact this year's iGEM team will have on society!",
         tasks: []
       },
       {
         name: "Gina Yu", role: "Wet Lab Instructor",
-        photo: "assets/img/members/gina-yu.jpg", workPhoto: "", goofyPhoto: "",
+        photo: "assets/img/members/gina-yu.jpg",
+        workPhoto: "assets/img/members/work/gina-yu.jpg",
+        goofyPhoto: "assets/img/members/goofy/gina-yu.jpg",
         grade: "", school: "", track: "",
         bio: "Hi, this is Gina, one of wetlab instructors. I passionate about science and have extensive hands-on experience working in lab. Also I enjoy guiding students in hand-on experiments.",
         tasks: []
