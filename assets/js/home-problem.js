@@ -21,14 +21,35 @@
     return total > 0 ? clamp01(-wrap.getBoundingClientRect().top / total) : 1;
   }
 
-  var frames = [];
-  var ticking = false;
-  function tick() {
-    ticking = false;
-    frames.forEach(function (f) { f(); });
-  }
-  function request() {
-    if (!ticking) { ticking = true; requestAnimationFrame(tick); }
+  // The homepage's shared frame: every scroll-driven piece measures first and
+  // writes second, so the page is laid out once a frame. home.js makes the
+  // same object; whichever file runs first creates it.
+  var homeFrame = window.__homeFrame || (window.__homeFrame = (function () {
+    var jobs = [], queued = false;
+    function run() {
+      queued = false;
+      var seen = jobs.map(function (j) { return j.read(); });
+      jobs.forEach(function (j, i) { if (seen[i] !== undefined) j.write(seen[i]); });
+    }
+    return {
+      add: function (read, write) { jobs.push({ read: read, write: write }); },
+      request: function () {
+        if (queued) return;
+        queued = true;
+        requestAnimationFrame(run);
+      }
+    };
+  })());
+
+  // set an attribute, a text or a style property only when it differs from
+  // what this file last wrote there
+  function writer() {
+    var last = {};
+    return function (key, v, apply) {
+      if (last[key] === v) return;
+      last[key] = v;
+      apply(v);
+    };
   }
 
   /* 1  map: opens on the weather, then lays the farms over it */
@@ -78,10 +99,34 @@
     var AGE = 63, YEARS = 10, WINDOWS = 730;
     var last = -1;
 
-    frames.push(function () {
-      var p = progress(wrap);
-      var unit = scene.clientHeight / 1000;
-      var vw = window.innerWidth;
+    // The camera only has work to do while the journey is on screen. Off it,
+    // the progress is pinned at 0 (still to come) or 1 (gone past), and so is
+    // everything drawn from it. There one rect says which end; a frame runs
+    // only when that changes, which is the first frame after leaving and any
+    // jump straight across the section. A resize always runs.
+    var near = true, pinnedAt = null;
+    if ("IntersectionObserver" in window) {
+      new IntersectionObserver(function (entries) {
+        near = entries[entries.length - 1].isIntersecting;
+        homeFrame.request();
+      }).observe(wrap);
+    }
+    window.addEventListener("resize", function () { pinnedAt = null; homeFrame.request(); });
+
+    var put = writer();
+
+    function measure() {
+      if (near) pinnedAt = null;
+      else {
+        var end = wrap.getBoundingClientRect().top > 0 ? 0 : 1;
+        if (end === pinnedAt) return;
+        pinnedAt = end;
+      }
+      return { p: progress(wrap), unit: scene.clientHeight / 1000, vw: window.innerWidth };
+    }
+
+    function draw(m) {
+      var p = m.p, unit = m.unit, vw = m.vw;
 
       // 0–0.08 in the lab, 0.08–0.86 on the road, then the camera moves on to her
       var ox, oy;
@@ -93,21 +138,25 @@
         ox = X0 + (SHELF - X0) * span(p, 0.08, 0.86);
         oy = ROAD;
       }
-      orb.setAttribute("transform", "translate(" + ox.toFixed(1) + " " + oy.toFixed(1) + ")");
-      trail.setAttribute("x2", Math.max(X0, ox).toFixed(1));
+      put("orb", "translate(" + ox.toFixed(1) + " " + oy.toFixed(1) + ")",
+          function (v) { orb.setAttribute("transform", v); });
+      put("trail", Math.max(X0, ox).toFixed(1), function (v) { trail.setAttribute("x2", v); });
 
       var camX = ox + (FARMER - SHELF) * ease(span(p, 0.86, 1));
       var maxPan = 6000 * unit - vw;
       var pan = Math.max(0, Math.min(maxPan, camX * unit - vw / 2));
-      scene.style.transform = "translate3d(" + (-pan).toFixed(1) + "px,0,0)";
+      put("scene", "translate3d(" + (-pan).toFixed(1) + "px,0,0)",
+          function (v) { scene.style.transform = v; });
       var panUnits = pan / unit;
-      far.setAttribute("transform", "translate(" + (panUnits * 0.55).toFixed(1) + " 0)");
-      mid.setAttribute("transform", "translate(" + (panUnits * 0.25).toFixed(1) + " 0)");
+      put("far", "translate(" + (panUnits * 0.55).toFixed(1) + " 0)",
+          function (v) { far.setAttribute("transform", v); });
+      put("mid", "translate(" + (panUnits * 0.25).toFixed(1) + " 0)",
+          function (v) { mid.setAttribute("transform", v); });
 
       var done = clamp01((ox - X0) / (SHELF - X0));
-      tickRect.setAttribute("width", (Math.max(0, ox - X0) + 5).toFixed(1));
+      put("tick", (Math.max(0, ox - X0) + 5).toFixed(1), function (v) { tickRect.setAttribute("width", v); });
       var windows = Math.round(done * WINDOWS);
-      winEl.textContent = windows;
+      put("windows", String(windows), function (v) { winEl.textContent = v; });
       var year = Math.min(YEARS, Math.floor(windows / 73));
       if (year !== last) {
         last = year;
@@ -116,8 +165,13 @@
         posts.forEach(function (g) { g.classList.toggle("on", +g.dataset.y <= year); });
         suns.forEach(function (g) { g.classList.toggle("on", +g.dataset.y <= year); });
       }
-      wrap.style.setProperty("--endIn", ease(span(p, 0.9, 0.98)).toFixed(3));
-    });
+      put("endIn", ease(span(p, 0.9, 0.98)).toFixed(3),
+          function (v) { wrap.style.setProperty("--endIn", v); });
+    }
+
+    homeFrame.add(measure, draw);
+    window.addEventListener("scroll", homeFrame.request, { passive: true });
+    draw(measure());
   })();
 
   /* 3  a citation opens the collapsed source list before jumping to it */
@@ -130,7 +184,4 @@
     });
   })();
 
-  window.addEventListener("scroll", request, { passive: true });
-  window.addEventListener("resize", request);
-  tick();
 })();

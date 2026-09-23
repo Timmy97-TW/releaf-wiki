@@ -1,0 +1,1680 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+<title>CropShield — Bioreactor Defender</title>
+<style>
+@import url('../fonts/fonts.css'); /* ReLeaf port: was Google Fonts; local copies (iGEM: no outside files) */
+
+:root {
+  --bg:#06090f; --accent:#00e5ff; --green:#39ff14; --gold:#ffc400;
+  --red:#ff3a3a; --purple:#b44aff; --white:#d8eeff; --dim:#5a7a94;
+  --heat:#ff5500; --salt:#66ccff; --fungal:#aa33ff; --insect:#88dd00;
+}
+
+* { margin:0; padding:0; box-sizing:border-box; -webkit-tap-highlight-color:transparent; }
+html, body {
+  width:100%; height:100%; overflow:hidden;
+  background:var(--bg); font-family:'Exo 2',sans-serif;
+  color:var(--white); touch-action:none;
+}
+
+.screen {
+  display:none; position:fixed; inset:0;
+  align-items:center; justify-content:center;
+  flex-direction:column; z-index:10;
+}
+.screen.active { display:flex; }
+
+#mainMenu {
+  background:radial-gradient(ellipse 90% 70% at 50% 25%, #0a2040, #06090f);
+  padding:16px; gap:10px; text-align:center;
+}
+.menu-bg {
+  position:absolute; bottom:0; left:50%; transform:translateX(-50%);
+  opacity:.08; font-size:clamp(120px,25vw,240px);
+  pointer-events:none; user-select:none;
+}
+.menu-logo {
+  font-family:'Orbitron',monospace; font-weight:900;
+  font-size:clamp(1.8rem,6vw,3.8rem); color:var(--accent);
+  letter-spacing:5px; text-shadow:0 0 50px var(--accent);
+  position:relative; z-index:1;
+}
+.menu-sub {
+  font-family:'Orbitron',monospace; font-size:clamp(.5rem,1.5vw,.78rem);
+  color:var(--green); letter-spacing:6px; opacity:.7; position:relative; z-index:1;
+}
+.menu-tag {
+  font-size:clamp(.7rem,1.6vw,.85rem); color:#7a9ab4;
+  max-width:380px; line-height:1.6; position:relative; z-index:1;
+}
+.mode-cards {
+  display:flex; gap:12px; flex-wrap:wrap;
+  justify-content:center; position:relative; z-index:1;
+}
+.mode-card {
+  width:clamp(150px,27vw,185px); padding:18px 14px;
+  border-radius:14px; border:2px solid rgba(255,255,255,.1);
+  background:rgba(10,20,40,.75); cursor:pointer; transition:all .2s;
+  display:flex; flex-direction:column; gap:7px;
+  align-items:center; text-align:center;
+}
+.mode-card:hover:not(.locked) {
+  border-color:var(--accent); background:rgba(0,229,255,.07); transform:translateY(-3px);
+}
+.mode-card:active:not(.locked) { transform:scale(.97); }
+.mode-card.locked { opacity:.4; cursor:default; }
+.mode-card.rec    { border-color:rgba(0,229,255,.45); }
+.mode-icon { font-size:clamp(1.5rem,4vw,2rem); }
+.mode-name { font-family:'Orbitron',monospace; font-size:clamp(.6rem,1.5vw,.75rem); font-weight:700; letter-spacing:2px; }
+.mode-desc { font-size:clamp(.52rem,1.2vw,.63rem); color:var(--dim); line-height:1.45; }
+.mode-badge { font-size:.52rem; font-family:'Orbitron',monospace; padding:3px 8px; border-radius:20px; }
+.b-rec  { background:rgba(0,229,255,.14); color:var(--accent); border:1px solid var(--accent); }
+.b-lock { background:rgba(255,255,255,.05); color:var(--dim); border:1px solid rgba(255,255,255,.1); }
+.b-open { background:rgba(57,255,20,.1); color:var(--green); border:1px solid var(--green); }
+
+.layout-btn {
+  display:flex; align-items:center; gap:10px;
+  font-family:'Orbitron',monospace; font-size:.75rem; letter-spacing:1px; font-weight:700;
+  color:var(--accent); cursor:pointer; padding:12px 22px;
+  border:2px solid var(--accent); border-radius:24px;
+  background:rgba(0,229,255,.1); transition:all .2s; position:relative; z-index:1;
+  box-shadow:0 0 16px rgba(0,229,255,.2);
+}
+.layout-btn:hover { background:rgba(0,229,255,.18); transform:scale(1.03); }
+
+#layoutModal {
+  position:fixed; inset:0; z-index:300;
+  display:none; align-items:center; justify-content:center;
+  background:rgba(0,0,0,.8); backdrop-filter:blur(6px);
+}
+#layoutModal.open { display:flex; }
+.lm-box {
+  background:linear-gradient(155deg,#0d1f38,#06090f);
+  border:1px solid rgba(0,229,255,.3); border-radius:18px;
+  padding:26px 24px; display:flex; flex-direction:column;
+  align-items:center; gap:16px; max-width:420px; width:90%;
+}
+.lm-title { font-family:'Orbitron',monospace; font-size:.95rem; font-weight:900; color:var(--accent); letter-spacing:3px; }
+.lm-sub   { font-size:.72rem; color:var(--dim); text-align:center; line-height:1.5; }
+.lm-choices { display:flex; gap:10px; width:100%; }
+.lm-choice {
+  flex:1; padding:16px 10px; border-radius:12px;
+  border:2px solid rgba(255,255,255,.12); background:rgba(10,20,40,.7);
+  cursor:pointer; transition:all .2s; text-align:center;
+  display:flex; flex-direction:column; gap:7px; align-items:center;
+}
+.lm-choice:hover:not(.sel) { border-color:rgba(0,229,255,.4); }
+.lm-choice.sel {
+  border-color:var(--accent); background:rgba(0,229,255,.11);
+  box-shadow:0 0 18px rgba(0,229,255,.2);
+}
+.lm-ci { font-size:1.8rem; }
+.lm-cn { font-family:'Orbitron',monospace; font-size:.68rem; font-weight:700; letter-spacing:1px; }
+.lm-cd { font-size:.6rem; color:var(--dim); line-height:1.4; }
+
+#dialogueScreen { background:rgba(4,8,18,.97); gap:10px; padding:20px; }
+.dia-ch   { font-family:'Orbitron',monospace; font-size:.6rem; letter-spacing:4px; color:var(--dim); }
+.dia-icon { font-size:clamp(2.5rem,8vw,4rem); }
+.dia-name { font-family:'Orbitron',monospace; font-size:clamp(1.2rem,4vw,2.2rem); font-weight:900; }
+.dia-threat { font-size:.7rem; letter-spacing:3px; padding:4px 14px; border-radius:20px; font-family:'Orbitron',monospace; }
+.dia-box {
+  background:rgba(0,30,60,.8); border:1px solid rgba(0,229,255,.22);
+  border-radius:13px; padding:16px 22px; max-width:500px; width:90%;
+}
+.dia-spk { font-family:'Orbitron',monospace; font-size:.58rem; letter-spacing:2px; color:var(--accent); margin-bottom:6px; }
+.dia-txt { font-size:.85rem; color:#b0ccdd; line-height:1.65; }
+.dia-nav { display:flex; gap:10px; align-items:center; }
+.dia-dot    { width:7px; height:7px; border-radius:50%; background:rgba(255,255,255,.2); }
+.dia-dot.on { background:var(--accent); }
+.dbtn {
+  background:transparent; border:1px solid var(--accent); color:var(--accent);
+  border-radius:8px; padding:10px 24px; font-family:'Orbitron',monospace;
+  font-size:.72rem; letter-spacing:2px; cursor:pointer; transition:all .15s;
+  touch-action:manipulation;
+}
+.dbtn:hover,.dbtn:active { background:rgba(0,229,255,.12); }
+.dbtn.go { background:linear-gradient(135deg,var(--accent),#0077aa); color:#000; border:none; font-weight:700; }
+
+#gameScreen { position:relative; width:100vw; height:100vh; overflow:hidden; }
+#gameCanvas { display:block; position:absolute; top:0; left:0; }
+
+#hudL, #hudR {
+  position:absolute; top:8px; display:flex; flex-direction:column;
+  gap:4px; pointer-events:none; font-family:'Orbitron',monospace; z-index:20;
+}
+#hudL { left:8px; }
+#hudR { right:8px; align-items:flex-end; }
+.hl { color:var(--dim); letter-spacing:1.5px; font-size:.5rem; text-transform:uppercase; }
+.hv { font-size:.85rem; font-weight:700; }
+.bw { width:82px; height:6px; background:rgba(255,255,255,.1); border-radius:3px; overflow:hidden; }
+.bf { height:100%; border-radius:3px; transition:width .25s; }
+.bs { background:linear-gradient(90deg,#00aaff,#00e5ff); }
+.bc { background:linear-gradient(90deg,#22aa22,#39ff14); }
+.bx { background:linear-gradient(90deg,#aa44ff,#ff88ff); }
+.bp { background:linear-gradient(90deg,#ff8800,#ffdd00); }
+.br { background:linear-gradient(90deg,#00cc88,#00ffbb); }
+.hr { display:flex; align-items:center; gap:5px; }
+
+#cropBanner {
+  position:absolute; top:8px; left:50%; transform:translateX(-50%);
+  text-align:center; pointer-events:none; z-index:20; white-space:nowrap;
+}
+.cbn { font-family:'Orbitron',monospace; font-size:clamp(.6rem,1.8vw,.9rem); font-weight:900; letter-spacing:3px; text-shadow:0 0 14px currentColor; }
+.cbt { font-size:.52rem; letter-spacing:2px; opacity:.7; font-family:'Orbitron',monospace; }
+
+#protBar {
+  position:absolute; bottom:0; left:0; right:0;
+  display:flex; justify-content:center; gap:8px; padding:6px 0 8px;
+  background:linear-gradient(to top, rgba(6,9,15,.96) 70%, transparent);
+  z-index:25; pointer-events:all;
+}
+.ps {
+  display:flex; flex-direction:column; align-items:center; gap:2px;
+  padding:5px 12px; border-radius:10px; border:2px solid transparent;
+  font-family:'Orbitron',monospace; font-size:.55rem; letter-spacing:1px;
+  opacity:.45; transition:all .18s; background:rgba(0,0,0,.4);
+  cursor:pointer; user-select:none; touch-action:manipulation;
+}
+.ps.on { opacity:1; transform:scale(1.1); }
+.ps.ph  { border-color:var(--heat);   color:var(--heat);   }
+.ps.psa { border-color:var(--salt);   color:var(--salt);   }
+.ps.pf  { border-color:var(--fungal); color:var(--fungal); }
+.ps.pi  { border-color:var(--insect); color:var(--insect); }
+.ps.ph.on  { box-shadow:0 0 12px var(--heat);   background:rgba(255,85,0,.14); }
+.ps.psa.on { box-shadow:0 0 12px var(--salt);   background:rgba(102,204,255,.1); }
+.ps.pf.on  { box-shadow:0 0 12px var(--fungal); background:rgba(170,51,255,.1); }
+.ps.pi.on  { box-shadow:0 0 12px var(--insect); background:rgba(136,221,0,.1); }
+.pk { font-size:.65rem; opacity:.55; }
+
+#eduPopup {
+  position:absolute; top:68px; left:50%; transform:translateX(-50%) translateY(-8px);
+  background:rgba(0,20,50,.95); border:1px solid var(--accent); border-radius:12px;
+  padding:10px 16px 8px; font-size:.72rem; color:var(--accent); text-align:center;
+  max-width:min(380px,85vw); pointer-events:none;
+  opacity:0; transition:opacity .5s,transform .4s; z-index:50; white-space:normal;
+  cursor:pointer; user-select:none;
+}
+#eduPopup.show {
+  opacity:1; transform:translateX(-50%) translateY(0);
+  pointer-events:all;
+}
+#eduPopupText { display:block; margin-bottom:5px; }
+#eduPauseBtn {
+  display:inline-block; margin-top:2px;
+  font-family:'Orbitron',monospace; font-size:.55rem; letter-spacing:1px;
+  color:var(--accent); border:1px solid var(--accent); border-radius:20px;
+  padding:3px 12px; background:rgba(0,229,255,.1);
+  cursor:pointer; touch-action:manipulation;
+}
+#eduPauseBtn:hover { background:rgba(0,229,255,.2); }
+
+/* Pause overlay */
+#pauseOverlay {
+  position:absolute; inset:0; z-index:60;
+  background:rgba(0,10,25,.88); backdrop-filter:blur(5px);
+  display:none; flex-direction:column; align-items:center; justify-content:center; gap:0;
+  padding:20px; overflow-y:auto;
+}
+#pauseOverlay.on { display:flex; }
+.pause-title { font-family:'Orbitron',monospace; font-size:1.4rem; font-weight:900; color:var(--accent); letter-spacing:4px; text-shadow:0 0 24px var(--accent); margin-bottom:14px; }
+.pause-tip { font-size:.82rem; color:#9ab8d0; max-width:340px; text-align:center; line-height:1.65; border:1px solid rgba(0,229,255,.2); border-radius:10px; padding:12px 18px; background:rgba(0,20,50,.6); margin-bottom:14px; }
+
+/* Tips/Help panel */
+#tipsPanel {
+  width:min(480px,94vw); background:rgba(4,10,24,.97);
+  border:1px solid rgba(0,229,255,.3); border-radius:16px;
+  display:flex; flex-direction:column; gap:0;
+  max-height:82vh; overflow:hidden; margin-bottom:14px;
+}
+.tips-header {
+  display:flex; align-items:center; justify-content:space-between;
+  padding:14px 18px; border-bottom:1px solid rgba(0,229,255,.15);
+}
+.tips-header-title { font-family:'Orbitron',monospace; font-size:.88rem; font-weight:900; color:var(--accent); letter-spacing:2px; }
+.tips-body { overflow-y:auto; padding:14px 18px; display:flex; flex-direction:column; gap:12px; }
+.tips-section { display:flex; flex-direction:column; gap:6px; }
+.tips-section-title { font-family:'Orbitron',monospace; font-size:.62rem; letter-spacing:2px; color:var(--gold); text-transform:uppercase; padding-bottom:4px; border-bottom:1px solid rgba(255,196,0,.2); }
+.tips-row { display:flex; align-items:flex-start; gap:10px; font-size:.78rem; color:#9ab8d0; line-height:1.5; }
+.tips-row .tip-icon { font-size:1rem; flex-shrink:0; margin-top:1px; }
+.tips-row strong { color:var(--white); }
+.tips-objective { background:rgba(0,229,255,.07); border:1px solid rgba(0,229,255,.25); border-radius:8px; padding:10px 14px; font-size:.8rem; color:var(--white); line-height:1.6; }
+.tips-objective span { color:var(--accent); font-weight:700; }
+
+/* ? help button — always visible in-game top right corner */
+#helpBtn {
+  position:absolute; top:8px; left:50%; transform:translateX(160px);
+  width:36px; height:36px; border-radius:50%; z-index:45;
+  background:rgba(0,229,255,.18); border:2px solid rgba(0,229,255,.55);
+  color:var(--accent); font-family:'Orbitron',monospace; font-weight:900; font-size:.85rem;
+  display:none; align-items:center; justify-content:center;
+  cursor:pointer; touch-action:manipulation; user-select:none;
+  box-shadow:0 0 12px rgba(0,229,255,.25);
+  transition:background .15s, transform .1s;
+}
+#helpBtn:active { background:rgba(0,229,255,.35); transform:translateX(160px) scale(.92); }
+body.mob #helpBtn { display:flex; }
+/* Also show on desktop */
+#helpBtn { display:flex; }
+
+/* ══ MOBILE: visible left/right move buttons ══ */
+#moveButtons {
+  position:absolute; bottom:36px; left:24px;
+  display:none; gap:20px; z-index:40;
+  align-items:center; touch-action:none;
+}
+.mvbtn {
+  width:88px; height:88px; border-radius:50%;
+  background:rgba(255,255,255,.92);
+  border:3px solid #fff;
+  color:#06090f; font-size:2.2rem; font-weight:900;
+  display:flex; align-items:center; justify-content:center;
+  cursor:pointer; touch-action:none; user-select:none;
+  box-shadow:0 4px 18px rgba(0,0,0,.5), 0 0 0 5px rgba(255,255,255,.15);
+  transition:transform .08s, background .1s;
+}
+.mvbtn.pr { background:#fff; transform:scale(.88); box-shadow:0 2px 10px rgba(0,0,0,.5), 0 0 0 8px rgba(0,229,255,.35); }
+/* Dash button: slightly smaller, gold-tinted */
+.mvbtn.mvdash {
+  width:68px; height:68px; font-size:1.6rem;
+  background:rgba(255,220,100,.92); border-color:rgba(255,200,60,.9);
+  color:#6b3a00;
+  box-shadow:0 4px 14px rgba(0,0,0,.4), 0 0 0 4px rgba(255,200,60,.3);
+}
+.mvbtn.mvdash.pr { background:rgba(255,200,60,.95); transform:scale(.88); }
+.mvbtn.mvdash.cd { opacity:0.38; filter:grayscale(.5); }
+
+/* Pulse button - circular, bottom right, white & bold */
+#mpulse {
+  position:absolute; bottom:124px; right:24px;
+  width:78px; height:78px; border-radius:50%; display:none;
+  background:rgba(255,255,255,.92);
+  border:3px solid #fff;
+  color:#a85a00; font-family:'Orbitron',monospace; font-size:.52rem; font-weight:800; letter-spacing:.5px;
+  align-items:center; justify-content:center; flex-direction:column; gap:1px;
+  cursor:pointer; touch-action:manipulation; user-select:none; z-index:40;
+  box-shadow:0 4px 18px rgba(0,0,0,.5), 0 0 0 5px rgba(255,255,255,.15);
+  transition:transform .1s, opacity .15s;
+}
+#mpulse .mp-ic { font-size:1.7rem; line-height:1; }
+#mpulse:active, #mpulse.pr { transform:scale(.88); }
+#mpulse.cd { opacity:0.45; filter:grayscale(.6); }
+
+/* Protectant bar - bottom centre, horizontal, white & bold, sits "in the dirt" */
+#mprotBar {
+  position:absolute; left:50%; bottom:14px; transform:translateX(-10%);
+  display:none; flex-direction:row; gap:16px; z-index:40;
+  align-items:flex-end; justify-content:center;
+}
+.mps {
+  width:72px; height:72px; border-radius:50%; border:3px solid rgba(255,255,255,.5);
+  display:flex; flex-direction:column; align-items:center; justify-content:center;
+  gap:0px; font-family:'Orbitron',monospace; font-size:.42rem; letter-spacing:.3px;
+  cursor:pointer; background:rgba(255,255,255,.85); touch-action:manipulation;
+  user-select:none; transition:all .15s; opacity:.88;
+  box-shadow:0 4px 14px rgba(0,0,0,.45);
+}
+.mps.on { opacity:1; transform:scale(1.14) translateY(-4px); border-color:#fff; }
+.mps .mpi { font-size:1.5rem; line-height:1; }
+.mps .mpn { font-size:.4rem; letter-spacing:.3px; margin-top:1px; opacity:.9; font-weight:800; }
+.mps.mph  { color:var(--heat);   }
+.mps.mpsa { color:var(--salt);   }
+.mps.mpf  { color:var(--fungal); }
+.mps.mpi2 { color:var(--insect); }
+.mps.mph.on  { box-shadow:0 0 20px var(--heat),   0 4px 14px rgba(0,0,0,.45); }
+.mps.mpsa.on { box-shadow:0 0 20px var(--salt),   0 4px 14px rgba(0,0,0,.45); }
+.mps.mpf.on  { box-shadow:0 0 20px var(--fungal), 0 4px 14px rgba(0,0,0,.45); }
+.mps.mpi2.on { box-shadow:0 0 20px var(--insect), 0 4px 14px rgba(0,0,0,.45); }
+
+/* Mobile HUD: compact pill-style panels, game-like */
+body.mob #hudL, body.mob #hudR {
+  background:rgba(8,12,20,.55); border:1px solid rgba(255,255,255,.08);
+  border-radius:12px; padding:6px 9px; backdrop-filter:blur(6px);
+}
+body.mob #protBar  { display:none; }
+body.mob .hl       { font-size:.42rem; }
+body.mob .hv       { font-size:.74rem; }
+body.mob .bw       { width:62px; height:5px; }
+body.mob .cbn      { font-size:clamp(.5rem,2.2vw,.7rem); }
+body.mob #eduPopup { max-width:min(220px,68vw); font-size:.65rem; top:58px; }
+body.mob #hudR     { right:8px; }
+body.mob #cropBanner {
+  background:rgba(8,12,20,.5); border:1px solid rgba(255,255,255,.08);
+  border-radius:10px; padding:4px 14px; backdrop-filter:blur(6px);
+}
+
+#harvestScreen { background:#06090f; gap:12px; padding:20px; }
+#harvBg {
+  position:absolute; inset:0; opacity:.15;
+  display:flex; align-items:center; justify-content:center;
+  font-size:clamp(100px,25vw,180px); pointer-events:none; z-index:0;
+}
+#shopScreen {
+  background:radial-gradient(ellipse at 50% 30%,#0d2040,#06090f);
+  gap:10px; padding:20px;
+}
+.sg { display:grid; grid-template-columns:1fr 1fr; gap:8px; width:clamp(280px,90vw,480px); }
+.si {
+  background:rgba(0,200,255,.06); border:1px solid rgba(0,200,255,.15);
+  border-radius:10px; padding:9px 12px; cursor:pointer; transition:all .18s;
+  display:flex; flex-direction:column; gap:3px;
+}
+.si:hover:not(.mx):not(.ca) { border-color:var(--gold); background:rgba(255,196,0,.08); }
+.si.mx,.si.ca { opacity:.35; cursor:default; }
+.sn { font-family:'Orbitron',monospace; font-size:.62rem; letter-spacing:1px; color:var(--white); }
+.sd { font-size:.6rem; color:var(--dim); }
+.st { font-size:.52rem; color:var(--dim); }
+.sc { font-size:.7rem; color:var(--gold); font-weight:700; margin-top:1px; }
+#storyComplete {
+  background:radial-gradient(ellipse at 50% 40%,#0a3020,#06090f);
+  gap:14px; text-align:center; padding:24px;
+}
+#endScreen {
+  background:radial-gradient(ellipse at 50% 40%,#200a0a,#06090f);
+  gap:12px; text-align:center; padding:24px;
+}
+#infEnd {
+  background:radial-gradient(ellipse at 50%,#0a1030,#06090f);
+  gap:12px; text-align:center; padding:24px;
+}
+.card {
+  background:rgba(0,200,255,.07); border:1px solid rgba(0,200,255,.2);
+  border-radius:14px; padding:15px 22px; display:flex; flex-direction:column;
+  gap:7px; width:clamp(280px,88vw,400px); position:relative; z-index:1;
+}
+.cr { display:flex; justify-content:space-between; gap:24px; font-size:.84rem; }
+.cr span:last-child { color:var(--gold); font-weight:700; }
+.grade { font-size:1.4rem; font-family:'Orbitron',monospace; position:relative; z-index:1; }
+.grade.poor      { color:#aa4444; }
+.grade.good      { color:#ddaa00; }
+.grade.excellent { color:var(--green); }
+.grade.highyield { color:var(--accent); text-shadow:0 0 18px var(--accent); }
+.stitle { font-family:'Orbitron',monospace; font-size:clamp(.95rem,3.5vw,1.9rem); font-weight:900; }
+.tg  { color:var(--gold);   text-shadow:0 0 22px var(--gold); }
+.tgr { color:var(--green);  text-shadow:0 0 22px var(--green); }
+.tr  { color:var(--red);    text-shadow:0 0 22px var(--red); }
+.ta  { color:var(--accent); text-shadow:0 0 22px var(--accent); }
+.rbar { width:clamp(200px,70vw,260px); height:13px; background:rgba(255,255,255,.1); border-radius:7px; overflow:hidden; border:1px solid rgba(0,200,136,.3); }
+.rbf  { height:100%; background:linear-gradient(90deg,#00cc88,#00ffbb); border-radius:7px; transition:width .5s; }
+.rl   { font-family:'Orbitron',monospace; font-size:.58rem; letter-spacing:2px; color:#00cc88; margin-bottom:3px; }
+.btn {
+  background:linear-gradient(135deg,var(--accent),#0077aa); color:#000;
+  border:none; border-radius:8px; padding:12px 34px;
+  font-family:'Orbitron',monospace; font-size:.85rem; font-weight:700; letter-spacing:2px;
+  cursor:pointer; box-shadow:0 0 20px rgba(0,229,255,.35);
+  transition:transform .15s,box-shadow .15s; touch-action:manipulation;
+}
+.btn:hover,.btn:active { transform:scale(1.04); box-shadow:0 0 34px rgba(0,229,255,.6); }
+.btn-sm { padding:9px 22px; font-size:.72rem; }
+.btn-go { background:linear-gradient(135deg,var(--gold),#aa6600); color:#000; }
+.btn-ol { background:transparent; border:1px solid var(--accent); color:var(--accent); box-shadow:none; }
+.btn-ol:hover { background:rgba(0,229,255,.1); }
+.brow { display:flex; gap:10px; flex-wrap:wrap; justify-content:center; }
+@media (max-width:520px) {
+  .mode-cards { flex-direction:column; align-items:center; }
+  .mode-card  { width:min(240px,78vw); }
+  .lm-choices { flex-direction:column; }
+  .sg         { grid-template-columns:1fr 1fr; }
+  .dia-box    { padding:12px 16px; }
+}
+</style>
+<!-- ReLeaf port: this game fills the window with fixed full-screen layers, so the wiki bar and licence footer are
+     pinned to the top and bottom edges instead of sitting in the page flow, and are hidden while a level or a dialogue
+     is on screen so they never cover the game. -->
+<style>
+#releaf-wiki-bar{position:fixed!important;top:0;left:0;right:0;z-index:1000}
+#releaf-wiki-footer{position:fixed!important;bottom:0;left:0;right:0;z-index:1000;padding:5px 12px!important;font-size:11px!important;line-height:1.4!important;background:rgba(243,242,238,.94)!important}
+body:has(#gameScreen.active) #releaf-wiki-bar,body:has(#gameScreen.active) #releaf-wiki-footer,body:has(#dialogueScreen.active) #releaf-wiki-bar,body:has(#dialogueScreen.active) #releaf-wiki-footer{display:none}
+</style>
+</head>
+<body>
+<!-- ReLeaf port: link back to the wiki's Education page. -->
+<div id="releaf-wiki-bar" role="navigation" aria-label="ReLeaf wiki" style="align-self:stretch;width:100%;box-sizing:border-box;margin:0;padding:6px 16px;background:#1b2e26;font:500 13px/1.5 system-ui,-apple-system,'Segoe UI',sans-serif;text-align:left;"><a href="../../" style="color:#fff;text-decoration:none;cursor:pointer;">&larr; ReLeaf wiki &middot; Education</a></div>
+
+
+<div id="deviceScreen" class="screen active">
+  <div class="menu-bg">🌱</div>
+  <div style="position:relative;z-index:1;display:flex;flex-direction:column;align-items:center;gap:14px;">
+    <div class="menu-sub">🌿 iGEM SYNTHETIC BIOLOGY PROJECT</div>
+    <div class="menu-logo">CROPSHIELD</div>
+    <div class="menu-sub" style="margin-bottom:6px;">BIOREACTOR DEFENDER</div>
+    <div class="lm-title" style="margin-top:8px;">SELECT YOUR DEVICE</div>
+    <div class="lm-sub" style="max-width:340px;">Choose your platform so we can set up the right controls. You can change this later from the menu.</div>
+    <div class="lm-choices" style="max-width:420px;">
+      <div class="lm-choice sel" id="lcM" onclick="pickLayout('mobile')">
+        <div class="lm-ci">📱</div>
+        <div class="lm-cn">iPAD / MOBILE</div>
+        <div class="lm-cd">On-screen arrow buttons<br>Tap protectants to switch<br>Large touch-friendly UI<br>No keyboard needed</div>
+      </div>
+      <div class="lm-choice" id="lcD" onclick="pickLayout('desktop')">
+        <div class="lm-ci">💻</div>
+        <div class="lm-cn">PC / LAPTOP</div>
+        <div class="lm-cd">← → or A D to move<br>1–4 switch protectant<br>E for pulse<br>Shift to dash</div>
+      </div>
+    </div>
+    <button class="btn" style="margin-top:6px;" onclick="confirmDevice()">CONTINUE ▶</button>
+  </div>
+</div>
+
+<div id="layoutModal">
+  <div class="lm-box">
+    <div class="lm-title">🖥️ CHANGE DEVICE</div>
+    <div class="lm-sub">Switch your platform. Changeable anytime from the menu.</div>
+    <div class="lm-choices">
+      <div class="lm-choice sel" id="lcM2" onclick="pickLayout2('mobile')">
+        <div class="lm-ci">📱</div>
+        <div class="lm-cn">iPAD / MOBILE</div>
+        <div class="lm-cd">On-screen arrow buttons<br>Tap protectants to switch<br>Large touch-friendly UI<br>No keyboard needed</div>
+      </div>
+      <div class="lm-choice" id="lcD2" onclick="pickLayout2('desktop')">
+        <div class="lm-ci">💻</div>
+        <div class="lm-cn">PC / LAPTOP</div>
+        <div class="lm-cd">← → or A D to move<br>1–4 switch protectant<br>E for pulse<br>Shift to dash</div>
+      </div>
+    </div>
+    <button class="btn btn-sm" onclick="confirmLayout()">✓ &nbsp;CONFIRM</button>
+  </div>
+</div>
+
+<div id="mainMenu" class="screen">
+  <div class="menu-bg">🌱</div>
+  <div style="position:relative;z-index:1;display:flex;flex-direction:column;align-items:center;gap:8px;">
+    <div class="menu-sub">🌿 iGEM SYNTHETIC BIOLOGY PROJECT</div>
+    <div class="menu-logo">CROPSHIELD</div>
+    <div class="menu-sub" style="margin-bottom:4px;">BIOREACTOR DEFENDER</div>
+    <div class="menu-tag">Protect engineered crops from climate stress using targeted biological protectants — without releasing live bacteria.</div>
+
+    <!-- Save slot banner — shown only when a story save exists -->
+    <div id="continueSlot" style="display:none;flex-direction:column;align-items:center;gap:6px;margin-top:4px;">
+      <div style="font-family:'Orbitron',monospace;font-size:.55rem;letter-spacing:2px;color:var(--dim);">SAVED PROGRESS FOUND</div>
+      <div id="continueInfo" style="font-family:'Orbitron',monospace;font-size:.72rem;color:var(--white);background:rgba(0,229,255,.08);border:1px solid rgba(0,229,255,.3);border-radius:10px;padding:8px 18px;text-align:center;"></div>
+      <div style="display:flex;gap:10px;">
+        <button class="btn btn-sm" onclick="continueStory()">▶ &nbsp;CONTINUE</button>
+        <button class="btn btn-sm btn-ol" onclick="confirmNewGame()">↩ &nbsp;NEW GAME</button>
+      </div>
+    </div>
+
+    <div class="mode-cards" style="margin-top:6px;" id="modeCards">
+      <div class="mode-card rec" id="storyCard" onclick="startStory()">
+        <div class="mode-icon">🌾</div>
+        <div class="mode-name" style="color:var(--accent);">STORY MODE</div>
+        <div class="mode-desc">6-chapter field trial.<br>Protect real crops.<br>Validate the PGPR system.</div>
+        <div class="mode-badge b-rec">★ RECOMMENDED</div>
+      </div>
+      <div class="mode-card locked" id="infCard" onclick="tryInfinite()">
+        <div class="mode-icon">♾️</div>
+        <div class="mode-name" style="color:var(--dim);">INFINITE MODE</div>
+        <div class="mode-desc">Endless escalation.<br>High score challenge.<br>Unlocks after campaign.</div>
+        <div class="mode-badge b-lock" id="infBadge">🔒 LOCKED</div>
+      </div>
+    </div>
+    <div class="layout-btn" id="layoutBtn" onclick="openLayoutModal()">
+      <span id="layIcon" style="font-size:1.3rem;">💻</span>
+      <span id="layLabel">PC / LAPTOP MODE ACTIVE</span>
+      <span style="opacity:.5;margin-left:4px;">▾ Tap to Change</span>
+    </div>
+  </div>
+</div>
+
+<div id="dialogueScreen" class="screen">
+  <div class="dia-ch"     id="diaChap">CHAPTER 1 OF 6</div>
+  <div class="dia-icon"   id="diaIcon">🥜</div>
+  <div class="dia-name"   id="diaName" style="color:var(--accent);">PEANUT</div>
+  <div class="dia-threat" id="diaThreat">⚠ MAIN THREAT: HEAT STRESS</div>
+  <div class="dia-box">
+    <div class="dia-spk">🔬 DR. CHEN — FIELD RESEARCHER</div>
+    <div class="dia-txt" id="diaTxt">...</div>
+  </div>
+  <div class="dia-nav">
+    <div id="diaDots" style="display:flex;gap:5px;"></div>
+    <button class="dbtn" onclick="skipDia()">SKIP</button>
+    <button class="dbtn" id="diaNext" onclick="advDia()">NEXT ▶</button>
+  </div>
+</div>
+
+<div id="gameScreen" class="screen">
+  <canvas id="gameCanvas"></canvas>
+  <div id="hudL">
+    <div class="hl">SHIELD</div>
+    <div class="hr"><div class="bw"><div class="bf bs" id="barShield" style="width:100%"></div></div><div class="hv" id="valShield" style="color:var(--accent)">10</div></div>
+    <div class="hl" style="margin-top:2px">🌱 PLANT</div>
+    <div class="hr"><div class="bw"><div class="bf bc" id="barCrop" style="width:100%"></div></div><div class="hv" id="valCrop" style="color:var(--green)">100%</div></div>
+    <div class="hl" style="margin-top:2px">LVL <span id="valLevel" style="color:var(--purple)">1</span></div>
+    <div class="hr"><div class="bw"><div class="bf bx" id="barXP" style="width:0%"></div></div><div class="hv" id="valXP" style="color:var(--purple);font-size:.62rem">0</div></div>
+    <div class="hl" style="margin-top:2px">PULSE [E]</div>
+    <div class="hr"><div class="bw"><div class="bf bp" id="barPulse" style="width:100%"></div></div><div class="hv" id="valPulse" style="color:#ffaa00;font-size:.66rem">READY</div></div>
+    <div style="margin-top:4px;font-family:'Orbitron',monospace;font-size:.62rem;color:var(--gold)">💰 <span id="valCred">0</span></div>
+    <div id="resRow" style="margin-top:4px;display:none;">
+      <div class="rl">RESEARCH</div>
+      <div class="rbar"><div class="rbf" id="barRes" style="width:0%"></div></div>
+      <div style="font-family:'Orbitron',monospace;font-size:.56rem;color:#00cc88;margin-top:1px;" id="valRes">0%</div>
+    </div>
+  </div>
+  <div id="hudR">
+    <div class="hv" id="valScore" style="color:var(--gold);font-size:.95rem">0</div>
+    <div class="hl">SCORE</div>
+    <div class="hl" style="margin-top:3px">CHAPTER</div>
+    <div class="hv" id="valRound" style="color:var(--accent)">1/6</div>
+    <div class="hl" style="margin-top:3px">DEFEATED</div>
+    <div class="hv" id="valDef" style="color:var(--green);font-size:.74rem">0/10</div>
+    <div class="hl" style="margin-top:3px">PLANT STAGE</div>
+    <div class="hv" id="valStg" style="color:var(--green);font-size:.65rem">Seedling</div>
+  </div>
+  <div id="cropBanner">
+    <div class="cbn" id="banName"   style="color:var(--accent)"></div>
+    <div class="cbt" id="banThreat"></div>
+  </div>
+  <div id="protBar">
+    <div class="ps ph on" id="ps0"><span class="pk">1</span><span>HEAT</span></div>
+    <div class="ps psa"   id="ps1"><span class="pk">2</span><span>SALINE</span></div>
+    <div class="ps pf"    id="ps2"><span class="pk">3</span><span>ANTIFUNG</span></div>
+    <div class="ps pi"    id="ps3"><span class="pk">4</span><span>INSECT</span></div>
+  </div>
+  <div id="eduPopup" onclick="toggleEduPause()">
+    <span id="eduPopupText"></span>
+    <span id="eduPauseBtn">⏸ TAP TO PAUSE</span>
+  </div>
+
+  <!-- Help button -->
+  <div id="helpBtn" onclick="openTips()">?</div>
+
+  <!-- Pause / Tips overlay -->
+  <div id="pauseOverlay">
+    <div class="pause-title" id="overlayTitle">⏸ PAUSED</div>
+    <div class="pause-tip" id="pauseTipText" style="display:none;"></div>
+
+    <!-- Tips panel -->
+    <div id="tipsPanel">
+      <div class="tips-header">
+        <div class="tips-header-title">📋 OBJECTIVES &amp; TIPS</div>
+      </div>
+      <div class="tips-body">
+
+        <!-- Current chapter objective -->
+        <div class="tips-section">
+          <div class="tips-section-title">🎯 Current Objective</div>
+          <div class="tips-objective" id="tipObjective">Defeat all stresses to complete the chapter.</div>
+        </div>
+
+        <!-- Controls -->
+        <div class="tips-section">
+          <div class="tips-section-title">🎮 Controls</div>
+          <div class="tips-row"><span class="tip-icon">◀▶</span><div><strong>Move</strong> — Arrow buttons (mobile) or ← → / A D (keyboard)</div></div>
+          <div class="tips-row"><span class="tip-icon">💨</span><div><strong>Dash</strong> — Gold button (mobile) or Shift / Z — quick burst dodge</div></div>
+          <div class="tips-row"><span class="tip-icon">⚡</span><div><strong>Pulse</strong> — E key or ⚡ button — area blast, slows &amp; damages all enemies</div></div>
+          <div class="tips-row"><span class="tip-icon">🔢</span><div><strong>Switch protectant</strong> — Tap the coloured buttons at the bottom (or keys 1–4)</div></div>
+        </div>
+
+        <!-- Protectants -->
+        <div class="tips-section">
+          <div class="tips-section-title">🧪 Protectants</div>
+          <div class="tips-row"><span class="tip-icon">🔥</span><div><strong>Heat Protectant</strong> — Effective against <strong>Heat Stress ☀</strong>. LEA peptides stabilise proteins denatured by extreme temperatures.</div></div>
+          <div class="tips-row"><span class="tip-icon">💧</span><div><strong>Saline Protectant</strong> — Effective against <strong>Salinity Stress ⬡</strong>. Triggers osmotic adjustment genes to counter salt-induced water loss.</div></div>
+          <div class="tips-row"><span class="tip-icon">🍄</span><div><strong>Antifungal</strong> — Effective against <strong>Fungal Stress 🍄</strong>. NaD1 defensin peptides disrupt fungal cell membranes.</div></div>
+          <div class="tips-row"><span class="tip-icon">🐛</span><div><strong>Anti-Insect</strong> — Effective against <strong>Aphids</strong> and <strong>Caterpillars</strong>. Bt toxins target insect gut receptors.</div></div>
+        </div>
+
+        <!-- Enemies -->
+        <div class="tips-section">
+          <div class="tips-section-title">⚠ Stress Types</div>
+          <div class="tips-row"><span class="tip-icon">☀</span><div><strong>Heat</strong> — Falls straight down. Fast. Use Heat Protectant.</div></div>
+          <div class="tips-row"><span class="tip-icon">⬡</span><div><strong>Salinity</strong> — Zigzags side to side. Use Saline Protectant.</div></div>
+          <div class="tips-row"><span class="tip-icon">🍄</span><div><strong>Fungal</strong> — Spirals slowly. Tanky. Use Antifungal.</div></div>
+          <div class="tips-row"><span class="tip-icon">🟢</span><div><strong>Aphids</strong> — Fast swarm movement. Use Anti-Insect.</div></div>
+          <div class="tips-row"><span class="tip-icon">🐛</span><div><strong>Caterpillar</strong> — Very slow but extremely tough. Use Anti-Insect.</div></div>
+        </div>
+
+        <!-- Strategy -->
+        <div class="tips-section">
+          <div class="tips-section-title">💡 Strategy Tips</div>
+          <div class="tips-row"><span class="tip-icon">✅</span><div>Using the <strong>correct protectant</strong> deals 7× more damage. Wrong protectants barely scratch enemies.</div></div>
+          <div class="tips-row"><span class="tip-icon">🛡</span><div>Your <strong>shield</strong> absorbs hits — watch for cracks. Once broken, one more hit ends the game.</div></div>
+          <div class="tips-row"><span class="tip-icon">🌱</span><div>The <strong>crop's health</strong> drops each time a stress reaches the bottom. Keep it above 50% for a better harvest grade.</div></div>
+          <div class="tips-row"><span class="tip-icon">⚡</span><div>Save the <strong>Pulse</strong> for when multiple enemies are about to reach the crop — it slows and damages all of them at once.</div></div>
+          <div class="tips-row"><span class="tip-icon">🛒</span><div>Spend <strong>credits</strong> in the Upgrade Lab between chapters to improve fire rate, shield HP, dash cooldown, and more.</div></div>
+        </div>
+
+        <!-- Science -->
+        <div class="tips-section">
+          <div class="tips-section-title">🧬 About This Project</div>
+          <div class="tips-row"><span class="tip-icon">🔬</span><div>This game simulates a <strong>sealed PGPR bioreactor</strong> that senses stress signals and releases targeted protectants — without releasing live bacteria into the environment.</div></div>
+          <div class="tips-row"><span class="tip-icon">🌍</span><div>The goal is to validate that <strong>engineered biological systems</strong> can protect crops from climate change stress more precisely than traditional pesticides.</div></div>
+        </div>
+
+      </div>
+    </div>
+
+    <div style="display:flex;gap:12px;flex-wrap:wrap;justify-content:center;margin-top:2px;">
+      <button class="btn btn-sm" onclick="resumeGame()">▶ &nbsp;RESUME</button>
+      <button class="btn btn-sm btn-ol" onclick="goMenu()">← MENU</button>
+    </div>
+  </div>
+  <div id="moveButtons">
+    <div class="mvbtn" id="mvLeft">◀</div>
+    <div class="mvbtn mvdash" id="mvDash">💨</div>
+    <div class="mvbtn" id="mvRight">▶</div>
+  </div>
+  <div id="mpulse"><span class="mp-ic">⚡</span><span>PULSE</span></div>
+  <div id="mprotBar">
+    <div class="mps mph on"  id="mp0"><div class="mpi">🔥</div><div class="mpn">HEAT</div></div>
+    <div class="mps mpsa"    id="mp1"><div class="mpi">💧</div><div class="mpn">SALINE</div></div>
+    <div class="mps mpf"     id="mp2"><div class="mpi">🍄</div><div class="mpn">FUNGAL</div></div>
+    <div class="mps mpi2"    id="mp3"><div class="mpi">🐛</div><div class="mpn">INSECT</div></div>
+  </div>
+</div>
+
+<div id="harvestScreen" class="screen">
+  <div id="harvBg"></div>
+  <div style="position:relative;z-index:1;display:flex;flex-direction:column;align-items:center;gap:10px;">
+    <div class="stitle tg">🌾 HARVEST REPORT</div>
+    <div class="grade" id="harvGrade"></div>
+    <div class="card"  id="harvCard"></div>
+    <div id="resGain" style="font-family:'Orbitron',monospace;font-size:.7rem;color:#00ffbb;"></div>
+    <div class="brow"><button class="btn btn-sm" id="toShopBtn">🛒 UPGRADE LAB</button></div>
+  </div>
+</div>
+
+<div id="shopScreen" class="screen">
+  <div class="stitle" style="color:var(--accent);">🔬 UPGRADE LAB</div>
+  <div style="font-family:'Orbitron',monospace;font-size:.9rem;color:var(--gold);">💰 Credits: <span id="shopCred">0</span></div>
+  <div class="sg" id="shopGrid"></div>
+  <div class="brow">
+    <button class="btn btn-sm" id="nextRndBtn">▶ NEXT CHAPTER</button>
+    <button class="btn btn-sm btn-ol" onclick="goMenu()">← MENU</button>
+  </div>
+</div>
+
+<div id="storyComplete" class="screen">
+  <div class="stitle tgr" style="font-size:clamp(1rem,4vw,2rem);">🧬 TECHNOLOGY VALIDATED!</div>
+  <div style="font-size:.82rem;color:#9ab8d0;max-width:420px;text-align:center;line-height:1.65;">
+    The PGPR bioreactor system has been validated across all six field trials.<br>
+    Crops protected without releasing any live bacteria into the environment.
+  </div>
+  <div class="card">
+    <div class="cr"><span>Chapters Completed</span><span id="scCh">6/6</span></div>
+    <div class="cr"><span>Research Validation</span><span id="scRes">100%</span></div>
+    <div class="cr"><span>Final Score</span>        <span id="scScore">0</span></div>
+    <div class="cr"><span>Level Reached</span>      <span id="scLvl">1</span></div>
+  </div>
+  <div style="font-family:'Orbitron',monospace;font-size:.68rem;color:var(--gold);letter-spacing:2px;">🔓 INFINITE MODE UNLOCKED!</div>
+  <div class="brow">
+    <button class="btn btn-sm btn-go"  onclick="startInfinite()">▶ INFINITE MODE</button>
+    <button class="btn btn-sm btn-ol"  onclick="goMenu()">← MENU</button>
+  </div>
+</div>
+
+<div id="endScreen" class="screen">
+  <div class="stitle" id="endTitle"></div>
+  <div class="card"   id="endStats"></div>
+  <div class="brow">
+    <button class="btn btn-sm" id="retryBtn" onclick="retryChapter()">↩ RETRY</button>
+    <button class="btn btn-sm btn-ol" onclick="goMenu()">← MENU</button>
+  </div>
+</div>
+
+<div id="infEnd" class="screen">
+  <div class="stitle ta">INFINITE MODE OVER</div>
+  <div style="font-family:'Orbitron',monospace;font-size:1.4rem;color:var(--gold);text-shadow:0 0 14px var(--gold);" id="infFinalScore">0</div>
+  <div class="card" id="infCard2"></div>
+  <div class="brow">
+    <button class="btn btn-sm"        onclick="startInfinite()">↩ PLAY AGAIN</button>
+    <button class="btn btn-sm btn-ol" onclick="goMenu()">← MENU</button>
+  </div>
+</div>
+
+<script>
+'use strict';
+
+// ══════════════════════════════════════════════
+//  LAYOUT SYSTEM
+// ══════════════════════════════════════════════
+let LAYOUT = 'desktop';
+let _pLay  = 'desktop'; // first-run device picker selection
+let _pLay2 = 'desktop'; // in-menu "change device" picker selection
+// touch.left/right are set true while the on-screen move buttons are held
+const touch = { left:false, right:false };
+
+// First-run device screen
+function pickLayout(l) {
+  _pLay = l;
+  document.getElementById('lcD').classList.toggle('sel', l === 'desktop');
+  document.getElementById('lcM').classList.toggle('sel', l === 'mobile');
+}
+function confirmDevice() {
+  LAYOUT = _pLay;
+  applyLayout();
+  try { localStorage.setItem('cs_lay', LAYOUT); } catch(e) {}
+  show('mainMenu');
+}
+
+// In-menu "change device" modal
+function openLayoutModal() {
+  _pLay2 = LAYOUT;
+  document.getElementById('lcD2').classList.toggle('sel', _pLay2 === 'desktop');
+  document.getElementById('lcM2').classList.toggle('sel', _pLay2 === 'mobile');
+  document.getElementById('layoutModal').classList.add('open');
+}
+function pickLayout2(l) {
+  _pLay2 = l;
+  document.getElementById('lcD2').classList.toggle('sel', l === 'desktop');
+  document.getElementById('lcM2').classList.toggle('sel', l === 'mobile');
+}
+function confirmLayout() {
+  LAYOUT = _pLay2; applyLayout();
+  document.getElementById('layoutModal').classList.remove('open');
+  try { localStorage.setItem('cs_lay', LAYOUT); } catch(e) {}
+}
+
+function applyLayout() {
+  const mob = LAYOUT === 'mobile';
+  document.body.classList.toggle('mob', mob);
+  const li = document.getElementById('layIcon');
+  const ll = document.getElementById('layLabel');
+  if (li) li.textContent  = mob ? '📱' : '💻';
+  if (ll) ll.textContent  = mob ? 'MOBILE / TABLET MODE ACTIVE' : 'PC / LAPTOP MODE ACTIVE';
+  const mb  = document.getElementById('moveButtons');
+  const mp  = document.getElementById('mpulse');
+  const mpb = document.getElementById('mprotBar');
+  if (mb)  mb.style.display  = mob ? 'flex' : 'none';
+  if (mp)  mp.style.display  = mob ? 'flex'  : 'none';
+  if (mpb) mpb.style.display = mob ? 'flex'  : 'none';
+}
+
+// Pre-select iPad/mobile by default since that is the primary platform.
+// A saved preference overrides this.
+(function () {
+  let initial = 'mobile'; // default to iPad/mobile
+  try {
+    const saved = localStorage.getItem('cs_lay');
+    if (saved === 'mobile' || saved === 'desktop') initial = saved;
+  } catch(e) {}
+  pickLayout(initial);
+})();
+
+// ══════════════════════════════════════════════
+//  AUDIO
+// ══════════════════════════════════════════════
+// IMPORTANT: AudioContext creation can throw in some browsers/webviews
+// (autoplay restrictions, embedded iframes, etc). If it throws here and
+// this were unguarded, the WHOLE script would stop executing at this line
+// and every function below it -- including all layout/touch control logic
+// -- would never be defined. Guard it so audio failures never break gameplay.
+let AC;
+try {
+  AC = new (window.AudioContext || window.webkitAudioContext)();
+} catch(e) {
+  // Minimal no-op stand-in so tn()/ns() calls below stay safe no-ops too
+  AC = { state:'suspended', currentTime:0, resume(){}, createOscillator(){throw 0;}, createGain(){throw 0;}, createBuffer(){throw 0;}, createBufferSource(){throw 0;}, createBiquadFilter(){throw 0;}, destination:null };
+}
+function tn(f,t,d,v=0.15){try{const o=AC.createOscillator(),g=AC.createGain();o.connect(g);g.connect(AC.destination);o.type=t;o.frequency.value=f;g.gain.setValueAtTime(v,AC.currentTime);g.gain.exponentialRampToValueAtTime(0.001,AC.currentTime+d);o.start();o.stop(AC.currentTime+d);}catch(e){}}
+function ns(d,v=0.13,f=400){try{const b=AC.createBuffer(1,AC.sampleRate*d,AC.sampleRate),dat=b.getChannelData(0);for(let i=0;i<dat.length;i++)dat[i]=Math.random()*2-1;const s=AC.createBufferSource(),fi=AC.createBiquadFilter(),g=AC.createGain();s.buffer=b;fi.type='bandpass';fi.frequency.value=f;s.connect(fi);fi.connect(g);g.connect(AC.destination);g.gain.setValueAtTime(v,AC.currentTime);g.gain.exponentialRampToValueAtTime(0.001,AC.currentTime+d);s.start();s.stop(AC.currentTime+d);}catch(e){}}
+const SFX={
+  shoot:()=>{tn(380,'sawtooth',.07,.09);tn(520,'sine',.05,.05);},
+  hit:()=>ns(.07,.11,600),
+  destroy:()=>{tn(220,'sine',.14,.17);ns(.1,.11,300);},
+  shieldHit:()=>{tn(180,'square',.11,.19);ns(.09,.09,200);},
+  shieldBreak:()=>{tn(100,'sawtooth',.4,.26);ns(.4,.2,150);},
+  correct:()=>{tn(660,'sine',.09,.13);tn(880,'sine',.11,.09);},
+  wrong:()=>tn(200,'square',.09,.09),
+  grow:()=>{[440,660,880].forEach((f,i)=>setTimeout(()=>tn(f,'sine',.17,.13),i*80));},
+  harvest:()=>{[523,659,784,1047].forEach((f,i)=>setTimeout(()=>tn(f,'sine',.27,.16),i*85));},
+  buy:()=>{tn(440,'sine',.09,.13);tn(550,'sine',.09,.1);},
+  levelup:()=>{[440,550,660,880].forEach((f,i)=>setTimeout(()=>tn(f,'sine',.17,.17),i*65));},
+  pulse:()=>{tn(80,'sine',.5,.26);ns(.3,.17,100);},
+  dash:()=>{tn(600,'sine',.07,.08);tn(400,'sine',.05,.06);},
+  validate:()=>{[523,659,784,1047,1319].forEach((f,i)=>setTimeout(()=>tn(f,'sine',.33,.19),i*95));},
+};
+
+// ══════════════════════════════════════════════
+//  CHAPTERS
+// ══════════════════════════════════════════════
+const CHAPTERS = [
+  { num:1, crop:'Peanut',       icon:'🥜', accent:'#ffcc44', sky:['#1a0f02','#0e0b05'], soil:'#3a2010', sa:'#6b3c18', threat:'⚠ HEAT STRESS',       weights:{heat:6,salt:1,fungal:1,aphid:1,cat:0}, goal:12, dia:["Peanuts are vulnerable during pod-filling — extreme heat denatures critical proteins.","Our LEA peptide protectant acts as a molecular chaperone, stabilising proteins under heat stress.","Focus on the Heat protectant here. Minor secondary stresses may also appear!"] },
+  { num:2, crop:'Tomato',       icon:'🍅', accent:'#ff8866', sky:['#1a0808','#0e0505'], soil:'#2a1508', sa:'#5a2f10', threat:'⚠ FUNGAL DISEASE',     weights:{heat:1,salt:1,fungal:6,aphid:1,cat:1}, goal:14, dia:["Tomatoes in humid greenhouse conditions are highly vulnerable to Botrytis fungal disease.","NaD1 defensin peptides disrupt fungal cell membranes — our primary antifungal protectant.","Aphids also vector fungal spores. Watch for insects and switch protectants fast!"] },
+  { num:3, crop:'Lettuce',      icon:'🥬', accent:'#66ff88', sky:['#021408','#020f06'], soil:'#12280a', sa:'#244d12', threat:'⚠ SALINITY STRESS',    weights:{heat:1,salt:6,fungal:1,aphid:2,cat:0}, goal:14, dia:["Coastal lettuce farms face salt water intrusion — osmotic stress draws water out of cells.","Our saline protectant triggers osmotic adjustment genes, maintaining vital cell turgor pressure.","Salt stress is invisible but devastating. Watch the plant health bar very closely!"] },
+  { num:4, crop:'Strawberry',   icon:'🍓', accent:'#ff88aa', sky:['#1a0810','#0e0508'], soil:'#2a1018', sa:'#5a2030', threat:'⚠ FUNGI + INSECTS',    weights:{heat:1,salt:1,fungal:4,aphid:3,cat:2}, goal:16, dia:["Strawberries face grey mould fungi AND aphid infestations simultaneously during fruiting.","You must switch protectants rapidly — both antifungal AND anti-insect compounds are vital.","This is where our bioreactor shines: it can release multiple protectants on demand!"] },
+  { num:5, crop:'Mixed Trial',  icon:'🌾', accent:'#ffdd88', sky:['#100e02','#0a0a03'], soil:'#28260a', sa:'#504e12', threat:'⚠ ALL STRESS TYPES',   weights:{heat:2,salt:2,fungal:2,aphid:2,cat:2}, goal:20, dia:["Real agricultural fields face multiple stress types simultaneously — this is the true test.","Your protectant-switching speed and accuracy will determine whether the crop survives.","The bioreactor's multi-compound release system is critical here. Stay sharp!"] },
+  { num:6, crop:'Climate Trial',icon:'🌍', accent:'#aaaaff', sky:['#050508','#030310'], soil:'#101028', sa:'#202048', threat:'⚠ CLIMATE EXTREME',    weights:{heat:3,salt:2,fungal:2,aphid:2,cat:1}, goal:25, stressSpd:92, spawnInt:0.9, dia:["Final validation: simulate a worst-case climate scenario — all stresses at high intensity.","This data will prove the PGPR bioreactor system works in real-world conditions.","The future of climate-resilient agriculture depends on this harvest. Good luck!"] },
+];
+
+const STRESS_DEF = {
+  heat:   {label:'Heat',        color:'#ff5500',glow:'#ff7700',r:24,maxHp:70, mt:'straight',spd:52},
+  salt:   {label:'Salinity',    color:'#66ccff',glow:'#aaddff',r:22,maxHp:60, mt:'zigzag',  spd:44},
+  fungal: {label:'Fungal',      color:'#9933ff',glow:'#cc66ff',r:26,maxHp:90, mt:'spiral',  spd:36},
+  aphid:  {label:'Aphids',      color:'#88dd00',glow:'#aaff22',r:18,maxHp:45, mt:'swarm',   spd:72},
+  cat:    {label:'Caterpillar', color:'#996633',glow:'#bbaa44',r:28,maxHp:130,mt:'slow',    spd:28},
+};
+const PROT = [
+  {name:'HEAT',    color:'#ff6622',glow:'#ff9900',eff:['heat']},
+  {name:'SALINE',  color:'#44ccff',glow:'#88eeff',eff:['salt']},
+  {name:'ANTIFUNG',color:'#cc44ff',glow:'#dd88ff',eff:['fungal']},
+  {name:'INSECT',  color:'#aaee00',glow:'#ccff44',eff:['aphid','cat']},
+];
+const STAGES = ['Seedling','Young Plant','Developing','Mature','High-Yield'];
+const SHOP_CAT = [
+  {id:'speed',name:'Drone Speed',   desc:'+20 movement speed', base:30,tiers:3},
+  {id:'dash', name:'Dash Cooldown', desc:'-0.4s dash cooldown',base:40,tiers:3},
+  {id:'shHp', name:'Shield +3 HP',  desc:'More shield HP',     base:50,tiers:3},
+  {id:'fire', name:'Fire Rate',     desc:'+20% faster shots',  base:35,tiers:3},
+  {id:'pot',  name:'Potency',       desc:'+15% protectant dmg',base:45,tiers:3},
+  {id:'pulse',name:'Pulse Cooldown',desc:'-3s pulse cooldown', base:60,tiers:2},
+];
+const EDU = [
+  "Heat stress denatures enzymes and disrupts photosynthesis.",
+  "Salinity creates osmotic imbalance — water leaves plant cells.",
+  "Fungal pathogens secrete enzymes that degrade cell walls.",
+  "Aphids pierce phloem vessels and transmit plant viruses.",
+  "LEA peptides stabilise proteins under heat and drought stress.",
+  "NaD1 defensin peptides disrupt fungal membrane integrity.",
+  "PGPRs sense stress signals through root exudates in the rhizosphere.",
+  "Our bioreactor is cell-free — no live bacteria released into the environment!",
+  "Bt toxins target insect gut receptors specifically and safely.",
+  "Correct protectant matching is far more effective than brute force.",
+];
+
+// ══════════════════════════════════════════════
+//  SAVE & STATE
+// ══════════════════════════════════════════════
+function loadSave(){try{return JSON.parse(localStorage.getItem('cs3'))||{};}catch(e){return {};}}
+function writeSave(s){try{localStorage.setItem('cs3',JSON.stringify(s));}catch(e){}}
+
+let SAVE=loadSave();
+SAVE.inf  = SAVE.inf  || false;
+SAVE.hi   = SAVE.hi   || 0;
+// story progress persisted across sessions
+SAVE.story = SAVE.story || null; // null = no saved story in progress
+
+function saveProgress(){
+  // Only save story mode progress (not infinite — that's score-only)
+  if(!P||P.mode!=='story') return;
+  SAVE.story = {
+    ch:   P.ch,
+    score:P.score,
+    cred: P.cred,
+    lvl:  P.lvl,
+    xp:   P.xp,
+    xpN:  P.xpN,
+    res:  P.res,
+    ups:  {...P.ups},
+    total:P.total,
+  };
+  writeSave(SAVE);
+}
+
+let P={};
+function resetP(mode){
+  P={mode,ch:0,score:0,cred:0,lvl:1,xp:0,xpN:100,res:0,ups:{speed:0,dash:0,shHp:0,fire:0,pot:0,pulse:0},total:0};
+}
+function loadStoryProgress(){
+  // Restore a saved story session into P
+  if(!SAVE.story) return false;
+  const s=SAVE.story;
+  P={mode:'story',ch:s.ch||0,score:s.score||0,cred:s.cred||0,
+     lvl:s.lvl||1,xp:s.xp||0,xpN:s.xpN||100,res:s.res||0,
+     ups:{speed:0,dash:0,shHp:0,fire:0,pot:0,pulse:0,...(s.ups||{})},
+     total:s.total||0};
+  return true;
+}
+function clearStoryProgress(){
+  SAVE.story=null; writeSave(SAVE);
+}
+
+// ══════════════════════════════════════════════
+//  SCREEN MANAGER
+// ══════════════════════════════════════════════
+function show(id){document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));document.getElementById(id).classList.add('active');if(id==='gameScreen')applyLayout();if(id==='mainMenu')refreshMenuSaveSlot();}
+function goMenu(){cancelAnimationFrame(animId);show('mainMenu');}
+function retryChapter(){show('gameScreen');startRound(CHAPTERS[P.ch]);}
+(function(){if(SAVE.inf)unlockInfCard();})();
+// Refresh save slot display once DOM is ready (deviceScreen is active on load,
+// but if localStorage skipped it, mainMenu is active — handle both)
+window.addEventListener('DOMContentLoaded',()=>{ refreshMenuSaveSlot(); });
+function unlockInfCard(){const c=document.getElementById('infCard');if(c)c.classList.remove('locked');const b=document.getElementById('infBadge');if(b){b.className='mode-badge b-open';b.textContent='✅ UNLOCKED';}}
+
+// ══════════════════════════════════════════════
+//  DIALOGUE
+// ══════════════════════════════════════════════
+let _dLines=[],_dIdx=0,_dCh=0;
+function showDialogue(chIdx){
+  _dCh=chIdx; const ch=CHAPTERS[chIdx]; _dLines=ch.dia; _dIdx=0;
+  document.getElementById('diaChap').textContent=`CHAPTER ${ch.num} OF ${CHAPTERS.length}`;
+  document.getElementById('diaIcon').textContent=ch.icon;
+  document.getElementById('diaName').textContent=ch.crop.toUpperCase();
+  document.getElementById('diaName').style.color=ch.accent;
+  const tEl=document.getElementById('diaThreat');
+  tEl.textContent=ch.threat; tEl.style.color=ch.accent;
+  tEl.style.border=`1px solid ${ch.accent}66`; tEl.style.background=`${ch.accent}18`;
+  renderDiaLine(); show('dialogueScreen');
+}
+function renderDiaLine(){
+  document.getElementById('diaTxt').textContent=_dLines[_dIdx];
+  const dots=document.getElementById('diaDots'); dots.innerHTML='';
+  _dLines.forEach((_,i)=>{const d=document.createElement('div');d.className='dia-dot'+(i===_dIdx?' on':'');dots.appendChild(d);});
+  const nx=document.getElementById('diaNext');
+  nx.textContent=_dIdx>=_dLines.length-1?'START ▶':'NEXT ▶';
+  nx.className=_dIdx>=_dLines.length-1?'dbtn go':'dbtn';
+}
+function advDia(){if(_dIdx<_dLines.length-1){_dIdx++;renderDiaLine();}else beginChapter(_dCh);}
+function skipDia(){beginChapter(_dCh);}
+
+// ══════════════════════════════════════════════
+//  CANVAS & KEYBOARD
+// ══════════════════════════════════════════════
+let canvas,ctx,animId=0,G={},gKeys={},gPrev={},eduIdx=0;
+function initCanvas(){
+  if(canvas)return;
+  canvas=document.getElementById('gameCanvas');
+  ctx=canvas.getContext('2d');
+  canvas.width=window.innerWidth; canvas.height=window.innerHeight;
+  window.addEventListener('resize',()=>{canvas.width=window.innerWidth;canvas.height=window.innerHeight;});
+  window.addEventListener('keydown',onKey);
+  window.addEventListener('keyup',e=>{gPrev[e.code]=gKeys[e.code];gKeys[e.code]=false;});
+}
+function onKey(e){
+  gPrev[e.code]=gKeys[e.code]; gKeys[e.code]=true;
+  if(e.code==='Digit1')sw(0); if(e.code==='Digit2')sw(1);
+  if(e.code==='Digit3')sw(2); if(e.code==='Digit4')sw(3);
+  if(e.code==='Space')e.preventDefault();
+  if((e.code==='ShiftLeft'||e.code==='ShiftRight'||e.code==='KeyZ')&&!gPrev[e.code])doDash();
+  if(e.code==='KeyE'&&!gPrev[e.code])doPulse();
+  AC.resume();
+}
+function sw(i){
+  if(!G)return; G.prot=i;
+  document.querySelectorAll('.ps').forEach((el,j)=>el.classList.toggle('on',j===i));
+  document.querySelectorAll('.mps').forEach((el,j)=>el.classList.toggle('on',j===i));
+}
+function doDash(){
+  if(!G||G.over||G.drone.dashT>0)return;
+  const d=G.drone;
+  const dir=(gKeys['ArrowLeft']||gKeys['KeyA']||touch.left)?-1:(gKeys['ArrowRight']||gKeys['KeyD']||touch.right)?1:1;
+  d.dashing=true; d.dashVx=dir*620; d.dashDur=0.16; d.dashT=d.dashCD;
+  SFX.dash(); ptcl(d.x,d.y,'#00e5ff',10);
+}
+function doPulse(){
+  if(!G||G.over||G.pulseT>0)return;
+  G.pulseT=G.pulseCD; SFX.pulse();
+  G.rings.push({x:canvas.width/2,y:canvas.height-80,r:0,maxR:canvas.width*0.56,a:1});
+  G.stresses.forEach(s=>{s.hp-=35;s.slow=2.5;ptcl(s.x,s.y,'#ffaa00',8);});
+  G.stresses=G.stresses.filter(s=>{if(s.hp<=0){killStress(s,false);return false;}return true;});
+}
+
+// ══════════════════════════════════════════════
+//  ROUND INIT
+// ══════════════════════════════════════════════
+function startRound(ch){
+  initCanvas();
+  const W=canvas.width,H=canvas.height,shMax=10+P.ups.shHp*3;
+  G={
+    drone:{x:W/2,y:H-150,spd:300+P.ups.speed*20,dashing:false,dashVx:0,dashDur:0,dashCD:Math.max(0.7,2-P.ups.dash*0.4),dashT:0},
+    bullets:[],ptcls:[],stresses:[],rings:[],
+    shHP:shMax,shMax,cracks:[],shBroke:false,
+    cropHP:100,goal:ch.goal,defeated:0,
+    prot:0,lastShot:0,fireRate:Math.max(0.09,0.22-P.ups.fire*0.035),
+    lastSpawn:0,spawnInt:ch.spawnInt||Math.max(0.9,2.4-P.ch*0.15),maxOnScreen:3,
+    pulseCD:Math.max(6,15-P.ups.pulse*3),pulseT:0,
+    plantStg:0,plantGrow:0,plantH:20,plantHAcc:0,plantHSamp:0,
+    over:false,win:false,lastTime:null,paused:false,shAnim:0,hitFlash:0,
+    xpRnd:0,credRnd:0,corrHits:0,wrongHits:0,
+    eff:1+P.ups.pot*0.15,ch,weights:ch.weights,
+    stressSpd:ch.stressSpd||(55+P.ch*8),infElapsed:0,
+  };
+  sw(0); updateHUD(); cancelAnimationFrame(animId);
+  animId=requestAnimationFrame(gameLoop); scheduleEdu();
+}
+
+// ══════════════════════════════════════════════
+//  GAME LOOP
+// ══════════════════════════════════════════════
+function gameLoop(ts){
+  if(!G.lastTime)G.lastTime=ts;
+  const dt=Math.min((ts-G.lastTime)/1000,0.05); G.lastTime=ts;
+  updateGame(dt); renderGame();
+  if(!G.over)animId=requestAnimationFrame(gameLoop); else endRound();
+}
+
+// ══════════════════════════════════════════════
+//  UPDATE
+// ══════════════════════════════════════════════
+function updateGame(dt){
+  if(G.paused) return;
+  const W=canvas.width,H=canvas.height;
+  G.shAnim+=dt*2; if(G.hitFlash>0)G.hitFlash-=dt*5; if(G.pulseT>0)G.pulseT-=dt;
+  const d=G.drone;
+  const goL=gKeys['ArrowLeft']||gKeys['KeyA']||touch.left;
+  const goR=gKeys['ArrowRight']||gKeys['KeyD']||touch.right;
+  if(d.dashing){d.x+=d.dashVx*dt;d.dashDur-=dt;if(d.dashDur<=0){d.dashing=false;d.dashVx=0;}}
+  else{if(goL&&d.x>30)d.x-=d.spd*dt;if(goR&&d.x<W-30)d.x+=d.spd*dt;}
+  d.x=Math.max(30,Math.min(W-30,d.x));
+  if(d.dashT>0)d.dashT-=dt;
+  if(LAYOUT==='mobile'){
+    const mp=document.getElementById('mpulse');
+    if(mp){mp.classList.toggle('cd',G.pulseT>0);mp.innerHTML=G.pulseT>0?`<span class="mp-ic">⚡</span><span>${G.pulseT.toFixed(1)}s</span>`:'<span class="mp-ic">⚡</span><span>PULSE</span>';}
+    const db=document.getElementById('mvDash');
+    if(db){const onCD=G.drone&&G.drone.dashT>0;db.classList.toggle('cd',onCD);db.textContent=onCD?'⏱':'💨';}
+  }
+  const now=performance.now()/1000;
+  if(now-G.lastShot>=G.fireRate){
+    G.lastShot=now; const p=PROT[G.prot];
+    G.bullets.push({x:d.x,y:d.y-22,vy:-500,w:7,h:16,color:p.color,glow:p.glow,prot:G.prot}); SFX.shoot();
+  }
+  G.lastSpawn+=dt;
+  if(G.lastSpawn>=G.spawnInt&&G.stresses.length<G.maxOnScreen){G.lastSpawn=0;spawnStress();}
+  G.bullets.forEach(b=>b.y+=b.vy*dt); G.bullets=G.bullets.filter(b=>b.y>-40);
+  const cropY=H-80;
+  G.stresses.forEach(s=>{
+    s.t+=dt; const sf=s.slow>0?0.28:1; if(s.slow>0)s.slow-=dt;
+    s.angle+=dt*s.spin*(s.slow>0?0.3:1);
+    const sp=G.stressSpd*sf*dt;
+    switch(s.mt){
+      case 'straight':s.y+=sp;break; case 'zigzag':s.y+=sp;s.x+=Math.sin(s.t*3.5)*1.4;break;
+      case 'spiral':s.y+=sp;s.x+=Math.sin(s.t*1.8)*2.0;break;
+      case 'swarm':s.y+=sp;s.x+=Math.sin(s.t*5+s.ph)*2.5;break; case 'slow':s.y+=sp;break;
+    }
+    s.x=Math.max(s.r+10,Math.min(W-s.r-10,s.x));
+  });
+  for(let i=G.stresses.length-1;i>=0;i--){
+    const s=G.stresses[i];
+    if(s.y+s.r>cropY){G.cropHP=Math.max(0,G.cropHP-8);ptcl(s.x,cropY,s.color,12);G.stresses.splice(i,1);if(G.cropHP<=0){G.over=true;G.win=false;return;}}
+  }
+  for(let bi=G.bullets.length-1;bi>=0;bi--){
+    const b=G.bullets[bi];
+    for(let si=G.stresses.length-1;si>=0;si--){
+      const s=G.stresses[si],dx=b.x-s.x,dy=b.y-s.y;
+      if(Math.sqrt(dx*dx+dy*dy)<s.r+10){
+        const pd=PROT[b.prot],ok=pd.eff.includes(s.type),dmg=ok?28*G.eff:4;
+        s.hp-=dmg;
+        if(ok){SFX.correct();ptcl(s.x,s.y,pd.color,7);G.corrHits++;}else{SFX.wrong();ptcl(s.x,s.y,'#fff',3);G.wrongHits++;}
+        G.bullets.splice(bi,1);
+        if(s.hp<=0){killStress(s,ok);G.stresses.splice(si,1);}
+        break;
+      }
+    }
+  }
+  for(let i=G.stresses.length-1;i>=0;i--){
+    const s=G.stresses[i],dx=s.x-d.x,dy=s.y-d.y,dist=Math.sqrt(dx*dx+dy*dy);
+    if(!G.shBroke&&dist<s.r+48){
+      G.stresses.splice(i,1); G.shHP=Math.max(0,G.shHP-1); G.hitFlash=1;
+      G.cracks.push({a:Math.atan2(dy,dx),l:12+Math.random()*18});
+      if(G.shHP<=0){G.shBroke=true;SFX.shieldBreak();ptcl(d.x,d.y,'#00e5ff',30,true);}else SFX.shieldHit();
+    }else if(G.shBroke&&dist<s.r+20){G.over=true;G.win=false;return;}
+  }
+  G.ptcls.forEach(p=>{p.x+=p.vx*dt;p.y+=p.vy*dt;p.vy+=50*dt;p.l-=dt;p.a=Math.max(0,p.l/p.ml);});
+  G.ptcls=G.ptcls.filter(p=>p.l>0);
+  G.rings.forEach(r=>{r.r+=600*dt;r.a=Math.max(0,1-r.r/r.maxR);}); G.rings=G.rings.filter(r=>r.a>0);
+  G.plantGrow+=dt*(G.cropHP/100); G.plantHAcc+=G.cropHP; G.plantHSamp++;
+  if(G.plantGrow>=8&&G.plantStg<4){G.plantStg++;G.plantGrow=0;SFX.grow();ptcl(canvas.width/2,canvas.height-90,'#39ff14',20,true);}
+  G.plantH=20+G.plantStg*22;
+  if(G.defeated>=G.goal){G.over=true;G.win=true;}
+  updateHUD(); gPrev={...gKeys};
+}
+
+function killStress(s,correct){
+  const xp=correct?15:4,cr=correct?12:3;
+  P.score+=correct?10:2; G.xpRnd+=xp; G.credRnd+=cr; P.xp+=xp; P.cred+=cr;
+  G.defeated++; P.total++; if(correct)P.res=Math.min(100,P.res+3);
+  SFX.destroy(); ptcl(s.x,s.y,s.color,20,true);
+  while(P.xp>=P.xpN){P.xp-=P.xpN;P.lvl++;P.xpN=Math.floor(P.xpN*1.4);SFX.levelup();ptcl(G.drone.x,G.drone.y,'#cc44ff',25,true);}
+  if(P.mode==='story') saveProgress();
+  updateHUD();
+}
+function spawnStress(){
+  const W=canvas.width,wts=G.weights||{heat:2,salt:2,fungal:2,aphid:2,cat:1};
+  const tot=Object.values(wts).reduce((a,b)=>a+b,0);
+  let r=Math.random()*tot,type='heat';
+  for(const[k,v]of Object.entries(wts)){r-=v;if(r<=0){type=k;break;}}
+  const def=STRESS_DEF[type];
+  // Spawn only in the middle 60% of the screen to avoid HUD panels on left/right
+  const spawnMargin = W * 0.20;
+  G.stresses.push({type,...def,x:spawnMargin+def.r+Math.random()*(W-spawnMargin*2-def.r*2),y:-40,hp:def.maxHp,t:0,angle:0,spin:(Math.random()-0.5)*2,ph:Math.random()*Math.PI*2,slow:0});
+}
+function ptcl(x,y,color,n,burst=false){
+  if(!G.ptcls)return;
+  for(let i=0;i<n;i++){const a=(i/n)*Math.PI*2+Math.random()*0.8,sp=burst?60+Math.random()*120:20+Math.random()*60;G.ptcls.push({x,y,vx:Math.cos(a)*sp,vy:Math.sin(a)*sp-(burst?50:0),color,r:burst?2+Math.random()*4:1.5+Math.random()*2.5,l:0.5+Math.random()*0.5,ml:0.5+Math.random()*0.5,a:1});}
+}
+
+// ══════════════════════════════════════════════
+//  HUD
+// ══════════════════════════════════════════════
+function updateHUD(){
+  document.getElementById('barShield').style.width=(G.shHP/G.shMax*100)+'%';
+  document.getElementById('valShield').textContent=G.shBroke?'BROKEN':`${G.shHP}/${G.shMax}`;
+  document.getElementById('valShield').style.color=G.shBroke?'#ff3a3a':'#00e5ff';
+  document.getElementById('barCrop').style.width=G.cropHP+'%';
+  document.getElementById('barCrop').style.background=G.cropHP>50?'linear-gradient(90deg,#22aa22,#39ff14)':G.cropHP>25?'linear-gradient(90deg,#aa8800,#ffcc00)':'linear-gradient(90deg,#aa2222,#ff4444)';
+  document.getElementById('valCrop').textContent=G.cropHP+'%';
+  document.getElementById('valCrop').style.color=G.cropHP>50?'#39ff14':G.cropHP>25?'#ffcc00':'#ff4444';
+  document.getElementById('valLevel').textContent=P.lvl;
+  document.getElementById('barXP').style.width=(P.xp/P.xpN*100)+'%';
+  document.getElementById('valXP').textContent=`${P.xp}/${P.xpN}`;
+  const pr=G.pulseT<=0;
+  document.getElementById('barPulse').style.width=pr?'100%':((1-G.pulseT/G.pulseCD)*100)+'%';
+  document.getElementById('valPulse').textContent=pr?'READY [E]':G.pulseT.toFixed(1)+'s';
+  document.getElementById('valCred').textContent=P.cred;
+  document.getElementById('valScore').textContent=P.score;
+  document.getElementById('valRound').textContent=`${P.ch+1}/${CHAPTERS.length}`;
+  document.getElementById('valDef').textContent=`${G.defeated}/${G.goal}`;
+  document.getElementById('valStg').textContent=STAGES[G.plantStg]||'High-Yield';
+  if(P.mode==='story'){document.getElementById('barRes').style.width=P.res+'%';document.getElementById('valRes').textContent=Math.floor(P.res)+'%';}
+}
+
+// ══════════════════════════════════════════════
+//  RENDER
+// ══════════════════════════════════════════════
+let starCache=null;
+function getStars(W,H){
+  if(!starCache||starCache.W!==W){starCache={W,list:[]};for(let i=0;i<110;i++)starCache.list.push({x:Math.random()*W,y:Math.random()*H*0.8,r:0.5+Math.random()*1.1,a:0.2+Math.random()*0.7});}
+  return starCache.list;
+}
+function renderGame(){
+  const W=canvas.width,H=canvas.height,ch=G.ch||CHAPTERS[0];
+  ctx.clearRect(0,0,W,H);
+  const[s1,s2]=ch.sky||['#07111f','#040a12'];
+  const skyG=ctx.createLinearGradient(0,0,0,H);
+  skyG.addColorStop(0,s1);skyG.addColorStop(0.65,s2);skyG.addColorStop(1,ch.soil||'#0a1506');
+  ctx.fillStyle=skyG;ctx.fillRect(0,0,W,H);
+  getStars(W,H).forEach(s=>{ctx.beginPath();ctx.arc(s.x,s.y,s.r,0,Math.PI*2);ctx.fillStyle=`rgba(200,220,255,${s.a})`;ctx.fill();});
+  G.rings.forEach(ring=>{ctx.save();ctx.globalAlpha=ring.a*0.5;ctx.strokeStyle='#ffaa00';ctx.lineWidth=3;ctx.shadowColor='#ffaa00';ctx.shadowBlur=20;ctx.beginPath();ctx.arc(ring.x,ring.y,ring.r,0,Math.PI*2);ctx.stroke();ctx.globalAlpha=ring.a*0.12;ctx.fillStyle='#ffcc00';ctx.beginPath();ctx.arc(ring.x,ring.y,ring.r,0,Math.PI*2);ctx.fill();ctx.restore();});
+  G.stresses.forEach(s=>drawStress(s));
+  G.bullets.forEach(b=>{ctx.save();ctx.shadowColor=b.glow;ctx.shadowBlur=14;const g=ctx.createLinearGradient(b.x,b.y-b.h,b.x,b.y);g.addColorStop(0,b.color);g.addColorStop(1,b.color+'22');ctx.fillStyle=g;ctx.beginPath();ctx.roundRect(b.x-b.w/2,b.y-b.h,b.w,b.h,3);ctx.fill();ctx.restore();});
+  G.ptcls.forEach(p=>{ctx.save();ctx.globalAlpha=p.a;ctx.fillStyle=p.color;ctx.shadowColor=p.color;ctx.shadowBlur=8;ctx.beginPath();ctx.arc(p.x,p.y,p.r,0,Math.PI*2);ctx.fill();ctx.restore();});
+  drawCrops(W,H,ch);
+  drawDrone(G.drone.x,G.drone.y);
+}
+function drawCrops(W,H,ch){
+  const cropY=H-80,green=Math.max(0,G.cropHP/100);
+  const sg=ctx.createLinearGradient(0,cropY,0,H);
+  sg.addColorStop(0,ch.soil||'#1a3a0e');sg.addColorStop(1,ch.sa||'#0a1506');
+  ctx.fillStyle=sg;ctx.fillRect(0,cropY,W,H-cropY);
+  const fh=Math.min(115,G.plantH*2.1);
+  ctx.save();
+  ctx.shadowColor=ch.accent||'#39ff14';ctx.shadowBlur=14;
+  ctx.strokeStyle=`hsl(${110*green},64%,${20+green*18}%)`;ctx.lineWidth=5;
+  ctx.beginPath();ctx.moveTo(W/2,cropY);ctx.lineTo(W/2,cropY-fh);ctx.stroke();
+  if(fh>30){
+    ctx.fillStyle=`hsl(${115*green},74%,${17+green*22}%)`;ctx.shadowBlur=6;
+    ctx.beginPath();ctx.ellipse(W/2-20,cropY-fh*0.50,18,7,-0.4,0,Math.PI*2);ctx.fill();
+    ctx.beginPath();ctx.ellipse(W/2+20,cropY-fh*0.65,18,7,0.4,0,Math.PI*2);ctx.fill();
+    if(fh>55){
+      ctx.beginPath();ctx.ellipse(W/2-14,cropY-fh*0.80,13,5,-0.3,0,Math.PI*2);ctx.fill();
+      ctx.beginPath();ctx.ellipse(W/2+14,cropY-fh*0.90,13,5,0.3,0,Math.PI*2);ctx.fill();
+    }
+  }
+  if(fh>40){ctx.shadowBlur=22;ctx.font=`${28+G.plantStg*6}px serif`;ctx.textAlign='center';ctx.textBaseline='middle';ctx.fillText(ch.icon,W/2,cropY-fh-18);}
+  ctx.restore();
+  const sp=80,cnt=Math.floor(W/sp)+1;
+  for(let i=0;i<cnt;i++){
+    const cx=(i+0.5)*sp;if(Math.abs(cx-W/2)<65)continue;
+    const sh=G.plantH*0.62;
+    ctx.save();ctx.strokeStyle=`hsl(${110*green},58%,20%)`;ctx.lineWidth=2;
+    ctx.beginPath();ctx.moveTo(cx,cropY);ctx.lineTo(cx,cropY-sh);ctx.stroke();
+    if(sh>20){ctx.fillStyle=`hsl(${112*green},68%,23%)`;ctx.beginPath();ctx.ellipse(cx-7,cropY-sh*0.50,7,3.2,-0.4,0,Math.PI*2);ctx.fill();ctx.beginPath();ctx.ellipse(cx+7,cropY-sh*0.65,7,3.2,0.4,0,Math.PI*2);ctx.fill();}
+    if(sh>28){ctx.font=`${10+G.plantStg}px serif`;ctx.textAlign='center';ctx.textBaseline='middle';ctx.fillText(ch.icon,cx,cropY-sh-5);}
+    ctx.restore();
+  }
+}
+function drawStress(s){
+  ctx.save();ctx.translate(s.x,s.y);ctx.rotate(s.angle);ctx.shadowColor=s.glow;ctx.shadowBlur=20;
+  switch(s.type){
+    case 'heat':
+      ctx.strokeStyle='#ff8800';ctx.lineWidth=2.5;
+      for(let i=0;i<8;i++){const a=(i/8)*Math.PI*2;ctx.beginPath();ctx.moveTo(Math.cos(a)*(s.r+2),Math.sin(a)*(s.r+2));ctx.lineTo(Math.cos(a)*(s.r+13),Math.sin(a)*(s.r+13));ctx.stroke();}
+      const hg=ctx.createRadialGradient(0,0,2,0,0,s.r);hg.addColorStop(0,'#ffcc00');hg.addColorStop(1,'#ff2200');
+      ctx.fillStyle=hg;ctx.beginPath();ctx.arc(0,0,s.r,0,Math.PI*2);ctx.fill();ctx.strokeStyle='#ff6600';ctx.lineWidth=2;ctx.stroke();
+      ctx.shadowBlur=0;ctx.font=`${Math.round(s.r*.85)}px serif`;ctx.textAlign='center';ctx.textBaseline='middle';ctx.fillStyle='rgba(255,255,255,.75)';ctx.fillText('☀',0,1);
+      break;
+    case 'salt':
+      ctx.fillStyle='rgba(140,210,255,.2)';ctx.strokeStyle='#88ddff';ctx.lineWidth=2;
+      ctx.beginPath();for(let i=0;i<6;i++){const a=(i/6)*Math.PI*2-Math.PI/6;i===0?ctx.moveTo(Math.cos(a)*s.r,Math.sin(a)*s.r):ctx.lineTo(Math.cos(a)*s.r,Math.sin(a)*s.r);}ctx.closePath();ctx.fill();ctx.stroke();
+      ctx.strokeStyle='rgba(200,240,255,.55)';ctx.lineWidth=1;
+      ctx.beginPath();for(let i=0;i<6;i++){const a=(i/6)*Math.PI*2-Math.PI/6;i===0?ctx.moveTo(Math.cos(a)*s.r*.5,Math.sin(a)*s.r*.5):ctx.lineTo(Math.cos(a)*s.r*.5,Math.sin(a)*s.r*.5);}ctx.closePath();ctx.stroke();
+      ctx.shadowBlur=0;ctx.font=`${Math.round(s.r*.75)}px serif`;ctx.textAlign='center';ctx.textBaseline='middle';ctx.fillStyle='#ccefff';ctx.fillText('⬡',0,1);
+      break;
+    case 'fungal':
+      ctx.fillStyle='rgba(130,28,210,.42)';ctx.strokeStyle='#aa44ff';ctx.lineWidth=2;
+      ctx.beginPath();ctx.arc(0,0,s.r,0,Math.PI*2);ctx.fill();ctx.stroke();
+      for(let i=0;i<6;i++){const a=(i/6)*Math.PI*2;ctx.fillStyle='rgba(55,170,35,.72)';ctx.beginPath();ctx.arc(Math.cos(a)*s.r*.78,Math.sin(a)*s.r*.78,s.r*.22,0,Math.PI*2);ctx.fill();}
+      ctx.shadowBlur=0;ctx.font=`${Math.round(s.r*.68)}px serif`;ctx.textAlign='center';ctx.textBaseline='middle';ctx.fillText('🍄',0,1);
+      break;
+    case 'aphid':
+      [[0,0],[s.r*.44,s.r*.2],[-.44*s.r,s.r*.2],[0,-s.r*.38],[s.r*.3,-.3*s.r]].forEach(([px,py])=>{ctx.fillStyle='rgba(100,200,0,.76)';ctx.strokeStyle='#aaff22';ctx.lineWidth=1.2;ctx.beginPath();ctx.arc(px,py,s.r*.3,0,Math.PI*2);ctx.fill();ctx.stroke();});
+      ctx.strokeStyle='#88cc00';ctx.lineWidth=1;ctx.shadowBlur=0;
+      ctx.beginPath();ctx.moveTo(-2,-s.r*.35);ctx.lineTo(-7,-s.r*.78);ctx.stroke();
+      ctx.beginPath();ctx.moveTo(2,-s.r*.35);ctx.lineTo(7,-s.r*.78);ctx.stroke();
+      break;
+    case 'cat':
+      const segR=s.r*0.38;
+      ['#996633','#88aa22','#99bb33','#775522'].forEach((col,i)=>{const sx=(i-1.5)*segR*1.6;ctx.fillStyle=col;ctx.strokeStyle='#665522';ctx.lineWidth=1.5;ctx.beginPath();ctx.arc(sx,0,segR,0,Math.PI*2);ctx.fill();ctx.stroke();});
+      const hx=1.5*segR*1.6+segR*0.7;
+      ctx.fillStyle='#cc9944';ctx.strokeStyle='#886622';ctx.lineWidth=1.5;ctx.beginPath();ctx.arc(hx,0,segR*1.2,0,Math.PI*2);ctx.fill();ctx.stroke();
+      ctx.shadowBlur=0;ctx.fillStyle='#000';ctx.beginPath();ctx.arc(hx-3,-3,2,0,Math.PI*2);ctx.fill();
+      break;
+  }
+  ctx.shadowBlur=0;
+  const hf=s.hp/s.maxHp;
+  ctx.fillStyle='rgba(0,0,0,.5)';ctx.fillRect(-s.r,s.r+5,s.r*2,5);
+  ctx.fillStyle=hf>0.5?'#44ff44':hf>0.25?'#ffcc00':'#ff4444';ctx.fillRect(-s.r,s.r+5,s.r*2*hf,5);
+  if(s.slow>0){ctx.fillStyle='rgba(100,200,255,.22)';ctx.beginPath();ctx.arc(0,0,s.r+4,0,Math.PI*2);ctx.fill();}
+  ctx.font='bold 8.5px "Exo 2",sans-serif';ctx.textAlign='center';ctx.textBaseline='middle';ctx.fillStyle='rgba(255,255,255,.65)';ctx.fillText(s.label,0,s.r+16);
+  ctx.restore();
+}
+function drawDrone(x,y){
+  ctx.save();ctx.translate(x,y);
+  const d=G.drone;
+  if(!G.shBroke){
+    const sR=48,pulse=0.7+0.3*Math.sin(G.shAnim),frac=G.shHP/G.shMax,a=frac*0.34*pulse,fa=G.hitFlash>0?G.hitFlash*0.44:0;
+    ctx.beginPath();ctx.arc(0,0,sR+9*pulse,0,Math.PI*2);ctx.fillStyle=`rgba(0,200,255,${a*.28})`;ctx.fill();
+    ctx.beginPath();ctx.arc(0,0,sR,0,Math.PI*2);
+    const sg=ctx.createRadialGradient(0,-12,4,0,0,sR);sg.addColorStop(0,`rgba(120,230,255,${a})`);sg.addColorStop(1,`rgba(0,100,200,${a*0.3})`);ctx.fillStyle=sg;ctx.fill();
+    ctx.strokeStyle=`rgba(0,220,255,${0.33+fa+pulse*0.18})`;ctx.lineWidth=1.5;ctx.stroke();
+    if(G.hitFlash>0){ctx.beginPath();ctx.arc(0,0,sR,0,Math.PI*2);ctx.fillStyle=`rgba(255,80,40,${G.hitFlash*0.33})`;ctx.fill();}
+    G.cracks.forEach(cr=>{ctx.strokeStyle='rgba(255,120,60,.82)';ctx.lineWidth=1.5;ctx.beginPath();ctx.moveTo(Math.cos(cr.a)*14,Math.sin(cr.a)*14);ctx.lineTo(Math.cos(cr.a)*(14+cr.l)+Math.cos(cr.a+0.5)*4,Math.sin(cr.a)*(14+cr.l)+Math.sin(cr.a+0.5)*4);ctx.stroke();});
+  }else{
+    ctx.beginPath();ctx.arc(0,0,40,0,Math.PI*2);ctx.fillStyle='rgba(255,50,50,.05)';ctx.fill();
+    ctx.strokeStyle='rgba(255,50,50,.22)';ctx.lineWidth=1;ctx.setLineDash([4,4]);ctx.stroke();ctx.setLineDash([]);
+  }
+  ctx.shadowColor='#00e5ff';ctx.shadowBlur=10;ctx.fillStyle='#122540';ctx.strokeStyle='#00ccee';ctx.lineWidth=1.5;
+  ctx.beginPath();ctx.roundRect(-11,-20,22,38,5);ctx.fill();ctx.stroke();
+  ctx.fillStyle='#0d1f38';
+  ctx.beginPath();ctx.moveTo(-11,-6);ctx.lineTo(-40,10);ctx.lineTo(-32,16);ctx.lineTo(-11,9);ctx.closePath();ctx.fill();ctx.stroke();
+  ctx.beginPath();ctx.moveTo(11,-6);ctx.lineTo(40,10);ctx.lineTo(32,16);ctx.lineTo(11,9);ctx.closePath();ctx.fill();ctx.stroke();
+  ctx.fillStyle='#005577';ctx.strokeStyle='#44aaff';ctx.lineWidth=1.2;
+  ctx.beginPath();ctx.ellipse(0,-9,7.5,10,0,0,Math.PI*2);ctx.fill();ctx.stroke();
+  ctx.fillStyle=d.dashing?'rgba(255,180,0,.9)':'rgba(0,229,255,.7)';
+  ctx.shadowColor=d.dashing?'#ffaa00':'#00e5ff';ctx.shadowBlur=22;
+  ctx.beginPath();ctx.ellipse(0,21,5.5,3.5,0,0,Math.PI*2);ctx.fill();
+  ctx.restore();
+}
+
+// ══════════════════════════════════════════════
+//  EDU POPUPS
+// ══════════════════════════════════════════════
+function scheduleEdu(){setTimeout(showEdu,6000);}
+
+let _currentEduTip = '';
+let _eduHideTimer = null;
+
+function showEdu(){
+  if(!G||G.over) return;
+  _currentEduTip = EDU[eduIdx%EDU.length]; eduIdx++;
+  const el=document.getElementById('eduPopup');
+  const txt=document.getElementById('eduPopupText');
+  if(txt) txt.textContent=_currentEduTip;
+  const btn=document.getElementById('eduPauseBtn');
+  if(btn) btn.textContent='⏸ TAP TO PAUSE';
+  el.classList.add('show');
+  // Auto-hide after 4.5s unless paused
+  if(_eduHideTimer) clearTimeout(_eduHideTimer);
+  _eduHideTimer = setTimeout(()=>{
+    if(!G.paused){ hideEdu(); }
+  }, 4500);
+}
+
+function hideEdu(){
+  const el=document.getElementById('eduPopup');
+  el.classList.remove('show');
+  if(_eduHideTimer){ clearTimeout(_eduHideTimer); _eduHideTimer=null; }
+  if(G&&!G.over) setTimeout(showEdu,14000);
+}
+
+function toggleEduPause(){
+  if(!G||G.over) return;
+  if(G.paused) resumeGame();
+  else pauseGame();
+}
+
+function pauseGame(){
+  if(!G||G.over||G.paused) return;
+  G.paused=true;
+  G.lastTime=null; // reset so dt doesn't jump on resume
+  cancelAnimationFrame(animId);
+  // Show overlay with current tip
+  const overlay=document.getElementById('pauseOverlay');
+  const tipEl=document.getElementById('pauseTipText');
+  if(tipEl) tipEl.textContent=_currentEduTip;
+  if(overlay) overlay.classList.add('on');
+  // Update popup button
+  const btn=document.getElementById('eduPauseBtn');
+  if(btn) btn.textContent='▶ TAP TO RESUME';
+  // Reset touch so held buttons don't fire when resumed
+  touch.left=false; touch.right=false;
+}
+
+function resumeGame(){
+  if(!G||!G.paused) return;
+  G.paused=false;
+  const overlay=document.getElementById('pauseOverlay');
+  if(overlay) overlay.classList.remove('on');
+  hideEdu();
+  // Restart the correct loop
+  if(P.mode==='infinite'){
+    function infLoop(ts){
+      if(!G.lastTime)G.lastTime=ts;
+      const dt=Math.min((ts-G.lastTime)/1000,0.05);G.lastTime=ts;
+      G.infElapsed=(G.infElapsed||0)+dt;
+      const m=G.infElapsed/60;
+      G.stressSpd=55+m*35;G.spawnInt=Math.max(0.52,2.2-m*0.4);G.maxOnScreen=Math.min(5,3+Math.floor(m*0.8));
+      updateGame(dt);renderGame();
+      if(!G.over)animId=requestAnimationFrame(infLoop);else doInfEnd();
+    }
+    animId=requestAnimationFrame(infLoop);
+  } else {
+    animId=requestAnimationFrame(gameLoop);
+  }
+}
+
+// ══════════════════════════════════════════════
+//  END ROUND
+// ══════════════════════════════════════════════
+function endRound(){
+  cancelAnimationFrame(animId);
+  if(G.win){if(P.mode==='story')doHarvest();else doInfEnd();}
+  else showGameOver();
+}
+
+// ══════════════════════════════════════════════
+//  HARVEST
+// ══════════════════════════════════════════════
+function doHarvest(){
+  SFX.harvest();
+  const avg=G.plantHSamp>0?G.plantHAcc/G.plantHSamp:G.cropHP;
+  const q=avg>=85?'highyield':avg>=65?'excellent':avg>=40?'good':'poor';
+  const gLbl={highyield:'🌟 HIGH YIELD',excellent:'✅ EXCELLENT',good:'👍 GOOD',poor:'⚠️ POOR'}[q];
+  const cB={highyield:80,excellent:50,good:25,poor:8}[q];
+  const rB={highyield:18,excellent:12,good:7,poor:2}[q];
+  P.cred+=cB; P.res=Math.min(100,P.res+rB);
+  saveProgress(); // save after harvest bonuses are applied
+  const ch=CHAPTERS[P.ch];
+  document.getElementById('harvBg').textContent=ch.icon;
+  document.getElementById('harvBg').style.fontSize='clamp(100px,25vw,180px)';
+  document.getElementById('harvGrade').textContent=gLbl;
+  document.getElementById('harvGrade').className='grade '+q;
+  document.getElementById('harvCard').innerHTML=`
+    <div class="cr"><span>Crop</span>             <span>${ch.icon} ${ch.crop}</span></div>
+    <div class="cr"><span>Plant Health</span>     <span>${G.cropHP}%</span></div>
+    <div class="cr"><span>Plant Stage</span>      <span>${STAGES[G.plantStg]}</span></div>
+    <div class="cr"><span>Stresses Defeated</span><span>${G.defeated}</span></div>
+    <div class="cr"><span>Accuracy</span>         <span>${G.corrHits+G.wrongHits>0?Math.round(G.corrHits/(G.corrHits+G.wrongHits)*100):0}%</span></div>
+    <div class="cr"><span>Credits Earned</span>   <span>+${cB+G.credRnd} 💰</span></div>
+    <div class="cr"><span>XP Earned</span>        <span>+${G.xpRnd} XP</span></div>
+  `;
+  document.getElementById('resGain').textContent=`🧬 Research +${rB}% → ${Math.floor(P.res)}% total`;
+  document.getElementById('toShopBtn').onclick=()=>{show('shopScreen');renderShop();};
+  document.getElementById('nextRndBtn').onclick=advStory;
+  document.getElementById('nextRndBtn').textContent=P.ch>=CHAPTERS.length-1?'▶ FINISH':'▶ NEXT CHAPTER';
+  show('harvestScreen');
+}
+
+function advStory(){
+  P.ch++;
+  if(P.ch>=CHAPTERS.length){
+    clearStoryProgress(); // campaign done — wipe the save slot
+    SAVE.inf=true; writeSave(SAVE); unlockInfCard(); SFX.validate();
+    document.getElementById('scCh').textContent=`${CHAPTERS.length}/${CHAPTERS.length}`;
+    document.getElementById('scRes').textContent=Math.floor(P.res)+'%';
+    document.getElementById('scScore').textContent=P.score;
+    document.getElementById('scLvl').textContent=P.lvl;
+    show('storyComplete');
+  }else{
+    saveProgress(); // save before next chapter starts
+    showDialogue(P.ch);
+  }
+}
+
+// ══════════════════════════════════════════════
+//  SHOP
+// ══════════════════════════════════════════════
+function renderShop(){
+  document.getElementById('shopCred').textContent=P.cred;
+  const grid=document.getElementById('shopGrid'); grid.innerHTML='';
+  SHOP_CAT.forEach(item=>{
+    const tier=P.ups[item.id]||0,maxed=tier>=item.tiers;
+    const cost=Math.floor(item.base*(1+tier*0.6)),canAff=P.cred>=cost;
+    const div=document.createElement('div');
+    div.className='si'+(maxed?' mx':!canAff?' ca':'');
+    div.innerHTML=`
+      <div class="sn">${item.name}</div>
+      <div class="sd">${item.desc}</div>
+      <div class="st">Tier ${tier}/${item.tiers}</div>
+      <div class="sc">${maxed?'MAX':canAff?'💰 '+cost:'🔒 '+cost}</div>
+    `;
+    if(!maxed&&canAff){div.onclick=()=>{P.cred-=cost;P.ups[item.id]++;SFX.buy();saveProgress();renderShop();};}
+    grid.appendChild(div);
+  });
+}
+
+// ══════════════════════════════════════════════
+//  GAME OVER
+// ══════════════════════════════════════════════
+function showGameOver(){
+  const ch=CHAPTERS[P.ch]||CHAPTERS[0];
+  document.getElementById('endTitle').textContent=G.cropHP<=0?'💀 Crops Failed':'🛸 Drone Destroyed';
+  document.getElementById('endTitle').className='stitle tr';
+  document.getElementById('endStats').innerHTML=`
+    <div class="cr"><span>Crop</span>             <span>${ch.icon} ${ch.crop}</span></div>
+    <div class="cr"><span>Score</span>            <span>${P.score}</span></div>
+    <div class="cr"><span>Chapter</span>          <span>${P.ch+1}/${CHAPTERS.length}</span></div>
+    <div class="cr"><span>Stresses Defeated</span><span>${G.defeated}</span></div>
+    <div class="cr"><span>Crop Health</span>      <span>${G.cropHP}%</span></div>
+  `;
+  document.getElementById('retryBtn').textContent='↩ RETRY CHAPTER';
+  document.getElementById('retryBtn').onclick=retryChapter;
+  show('endScreen');
+}
+
+// ══════════════════════════════════════════════
+//  STORY MODE
+// ══════════════════════════════════════════════
+function refreshMenuSaveSlot(){
+  const slot = document.getElementById('continueSlot');
+  const cards = document.getElementById('modeCards');
+  const info  = document.getElementById('continueInfo');
+  if(!slot) return;
+  if(SAVE.story){
+    const s = SAVE.story;
+    const ch = CHAPTERS[s.ch] || CHAPTERS[0];
+    info.innerHTML = `${ch.icon} <b>${ch.crop}</b> &nbsp;|&nbsp; Chapter ${s.ch+1}/${CHAPTERS.length} &nbsp;|&nbsp; Lvl ${s.lvl} &nbsp;|&nbsp; 💰${s.cred}`;
+    slot.style.display  = 'flex';
+    cards.style.display = 'none'; // hide mode cards when continue slot is visible
+  } else {
+    slot.style.display  = 'none';
+    cards.style.display = 'flex';
+  }
+}
+
+function continueStory(){
+  AC.resume();
+  if(!loadStoryProgress()){ startStory(); return; }
+  document.getElementById('resRow').style.display='block';
+  showDialogue(P.ch); // show the dialogue for the chapter we're resuming at
+}
+
+function confirmNewGame(){
+  // Simple confirm before wiping save
+  if(window.confirm('Start a new game? Your saved progress will be lost.')){
+    clearStoryProgress();
+    refreshMenuSaveSlot();
+    startStory();
+  }
+}
+
+function startStory(){
+  AC.resume(); resetP('story');
+  document.getElementById('resRow').style.display='block';
+  showDialogue(0);
+}
+function beginChapter(idx){
+  show('gameScreen');
+  document.getElementById('banName').textContent=`${CHAPTERS[idx].icon} ${CHAPTERS[idx].crop.toUpperCase()}`;
+  document.getElementById('banName').style.color=CHAPTERS[idx].accent;
+  document.getElementById('banThreat').textContent=CHAPTERS[idx].threat;
+  startRound(CHAPTERS[idx]);
+}
+
+// ══════════════════════════════════════════════
+//  INFINITE MODE
+// ══════════════════════════════════════════════
+function tryInfinite(){
+  if(!SAVE.inf){
+    const b=document.getElementById('infBadge');
+    if(b){b.textContent='Complete Story Mode first!';setTimeout(()=>{b.textContent='🔒 LOCKED';},2200);}
+    return;
+  }
+  startInfinite();
+}
+function startInfinite(){
+  AC.resume(); resetP('infinite');
+  document.getElementById('resRow').style.display='none';
+  document.getElementById('banName').textContent='♾️ INFINITE MODE';
+  document.getElementById('banName').style.color='#aaaaff';
+  document.getElementById('banThreat').textContent='ALL STRESS TYPES — ESCALATING';
+  show('gameScreen');
+  initCanvas();
+  canvas.width=window.innerWidth; canvas.height=window.innerHeight;
+  const W=canvas.width,H=canvas.height;
+  G={
+    drone:{x:W/2,y:H-150,spd:320,dashing:false,dashVx:0,dashDur:0,dashCD:2,dashT:0},
+    bullets:[],ptcls:[],stresses:[],rings:[],
+    shHP:10,shMax:10,cracks:[],shBroke:false,
+    cropHP:100,goal:9999999,defeated:0,
+    prot:0,lastShot:0,fireRate:0.22,
+    lastSpawn:0,spawnInt:2.2,maxOnScreen:3,
+    pulseCD:15,pulseT:0,
+    plantStg:0,plantGrow:0,plantH:20,plantHAcc:0,plantHSamp:0,
+    over:false,win:false,lastTime:null,paused:false,shAnim:0,hitFlash:0,
+    xpRnd:0,credRnd:0,corrHits:0,wrongHits:0,eff:1,
+    ch:CHAPTERS[5],
+    weights:{heat:2,salt:2,fungal:2,aphid:2,cat:1},
+    stressSpd:55,infElapsed:0,
+  };
+  sw(0); updateHUD(); cancelAnimationFrame(animId);
+
+  function infLoop(ts){
+    if(!G.lastTime)G.lastTime=ts;
+    const dt=Math.min((ts-G.lastTime)/1000,0.05); G.lastTime=ts;
+    G.infElapsed=(G.infElapsed||0)+dt;
+    const m=G.infElapsed/60;
+    G.stressSpd=55+m*35; G.spawnInt=Math.max(0.52,2.2-m*0.4); G.maxOnScreen=Math.min(5,3+Math.floor(m*0.8));
+    updateGame(dt); renderGame();
+    if(!G.over)animId=requestAnimationFrame(infLoop); else doInfEnd();
+  }
+  animId=requestAnimationFrame(infLoop);
+}
+function doInfEnd(){
+  const t=G.infElapsed||0;
+  const m=Math.floor(t/60),s=Math.floor(t%60);
+  const fin=P.score;
+  if(fin>SAVE.hi){SAVE.hi=fin;writeSave(SAVE);}
+  document.getElementById('infFinalScore').textContent=fin;
+  document.getElementById('infCard2').innerHTML=`
+    <div class="cr"><span>Time Survived</span>    <span>${m}:${String(s).padStart(2,'0')}</span></div>
+    <div class="cr"><span>Stresses Defeated</span><span>${P.total}</span></div>
+    <div class="cr"><span>Level Reached</span>    <span>${P.lvl}</span></div>
+    <div class="cr"><span>All-Time High Score</span><span>${SAVE.hi}</span></div>
+  `;
+  show('infEnd');
+}
+
+// ══════════════════════════════════════════════
+//  MOBILE MOVE BUTTONS (press & hold)
+// ══════════════════════════════════════════════
+function initMobileControls(){
+  const left  = document.getElementById('mvLeft');
+  const right = document.getElementById('mvRight');
+
+  function bindHold(el, key){
+    if(!el) return;
+    const activeTouches = new Set();
+
+    el.addEventListener('touchstart', e => {
+      e.preventDefault();
+      Array.from(e.changedTouches).forEach(t => activeTouches.add(t.identifier));
+      touch[key] = true;
+      el.classList.add('pr');
+      AC.resume();
+    }, {passive:false});
+
+    // Listen on document so touchend is caught even if finger slides off the button
+    document.addEventListener('touchend', e => {
+      Array.from(e.changedTouches).forEach(t => activeTouches.delete(t.identifier));
+      if(activeTouches.size === 0){
+        touch[key] = false;
+        el.classList.remove('pr');
+      }
+    }, {passive:false});
+
+    document.addEventListener('touchcancel', e => {
+      Array.from(e.changedTouches).forEach(t => activeTouches.delete(t.identifier));
+      if(activeTouches.size === 0){
+        touch[key] = false;
+        el.classList.remove('pr');
+      }
+    }, {passive:false});
+
+    // Mouse fallback for desktop testing
+    el.addEventListener('mousedown', e => { touch[key]=true; el.classList.add('pr'); });
+    window.addEventListener('mouseup', () => { touch[key]=false; el.classList.remove('pr'); });
+  }
+  bindHold(left, 'left');
+  bindHold(right, 'right');
+
+  // Dash button
+  const dash = document.getElementById('mvDash');
+  if(dash){
+    const pressDash = e => { e.preventDefault(); dash.classList.add('pr'); doDash(); AC.resume(); };
+    const releaseDash = e => { if(e) e.preventDefault(); dash.classList.remove('pr'); };
+    dash.addEventListener('touchstart', pressDash, {passive:false});
+    dash.addEventListener('touchend', releaseDash, {passive:false});
+    dash.addEventListener('touchcancel', releaseDash, {passive:false});
+    dash.addEventListener('mousedown', pressDash);
+    dash.addEventListener('mouseup', releaseDash);
+    dash.addEventListener('mouseleave', releaseDash);
+  }
+
+  // Pulse button
+  const mp=document.getElementById('mpulse');
+  if(mp){
+    mp.addEventListener('touchstart',e=>{e.preventDefault();mp.classList.add('pr');doPulse();AC.resume();},{passive:false});
+    mp.addEventListener('touchend',()=>mp.classList.remove('pr'),{passive:false});
+    mp.addEventListener('click',()=>doPulse());
+  }
+}
+function initMobileProtBar(){
+  const bar=document.getElementById('mprotBar'); if(!bar)return;
+  for(let i=0;i<4;i++){
+    const el=document.getElementById('mp'+i); if(!el)continue;
+    el.addEventListener('touchstart',e=>{e.preventDefault();sw(i);bar.classList.add('active');setTimeout(()=>bar.classList.remove('active'),300);AC.resume();},{passive:false});
+    el.addEventListener('click',()=>sw(i));
+  }
+}
+function initDesktopProtBar(){
+  for(let i=0;i<4;i++){const el=document.getElementById('ps'+i); if(!el)continue; el.addEventListener('click',()=>{sw(i);AC.resume();});}
+}
+
+document.addEventListener('touchmove',e=>{
+  const gs=document.getElementById('gameScreen');
+  if(gs&&gs.classList.contains('active'))e.preventDefault();
+},{passive:false});
+window.addEventListener('contextmenu',e=>{if(LAYOUT==='mobile')e.preventDefault();});
+
+window.addEventListener('DOMContentLoaded',()=>{
+  initMobileControls();
+  initMobileProtBar();
+  initDesktopProtBar();
+  applyLayout();
+});
+</script>
+
+<!-- ReLeaf port: the wiki's licence and repository notice (wording from education/index.html). -->
+<footer id="releaf-wiki-footer" style="align-self:stretch;width:100%;box-sizing:border-box;margin:0;padding:14px 16px;background:#f3f2ee;color:#333;border-top:1px solid #d9d6cc;font:13px/1.55 system-ui,-apple-system,'Segoe UI',sans-serif;text-align:center;">
+  <p style="margin:2px 0;"><b>ReLeaf</b> &middot; GEMS Taiwan &middot; iGEM 2026 &middot; Biomanufacturing Village</p>
+  <p style="margin:2px 0;">&copy; 2026 &middot; Content on this wiki is licensed under a <a href="https://creativecommons.org/licenses/by/4.0/" rel="license" style="color:inherit;">Creative Commons Attribution 4.0 International license</a>.</p>
+  <p style="margin:2px 0;">The repository used to create this website is available at <a href="https://gitlab.igem.org/2026/gems-taiwan" style="color:inherit;">gitlab.igem.org/2026/gems-taiwan</a>.</p>
+</footer>
+<!-- ReLeaf port: nav.js inserts the site's own header and footer on DOMContentLoaded; keep the wiki bar above and the licence footer below them. -->
+<script>window.addEventListener('DOMContentLoaded',function(){var b=document.getElementById('releaf-wiki-bar'),f=document.getElementById('releaf-wiki-footer');if(b)document.body.insertBefore(b,document.body.firstChild);if(f)document.body.appendChild(f);});</script>
+<script src="../../../assets/data/site-nav.js"></script><script src="../../../assets/js/rulecheck.js?v=5" defer></script>
+</body>
+</html>

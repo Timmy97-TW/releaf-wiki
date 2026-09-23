@@ -55,6 +55,20 @@
   const tint = (hex, a) => "rgba(" + rgb(hex).join(",") + "," + a + ")";
   const shade = (hex, k) =>
     "rgb(" + rgb(hex).map((v) => Math.round(v * k)).join(",") + ")";
+  /* the pill's text: the same hue at 0.72, darkened further only where that
+     reads below 4.5:1 (WCAG AA) on its own wash over the card (--card-bg,
+     the darkest surface a pill sits on) */
+  const lum = (c) => {
+    const [r, g, b] = c.map((v) => { v /= 255; return v <= .03928 ? v / 12.92 : Math.pow((v + .055) / 1.055, 2.4); });
+    return .2126 * r + .7152 * g + .0722 * b;
+  };
+  const inkOn = (hex, a) => {
+    const c = rgb(hex), card = [244, 244, 242];
+    const bg = lum(c.map((v, i) => v * a + card[i] * (1 - a)));
+    let k = .72;
+    while (k > .2 && (bg + .05) / (lum(c.map((v) => Math.round(v * k))) + .05) < 4.6) k -= .02;
+    return shade(hex, k);
+  };
 
   /* one glyph per section, as an SVG mask so it inherits the link colour */
   const ICONS = {
@@ -101,7 +115,7 @@
       const color = LABELS[t.label] || "#737373";
       const pill = el("span", "tag tag--mem");
       pill.style.backgroundColor = tint(color, 0.16);
-      pill.style.color = shade(color, 0.72);
+      pill.style.color = inkOn(color, 0.16);
       pill.textContent = t.label;
       pill.title = t.label + ": task member";
       wrap.appendChild(pill);
@@ -116,7 +130,9 @@
     /* the frame usually follows the role, but `frame:` can lift someone who
        carries a lead's weight without a lead's title */
     const frame = m.frame || kind;
-    const card = el("article", "card" + (frame === "lead" || frame === "vice" ? " card--" + frame : ""));
+    /* a div, not an article: the whole card is a button, and an article
+       cannot take role="button" */
+    const card = el("div", "card" + (frame === "lead" || frame === "vice" ? " card--" + frame : ""));
     card.id = "member-" + slug(m.name);
     card.dataset.labels = tagsOf(m).map((t) => t.label).join("|");
 
@@ -408,13 +424,18 @@
     document.getElementById("bio-modal").classList.remove("is-open");
     document.body.style.overflow = "";
     if (lastFocus) lastFocus.focus();
+    lastFocus = null;
   }
 
   function wireModal() {
     const modal = document.getElementById("bio-modal");
     modal.querySelector(".modal__close").addEventListener("click", closeModal);
     modal.addEventListener("click", (e) => { if (e.target === modal) closeModal(); });
-    document.addEventListener("keydown", (e) => { if (e.key === "Escape") closeModal(); });
+    /* only when a profile is open: Escape also closes the nav, and must not
+       pull focus back to a card that was opened minutes ago */
+    document.addEventListener("keydown", (e) => {
+      if (e.key === "Escape" && modal.classList.contains("is-open")) closeModal();
+    });
   }
 
   /* ---------------------------------------------------------- mobile nav - */

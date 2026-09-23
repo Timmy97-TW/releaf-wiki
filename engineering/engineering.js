@@ -287,8 +287,8 @@
       document.body.style.overflow = "";
       if (opener) opener.focus();
     }
-    imgs.forEach(function (img) {
-      img.addEventListener("click", function () {
+    /* the images are the buttons, so they take focus and answer to Enter/Space */
+    function open(img) {
         opener = img;
         big.src = img.currentSrc || img.src;
         big.alt = img.alt;
@@ -297,13 +297,24 @@
         box.classList.add("is-open");
         document.body.style.overflow = "hidden";
         $(".lightbox__close", box).focus();
+    }
+    imgs.forEach(function (img) {
+      img.tabIndex = 0;
+      img.setAttribute("role", "button");
+      img.setAttribute("aria-label", "Enlarge figure" + (img.alt ? ": " + img.alt : ""));
+      img.addEventListener("click", function () { open(img); });
+      img.addEventListener("keydown", function (e) {
+        if (e.key === "Enter" || e.key === " ") { e.preventDefault(); open(img); }
       });
     });
     box.addEventListener("click", function (e) {
       if (e.target === box || e.target.closest(".lightbox__close")) close();
     });
     document.addEventListener("keydown", function (e) {
-      if (e.key === "Escape" && box.classList.contains("is-open")) close();
+      if (!box.classList.contains("is-open")) return;
+      if (e.key === "Escape") close();
+      /* the close button is the dialog's only control, so Tab stays on it */
+      else if (e.key === "Tab") { e.preventDefault(); $(".lightbox__close", box).focus(); }
     });
   }
 

@@ -10,10 +10,14 @@ Drop the student designs in here with these exact filenames:
     engagement.png
     team.png
 
-.svg works too, and so does .webp. If you use a different extension or a
-different name, set "art" on that tab in assets/data/site-nav.js, for example:
+Then switch it on for that tab in assets/data/site-nav.js:
 
-    { id: "wetlab", name: "Wetlab", art: "assets/img/tab-icons/pipette.svg", ... }
+    { id: "wetlab", name: "Wet Lab", art: true, ... }
+
+.svg works too, and so does .webp. If you use a different extension or a
+different name, give "art" the path from the wiki root instead of true:
+
+    { id: "wetlab", name: "Wet Lab", art: "assets/img/tab-icons/pipette.svg", ... }
 
 Guidance
 --------
@@ -25,5 +29,5 @@ Guidance
   weight      the drawing sits next to 1.75rem type, so keep it simple enough
               to read at thumbnail size
 
-Anything missing is skipped, so the nav will not show a broken image while you
-are still drawing.
+A tab without "art" requests nothing, and a file that fails to load is
+removed, so the nav will not show a broken image while you are still drawing.

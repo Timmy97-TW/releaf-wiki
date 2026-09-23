@@ -77,6 +77,11 @@
     const currentPage = root.dataset.page || "";
 
     root.classList.add("sitenav");
+    /* a landmark, so screen readers can jump to it and nothing in it sits
+       outside every landmark. The tabs are disclosure buttons (aria-expanded),
+       not a menubar: a menubar promises menuitems and arrow-key menus. */
+    root.setAttribute("role", "navigation");
+    root.setAttribute("aria-label", "Site");
     root.innerHTML =
       '<div class="sitenav__bar">' +
         '<div class="sitenav__inner">' +
@@ -84,7 +89,7 @@
             '<img class="sitenav__logo" src="' + logo + '" alt="ReLeaf team logo" />' +
             '<span class="sitenav__word">ReLeaf</span>' +
           "</a>" +
-          '<div class="sitenav__tabs" role="menubar"></div>' +
+          '<div class="sitenav__tabs"></div>' +
           '<button class="sitenav__burger" aria-expanded="false" aria-label="Open menu">' +
             "<span></span><span></span><span></span></button>" +
         "</div>" +
@@ -114,13 +119,18 @@
 
       const rail = el("div", "sitenav__rail");
 
-      /* student artwork, if it has been dropped into assets/img/tab-icons/ */
-      const art = document.createElement("img");
-      art.className = "sitenav__railart";
-      art.src = tab.art || BASE + "assets/img/tab-icons/" + tab.id + ".png";
-      art.alt = "";
-      art.onerror = () => art.remove();
-      rail.appendChild(art);
+      /* student artwork, only for tabs that name it in site-nav.js: `art: true`
+         means assets/img/tab-icons/<id>.png, a string is a path from the wiki
+         root. Probing for files that are not there would put five 404s in the
+         console of every page. */
+      if (tab.art) {
+        const art = document.createElement("img");
+        art.className = "sitenav__railart";
+        art.src = BASE + (tab.art === true ? "assets/img/tab-icons/" + tab.id + ".png" : tab.art);
+        art.alt = "";
+        art.onerror = () => art.remove();
+        rail.appendChild(art);
+      }
 
       rail.appendChild(el("h2", "sitenav__railtitle", tab.name));
       rail.appendChild(el("p", "sitenav__railblurb", tab.blurb));
@@ -175,10 +185,12 @@
   function wire(root) {
     const btns   = [...root.querySelectorAll(".sitenav__tab")];
     const panels = [...root.querySelectorAll(".sitenav__panel")];
-    let openId = null, closeTimer = null;
+    const burger = root.querySelector(".sitenav__burger");
+    let openId = null, closeTimer = null, shownAt = 0;
 
     const show = (id) => {
       clearTimeout(closeTimer);
+      if (id !== openId) shownAt = performance.now();
       openId = id;
       btns.forEach((b) => {
         const on = b.dataset.tab === id;
@@ -191,21 +203,88 @@
     const hide = () => show(null);
     const hideSoon = () => { clearTimeout(closeTimer); closeTimer = setTimeout(hide, 160); };
 
-    btns.forEach((b) => {
+    /* Hover opens a panel, and so does the click that usually follows the
+       hover, or the tap on a touch screen (which fires mouseenter first). A
+       click only closes a panel that has been open for a moment. Focus alone
+       does not open anything: the panels sit after the whole tab bar, so
+       opening on focus swapped the panel under every Tab press and left only
+       Team's links reachable. Enter, Space or ArrowDown opens a panel and Tab
+       then walks into it; tabbing out of its last link moves to the next tab. */
+    const entries = (id) => {
+      const p = panels.find((x) => x.dataset.tab === id);
+      return p ? [...p.querySelectorAll("a[href]")] : [];
+    };
+    btns.forEach((b, i) => {
       b.addEventListener("mouseenter", () => show(b.dataset.tab));
-      b.addEventListener("focus", () => show(b.dataset.tab));
       b.addEventListener("click", (e) => {
         e.preventDefault();
-        openId === b.dataset.tab ? hide() : show(b.dataset.tab);
+        openId === b.dataset.tab && performance.now() - shownAt > 400 ? hide() : show(b.dataset.tab);
+      });
+      b.addEventListener("keydown", (e) => {
+        const id = b.dataset.tab;
+        if (e.key === "ArrowDown") {
+          e.preventDefault();
+          show(id);
+          const first = entries(id)[0];
+          if (first) first.focus();
+        } else if (e.key === "ArrowRight" || e.key === "ArrowLeft") {
+          e.preventDefault();
+          const next = btns[(i + (e.key === "ArrowRight" ? 1 : btns.length - 1)) % btns.length];
+          if (openId) show(next.dataset.tab);
+          next.focus();
+        } else if (e.key === "Tab" && !e.shiftKey && openId === id) {
+          const first = entries(id)[0];
+          if (first) { e.preventDefault(); first.focus(); }
+        }
       });
     });
     panels.forEach((p) => {
       p.addEventListener("mouseenter", () => clearTimeout(closeTimer));
       p.addEventListener("mouseleave", hideSoon);
+      p.addEventListener("keydown", (e) => {
+        if (e.key !== "Tab") return;
+        const list = entries(p.dataset.tab);
+        const i = btns.findIndex((b) => b.dataset.tab === p.dataset.tab);
+        if (!e.shiftKey && document.activeElement === list[list.length - 1] && btns[i + 1]) {
+          /* past the last link: on to the next tab. After Team the browser's own
+             order already leads into the page, and focusout closes the panel. */
+          e.preventDefault();
+          hide();
+          btns[i + 1].focus();
+        } else if (e.shiftKey && document.activeElement === list[0]) {
+          e.preventDefault();
+          btns[i].focus();
+        }
+      });
     });
     root.querySelector(".sitenav__tabs").addEventListener("mouseleave", hideSoon);
-    document.addEventListener("keydown", (e) => { if (e.key === "Escape") hide(); });
-    document.addEventListener("click", (e) => { if (!root.contains(e.target)) hide(); });
+    /* focus leaving the navigation closes whatever it left open */
+    root.addEventListener("focusout", (e) => {
+      if (e.relatedTarget && !root.contains(e.relatedTarget)) hide();
+    });
+    document.addEventListener("keydown", (e) => {
+      if (e.key !== "Escape") return;
+      const inPanel = openId && root.contains(document.activeElement) &&
+        !document.activeElement.classList.contains("sitenav__tab");
+      const back = inPanel ? btns.find((b) => b.dataset.tab === openId) : null;
+      hide();
+      if (back) back.focus();
+      if (root.classList.contains("drawer-open")) {
+        root.classList.remove("drawer-open");
+        burger.setAttribute("aria-expanded", "false");
+        burger.setAttribute("aria-label", "Open menu");
+        burger.focus();
+      }
+    });
+    document.addEventListener("click", (e) => {
+      if (root.contains(e.target)) return;
+      hide();
+      if (root.classList.contains("drawer-open")) {
+        root.classList.remove("drawer-open");
+        burger.setAttribute("aria-expanded", "false");
+        burger.setAttribute("aria-label", "Open menu");
+      }
+    });
 
     /* The dark bar over a hero is transparent until the page moves, so it needs
        to know. Cheap enough to run everywhere; only nav-dark.css styles it. */
@@ -221,15 +300,99 @@
     }, { passive: true });
     mark();
 
-    const burger = root.querySelector(".sitenav__burger");
     burger.addEventListener("click", () => {
       const open = root.classList.toggle("drawer-open");
       burger.setAttribute("aria-expanded", String(open));
+      burger.setAttribute("aria-label", open ? "Close menu" : "Open menu");
     });
+  }
+
+
+  /* A keyboard user's first Tab lands here, not on the links of the
+     navigation. It points at the page's <main>, giving it an id if it has
+     none; pages with their own skip link (hardware) or no <main> are left
+     alone. Styled in nav.css, off-screen until focused. */
+  function skipLink() {
+    const main = document.querySelector("main");
+    if (!main || document.querySelector(".skip-link, .sitenav-skip")) return;
+    if (!main.id) main.id = "main";
+    if (!main.hasAttribute("tabindex")) main.setAttribute("tabindex", "-1");
+    const a = document.createElement("a");
+    a.className = "sitenav-skip";
+    a.href = "#" + main.id;
+    a.textContent = "Skip to content";
+    document.body.prepend(a);
+  }
+
+  /* A box that scrolls on its own (a wide table on a phone, a wide figure)
+     has to be reachable from the keyboard, or whatever sits past its edge can
+     only be seen with a mouse or a finger. While, and only while, such a box
+     overflows and holds nothing focusable, it gets a tab stop and a name
+     (role="group", not "region", so thirty tables do not become thirty
+     landmarks). The same function sits in nav-rail.js. */
+  function scrollRegions() {
+    const FOCUSABLE = 'a[href], button, input, select, textarea, summary, iframe, ' +
+                      '[contenteditable], [tabindex]:not([tabindex="-1"])';
+    const scrolls = (v) => v === "auto" || v === "scroll";
+    const name = (el, sideways) => {
+      const cap = el.querySelector("caption, figcaption");
+      let t = cap ? cap.textContent.replace(/¶/g, "").replace(/\s+/g, " ").trim() : "";
+      if (t.length > 90) t = t.slice(0, 88).replace(/\s\S*$/, "") + "…";
+      return (t || (el.querySelector("table") ? "Table" : el.querySelector("svg, canvas, img") ? "Figure" : "Content")) +
+             (sideways ? ", scrolls sideways" : ", scrolls");
+    };
+    const unmark = (el) => {
+      (el.dataset.scrollstop || "").split(" ").forEach((a) => a && el.removeAttribute(a));
+      delete el.dataset.scrollstop;
+    };
+    const check = () => {
+      const keep = new Set();
+      document.querySelectorAll("body *").forEach((el) => {
+        const wide = el.scrollWidth > el.clientWidth + 1;
+        const tall = el.scrollHeight > el.clientHeight + 1;
+        if (!wide && !tall) return;
+        const cs = getComputedStyle(el);
+        const sideways = wide && scrolls(cs.overflowX);
+        if (!sideways && !(tall && scrolls(cs.overflowY))) return;
+        if (el.dataset.scrollstop != null) { keep.add(el); return; }   /* already ours */
+        if (el.hasAttribute("tabindex")) return;       /* someone already chose */
+        if (el.querySelector(FOCUSABLE) || el.closest('[aria-hidden="true"], [inert]')) return;
+        const added = ["tabindex"];
+        el.tabIndex = 0;
+        if (!el.hasAttribute("aria-label") && !el.hasAttribute("aria-labelledby")) {
+          if (!el.hasAttribute("role")) { el.setAttribute("role", "group"); added.push("role"); }
+          el.setAttribute("aria-label", name(el, sideways)); added.push("aria-label");
+        }
+        el.dataset.scrollstop = added.join(" ");
+        keep.add(el);
+      });
+      document.querySelectorAll("[data-scrollstop]").forEach((el) => { if (!keep.has(el)) unmark(el); });
+    };
+    let timer = null;
+    const soon = () => { clearTimeout(timer); timer = setTimeout(check, 250); };
+    if (document.readyState === "complete") soon();
+    else window.addEventListener("load", soon);
+    window.addEventListener("resize", soon);
+    /* tabs, <details> and accordions change what overflows */
+    document.addEventListener("click", soon);
+    document.addEventListener("toggle", soon, true);
+  }
+
+  /* Demo wiki only: outline what breaks an iGEM rule (assets/js/rulecheck.js).
+     Switched off with window.RULECHECK = false in assets/data/site-nav.js. */
+  function ruleCheck(base) {
+    if (window.RULECHECK === false) return;
+    const s = document.createElement("script");
+    s.src = base + "assets/js/rulecheck.js?v=5";   /* bump when rulecheck.js changes: Pages lets browsers cache it for 10 minutes */
+    s.defer = true;
+    document.body.appendChild(s);
   }
 
   document.addEventListener("DOMContentLoaded", () => {
     const root = document.getElementById("site-nav");
     if (root) build(root);
+    skipLink();
+    scrollRegions();
+    ruleCheck(root && root.dataset.base != null ? root.dataset.base : "");
   });
 })();

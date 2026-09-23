@@ -219,8 +219,88 @@
     wake();
   }
 
+  /* A keyboard user's first Tab lands here, not on the links of the
+     navigation. It points at the page's <main>, giving it an id if it has
+     none; pages with their own skip link (hardware) or no <main> are left
+     alone. Styled in nav-rail.css, off-screen until focused. */
+  function skipLink() {
+    var main = document.querySelector("main");
+    if (!main || document.querySelector(".skip-link, .sitenav-skip")) return;
+    if (!main.id) main.id = "main";
+    if (!main.hasAttribute("tabindex")) main.setAttribute("tabindex", "-1");
+    var a = document.createElement("a");
+    a.className = "sitenav-skip";
+    a.href = "#" + main.id;
+    a.textContent = "Skip to content";
+    document.body.prepend(a);
+  }
+
+  /* A box that scrolls on its own (a wide table or chart on a phone) has to
+     be reachable from the keyboard. While, and only while, it overflows and
+     holds nothing focusable, it gets a tab stop and a name. The same function
+     sits in nav.js; see the note there. */
+  function scrollRegions() {
+    var FOCUSABLE = 'a[href], button, input, select, textarea, summary, iframe, ' +
+                    '[contenteditable], [tabindex]:not([tabindex="-1"])';
+    var scrolls = function (v) { return v === "auto" || v === "scroll"; };
+    var name = function (el, sideways) {
+      var cap = el.querySelector("caption, figcaption");
+      var t = cap ? cap.textContent.replace(/¶/g, "").replace(/\s+/g, " ").trim() : "";
+      if (t.length > 90) t = t.slice(0, 88).replace(/\s\S*$/, "") + "…";
+      return (t || (el.querySelector("table") ? "Table" : el.querySelector("svg, canvas, img") ? "Figure" : "Content")) +
+             (sideways ? ", scrolls sideways" : ", scrolls");
+    };
+    var unmark = function (el) {
+      (el.dataset.scrollstop || "").split(" ").forEach(function (a) { if (a) el.removeAttribute(a); });
+      delete el.dataset.scrollstop;
+    };
+    var check = function () {
+      var keep = new Set();
+      document.querySelectorAll("body *").forEach(function (el) {
+        var wide = el.scrollWidth > el.clientWidth + 1;
+        var tall = el.scrollHeight > el.clientHeight + 1;
+        if (!wide && !tall) return;
+        var cs = getComputedStyle(el);
+        var sideways = wide && scrolls(cs.overflowX);
+        if (!sideways && !(tall && scrolls(cs.overflowY))) return;
+        if (el.dataset.scrollstop != null) { keep.add(el); return; }
+        if (el.hasAttribute("tabindex")) return;
+        if (el.querySelector(FOCUSABLE) || el.closest('[aria-hidden="true"], [inert]')) return;
+        var added = ["tabindex"];
+        el.tabIndex = 0;
+        if (!el.hasAttribute("aria-label") && !el.hasAttribute("aria-labelledby")) {
+          if (!el.hasAttribute("role")) { el.setAttribute("role", "group"); added.push("role"); }
+          el.setAttribute("aria-label", name(el, sideways)); added.push("aria-label");
+        }
+        el.dataset.scrollstop = added.join(" ");
+        keep.add(el);
+      });
+      document.querySelectorAll("[data-scrollstop]").forEach(function (el) { if (!keep.has(el)) unmark(el); });
+    };
+    var timer = null;
+    var soon = function () { clearTimeout(timer); timer = setTimeout(check, 250); };
+    if (document.readyState === "complete") soon();
+    else window.addEventListener("load", soon);
+    window.addEventListener("resize", soon);
+    document.addEventListener("click", soon);
+    document.addEventListener("toggle", soon, true);
+  }
+
+  /* Demo wiki only: outline what breaks an iGEM rule (assets/js/rulecheck.js).
+     Switched off with window.RULECHECK = false in assets/data/site-nav.js. */
+  function ruleCheck(base) {
+    if (window.RULECHECK === false) return;
+    var s = document.createElement("script");
+    s.src = base + "assets/js/rulecheck.js?v=5";   /* bump when rulecheck.js changes: Pages lets browsers cache it for 10 minutes */
+    s.defer = true;
+    document.body.appendChild(s);
+  }
+
   document.addEventListener("DOMContentLoaded", function () {
+    skipLink();
+    scrollRegions();
     var mount = document.getElementById("nav-rail");
     if (mount) build(mount);
+    ruleCheck(mount && mount.dataset.base != null ? mount.dataset.base : "");
   });
 })();

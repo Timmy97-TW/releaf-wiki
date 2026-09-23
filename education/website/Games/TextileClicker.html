@@ -1,0 +1,849 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Gems Taiwan — Online Games</title>
+
+  <link rel="stylesheet" href="../fonts/fonts.css" /> <!-- ReLeaf port: Google Fonts link replaced by local copies in fonts/ (iGEM wikis may not load files from outside iGEM). -->
+  <!-- ReLeaf port: disabled, this file does not exist at this path (it 404s on the original site too): <link rel="stylesheet" href="styles.css" /> -->
+  <script>window.ACTIVE_PAGE = 'Game/TextileClicker.html';</script>
+  <!-- ReLeaf port: disabled, this file does not exist at this path (it 404s on the original site too): <script defer src="nav.js"></script> -->
+</head>
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Textile Degradation Clicker</title>
+    <!-- Favicon -->
+    <link rel="icon" type="image/gif" href="Fly.gif">
+    <!-- Comic Neue from Google Fonts -->
+    <!-- ReLeaf port: Google Fonts link replaced by local copies in fonts/ (iGEM wikis may not load files from outside iGEM). -->
+    <style>
+        body {
+            font-family: 'Comic Neue', Arial, sans-serif;
+            background: #e0f7fa;
+            color: #333;
+            margin: 0;
+            padding: 0;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            min-height: 100vh;
+            cursor: none;
+        }
+
+        /* Custom iGem logo cursor */
+        #custom-cursor {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 48px;
+            height: 48px;
+            pointer-events: none;
+            z-index: 99999;
+            transition: transform 0.08s;
+            will-change: transform;
+        }
+        #custom-cursor img {
+            width: 100%;
+            height: 100%;
+            display: block;
+        }
+        h1 {
+            margin-top: 20px;
+            margin-bottom: 10px;
+            font-size: 4rem;
+            font-weight: 700;
+            letter-spacing: 2px;
+            background: linear-gradient(270deg, red, orange, yellow, green, blue, indigo, violet, red, orange, yellow, green, blue, indigo, violet, red);
+            background-size: 800% 100%;
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            animation: rainbow-move 12s linear infinite;
+            text-align: center;
+        }
+        @keyframes rainbow-move {
+            0% { background-position: 0% 50%; }
+            100% { background-position: 100% 50%; }
+        }
+        .nav-button {
+            position: fixed;
+            top: 20px;
+            left: 20px;
+            z-index: 100;
+            display:inline-block;
+            padding: 12px 24px;
+            background-color: #000;
+            color: #fff;
+            text-decoration: none;
+            border-radius: 8px;
+            font-weight: bold;
+        }
+        .nav-button:hover{
+            background-color: #333;
+            color: #fff;
+            transform: translateY(-3px);
+            box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+        }
+
+        #clicker-btn {
+            font-size: 2rem;
+            padding: 20px 40px;
+            margin: 30px 0;
+            background: #4caf50;
+            color: white;  
+            border: none;
+            border-radius: 10px;
+            cursor: pointer;
+            transition: background 0.2s;
+            font-family: 'Comic Neue', Arial, sans-serif;
+        }
+        #clicker-btn:hover {
+            background: #388e3c;
+        }
+        /* Pulse animation */
+        #clicker-btn.pulse {
+            animation: pulse 0.3s;
+        }
+        @keyframes pulse {
+            0% {
+                transform: scale(1);
+                box-shadow: 0 0 0 0 rgba(76,175,80,0.7);
+            }
+            50% {
+                transform: scale(1.12);
+                box-shadow: 0 0 16px 8px rgba(76,175,80,0.2);
+            }
+            100% {
+                transform: scale(1);
+                box-shadow: 0 0 0 0 rgba(76,175,80,0);
+            }
+        }
+        #stats {
+            font-size: 1.2rem;
+            margin-top: 0;
+            margin-bottom: 20px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+        #degraded-total {
+            font-size: 3.5rem;
+            font-weight: bold;
+            color: #388e3c;
+            margin-bottom: 0.2em;
+            line-height: 1.1;
+        }
+        #cps-line {
+            font-size: 1.2rem;
+        }
+        #cpc-line {
+            font-size: 1.2rem;
+        }
+        #powerups {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+            width: 350px;
+            margin-top: 20px;
+            max-height: 300px;
+            overflow-y: auto;
+            padding-right: 8px;
+            scrollbar-width: none; 
+            -ms-overflow-style: none; 
+        }
+        #powerups::-webkit-scrollbar {
+            width: 0;
+            background: transparent;
+        }
+        .powerup {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background: #fffde7;
+            border: 1px solid #ffe082;
+            border-radius: 8px;
+            padding: 12px 18px;
+        }
+        .powerup button {
+            background: #ffb300;
+            color: #fff;
+            border: none;
+            border-radius: 6px;
+            padding: 8px 16px;
+            cursor: pointer;
+            font-size: 1rem;
+            font-family: 'Comic Neue', Arial, sans-serif;
+        }
+        .powerup button:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+        }
+        #footer {
+            margin-top: auto;
+            margin-bottom: 20px;
+            color: #888;
+        }
+    </style>
+</head>
+<body>
+<!-- ReLeaf port: link back to the wiki's Education page. -->
+<div id="releaf-wiki-bar" role="navigation" aria-label="ReLeaf wiki" style="align-self:stretch;width:100%;box-sizing:border-box;margin:0;padding:6px 16px;background:#1b2e26;font:500 13px/1.5 system-ui,-apple-system,'Segoe UI',sans-serif;text-align:left;"><a href="../../" style="color:#fff;text-decoration:none;cursor:pointer;">&larr; ReLeaf wiki &middot; Education</a></div>
+
+    <h1>Textile Degradation Clicker</h1>
+    <button onclick="window.location.href='../play.html'" class="nav-button">Return</button>
+    
+    <div id="custom-cursor"><img src="iGem Logo.png" alt="iGem Logo"></div>
+    <div id="stats">
+        <div id="degraded-total"><span id="clicks">0</span></div>
+        <div id="cps-line">Clicks per Second: <span id="cps">0</span></div>
+        <div id="cpc-line">Click Power: <span id="cpc">1</span></div>
+    </div>
+    <button id="clicker-btn">Degrade Textile</button>
+    <audio id="click-sound" preload="auto">
+        <source src="Click.mp3" type="audio/mpeg">
+        <!-- ReLeaf port: Click.ogg was never in the site; browsers play the mp3 above -->
+    </audio>
+    <div id="powerups"></div>
+    <div id="gif-container" style="position:fixed;top:0;left:0;width:100vw;height:100vh;pointer-events:none;z-index:100;"></div>
+    <div id="footer">Degrade textiles, have fun, and save the environment!</div>
+    <!-- Notification -->
+    <div id="notif-slide" style="position:fixed;left:-350px;bottom:30px;z-index:300;background:#fffde7;border:2px solid #ffe082;border-radius:10px;padding:18px 32px 18px 32px;box-shadow:0 4px 16px rgba(0,0,0,0.12);font-size:1.3rem;color:#00796b;display:flex;align-items:center;transition:left 0.7s cubic-bezier(.68,-0.55,.27,1.55);cursor:pointer;min-width:260px;max-width:90vw;">
+        <span>Click here to degrade textiles.</span>
+        <audio id="notif-sound" preload="auto">
+            <source src="Notif.mp3" type="audio/mpeg">
+        </audio>
+    </div>
+    <script>
+        // Custom iGem logo cursor logic
+        const cursor = document.getElementById('custom-cursor'); // Get the custom cursor element
+        document.addEventListener('mousemove', function(e) {
+            // Move the custom cursor to follow the mouse
+            cursor.style.left = (e.clientX - 24) + 'px';
+            cursor.style.top = (e.clientY - 24) + 'px';
+        });
+        // Make cursor smaller on mousedown, normal on mouseup
+        document.addEventListener('mousedown', function() {
+            cursor.style.transform = 'scale(0.7)'; // Shrink cursor on mouse down
+        });
+        document.addEventListener('mouseup', function() {
+            cursor.style.transform = 'scale(1)'; // Restore cursor size on mouse up
+        });
+        // Notification logic (click to dismiss, then restart timer)
+        let notifTimer = null; // Timer for notification
+        function showNotification() {
+            // Show notification slide
+            const notif = document.getElementById('notif-slide');
+            notif.style.left = '30px';
+            notif.style.pointerEvents = 'auto';
+            // Play notification sound
+            const notifSound = document.getElementById('notif-sound');
+            if (notifSound) {
+                notifSound.currentTime = 0;
+                notifSound.play();
+            }
+        }
+// Returns a random delay between 5 and 15 seconds for notification
+function getRandomNotifDelay() {
+    return Math.floor(Math.random() * (15000 - 5000 + 1)) + 5000;
+}
+// Hide notification, play sound, launch confetti, and give bonus
+function hideNotificationAndRestartTimer() {
+    // Play Click.mp3 sound
+    const clickSound = document.getElementById('click-sound');
+    if (clickSound) {
+        clickSound.currentTime = 0;
+        clickSound.play();
+    }
+    // Confetti effect
+    launchConfetti();
+    // Give 5% of total clicks, animated
+    const bonus = Math.ceil(clicks * 0.05);
+    let added = 0;
+    const steps = 30; // Number of animation steps
+    const perStep = Math.max(1, Math.floor(bonus / steps));
+    function animateBonus() {
+        if (added < bonus) {
+            let toAdd = Math.min(perStep, bonus - added);
+            clicks += toAdd;
+            added += toAdd;
+            updateStats();
+            renderPowerups();
+            setTimeout(animateBonus, 18); // ~30 steps in ~0.5s
+        } else {
+            // Hide notification and start timer for next
+            const notif = document.getElementById('notif-slide');
+            notif.style.left = '-350px';
+            notif.style.pointerEvents = 'none';
+            notifTimer = setTimeout(showNotification, getRandomNotifDelay());
+        }
+    }
+    animateBonus();
+}
+// Simple confetti effect for notification bonus
+function launchConfetti() {
+    const colors = ['#ffb300', '#4caf50', '#388e3c', '#ff5252', '#40c4ff', '#ffd600', '#ab47bc']; // Confetti colors
+    const confettiCount = 36; // Number of confetti pieces
+    const notif = document.getElementById('notif-slide');
+    const rect = notif.getBoundingClientRect();
+    for (let i = 0; i < confettiCount; i++) {
+        const conf = document.createElement('div'); // Create confetti div
+        conf.style.position = 'fixed';
+        conf.style.left = (rect.left + rect.width/2) + 'px';
+        conf.style.top = (rect.top + rect.height/2) + 'px';
+        conf.style.width = '10px';
+        conf.style.height = '10px';
+        conf.style.background = colors[Math.floor(Math.random()*colors.length)];
+        conf.style.borderRadius = '50%';
+        conf.style.zIndex = 9999;
+        conf.style.pointerEvents = 'none';
+        conf.style.opacity = '0.85';
+        const angle = Math.random() * 2 * Math.PI;
+        const distance = 80 + Math.random() * 80;
+        const dx = Math.cos(angle) * distance;
+        const dy = Math.sin(angle) * distance;
+        const rotate = Math.random() * 360;
+        conf.animate([
+            { transform: 'translate(0,0) rotate(0deg)', opacity: 0.85 },
+            { transform: `translate(${dx}px,${dy}px) rotate(${rotate}deg)`, opacity: 0 }
+        ], {
+            duration: 900 + Math.random()*400,
+            easing: 'cubic-bezier(.61,-0.01,.7,1.01)',
+            fill: 'forwards'
+        });
+        setTimeout(() => conf.remove(), 1300); // Remove confetti after animation
+        document.body.appendChild(conf);
+    }
+}
+        // Set up click handler for notification
+        document.addEventListener('DOMContentLoaded', function() {
+            const notif = document.getElementById('notif-slide');
+            notif.onclick = function() {
+                hideNotificationAndRestartTimer(); // Hide notification and give bonus on click
+            };
+        });
+        // Start first notification after 1s
+        setTimeout(showNotification, 1000);
+        let clicks = 0; // Total clicks (currency)
+        let clicksPerClick = 1; // Click power
+        let clicksPerSecond = 0; // Passive income per second
+        let bouncingGifs = [];
+        // Stocks upgrade variables
+        let stocksUnlocked = false; // Whether stocks are unlocked
+        let playerMoney = 0; // Unused, legacy
+        let investedAmount = 0; // Amount invested in stocks
+        let stockValue = 100; // Current stock value
+        let stockHistory = Array(40).fill(100); // Stock value history for chart
+        let buyStockValue = null; // Value at which player bought stock
+        // Powerups with their corresponding properties
+        // Each powerup has a name, description, base cost, current cost, count
+        let powerups = [
+            {
+                name: "Textile Fighter",
+                desc: "Adds a bouncing Mascot! (Max 10)",
+                baseCost: 30,
+                cost: 30,
+                count: 0,
+                onBuy: function() { /* Only adds gif now */ },
+                unlockAt: 20,
+                everUnlocked: false,
+                maxCount: 10
+            },
+            {
+                name: "Sort the Textiles",
+                desc: "+1 per click",
+                baseCost: 50,
+                cost: 50,
+                count: 0,
+                onBuy: function() { clicksPerClick += 1; },
+                unlockAt: 40,
+                everUnlocked: false
+            },
+            {
+                name: "Waste is <i>so</i> last season.",
+                desc: "+1 per second",
+                baseCost: 125,
+                cost: 125,
+                count: 0,
+                onBuy: function() { clicksPerSecond += 1; },
+                unlockAt: 125,
+                everUnlocked: false
+            },
+            {
+                name: "Collect the PET-Cotton Blends!",
+                desc: "+5 per click",
+                baseCost: 600,
+                cost: 600,
+                count: 0,
+                onBuy: function() { clicksPerClick += 5; },
+                unlockAt: 1000,
+                everUnlocked: false
+            },
+            {
+                name: "Cut it out!",
+                desc: "+6 per second",
+                baseCost: 1500,
+                cost: 1500,
+                count: 0,
+                onBuy: function() { clicksPerSecond += 8; },
+                unlockAt: 1500,
+                everUnlocked: false
+            },
+            {
+                name: "Debug",
+                desc: "OMG is Debug from Drylab!",
+                baseCost: 1500,
+                cost: 1500,
+                count: 0,
+                onBuy: function() {
+                    if (!document.getElementById('debug-gif')) {
+                        const img = document.createElement('img');
+                        img.src = 'Debug.gif'; // ReLeaf port: file is Debug.gif; lower-case name 404s on case-sensitive servers
+                        img.id = 'debug-gif';
+                        img.style.position = 'fixed';
+                        img.style.right = '0';
+                        img.style.bottom = '0';
+                        img.style.height = '160px';
+                        img.style.width = 'auto';
+                        img.style.zIndex = '200';
+                        document.body.appendChild(img);
+                    }
+                },
+                unlockAt: 1500,
+                everUnlocked: false,
+                maxCount: 1
+            },
+            {
+                name: "Debug it!",
+                desc: "+100 per click",
+                baseCost: 12000,
+                cost: 12000,
+                count: 0,
+                onBuy: function() { clicksPerClick += 100; },
+                unlockAt: 12000,
+                everUnlocked: false
+            },
+            {
+                name: "Biodegrade the Textiles",
+                desc: "+200 per second",
+                baseCost: 100000,
+                cost: 100000,
+                count: 0,
+                onBuy: function() { clicksPerSecond += 200; },
+                unlockAt: 100000,
+                everUnlocked: false
+            },
+            {
+                name: "Ice Splice",
+                desc: "+1000 per Click",
+                baseCost: 100000,
+                cost: 100000,
+                count: 0,
+                onBuy: function() { clicksPerClick += 1000; },
+                unlockAt: 100000,
+                everUnlocked: false
+            },
+            {
+                name: "TfCut the PET",
+                desc: "+5000 per second",
+                baseCost: 350000,
+                cost: 350000,
+                count: 0,
+                onBuy: function() { clicksPerSecond += 5000; },
+                unlockAt: 50000,
+                everUnlocked: false
+            },
+            {
+                name: "Textile Futures",
+                desc: "+3000 per click",
+                baseCost: 4200000,
+                cost: 4200000,
+                count: 0,
+                onBuy: function() { clicksPerClick += 3000; },
+                unlockAt: 4200000,
+                everUnlocked: false
+            },
+            {
+                name: "Take the TPA",
+                desc: "+5000 per second",
+                baseCost: 25000000,
+                cost: 25000000,
+                count: 0,
+                onBuy: function() { clicksPerSecond += 5000; },
+                unlockAt: 25000000,
+                everUnlocked: false
+            },
+            {
+                name: "Remake into PET",
+                desc: "+10000 per click",
+                baseCost: 100000000,
+                cost: 100000000,
+                count: 0,
+                onBuy: function() { clicksPerClick += 10000; },
+                unlockAt: 100000000,
+                everUnlocked: false
+            },
+            {
+                name: "Cut that crap!",
+                desc: "+25000 per second",
+                baseCost: 250000000,
+                cost: 250000000,
+                count: 0,
+                onBuy: function() { clicksPerSecond += 25000; },
+                unlockAt: 250000000,
+                everUnlocked: false
+            }
+        ];
+        // Add Stocks powerup
+        powerups.push({
+            name: "Stocks", // Powerup name
+            desc: "Don't you just love investing~", // Description
+            baseCost: 10000, // Initial cost
+            cost: 10000, // Current cost
+            count: 0, // Number owned
+            onBuy: function() {
+                stocksUnlocked = true; // Unlock stocks feature
+                showStocksChart(); // Show stocks chart UI
+            },
+            unlockAt: 10000, // Unlock at 10,000 clicks
+            everUnlocked: false, // Has ever been unlocked
+            maxCount: 1 // Can only buy once
+        });
+
+        // Update stats display in UI
+        function updateStats() {
+            document.getElementById('clicks').textContent = Math.floor(clicks); // Update clicks
+            document.getElementById('cps').textContent = Math.floor(clicksPerSecond); // Update CPS
+            document.getElementById('cpc').textContent = Math.floor(clicksPerClick); // Update CPC
+            // No money display for stocks
+        }
+        // Renders the powerups dynamically
+        // Checks if the powerup has been unlocked based on clicks, and updates the UI accordingly
+        function renderPowerups() {
+            const container = document.getElementById('powerups'); // Powerups container
+            powerups.forEach((p, i) => {
+                // Mark as ever unlocked if threshold reached
+                if (clicks >= p.unlockAt) {
+                    p.everUnlocked = true;
+                }
+                if (p.everUnlocked) {
+                    let div = document.getElementById(`powerup-${i}`); // Get powerup div
+                    if (!div) {
+                        div = document.createElement('div'); // Create new powerup div
+                        div.className = 'powerup';
+                        div.id = `powerup-${i}`;
+                        let buttonHtml = '';
+                        // Disable button if maxCount reached or only one allowed
+                        if ((i === 0 && p.count >= p.maxCount) || (p.name === 'Debug' && p.count >= 1) || (p.name === 'Stocks' && p.count >= 1)) {
+                            buttonHtml = `<button id="buy-${i}" disabled style="background:#888;color:#fff;">Offsale</button>`;
+                        } else {
+                            buttonHtml = `<button id="buy-${i}">Buy (${Math.floor(p.cost)})</button>`;
+                        }
+                        div.innerHTML = `
+                            <div>
+                                <strong>${p.name}</strong><br>
+                                <small>${p.desc}</small><br>
+                                <small>Owned: <span id="count-${i}">${p.count}</span></small>
+                            </div>
+                            ${buttonHtml}
+                        `;
+                        container.appendChild(div);
+                        // Set up buy button click handler
+                        if (!((i === 0 && p.count >= p.maxCount) || (p.name === 'Debug' && p.count >= 1) || (p.name === 'Stocks' && p.count >= 1))) {
+                            document.getElementById(`buy-${i}`).onclick = function() {
+                                if (clicks >= p.cost && !((i === 0 && p.count >= p.maxCount) || (p.name === 'debug' && p.count >= 1) || (p.name === 'Stocks' && p.count >= 1))) {
+                                    clicks -= p.cost; // Deduct cost
+                                    p.count += 1; // Increment count
+                                    p.onBuy(); // Run onBuy effect
+                                    // Play click sound when buying powerup
+                                    const clickSound = document.getElementById('click-sound');
+                                    if (clickSound) {
+                                        clickSound.currentTime = 0;
+                                        clickSound.play();
+                                    }
+                                    // Only increase cost for non-Stocks powerups
+                                    if (p.name !== 'Stocks') {
+                                        p.cost = Math.ceil(p.baseCost * Math.pow(1.2, p.count));
+                                    }
+                                    updateStats();
+                                    renderPowerups();
+                                    // If Textile Fighter, add bouncing gif
+                                    if (i === 0) {
+                                        addBouncingGif();
+                                    }
+                                    // If Stocks, show chart
+                                    if (p.name === "Stocks") {
+                                        showStocksChart();
+                                    }
+                                }
+                            };
+                        }
+                    } else {
+                        // Handle maxCount for Textile Fighter, Debug, and Stocks
+                        if ((i === 0 && p.count >= p.maxCount) || (p.name === 'Debug' && p.count >= 1) || (p.name === 'Stocks' && p.count >= 1)) {
+                            const btn = document.getElementById(`buy-${i}`);
+                            btn.disabled = true;
+                            btn.textContent = 'Offsale';
+                            btn.style.background = '#888';
+                            btn.style.color = '#fff';
+                        } else {
+                            const btn = document.getElementById(`buy-${i}`);
+                            btn.disabled = clicks < p.cost;
+                            btn.textContent = `Buy (${Math.floor(p.cost)})`;
+                            btn.style.background = '';
+                            btn.style.color = '';
+                        }
+                        document.getElementById(`count-${i}`).textContent = p.count;
+                    }
+                }
+            });
+        }
+        // Adds a bouncing mascot GIF to the screen
+        function addBouncingGif() {
+            const container = document.getElementById('gif-container'); // Get GIF container
+            const gif = document.createElement('img'); // Create image element
+            gif.src = 'Fly.gif'; // Set GIF source
+            gif.style.position = 'absolute';
+            gif.style.height = '100px';
+            gif.style.width = 'auto';
+            gif.style.left = Math.random() * (window.innerWidth - 100) + 'px'; // Random X position
+            gif.style.top = Math.random() * (window.innerHeight - 100) + 'px'; // Random Y position
+            container.appendChild(gif);
+
+            // Random direction for bouncing
+            let dx = (Math.random() < 0.5 ? 1 : -1) * (2 + Math.random() * 2);
+            let dy = (Math.random() < 0.5 ? 1 : -1) * (2 + Math.random() * 2);
+            let x = parseFloat(gif.style.left);
+            let y = parseFloat(gif.style.top);
+            let w = 100, h = 100;
+
+            bouncingGifs.push({gif, x, y, dx, dy, w, h}); // Add to bouncing GIFs array
+        }
+
+        // Animates all bouncing GIFs on the screen
+        function animateGifs() {
+            bouncingGifs.forEach(obj => {
+                obj.x += obj.dx; // Move X
+                obj.y += obj.dy; // Move Y
+                let hitWall = false; // Track if hit wall
+                // Bounce off left/right
+                let flipped = false;
+                if (obj.x <= 0) {
+                    obj.x = 0;
+                    if (obj.dx < 0) flipped = true;
+                    obj.dx = Math.abs(obj.dx);
+                    hitWall = true;
+                } else if (obj.x + obj.w >= window.innerWidth) {
+                    obj.x = window.innerWidth - obj.w;
+                    if (obj.dx > 0) flipped = true;
+                    obj.dx = -Math.abs(obj.dx);
+                    hitWall = true;
+                }
+                // Bounce off top/bottom
+                if (obj.y <= 0) {
+                    obj.y = 0;
+                    obj.dy = Math.abs(obj.dy);
+                    hitWall = true;
+                } else if (obj.y + obj.h >= window.innerHeight) {
+                    obj.y = window.innerHeight - obj.h;
+                    obj.dy = -Math.abs(obj.dy);
+                    hitWall = true;
+                }
+                obj.gif.style.left = obj.x + 'px'; // Update X position
+                obj.gif.style.top = obj.y + 'px'; // Update Y position
+                // Flip horizontally if direction changed
+                if (flipped) {
+                    // The original image faces right, so scaleX(-1) should face right, scaleX(1) should face left
+                    if (obj.dx > 0) {
+                        obj.gif.style.transform = 'scaleX(-1)'; // Facing right
+                    } else {
+                        obj.gif.style.transform = 'scaleX(1)'; // Facing left
+                    }
+                    // Always preserve height for proportions
+                    obj.gif.style.height = '100px';
+                    obj.gif.style.width = 'auto';
+                }
+                if (hitWall) {
+                    clicks += 1; // Add click when hitting wall
+                }
+            });
+        }
+
+        setInterval(animateGifs, 16); // Animate GIFs at ~60fps
+
+        // Main clicker button handler
+        document.getElementById('clicker-btn').onclick = function() {
+            clicks += clicksPerClick; // Add clicks
+            updateStats(); // Update stats
+            renderPowerups(); // Update powerups
+            // Play click sound
+            const clickSound = document.getElementById('click-sound');
+            if (clickSound) {
+                clickSound.currentTime = 0;
+                clickSound.play();
+            }
+            // Pulse effect for button
+            const btn = document.getElementById('clicker-btn');
+            btn.classList.remove('pulse');
+            void btn.offsetWidth; // Trigger reflow
+            btn.classList.add('pulse');
+        };
+
+        // Passive clicks per second handler
+        setInterval(() => {
+            if (clicksPerSecond > 0) {
+                clicks += clicksPerSecond / 10; // Add passive clicks
+            }
+        }, 100); // Update every 100ms
+
+        // Update stats and powerups frequently for smooth UI
+        setInterval(() => {
+            updateStats();
+            renderPowerups();
+        }, 50); // Update every 50ms
+
+        // Stocks chart animation handler
+        function animateStocks() {
+            if (!stocksUnlocked) return; // Only animate if unlocked
+            // Fully randomized stock value change
+            let change = (Math.random() - 0.5) * 40; // Random change
+            stockValue = Math.max(1, stockValue + change); // Update value
+            stockHistory.push(stockValue); // Add to history
+            if (stockHistory.length > 40) stockHistory.shift(); // Keep history size
+            drawStocksChart(); // Redraw chart
+            updateInvestedInfo(); // Update investment info
+        }
+        setInterval(animateStocks, 300); // Animate stocks every 300ms
+
+        // Show stocks chart UI
+        function showStocksChart() {
+            if (document.getElementById('stocks-chart-container')) return; // Only show once
+            const container = document.createElement('div'); // Create chart container
+            container.id = 'stocks-chart-container';
+            container.style.position = 'fixed';
+            container.style.top = '50%';
+            container.style.right = '30px';
+            container.style.transform = 'translateY(-50%)';
+            container.style.width = '340px';
+            container.style.height = '240px';
+            container.style.background = '#181818';
+            container.style.border = '2px solid #4caf50';
+            container.style.borderRadius = '12px';
+            container.style.boxShadow = '0 4px 16px rgba(0,0,0,0.12)';
+            container.style.zIndex = '9999';
+            container.style.padding = '18px 18px 12px 18px';
+            container.innerHTML = `
+                <div style="font-size:1.3rem;font-weight:bold;color:#fff;margin-bottom:6px;">Stock</div>
+                <canvas id="stocks-canvas" width="300" height="100" style="background:#222;border-radius:8px;display:block;margin-bottom:8px;"></canvas>
+                <form id="invest-form" style="margin-top:0;display:flex;gap:8px;align-items:center;justify-content:center;">
+                    <input id="invest-input" type="number" min="1" max="999999" placeholder="Invest amount" style="width:90px;padding:4px 8px;border-radius:6px;border:1px solid #444;background:#222;color:#fff;font-size:1rem;">
+                    <button type="submit" style="background:#4caf50;color:#fff;border:none;border-radius:20px;padding:8px 24px;cursor:pointer;font-size:1rem;">Buy</button>
+                    <button id="sell-btn" type="button" style="background:#ff5252;color:#fff;border:none;border-radius:20px;padding:8px 24px;cursor:pointer;font-size:1rem;">Sell</button>
+                </form>
+                <div id="invested-info" style="margin-top:8px;font-size:1.1rem;color:#fff;text-align:center;"></div>
+            `;
+            document.body.appendChild(container);
+            drawStocksChart(); // Draw initial chart
+            // Buy stocks form handler
+            document.getElementById('invest-form').onsubmit = function(e) {
+                e.preventDefault();
+                const val = parseInt(document.getElementById('invest-input').value); // Get invest amount
+                if (!isNaN(val) && val > 0 && clicks >= val) {
+                    clicks -= val; // Deduct clicks
+                    investedAmount += val; // Add to invested
+                    buyStockValue = stockValue; // Set buy value
+                    updateInvestedInfo(); // Update info
+                    updateStats(); // Update stats
+                }
+                document.getElementById('invest-input').value = '';
+            };
+            // Sell stocks button handler
+            document.getElementById('sell-btn').onclick = function() {
+                if (investedAmount > 0) {
+                    const payout = Math.floor(investedAmount * (stockValue / buyStockValue)); // Calculate payout
+                    clicks += payout; // Add payout to clicks
+                    investedAmount = 0; // Reset invested
+                    buyStockValue = null; // Reset buy value
+                    updateInvestedInfo(); // Update info
+                    updateStats(); // Update stats
+                }
+            };
+        }
+
+        // Updates the invested info display below the stocks chart
+        function updateInvestedInfo() {
+            const info = document.getElementById('invested-info'); // Get info element
+            if (!info) return;
+            if (investedAmount > 0 && buyStockValue) {
+                const currentValue = investedAmount * (stockValue / buyStockValue); // Current value
+                const gainLoss = currentValue - investedAmount; // Gain/loss
+                let sign = gainLoss > 0 ? '+' : '';
+                info.innerHTML = `<span style="color:#fff;">${investedAmount} shares</span> <span style="color:${gainLoss<0?'#ff5252':'#4caf50'};font-weight:bold;">${sign}${gainLoss.toFixed(0)}</span>`;
+            } else {
+                info.innerHTML = `<span style='color:#fff;'>0 shares</span>`;
+            }
+        }
+
+        // Draws the stocks chart on the canvas
+        function drawStocksChart() {
+            const canvas = document.getElementById('stocks-canvas'); // Get canvas
+            if (!canvas) return;
+            const ctx = canvas.getContext('2d'); // Get context
+            ctx.clearRect(0, 0, canvas.width, canvas.height); // Clear canvas
+            // Draw grid lines
+            ctx.strokeStyle = '#444';
+            ctx.lineWidth = 1;
+            for (let i = 0; i <= 5; i++) {
+                ctx.beginPath();
+                ctx.moveTo(0, 20*i);
+                ctx.lineTo(canvas.width, 20*i);
+                ctx.stroke();
+            }
+            // Draw smooth curve using quadratic Bezier
+            ctx.strokeStyle = '#4caf50';
+            ctx.lineWidth = 3;
+            ctx.beginPath();
+            let min = Math.min(...stockHistory); // Minimum value
+            let max = Math.max(...stockHistory); // Maximum value
+            let range = max - min || 1; // Value range
+            let prevX = 10, prevY = 90 - ((stockHistory[0] - min) / range) * 80; // Start point
+            ctx.moveTo(prevX, prevY);
+            for (let i = 1; i < stockHistory.length; i++) {
+                let x = 10 + (i * 7);
+                let y = 90 - ((stockHistory[i] - min) / range) * 80;
+                let cpx = prevX + (x - prevX) / 2;
+                let cpy = prevY;
+                ctx.quadraticCurveTo(cpx, cpy, x, y); // Draw curve
+                prevX = x; prevY = y;
+            }
+            ctx.stroke();
+            // Fill under curve
+            ctx.lineTo(prevX, 100);
+            ctx.lineTo(10, 100);
+            ctx.closePath();
+            ctx.globalAlpha = 0.18;
+            ctx.fillStyle = '#4caf50';
+            ctx.fill();
+            ctx.globalAlpha = 1;
+            // No value label inside graph
+        }
+
+        // Initial UI update and notification
+        updateStats(); // Update stats
+        renderPowerups(); // Render powerups
+        setTimeout(showNotification, 1000); // Show first notification after 1s
+    </script>
+    
+
+<!-- ReLeaf port: the wiki's licence and repository notice (wording from education/index.html). -->
+<footer id="releaf-wiki-footer" style="align-self:stretch;width:100%;box-sizing:border-box;margin:0;padding:14px 16px;background:#f3f2ee;color:#333;border-top:1px solid #d9d6cc;font:13px/1.55 system-ui,-apple-system,'Segoe UI',sans-serif;text-align:center;">
+  <p style="margin:2px 0;"><b>ReLeaf</b> &middot; GEMS Taiwan &middot; iGEM 2026 &middot; Biomanufacturing Village</p>
+  <p style="margin:2px 0;">&copy; 2026 &middot; Content on this wiki is licensed under a <a href="https://creativecommons.org/licenses/by/4.0/" rel="license" style="color:inherit;">Creative Commons Attribution 4.0 International license</a>.</p>
+  <p style="margin:2px 0;">The repository used to create this website is available at <a href="https://gitlab.igem.org/2026/gems-taiwan" style="color:inherit;">gitlab.igem.org/2026/gems-taiwan</a>.</p>
+</footer>
+<!-- ReLeaf port: nav.js inserts the site's own header and footer on DOMContentLoaded; keep the wiki bar above and the licence footer below them. -->
+<script>window.addEventListener('DOMContentLoaded',function(){var b=document.getElementById('releaf-wiki-bar'),f=document.getElementById('releaf-wiki-footer');if(b)document.body.insertBefore(b,document.body.firstChild);if(f)document.body.appendChild(f);});</script>
+<script src="../../../assets/data/site-nav.js"></script><script src="../../../assets/js/rulecheck.js?v=5" defer></script>
+</body>
+</html>

@@ -6,7 +6,7 @@
 
    THE `slug` FIELD IS THE URL AND IS NOT FREE TO CHANGE.
    iGEM fixes the URL of every judged page (2026 Judge Handbook, "Standard Pages
-   for Awards", p.28). A team is evaluated for a medal or a special award only if
+   for Awards", p.29). A team is evaluated for a medal or a special award only if
    the work sits at the standard address. Slugs marked STANDARD below are those
    addresses. Rename one and the award goes unjudged.
 
@@ -18,9 +18,11 @@
                    page's own `data-base`, so the same file works at any depth.
    To add an icon: add a key to ICONS in nav.js (inner SVG markup, stroked,
                    24x24 viewBox) and reference it with `icon:`.
-   Tab artwork:    each tab looks for assets/img/tab-icons/<id>.png (or .svg, set
-                   `art:` to override). Missing files are skipped silently, so
-                   the nav stays clean until the drawings arrive.
+   Tab artwork:    drop the drawing into assets/img/tab-icons/<id>.png and set
+                   `art: true` on that tab, or `art: "assets/img/tab-icons/x.svg"`
+                   (a path from the wiki root) for another name. Tabs without
+                   `art` request nothing, so the console stays clean until the
+                   drawings arrive.
    ========================================================================== */
 
 const NAV = [
@@ -133,3 +135,9 @@ const NAV_UNLISTED = [
   { title: "Peptide Design", slug: "peptide-design",
     caption: "The worked case. BoPep4 run end to end, including what we retracted." }
 ];
+
+/* iGEM rule check (assets/js/rulecheck.js): outlines on every page whatever
+   would break an iGEM 2026 wiki rule, with a panel listing them. It is a
+   teaching aid for this demo copy. Set to false in the copy that goes to
+   gitlab.igem.org, or delete the line and the file.                        */
+window.RULECHECK = true;

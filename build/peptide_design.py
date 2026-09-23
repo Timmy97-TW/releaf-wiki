@@ -477,7 +477,7 @@ def ladder_block():
         '  </div>')
 
     return "\n".join([
-        '<div class="pd-ladder" id="ladder">',
+        '<div class="pd-ladder" id="ladder-chart">',
         '  <div class="pd-aln__bar">',
         '    <span class="pd-aln__legend">Y axis:</span>',
         '    <button type="button" class="pd-chip is-on" data-lad="raw" aria-pressed="true">docking score</button>',
@@ -729,7 +729,7 @@ CSS = r"""
       font-family: var(--font-mono); font-size: var(--text-sm); font-weight: 700;
       color: var(--gray-500); line-height: 1;
     }
-    .pd-res__n { font-size: 10px; color: var(--gray-400); font-variant-numeric: tabular-nums; }
+    .pd-res__n { font-size: 10px; color: var(--gray-450); font-variant-numeric: tabular-nums; }
     .pd-res__bar { display: block; width: 60%; border-radius: 2px 2px 0 0; background: var(--gray-300); }
     .pd-res.is-anchor  .pd-res__bar { background: var(--leaf-900); }
     .pd-res.is-core    .pd-res__bar { background: var(--leaf-700); }
@@ -745,7 +745,7 @@ CSS = r"""
       margin: 0; padding: 0 var(--sp-5) var(--sp-4);
       font-size: var(--text-xs); color: var(--gray-500);
     }
-    .pd-ruler__axis span:nth-child(2) { color: var(--gray-400); }
+    .pd-ruler__axis span:nth-child(2) { color: var(--gray-450); }
     .pd-ruler__panel {
       border-top: 1px solid var(--gray-200); background: var(--white);
       padding: var(--sp-5);
@@ -782,11 +782,11 @@ CSS = r"""
       white-space: nowrap; font-weight: 400;
     }
     .pd-aln__nm b { display: block; font-size: var(--text-xs); font-weight: 650; color: var(--gray-700); }
-    .pd-aln__nm i { display: block; font-size: 10px; font-style: normal; color: var(--gray-400); }
+    .pd-aln__nm i { display: block; font-size: 10px; font-style: normal; color: var(--gray-450); }
     .is-us .pd-aln__nm b { color: var(--leaf-900); }
     .is-us .pd-aln__nm { background: var(--leaf-50); }
     .pd-aln__num {
-      font-size: 10px; font-weight: 600; color: var(--gray-400);
+      font-size: 10px; font-weight: 600; color: var(--gray-450);
       text-align: center; padding: var(--sp-2) 0 .3rem !important;
       font-variant-numeric: tabular-nums;
     }
@@ -826,7 +826,7 @@ CSS = r"""
       font-family: var(--font-body); padding: var(--sp-4) 0 0;
     }
     .pd-ax   { fill: var(--gray-500); font-size: 10px; }
-    .pd-ax--t{ fill: var(--gray-400); font-size: 10.5px; }
+    .pd-ax--t{ fill: var(--gray-450); font-size: 10.5px; }
     .pd-grid { stroke: var(--gray-200); stroke-width: 1; }
     .pd-axis, .pd-tick { stroke: var(--gray-400); stroke-width: 1; }
     .pd-band { fill: var(--rust-100); }
@@ -891,7 +891,7 @@ CSS = r"""
     .pd-cass__h { display: flex; flex-wrap: wrap; align-items: baseline; gap: var(--sp-3); margin: 0 0 var(--sp-3); }
     .pd-cass__h b { font-family: var(--font-mono); font-size: var(--text-sm); color: var(--leaf-900); }
     .pd-cass__h span { font-size: var(--text-sm); font-weight: 650; color: var(--gray-700); }
-    .pd-cass__h i { margin-left: auto; font-style: normal; font-size: var(--text-xs); color: var(--gray-400); font-variant-numeric: tabular-nums; }
+    .pd-cass__h i { margin-left: auto; font-style: normal; font-size: var(--text-xs); color: var(--gray-450); font-variant-numeric: tabular-nums; }
     .pd-cass__seq { margin: 0 0 var(--sp-3); line-height: 2; }
     .pd-part {
       display: inline-block; font-size: var(--text-xs); font-weight: 650;
@@ -908,7 +908,7 @@ CSS = r"""
     .pd-aa.is-anchor { color: var(--leaf-900); font-weight: 700; background: var(--leaf-100); border-radius: 2px; }
     .pd-aa.is-mut { color: var(--rust-700); font-weight: 700; background: var(--rust-100); border-radius: 2px; }
     .pd-cass__why { margin: 0; font-size: var(--text-sm); color: var(--gray-600); line-height: 1.6; }
-    .pd-cass__p1 { color: var(--gray-400); }
+    .pd-cass__p1 { color: var(--gray-450); }
     .pd-casskey { margin: calc(var(--sp-4) * -1) 0 var(--sp-6); font-size: var(--text-xs); color: var(--gray-500); }
 
     /* ---- a two-column card row for the design rules ---- */
@@ -996,7 +996,7 @@ JS = r"""
 
   /* ---- 3. truncation ladder --------------------------------------------- */
   var LAD = __LAD__;
-  var ladder = $("#ladder");
+  var ladder = $("#ladder-chart");
   if (ladder) {
     var slider = $("#lad-slider", ladder);
     var mark = $("#lad-mark", ladder);
@@ -1036,7 +1036,7 @@ JS = r"""
         });
       });
     });
-    readRung(9);
+    readRung(Number(slider.value) || 9);   /* Firefox restores the slider on reload */
   }
 
   /* ---- 4. the benchmark view -------------------------------------------- */
