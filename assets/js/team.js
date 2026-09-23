@@ -136,21 +136,14 @@
     card.id = "member-" + slug(m.name);
     card.dataset.labels = tagsOf(m).map((t) => t.label).join("|");
 
-    /* photo (+ optional hover photo, Marburg-style) */
+    /* the official portrait only: every card is shot the same way, and the
+       working and goofy photos wait inside the profile */
     const media = el("div", "card__media");
     const img = el("img");
     img.src = photo(m);
     img.alt = m.name;
     img.loading = "lazy";
     media.appendChild(img);
-    if (m.funPhoto) {
-      const fun = el("img", "card__fun");
-      fun.src = BASE + m.funPhoto;
-      fun.alt = "";
-      fun.setAttribute("aria-hidden", "true");
-      fun.loading = "lazy";
-      media.appendChild(fun);
-    }
     card.appendChild(media);
 
     /* body */
@@ -399,8 +392,36 @@
     document.getElementById("modal-frame").style.setProperty("--frame", frameGradient(palette));
     document.getElementById("modal-sprig").innerHTML = sprigSVG(palette);
 
-    modal.querySelector(".modal__media").src = photo(m);
-    modal.querySelector(".modal__media").alt = m.name;
+    /* Working photo left, goofy right, the bio in a box underneath. Until
+       someone's pair arrives, the profile keeps the official portrait beside
+       the bio, so an unfinished profile never shows two empty frames. */
+    const paired = !!(m.workPhoto || m.goofyPhoto);
+    modal.querySelector(".modal__panel").classList.toggle("modal__panel--pair", paired);
+    const single = modal.querySelector(".modal__media");
+    if (paired) single.removeAttribute("src"); else single.src = photo(m);
+    single.alt = paired ? "" : m.name;
+    const pair = modal.querySelector(".modal__pair");
+    const shots = [...pair.querySelectorAll(".modal__shot-img")];
+    /* Nothing is cropped. Both photos share one height and keep their own
+       shape, so the row's height is the width divided by the sum of the two
+       aspect ratios. The CSS does the division; this supplies the sum once
+       both photos know their size. */
+    const fit = () => {
+      if (!shots.every((i) => i.complete && i.naturalWidth)) return;
+      const sum = shots.reduce((s, i) => s + i.naturalWidth / i.naturalHeight, 0);
+      pair.style.setProperty("--ratio-sum", sum.toFixed(4));
+    };
+    pair.style.setProperty("--ratio-sum", "1.6");
+    [[m.workPhoto, " at work"], [m.goofyPhoto, ", being goofy"]]
+      .forEach(([src, alt], n) => {
+        const img = shots[n];
+        img.onload = fit;
+        /* one of the pair missing: an initials tile holds its place, not the
+           official portrait, which would pass for the missing photo */
+        img.src = src ? BASE + src : placeholder(m.name);
+        img.alt = src ? m.name + alt : "";
+      });
+    fit();
     modal.querySelector(".modal__role").textContent = m.role || "";
     modal.querySelector(".modal__role").style.display = m.role ? "" : "none";
     modal.querySelector(".modal__name").textContent = m.name;
