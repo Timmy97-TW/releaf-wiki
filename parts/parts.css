@@ -1,0 +1,299 @@
+/* =============================================================================
+   Parts: the few things page.css does not already do.
+
+   HOUSE RULES THIS FILE OBEYS
+   1. One white ground. Every section is white. A boxed note is white with a
+      hairline and a 3px left edge in the colour of what it is.
+   2. Figures are one component with a fixed set of frames, and every one opens
+      full-window (page.js wires the lightbox; the frames are set here).
+   3. Nothing important is behind a click.
+   4. Numbers in the status box agree with the fix numbers in the sections.
+
+   WIDTH. Six-column part tables and square plasmid maps are unreadable at
+   68ch, so the body column opens to 60rem and the prose is capped back to the
+   normal measure, the way entrepreneurship.css does it. No sentence on this
+   page is any longer than a sentence anywhere else on the wiki; the tables and
+   the figures get the extra width and nothing else does.
+
+   FRAMES. The house strip is 7:2, and it is right for a linear transcription
+   unit. It is wrong for a SnapGene circular map, which arrives about square:
+   contained inside a 7:2 box, a 1477 x 1440 map renders at under a third of
+   the column and the restriction-site labels stop being legible. Cropping it
+   would cut those labels off, which is the thing the rule exists to prevent.
+   So circular maps get their own 1:1 frame, contained, and .fig--strip stays
+   7:2 for the linear unit diagrams borrowed from Engineering.
+
+   COLOUR. One ladder of five status words plus a failure word, and those six
+   pills are the only colours on the page besides the ReLeaf green and the
+   neutrals. Amber means in progress, slate means checked but not read, green
+   means read, rust means it failed. A status colour is never a background.
+   ========================================================================== */
+
+.parts .pagebody { max-width: 60rem; }
+
+.parts .pagebody .sec > p,
+.parts .pagebody .sec > ul,
+.parts .pagebody .sec > ol,
+.parts .pagebody .sec > dl,
+.parts .pagebody .sec > blockquote,
+.parts .pagebody .sec > .callout,
+.parts .pagebody .sec > .fix,
+.parts .pagebody .sec > .todo,
+.parts .pagebody > .callout,
+.parts .pagebody > .status { max-width: var(--measure); }
+
+.parts .pagebody .callout,
+.parts .pagebody .callout--unproven,
+.parts .pagebody .callout--borrowed,
+.parts .pagebody .callout--medal {
+  background: var(--white);
+  border-left-width: 3px;
+}
+
+/* ================================================================= FIX =====
+   An editorial marker: something the team still has to settle before the
+   wiki freeze. Numbered P1, P2... so the list in the status box matches.   */
+
+.parts .fix {
+  margin: var(--sp-5) 0;
+  padding: var(--sp-3) var(--sp-5);
+  border: 1px solid var(--gray-200);
+  border-left: 3px solid var(--amber-700);
+  border-radius: var(--radius-sm);
+  background: var(--white);
+  font-size: var(--text-sm);
+  color: var(--gray-700);
+}
+.parts .fix > :first-child { margin-top: 0; }
+.parts .fix > :last-child  { margin-bottom: 0; }
+.parts .fix__label {
+  display: block; margin-bottom: var(--sp-1);
+  font-size: .6875rem; font-weight: 700; letter-spacing: .09em;
+  text-transform: uppercase; color: var(--amber-700);
+}
+.parts .fix ul { margin: var(--sp-2) 0 0; padding-left: 1.2em; }
+.parts .fix p + p { margin-top: var(--sp-2); }
+
+/* ============================================================== STATUS =====
+   The one vocabulary. Every part in every table on this page carries exactly
+   one of these words, and the little tag after it says which assembly level
+   the word was earned at. The words come from the build spreadsheet's own
+   states, not from anything invented here.                                 */
+
+.parts .st {
+  display: inline-flex; align-items: baseline; gap: .4em;
+  white-space: nowrap;
+  padding: .15rem .5rem;
+  border: 1px solid var(--gray-300);
+  border-radius: 100px;
+  font-size: var(--text-xs); font-weight: 650; line-height: 1.5;
+  letter-spacing: .02em;
+  color: var(--gray-600);
+}
+.parts .st i {
+  font-style: normal; font-weight: 700;
+  font-size: .8em; letter-spacing: .06em;
+  color: var(--gray-400);
+}
+.parts .st--designed { border-color: var(--gray-300); color: var(--gray-500); }
+.parts .st--cloned   { border-color: var(--gray-400); color: var(--gray-700); }
+.parts .st--assembled{ border-color: var(--amber-700); color: var(--amber-700); }
+.parts .st--pcr      { border-color: var(--slate-700); color: var(--slate-700); }
+.parts .st--seq      { border-color: var(--leaf-700);  color: var(--leaf-700); }
+.parts .st--failed   { border-color: var(--rust-700);  color: var(--rust-700); }
+
+/* The ladder itself, set out once under the overview so every later table can
+   be read without a key beside it. */
+
+.parts .ladder { list-style: none; margin: var(--sp-5) 0; padding: 0; max-width: var(--measure); }
+.parts .ladder > li {
+  display: grid; gap: var(--sp-1) var(--sp-4);
+  grid-template-columns: 1fr;
+  padding: var(--sp-3) 0;
+  border-top: 1px solid var(--gray-200);
+  font-size: var(--text-sm); line-height: 1.6;
+}
+.parts .ladder > li:last-child { border-bottom: 1px solid var(--gray-200); }
+@media (min-width: 42rem) {
+  .parts .ladder > li { grid-template-columns: 12.5rem 1fr; align-items: baseline; }
+}
+.parts .ladder p { margin: 0; color: var(--gray-700); }
+.parts .ladder .st { justify-self: start; }
+
+/* ============================================================== TABLES =====
+   The source docx gives each part six fields: registry number, name,
+   category, type and function, with a status added here. Six columns do not
+   fit in this column and the function column is a whole sentence, so the two
+   pairs that belong together are stacked instead of set side by side: the
+   accession under the name, and Basic or Composite under the category. Four
+   columns, no information dropped, and the sentence gets room to wrap.     */
+
+.parts table.data { border-collapse: collapse; width: 100%; font-size: var(--text-sm); }
+.parts table.data th, .parts table.data td {
+  padding: var(--sp-3) var(--sp-4);
+  border-bottom: 1px solid var(--gray-200);
+  text-align: left; vertical-align: top;
+}
+.parts table.data thead th {
+  border-bottom: 1px solid var(--gray-400);
+  font-size: var(--text-xs); font-weight: 700;
+  letter-spacing: .07em; text-transform: uppercase;
+  color: var(--gray-600);
+  white-space: nowrap;
+}
+.parts table.data tbody tr:last-child td { border-bottom: 1px solid var(--gray-400); }
+.parts table.data td b { color: var(--leaf-900); font-weight: 650; }
+
+.parts table.parts-tbl { table-layout: fixed; }
+.parts table.parts-tbl th:nth-child(1),
+.parts table.parts-tbl td:nth-child(1) { width: 9.5rem; }
+.parts table.parts-tbl th:nth-child(2),
+.parts table.parts-tbl td:nth-child(2) { width: 8.5rem; }
+.parts table.parts-tbl th:nth-child(3),
+.parts table.parts-tbl td:nth-child(3) { width: 11.5rem; }
+.parts table.parts-tbl td { overflow-wrap: break-word; }
+.parts table.parts-tbl td:first-child b { display: block; }
+
+/* The build-record tables run to eight and nine columns, because that is how
+   many steps the progression sheet records. They get tighter cells, and their
+   status pill is allowed to wrap onto two lines, which is what keeps the
+   widest of them inside the column instead of behind a horizontal scroll. */
+.parts table.rec { table-layout: auto; }
+.parts table.rec th, .parts table.rec td { padding: var(--sp-2) var(--sp-3); }
+.parts table.rec .st { white-space: normal; }
+.parts table.rec th { font-size: .625rem; white-space: normal; }
+.parts table.rec td { overflow-wrap: break-word; }
+
+.parts table.data code,
+.parts .acc {
+  font-family: var(--font-mono);
+  font-size: .9em;
+  color: var(--gray-700);
+}
+.parts table.parts-tbl .acc { font-size: .82em; }
+
+/* The Basic or Composite tag, under the category it qualifies. */
+.parts .typ {
+  display: inline-block; margin-top: .2rem;
+  font-size: var(--text-xs); font-weight: 700;
+  letter-spacing: .07em; text-transform: uppercase;
+  color: var(--gray-400);
+}
+
+/* No registry number yet. Written out because a blank cell in a parts table
+   reads as an oversight, and this one is a fact about the part.            */
+.parts .none {
+  display: inline-block; margin-top: .2rem;
+  font-size: var(--text-xs); font-style: italic;
+  color: var(--gray-400);
+}
+
+/* The build record tables use a tick and a dash rather than the spreadsheet's
+   word, because six columns of "complete" is unreadable. */
+.parts .yes { color: var(--leaf-700); font-weight: 700; }
+.parts .no  { color: var(--gray-300); }
+
+/* ============================================================== FIGURES ====
+   Two frames and nothing sized by hand.
+
+     .fig--plasmid  a circular SnapGene map: a 1:1 box, white mat, hairline,
+                    contained and never cropped, because cropping cuts the
+                    restriction-site labels off.
+     .fig--strip    a linear transcription-unit map: the house 7:2 strip,
+                    contained, for the same reason.
+
+   Nothing is upscaled except an SVG, which loses nothing by it.            */
+
+.parts .fig { margin: 0 0 var(--sp-6); max-width: 34rem; }
+.parts .fig.wide, .parts .figs .fig { max-width: none; }
+
+.parts .fig__frame {
+  position: relative;
+  aspect-ratio: var(--fr, 4 / 3);
+  display: grid; place-items: center;
+  overflow: hidden;
+  padding: var(--sp-3);
+  background: var(--white);
+  border: 1px solid var(--gray-200);
+  border-radius: var(--radius-sm);
+}
+.parts .fig__frame img {
+  max-width: 100%; max-height: 100%;
+  width: auto; height: auto;
+  object-fit: contain;
+  border: 0; border-radius: 0; background: none;
+  cursor: zoom-in;
+}
+
+.parts .fig--plasmid { --fr: 1 / 1; }
+.parts .fig--strip   { --fr: 7 / 2; }
+.parts .fig--strip .fig__frame { padding: var(--sp-4); }
+
+.parts .fig figcaption {
+  margin-top: var(--sp-3);
+  padding-left: var(--sp-4);
+  border-left: 3px solid var(--leaf-500);
+  font-size: var(--text-sm); line-height: 1.6;
+  color: var(--gray-600);
+}
+.parts .fig figcaption b { color: var(--gray-700); font-weight: 650; }
+
+/* A row of figures: equal columns, so equal frames. Captions are not equal
+   length, so the row puts every frame on one grid row and every caption on
+   the next; the images sit on a shared floor and the captions all start on
+   the same line, however long they run. A plate and a strip never share a
+   row, so every .figs below holds one frame type.                          */
+.parts .figs { display: grid; gap: var(--sp-5); margin: var(--sp-6) 0; align-items: start; }
+@media (min-width: 46rem) {
+  .parts .figs--2 { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .parts .figs--3 { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+}
+.parts .figs .fig { margin-bottom: 0; }
+@supports (grid-template-rows: subgrid) {
+  @media (min-width: 46rem) {
+    .parts .figs[class*="figs--"] { grid-template-rows: auto auto; }
+    .parts .figs[class*="figs--"] .fig {
+      display: grid; grid-row: span 2; grid-template-rows: subgrid;
+    }
+  }
+}
+
+/* =============================================================== PRINT ===== */
+
+@media print {
+  .parts .fig, .parts .fix, .parts .tablewrap { break-inside: avoid; }
+  .parts .lightbox, .sitenav-spacer { display: none !important; }
+}
+
+/* ============================================================ LIGHTBOX =====
+   page.js builds the overlay; page.css gives it a backdrop at 88% opacity,
+   which lets body text show through under a pale map and leaves the caption
+   sitting on a muddy ground. Engineering solved this already: a near-opaque
+   backdrop, the image and the caption on the same 80% column, and the caption
+   left-aligned so a long one reads as a paragraph. Same treatment here, and
+   it matters more on this page than most, because half the maps are drawn on
+   a near-black ground and the other half on a near-white one.              */
+
+.parts .lightbox {
+  display: none;
+  place-items: initial;
+  flex-direction: column;
+  align-items: center; justify-content: center;
+  padding: 3vh 3vw;
+  background: rgb(8 20 15 / .97);
+}
+.parts .lightbox.is-open { display: flex; }
+.parts .lightbox figure { margin: 0; width: 80vw; display: grid; justify-items: center; }
+.parts .lightbox img {
+  max-width: 80vw; max-height: 76vh;
+  width: auto; height: auto;
+  object-fit: contain;
+}
+.parts .lightbox figcaption {
+  width: 80vw; max-width: 80vw;
+  margin: var(--sp-4) 0 0;
+  text-align: left;
+  color: var(--gray-200);
+  font-size: var(--text-sm); line-height: 1.6;
+}
+.parts .lightbox figcaption b { color: var(--white); }
