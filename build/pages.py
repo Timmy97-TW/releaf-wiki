@@ -543,6 +543,21 @@ PAGES = [
 # to live in this entry is on the page as the Best Software Tool callout on
 # Sheet 01, and the hosting requirement it carries is scored on Sheet 09.
 
+# --------------------------------------------------------------------------
+# PROTEIN DESIGN, 23 September 2026.
+#
+# The Dry Lab tab used to carry Peptide Design and MD Simulations as two
+# entries of its own. They are now two steps inside one section, reached from
+# /protein-design/, which is a hub plus five hand-written subpages named for
+# the pipeline's own five steps (generate, restraints, assembly, flex, triage)
+# with a sixth for packaging. None of those files is generated, so none of
+# them has an entry here; site-nav.js is where their addresses live.
+#
+# The two entries below stay because both pages still exist at their old
+# addresses and generate.py has to keep skipping them. Do not delete these
+# entries and do not run `generate.py peptide-design --force`.
+# --------------------------------------------------------------------------
+
 {
  "slug": "peptide-design", "tab": "drylab", "title": "Peptide Design",
  "lede": "Choosing the protectant, and letting its size decide the membrane.",

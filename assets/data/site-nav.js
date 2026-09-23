@@ -71,10 +71,8 @@ const NAV = [
         caption: "Three instruments, taken apart. Plus the build notebook." },
       { title: "Software",                slug: "software",                icon: "software",
         caption: "Control code, analysis and tooling." },
-      { title: "Peptide Design",          slug: "peptide-design",          icon: "peptide",
-        caption: "Which of the peptide's residues we could change, and what we retracted." },
-      { title: "MD Simulations",          slug: "md-simulations",          icon: "md",
-        caption: "Nine trajectories of BoPep4 on its receptor, read together." },
+      { title: "Protein Design",          slug: "protein-design",          icon: "peptide",
+        caption: "The five-step pipeline that took a peptide from a family alignment to an order form." },
       { title: "Dry Lab Notebook",        slug: "drylab-notebook",         icon: "notebook",
         caption: "The computational record, week by week." }
     ]
@@ -124,5 +122,14 @@ const NAV = [
    -------------------------------------------------------------------------- */
 const NAV_UNLISTED = [
   { title: "Inclusivity", slug: "inclusivity",
-    caption: "Who the project is built for, and who it would leave out." }
+    caption: "Who the project is built for, and who it would leave out." },
+
+  /* The two pages below used to be Dry Lab tabs of their own. Since
+     23 September 2026 they are steps inside Protein Design, reached from
+     /protein-design/. Their addresses have not changed, so every existing
+     link and every footer entry still resolves. */
+  { title: "MD Simulations", slug: "md-simulations",
+    caption: "Step F of the pipeline. Nine trajectories of BoPep4 on its receptor." },
+  { title: "Peptide Design", slug: "peptide-design",
+    caption: "The worked case. BoPep4 run end to end, including what we retracted." }
 ];

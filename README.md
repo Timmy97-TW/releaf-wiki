@@ -16,8 +16,13 @@ index.html                the homepage
 <slug>/index.html         one folder per page, so the URL is /<slug>
 hardware/                 the hardware section: hub, three 3D teardowns,
                           the build notebook, and its own css/ js/ models/
-md-simulations/           the MD section: the overview with the map of the nine
-                          runs, plus the nine self-contained report files
+protein-design/           the Dry Lab section that holds the peptide pipeline:
+                          a hub plus five subpages named for the pipeline's own
+                          steps. Two of its steps are the pages below, which
+                          keep their original addresses
+md-simulations/           step F of protein design: the overview with the map of
+                          the nine runs, plus the nine self-contained reports
+peptide-design/           the worked case, BoPep4 run end to end
 assets/
   css/   tokens.css       colours, type and spacing, read by everything else
          nav.css          the five-tab navigation
@@ -68,6 +73,16 @@ outline and the note telling whoever writes it what belongs in each section.
 | `team/` | Forty-seven people, built from `assets/data/roster.js`. |
 | `attributions/` | iGEM allows the nav, the footer and the embedded form on this page and nothing else. |
 | `bioreactor-calculations/` | An instrument page. Hovering left rail, five live panels, its own CSS and JS. |
+| `protein-design/` | A hub over five subpages, not an argument of its own. |
+
+**Protein Design is a section, not a page**, since 23 September 2026. The Dry
+Lab tab used to carry Peptide Design and MD Simulations as two entries. They
+are now two steps of one pipeline, reached from `/protein-design/`: a hub plus
+five hand-written subpages named for the pipeline's own steps. Neither of the
+two older pages moved, so every link into them still resolves, and both keep
+their entries in `build/pages.py` so the generator goes on skipping them. The
+addresses live, as always, in `assets/data/site-nav.js`, where the two pages
+have moved into `NAV_UNLISTED`.
 
 **Bioreactor Calculations** is the fourth exception. `bioreactor-calculations/`
 keeps the wiki's palette and prose styles but drops the five-tab bar for the
