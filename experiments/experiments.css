@@ -1,0 +1,295 @@
+/* =============================================================================
+   Experiments: the few things page.css does not already do.
+
+   HOUSE RULES THIS FILE OBEYS
+   1. One white ground. Every section is white. A boxed note is white with a
+      hairline and a 3px left edge in the colour of what it is.
+   2. Figures are one component with a fixed set of frames, and every one opens
+      full-window (page.js wires the lightbox; the frames are set here). The
+      system is lifted from sustainability/sus.css, with the frames changed:
+      this page carries BioRender procedure diagrams, which are wide and
+      label-dense, so they are contained and never cropped.
+   3. Nothing important is behind a click. There is no <details> on this page.
+      Page length is handled by the protocol index and by tight typography.
+   4. Numbers in any rail agree with the section numbers page.js writes.
+
+   THE ONE REPEATED COMPONENT. A protocol is .proto, and every protocol is the
+   same object: a heading, a purpose line, a three-cell fact strip, materials,
+   numbered steps, and where it applies a reagent table and a notes block. No
+   protocol gets a layout of its own, because a reader who has read one has
+   then read the shape of all twenty-three.
+   ========================================================================== */
+
+.exp {
+  --edge: var(--leaf-500);          /* the rule that marks a protocol      */
+}
+
+/* Callouts keep the white ground the rest of the page has. */
+.exp .pagebody .callout,
+.exp .pagebody .callout--unproven,
+.exp .pagebody .callout--borrowed {
+  background: var(--white);
+  border-left-width: 3px;
+}
+
+/* ======================================================= PROTOCOL INDEX ====
+   Four columns of links that jump down the page. It exists so the page can
+   stay open all the way down and still be navigable, which is the trade the
+   house rules ask for: length over hiding.                                 */
+
+.exp .pindex {
+  display: grid;
+  gap: var(--sp-5);
+  margin: var(--sp-6) 0;
+  padding: var(--sp-5);
+  border: 1px solid var(--gray-200);
+  border-radius: var(--radius-sm);
+  background: var(--white);
+  grid-template-columns: 1fr;
+}
+@media (min-width: 40rem) { .exp .pindex { grid-template-columns: 1fr 1fr; } }
+@media (min-width: 62rem) { .exp .pindex { grid-template-columns: repeat(4, 1fr); } }
+
+.exp .pindex h3 {
+  margin: 0 0 var(--sp-2);
+  font-size: var(--text-xs); font-weight: 700;
+  letter-spacing: .09em; text-transform: uppercase;
+  color: var(--leaf-700);
+}
+.exp .pindex h3.pindex__h2 { margin-top: var(--sp-4); }
+.exp .pindex ol { margin: 0; padding-left: 1.35em; font-size: var(--text-sm); line-height: 1.45; }
+.exp .pindex li + li { margin-top: var(--sp-2); }
+.exp .pindex li::marker { color: var(--gray-400); font-variant-numeric: tabular-nums; }
+.exp .pindex a { text-decoration: none; }
+.exp .pindex a:hover { text-decoration: underline; }
+
+/* ============================================================= PROTOCOL ====
+   One class, twenty-three identical instances.                             */
+
+.exp .proto {
+  margin: var(--sp-6) 0;
+  padding-left: var(--sp-5);
+  border-left: 3px solid var(--edge);
+}
+.exp .proto > :last-child { margin-bottom: 0; }
+.exp .proto h3 { margin-top: 0; color: var(--leaf-900); }
+
+/* the purpose line, set once at lede size so it reads before the detail */
+.exp .proto__why {
+  margin: 0 0 var(--sp-4);
+  font-size: var(--text-base);
+  line-height: 1.6;
+  color: var(--gray-700);
+}
+
+/* timing, what comes out, and whether we actually ran it */
+.exp .proto__meta {
+  display: grid;
+  gap: var(--sp-3) var(--sp-5);
+  margin: 0 0 var(--sp-5);
+  padding: var(--sp-3) 0;
+  border-top: 1px solid var(--gray-200);
+  border-bottom: 1px solid var(--gray-200);
+  grid-template-columns: 1fr;
+}
+@media (min-width: 34rem) { .exp .proto__meta { grid-template-columns: repeat(3, minmax(0, 1fr)); } }
+.exp .proto__meta > div { min-width: 0; }
+.exp .proto__meta b {
+  display: block;
+  font-size: .6875rem; font-weight: 700;
+  letter-spacing: .09em; text-transform: uppercase;
+  color: var(--gray-500);
+}
+.exp .proto__meta span {
+  display: block; margin-top: .15rem;
+  font-size: var(--text-sm); line-height: 1.45;
+  color: var(--gray-700);
+}
+.exp .proto__meta [data-run="no"]  { color: var(--rust-700); font-weight: 650; }
+.exp .proto__meta [data-run="yes"] { color: var(--leaf-700); font-weight: 650; }
+
+.exp .proto h4 {
+  margin: var(--sp-5) 0 var(--sp-2);
+  font-size: var(--text-xs); font-weight: 700;
+  letter-spacing: .09em; text-transform: uppercase;
+  color: var(--gray-500);
+}
+.exp .proto h4:first-of-type { margin-top: var(--sp-4); }
+
+/* materials: a dense list, because nobody reads a bill of materials in prose */
+.exp .proto ul.mats { margin: 0 0 var(--sp-4); padding-left: 1.15em; font-size: var(--text-sm); line-height: 1.5; }
+.exp .proto ul.mats li + li { margin-top: var(--sp-1); }
+.exp .proto ul.mats ul { margin: var(--sp-1) 0 0; padding-left: 1.15em; color: var(--gray-600); }
+
+.exp .proto ol.steps { margin: 0 0 var(--sp-4); padding-left: 1.4em; font-size: var(--text-sm); line-height: 1.6; }
+.exp .proto ol.steps > li + li { margin-top: var(--sp-2); }
+.exp .proto ol.steps ul,
+.exp .proto ol.steps ol { margin: var(--sp-2) 0 0; padding-left: 1.2em; color: var(--gray-600); }
+.exp .proto ol.steps li::marker { color: var(--leaf-500); font-variant-numeric: tabular-nums; }
+
+/* the part another team actually needs: what went wrong and what we changed */
+.exp .note {
+  margin: var(--sp-4) 0;
+  padding: var(--sp-3) var(--sp-4);
+  border: 1px solid var(--gray-200);
+  border-left: 3px solid var(--slate-700);
+  border-radius: var(--radius-sm);
+  background: var(--white);
+  font-size: var(--text-sm);
+  line-height: 1.6;
+  color: var(--gray-700);
+}
+.exp .note > :first-child { margin-top: 0; }
+.exp .note > :last-child  { margin-bottom: 0; }
+.exp .note b.note__label {
+  display: block; margin-bottom: var(--sp-1);
+  font-size: .6875rem; font-weight: 700; letter-spacing: .09em;
+  text-transform: uppercase; color: var(--slate-700);
+}
+.exp .note ul { margin: var(--sp-2) 0 0; padding-left: 1.2em; }
+.exp .note li + li { margin-top: var(--sp-1); }
+
+/* ================================================================= FIX =====
+   An editorial marker: something the team still has to settle before the
+   wiki freeze. Numbered E1, E2... so the list in the status box matches.   */
+
+.exp .fix {
+  margin: var(--sp-4) 0;
+  padding: var(--sp-3) var(--sp-4);
+  border: 1px solid var(--gray-200);
+  border-left: 3px solid var(--amber-700);
+  border-radius: var(--radius-sm);
+  background: var(--white);
+  font-size: var(--text-sm);
+  color: var(--gray-700);
+}
+.exp .fix > :first-child { margin-top: 0; }
+.exp .fix > :last-child  { margin-bottom: 0; }
+.exp .fix__label {
+  display: block; margin-bottom: var(--sp-1);
+  font-size: .6875rem; font-weight: 700; letter-spacing: .09em;
+  text-transform: uppercase; color: var(--amber-700);
+}
+.exp .fix ul { margin: var(--sp-2) 0 0; padding-left: 1.2em; }
+.exp .fix li + li { margin-top: var(--sp-1); }
+
+/* ============================================================== FIGURES ====
+   Two frames and nothing sized by hand.
+
+     .fig--diagram  a BioRender procedure diagram, roughly 10:7. Contained,
+                    never cropped, because cropping cuts the step labels.
+     .fig--strip    the same thing drawn as one long band. 12:5, contained.
+
+   A diagram and a strip never share a row.                                 */
+
+.exp .fig { margin: 0 0 var(--sp-6); }
+.exp .figs .fig { max-width: none; }
+
+.exp .fig__frame {
+  position: relative;
+  aspect-ratio: var(--fr, 10 / 7);
+  display: grid; place-items: center;
+  overflow: hidden;
+  padding: var(--sp-3);
+  background: var(--white);
+  border: 1px solid var(--gray-200);
+  border-radius: var(--radius-sm);
+}
+.exp .fig__frame img {
+  position: absolute;
+  inset: 0;
+  width: 100%; height: 100%;
+  max-width: none; max-height: none;
+  padding: var(--sp-3); box-sizing: border-box;
+  object-fit: contain;
+  border: 0; border-radius: 0; background: none;
+  cursor: zoom-in;
+}
+.exp .fig--diagram { --fr: 10 / 7; }
+.exp .fig--strip   { --fr: 12 / 5; }
+
+.exp .fig figcaption {
+  margin-top: var(--sp-3);
+  padding-left: var(--sp-4);
+  border-left: 3px solid var(--leaf-500);
+  font-size: var(--text-sm); line-height: 1.6;
+  color: var(--gray-600);
+}
+.exp .fig figcaption b { color: var(--gray-700); font-weight: 650; }
+
+/* A row of figures: equal columns, so equal frames. Captions are not equal
+   length, so the row puts every frame on one grid row and every caption on
+   the next; the images sit on a shared floor and the captions all start on
+   the same line, however long they run. */
+.exp .figs { display: grid; gap: var(--sp-5); margin: var(--sp-6) 0; align-items: start; }
+@media (min-width: 46rem) {
+  .exp .figs--2 { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .exp .figs--3 { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+}
+.exp .figs .fig { margin-bottom: 0; }
+@supports (grid-template-rows: subgrid) {
+  @media (min-width: 46rem) {
+    .exp .figs[class*="figs--"] { grid-template-rows: auto auto; }
+    .exp .figs[class*="figs--"] .fig {
+      display: grid; grid-row: span 2; grid-template-rows: subgrid;
+    }
+  }
+}
+
+/* ============================================================== TABLES =====
+   Where the source has a table of reagent volumes it stays a table.        */
+
+.exp table.data { border-collapse: collapse; width: 100%; font-size: var(--text-sm); }
+.exp table.data th, .exp table.data td {
+  padding: var(--sp-2) var(--sp-4);
+  border-bottom: 1px solid var(--gray-200);
+  text-align: left; vertical-align: top;
+}
+.exp table.data thead th {
+  border-bottom: 1px solid var(--gray-400);
+  font-size: var(--text-xs); font-weight: 700;
+  letter-spacing: .07em; text-transform: uppercase;
+  color: var(--gray-600);
+}
+.exp table.data tbody tr:last-child td { border-bottom: 1px solid var(--gray-400); }
+.exp table.data td.num, .exp table.data th.num { font-variant-numeric: tabular-nums; white-space: nowrap; }
+.exp .proto .tablewrap { margin: var(--sp-2) 0 var(--sp-4); }
+
+/* =============================================================== PRINT ===== */
+
+@media print {
+  .exp .pindex { grid-template-columns: 1fr 1fr; }
+  .exp .fig, .exp .proto, .exp .note, .exp .fix { break-inside: avoid; }
+  .exp .lightbox, .sitenav-spacer { display: none !important; }
+}
+
+/* ============================================================ LIGHTBOX =====
+   page.js builds the overlay; page.css gives it a backdrop at 88% opacity,
+   which lets body text show through under a pale diagram. Same treatment as
+   Engineering and Sustainability: a near-opaque backdrop, the image and the
+   caption on the same 80% column, caption left-aligned.                    */
+
+.exp .lightbox {
+  display: none;
+  place-items: initial;
+  flex-direction: column;
+  align-items: center; justify-content: center;
+  padding: 3vh 3vw;
+  background: rgb(8 20 15 / .97);
+}
+.exp .lightbox.is-open { display: flex; }
+.exp .lightbox figure { margin: 0; width: 88vw; display: grid; justify-items: center; }
+.exp .lightbox img {
+  max-width: 88vw; max-height: 78vh;
+  width: auto; height: auto;
+  object-fit: contain;
+  background: var(--white);
+}
+.exp .lightbox figcaption {
+  width: 88vw; max-width: 88vw;
+  margin: var(--sp-4) 0 0;
+  text-align: left;
+  color: var(--gray-200);
+  font-size: var(--text-sm); line-height: 1.6;
+}
+.exp .lightbox figcaption b { color: var(--white); }
