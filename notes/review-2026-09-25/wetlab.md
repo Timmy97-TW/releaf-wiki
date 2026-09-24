@@ -17,6 +17,7 @@ left at the end of the section it is about.
 | `Parts: the module tables stop collapsing into a column of single characters on a phone` | Real mobile defect, described below. Also the Safety lede, which claimed a control for every risk. |
 | `Wet Lab: three more cross-page number disagreements added to the review notes` | Chlorophyll extraction volume and electroporation voltages. |
 | `Experiments: the fix and note boxes take the same spacing as the other wet lab pages` | `--sp-4` to `--sp-5`, so the identical box on four pages is identical. |
+| `Plants: every stage and every platform is readable with JavaScript off` | The eight tab panels shipped with `hidden` in the markup; both scripts already hide the inactive ones at boot, so the attribute came out. |
 
 ### Mechanical fixes, logged individually
 
@@ -32,6 +33,12 @@ left at the end of the section it is about.
 - `safety-and-security/index.html`: meta description and lede changed from "what we did about
   each one", which the page cannot support, to "what is engineered against it, and what is still
   only procedure".
+- `plant/index.html`: the five later `.rail__panel` blocks and the three `.tabs__panel` blocks
+  carried `hidden` in the markup. With scripts off that lost a reader five of the six stages of a
+  run, including the paragraph on seed sterilisation that cost the team a trial, and two of the
+  three growth systems. `plant.js` and `page.js` both call their show function at boot, so the
+  attribute was removed and the rendering with JavaScript on is unchanged. The comment at the top
+  of `plant.js`, which described the old behaviour, was updated with it.
 - `parts/parts.css`: `.parts table.parts-tbl` had `table-layout: fixed` with the first three
   columns set at 9.5, 8.5 and 11.5 rem. Below about 46 rem those add up to more than the
   viewport, the function column was left with almost no width, and every sentence in it wrapped
