@@ -1243,7 +1243,6 @@ FOOTER = """
           <h3>Dry Lab</h3>
           <ul>
           <li><a href="../model/">Math Model</a></li>
-          <li><a href="../bioreactor-calculations/">Bioreactor Calculations</a></li>
           <li><a href="../hardware/">Hardware</a></li>
           <li><a href="../software/">Software</a></li>
           <li><a href="../protein-design/">Protein Design</a></li>

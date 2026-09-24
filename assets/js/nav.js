@@ -329,7 +329,7 @@
      only be seen with a mouse or a finger. While, and only while, such a box
      overflows and holds nothing focusable, it gets a tab stop and a name
      (role="group", not "region", so thirty tables do not become thirty
-     landmarks). The same function sits in nav-rail.js. */
+     landmarks). */
   function scrollRegions() {
     const FOCUSABLE = 'a[href], button, input, select, textarea, summary, iframe, ' +
                       '[contenteditable], [tabindex]:not([tabindex="-1"])';

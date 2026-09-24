@@ -480,85 +480,6 @@ PAGES = [
  ]},
 
 {
- "slug": "bioreactor-calculations", "tab": "drylab",
- "title": "Bioreactor Calculations",
- "lede": "Sizing, flow and mass transfer for a hollow-fibre vessel small "
-         "enough to sit where the crop is.",
- "owner": "Dry lab, reactor",
- "award": None,
- "sections": [
-   {"h": "Design brief and constraints",
-    "note": "Volume, footprint, power, and what is fixed versus what is "
-            "chosen. Reactor dimensions are not on record; settle them first."},
-   {"h": "Geometry and volumes",
-    "note": "Fibre count, length, inner diameter, packing fraction, "
-            "extracapillary volume. Use the compartment vocabulary exactly."},
-   {"h": "Flow, shear and residence time",
-    "note": "Cross-flow rate, wall shear at the fibre surface, and the "
-            "residence time distribution."},
-   {"h": "Mass transfer and oxygen",
-    "note": "Oxygen is usually what limits a dense culture. Show the "
-            "calculation and the margin."},
-   {"h": "Membrane selection",
-    "note": "0.2 micron and 50 kDa are not two candidate values, they are two "
-            "different devices with opposite consequences. Work both and say "
-            "which one makes 'passes only protein' true.",
-    "callout": ("unproven", "The unmade decision",
-                "Membrane cutoff is unchosen. This is the central open design "
-                "decision in the project, not a discrepancy in the notes.")},
-   {"h": "Scale-up rules",
-    "note": "Scale on wall shear and flux below critical, not geometric "
-            "similarity, and declare which similarity group is being "
-            "sacrificed. Credit the advice on the Human Practices page."},
-   {"h": "Worked example",
-    "note": "One vessel, all the way through, with units at every line."},
-   {"h": "Assumption register",
-    "note": "Every number used above that is not measured.",
-    "table": (["Assumption", "Value used", "Basis", "Effect if wrong"],
-              [["", "", "", ""] for _ in range(5)])},
- ]},
-
-# NOT GENERATED: hardware.
-#
-# /hardware is the students' own build — a hub, three scroll-driven 3D teardowns
-# assembled from the real STLs, and the 62-page scanned notebook. It arrived as
-# a standalone site and now lives at wiki/hardware/, keeping the standard URL
-# that Best Hardware is judged from.
-#
-# generate.py would skip it anyway, because the page carries no generated
-# marker, but leaving a scaffold spec here would invite somebody to run
-# `generate.py hardware --force` and destroy it. The section's own
-# documentation is hardware/README.md and notes/hardware-handoff.md.
-
-# NOT GENERATED: software.
-#
-# /software is hand-owned. It is written in the Engineering sheet idiom —
-# software/software.css and software/software.js are its own — and it carries
-# the BR-01 operator interface itself at software/ui/0906UI.html, so the page
-# and the thing it documents cannot drift apart.
-#
-# generate.py would skip it anyway, because the page no longer carries the
-# generated marker, but leaving a scaffold spec here would invite somebody to
-# run `generate.py software --force` and destroy it. The award block that used
-# to live in this entry is on the page as the Best Software Tool callout on
-# Sheet 01, and the hosting requirement it carries is scored on Sheet 09.
-
-# --------------------------------------------------------------------------
-# PROTEIN DESIGN, 23 September 2026.
-#
-# The Dry Lab tab used to carry Peptide Design and MD Simulations as two
-# entries of its own. They are now two steps inside one section, reached from
-# /protein-design/, which is a hub plus five hand-written subpages named for
-# the pipeline's own five steps (generate, restraints, assembly, flex, triage)
-# with a sixth for packaging. None of those files is generated, so none of
-# them has an entry here; site-nav.js is where their addresses live.
-#
-# The two entries below stay because both pages still exist at their old
-# addresses and generate.py has to keep skipping them. Do not delete these
-# entries and do not run `generate.py peptide-design --force`.
-# --------------------------------------------------------------------------
-
-{
  "slug": "peptide-design", "tab": "drylab", "title": "Peptide Design",
  "lede": "Choosing the protectant, and letting its size decide the membrane.",
  "owner": "Dry lab, design",
@@ -584,8 +505,7 @@ PAGES = [
     "note": "Codon usage for B. subtilis, signal peptide, tags, and what each "
             "costs."},
    {"h": "What this sets for the membrane",
-    "note": "Carry the size straight into the cutoff decision and link to the "
-            "Bioreactor Calculations page."},
+    "note": "Carry the size straight into the cutoff decision."},
    {"h": "Validation status",
     "note": "Nothing here has been confirmed at the bench. Say it plainly."},
  ]},

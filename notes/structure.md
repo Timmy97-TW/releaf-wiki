@@ -25,7 +25,6 @@ team three awards.
 | Safety | `/safety-and-security` | Safety and Security Award |
 | Notebook | `/notebook` | — |
 | Math Model | `/model` | Best Model |
-| Bioreactor Calculations | `/bioreactor-calculations` | — |
 | Hardware | `/hardware` | Best Hardware |
 | Software | `/software` | Best Software Tool |
 | Peptide Design | `/peptide-design` | — |

@@ -3,7 +3,7 @@
    -----------------------------------------------------------------------------
    Marks, on the page itself, everything that would break an iGEM 2026 wiki
    rule, so whoever is editing a page can see what to fix without running
-   anything. nav.js and nav-rail.js load this file on every page unless
+   anything. nav.js loads this file on every page unless
    window.RULECHECK === false (set in assets/data/site-nav.js). The copy that
    goes to gitlab.igem.org must ship with it switched off.
 
@@ -142,7 +142,7 @@
 .rc-hidden .rc-tag { display: none; }
 .rc-hidden .rc-mark.rc-flash { outline: 3px dashed var(--rc) !important; }
 /* bottom-left: bottom-right is where the pages keep their own controls (the
-   hardware film's pause button); clear the Bioreactor Calculations rail */
+   hardware film's pause button) */
 body:has(aside.rail) .rulecheck { left: 64px; }
 @media print { .rulecheck, .rc-tag { display: none !important; } .rc-mark { outline: none !important; } }`;
     document.head.appendChild(s);

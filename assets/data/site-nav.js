@@ -67,8 +67,6 @@ const NAV = [
     pages: [
       { title: "Math Model",              slug: "model",                   icon: "model",
         caption: "The equations behind sensing, expression and release." },
-      { title: "Bioreactor Calculations", slug: "bioreactor-calculations", icon: "bioreactor",
-        caption: "Sizing, flow and mass transfer for the vessel." },
       { title: "Hardware",                slug: "hardware",                icon: "hardware",
         caption: "Three instruments, taken apart. Plus the build notebook." },
       { title: "Software",                slug: "software",                icon: "software",
