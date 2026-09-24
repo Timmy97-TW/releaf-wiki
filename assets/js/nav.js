@@ -367,6 +367,26 @@
         keep.add(el);
       });
       document.querySelectorAll("[data-scrollstop]").forEach((el) => { if (!keep.has(el)) unmark(el); });
+      cues();
+    };
+    /* A table wider than its column says so in words underneath, and only
+       while it is: "More columns to the right, scroll sideways". The line is
+       aria-hidden because the wrapper's own name (above) already says it
+       scrolls sideways. Styled as .scrollcue in page.css. */
+    const cues = () => {
+      document.querySelectorAll(".tablewrap").forEach((w) => {
+        const over = w.scrollWidth > w.clientWidth + 1;
+        let cue = w.nextElementSibling;
+        if (!cue || !cue.classList.contains("scrollcue")) {
+          if (!over) return;
+          cue = document.createElement("p");
+          cue.className = "scrollcue";
+          cue.setAttribute("aria-hidden", "true");
+          cue.textContent = "More columns to the right. Scroll the table sideways.";
+          w.after(cue);
+        }
+        cue.hidden = !over;
+      });
     };
     let timer = null;
     const soon = () => { clearTimeout(timer); timer = setTimeout(check, 250); };
