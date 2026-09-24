@@ -1,15 +1,13 @@
 /* =============================================================================
    ReLeaf: site navigation
    -----------------------------------------------------------------------------
-   A full-width drop panel. It borrows the idea from iGEM Marburg 2024 and then
-   goes its own way:
-
-   · Marburg floods the whole row with solid purple on hover and uses filled
-     circular glyph badges. We use line art in a soft square tile, a pale leaf
-     wash on the row, and a green bar that grows down the left edge.
-   · Each panel opens with a title rail carrying the team's own artwork, so a
-     tab reads as a chapter instead of three anonymous columns of links.
-   · One accent family only: four steps of leaf green.
+   A full-width drop panel, drawn as a register of sheets: a title rail on the
+   left naming the tab (and carrying the team's own artwork when it arrives),
+   and on the right one ruled entry per page with its title, a caption of
+   what is on it, and the award it is judged for in field lettering. No icon
+   tiles, no shadow, no gradient: the panel is separated from the page by a
+   heavy rule, the drawing-set way (DESIGN.md). One accent family only: four
+   steps of leaf green.
    ========================================================================== */
 
 /* Colours that exist in tokens.css point at the token. The hardware pages load
@@ -97,13 +95,11 @@
   content: "";
   position: absolute; left: 1.15rem; right: 1.15rem; bottom: 0;
   height: 2px; background: var(--nv-500);
-  border-radius: 2px 2px 0 0;
 }
 .sitenav__tab.is-open::after {
   content: "";
   position: absolute; left: .8rem; right: .8rem; bottom: 0;
   height: 3px; background: var(--nv-700);
-  border-radius: 3px 3px 0 0;
 }
 
 /* chevron drawn in CSS, no icon font */
@@ -130,18 +126,10 @@
   display: none;
   background: var(--white, #fff);
   border-top: 1px solid var(--nv-line);
-  box-shadow: 0 24px 48px -28px rgb(20 64 43 / .55);
+  border-bottom: 1.5px solid var(--nv-900);   /* the heavy rule that ends the sheet */
 }
-.sitenav__panel.is-open { display: block; animation: nv-in .22s cubic-bezier(.2,.7,.3,1); }
-@keyframes nv-in { from { opacity: 0; transform: translateY(-6px); } }
-
-/* a thread of green across the top of the open panel, the page's signature */
-.sitenav__panel::before {
-  content: "";
-  position: absolute; inset: -1px 0 auto 0;
-  height: 3px;
-  background: linear-gradient(90deg, var(--nv-900), var(--nv-500) 55%, var(--nv-100));
-}
+.sitenav__panel.is-open { display: block; animation: nv-in .18s ease-out; }
+@keyframes nv-in { from { opacity: 0; } }
 
 .sitenav__panelinner {
   max-width: var(--nv-max);
@@ -180,12 +168,14 @@
   max-width: 22rem;
 }
 
-/* ---- entries ------------------------------------------------------------- */
+/* ---- entries -------------------------------------------------------------
+   A register row: title, caption, award. Separated by hairlines, not boxed.
+   Hover lifts the row one step of tone; the current page says so in words.  */
 
 .sitenav__list {
   display: grid;
   grid-template-columns: repeat(1, minmax(0, 1fr));
-  gap: .25rem .75rem;
+  gap: 0 1.5rem;
   align-content: start;
 }
 @media (min-width: 700px)  { .sitenav__list { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
@@ -194,58 +184,41 @@
                              .sitenav__list[data-count="7"] { grid-template-columns: repeat(3, minmax(0, 1fr)); } }
 
 .sitenav__entry {
-  position: relative;
   display: grid;
-  grid-template-columns: 38px 1fr;
-  align-items: start;
-  gap: .8rem;
-  padding: .7rem .8rem;
-  border-radius: 10px;
+  align-content: start;
+  gap: .15rem;
+  padding: .7rem .75rem .8rem;
+  border-top: 1px solid var(--nv-line);
   text-decoration: none;
-  transition: background .22s;
-}
-.sitenav__entry::before {          /* accent grows down the left edge */
-  content: "";
-  position: absolute; left: 0; top: 50%; bottom: 50%;
-  width: 3px; border-radius: 3px;
-  background: var(--nv-500);
-  transition: top .25s cubic-bezier(.2,.7,.3,1), bottom .25s cubic-bezier(.2,.7,.3,1);
+  transition: background .18s;
 }
 .sitenav__entry:hover { background: var(--nv-50); }
-.sitenav__entry:hover::before,
-.sitenav__entry.is-current::before { top: 18%; bottom: 18%; }
+.sitenav__entry:hover .sitenav__entrytitle { text-decoration: underline; text-underline-offset: .18em; text-decoration-thickness: 1px; }
 
-.sitenav__tile {
-  width: 38px; height: 38px;
-  display: grid; place-items: center;
-  border-radius: 10px;
-  background: var(--nv-100);
-  color: var(--nv-700);
-  transition: background .22s, color .22s;
-}
-.sitenav__tile svg {
-  width: 20px; height: 20px;
-  fill: none;
-  stroke: currentColor;
-  stroke-width: 1.7;
-  stroke-linecap: round;
-  stroke-linejoin: round;
-}
-.sitenav__entry:hover .sitenav__tile { background: var(--nv-700); color: #fff; }
-
-.sitenav__entrytext { display: grid; gap: .1rem; min-width: 0; }
 .sitenav__entrytitle {
-  font-size: .925rem; font-weight: 650;
+  display: flex; flex-wrap: wrap; align-items: baseline; gap: .25rem .6rem;
+  font-size: .95rem; font-weight: 650;
   color: var(--nv-ink);
   letter-spacing: -.005em;
 }
 .sitenav__entrycap {
-  font-size: .775rem; line-height: 1.45;
+  font-size: .8rem; line-height: 1.45;
   color: var(--nv-muted);
+}
+.sitenav__award,
+.sitenav__here {
+  font-size: .625rem; font-weight: 700; line-height: 1.3;
+  letter-spacing: .12em; text-transform: uppercase;
+  font-variant-numeric: tabular-nums;
+}
+.sitenav__award { margin-top: .3rem; color: var(--nv-700); }
+.sitenav__here {
+  padding: .15em .45em;
+  border: 1px solid currentColor;
+  color: var(--nv-700);
 }
 
 .sitenav__entry.is-current { background: var(--nv-50); }
-.sitenav__entry.is-current .sitenav__tile { background: var(--nv-700); color: #fff; }
 .sitenav__entry.is-current .sitenav__entrytitle { color: var(--nv-900); }
 
 /* ---- mobile -------------------------------------------------------------- */
@@ -268,7 +241,7 @@
   overflow-y: auto;
   background: #fff;
   border-top: 1px solid var(--nv-line);
-  box-shadow: 0 24px 48px -28px rgb(20 64 43 / .55);
+  border-bottom: 1.5px solid var(--nv-900);
   padding: .5rem 1.25rem 1.5rem;
 }
 .sitenav.drawer-open .sitenav__drawer { display: block; }
@@ -297,7 +270,7 @@
 /* ---- skip link (added by nav.js) ----------------------------------------- */
 .sitenav-skip {
   position: absolute; left: 8px; top: -60px; z-index: 1000;
-  padding: .6rem 1rem; border-radius: 0 0 6px 6px;
+  padding: .6rem 1rem; border-radius: 0;
   background: #14402b; color: #fff;
   font: 600 .875rem/1.2 var(--font-body, system-ui, sans-serif);
   text-decoration: none;
@@ -376,3 +349,5 @@ body:has(.palette-hint) .demo-tools { bottom: 64px; }
 :root:has(.sitenav--dark) .review-toggle { background: #1a1408; color: #f0c46a; border-color: #d4a03a; }
 
 @media print { .review-note, .review-toggle { display: none !important; } }
+/* the phone menu is the whole screen while it is open; the tray waits */
+body:has(.sitenav.drawer-open) .demo-tools { display: none; }
