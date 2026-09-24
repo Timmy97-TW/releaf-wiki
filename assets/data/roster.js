@@ -90,7 +90,7 @@ const SECTIONS = [
         name: "Alex Li",
         photo: "assets/img/members/alex-li.webp", workPhoto: "assets/img/members/work/alex-li.webp", goofyPhoto: "",
         grade: "Sophomore", school: "KCIS", track: "Wet Lab",
-        bio: "Hi! I'm Alex. I love to play board games and listen to music. I joined iGEM because I enjoy learning biology and I am looking foward to create a significant project that will really impact the world.",
+        bio: "Hi! I'm Alex. I love to play board games and listen to music. I joined iGEM because I enjoy learning biology and I am looking forward to create a significant project that will really impact the world.",
         tasks: ["Lab", "Plant"]
       },
       {
@@ -188,7 +188,7 @@ const SECTIONS = [
         name: "Noah Tau",
         photo: "assets/img/members/noah-tau.webp", workPhoto: "", goofyPhoto: "assets/img/members/goofy/noah-tau.webp",
         grade: "Sophomore", school: "TAS", track: "Dry Lab",
-        bio: "Hi, my name is Noah and my passion lies in robotics, specfically FRC at the moment. I joined iGEM because of my deep passion towards countless facets of engineering and I'd love to explore different types to broaden my horizons and learn more about the world we live in. I look forward to working alongside other passionate hardworkers to understand difficult topics and learn how to better work as a group.",
+        bio: "Hi, my name is Noah and my passion lies in robotics, specifically FRC at the moment. I joined iGEM because of my deep passion towards countless facets of engineering and I'd love to explore different types to broaden my horizons and learn more about the world we live in. I look forward to working alongside other passionate hardworkers to understand difficult topics and learn how to better work as a group.",
         tasks: ["Bioreactor", "Hardware", "Wiki"]
       },
       {
@@ -202,7 +202,7 @@ const SECTIONS = [
         name: "Olivia Lin",
         photo: "assets/img/members/olivia-lin.webp", workPhoto: "", goofyPhoto: "",
         grade: "Junior", school: "KCISLK", track: "Wet Lab",
-        bio: "Hi, I'm Olivia Lin! I love listening to music, gyming or running, and shopping in my freetime! I joined iGem because of my ongoing passion for biology (especially human biology and oncology) in general alongside the research and wetlab based experiences that I will derive from joining. Besides having fun in Paris, I hope to grind some late night research with new friends on integrated biology,making a difference to society!",
+        bio: "Hi, I'm Olivia Lin! I love listening to music, gyming or running, and shopping in my freetime! I joined iGEM because of my ongoing passion for biology (especially human biology and oncology) in general alongside the research and wetlab based experiences that I will derive from joining. Besides having fun in Paris, I hope to grind some late night research with new friends on integrated biology, making a difference to society!",
         tasks: ["GIS", "Protectant", "Entrepreneurship"]
       },
       {
@@ -230,14 +230,14 @@ const SECTIONS = [
         name: "Ryan Yuan",
         photo: "assets/img/members/ryan-yuan.webp", workPhoto: "assets/img/members/work/ryan-yuan.webp", goofyPhoto: "",
         grade: "Sophomore", school: "KCIS", track: "Wet Lab",
-        bio: "Hi, I'm Ryan Yuan! I enjoyed listening to R&B music and diving all around the volleyball court. I'm extremely passioante in both biology and chemistry and I hope the love can be fully shown into the effort of our iGEM team. It's been a pleasure to stay on the team as it teaches not only synthetic biology, but also on how to stand out as an individual and make a true difference.",
+        bio: "Hi, I'm Ryan Yuan! I enjoyed listening to R&B music and diving all around the volleyball court. I'm extremely passionate in both biology and chemistry and I hope the love can be fully shown into the effort of our iGEM team. It's been a pleasure to stay on the team as it teaches not only synthetic biology, but also on how to stand out as an individual and make a true difference.",
         tasks: ["Lab", "Protectant", "Video", "Entrepreneurship"]
       },
       {
         name: "Sara Chen",
         photo: "assets/img/members/sara-chen.webp", workPhoto: "assets/img/members/work/sara-chen.webp", goofyPhoto: "",
         grade: "Sophomore", school: "WEGO", track: "Wet Lab",
-        bio: "Hi! I am Sara Chen. I love to listen to jazz, sing different types of songs and explore questions about Biology. I joined IGEM aiming to gain expereicne of molecular cloning technique and expand my vision of Biology. I am also really looking forward to create something on my own and share those results with people who are fascinated with Biology.",
+        bio: "Hi! I am Sara Chen. I love to listen to jazz, sing different types of songs and explore questions about Biology. I joined iGEM aiming to gain experience of molecular cloning technique and expand my vision of Biology. I am also really looking forward to create something on my own and share those results with people who are fascinated with Biology.",
         tasks: ["Lab", "Plant"]
       },
       {
@@ -279,7 +279,7 @@ const SECTIONS = [
         name: "Sophie Liu",
         photo: "assets/img/members/sophie-liu.webp", workPhoto: "", goofyPhoto: "",
         grade: "Sophomore", school: "TAS", track: "Wet Lab",
-        bio: "Hi, I'm Sophie! I love listening to music, studying at cafes, and going out with my friends. I joined igem to collaborate with like-minded peers to work on a meaningful real-world project.",
+        bio: "Hi, I'm Sophie! I love listening to music, studying at cafes, and going out with my friends. I joined iGEM to collaborate with like-minded peers to work on a meaningful real-world project.",
         tasks: ["Video", "Lab", "Plant", "Model", "Education", "Entrepreneurship"]
       }
     ]},
@@ -411,7 +411,7 @@ const SECTIONS = [
         workPhoto: "assets/img/members/work/gina-yu.webp",
         goofyPhoto: "assets/img/members/goofy/gina-yu.webp",
         grade: "", school: "", track: "",
-        bio: "Hi, this is Gina, one of wetlab instructors. I passionate about science and have extensive hands-on experience working in lab. Also I enjoy guiding students in hand-on experiments.",
+        bio: "Hi, this is Gina, one of wetlab instructors. I am passionate about science and have extensive hands-on experience working in lab. Also I enjoy guiding students in hands-on experiments.",
         tasks: []
       },
       {
