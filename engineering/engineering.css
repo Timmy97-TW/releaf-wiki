@@ -157,15 +157,23 @@
   padding-inline: calc(var(--rail) + var(--gutter)) var(--gutter);
 }
 .eng .wide {
-  width: min(var(--wide), calc(100vw - var(--rail) - 2 * var(--gutter)));
+  width: min(var(--wide), calc(100vw - var(--sbw, 0px) - var(--rail) - 2 * var(--gutter)));
   margin-inline: 0;
   max-width: none;
 }
 .eng .full {
-  width: min(1560px, calc(100vw - var(--rail) - 2 * var(--gutter)));
+  width: min(1560px, calc(100vw - var(--sbw, 0px) - var(--rail) - 2 * var(--gutter)));
   margin-inline: 0;
   max-width: none;
 }
+
+/* A breakout is measured against the window, so it only lines up when it is a
+   direct child of the sheet's inner column. Inside a cycle body, which is
+   indented past the cycle number, the same class produced a block as wide as
+   the sheet starting at the indent, and the page scrolled sideways by the
+   difference. Nested, a breakout is simply full width of what holds it. */
+.eng .cyc__body .wide, .eng .cyc__body .full,
+.eng .step .wide, .eng .step .full { width: 100%; max-width: 100%; }
 
 .eng .sheethead {
   display: grid;
@@ -184,7 +192,7 @@
 @media (min-width: 62rem) {
   .eng .sheethead {
     width: max(100%, calc(
-      min(var(--wide), 100vw - var(--rail) - 2 * var(--gutter))
+      min(var(--wide), 100vw - var(--sbw, 0px) - var(--rail) - 2 * var(--gutter))
       - var(--rail) - 2 * var(--gutter)));
   }
 }
@@ -236,7 +244,7 @@
    its own full-bleed scrim and the photograph above it stays legible. */
 .eng .cover__body::before {
   content: ""; position: absolute; inset: 0;
-  left: 50%; width: 100vw; transform: translateX(-50%);
+  left: 50%; width: calc(100vw - var(--sbw, 0px)); transform: translateX(-50%);
   background: linear-gradient(180deg,
     rgba(9,26,19,0) 0%, rgba(9,26,19,.46) 22%,
     rgba(9,26,19,.78) 52%, rgba(9,26,19,.9) 100%);
@@ -367,7 +375,11 @@
 
 /* =============================================================== DIAL ====== */
 
-.eng .record { display: grid; gap: var(--sp-6); }
+/* minmax(0, 1fr), not the default auto track: a grid track grows to the
+   min-content of what is in it, so one long unbreakable string in a cycle was
+   widening the whole column past the sheet and taking the page sideways with
+   it. */
+.eng .record { display: grid; gap: var(--sp-6); grid-template-columns: minmax(0, 1fr); }
 @media (min-width: 62rem) {
   .eng .record {
     grid-template-columns: 13rem minmax(0, 1fr);

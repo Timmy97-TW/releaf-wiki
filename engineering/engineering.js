@@ -532,8 +532,24 @@
     show(null);
   }
 
+  /* ---- 0. the scrollbar allowance ---------------------------------------
+     A breakout block is sized against 100vw, and on a browser with classic
+     scrollbars 100vw includes the scrollbar, so every breakout came out a
+     scrollbar wider than the page and the page scrolled sideways by that much.
+     The width is measured once and on resize, and the CSS falls back to 0 when
+     there is no script, which is what an overlay scrollbar is worth anyway. */
+  function gutterForScrollbar() {
+    var set = function () {
+      var w = window.innerWidth - document.documentElement.clientWidth;
+      document.documentElement.style.setProperty("--sbw", (w > 0 ? w : 0) + "px");
+    };
+    set();
+    window.addEventListener("resize", set);
+  }
+
   function start() {
     document.documentElement.classList.add("js");
+    gutterForScrollbar();
     $$("[data-needs-js]").forEach(function (el) { el.hidden = false; });
     dial(); record(); edge(); gauge(); lightbox(); plate();
   }
