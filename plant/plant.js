@@ -3,9 +3,11 @@
    -----------------------------------------------------------------------------
    Three small behaviours. With JavaScript off the ledger still lists every run
    (the chips just do nothing), the matrix still shows every verdict and its
-   first cell's detail, and the rail still shows the first stage. Clicking
-   changes which one you are looking at; it never reveals a fact that is
-   otherwise unreachable.
+   first cell's detail, and every stage of the rail is on the page, stacked,
+   because the panels ship without the hidden attribute and this script is what
+   puts it on. Clicking changes which one you are looking at; it never reveals
+   a fact that is otherwise unreachable, and with the script off nothing is
+   hidden either.
    ========================================================================== */
 
 (function () {
