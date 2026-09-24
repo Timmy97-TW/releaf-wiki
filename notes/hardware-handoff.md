@@ -269,3 +269,51 @@ Working files, not needed to run the site but useful for rebuilding:
 
 Original write-ups came from `Photometer (1).pdf`, `Hardware Wiki Writing.pdf`,
 `LPA (1).pdf` and `Hardware Wiki Writing (1).pdf`.
+
+## 9. Wiki-side changes of 25 September 2026, and how to take them upstream
+
+The wiki copy of `hardware/` was changed again overnight on 25 September. Full list
+and reasons: `notes/review-2026-09-25/hardware.md`. In short:
+
+- `css/polish.css`: styling for the writing-review notes (a dark amber panel on the
+  dark ground, cream on the white record); the section strip (`.hwnav`) gets a solid
+  band once the bar has scrolled on the white record, the hub and the notebook, where
+  it was unreadable over light content; the jump pill's light fill on every record
+  (hydroponics already had it); notebook footer padding; a previous / next pager on
+  the hub (`nav.pagenav`: Math Model, Software).
+- `index.html`: the missing space in "Four instruments and how they fit"; species in
+  italics in the notebook reel; the pager.
+- `bioreactor/index.html`: the two empty `xref` anchors carry fallback text.
+- `diopal/index.html`: *B. subtilis* 168 in italics.
+- `notebook/index.html`: alt text on the 31 continuation pages names the week.
+- Every page: `<title>` in the wiki's form, meta descriptions spell GEMS Taiwan and
+  ReLeaf, `polish.css?v=` cache tag bumped.
+- **63 review notes** (`<aside class="review-note">`) at the end of the sections of
+  every page. They are for the team, not for judges; see below.
+
+Two patches, both with paths relative to the `hardware/` folder, both tested with
+`git apply` against the wiki's `hardware/` as it was before the night (which already
+includes the 23 September patch; apply that one first if upstream has not):
+
+```bash
+cd /path/to/anton-repo/hardware        # the folder holding index.html, css/, js/
+git apply --check /path/to/notes/hardware-upstream-2026-09-25-fixes-only.patch
+git apply /path/to/notes/hardware-upstream-2026-09-25-fixes-only.patch
+```
+
+- `hardware-upstream-2026-09-25-fixes-only.patch` has the fixes and none of the review
+  notes. This is the one to take upstream, so the next sync does not undo the fixes.
+- `hardware-upstream-2026-09-25.patch` has the fixes and the notes. Take it only if
+  the upstream copy should carry the notes too; the next sync would otherwise delete
+  them from the wiki.
+
+If `git apply` refuses because upstream has moved on, `git apply --3way` or
+`patch -p1 < file` usually lands it; the hunks are small and independent.
+
+The review notes read the records against the Best Hardware rubric and cross-check them
+against Results, Measurement, Software, Model, Plants and the notebook. The biggest
+single finding: these records froze on 13 August while other pages carry later
+hardware evidence (TiO2 ladder 23 Aug, pressure sweep 16 Aug, 102-hour perfusion run
+2-6 Sept, the bioreactor controller and interlocks on Software). Bringing that across
+is the most valuable edit left for Best Hardware. The notes must be off before the
+freeze: `window.REVIEW_NOTES = false` in `assets/data/site-nav.js`, or delete the asides.
