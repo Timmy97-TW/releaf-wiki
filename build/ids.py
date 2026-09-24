@@ -21,6 +21,9 @@ data-no-toc, and everything outside the first .pagebody. Also skipped: the
 generated MD reports, education/website, hardware (its own system) and
 software/ui/0906UI.html.
 
+A heading whose enclosing <section> already carries the id it would get is
+left without one, exactly as page.js leaves it: the section is the target.
+
 The slug is page.js's own: lower case, trimmed, anything that is not an
 ASCII letter or digit, _, a CJK ideograph (U+4E00-U+9FFF), whitespace or -
 dropped, whitespace runs to -, and repeated - collapsed. If page.js's slug()
@@ -122,6 +125,12 @@ def plan(src):
         while new in taken and taken[new] is not h and taken[new] not in anc:
             new = base + "-" + str(k)
             k += 1
+        if new in taken:
+            # the heading's own <section> already carries this id; page.js
+            # links to the section and gives the heading no copy of it, and
+            # neither does this script (a second element with the same id
+            # would be a duplicate id)
+            continue
         h["id"] = new
         taken.setdefault(new, h)
         out.append((h, new))

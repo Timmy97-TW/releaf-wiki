@@ -53,15 +53,19 @@
 
       /* Two headings with the same words ("The problem" under three goals)
          would share an id, and every contents link after the first would jump
-         to the first one. The second becomes the-problem-2, and so on. A
-         clash with the heading's own <section id> is left alone: both are
-         the same place on the page. */
-      if (!h.id) {
+         to the first one. The second becomes the-problem-2, and so on. When
+         the heading's own <section> already carries the id, the heading is
+         not given a second copy of it (an id is unique or it is nothing):
+         the links point at the section, which is the same place. */
+      let anchor = h.id;
+      if (!anchor) {
         const base = slug(h.textContent) || "section";
         let id = base, k = 2, other;
         while ((other = document.getElementById(id)) && !other.contains(h)) id = base + "-" + k++;
-        h.id = id;
+        if (!other) h.id = id;
+        anchor = id;
       }
+      h.dataset.anchor = anchor;
 
       if (no) {
         const tag = document.createElement("span");
@@ -73,7 +77,7 @@
 
       const a = document.createElement("a");
       a.className = "anchor";
-      a.href = "#" + h.id;
+      a.href = "#" + anchor;
       a.textContent = "¶";
       a.setAttribute("aria-label", "Link to this section");
       h.append(a);
@@ -81,7 +85,7 @@
       const li = document.createElement("li");
       if (isSub) li.className = "is-sub";
       const link = document.createElement("a");
-      link.href = "#" + h.id;
+      link.href = "#" + anchor;
       link.textContent = (no ? no + " " : "") + h.textContent.replace(/¶$/, "").replace(/^[\d.]+\s*/, "").trim();
       li.appendChild(link);
       list.appendChild(li);
@@ -121,7 +125,7 @@
       const line = window.innerHeight * 0.4;
       let id = null;
       for (const h of heads) {
-        if (h.getBoundingClientRect().top <= line) id = h.id; else break;
+        if (h.getBoundingClientRect().top <= line) id = h.dataset.anchor; else break;
       }
       if (id === current) return;
       current = id;
