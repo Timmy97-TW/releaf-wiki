@@ -37,7 +37,9 @@
   function build(root) {
     BASE = root.dataset.base != null ? root.dataset.base : "";
     const brandHref = root.dataset.home || BASE || "./";
-    const logo = root.dataset.logo || BASE + "assets/img/logo.png";
+    /* the bar shows the logo at 50px: a 100px WebP (5 KB) for two-times
+       screens, not the 200px PNG (64 KB) the favicon uses */
+    const logo = root.dataset.logo || BASE + "assets/img/logo-100.webp";
     const currentTab = root.dataset.tab || "";
     const currentPage = root.dataset.page || "";
 
@@ -51,7 +53,7 @@
       '<div class="sitenav__bar">' +
         '<div class="sitenav__inner">' +
           '<a class="sitenav__brand" href="' + brandHref + '">' +
-            '<img class="sitenav__logo" src="' + logo + '" alt="ReLeaf team logo" />' +
+            '<img class="sitenav__logo" src="' + logo + '" alt="ReLeaf team logo" width="50" height="50" />' +
             '<span class="sitenav__word">ReLeaf</span>' +
           "</a>" +
           '<div class="sitenav__tabs"></div>' +
