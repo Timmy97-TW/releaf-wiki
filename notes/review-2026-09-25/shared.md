@@ -23,7 +23,7 @@ Measurement, Results, Attribution, Gallery and the hardware hub.
 | Demo tools: one tray, bottom right | rule check and review-notes switch side by side bottom right, clear of the contents rail; lifted above hardware's palette hint; labelled in words; hidden while the phone menu is open |
 | Hardware nav: the section strip sits above the bar's scrim | `.hwnav` z-index 49 to 51 |
 | Review notes: styled from nav.css at first paint | no flash of unstyled note; `:root:root` selectors beat page rules like `.sec p b`; dark variant for the hardware section; links in the note's brown |
-| Navigation: a ruled register of pages instead of icon tiles; captions rewritten | see section 2 of this file's chrome notes below |
+| Navigation: a ruled register of pages instead of icon tiles; captions rewritten | see "The nav panels" below |
 | Notes: the run-length table no longer cites the homepage ledger | notes/structure.md |
 | Build: ids.py | writes page.js's heading ids into the HTML (not run; see requests) |
 | Page behaviour: review notes never numbered, never in the rail, never cite-linked | page.js excludes `.review-note` from the outline and the `[n]` linker |
