@@ -23,6 +23,15 @@ is no worse than before on any count, and `index.html` has left the
 | `b3d91ea` | Focus ring in signal green on the dark grounds (leaf-700 on ink was under 3:1). |
 | `16482de` | The four threat figures as a ruled schedule rather than a hero-metric row. Same numbers and words. |
 | `866ae0e` | The 14px glyph in front of each big-picture tile name is hidden (one CSS line brings it back). |
+| `57ec9c1` | Second pass: the bioreactor flow key names the blue "both sides" marker it uses. |
+| `656cee4` | Chapter rail names match the renamed section kickers. |
+| `3260a15` | Review note for 03 corrected; hero CSS comment points at the title block. |
+| `d31dbf0` | With scripting off, the dark act showed the name card beside an empty black half (the reactor photograph only appears once a script adds `.no-gl`); a `scripting: none` rule shows it. The poster and the name-card logo are lazy-loaded (about 260 KB off the first load). |
+| `e0cb8e2` | With scripting off, the circuit figure was invisible (its `.rise` entrance state was set in CSS); now shown. |
+
+First-load weight at 1440x900 went from about 3.1 MB to 2.6 MB (hero variant,
+lazy poster and logo); the full page, scrolled to the end, from 5.8 MB to about
+5.1 MB.
 
 Kept on purpose: the photographs, the team's BioRender figure, the QGIS map
 and its layers, the big-picture cut-outs, the journey illustration, the nine
@@ -95,6 +104,7 @@ The homepage has no "Written by" line, so no author is named.
 - **three.min.js (589 KB) loads on every homepage visit**, including for readers who never reach the reactor, because it is a `defer` script tag. `home-reactor.js` already waits before fetching STLs; injecting three.js at the same moment would cut the first load by about a fifth. `home-reactor.js` and `hardware/js/deck3d.js` were not mine to change.
 - **Three 404s per visit**: `home.js` probes for `ihp-timeline.png` and the two vision renders so the page can swap them in when they land. Harmless, but they show in the console. Deliver the art or remove the probes.
 - **With JavaScript off**, the dark act shows the same final frame (reactor, name card) for three screens of scroll, because the scroll beats keep their height. Collapsing them without JS needs a change to how home.js drives the stage; not attempted overnight.
+- **With scripting off, the nine-step pathway never shows.** The dark act's resting state is its final frame (reactor and name card), so the chain and its heading "Protection exists. Getting it to the field takes time." stay at opacity 0. The steps are in the figure's aria-label, but a sighted no-script reader never sees them.
 - **`hero-reactor` srcset** declares its files as 980w and 1680w, but they are 1400 and 2400 px wide. That may be deliberate (it biases the browser to the smaller file); left as it is.
 - **Chen's name**: "Farmer Chen" in the hero, 陳惠雯 on the cards, "Ms. Chen Hui-wen" on Human Practices. Fine, but pick one romanisation for any English text.
 
