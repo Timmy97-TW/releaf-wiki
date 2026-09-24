@@ -288,6 +288,41 @@ h2:hover .anchor, h3:hover .anchor, .anchor:focus-visible { opacity: 1; }
 .callout--borrowed { border-color: var(--slate-700); }
 .callout--borrowed .callout__label { color: var(--slate-700); }
 
+/* ===================================================== EDITORIAL BOXES ===== */
+/* Three boxes that ten pages had each drawn for themselves, and that had
+   drifted apart in padding, margin and edge. They are the callout's shape: a
+   1px rule on all four sides in the box's own colour, the page's white ground,
+   and a field-lettered label that says in words what the box is.
+
+     .fix   two sources disagree and nobody has decided yet (label: "To fix · P7")
+     .note  what went wrong at the bench and what we changed (Experiments)
+     .gap   something the record should hold and does not (label: "Declared gap")
+
+   A page stylesheet that still defines its own .fix/.note/.gap wins over these
+   (its selectors are scoped, so more specific) until it is deleted.          */
+
+.fix, .note, .gap {
+  margin: var(--sp-5) 0;
+  padding: var(--sp-3) var(--sp-5);
+  border: 1px solid var(--amber-700);
+  background: var(--white);
+  font-size: var(--text-sm);
+  line-height: 1.6;
+  color: var(--gray-700);
+}
+.note, .gap { border-color: var(--slate-700); }
+.fix > :first-child, .note > :first-child, .gap > :first-child { margin-top: 0; }
+.fix > :last-child,  .note > :last-child,  .gap > :last-child  { margin-bottom: 0; }
+.fix p, .note p, .gap p { margin: 0 0 var(--sp-2); }
+.fix__label, .note__label, .gap__label {
+  display: block; margin-bottom: var(--sp-1);
+  font-size: .6875rem; font-weight: 700; letter-spacing: .09em;
+  text-transform: uppercase; color: var(--amber-700);
+}
+.note__label, .gap__label { color: var(--slate-700); }
+.fix ul, .note ul, .gap ul { margin: var(--sp-2) 0 0; padding-left: 1.2em; }
+.fix li + li, .note li + li, .gap li + li { margin-top: var(--sp-1); }
+
 /* ============================================================= FIGURES ===== */
 
 .fig { margin: var(--sp-6) 0; }
@@ -351,18 +386,19 @@ h2:hover .anchor, h3:hover .anchor, .anchor:focus-visible { opacity: 1; }
 
 .grid { display: grid; gap: var(--sp-4); grid-template-columns: repeat(auto-fit, minmax(15rem, 1fr)); margin: var(--sp-5) 0; }
 .card2 {
-  padding: var(--sp-5);
+  padding: var(--sp-4) var(--sp-5) var(--sp-5);
   border: 1px solid var(--gray-200);
-  border-radius: var(--radius);
+  border-radius: 0;
   background: var(--white);
 }
 .card2 h4 { margin-top: 0; color: var(--leaf-900); }
 .card2 p:last-child { margin-bottom: 0; }
+/* A number inside a card is a quantity in a schedule, set at the card's own
+   heading size, not a hero figure over a tiny label. */
 .card2 .num {
   display: block;
-  font-family: var(--font-display);
-  font-size: 2rem; font-weight: 700; line-height: 1;
-  color: var(--leaf-700);
+  font-size: var(--text-h3); font-weight: 700; line-height: 1.2;
+  color: var(--leaf-900);
   font-variant-numeric: tabular-nums;
 }
 
@@ -373,6 +409,28 @@ h2:hover .anchor, h3:hover .anchor, .anchor:focus-visible { opacity: 1; }
    This is the table Measurement, Experiments, Results and Math Model had each
    drawn for themselves; it now lives here so every page gets the same one. */
 .tablewrap { overflow-x: auto; margin: var(--sp-5) 0; }
+
+/* Wide tables. The wrapper scrolls, never the page. Two cues say there is
+   more to the right: a graphite edge that sits on the right while columns are
+   hidden past it (drawn with the local/scroll background pair, so it needs no
+   script and disappears once the reader reaches the last column), and a line
+   of words under the table that nav.js adds only while the table overflows.
+   .tablewrap--wide lets a table with many columns grow into the gutter beside
+   the text column, the way .fig--wide does, once a gutter exists.           */
+.tablewrap {
+  background:
+    linear-gradient(to left, var(--white) 30%, rgb(255 255 255 / 0)) right / 1.5rem 100% no-repeat local,
+    linear-gradient(to left, rgb(61 74 67 / .16), rgb(61 74 67 / 0)) right / .6rem 100% no-repeat scroll;
+}
+.scrollcue {
+  margin: calc(var(--sp-5) * -1 + var(--sp-2)) 0 var(--sp-5);
+  font-size: var(--text-xs); font-weight: 600; letter-spacing: .07em; text-transform: uppercase;
+  color: var(--gray-500);
+}
+.scrollcue[hidden] { display: none; }
+@media (min-width: 1240px) {
+  .tablewrap--wide { width: min(64rem, calc(100vw - 24rem)); max-width: none; }
+}
 table.data { width: 100%; border-collapse: collapse; font-size: var(--text-sm); font-variant-numeric: tabular-nums; }
 table.data th, table.data td { padding: .6rem .85rem; text-align: left; vertical-align: top; border-bottom: 1px solid var(--gray-200); }
 table.data th:first-child, table.data td:first-child { padding-left: 0; }
