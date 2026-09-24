@@ -140,7 +140,8 @@ individual author is named in the page headers.
 6. **The software mirror to iGEM GitLab**, at the correct 2026 address, before
    21 October. Best Software Tool requires it.
 7. **`/drylab-notebook` weighs 9.7 MB in one HTML file.** iGEM Pages builds are
-   capped at 10 MiB. The entry data should move into
+   capped at 10 MiB and pushes at 11 MiB, so this one file is almost the whole
+   budget. The entry data should move into
    `drylab-notebook/data/*.js` before the upload. I did not split it tonight
    because it changes how the page loads and needs testing.
 8. **No-JavaScript fallbacks.** The Dry Lab Notebook board, the MD Simulations
