@@ -126,6 +126,14 @@
       if (id === current) return;
       current = id;
       links.forEach((a, k) => a.classList.toggle("is-active", k === id));
+      /* keep the lit entry inside a rail that scrolls on its own, without
+         moving the page (scrollIntoView would scroll the window too) */
+      const lit = id && links.get(id), rail = list.closest(".toc");
+      if (lit && rail && rail.scrollHeight > rail.clientHeight) {
+        const r = rail.getBoundingClientRect(), l = lit.getBoundingClientRect();
+        if (l.top < r.top + 24) rail.scrollTop -= (r.top + 24 - l.top);
+        else if (l.bottom > r.bottom - 24) rail.scrollTop += (l.bottom - r.bottom + 24);
+      }
     };
     const queue = () => { if (!queued) { queued = true; requestAnimationFrame(update); } };
     window.addEventListener("scroll", queue, { passive: true });
