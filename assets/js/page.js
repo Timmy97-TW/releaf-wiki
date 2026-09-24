@@ -7,13 +7,14 @@
    contents rail, the numbering and the lightbox. That is deliberate. A judge
    on a locked-down machine still has to be able to read the argument.
 
-   Six jobs:
+   Seven jobs:
      1. number every section and sub-section
      2. build the contents rail from those headings and follow the scroll
      3. turn [n] in the prose into a link to reference n, and back again
      4. run any tab groups
      5. open figures full-window on click
      6. keep a jumped-to heading in place while images load around it
+     7. open every <details> for printing, and close them again after
    ========================================================================== */
 (function () {
   "use strict";
@@ -34,7 +35,9 @@
     const toc  = $(".toc");
     if (!body) return;
 
-    const heads = $$("h2, h3", body).filter((h) => !h.closest(".refs") && !h.dataset.noToc);
+    /* .review-note asides are demo-only furniture: never numbered, never in
+       the rail, even if a heading ever ends up inside one */
+    const heads = $$("h2, h3", body).filter((h) => !h.closest(".refs, .review-note") && !h.dataset.noToc);
     if (!heads.length) { if (toc) toc.remove(); return; }
 
     const list = document.createElement("ol");
@@ -50,15 +53,19 @@
 
       /* Two headings with the same words ("The problem" under three goals)
          would share an id, and every contents link after the first would jump
-         to the first one. The second becomes the-problem-2, and so on. A
-         clash with the heading's own <section id> is left alone: both are
-         the same place on the page. */
-      if (!h.id) {
+         to the first one. The second becomes the-problem-2, and so on. When
+         the heading's own <section> already carries the id, the heading is
+         not given a second copy of it (an id is unique or it is nothing):
+         the links point at the section, which is the same place. */
+      let anchor = h.id;
+      if (!anchor) {
         const base = slug(h.textContent) || "section";
         let id = base, k = 2, other;
         while ((other = document.getElementById(id)) && !other.contains(h)) id = base + "-" + k++;
-        h.id = id;
+        if (!other) h.id = id;
+        anchor = id;
       }
+      h.dataset.anchor = anchor;
 
       if (no) {
         const tag = document.createElement("span");
@@ -70,7 +77,7 @@
 
       const a = document.createElement("a");
       a.className = "anchor";
-      a.href = "#" + h.id;
+      a.href = "#" + anchor;
       a.textContent = "¶";
       a.setAttribute("aria-label", "Link to this section");
       h.append(a);
@@ -78,7 +85,7 @@
       const li = document.createElement("li");
       if (isSub) li.className = "is-sub";
       const link = document.createElement("a");
-      link.href = "#" + h.id;
+      link.href = "#" + anchor;
       link.textContent = (no ? no + " " : "") + h.textContent.replace(/¶$/, "").replace(/^[\d.]+\s*/, "").trim();
       li.appendChild(link);
       list.appendChild(li);
@@ -118,11 +125,19 @@
       const line = window.innerHeight * 0.4;
       let id = null;
       for (const h of heads) {
-        if (h.getBoundingClientRect().top <= line) id = h.id; else break;
+        if (h.getBoundingClientRect().top <= line) id = h.dataset.anchor; else break;
       }
       if (id === current) return;
       current = id;
       links.forEach((a, k) => a.classList.toggle("is-active", k === id));
+      /* keep the lit entry inside a rail that scrolls on its own, without
+         moving the page (scrollIntoView would scroll the window too) */
+      const lit = id && links.get(id), rail = list.closest(".toc");
+      if (lit && rail && rail.scrollHeight > rail.clientHeight) {
+        const r = rail.getBoundingClientRect(), l = lit.getBoundingClientRect();
+        if (l.top < r.top + 24) rail.scrollTop -= (r.top + 24 - l.top);
+        else if (l.bottom > r.bottom - 24) rail.scrollTop += (l.bottom - r.bottom + 24);
+      }
     };
     const queue = () => { if (!queued) { queued = true; requestAnimationFrame(update); } };
     window.addEventListener("scroll", queue, { passive: true });
@@ -143,7 +158,7 @@
     const firstMention = {};
     const walker = document.createTreeWalker($(".pagebody"), NodeFilter.SHOW_TEXT, {
       acceptNode: (n) =>
-        n.parentElement.closest(".refs, a, code, pre, .toc")
+        n.parentElement.closest(".refs, a, code, pre, .toc, .review-note")
           ? NodeFilter.FILTER_REJECT
           : /\[\d+(\s*,\s*\d+)*\]/.test(n.nodeValue)
             ? NodeFilter.FILTER_ACCEPT
@@ -358,7 +373,23 @@
     if (location.hash) hold(location.hash);
   }
 
-  const start = () => { outline(); citations(); tabs(); lightbox(); anchorHold(); };
+  /* ---- 7. print everything ---------------------------------------------- */
+  /* A printed or PDF copy should hold the whole record, so every closed
+     <details> is opened for the print and put back afterwards. */
+
+  function printOpen() {
+    let opened = [];
+    window.addEventListener("beforeprint", () => {
+      opened = $$("details:not([open])");
+      opened.forEach((d) => { d.open = true; });
+    });
+    window.addEventListener("afterprint", () => {
+      opened.forEach((d) => { d.open = false; });
+      opened = [];
+    });
+  }
+
+  const start = () => { outline(); citations(); tabs(); lightbox(); anchorHold(); printOpen(); };
 
   /* The script is loaded at the foot of the page, so the document is usually
      still parsing when this runs. If it is not, because the file was added

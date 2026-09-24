@@ -55,7 +55,7 @@ a:hover { color: var(--leaf-900); }
 /* ======================================================== HEADER BAND ====== */
 
 .pagehead {
-  background: linear-gradient(180deg, var(--leaf-50), var(--white) 78%);
+  background: var(--white);
   border-bottom: 1px solid var(--gray-200);
 }
 .pagehead__inner {
@@ -104,7 +104,7 @@ a:hover { color: var(--leaf-900); }
   display: flex; flex-wrap: wrap; gap: var(--sp-2) var(--sp-5);
   margin: var(--sp-6) 0 0;
   padding: var(--sp-4) 0 0;
-  border-top: 1px solid var(--leaf-200);
+  border-top: 1px solid var(--gray-200);
   list-style: none;
   font-size: var(--text-xs);
   color: var(--gray-500);
@@ -173,7 +173,6 @@ a:hover { color: var(--leaf-900); }
   .toc {
     position: static;
     border: 1px solid var(--gray-200);
-    border-radius: var(--radius);
     background: var(--gray-50);
     padding: 0;
   }
@@ -189,6 +188,16 @@ a:hover { color: var(--leaf-900); }
 @media (min-width: 1040px) {
   .toc > summary { display: none; }
   .toc[open] .toc__inner, .toc .toc__inner { display: block; }
+  /* a long rail (Entrepreneurship has forty entries) scrolls inside itself,
+     so its last entries are reachable while it is stuck under the bar;
+     page.js keeps the lit entry in view */
+  .toc {
+    max-height: calc(100vh - var(--nav-h) - 2 * var(--sp-5));
+    overflow-y: auto;
+    overscroll-behavior: contain;
+    scrollbar-width: thin;
+    padding-right: var(--sp-2);
+  }
 }
 
 /* =========================================================== SECTIONS ====== */
@@ -235,9 +244,11 @@ a:hover { color: var(--leaf-900); }
 
 .sec p { margin: 0 0 var(--sp-4); }
 .sec p:last-child { margin-bottom: 0; }
-.sec ul, .sec ol { margin: 0 0 var(--sp-4); padding-left: 1.4em; }
-.sec li + li { margin-top: var(--sp-2); }
-.sec li::marker { color: var(--leaf-500); }
+/* list defaults at the specificity of a bare element, so a page's own list
+   class (a key, a ledger, a step list) wins without having to out-shout it */
+:where(.sec) :where(ul, ol) { margin: 0 0 var(--sp-4); padding-left: 1.4em; }
+:where(.sec) :where(li + li) { margin-top: var(--sp-2); }
+:where(.sec) li::marker { color: var(--leaf-500); }
 
 .lede { font-size: var(--text-lede); line-height: 1.55; color: var(--gray-600); }
 
@@ -253,16 +264,18 @@ a:hover { color: var(--leaf-900); }
 h2:hover .anchor, h3:hover .anchor, .anchor:focus-visible { opacity: 1; }
 
 /* =========================================================== CALLOUTS ====== */
-/* Left edge carries the meaning; the fill is barely there so a page with four
-   of them still reads as one page.                                            */
+/* A ruled box on the page's own white ground. The kind is carried by the label,
+   which names itself in words, and confirmed by the colour of the 1px rule
+   round all four sides. No coloured slab down the left edge and no tinted
+   fill: several pages were already overriding both, one page at a time, and
+   DESIGN.md's No Coloured Bar Rule asks for exactly this.                    */
 
 .callout {
   margin: var(--sp-5) 0;
   padding: var(--sp-4) var(--sp-5);
-  border: 1px solid var(--gray-200);
-  border-left: 4px solid var(--leaf-700);
-  border-radius: var(--radius-sm);
-  background: var(--leaf-50);
+  border: 1px solid var(--leaf-700);
+  border-radius: 0;
+  background: var(--white);
   font-size: var(--text-sm);
 }
 .callout > :first-child { margin-top: 0; }
@@ -275,17 +288,104 @@ h2:hover .anchor, h3:hover .anchor, .anchor:focus-visible { opacity: 1; }
 }
 
 /* what iGEM asks this page to prove */
-.callout--medal { border-left-color: var(--amber-700); background: var(--amber-100); }
+.callout--medal { border-color: var(--amber-700); }
 .callout--medal .callout__label { color: var(--amber-700); }
 
 /* a claim we have not earned yet. The brief requires these to sit next to the
    claim they limit, at the same size, never in a footnote.                    */
-.callout--unproven { border-left-color: var(--rust-700); background: var(--rust-100); }
+.callout--unproven { border-color: var(--rust-700); }
 .callout--unproven .callout__label { color: var(--rust-700); }
 
 /* a number or a method taken from somebody else's paper */
-.callout--borrowed { border-left-color: var(--slate-700); background: var(--slate-100); }
+.callout--borrowed { border-color: var(--slate-700); }
 .callout--borrowed .callout__label { color: var(--slate-700); }
+
+/* ===================================================== EDITORIAL BOXES ===== */
+/* Three boxes that ten pages had each drawn for themselves, and that had
+   drifted apart in padding, margin and edge. They are the callout's shape: a
+   1px rule on all four sides in the box's own colour, the page's white ground,
+   and a field-lettered label that says in words what the box is.
+
+     .fix   two sources disagree and nobody has decided yet (label: "To fix · P7")
+     .note  what went wrong at the bench and what we changed (Experiments)
+     .gap   something the record should hold and does not (label: "Declared gap")
+
+   A page stylesheet that still defines its own .fix/.note/.gap wins over these
+   (its selectors are scoped, so more specific) until it is deleted.          */
+
+.fix, .note, .gap {
+  margin: var(--sp-5) 0;
+  padding: var(--sp-3) var(--sp-5);
+  border: 1px solid var(--amber-700);
+  background: var(--white);
+  font-size: var(--text-sm);
+  line-height: 1.6;
+  color: var(--gray-700);
+}
+.note, .gap { border-color: var(--slate-700); }
+.fix > :first-child, .note > :first-child, .gap > :first-child { margin-top: 0; }
+.fix > :last-child,  .note > :last-child,  .gap > :last-child  { margin-bottom: 0; }
+.fix p, .note p, .gap p { margin: 0 0 var(--sp-2); }
+.fix__label, .note__label, .gap__label {
+  display: block; margin-bottom: var(--sp-1);
+  font-size: .6875rem; font-weight: 700; letter-spacing: .09em;
+  text-transform: uppercase; color: var(--amber-700);
+}
+.note__label, .gap__label { color: var(--slate-700); }
+.fix ul, .note ul, .gap ul { margin: var(--sp-2) 0 0; padding-left: 1.2em; }
+.fix li + li, .note li + li, .gap li + li { margin-top: var(--sp-1); }
+
+/* ============================================================ STAMPS ======= */
+/* A state, named in words, in a square box with a square dot: the drawing
+   office's rubber stamp from DESIGN.md. Seven pages each drew this as a
+   rounded pill (Measurement .state, Results .state and .goal__state, Math
+   Model .link__state and .prov, Parts .st, Protein Design .stepcard__state);
+   this is the one to use instead. The word always comes first; colour only
+   confirms it.
+
+     <span class="stamp stamp--closed">Measured</span>
+     <span class="stamp stamp--fail">Partial</span>
+     <span class="stamp stamp--open">Design only</span>
+     <span class="stamp">Not started</span>                                   */
+
+.stamp {
+  display: inline-flex; align-items: center; gap: .45em;
+  padding: .25em .55em;
+  border: 1px solid currentColor;
+  border-radius: 0;
+  background: var(--white);
+  font-size: .6875rem; font-weight: 700; line-height: 1.2;
+  letter-spacing: .1em; text-transform: uppercase;
+  font-variant-numeric: tabular-nums;
+  color: var(--gray-600);
+  white-space: nowrap;
+}
+.stamp::before { content: ""; flex: none; width: .5em; height: .5em; background: currentColor; }
+.stamp--closed { color: var(--leaf-700); }
+.stamp--fail   { color: var(--amber-700); }
+.stamp--open   { color: var(--rust-700); }
+@media (max-width: 47.99rem) { .stamp { white-space: normal; } }
+
+/* ============================================================= CHIPS ======= */
+/* A filter: a field label with a box drawn round it, not a pill. State is
+   carried by aria-pressed. Plants and Software each had a rounded .chip;
+   this is named .filterchip so it cannot collide with the Dry Lab
+   Notebook's own .chip, which means something else.                        */
+
+.filterchip {
+  appearance: none;
+  padding: .45em .85em;
+  border: 1px solid var(--gray-400);
+  border-radius: 0;
+  background: transparent;
+  font: inherit; font-size: .6875rem; font-weight: 700; line-height: 1.2;
+  letter-spacing: .1em; text-transform: uppercase;
+  color: var(--gray-700);
+  cursor: pointer;
+  transition: background .14s ease, border-color .14s ease, color .14s ease;
+}
+.filterchip:hover { border-color: var(--gray-700); color: var(--black); }
+.filterchip[aria-pressed="true"] { background: var(--leaf-900); border-color: var(--leaf-900); color: var(--white); }
 
 /* ============================================================= FIGURES ===== */
 
@@ -300,19 +400,19 @@ h2:hover .anchor, h3:hover .anchor, .anchor:focus-visible { opacity: 1; }
   width: 100%;
   height: auto;
   border: 1px solid var(--gray-200);
-  border-radius: var(--radius-sm);
+  border-radius: 0;
   background: var(--gray-50);
 }
 .fig img { cursor: zoom-in; }
 .fig figcaption {
   margin-top: var(--sp-3);
   padding-left: var(--sp-3);
-  border-left: 2px solid var(--leaf-200);
+  border-left: 1px solid var(--gray-400);
   font-size: var(--text-sm);
   line-height: 1.5;
   color: var(--gray-600);
 }
-.fig figcaption b { color: var(--leaf-700); font-weight: 650; }
+.fig figcaption b { color: var(--leaf-900); font-weight: 650; }
 
 /* a figure that has not been shot or drawn yet */
 .fig--pending img, .fig--pending .fig__slot {
@@ -335,13 +435,13 @@ h2:hover .anchor, h3:hover .anchor, .anchor:focus-visible { opacity: 1; }
   background: rgb(10 20 15 / .88);
 }
 .lightbox.is-open { display: grid; }
-.lightbox img { max-width: 100%; max-height: 86vh; border-radius: var(--radius-sm); }
+.lightbox img { max-width: 100%; max-height: 86vh; }
 .lightbox figcaption { margin-top: var(--sp-4); max-width: 60ch; color: var(--gray-200); font-size: var(--text-sm); }
 .lightbox__close {
   position: absolute; top: var(--sp-4); right: var(--sp-4);
   width: 2.5rem; height: 2.5rem;
-  border: 0; border-radius: 50%;
-  background: rgb(255 255 255 / .12); color: var(--white);
+  border: 1px solid rgb(255 255 255 / .35); border-radius: 0;
+  background: rgb(255 255 255 / .08); color: var(--white);
   font-size: 1.4rem; line-height: 1; cursor: pointer;
 }
 .lightbox__close:hover { background: rgb(255 255 255 / .22); }
@@ -350,35 +450,65 @@ h2:hover .anchor, h3:hover .anchor, .anchor:focus-visible { opacity: 1; }
 
 .grid { display: grid; gap: var(--sp-4); grid-template-columns: repeat(auto-fit, minmax(15rem, 1fr)); margin: var(--sp-5) 0; }
 .card2 {
-  padding: var(--sp-5);
+  padding: var(--sp-4) var(--sp-5) var(--sp-5);
   border: 1px solid var(--gray-200);
-  border-radius: var(--radius);
+  border-radius: 0;
   background: var(--white);
 }
 .card2 h4 { margin-top: 0; color: var(--leaf-900); }
 .card2 p:last-child { margin-bottom: 0; }
+/* A number inside a card is a quantity in a schedule, set at the card's own
+   heading size, not a hero figure over a tiny label. */
 .card2 .num {
   display: block;
-  font-family: var(--font-display);
-  font-size: 2rem; font-weight: 700; line-height: 1;
-  color: var(--leaf-700);
+  font-size: var(--text-h3); font-weight: 700; line-height: 1.2;
+  color: var(--leaf-900);
   font-variant-numeric: tabular-nums;
 }
 
 /* ============================================================== TABLES ===== */
 
-.tablewrap { overflow-x: auto; margin: var(--sp-5) 0; border: 1px solid var(--gray-200); border-radius: var(--radius-sm); }
-table.data { width: 100%; border-collapse: collapse; font-size: var(--text-sm); }
-table.data th, table.data td { padding: .6rem .85rem; text-align: left; vertical-align: top; }
-table.data thead th {
-  background: var(--leaf-50);
-  border-bottom: 1px solid var(--leaf-200);
-  font-size: var(--text-xs); font-weight: 700; letter-spacing: .05em; text-transform: uppercase;
-  color: var(--leaf-900); white-space: nowrap;
+/* A revision block: no box and no filled head. Field-lettered column heads over
+   a graphite rule, hairlines between rows, a graphite rule to close the table.
+   This is the table Measurement, Experiments, Results and Math Model had each
+   drawn for themselves; it now lives here so every page gets the same one. */
+.tablewrap { overflow-x: auto; margin: var(--sp-5) 0; }
+
+/* Wide tables. The wrapper scrolls, never the page. Two cues say there is
+   more to the right: a graphite edge that sits on the right while columns are
+   hidden past it (drawn with the local/scroll background pair, so it needs no
+   script and disappears once the reader reaches the last column), and a line
+   of words under the table that nav.js adds only while the table overflows.
+   .tablewrap--wide lets a table with many columns grow into the gutter beside
+   the text column, the way .fig--wide does, once a gutter exists.           */
+.tablewrap {
+  background:
+    linear-gradient(to left, var(--white) 30%, rgb(255 255 255 / 0)) right / 1.5rem 100% no-repeat local,
+    linear-gradient(to left, rgb(61 74 67 / .16), rgb(61 74 67 / 0)) right / .6rem 100% no-repeat scroll;
 }
-table.data tbody tr + tr { border-top: 1px solid var(--gray-200); }
+.scrollcue {
+  margin: calc(var(--sp-5) * -1 + var(--sp-2)) 0 var(--sp-5);
+  font-size: var(--text-xs); font-weight: 600; letter-spacing: .07em; text-transform: uppercase;
+  color: var(--gray-500);
+}
+.scrollcue[hidden] { display: none; }
+@media (min-width: 1240px) {
+  .tablewrap--wide { width: min(64rem, calc(100vw - 24rem)); max-width: none; }
+}
+table.data { width: 100%; border-collapse: collapse; font-size: var(--text-sm); font-variant-numeric: tabular-nums; }
+table.data th, table.data td { padding: .6rem .85rem; text-align: left; vertical-align: top; border-bottom: 1px solid var(--gray-200); }
+table.data th:first-child, table.data td:first-child { padding-left: 0; }
+table.data thead th {
+  border-bottom: 1px solid var(--gray-400);
+  font-size: var(--text-xs); font-weight: 700; letter-spacing: .07em; text-transform: uppercase;
+  color: var(--gray-600); white-space: nowrap;
+}
+table.data tbody tr:last-child > * { border-bottom: 1px solid var(--gray-400); }
 table.data tbody tr:hover { background: var(--gray-50); }
-table.data td.num { text-align: right; font-variant-numeric: tabular-nums; }
+table.data td.num, table.data th.num { text-align: right; }
+/* a unit inside an uppercase label keeps its own case: "Volume (µL)", not "(ΜL)" */
+.u { text-transform: none; letter-spacing: 0; }
+table.data caption { caption-side: bottom; padding-top: var(--sp-3); text-align: left; font-size: var(--text-sm); color: var(--gray-600); }
 
 /* ================================================================ TABS ===== */
 /* Plants runs three growth systems on one page. Same page, same URL, three
@@ -408,7 +538,7 @@ table.data td.num { text-align: right; font-variant-numeric: tabular-nums; }
 .refs h2 { border: 0; padding: 0; font-size: var(--text-h3); }
 .refs ol { margin: 0; padding-left: 2.1em; font-size: var(--text-sm); color: var(--gray-600); }
 .refs li { margin-bottom: var(--sp-3); scroll-margin-top: calc(var(--nav-h) + 2rem); }
-.refs li:target { background: var(--leaf-100); border-radius: 3px; box-shadow: 0 0 0 .4rem var(--leaf-100); }
+.refs li:target { background: var(--leaf-100); box-shadow: 0 0 0 .4rem var(--leaf-100); }
 .refs a { word-break: break-word; }
 
 /* the [3] in running text */
@@ -427,18 +557,16 @@ a.cite:hover { text-decoration: underline; }
   margin: var(--sp-6) 0 0;
   padding: var(--sp-4) var(--sp-5);
   border: 1px dashed var(--gray-300);
-  border-radius: var(--radius-sm);
   background: var(--gray-50);
   font-size: var(--text-sm);
   color: var(--gray-600);
 }
 .status b { display: block; color: var(--gray-700); margin-bottom: var(--sp-1); }
-.status code { font-family: var(--font-mono); font-size: .9em; background: var(--gray-200); padding: .1em .35em; border-radius: 3px; }
+.status code { font-family: var(--font-mono); font-size: .9em; background: var(--gray-200); padding: .1em .35em; }
 
 .todo {
   display: inline-block;
   padding: .1em .5em;
-  border-radius: 3px;
   background: var(--amber-100);
   border: 1px solid #e8cf95;
   color: var(--amber-700);
@@ -453,14 +581,19 @@ a.cite:hover { text-decoration: underline; }
   margin: 0 auto;
   padding: 0 var(--sp-5) var(--sp-8);
   display: grid; gap: var(--sp-4);
-  grid-template-columns: repeat(auto-fit, minmax(16rem, 1fr));
+  grid-template-columns: minmax(0, 1fr);
 }
-@media (min-width: 640px) { .pagenav { padding-left: var(--sp-6); padding-right: var(--sp-6); } }
+/* two columns from a tablet up, previous on the left and next on the right,
+   whichever of the two a page has */
+@media (min-width: 640px) {
+  .pagenav { padding-left: var(--sp-6); padding-right: var(--sp-6); grid-template-columns: 1fr 1fr; }
+  .pagenav .is-next { grid-column: 2; }
+}
 .pagenav a {
   display: block;
   padding: var(--sp-4) var(--sp-5);
   border: 1px solid var(--gray-200);
-  border-radius: var(--radius);
+  border-radius: 0;
   text-decoration: none;
   transition: border-color .18s, background .18s;
 }
@@ -499,9 +632,38 @@ a.cite:hover { text-decoration: underline; }
 /* underlined: in a line of grey text a link told apart by colour alone fails WCAG 1.4.1 */
 .footer2__legal a { text-decoration: underline; text-underline-offset: 2px; }
 
+/* =============================================================== PRINT ===== */
+/* A judge who prints a page, or saves it as PDF, gets the argument: title
+   block, prose, figures, tables and references, in order. Chrome goes
+   (navigation, contents rail, page links, the footer's link columns, the demo
+   tray). Every <details> is opened by page.js before printing and closed
+   again after, so no evidence is left folded away. A table prints whole
+   instead of scrolling; its head row repeats on each sheet. */
 @media print {
-  .sitenav, .toc, .pagenav, .sitenav-spacer { display: none !important; }
-  .pagewrap { display: block; }
+  @page { margin: 16mm 14mm; }
+  html { scroll-padding-top: 0; }
+  body { font-size: 10.5pt; line-height: 1.5; color: #000; background: #fff; }
+  .sitenav, .toc, .pagenav, .sitenav-spacer, .sitenav-skip, .lightbox,
+  .footer2__inner > :not(.footer2__legal), .anchor, .scrollcue { display: none !important; }
+  .pagewrap { display: block; padding: 0; max-width: none; }
+  .pagebody { max-width: none; }
+  .pagehead, .footer2 { background: none; }
+  .pagehead__inner, .footer2__inner { padding: 0 0 6mm; }
+  .pagehead__hero { aspect-ratio: auto; max-height: 9cm; }
+  .pagehead__hero::after { display: none; }
+  .pagehead__heroinner { position: static; padding: 4mm 0 0; }
+  .pagehead__heroinner .pagehead__eyebrow, .pagehead__heroinner .pagehead__title { color: #000; text-shadow: none; }
+  .sec + .sec { margin-top: 8mm; }
+  h2, h3, h4 { break-after: avoid; }
+  .fig, .figs, .callout, .fix, .note, .gap, .card2 { break-inside: avoid; }
+  .fig img { max-height: 16cm; width: auto; max-width: 100%; }
+  .tablewrap { overflow: visible; background: none; }
+  table.data thead { display: table-header-group; }
+  table.data tr { break-inside: avoid; }
+  .tabs__panel[hidden] { display: block !important; }
+  .tabs__strip { display: none; }
+  a { color: inherit; }
+  .refs a { word-break: break-all; }
 }
 
 /* =========================================================== SCAFFOLD ====== */
@@ -606,7 +768,7 @@ p.scaffold::before {
    after the title. Nothing inside is an h2 or h3: the contents rail is built
    from those, and it must not point at text behind a closed toggle.          */
 
-.discloses { margin: var(--sp-5) 0; border: 1px solid var(--gray-200); border-radius: var(--radius-sm); overflow: hidden; }
+.discloses { margin: var(--sp-5) 0; border: 1px solid var(--gray-200); overflow: hidden; }
 .discloses > .disclose + .disclose { border-top: 1px solid var(--gray-200); }
 
 .disclose { background: var(--white); }
@@ -652,7 +814,7 @@ p.scaffold::before {
 @media (max-width: 560px) { .disclose__body { padding-left: var(--sp-4); } }
 
 /* a single toggle standing on its own rather than in a run */
-.disclose--solo { border: 1px solid var(--gray-200); border-radius: var(--radius-sm); margin: var(--sp-5) 0; }
+.disclose--solo { border: 1px solid var(--gray-200); margin: var(--sp-5) 0; }
 
 /* ========================================================== DOWNLOADS ====== */
 /* Best Education is judged on whether somebody else can pick the material up
@@ -665,7 +827,6 @@ p.scaffold::before {
   display: flex; align-items: center; gap: var(--sp-4);
   padding: var(--sp-4);
   border: 1px solid var(--gray-200);
-  border-radius: var(--radius-sm);
   background: var(--white);
   text-decoration: none;
   color: inherit;
@@ -675,8 +836,8 @@ p.scaffold::before {
   flex: none;
   min-width: 3.1rem;
   padding: .3rem .45rem;
-  border-radius: 3px;
-  background: var(--leaf-100);
+  border: 1px solid var(--leaf-700);
+  background: var(--white);
   color: var(--leaf-900);
   font-family: var(--font-mono);
   font-size: .6875rem; font-weight: 700; letter-spacing: .06em;

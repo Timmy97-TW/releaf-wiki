@@ -2,7 +2,8 @@
    ReLeaf: site navigation
    -----------------------------------------------------------------------------
    Five tabs. Each opens a full-width panel: a title rail on the left, the
-   sub-pages on the right, every one with its own icon and a one-line caption.
+   sub-pages on the right, each with a one-line caption and, where the page
+   is the one judged for a medal criterion or an award, that award named.
 
    THE `slug` FIELD IS THE URL AND IS NOT FREE TO CHANGE.
    iGEM fixes the URL of every judged page (2026 Judge Handbook, "Standard Pages
@@ -16,8 +17,14 @@
    To add a page:  drop an entry into the right tab's `pages` array. `slug` is
                    the folder under the wiki root; nav.js prefixes it with the
                    page's own `data-base`, so the same file works at any depth.
-   To add an icon: add a key to ICONS in nav.js (inner SVG markup, stroked,
-                   24x24 viewBox) and reference it with `icon:`.
+   Captions:       say what is on the page, concretely, in under fifteen
+                   words: a count, a subject, a scope. Not what the page
+                   hopes to achieve.
+   `award`:        the iGEM medal criterion or special award judged at this
+                   address (2026 Judge Handbook, p.29). Shown under the
+                   caption in field lettering. Leave it off pages that are
+                   not judged. Keep `title` and `slug` first in each entry:
+                   build/generate.py and build/audit.py read them by pattern.
    Tab artwork:    drop the drawing into assets/img/tab-icons/<id>.png and set
                    `art: true` on that tab, or `art: "assets/img/tab-icons/x.svg"`
                    (a path from the wiki root) for another name. Tabs without
@@ -29,88 +36,88 @@ const NAV = [
   {
     id: "project",
     name: "Project",
-    blurb: "The whole arc of the work, from the first sketch of the problem through the build cycles to the numbers we finished with.",
+    blurb: "What ReLeaf is and why, the cycles that built it, what it leaves for other teams, and how far the evidence for each link goes.",
     pages: [
-      { title: "Description",  slug: "description",  icon: "description",
-        caption: "The problem we picked, the system we designed, and why it had to be alive." },
-      { title: "Engineering",  slug: "engineering",  icon: "engineering",
-        caption: "Every design, build, test and learn cycle we went through." },
-      { title: "Contribution", slug: "contribution", icon: "contribution",
-        caption: "What we are leaving behind for the teams that come after us." },
-      { title: "Results",      slug: "results",      icon: "results",
-        caption: "What the system actually did on the bench." }
+      { title: "Description",  slug: "description",
+        caption: "Heat and salt stress, and a contained bioreactor that makes the protectant at the edge of the field." },
+      { title: "Engineering",  slug: "engineering",  award: "Silver #1",
+        caption: "Six cloning cycles that moved a four-module light circuit into the production strain." },
+      { title: "Contribution", slug: "contribution", award: "Bronze #3",
+        caption: "What a team starting a perfusion reactor next year can take from us." },
+      { title: "Results",      slug: "results",
+        caption: "The chain from forecast to containment, link by link, with what each link has shown." }
     ]
   },
   {
     id: "wetlab",
     name: "Wet Lab",
-    blurb: "Everything that happened at the bench: the runs and protocols, the parts we built and characterised, the plants we stressed, and how we measured and contained it all.",
+    blurb: "The bench: protocols, the parts and how they were read back, the plant assays, the measurements, and how the culture is contained.",
     pages: [
-      { title: "Experiments",  slug: "experiments",         icon: "experiments",
-        caption: "Protocols, conditions and every run we made." },
-      { title: "Parts",        slug: "parts",               icon: "parts",
-        caption: "What we built, what we characterised, what we registered." },
-      { title: "Plants",       slug: "plant",               icon: "plants",
-        caption: "Agar, hydroponics and soil, from seedling to stress." },
-      { title: "Measurement",  slug: "measurement",         icon: "measurement",
-        caption: "How we quantified expression and output." },
-      { title: "Safety",       slug: "safety-and-security", icon: "safety",
+      { title: "Experiments",  slug: "experiments",
+        caption: "Twenty-one protocols in four families, with reagents, volumes and timings." },
+      { title: "Parts",        slug: "parts",
+        caption: "Five modules, each part marked against its sequencing record." },
+      { title: "Plants",       slug: "plant",
+        caption: "Seedlings on agar, in hydroponics and in soil, under salt and heat." },
+      { title: "Measurement",  slug: "measurement",         award: "Best Measurement",
+        caption: "Thirteen measurements, each with its method, unit, control and state." },
+      { title: "Safety",       slug: "safety-and-security", award: "Safety and Security",
         caption: "Containment, risk assessment and lab practice." },
-      { title: "Notebook",     slug: "notebook",            icon: "notebook",
-        caption: "The wet lab record, week by week." }
+      { title: "Notebook",     slug: "notebook",
+        caption: "The bench record, month by month." }
     ]
   },
   {
     id: "drylab",
     name: "Dry Lab",
-    blurb: "The maths, the machine and the code. Reactor sizing, the model behind the light switch, our hardware and software, and the peptide designed to go with them.",
+    blurb: "The model behind the light switch, the instruments we built, the reactor software, and the peptide designed for the system.",
     pages: [
-      { title: "Math Model",              slug: "model",                   icon: "model",
-        caption: "The equations behind sensing, expression and release." },
-      { title: "Hardware",                slug: "hardware",                icon: "hardware",
-        caption: "Three instruments, taken apart. Plus the build notebook." },
-      { title: "Software",                slug: "software",                icon: "software",
-        caption: "Control code, analysis and tooling." },
-      { title: "Protein Design",          slug: "protein-design",          icon: "peptide",
-        caption: "The five-step pipeline that took a peptide from a family alignment to an order form." },
-      { title: "Dry Lab Notebook",        slug: "drylab-notebook",         icon: "notebook",
+      { title: "Math Model",              slug: "model",                   award: "Best Model",
+        caption: "A stress index, the light-switch kinetics, and reactors per hectare." },
+      { title: "Hardware",                slug: "hardware",                award: "Best Hardware",
+        caption: "The bioreactor, photometer, LED array and hydroponics plate, and the build notebook." },
+      { title: "Software",                slug: "software",                award: "Best Software Tool",
+        caption: "The operator interface for the BR-01 reactor, and the test for calling it a digital twin." },
+      { title: "Protein Design",          slug: "protein-design",
+        caption: "Five steps from a peptide family alignment to a DNA order." },
+      { title: "Dry Lab Notebook",        slug: "drylab-notebook",
         caption: "The computational record, week by week." }
     ]
   },
   {
     id: "engagement",
     name: "Engagement",
-    blurb: "The world the project has to survive in. Who we talked to, what we taught, the rules we would have to meet, and where the need for this actually sits.",
+    blurb: "Who we talked to and what changed because of it, what we taught, the rules a product would have to meet, and where in Taiwan the need is.",
     pages: [
-      { title: "Integrated Human Practices", slug: "human-practices",      icon: "ihp",
+      { title: "Integrated Human Practices", slug: "human-practices",      award: "Silver #2 · Best IHP",
         caption: "The people who changed the project, and what they changed about it." },
-      { title: "Education",                  slug: "education",            icon: "education",
-        caption: "What we taught, who we taught it to, and what stuck." },
-      { title: "Entrepreneurship",           slug: "entrepreneurship",     icon: "entrepreneurship",
-        caption: "The business case, what it costs, and how it would reach a field." },
-      { title: "Sustainability",             slug: "sustainability",       icon: "sustainability",
-        caption: "Measuring ReLeaf against the SDGs." },
-      { title: "Laws and Regulations",       slug: "laws-and-regulations", icon: "legal",
-        caption: "Regulation, approval routes and compliance in Taiwan." },
-      { title: "Geospatial Analysis",        slug: "geospatial-analysis",  icon: "gis",
-        caption: "Mapping where plant stress actually bites." },
-      { title: "Data Physicalization",       slug: "data-physicalization", icon: "physical",
-        caption: "Our data, rebuilt as objects you can pick up." }
+      { title: "Education",                  slug: "education",            award: "Best Education",
+        caption: "Five schools, three age groups, one lesson rebuilt four times." },
+      { title: "Entrepreneurship",           slug: "entrepreneurship",     award: "Best Entrepreneurship",
+        caption: "Who would own a ReLeaf unit, who pays for it, and what it costs." },
+      { title: "Sustainability",             slug: "sustainability",       award: "Best Sustainable Development",
+        caption: "Four SDGs argued at target level, and where ReLeaf works against them." },
+      { title: "Laws and Regulations",       slug: "laws-and-regulations",
+        caption: "How the protectant would be classified in Taiwan, the EU and the US." },
+      { title: "Geospatial Analysis",        slug: "geospatial-analysis",
+        caption: "Nineteen counties and 2.79 million farm parcels, mapped against climate stress." },
+      { title: "Data Physicalization",       slug: "data-physicalization",
+        caption: "A stress map of Taiwan wired with LEDs, and a drought-stressed plant you can hear." }
     ]
   },
   {
     id: "team",
     name: "Team",
-    blurb: "The forty-seven of us, a record of who did which part, the year in order, and the photographs from all of it.",
+    blurb: "The students, advisors and instructors, who did which part, the year in order, and the photographs.",
     pages: [
-      { title: "Members",     slug: "team",         icon: "members",
+      { title: "Members",     slug: "team",
         caption: "The students, advisors and instructors who built ReLeaf." },
-      { title: "Attribution", slug: "attributions", icon: "attribution",
+      { title: "Attribution", slug: "attributions", award: "Bronze #2",
         caption: "Who did what, and who helped us do it." },
-      { title: "Milestone",   slug: "milestone",    icon: "milestone",
+      { title: "Milestone",   slug: "milestone",
         caption: "The year in order, from the first meeting to the freeze." },
-      { title: "Gallery",     slug: "gallery",      icon: "gallery",
-        caption: "Photographs from the bench, the field and the road to Paris." }
+      { title: "Gallery",     slug: "gallery",
+        caption: "The year in photographs, each linked to the page it comes from." }
     ]
   }
 ];
