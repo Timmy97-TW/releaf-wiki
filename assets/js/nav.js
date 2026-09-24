@@ -403,7 +403,7 @@
   function ruleCheck(base) {
     if (window.RULECHECK === false) return;
     const s = document.createElement("script");
-    s.src = base + "assets/js/rulecheck.js?v=5";   /* bump when rulecheck.js changes: Pages lets browsers cache it for 10 minutes */
+    s.src = base + "assets/js/rulecheck.js?v=6";   /* bump when rulecheck.js changes: Pages lets browsers cache it for 10 minutes */
     s.defer = true;
     document.body.appendChild(s);
   }
@@ -413,7 +413,7 @@
   function reviewNotes(base) {
     if (window.REVIEW_NOTES === false && !document.querySelector(".review-note")) return;
     const s = document.createElement("script");
-    s.src = base + "assets/js/review-notes.js?v=1";
+    s.src = base + "assets/js/review-notes.js?v=2";
     s.defer = true;
     document.body.appendChild(s);
   }
