@@ -566,9 +566,38 @@ a.cite:hover { text-decoration: underline; }
 /* underlined: in a line of grey text a link told apart by colour alone fails WCAG 1.4.1 */
 .footer2__legal a { text-decoration: underline; text-underline-offset: 2px; }
 
+/* =============================================================== PRINT ===== */
+/* A judge who prints a page, or saves it as PDF, gets the argument: title
+   block, prose, figures, tables and references, in order. Chrome goes
+   (navigation, contents rail, page links, the footer's link columns, the demo
+   tray). Every <details> is opened by page.js before printing and closed
+   again after, so no evidence is left folded away. A table prints whole
+   instead of scrolling; its head row repeats on each sheet. */
 @media print {
-  .sitenav, .toc, .pagenav, .sitenav-spacer { display: none !important; }
-  .pagewrap { display: block; }
+  @page { margin: 16mm 14mm; }
+  html { scroll-padding-top: 0; }
+  body { font-size: 10.5pt; line-height: 1.5; color: #000; background: #fff; }
+  .sitenav, .toc, .pagenav, .sitenav-spacer, .sitenav-skip, .lightbox,
+  .footer2__inner > :not(.footer2__legal), .anchor, .scrollcue { display: none !important; }
+  .pagewrap { display: block; padding: 0; max-width: none; }
+  .pagebody { max-width: none; }
+  .pagehead, .footer2 { background: none; }
+  .pagehead__inner, .footer2__inner { padding: 0 0 6mm; }
+  .pagehead__hero { aspect-ratio: auto; max-height: 9cm; }
+  .pagehead__hero::after { display: none; }
+  .pagehead__heroinner { position: static; padding: 4mm 0 0; }
+  .pagehead__heroinner .pagehead__eyebrow, .pagehead__heroinner .pagehead__title { color: #000; text-shadow: none; }
+  .sec + .sec { margin-top: 8mm; }
+  h2, h3, h4 { break-after: avoid; }
+  .fig, .figs, .callout, .fix, .note, .gap, .card2 { break-inside: avoid; }
+  .fig img { max-height: 16cm; width: auto; max-width: 100%; }
+  .tablewrap { overflow: visible; background: none; }
+  table.data thead { display: table-header-group; }
+  table.data tr { break-inside: avoid; }
+  .tabs__panel[hidden] { display: block !important; }
+  .tabs__strip { display: none; }
+  a { color: inherit; }
+  .refs a { word-break: break-all; }
 }
 
 /* =========================================================== SCAFFOLD ====== */

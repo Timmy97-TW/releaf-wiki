@@ -7,13 +7,14 @@
    contents rail, the numbering and the lightbox. That is deliberate. A judge
    on a locked-down machine still has to be able to read the argument.
 
-   Six jobs:
+   Seven jobs:
      1. number every section and sub-section
      2. build the contents rail from those headings and follow the scroll
      3. turn [n] in the prose into a link to reference n, and back again
      4. run any tab groups
      5. open figures full-window on click
      6. keep a jumped-to heading in place while images load around it
+     7. open every <details> for printing, and close them again after
    ========================================================================== */
 (function () {
   "use strict";
@@ -360,7 +361,23 @@
     if (location.hash) hold(location.hash);
   }
 
-  const start = () => { outline(); citations(); tabs(); lightbox(); anchorHold(); };
+  /* ---- 7. print everything ---------------------------------------------- */
+  /* A printed or PDF copy should hold the whole record, so every closed
+     <details> is opened for the print and put back afterwards. */
+
+  function printOpen() {
+    let opened = [];
+    window.addEventListener("beforeprint", () => {
+      opened = $$("details:not([open])");
+      opened.forEach((d) => { d.open = true; });
+    });
+    window.addEventListener("afterprint", () => {
+      opened.forEach((d) => { d.open = false; });
+      opened = [];
+    });
+  }
+
+  const start = () => { outline(); citations(); tabs(); lightbox(); anchorHold(); printOpen(); };
 
   /* The script is loaded at the foot of the page, so the document is usually
      still parsing when this runs. If it is not, because the file was added
