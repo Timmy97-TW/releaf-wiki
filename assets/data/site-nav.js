@@ -139,3 +139,8 @@ const NAV_UNLISTED = [
    teaching aid for this demo copy. Set to false in the copy that goes to
    gitlab.igem.org, or delete the line and the file.                        */
 window.RULECHECK = true;
+
+/* Review notes (assets/js/review-notes.js): the writing review left at the
+   end of each section on 25 September 2026. Set to false, or delete the
+   <aside class="review-note"> blocks, in the copy that goes to gitlab.igem.org. */
+window.REVIEW_NOTES = true;
