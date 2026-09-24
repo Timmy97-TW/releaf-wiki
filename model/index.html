@@ -162,7 +162,7 @@
 
         <p>Taiwan's summers push past 35&nbsp;&deg;C routinely, and coastal farmland takes salinity from sea-level rise and from irrigation drawdown. Neither of those alone tells a reactor what to do. The Composite Stress Index takes three field measurements and returns one value between 0 and 1, and everything downstream follows from it: how bright the light runs, how much enzyme the culture makes, how much reaches a plant.</p>
 
-        <h3>Inputs</h3>
+        <h3 id="inputs">Inputs</h3>
 
         <p><b>Temperature</b>, in degrees Celsius, comes from the Central Weather Administration through the Open-Meteo ECMWF forecast&nbsp;[5]. We pull daily maximum and minimum at 2&nbsp;m for D+1 to D+3 at 19 county anchors, interpolate to the field by inverse-distance weighting with a power of 4, then correct both the anchor and the target for elevation at 6.5&nbsp;&deg;C per kilometre.</p>
 
@@ -170,7 +170,7 @@
 
         <p><b>Vapour pressure deficit</b>, in kilopascals, is computed from forecast temperature and the FAO reference evapotranspiration in the forecast output&nbsp;[6]. No sensor measures it in the current build.</p>
 
-        <h3>The index</h3>
+        <h3 id="the-index">The index</h3>
 
         <p>Each input becomes a sub-score between 0 and 1 through a Hill function on the amount by which it exceeds a crop-specific threshold. Below the threshold the sub-score is zero, which is what keeps the reactor off on an ordinary day.</p>
 
@@ -220,7 +220,7 @@
           <div class="fig__frame">
             <img src="../assets/img/model/salt-ladder-hill-fit.webp"
                  alt="Root length against sodium chloride concentration. Four open circles with standard deviation bars at 0, 75, 100 and 150 millimolar, with the nine individual seedlings behind each one as faint dots, and a green sigmoid curve passing through all four means."
-                 width="1600" height="1013" loading="lazy" decoding="async" />
+                 width="1600" height="1014" loading="lazy" decoding="async" />
           </div>
           <figcaption><b>Figure 2.</b> The dose ladder with the fit on it. Faint dots are the nine seedlings in each group, bars are one standard deviation, and the curve is equation&nbsp;(5). The 150&nbsp;mM group holds two seedlings that did not elongate at all, which is why its spread runs to the axis. Drawn from the raw sheet by <code>build/model_figures.py</code>.</figcaption>
         </figure>
@@ -297,7 +297,7 @@
           <p>No induction curve exists for our construct. Nothing anywhere in the project shows P<sub>cpcG2</sub> output changing with green light. Every number in this section comes from a paper about a different construct, or from a consistency argument inside the model itself. The equations are written out so the model can be checked. None of them has been confirmed.</p>
         </aside>
 
-        <h3>From stress to light dose</h3>
+        <h3 id="from-stress-to-light-dose">From stress to light dose</h3>
 
         <p>The CcaSR system responds to green light with a Hill-type curve. If we treat the stress index as the fractional activation we want (assumption&nbsp;A4), the required photon flux is that curve run backwards, then clipped to what the hardware can actually do.</p>
 
@@ -328,7 +328,7 @@
           <figcaption><b>Figure 4.</b> Equation&nbsp;(6) plotted. The shaded bands are the index's four severity classes. The curve is nearly flat through the low bands and turns sharply above 0.7, which is the behaviour that keeps the reactor quiet on ordinary days. From the content document.</figcaption>
         </figure>
 
-        <h3>Promoter output</h3>
+        <h3 id="promoter-output">Promoter output</h3>
 
         <p>The light dose has to become protein. The content document models P<sub>cpcG2</sub> output as a Hill curve anchored at an off state of 1,500&nbsp;MEFL and an on state of 30,000, with the shape taken wholesale from the CcaS sensor upstream.</p>
 
@@ -439,11 +439,11 @@
 
         <p>Deploying a reactor into a field starts with one number: how many units does a hectare take? Five stages get there, each turning a wet-lab or literature input into the next stage's assumption. The answer changes by a factor of five depending on the soil, and it changes in the direction almost nobody expects.</p>
 
-        <h3>Enzyme activity target</h3>
+        <h3 id="enzyme-activity-target">Enzyme activity target</h3>
 
         <p>The field-standard screening cutoff for ACC deaminase is 20&nbsp;nmol&nbsp;mg<sup>&minus;1</sup>&nbsp;h<sup>&minus;1</sup>&nbsp;[3]. That threshold exists to decide whether an isolate has the enzyme at all, and it says nothing about whether the activity is enough to protect a plant. Strains demonstrated to confer salinity protection in planta report specific activities of 1,589 to 1,677&nbsp;nmol&nbsp;mg<sup>&minus;1</sup>&nbsp;h<sup>&minus;1</sup>&nbsp;[4], so the design target is set at the midpoint of that range, 1,600, which is 1.6&nbsp;&micro;mol&nbsp;mg<sup>&minus;1</sup>&nbsp;h<sup>&minus;1</sup>. That is an eightyfold higher bar than the screening cutoff, and using the cutoff as a design target would have understated what the system needs by that factor.</p>
 
-        <h3>Volumetric activity</h3>
+        <h3 id="volumetric-activity">Volumetric activity</h3>
 
         <p>What a litre of culture does in an hour is how active each molecule is times how many molecules there are. Keeping those two apart matters, because one is a protein engineering problem and the other is a fermentation problem, and they are fixed by different people.</p>
 
@@ -456,11 +456,11 @@
 
         <p>The titre is the weak link, and it is weak downward, which is the useful direction. Three scenarios were run: the conservative 5.4&nbsp;mg/L used downstream, a moderate 50&nbsp;mg/L giving about 80&nbsp;&micro;mol&nbsp;L<sup>&minus;1</sup>&nbsp;h<sup>&minus;1</sup>, and an optimised 500&nbsp;mg/L giving about 800. Even the optimised case sits well under the published ceiling for optimised <i>B.&nbsp;subtilis</i> secretion. So every figure below is an upper bound on how many reactors a hectare needs, and a lower bound on what one reactor covers. Real production will very likely need fewer units than this page states.</p>
 
-        <h3>Coverage threshold</h3>
+        <h3 id="coverage-threshold">Coverage threshold</h3>
 
         <p>Coverage has to be defined by a concentration, not by presence. The protectant is present at any distance if you look hard enough; the question is where it stops doing anything. The model sets that floor at 0.1&nbsp;mg/L of ACC deaminase protein in the bulk root zone, and uses it as the stopping condition when solving the transport equation for a radius. The number is a placeholder. There is no in-house dose response for protectant concentration against plant outcome, and there is no published one for our protein in our soil, so 0.1 is a working value and is labelled that way in <a href="#parameters">section&nbsp;6</a>.</p>
 
-        <h3>Coverage by soil type</h3>
+        <h3 id="coverage-by-soil-type">Coverage by soil type</h3>
 
         <p>Transport through soil is three processes competing. Bulk flow carries the protectant, dispersion and molecular diffusion spread it, and adsorption, degradation and plant uptake remove it. Which one dominates decides whether the plume is narrow and deep or wide and shallow, and that decides the radius.</p>
 
@@ -491,7 +491,7 @@
 
         <p>The result inverts the intuition. Sandy loam, the most permeable soil in the table, gives the <i>smallest</i> radius. Advection dominates there, so the protectant is pulled downward before it can spread sideways, and the plume comes out narrow and deep. Clay does the reverse: flow is four orders of magnitude slower, so diffusion has time to work laterally, and the plume comes out wide and shallow. The Péclet numbers in the table look like they say the opposite, with clay at 75 against sandy loam at 8, but a Péclet number is a ratio and not a rate. Clay's advection beats its diffusion, and both are slow.</p>
 
-        <h3>Units per hectare</h3>
+        <h3 id="units-per-hectare">Units per hectare</h3>
 
         <div class="eqn eqn--assum">
           <b>Deployment density</b>

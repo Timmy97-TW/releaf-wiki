@@ -59,12 +59,27 @@ body {
 img { display: block; max-width: 100%; }
 a { color: var(--leaf-700); text-underline-offset: .18em; }
 :focus-visible { outline: 2px solid var(--leaf-700); outline-offset: 3px; }
+/* on the ink grounds the leaf-700 ring measured under 3:1; the signal green
+   clears it comfortably */
+.hero :focus-visible, .pb-dist :focus-visible, .stagewrap :focus-visible,
+.band--dark :focus-visible { outline-color: var(--sig-green); }
 
 .visually-hidden {
   position: absolute; width: 1px; height: 1px; margin: -1px; padding: 0;
   overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; border: 0;
 }
 .sitenav-spacer { height: var(--nav-h); }
+
+/* Square corners on everything the homepage draws, as on every other page of
+   the set (DESIGN.md: "zero radius except focus"). Scoped to <main> so the
+   shared nav keeps its own tokens. */
+main { --radius: 0; --radius-sm: 0; }
+
+/* Review notes (assets/js/review-notes.js) that land inside a grid span its
+   full width rather than taking one cell of it. */
+.hero__strip-inner > .review-note,
+.pb-threat__grid > .review-note { grid-column: 1 / -1; }
+.hero__strip-inner > .review-note { margin-bottom: var(--sp-2); }
 
 /* homepage-only tokens: the dark act, and the one accent that is allowed to
    glow. --sig-green is the 520 nm the reactor actually runs on. */
@@ -111,6 +126,9 @@ h2.band__title {
 .rise { opacity: 0; transform: translateY(18px); transition: opacity .7s ease, transform .7s ease; }
 .rise.in { opacity: 1; transform: none; }
 @media (prefers-reduced-motion: reduce) { .rise { opacity: 1; transform: none; transition: none; } }
+/* nothing will ever add .in without scripting, so the circuit figure (the one
+   .rise on the page) was invisible to a no-script reader */
+@media (scripting: none) { .rise { opacity: 1; transform: none; } }
 
 /* ============================================================= 1  HERO ==== */
 /* Two photographs meeting in a wash. Left is a farm at work, right is the
@@ -139,6 +157,8 @@ h2.band__title {
    sits in a column of its own on the right, so each photograph is cropped to
    the shape it is actually seen in. The reactor's left edge is masked, so the
    seam is a fade onto the farm rather than a cut. */
+/* the photographs and the type over them; the title block sits below this */
+.hero__stage { position: relative; isolation: isolate; }
 .hero__frames { position: absolute; inset: 0; display: grid; grid-template-columns: 46% 54%; }
 .hero__frame { grid-row: 1; position: relative; overflow: hidden; }
 .hero__frame img { width: 100%; height: 100%; object-fit: cover; }
@@ -245,7 +265,8 @@ h2.band__title {
   position: relative; z-index: 3;
   max-width: var(--max); margin: 0 auto;
   padding: clamp(1.75rem, 3.2vw, 2.75rem) var(--sp-5) clamp(2.5rem, 5vw, 4rem);
-  min-height: min(90vh, 800px);
+  /* one screen including the title block under it (about 6rem) */
+  min-height: min(calc(100vh - var(--nav-h) - 6.5rem), 760px);
   display: grid;
   grid-template-columns: minmax(0, 1fr);
   grid-template-rows: auto 1fr auto;
@@ -257,7 +278,8 @@ h2.band__title {
    right to reach her, so the h1 has to finish above roughly 200px. The head is
    the wordmark and the claim and nothing else: there is no sub-heading and no
    credentials line any more, by request. Add a line under the claim, or push
-   the type size up, and words land on her face. */
+   the type size up, and words land on her face. The sentence saying what ReLeaf
+   is lives in the title block under the photographs (.hero__strip). */
 .hero__head { grid-row: 1; justify-self: start; max-width: 41rem; }
 
 .hero__claim {
@@ -296,11 +318,9 @@ h2.band__title {
   max-width: 34rem;
   margin: 0;
   padding: var(--sp-4) var(--sp-5) var(--sp-4) var(--sp-5);
-  border-left: 3px solid var(--sig-green);
+  border-left: 1px solid rgb(180 215 195 / .5);
   border-radius: 0;
-  background: rgb(7 11 9 / .52);
-  backdrop-filter: blur(7px);
-  -webkit-backdrop-filter: blur(7px);
+  background: rgb(7 11 9 / .66);
 }
 .hero__note p {
   margin: 0;
@@ -318,6 +338,36 @@ h2.band__title {
 }
 
 
+
+/* The title block under the photographs: what ReLeaf is in one sentence, who
+   made it, and three ways in. Drawn like the cover strip on Engineering (a
+   blueprint strip with field lettering), so the homepage opens the way the
+   other sheets of the set do. */
+.hero__strip {
+  position: relative; z-index: 3;
+  background: #10301f;
+  border-top: 1px solid rgb(180 215 195 / .32);
+  color: #e3ece6;
+}
+.hero__strip-inner {
+  max-width: var(--max); margin: 0 auto;
+  padding: var(--sp-4) var(--sp-5);
+  display: grid; gap: var(--sp-3) var(--sp-7);
+  align-items: center;
+}
+@media (min-width: 640px) { .hero__strip-inner { padding-inline: var(--sp-6); } }
+@media (min-width: 1040px) { .hero__strip-inner { grid-template-columns: minmax(0, 1fr) auto; } }
+.hero__what { margin: 0; max-width: 62ch; font-size: var(--text-sm); line-height: 1.55; color: #e3ece6; }
+.hero__what b { color: var(--white); font-weight: 700; }
+.hero__fields { margin: 0; display: flex; flex-wrap: wrap; gap: var(--sp-2) var(--sp-6); }
+.hero__fields dt {
+  font-size: .6875rem; font-weight: 700; letter-spacing: .12em; text-transform: uppercase;
+  color: #97b4a3;
+}
+.hero__fields dd { margin: .15rem 0 0; font-size: var(--text-sm); color: #e3ece6; }
+.hero__fields a { color: var(--white); text-underline-offset: .2em; }
+.hero__fields a + a { margin-left: var(--sp-4); }
+.hero__fields a:hover { color: var(--sig-green); }
 
 @media (max-width: 800px) {
   .hero__frames { grid-template-columns: 1fr; grid-template-rows: 52% 48%; }
@@ -348,7 +398,8 @@ h2.band__title {
      buys a strip of frame under the quote wide enough for the lit bench to
      show, so the mobile hero still has both halves of the argument in it. */
   .hero__inner {
-    min-height: min(92vh, 720px);
+    /* leaves the first lines of the title block on the first screen */
+    min-height: min(calc(100vh - var(--nav-h) - 8rem), 660px);
     padding-bottom: 5.5rem;
     row-gap: var(--sp-6);
   }
@@ -372,20 +423,18 @@ h2.band__title {
 .chapters {
   position: fixed; z-index: 30;
   right: clamp(.5rem, 1.1vw, 1rem); top: 50%; transform: translateY(-50%);
-  opacity: 0; pointer-events: none;
-  transition: opacity .35s ease;
+  opacity: 0; pointer-events: none; visibility: hidden;
+  transition: opacity .35s ease, visibility 0s linear .35s;
 }
-.chapters.is-shown { opacity: 1; pointer-events: auto; }
+/* visibility, not just opacity: an invisible rail must not take Tab focus */
+.chapters.is-shown { opacity: 1; pointer-events: auto; visibility: visible; transition: opacity .35s ease; }
 @media (max-width: 1179px) { .chapters { display: none; } }
 
 .chapters ol {
   display: flex; flex-direction: column; gap: .1rem;
   margin: 0; padding: .45rem .3rem; list-style: none;
-  border: 1px solid rgb(120 140 130 / .22); border-radius: 999px;
-  background: rgb(255 255 255 / .62);
-  -webkit-backdrop-filter: blur(10px) saturate(1.2);
-          backdrop-filter: blur(10px) saturate(1.2);
-  box-shadow: 0 8px 24px -18px rgb(7 11 9 / .8);
+  border: 1px solid rgb(120 140 130 / .3); border-radius: 0;
+  background: rgb(255 255 255 / .9);
 }
 .chapters a {
   position: relative; display: flex; align-items: center; justify-content: center;
@@ -403,8 +452,8 @@ h2.band__title {
 /* the label, which rides out to the left of its own dot */
 .chapters span {
   position: absolute; right: calc(100% + .3rem);
-  padding: .22rem .6rem; border-radius: 999px;
-  background: rgb(7 11 9 / .86); color: var(--white);
+  padding: .22rem .6rem; border-radius: 0;
+  background: rgb(7 11 9 / .9); color: var(--white);
   font-size: .6875rem; font-weight: 650; letter-spacing: .02em; white-space: nowrap;
   opacity: 0; transform: translateX(4px); pointer-events: none;
   transition: opacity .18s ease, transform .18s ease;
@@ -422,7 +471,7 @@ h2.band__title {
 .chapters.is-moving.on-ink [aria-current] span { color: var(--white); text-shadow: 0 1px 10px rgb(7 11 9 / .95), 0 1px 3px rgb(7 11 9 / .9); }
 .chapters.on-ink i { background: rgb(255 255 255 / .38); }
 .chapters.on-ink [aria-current] i { background: var(--sig-green); }
-.chapters.on-ink ol { background: rgb(7 11 9 / .42); border-color: rgb(255 255 255 / .16); }
+.chapters.on-ink ol { background: rgb(7 11 9 / .8); border-color: rgb(255 255 255 / .2); }
 
 @media (prefers-reduced-motion: reduce) {
   .chapters, .chapters i, .chapters span { transition: none; }
@@ -498,6 +547,10 @@ h2.band__title {
   opacity: 0; transition: opacity .5s;
 }
 .stage__reactor.no-gl .stage__poster { opacity: 1; }
+/* With scripting off nothing adds .no-gl and nothing draws the canvas, so the
+   resting frame was the name card beside an empty black half. The photograph
+   is the reactor for that reader. */
+@media (scripting: none) { .stage__poster { opacity: 1; } }
 .stage__reactor.no-gl .stage__canvas { display: none; }
 
 .stage__loading {
@@ -743,7 +796,9 @@ h2.band__title {
    ground. On one column that ground is the whole width. */
 .beat--parts::before {
   content: ""; position: absolute; inset: 0; z-index: 0; pointer-events: none;
-  background: linear-gradient(180deg, rgb(7 11 9 / .55), rgb(7 11 9 / .93) 22%);
+  /* dark enough at the top that the name card still fading out behind it on
+     a phone does not read through the heading */
+  background: linear-gradient(180deg, rgb(7 11 9 / .84), rgb(7 11 9 / .95) 14%);
 }
 @media (min-width: 980px) {
   .beat--parts::before { background: linear-gradient(90deg, rgb(7 11 9 / 0) 20%, rgb(7 11 9 / .62) 40%, rgb(7 11 9 / .96) 54%); }
@@ -771,7 +826,7 @@ h2.band__title {
 .partlist li:last-child .part { border-bottom: 1px solid rgb(255 255 255 / .12); }
 .part::before {
   content: ""; position: absolute; left: var(--sp-3); top: 1.55rem;
-  width: .5rem; height: .5rem; border-radius: 50%;
+  width: .5rem; height: .5rem;
   background: var(--flow, #5aa9ff); opacity: .55; transition: opacity .2s, box-shadow .2s;
 }
 .part[data-flow="lumen"] { --flow: #ff8a2e; }
@@ -794,7 +849,7 @@ h2.band__title {
 .partlist__open a { color: rgb(255 255 255 / .8); }
 
 .flowkey { display: flex; flex-wrap: wrap; gap: var(--sp-4); margin-top: var(--sp-5); font-size: var(--text-xs); color: rgb(255 255 255 / .6); }
-.flowkey i { display: inline-block; width: .6rem; height: .6rem; border-radius: 50%; margin-right: .4rem; vertical-align: -.05rem; }
+.flowkey i { display: inline-block; width: .6rem; height: .6rem; margin-right: .4rem; vertical-align: -.05rem; }
 
 /* This copy sits on the dark ground the stage paints, but .band__title and
    .lede are written for white paper. Without these three lines the section
@@ -827,7 +882,7 @@ h2.band__title {
 .modules { display: grid; gap: var(--sp-4); margin-top: var(--sp-6); grid-template-columns: repeat(auto-fit, minmax(15rem, 1fr)); }
 .module {
   padding: var(--sp-5);
-  border: 1px solid var(--gray-200); border-top: 3px solid var(--mod, var(--leaf-500));
+  border: 1px solid var(--gray-300); border-top: 2px solid var(--mod, var(--leaf-500));
   border-radius: var(--radius-sm); background: var(--white);
 }
 .module:nth-child(1) { --mod: #4a7c3f; }
@@ -837,8 +892,8 @@ h2.band__title {
 /* direct child only: the module bodies use <i> for gene and species names and
    must not pick up the eyebrow's monospace */
 .module > i {
-  font-style: normal; font-family: var(--font-mono);
-  font-size: var(--text-xs); font-weight: 700; letter-spacing: .1em;
+  font-style: normal;
+  font-size: .6875rem; font-weight: 700; letter-spacing: .12em; text-transform: uppercase;
   color: var(--mod);
 }
 .module b { display: block; margin: var(--sp-2) 0 var(--sp-3); font-family: var(--font-display); font-size: var(--text-h3); font-weight: 700; color: var(--leaf-900); }
@@ -851,9 +906,9 @@ h2.band__title {
 .switch div { padding: var(--sp-4) var(--sp-5); border-radius: var(--radius-sm); }
 .switch b { display: block; font-size: var(--text-sm); letter-spacing: .06em; text-transform: uppercase; }
 .switch p { margin: var(--sp-2) 0 0; font-size: var(--text-sm); }
-.switch__green { background: #e8f7ee; border: 1px solid #b9e4cb; }
+.switch__green { background: var(--white); border: 1px solid #1b7f4d; }
 .switch__green b { color: #1b7f4d; }
-.switch__red   { background: var(--rust-100); border: 1px solid #f0cfc3; }
+.switch__red   { background: var(--white); border: 1px solid var(--rust-700); }
 .switch__red b { color: var(--rust-700); }
 
 /* ============================================================= 6  iHP ===== */
@@ -864,7 +919,10 @@ h2.band__title {
 .timeline figcaption { margin-top: var(--sp-3); font-size: var(--text-sm); color: var(--gray-500); }
 
 .visits { display: grid; gap: var(--sp-4); margin-top: var(--sp-6); grid-template-columns: repeat(auto-fit, minmax(14rem, 1fr)); }
-.visit { border: 1px solid var(--gray-200); border-radius: var(--radius); overflow: hidden; background: var(--white); }
+/* margin 0: a <figure> brings 40px side margins of its own, which had been
+   shrinking every photograph to two thirds of its card */
+.visit { margin: 0; border: 1px solid var(--gray-300); overflow: hidden; background: var(--white); }
+.visit img { border-bottom: 1px solid var(--gray-300); }
 .visit img { aspect-ratio: 4 / 3; object-fit: cover; width: 100%; }
 .visit div { padding: var(--sp-4) var(--sp-5) var(--sp-5); }
 .visit b { display: block; color: var(--leaf-900); font-size: var(--text-base); }
@@ -892,6 +950,9 @@ h2.band__title {
    262 x 322. */
 .pkgorb { position: relative; width: min(100%, 34rem); margin-inline: auto; aspect-ratio: 1; }
 .pkgorb__halo { position: absolute; inset: 0; width: 100%; height: 100%; overflow: visible; opacity: .9; }
+/* The drawn ring, its ticks and the dotted orbit stay: they are a lens mark on
+   the model. The soft blue disc behind them was a glow and nothing else. */
+.pkgorb__halo > circle:first-of-type { display: none; }
 .pkgorb__rim   { fill: none; stroke-width: 1.6; }
 .pkgorb__dots  { fill: none; stroke-width: 1.2; transform-origin: 50% 50%; }
 .pkgorb__arc   { fill: none; stroke-width: 2.4; stroke-linecap: round; }
@@ -925,17 +986,12 @@ h2.band__title {
   background: rgb(255 255 255 / .03);
   transition: border-color .2s, background .2s, transform .2s;
 }
-.prop:hover { border-color: var(--sig-dim); background: rgb(53 224 138 / .07); transform: translateY(-2px); }
+.prop:hover { border-color: rgb(255 255 255 / .3); }
 .prop b { display: block; font-family: var(--font-display); font-size: var(--text-h3); font-weight: 700; color: var(--white); }
 .prop p { margin: var(--sp-2) 0 0; font-size: var(--text-sm); line-height: 1.6; color: rgb(255 255 255 / .68); }
 
-.pkg__props { margin: 0; padding: 0; list-style: none; display: grid; gap: var(--sp-3); counter-reset: pkg; }
-.pkg__props .prop { counter-increment: pkg; }
-.pkg__props .prop b::before {
-  content: counter(pkg, decimal-leading-zero);
-  margin-right: .6rem; font-size: .75rem; font-weight: 700;
-  font-variant-numeric: tabular-nums; color: var(--sig-green);
-}
+/* Five properties, in no order that matters, so they carry no numbers. */
+.pkg__props { margin: 0; padding: 0; list-style: none; display: grid; gap: var(--sp-3); }
 .pkg__props .prop p i { color: rgb(255 255 255 / .82); font-style: italic; }
 
 /* ========================================================== 8  VISION ===== */
@@ -968,11 +1024,10 @@ h2.band__title {
 
 /* the label that keeps a generated image from being read as a photograph */
 .vision figcaption i {
-  display: inline-block; margin-top: var(--sp-3);
-  padding: .15rem .5rem; border-radius: 999px;
-  background: var(--gray-100); border: 1px solid var(--gray-200);
-  font-style: normal; font-size: var(--text-xs); letter-spacing: .04em;
-  color: var(--gray-500);
+  display: block; width: fit-content; margin-top: var(--sp-3);
+  padding: .25em .55em; border: 1px solid currentColor;
+  font-style: normal; font-size: .6875rem; font-weight: 700; letter-spacing: .08em; text-transform: uppercase;
+  color: var(--rust-700);
 }
 
 /* ---- the drawn frames ----
@@ -996,7 +1051,8 @@ h2.band__title {
    phone the frame is about 310px wide against a 480 viewBox, which takes a
    10px label down to under 7. These put it back. */
 @media (max-width: 899px) { .vz .art-cap { font-size: 13px; } }
-@media (max-width: 460px) { .vz .art-cap { font-size: 15px; } }
+/* (a 15px step under 460px used to sit here; at that size "ReLeaf" ran into
+   "Nutrient tank" and "Water in" ran into the reactor, so 13px holds) */
 .vz-pipe  { fill: none; stroke: var(--slate-100); stroke-width: 7; stroke-linecap: round; stroke-linejoin: round; }
 .vz-water { fill: #d9e4ee; }
 .vz-rx         { fill: var(--leaf-900); }
@@ -1022,15 +1078,20 @@ h2.band__title {
 @keyframes vz-run { to { stroke-dashoffset: -18.2; } }
 
 /* ========================================================= 9  EXPLORE ===== */
-/* Four doors in a row, then the team as a full-width banner.
+/* Four doors in a row, then the team as a full-width banner, one per tab of
+   the site nav and in the nav's order, listing the same pages under the same
+   names.
 
-   Two problems this layout had to solve. First, a photograph in a rounded card
-   reads as a sticker unless its edges are dissolved into the card, so every
-   shot is masked out at the bottom and softened at the sides. Second, a row of
-   four boxes says nothing about how the pages inside them relate, which a map
-   used to. The answer is cross-highlighting: point at any page and the pages
-   it actually works with light up in the OTHER boxes, and the line underneath
-   names them. The relationships live in PAGE_LINKS in home.js. */
+   Drawn as the rest of the set draws a card: a photograph on a hairline mat,
+   square corners, no shadow, one accent. It used to dissolve each photograph
+   into a rounded card with masks, give every tab its own colour (one of them
+   purple, which is in no palette on the site), lift on hover, and put a stroked
+   icon in front of every page name; none of that said anything the page names
+   do not.
+
+   Cross-highlighting stays: point at any page and the pages it works with
+   light up in the other boxes, and the line above names them. The
+   relationships live in PAGE_LINKS in home.js. */
 
 .doors { display: grid; gap: var(--sp-4); }
 @media (min-width: 720px)  { .doors { grid-template-columns: repeat(2, 1fr); } }
@@ -1038,142 +1099,71 @@ h2.band__title {
 .door--team { grid-column: 1 / -1; }
 
 .door {
-  --accent: var(--leaf-700);
   position: relative;
   display: flex; flex-direction: column;
-  overflow: hidden;
-  border: 1px solid var(--gray-200);
-  border-radius: var(--radius);
+  border: 1px solid var(--gray-300);
   background: var(--white);
-  transition: border-color .25s, box-shadow .25s, transform .25s;
+  transition: border-color .14s;
 }
-.door--project { --accent: #23684a; }
-.door--wetlab  { --accent: #2f7d8c; }
-.door--drylab  { --accent: #7a5cb8; }
-.door--hp      { --accent: #b3721f; }
-.door--team    { --accent: #a8443a; }
+.door:hover, .door:focus-within { border-color: var(--leaf-700); }
 
-.door:hover, .door:focus-within { border-color: var(--accent); box-shadow: var(--shadow-md); }
-.door:hover { transform: translateY(-2px); }
+.door__shot { background: var(--gray-100); border-bottom: 1px solid var(--gray-300); }
+.door__shot img { display: block; width: 100%; aspect-ratio: 10 / 7; object-fit: cover; }
 
-/* the photograph, dissolved rather than cropped: it fades out at the bottom
-   into the card and softens at both sides, so there is no rectangle edge */
-.door__shot { position: relative; overflow: hidden; background: var(--gray-100); }
-.door__shot::after {
-  content: ""; position: absolute; inset: 0;
-  background: linear-gradient(180deg, transparent 45%, rgb(255 255 255 / .55) 82%, var(--white) 100%);
-}
-.door__shot img {
-  display: block; width: 100%; aspect-ratio: 10 / 7; object-fit: cover;
-  filter: saturate(.94);
-  transition: transform .6s cubic-bezier(.2,.7,.2,1), filter .4s;
-  -webkit-mask-image: linear-gradient(180deg, #000 62%, transparent 100%),
-                      linear-gradient(90deg, transparent 0, #000 7%, #000 93%, transparent 100%);
-          mask-image: linear-gradient(180deg, #000 62%, transparent 100%),
-                      linear-gradient(90deg, transparent 0, #000 7%, #000 93%, transparent 100%);
-  -webkit-mask-composite: source-in;
-          mask-composite: intersect;
-}
-.door:hover .door__shot img { transform: scale(1.04); filter: saturate(1.04); }
-
-.door__body { position: relative; margin-top: -12%; padding: 0 var(--sp-5) var(--sp-5); }
+.door__body { padding: var(--sp-4) var(--sp-5) var(--sp-5); }
 
 .door h3 {
   margin: 0;
   font-family: var(--font-display);
-  font-size: clamp(1.25rem, 1.05rem + .6vw, 1.55rem);
-  font-weight: 750; letter-spacing: -.02em; line-height: 1.1;
+  font-size: var(--text-h3);
+  font-weight: 700; letter-spacing: -.015em; line-height: 1.2;
 }
 .door h3 a { color: var(--leaf-900); text-decoration: none; }
-.door h3 a::after {
-  content: " \2192"; display: inline-block; color: var(--accent);
-  transition: transform .3s;
-}
-.door:hover h3 a::after { transform: translateX(.28rem); }
-.door h3 a:hover { color: var(--accent); }
+.door h3 a::after { content: " \2192"; color: var(--leaf-700); }
+.door h3 a:hover { text-decoration: underline; }
 
 .door__hook {
-  margin: var(--sp-3) 0 var(--sp-4);
+  margin: var(--sp-2) 0 var(--sp-4);
   font-size: var(--text-sm); line-height: 1.55; color: var(--gray-600);
 }
 
-/* ---- the page chips ---- */
+/* ---- the page list ---- */
 
-.door__pages { display: flex; flex-direction: column; gap: .3rem; margin: 0; padding: 0; list-style: none; }
+.door__pages { margin: 0; padding: 0; list-style: none; border-top: 1px solid var(--gray-200); }
+.door__pages li { border-bottom: 1px solid var(--gray-200); }
 .pg {
-  display: flex; align-items: center; gap: .5rem;
-  padding: .32rem .6rem;
-  margin-left: -.6rem;
-  border: 1px solid transparent; border-radius: 999px;
-  font-size: var(--text-xs); line-height: 1.3; color: var(--gray-600);
+  display: block; padding: .4rem 0;
+  font-size: var(--text-sm); line-height: 1.35; color: var(--leaf-700);
   text-decoration: none;
-  transition: color .18s, border-color .18s, background .18s, opacity .2s;
+  transition: color .14s, background .14s, opacity .2s;
 }
-.pg__i { flex: 0 0 auto; width: 16px; height: 16px; color: var(--accent); opacity: .75; transition: opacity .18s; }
-.pg:hover { color: var(--accent); border-color: color-mix(in srgb, var(--accent) 35%, transparent); background: color-mix(in srgb, var(--accent) 7%, transparent); }
-.pg:hover .pg__i { opacity: 1; }
+.pg:hover { color: var(--leaf-900); text-decoration: underline; }
 
 /* cross-highlighting. `.src` is the page being pointed at; `.lit` is a page it
    works with, wherever it lives. Everything else steps back. */
-.doors.hot .pg { opacity: .32; }
+.doors.hot .pg { opacity: .35; }
 .doors.hot .pg.lit, .doors.hot .pg.src { opacity: 1; }
-.doors.hot .pg.src {
-  color: var(--accent);
-  border-color: var(--accent);
-  background: color-mix(in srgb, var(--accent) 10%, transparent);
-}
-.doors.hot .pg.lit {
-  border-color: color-mix(in srgb, currentColor 28%, transparent);
-  background: var(--gray-50);
-}
-.doors.hot .door { border-color: var(--gray-200); box-shadow: none; }
-.doors.hot .door__shot img { filter: saturate(.5) opacity(.55); }
+.doors.hot .pg.src { color: var(--leaf-900); font-weight: 650; }
+.doors.hot .pg.lit { background: var(--leaf-50); }
 
 .doors__read {
-  margin: var(--sp-5) 0 0; min-height: 2.75rem;
-  padding: var(--sp-3) var(--sp-4);
-  border-left: 3px solid var(--leaf-500);
-  border-radius: 0 var(--radius-sm) var(--radius-sm) 0;
-  background: var(--white);
+  margin: var(--sp-5) 0 var(--sp-4); min-height: 1.6em;
   font-size: var(--text-sm); line-height: 1.6; color: var(--gray-600);
 }
 .doors__read b { color: var(--leaf-900); }
 
-/* ---- the team banner ---- */
-/* Landscape, with the group shot bled into the section background on the left
-   and dissolved out under the text on the right. */
-.door--team { flex-direction: row; align-items: stretch; min-height: 15rem; background: var(--white); }
-.door--team .door__shot { position: absolute; inset: 0; background: none; }
-.door--team .door__shot::after {
-  background: linear-gradient(90deg, rgb(255 255 255 / .12) 0 26%, rgb(255 255 255 / .82) 62%, var(--white) 86%);
+/* ---- the team banner: photograph left, words right ---- */
+@media (min-width: 720px) {
+  .door--team { display: grid; grid-template-columns: minmax(0, 1.6fr) minmax(0, 1fr); }
+  .door--team .door__shot { border-bottom: 0; border-right: 1px solid var(--gray-300); }
+  .door--team .door__shot img { height: 100%; aspect-ratio: 2000 / 620; object-position: 22% 42%; }
+  .door--team .door__body { align-self: center; padding: var(--sp-5) var(--sp-6); }
 }
-.door--team .door__shot img {
-  width: 100%; height: 100%; aspect-ratio: auto; object-fit: cover; object-position: 50% 42%;
-  -webkit-mask-image: linear-gradient(90deg, #000 0 44%, transparent 88%);
-          mask-image: linear-gradient(90deg, #000 0 44%, transparent 88%);
-  -webkit-mask-composite: source-over;
-          mask-composite: add;
-}
-.door--team .door__body {
-  position: relative; z-index: 1;
-  margin: 0 0 0 auto; padding: var(--sp-6);
-  width: min(46%, 30rem);
-  align-self: center;
-}
-.door--team .door__pages { flex-direction: row; flex-wrap: wrap; gap: .35rem; }
-.door--team .pg { margin-left: 0; border-color: var(--gray-200); background: rgb(255 255 255 / .7); }
-@media (max-width: 719px) {
-  .door--team { flex-direction: column; }
-  .door--team .door__shot { position: relative; }
-  .door--team .door__shot img { aspect-ratio: 16 / 9; -webkit-mask-image: none; mask-image: none; }
-  .door--team .door__shot::after { background: linear-gradient(180deg, transparent 40%, var(--white) 100%); }
-  .door--team .door__body { width: auto; margin: -12% 0 0; padding: 0 var(--sp-5) var(--sp-5); }
-}
+.door--team .door__pages { display: flex; flex-wrap: wrap; column-gap: var(--sp-5); border-top: 0; }
+.door--team .door__pages li { border-bottom: 0; }
 
 @media (prefers-reduced-motion: reduce) {
-  .door, .door__shot img, .door h3 a::after, .pg { transition: none; }
-  .door:hover { transform: none; }
-  .door:hover .door__shot img { transform: none; }
+  .door, .pg { transition: none; }
 }
 
 /* ============================================================== FOOTER ==== */

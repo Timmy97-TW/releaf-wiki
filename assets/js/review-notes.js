@@ -20,8 +20,13 @@
 
      grep -rl 'class="review-note"' --include=*.html .
 
-   A small switch in the bottom-left corner hides and shows the notes; the
-   choice is remembered in this browser only.
+   The notes are <aside>, never headings, so page.js leaves them out of the
+   contents rail and the section numbering, and does not link [n] inside
+   them. Their look lives in assets/css/nav.css (loaded early, so there is
+   no flash of an unstyled note), including the dark variant for the
+   hardware section and print. This file only runs the switch in the
+   demo-tools tray (bottom right, shared with the rule check), which hides
+   and shows them; the choice is remembered in this browser only.
    ========================================================================== */
 (function () {
   "use strict";
@@ -36,36 +41,29 @@
   }
   if (!notes().length) return;
 
-  const css = `
-.review-note { margin: 1.75rem 0 0.5rem; padding: 0.85rem 1.1rem 0.9rem; border: 1px dashed #92610c;
-  background: #fffaf0; color: #3d3320; font: 400 0.9rem/1.55 var(--font-body, Inter, system-ui, sans-serif);
-  max-width: var(--measure, 68ch); border-radius: 0; box-shadow: none; }
-.review-note p { margin: 0 0 0.45rem; max-width: none; font-size: inherit; line-height: inherit; color: inherit; }
-.review-note p:last-child { margin-bottom: 0; }
-.review-note b { color: #6b4708; font-weight: 650; }
-.review-note .review-note__head { font-size: 0.6875rem; font-weight: 650; letter-spacing: 0.12em;
-  text-transform: uppercase; color: #92610c; margin-bottom: 0.5rem; }
-.review-note .review-note__head span { text-transform: none; letter-spacing: 0; font-weight: 500; color: #6b5a3a; }
-html.review-off .review-note { display: none; }
-.review-toggle { position: fixed; left: 12px; bottom: 56px; z-index: 900; font: 600 11px/1 var(--font-body, Inter, system-ui, sans-serif);
-  letter-spacing: 0.06em; padding: 7px 10px; background: #fffaf0; color: #6b4708; border: 1px dashed #92610c;
-  cursor: pointer; border-radius: 0; }
-.review-toggle:focus-visible { outline: 2px solid #4f9c6f; outline-offset: 2px; }
-@media print { .review-note, .review-toggle { display: none !important; } }`;
-  const s = document.createElement("style");
-  s.textContent = css;
-  document.head.appendChild(s);
+  const root = document.documentElement;
 
   const KEY = "releaf-review-notes";
   let off = false;
   try { off = localStorage.getItem(KEY) === "off"; } catch (e) {}
-  const root = document.documentElement;
+
+  let tray = document.querySelector(".demo-tools");
+  if (!tray) {
+    tray = document.createElement("div");
+    tray.className = "demo-tools";
+    document.body.appendChild(tray);
+  }
+
   const btn = document.createElement("button");
   btn.type = "button";
   btn.className = "review-toggle";
   const paint = () => {
+    const n = notes().length;
     root.classList.toggle("review-off", off);
-    btn.textContent = (off ? "Show" : "Hide") + " review notes (" + notes().length + ")";
+    /* the words say what a press will do; aria-pressed says the current state */
+    btn.innerHTML = '<span class="rt-long">' + (off ? "Show" : "Hide") + " review notes (" + n + ")</span>" +
+                    '<span class="rt-short">Notes ' + (off ? "off" : "on") + " (" + n + ")</span>";
+    btn.setAttribute("aria-label", "Review notes: " + n + " on this page");
     btn.setAttribute("aria-pressed", String(!off));
   };
   btn.addEventListener("click", () => {
@@ -74,5 +72,5 @@ html.review-off .review-note { display: none; }
     paint();
   });
   paint();
-  document.body.appendChild(btn);
+  tray.appendChild(btn);
 })();

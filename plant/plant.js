@@ -34,10 +34,13 @@
     btns.forEach(function (b, i) {
       b.addEventListener("click", function () { show(i); });
       b.addEventListener("keydown", function (e) {
-        var d = e.key === "ArrowRight" ? 1 : e.key === "ArrowLeft" ? -1 : 0;
-        if (!d) return;
+        var last = btns.length - 1, n;
+        if (e.key === "ArrowRight") n = i === last ? 0 : i + 1;
+        else if (e.key === "ArrowLeft") n = i === 0 ? last : i - 1;
+        else if (e.key === "Home") n = 0;
+        else if (e.key === "End") n = last;
+        else return;
         e.preventDefault();
-        var n = (i + d + btns.length) % btns.length;
         btns[n].focus();
         show(n);
       });
