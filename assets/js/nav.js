@@ -413,7 +413,7 @@
   function reviewNotes(base) {
     if (window.REVIEW_NOTES === false && !document.querySelector(".review-note")) return;
     const s = document.createElement("script");
-    s.src = base + "assets/js/review-notes.js?v=2";
+    s.src = base + "assets/js/review-notes.js?v=3";
     s.defer = true;
     document.body.appendChild(s);
   }
