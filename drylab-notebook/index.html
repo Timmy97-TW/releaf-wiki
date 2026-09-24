@@ -83,19 +83,13 @@
 }
 @media (min-width: 640px) { .nbwrap { padding-left: var(--sp-6); padding-right: var(--sp-6); } }
 
-/* the season in figures, set as a sentence rather than a row of KPI tiles */
+/* the season in figures, set as one sentence of body text: the counts are
+   facts about the record, not a row of headline numbers */
 .stats {
-  display: flex; flex-wrap: wrap; align-items: baseline;
-  gap: var(--sp-2) var(--sp-6);
-  margin: 0;
+  margin: 0; max-width: var(--measure, 68ch);
+  font-size: var(--text-sm); line-height: 1.6; color: var(--gray-600);
 }
-.stat { display: flex; align-items: baseline; gap: .45rem; }
-.stat b {
-  font-family: var(--font-display);
-  font-size: 1.5rem; font-weight: 700; letter-spacing: -.02em;
-  font-variant-numeric: tabular-nums; color: var(--leaf-700);
-}
-.stat span { font-size: var(--text-sm); color: var(--gray-500); }
+.stats b { font-weight: 650; color: var(--ink, var(--gray-900)); font-variant-numeric: tabular-nums; }
 
 /* ================================================= THE CONTACT STRIP ======= */
 
@@ -737,7 +731,7 @@ svg.links { position: absolute; left: 0; top: var(--headh); pointer-events: none
 
   <div class="nbwrap">
 
-    <div class="stats" id="stats"></div>
+    <p class="stats" id="stats"></p>
 
     <div class="controls">
       <div class="ctl-group">
@@ -2618,11 +2612,11 @@ document.getElementById('hintpix').textContent =
 const closed=ENTRIES.filter(e=>e.k==='end').length;
 const miles=ENTRIES.filter(e=>e.k==='milestone').length;
 const people=new Set(); ENTRIES.forEach(e=>(e.who||[]).forEach(w=>people.add(w)));
-document.getElementById('stats').innerHTML=[
+document.getElementById('stats').innerHTML='The record holds '+[
   [NW,'weeks'],[NL,'pipelines'],[ENTRIES.length,'notebook pages'],
   [PHOTOS.length,'photographs'],[miles,'milestones'],[BRANCHES.length,'branch points'],
-  [HANDOFFS.length,'wetlab handoffs'],[closed,'closed on purpose'],[people.size,'contributors']
-].map(([n,l])=>`<div class="stat"><b>${n}</b><span>${l}</span></div>`).join('');
+  [HANDOFFS.length,'handoffs to the Wet Lab'],[closed,'pipelines closed on purpose']
+].map(([n,l])=>`<b>${n}</b> ${l}`).join(', ')+`, from <b>${people.size}</b> contributors.`;
 
 /* ==================================================================
    7. DOCUMENT VIEW
@@ -2659,7 +2653,7 @@ function buildDoc(){
     });
     hs.forEach(x=>{
       h+=`<article class="docentry" style="--c:var(--wet)">
-        <div class="pipe">WetLab handoff</div><h3>${x.t}</h3><p>${x.d}</p></article>`;
+        <div class="pipe">Sent to the Wet Lab</div><h3>${x.t}</h3><p>${x.d}</p></article>`;
     });
     h+=`</div></section>`;
   }
