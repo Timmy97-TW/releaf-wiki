@@ -4,25 +4,29 @@
    This is the roster. Edit this file. Each person is one object:
 
      name     shown on the card
-     role     badge above the name ("Student Advisor", "Wet Lab Instructor").
-              Students carry no role badge: the roster is a team, not a ladder
-     photo    official portrait on the card; "" falls back to an initials tile
+     role     the line above the name ("Student Advisor", "Wet Lab Instructor").
+              Students carry no role: the roster is a team, not a ladder
+     photo    official portrait on the card; "" shows the initials and
+              "Portrait to come"
      workPhoto   profile view, left: the person at work
      goofyPhoto  profile view, right: the goofy one. Either one left "" shows
-                 as an empty frame. Put the files in assets/img/members/work/
-                 and assets/img/members/goofy/, named like the portrait
+                 as an empty frame that says the photo is to come. Put the
+                 files in assets/img/members/work/ and
+                 assets/img/members/goofy/, named like the portrait.
               Photos are WebP. A portrait is 720 x 900; a working or goofy
               photo is at most 1100 px on its long edge, in its own shape,
               never cropped. From the wiki root, with Python and Pillow:
                 python3 -c "import sys;from PIL import Image,ImageOps;f=sys.argv[1];i=ImageOps.exif_transpose(Image.open(f)).convert('RGB');i.thumbnail((1100,1100));i.save(f.rsplit('.',1)[0]+'.webp',quality=80,method=6)" FILE.jpg
               then point the path here at the .webp and delete the .jpg
-     grade / school         the small meta line under the name
-     track    subteam only ("Wet Lab", "Dry Lab", "Human Practices")
+     grade / school / track   the line under the name, in that order;
+              track is the subteam only ("Wet Lab", "Dry Lab", "Human Practices")
      bio      shown under the photo; clicking the card opens the full view
-     tasks    the tasks this person is on -> one pill each, everybody a member
+     tasks    the tasks this person is on, listed in words on the card and
+              in the profile. Use the names in LABELS below, spelled the same
 
-   Adding a new task: add one line to LABELS. It appears in the filter bar and
-   on every card automatically.
+   LABELS is the list of task names. The page no longer colours tasks (a
+   card lists them in words), so the colour values and LABEL_GRADIENTS are
+   kept only in case a future page wants them.
    ========================================================================== */
 
 /* ---------- Label system (adopted from Unicamp-Brazil) ------------------- */
@@ -61,7 +65,7 @@ const LABEL_GRADIENTS = {
 const SECTIONS = [
   {
     id: "student-members",
-    title: "Student Members",
+    title: "Student members",
     note: "",
     groups: [
     { title: "", members: [
@@ -287,7 +291,7 @@ const SECTIONS = [
   },
   {
     id: "advisors",
-    title: "Student Advisors",
+    title: "Student advisors",
     note: "Student advisors are not just here to help out. Each of them turned a year of experience into something the team did not have: an education site that finally strings our teaching work together across the years, the logistics and software behind advanced peptide design, a firmer structure for our videos, a photography initiative putting plant stress in front of a global audience through one distinct lens, and lab technique passed down bench to bench.",
     groups: [
     { title: "", members: [
@@ -359,7 +363,7 @@ const SECTIONS = [
   },
   {
     id: "support-team",
-    title: "Support Team",
+    title: "Support team",
     note: "Every team finds its own rhythm, and not everyone can give it the same hours. This section is kept for members whose contribution to the project has been lighter. It is empty today, and we would be glad for it to stay that way.",
     groups: [
     { title: "", members: [] },
