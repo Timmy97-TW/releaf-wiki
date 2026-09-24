@@ -48,26 +48,26 @@ else is flagged here and in the review note of that section.
 | Homepage | What it says | Other page | What that says | Suggested resolution |
 |---|---|---|---|---|
 | `index.html:153` | 97% of mapped farmland in parcels under 2 ha; 99.8% in the most volatile band | `geospatial-analysis/index.html:253-255` | "more than 80% of farmers work small-scale farms… less than 9% of agricultural land"; no 97% or 99.8% anywhere | Put the 97%/99.8% calculation and method on Geospatial, or use Geospatial's figures |
-| `index.html:1948` (legend) | Class breaks 0.49, 0.60, 0.71, 0.82 | `geospatial-analysis/index.html:501, 317` | Only the 0.38 to 0.93 range and the 0.71 break are stated | Add the five bands as a table on Geospatial |
-| `index.html:1906` | Two most volatile bands = "first 15%"; a quarter of small-farm land reaches every farm at 0.71 or harder | none | Not on any sub-page | Add the band-by-band share table to Geospatial |
+| `index.html:1949` (legend) | Class breaks 0.49, 0.60, 0.71, 0.82 | `geospatial-analysis/index.html:501, 317` | Only the 0.38 to 0.93 range and the 0.71 break are stated | Add the five bands as a table on Geospatial |
+| `index.html:1907` | Two most volatile bands = "first 15%"; a quarter of small-farm land reaches every farm at 0.71 or harder | none | Not on any sub-page | Add the band-by-band share table to Geospatial |
 | `index.html:158` | "damages rice at grain filling" | `geospatial-analysis/index.html:241` | "grain-setting" | One term |
 | `index.html:319` | "Between 34% and 46% of flash droughts" | `geospatial-analysis/index.html:288-290` | "nearly half now developing inside a single five-day window" | One wording, same source |
 | `index.html:319-326` | Pivot Bio 2008/2011/2019; EU admits four organism groups; registration 1-3 / 2-3 / 7-9 years; 18 inoculants, 44% pathogens | none | Only on the homepage (refs 4-10) | Carry them on Description 2.2 or Entrepreneurship with the same refs |
 | `index.html:72` | "By the Datun Stream in Tamsui · Chen's farm" | `human-practices/index.html:593` | "Ms. Chen Hui-wen's (陳惠雯) Happy Farm in Tamsui" | One place name |
-| `index.html:1105` | Farm visit "moved dosing off a wall clock and onto soil-moisture state" | `human-practices/index.html:593-598` | The recorded outcome is "act when stress is forecast, at the seedling stage, and then stop", plus a seed exchange | Make the card match the HP page |
-| `index.html:1129` | Yes Health visit "sent the hardware team back to the CAD the same afternoon" | `plant/index.html:1028` | "sent the dry lab back to the hardware drawings the same day" | One wording |
-| `index.html:2303` and `assets/data/site-nav.js:104` | "Forty-seven of us" | `assets/data/roster.js` | 46 people | Count and fix whichever is wrong |
-| `index.html:1782` (tile alt) | 434 h, 2 671 readings | `hardware/index.html:108`, `hardware/photometer/index.html:888`; `hardware/index.html:387` | 336 h / 2132 points; "nineteen-day run" | Results itself flags this (`results/index.html:725`); the homepage agrees with Software and Results. Settle one figure |
-| `index.html:1777` (tile alt) | "117 reads and 61 clones", own ABIF reader | none | Not on any sub-page | Add to Engineering or Software, or cut from the alt |
-| `index.html:1840` (tile alt) | "BAPHIQ has not answered" | `laws-and-regulations/`, `entrepreneurship/index.html:745` | BAPHIQ appears only as a risk | Record the request on Laws, or cut |
-| `index.html:1662` (tile alt) | Agar boxes, salt and heat, 5 July 2026 | `experiments/index.html:1616` | Plant salt/heat sets dated from 25 July | Check the photo date |
-| `index.html:1705` (tile alt) | BoPep4 aligned "against the eight Arabidopsis Peps" | `peptide-design/index.html:16` | "a seventeen-row alignment" | One description |
-| `index.html:1846` (tile) | Permeate transport model | `model/index.html:610-611` | "Membrane transport: On Bioreactor Calculations" (deleted page) | Move the evidence or drop the tile and change "Twenty-nine" |
-| `index.html:937` | 500 mL reservoir | `milestone/index.html:617` | "a 300 mL medium reservoir" | Correct Milestone (Hardware says 500 mL vessel, 300 mL working) |
-| `index.html:914-918` | OD600 0.8-0.9 in 2 h vs 0.6-0.8 in 4.5 h | `results/index.html:658` | "one run each" | Add "one run each" on the homepage |
-| `index.html:961, 1232` | "Every drawing and model… under CC BY 4.0" | `hardware/index.html:441-448` | CC BY 4.0 for site content, MIT for JS; no licence stated for STL/CAD | State the CAD licence where files are offered |
-| `index.html:1045` | Green 520 nm, red 660 nm | `hardware/diopal/index.html:409` | "assumed pending measurement" (literature 535/670) | Add the qualifier |
-| `index.html:1027` | "a dial rather than a fuse" | `model/index.html:378-380`, `results/index.html:340` | No induction curve measured | Flag as design intent |
+| `index.html:1106` | Farm visit "moved dosing off a wall clock and onto soil-moisture state" | `human-practices/index.html:593-598` | The recorded outcome is "act when stress is forecast, at the seedling stage, and then stop", plus a seed exchange | Make the card match the HP page |
+| `index.html:1131` | Yes Health visit "sent the hardware team back to the CAD the same afternoon" | `plant/index.html:1028` | "sent the dry lab back to the hardware drawings the same day" | One wording |
+| `index.html:2304` and `assets/data/site-nav.js:104` | "Forty-seven of us" | `assets/data/roster.js` | 46 people | Count and fix whichever is wrong |
+| `index.html:1783` (tile alt) | 434 h, 2 671 readings | `hardware/index.html:108`, `hardware/photometer/index.html:888`; `hardware/index.html:387` | 336 h / 2132 points; "nineteen-day run" | Results itself flags this (`results/index.html:725`); the homepage agrees with Software and Results. Settle one figure |
+| `index.html:1778` (tile alt) | "117 reads and 61 clones", own ABIF reader | none | Not on any sub-page | Add to Engineering or Software, or cut from the alt |
+| `index.html:1841` (tile alt) | "BAPHIQ has not answered" | `laws-and-regulations/`, `entrepreneurship/index.html:745` | BAPHIQ appears only as a risk | Record the request on Laws, or cut |
+| `index.html:1663` (tile alt) | Agar boxes, salt and heat, 5 July 2026 | `experiments/index.html:1616` | Plant salt/heat sets dated from 25 July | Check the photo date |
+| `index.html:1706` (tile alt) | BoPep4 aligned "against the eight Arabidopsis Peps" | `peptide-design/index.html:16` | "a seventeen-row alignment" | One description |
+| `index.html:1847` (tile) | Permeate transport model | `model/index.html:610-611` | "Membrane transport: On Bioreactor Calculations" (deleted page) | Move the evidence or drop the tile and change "Twenty-nine" |
+| `index.html:938` | 500 mL reservoir | `milestone/index.html:617` | "a 300 mL medium reservoir" | Correct Milestone (Hardware says 500 mL vessel, 300 mL working) |
+| `index.html:939` | OD600 0.8-0.9 in 2 h vs 0.6-0.8 in 4.5 h | `results/index.html:658` | "one run each" | Add "one run each" on the homepage |
+| `index.html:962, 1233` | "Every drawing and model… under CC BY 4.0" | `hardware/index.html:441-448` | CC BY 4.0 for site content, MIT for JS; no licence stated for STL/CAD | State the CAD licence where files are offered |
+| `index.html:1046` | Green 520 nm, red 660 nm | `hardware/diopal/index.html:409` | "assumed pending measurement" (literature 535/670) | Add the qualifier |
+| `index.html:1028` | "a dial rather than a fuse" | `model/index.html:378-380`, `results/index.html:340` | No induction curve measured | Flag as design intent |
 | **Fixed** `index.html` rigs tile alt | "germinated 100%" | `plant/index.html:559` | Prototype 4's 5 of 5 are seedlings moved from agar, not germination | Alt now says so |
 | **Fixed** codon tile alt | SD accessibility 0.067 to 0.641 | `peptide-design/index.html:1840`, `protein-design/packaging/index.html:130-132` | 0.528 (and 0.497); 0.641 is on no page | Number removed from the alt; the two sub-pages still disagree with each other |
 | **Fixed** photometer tile alt | four-fold overestimate on 4 July | `milestone/index.html:1041`, `hardware/notebook/index.html:240` | "the four-fold error from 19 July" (week 20) | Alt keeps the photo date and the later finding apart |
