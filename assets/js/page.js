@@ -243,6 +243,8 @@
         let n = null;
         if (e.key === "ArrowRight") n = (i + 1) % btns.length;
         if (e.key === "ArrowLeft")  n = (i - 1 + btns.length) % btns.length;
+        if (e.key === "Home") n = 0;
+        if (e.key === "End")  n = btns.length - 1;
         if (n === null) return;
         e.preventDefault();
         show(btns[n].dataset.panel, true);
