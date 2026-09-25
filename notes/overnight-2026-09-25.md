@@ -34,12 +34,17 @@ or delete the `<aside class="review-note">` blocks. Same for the rule check
 
 **Bioreactor Calculations is removed**, as asked: the page, its Dry Lab tab
 entry, its footer entries, its homepage entry, the left rail only it used, and
-its README and generator entries. Nothing links to it. But **34 sentences on
-nine pages still name it in their prose**, because they are the students'
-words: Math Model, Measurement and Results lean on it most (the pump floor, the
-fibre count, the lumen holdup, the log reduction value that was "never
-measured"). Each one has a review note saying what the claim now needs, and
-section 35 of INCONSISTENCIES.md lists them all.
+its README and generator entries. Its 35 mentions in other pages' prose no
+longer send anyone to a missing page: 13 pure pointers now go to the page that
+really holds the material (Hardware, Hardware: Bioreactor, Measurement, Math
+Model) or lose just the pointer clause; 22 sentences that credited it with a
+number now say "the team's reactor calculations (not currently published on
+the wiki)", with every number left exactly as it was. Those numbers (the 230
+mL/min pump floor, 3.74 mL lumen holdup, eight fibres, 37.6 kDa, the growth
+refit, the shell concentration) still need a published source or should be
+dropped; each place has a review note, and `review-2026-09-25/orphans.md`
+lists every sentence before and after. The three Human Practices links to
+Math Model are a best reading of what the writer meant; check them.
 
 **Milestone is rebuilt** to the "From Failure to Function" structure: success
 definition with the six-stage chain and the validation framework, the team's
@@ -134,8 +139,8 @@ sections), Notebook (March to September index), Gallery, Inclusivity.
    each needing the team to say which record is right: the long photometer
    run (336 / 434 / 400 h), the pump floor (230 mL/min quoted, 100.3 measured,
    94 run), the membrane fibre count and lumen volume, the ACC deaminase mass
-   (36 / 37.6 / 41 / 42 kDa), the light wavelengths, the sentences naming the
-   deleted page, and the containment layers. (The root length, the software
+   (36 / 37.6 / 41 / 42 kDa), the light wavelengths, the numbers that were only
+   ever published on the deleted page, and the containment layers. (The root length, the software
    address and the Castillo-Hair citation were fixed overnight.)
 2. **Farmer Chen's image consent** is not on record (a comment in the homepage
    source says so). Her photograph and words open the site.
