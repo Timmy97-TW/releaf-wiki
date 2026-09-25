@@ -157,15 +157,23 @@
   padding-inline: calc(var(--rail) + var(--gutter)) var(--gutter);
 }
 .eng .wide {
-  width: min(var(--wide), calc(100vw - var(--rail) - 2 * var(--gutter)));
+  width: min(var(--wide), calc(100vw - var(--sbw, 0px) - var(--rail) - 2 * var(--gutter)));
   margin-inline: 0;
   max-width: none;
 }
 .eng .full {
-  width: min(1560px, calc(100vw - var(--rail) - 2 * var(--gutter)));
+  width: min(1560px, calc(100vw - var(--sbw, 0px) - var(--rail) - 2 * var(--gutter)));
   margin-inline: 0;
   max-width: none;
 }
+
+/* A breakout is measured against the window, so it only lines up when it is a
+   direct child of the sheet's inner column. Inside a cycle body, which is
+   indented past the cycle number, the same class produced a block as wide as
+   the sheet starting at the indent, and the page scrolled sideways by the
+   difference. Nested, a breakout is simply full width of what holds it. */
+.eng .cyc__body .wide, .eng .cyc__body .full,
+.eng .step .wide, .eng .step .full { width: 100%; max-width: 100%; }
 
 .eng .sheethead {
   display: grid;
@@ -184,7 +192,7 @@
 @media (min-width: 62rem) {
   .eng .sheethead {
     width: max(100%, calc(
-      min(var(--wide), 100vw - var(--rail) - 2 * var(--gutter))
+      min(var(--wide), 100vw - var(--sbw, 0px) - var(--rail) - 2 * var(--gutter))
       - var(--rail) - 2 * var(--gutter)));
   }
 }
@@ -236,7 +244,7 @@
    its own full-bleed scrim and the photograph above it stays legible. */
 .eng .cover__body::before {
   content: ""; position: absolute; inset: 0;
-  left: 50%; width: 100vw; transform: translateX(-50%);
+  left: 50%; width: calc(100vw - var(--sbw, 0px)); transform: translateX(-50%);
   background: linear-gradient(180deg,
     rgba(9,26,19,0) 0%, rgba(9,26,19,.46) 22%,
     rgba(9,26,19,.78) 52%, rgba(9,26,19,.9) 100%);
@@ -272,8 +280,11 @@
   display: flex; flex-wrap: wrap; gap: .35rem 1.75rem;
   font: var(--fld); letter-spacing: .12em; text-transform: uppercase;
 }
-.eng .cover__strip dt { color: var(--plate-ink-muted); }
-.eng .cover__strip dd { margin: 0 1.25rem 0 0; color: var(--plate-ink); }
+/* Each field is a dt and its dd in one box, so a field name never ends a line
+   with its value on the next one. */
+.eng .cover__strip dl > div { display: flex; gap: .7rem; align-items: baseline; }
+.eng .cover__strip dt { color: var(--plate-ink-muted); white-space: nowrap; }
+.eng .cover__strip dd { margin: 0; color: var(--plate-ink); }
 
 /* ============================================================ READING ====== */
 
@@ -367,7 +378,11 @@
 
 /* =============================================================== DIAL ====== */
 
-.eng .record { display: grid; gap: var(--sp-6); }
+/* minmax(0, 1fr), not the default auto track: a grid track grows to the
+   min-content of what is in it, so one long unbreakable string in a cycle was
+   widening the whole column past the sheet and taking the page sideways with
+   it. */
+.eng .record { display: grid; gap: var(--sp-6); grid-template-columns: minmax(0, 1fr); }
 @media (min-width: 62rem) {
   .eng .record {
     grid-template-columns: 13rem minmax(0, 1fr);
@@ -430,6 +445,9 @@
 }
 .eng .dial__cap b { display: block; color: var(--e-leaf-900); margin-bottom: .2rem; }
 
+/* Below the width where the ring is drawn, the six chips are all a reader
+   gets, and six bare numerals do not say what they are. */
+.eng .dial__chipsnote { margin: 0 0 .5rem; }
 .eng .dial__chips {
   display: flex; flex-wrap: wrap; gap: .4rem;
   margin: 0 0 var(--sp-5); padding: 0; list-style: none;
@@ -447,7 +465,7 @@
 }
 @media (min-width: 62rem) {
   .eng .dial__ring { display: block; }
-  .eng .dial__chips { display: none; }
+  .eng .dial__chips, .eng .dial__chipsnote { display: none; }
 }
 
 /* ============================================================= CYCLES ====== */
@@ -802,6 +820,24 @@
 .eng .callout--unproven .callout__label { color: var(--st-open); }
 .eng .callout--note { border-left-color: var(--lvl-0); }
 .eng .callout--note .callout__label { color: var(--lvl-0); }
+/* the one medal callout on the page: the rubric criterion this sheet set is
+   read against, and a way into the cycle that answers it. Same object as every
+   other boxed note, in the state colour that means "closed on a fail" nowhere
+   else on this sheet. */
+.eng .callout--medal { border-left-color: var(--st-fail); }
+.eng .callout--medal .callout__label { color: var(--st-fail); }
+.eng .callout__jump {
+  display: flex; flex-wrap: wrap; align-items: center; gap: .5rem .75rem;
+  font: var(--fld); letter-spacing: var(--lsp); text-transform: uppercase;
+  color: var(--graphite);
+}
+.eng .callout__jump a {
+  padding: .22em .55em;
+  border: var(--rule) solid var(--graphite-2);
+  color: var(--e-leaf-700);
+  text-decoration: none;
+}
+.eng .callout__jump a:hover { border-color: var(--e-leaf-700); color: var(--e-leaf-900); }
 
 /* =============================================================== FIXES =====
    A .fix is the same object as a .callout and a .todo — white ground,
@@ -1268,11 +1304,16 @@
 }
 
 /* ============================================ REVIEW NOTES (demo only) =====
-   assets/js/review-notes.js styles the note itself. Two things it cannot
-   know about: this page inverts sheet 04 to blueprint, where an inherited
-   link colour would be unreadable on the note's pale ground, and the sheet
-   grid would otherwise stretch a note across the drawing column.        */
+   nav.css styles the note itself, including its link colour. One thing it
+   cannot know about: this page inverts sheet 04 to blueprint, and the sheet's
+   own paragraph colour, pale so it reads on the dark ground, outranks the
+   note's, so the note there would be pale text on its own pale ground.   */
 
-.eng .review-note a { color: #6b4708; text-decoration: underline; }
-.eng .review-note a:hover { color: #92610c; }
 .eng .sheet--plate .review-note { margin-left: 0; }
+/* On the blueprint plate the sheet's own paragraph colour (pale, for the dark
+   ground) outranked the note's, so the note on sheet 04 was pale text on its
+   own pale ground and could barely be read. The note keeps its own ink. */
+.eng .sheet.sheet--plate .review-note p,
+.eng .sheet.sheet--plate .review-note li { color: #3d3320; }
+
+
