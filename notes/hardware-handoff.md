@@ -310,6 +310,13 @@ git apply /path/to/notes/hardware-upstream-2026-09-25-fixes-only.patch
 If `git apply` refuses because upstream has moved on, `git apply --3way` or
 `patch -p1 < file` usually lands it; the hunks are small and independent.
 
+A third, small patch came out of the 25 September contrast pass and applies on top of
+the fixes-only one: `hardware-upstream-2026-09-25-contrast.patch`. It hides the
+Hydroponics contents rail below 1100px (it was squeezed into a 34px column and
+lettered over the record, as the other three instrument pages already avoid) and
+gives the (5.2) link in the Bioreactor hero lede the prose-link colour instead of the
+browser's default blue on black. Details in `review-2026-09-25/contrast.md`.
+
 The review notes read the records against the Best Hardware rubric and cross-check them
 against Results, Measurement, Software, Model, Plants and the notebook. The biggest
 single finding: these records froze on 13 August while other pages carry later
