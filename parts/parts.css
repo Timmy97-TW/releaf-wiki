@@ -26,8 +26,11 @@
 
    COLOUR. One ladder of five status words plus a failure word, and those six
    stamps are the only colours on the page besides the ReLeaf green and the
-   neutrals. The word is always written out; the colour only confirms it. Amber means in progress, slate means checked but not read, green
-   means read, rust means it failed. A status colour is never a background.
+   neutrals. The word is always written out; the colour only confirms it.
+   The colours are the site's state colours (DESIGN.md): green means read
+   (stamp--closed), amber means it failed (stamp--fail, as a failed cycle is
+   on Engineering), rust means still under way (stamp--open), slate means
+   checked but not read. A status colour is never a background.
    ========================================================================== */
 
 .parts .pagebody { max-width: 60rem; }
@@ -46,43 +49,29 @@
 /* The .fix box (numbered P1, P2... so the list in the status box matches) is
    drawn by page.css, the same box the other wet lab pages use. */
 
-/* A unit inside a capitalised column head keeps its own case. */
-.parts .u { text-transform: none; letter-spacing: .02em; }
-
 /* ============================================================== STATUS =====
    The one vocabulary. Every part in every table on this page carries exactly
    one of these words, and the little tag after it says which assembly level
    the word was earned at. The words come from the build spreadsheet's own
    states, not from anything invented here.                                 */
 
-/* Drawn as the drawing set's stamp (DESIGN.md, Stamps), the same component
-   Plants and Measurement use for their states: the word in a 1px box of its
-   own colour, a filled square before it, square corners. Kept in sentence
-   case rather than capitals because two of the words are long and the level
-   tag after them (L0, L1, L2) has to stay legible. */
-.parts .st {
-  display: inline-flex; align-items: center; gap: .45em;
-  white-space: nowrap;
-  padding: .2em .55em;
-  border: 1px solid currentColor;
-  border-radius: 0;
-  font-size: var(--text-xs); font-weight: 650; line-height: 1.4;
-  letter-spacing: .01em;
-  color: var(--gray-600);
-}
-.parts .st::before { content: ""; flex: none; width: .5em; height: .5em; background: currentColor; }
-.parts .st i {
+/* Drawn with page.css's .stamp, the component Plants, Measurement and
+   Results use for their states. Three of the six words are shared states:
+     Sequence-confirmed  stamp--closed
+     Unsuccessful        stamp--fail
+     Assembled           stamp--open   (under way, not yet confirmed)
+   The other three are rungs the shared stamp does not have, so they are
+   page-scoped modifiers of the same shape. The level tag after the word
+   (L0, L1, L2) is set a step lighter so the word leads.                    */
+.parts .stamp i {
   font-style: normal; font-weight: 700;
-  font-size: .8em; letter-spacing: .06em;
+  font-size: .9em; letter-spacing: .06em;
   color: var(--gray-500);
 }
-.parts .st--designed { color: var(--gray-500); }
-.parts .st--designed::before { background: none; box-shadow: inset 0 0 0 1px currentColor; }
-.parts .st--cloned   { color: var(--gray-700); }
-.parts .st--assembled{ color: var(--amber-700); }
-.parts .st--pcr      { color: var(--slate-700); }
-.parts .st--seq      { color: var(--leaf-700); }
-.parts .st--failed   { color: var(--rust-700); }
+.parts .stamp--designed { color: var(--gray-500); }
+.parts .stamp--designed::before { background: none; box-shadow: inset 0 0 0 1px currentColor; }
+.parts .stamp--cloned   { color: var(--gray-700); }
+.parts .stamp--pcr      { color: var(--slate-700); }
 
 /* The ladder itself, set out once under the overview so every later table can
    be read without a key beside it. */
@@ -97,10 +86,10 @@
 }
 .parts .ladder > li:last-child { border-bottom: 1px solid var(--gray-200); }
 @media (min-width: 42rem) {
-  .parts .ladder > li { grid-template-columns: 12.5rem 1fr; align-items: baseline; }
+  .parts .ladder > li { grid-template-columns: 13rem 1fr; align-items: baseline; }
 }
 .parts .ladder p { margin: 0; color: var(--gray-700); }
-.parts .ladder .st { justify-self: start; }
+.parts .ladder .stamp { justify-self: start; }
 
 /* ============================================================== TABLES =====
    The source docx gives each part six fields: registry number, name,
@@ -119,7 +108,11 @@
 .parts table.parts-tbl th:nth-child(2),
 .parts table.parts-tbl td:nth-child(2) { width: 8.5rem; }
 .parts table.parts-tbl th:nth-child(3),
-.parts table.parts-tbl td:nth-child(3) { width: 11.5rem; }
+.parts table.parts-tbl td:nth-child(3) { width: 13.5rem; }
+/* "Sequence-confirmed L1" in capitals is wider than a fixed column can
+   spare, so in these tables the stamp may wrap onto two lines rather than
+   run into the Function text. */
+.parts table.parts-tbl .stamp { white-space: normal; }
 .parts table.parts-tbl td { overflow-wrap: break-word; }
 .parts table.parts-tbl td:first-child b { display: block; }
 
@@ -143,7 +136,7 @@
    widest of them inside the column instead of behind a horizontal scroll. */
 .parts table.rec { table-layout: auto; }
 .parts table.rec th, .parts table.rec td { padding: var(--sp-2) var(--sp-3); }
-.parts table.rec .st { white-space: normal; }
+.parts table.rec .stamp { white-space: normal; }
 .parts table.rec th { font-size: .625rem; white-space: normal; }
 .parts table.rec td { overflow-wrap: break-word; }
 
@@ -283,21 +276,3 @@
 }
 .parts .lightbox figcaption b { color: var(--white); }
 
-/* ============================================================ CONTENTS =====
-   The contents rail is sticky, and on this page it is long. Taller than the
-   window, its last entries sat below the fold with no way to reach them while
-   reading. Capped to the window and scrolled on its own; the script at the
-   foot of the page keeps the highlighted entry inside the visible part.
-   (Requested for page.css in notes/review-2026-09-25/wetlab2.md.)          */
-@media (min-width: 1040px) {
-  .parts .toc {
-    max-height: calc(100vh - var(--nav-h) - 2 * var(--sp-5));
-    overflow-y: auto;
-    overscroll-behavior: contain;
-    scrollbar-width: thin;
-  }
-}
-
-/* A numeric column is right-aligned in page.css; its head goes with it, so
-   the unit in the head sits over the figures it describes. */
-.parts table.data th.num { text-align: right; }

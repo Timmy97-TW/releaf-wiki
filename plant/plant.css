@@ -48,32 +48,44 @@
 
 /* ------------------------------------------------------------- KEY FACTS -- */
 
-/* A quantity schedule, not a row of hero figures: ruled cells, the number at
-   the size of a subheading and the words beside it doing the work. Scoped to
-   .plant so it outranks page.css's ".sec ul" and ".sec li + li", which were
-   indenting the first cell and pushing the others down, and showing the grey
-   grid ground through the gaps as a slab down the left and a bar on top. */
+/* A quantity schedule, not a row of hero figures: DESIGN.md's tally with
+   ruled cells, drawn exactly as Software draws its four counts. A heavy rule
+   above and below, a hairline between cells, and each number set beside its
+   words at a modest size, so the words do the work. Scoped to .plant so it
+   outranks page.css's ".sec ul" and ".sec li + li". */
 .plant .keyfacts {
   list-style: none;
   margin: var(--sp-6) 0;
   padding: 0;
   display: grid;
-  gap: 1px;
-  background: var(--gray-200);
-  border: 1px solid var(--gray-200);
-  border-radius: 0;
   grid-template-columns: repeat(auto-fit, minmax(11rem, 1fr));
+  border-top: 1.5px solid var(--gray-700);
+  border-bottom: 1.5px solid var(--gray-700);
 }
-.plant .keyfacts li { margin: 0; padding: var(--sp-3) var(--sp-4); background: var(--white); }
+.plant .keyfacts li {
+  margin: 0;
+  padding: var(--sp-3) var(--sp-4) var(--sp-3) 0;
+  border-right: 1px solid var(--gray-200);
+  display: grid;
+  grid-template-columns: 3.25rem 1fr;
+  gap: var(--sp-3);
+  align-items: baseline;
+}
+.plant .keyfacts li:last-child { border-right: 0; }
 .plant .keyfacts b {
-  display: block;
-  font-size: var(--text-h3);
+  font-size: 1.5rem;
   font-weight: 700;
   line-height: 1.2;
+  text-align: right;
   color: var(--leaf-900);
   font-variant-numeric: tabular-nums;
 }
-.plant .keyfacts span { display: block; margin-top: .2rem; font-size: var(--text-sm); color: var(--gray-600); line-height: 1.4; }
+.plant .keyfacts span { font-size: var(--text-sm); color: var(--gray-600); line-height: 1.4; }
+@media (max-width: 46rem) {
+  .plant .keyfacts { grid-template-columns: 1fr; }
+  .plant .keyfacts li { border-right: 0; border-bottom: 1px solid var(--gray-200); }
+  .plant .keyfacts li:last-child { border-bottom: 0; }
+}
 
 /* --------------------------------------------------------------- PIPELINE -- */
 
@@ -145,48 +157,20 @@
 
 /* ----------------------------------------------------------------- STAMPS -- */
 
-/* The drawing set's stamp (DESIGN.md, Stamps), the same component Measurement
-   and Parts use for their states: the word, always written out, in a 1px box
-   of its own colour with a filled square before it. Square corners. */
-.stamp {
-  display: inline-flex; align-items: center; gap: .45em;
-  font-size: .6875rem;
-  font-weight: 700;
-  line-height: 1.3;
-  letter-spacing: .1em;
-  text-transform: uppercase;
-  font-variant-numeric: tabular-nums;
-  padding: .25em .55em;
-  border: 1px solid currentColor;
-  border-radius: 0;
-  white-space: nowrap;
-  vertical-align: .1em;
-}
-.stamp::before { content: ""; flex: none; width: .5em; height: .5em; background: currentColor; }
-.stamp--done    { color: var(--leaf-700); }
-.stamp--partial { color: var(--amber-700); }
-.stamp--open    { color: var(--slate-700); }
-.stamp--void    { color: var(--rust-700); }
+/* page.css's .stamp, the component Measurement, Parts and Results use for
+   their states, keeping this page's four-way split: Closed is
+   stamp--closed; a partial run (4 trials, Inconclusive, Pretest...)
+   stamp--fail; Unmeasured and Void twice stamp--open (rust, as they were);
+   Queued, a run not yet started, the plain grey stamp (it was slate).
+   Software maps its states the same way. */
+.plant .stamp { vertical-align: .1em; }
 
 /* ----------------------------------------------------------------- LEDGER -- */
 
 .filters { display: flex; flex-wrap: wrap; gap: var(--sp-2); margin: var(--sp-5) 0 var(--sp-3); align-items: center; }
 .filters__lab { font-size: .6875rem; font-weight: 700; letter-spacing: .12em; text-transform: uppercase; color: var(--gray-450); margin-right: var(--sp-2); }
-.chip {
-  appearance: none;
-  font: inherit;
-  font-size: var(--text-sm);
-  cursor: pointer;
-  padding: .3rem .7rem;
-  border: 1px solid var(--gray-300);
-  border-radius: 0;   /* a field label with a box round it, not a pill */
-  background: var(--white);
-  color: var(--gray-600);
-  transition: background .12s ease, border-color .12s ease, color .12s ease;
-}
-.chip:hover { border-color: var(--leaf-500); color: var(--leaf-900); }
-.chip:focus-visible { outline: 2px solid var(--leaf-500); outline-offset: 2px; }
-.chip[aria-pressed="true"] { background: var(--leaf-900); border-color: var(--leaf-900); color: var(--white); }
+/* The filter buttons are page.css's .filterchip; "chip" stays on them as
+   plant.js's hook. */
 
 /* below about 46rem the columns crush into single words, so the table scrolls
    inside its wrapper instead of wrapping every cell to four lines */
@@ -218,9 +202,8 @@
 .chart .cat text { fill: var(--gray-700); font-weight: 600; }
 .chart .val text { fill: var(--gray-600); font-size: 11.5px; font-weight: 600; font-variant-numeric: tabular-nums; }
 .chart .axtitle { fill: var(--gray-450); font-size: 11px; font-weight: 700; letter-spacing: .1em; text-transform: uppercase; }
-/* a unit or a formula keeps its case inside a capitalised label: "mm" set in
-   capitals reads as megametres, "NaCl" as NACL */
-.u, .chart .axtitle .u { text-transform: none; }
+/* a unit or a formula inside a capitalised label (.u, from page.css) keeps
+   its case: "mm" set in capitals reads as megametres, "NaCl" as NACL */
 /* whiskers are one standard deviation either side of the mean; they sit above
    the bars so a short bar's whisker is still readable */
 .chart .err line { stroke: var(--gray-700); stroke-width: 1.4; stroke-linecap: butt; }
@@ -257,7 +240,7 @@
 .cell:hover { background: var(--leaf-50); }
 .cell:focus-visible { outline: 2px solid var(--leaf-500); outline-offset: -2px; }
 .cell[aria-pressed="true"] { background: var(--leaf-900); }
-.cell[aria-pressed="true"] .stamp { color: var(--white); }
+.cell[aria-pressed="true"] .stamp { color: var(--white); background: transparent; }
 .cell[aria-pressed="true"] .cell__note { color: var(--leaf-200); }
 .cell__note { display: block; margin-top: .35rem; font-size: var(--text-xs); }
 .cell--none { cursor: default; color: var(--gray-500); }   /* "Not run" is a finding, so it is text, not a rule colour */
@@ -410,17 +393,3 @@
 
 .rail__shot img, .proto img { cursor: zoom-in; }
 
-/* ============================================================ CONTENTS =====
-   The contents rail is sticky, and on this page it is long. Taller than the
-   window, its last entries sat below the fold with no way to reach them while
-   reading. Capped to the window and scrolled on its own; the script at the
-   foot of the page keeps the highlighted entry inside the visible part.
-   (Requested for page.css in notes/review-2026-09-25/wetlab2.md.)          */
-@media (min-width: 1040px) {
-  .plant .toc {
-    max-height: calc(100vh - var(--nav-h) - 2 * var(--sp-5));
-    overflow-y: auto;
-    overscroll-behavior: contain;
-    scrollbar-width: thin;
-  }
-}
