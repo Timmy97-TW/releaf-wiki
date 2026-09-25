@@ -11,23 +11,16 @@
   <link rel="stylesheet" href="../assets/css/page.css" />
   <style>
     /* ============================================================== STATE ==
-       Four words, used strictly, and defined once in section 1. A state is a
-       word first and a colour second: the border is the state's own colour,
-       the fill is never a slab, and the corner is square, as everywhere else
-       on this wiki.                                                        */
-    .st {
-      display: inline-block;
-      padding: .12em .5em;
-      border: 1px solid currentColor;
-      border-radius: 0;
-      font-size: .6875rem; font-weight: 700; letter-spacing: .08em;
-      text-transform: uppercase; white-space: nowrap;
-      font-variant-numeric: tabular-nums;
-    }
-    .st--met      { color: var(--leaf-700); }
-    .st--partly   { color: var(--amber-700); }
-    .st--not      { color: var(--rust-700); }
-    .st--untested { color: var(--gray-600); }
+       Four words, used strictly, and defined once in section 1. They are
+       page.css's .stamp: Met is closed (leaf), Partly met is the amber
+       partial stamp, Not met is rust, Not yet tested is the plain grey stamp.
+       Not met takes rust rather than amber so it never reads as the same
+       state as Partly met.                                                  */
+    /* Some verdicts are a phrase ("Apparatus yes, experiment not yet run").
+       page.css keeps a stamp on one line above 48rem, which pushed three
+       iteration tables past their scroller at 1440; in a table cell the
+       stamp may wrap, as it already does on a phone. */
+    table.data.iter .stamp, table.data.crit .stamp { white-space: normal; }
 
     /* ============================================================== CHAIN ==
        The six stages drawn as what they are: cells of one rule, in order,
@@ -37,7 +30,8 @@
       display: grid;
       gap: 0;
       grid-template-columns: repeat(2, 1fr);
-      border-top: 2px solid var(--leaf-900);
+      border-top: 1.5px solid var(--leaf-900);
+      border-left: 1px solid var(--gray-200);
       margin: var(--sp-5) 0;
     }
     @media (min-width: 34rem) { .chain { grid-template-columns: repeat(3, 1fr); } }
@@ -72,6 +66,24 @@
     .vframe__box span { display: block; margin-top: var(--sp-1); color: var(--gray-600); }
     .vframe__box--ask { border-color: var(--leaf-700); }
     .vframe__link { width: 1px; height: var(--sp-5); margin: 0 auto; background: var(--gray-300); }
+    /* Three across: the stem above and below meets a horizontal rule that runs
+       from the first box's centre to the last's, and each box hangs off it,
+       so all three questions visibly feed the same evidence. */
+    @media (min-width: 640px) {
+      .vframe__row--3 { position: relative; padding: var(--sp-4) 0; }
+      .vframe__row--3::before, .vframe__row--3::after {
+        content: ""; position: absolute; height: 1px; background: var(--gray-300);
+        left: calc((100% - 2 * var(--sp-4)) / 6); right: calc((100% - 2 * var(--sp-4)) / 6);
+      }
+      .vframe__row--3::before { top: 0; }
+      .vframe__row--3::after { bottom: 0; }
+      .vframe__row--3 > .vframe__box { position: relative; }
+      .vframe__row--3 > .vframe__box::before, .vframe__row--3 > .vframe__box::after {
+        content: ""; position: absolute; left: 50%; width: 1px; height: var(--sp-4); background: var(--gray-300);
+      }
+      .vframe__row--3 > .vframe__box::before { bottom: 100%; }
+      .vframe__row--3 > .vframe__box::after { top: 100%; }
+    }
 
     /* The criteria and iteration tables are wide. page.css already wraps a
        table in a horizontal scroller; fixed layout keeps the status column on
@@ -224,10 +236,10 @@
           <table class="data">
             <thead><tr><th>Status</th><th>What it means on this page</th></tr></thead>
             <tbody>
-              <tr><td><span class="st st--met">Met</span></td><td>The experiment was run, it produced a number, and the number clears the criterion.</td></tr>
-              <tr><td><span class="st st--partly">Partly met</span></td><td>Evidence exists and it does not carry the whole criterion. The cell says what is missing.</td></tr>
-              <tr><td><span class="st st--not">Not met</span></td><td>The experiment was run and the criterion was not cleared.</td></tr>
-              <tr><td><span class="st st--untested">Not yet tested</span></td><td>No experiment exists. The apparatus may exist; nothing has been asked of it.</td></tr>
+              <tr><td><span class="stamp stamp--closed">Met</span></td><td>The experiment was run, it produced a number, and the number clears the criterion.</td></tr>
+              <tr><td><span class="stamp stamp--fail">Partly met</span></td><td>Evidence exists and it does not carry the whole criterion. The cell says what is missing.</td></tr>
+              <tr><td><span class="stamp stamp--open">Not met</span></td><td>The experiment was run and the criterion was not cleared.</td></tr>
+              <tr><td><span class="stamp">Not yet tested</span></td><td>No experiment exists. The apparatus may exist; nothing has been asked of it.</td></tr>
             </tbody>
           </table>
         </div>
@@ -242,168 +254,168 @@
                 <td>Detect</td>
                 <td>Identify the target stress<span class="sub">Metric: detection accuracy</span></td>
                 <td>Correct presence or absence of the stress in &ge;90% of predefined test conditions<span class="sub">Evidence: sensor reading against a known stress condition</span></td>
-                <td><span class="st st--untested">Not yet tested</span> No sensor has been scored against a known stress. <a href="../results/#stress-signal">Results, stress signal</a></td>
+                <td><span class="stamp">Not yet tested</span> No sensor has been scored against a known stress. <a href="../results/#stress-signal">Results, stress signal</a></td>
               </tr>
               <tr>
                 <td>Detect</td>
                 <td>Give repeatable readings<span class="sub">Metric: coefficient of variation</span></td>
                 <td>CV &le;10% on repeated measurements in identical conditions<span class="sub">Evidence: repeated sensor measurements</span></td>
-                <td><span class="st st--untested">Not yet tested</span> No repeat series exists. <a href="../measurement/#state-of-each-measurement">Measurement, state of each measurement</a></td>
+                <td><span class="stamp">Not yet tested</span> No repeat series exists. <a href="../measurement/#state-of-each-measurement">Measurement, state of each measurement</a></td>
               </tr>
               <tr>
                 <td>Detect</td>
                 <td>Detect in time to act<span class="sub">Metric: detection response time</span></td>
                 <td>Detection within the treatment window. Target &le;3&nbsp;min <i>(proposal, see note below)</i><span class="sub">Evidence: time-series sensor data</span></td>
-                <td><span class="st st--untested">Not yet tested</span> No timed detection run exists. <a href="../model/#optogenetics-kinetics">Math Model, optogenetics kinetics</a></td>
+                <td><span class="stamp">Not yet tested</span> No timed detection run exists. <a href="../model/#optogenetics-kinetics">Math Model, optogenetics kinetics</a></td>
               </tr>
               <tr>
                 <td>Detect</td>
                 <td>Distinguish stress severity<span class="sub">Metric: signal against stress intensity</span></td>
                 <td>Monotonic, reproducible relationship across at least three predefined stress levels<span class="sub">Evidence: sensor readings across stress levels</span></td>
-                <td><span class="st st--untested">Not yet tested</span> The plant side of this is measured across four salt levels; the sensor side is not. <a href="../plant/#comparison">Plants, performance comparison</a></td>
+                <td><span class="stamp">Not yet tested</span> The plant side of this is measured across four salt levels; the sensor side is not. <a href="../plant/#comparison">Plants, performance comparison</a></td>
               </tr>
 
               <tr>
                 <td>Activate</td>
                 <td>Convert the reading into the right command<span class="sub">Metric: activation accuracy</span></td>
                 <td>&ge;90% correct activation decisions: active under stress, inactive under non-stress<span class="sub">Evidence: sensor and controller integration test</span></td>
-                <td><span class="st st--untested">Not yet tested</span> No forecast has ever driven a light. <a href="../results/#stress-signal">Results, stress signal</a></td>
+                <td><span class="stamp">Not yet tested</span> No forecast has ever driven a light. <a href="../results/#stress-signal">Results, stress signal</a></td>
               </tr>
               <tr>
                 <td>Activate</td>
                 <td>Activate quickly enough<span class="sub">Metric: detection to activation delay</span></td>
                 <td>&le;3&nbsp;min <i>(proposal, see note below)</i><span class="sub">Evidence: controller logs</span></td>
-                <td><span class="st st--untested">Not yet tested</span> No integration log exists. <a href="../software/">Software</a></td>
+                <td><span class="stamp">Not yet tested</span> No integration log exists. <a href="../software/">Software</a></td>
               </tr>
               <tr>
                 <td>Activate</td>
                 <td>Emit the intended light signal<span class="sub">Metric: peak wavelength and irradiance</span></td>
                 <td>Green 525&nbsp;nm &plusmn;30, red 660&nbsp;nm &plusmn;30<span class="sub">Evidence: light measurements</span></td>
-                <td><span class="st st--partly">Partly met</span> The array is specified at 520&nbsp;nm green and 660&nbsp;nm red, both inside this window, and both channels were measured for intensity. No spectral measurement of the delivered light exists, and the peak wavelength cells of the bill of materials are blank. <a href="../hardware/diopal/">Hardware, DiOPAL</a></td>
+                <td><span class="stamp stamp--fail">Partly met</span> The array is specified at 520&nbsp;nm green and 660&nbsp;nm red, both inside this window, and both channels were measured for intensity. No spectral measurement of the delivered light exists, and the peak wavelength cells of the bill of materials are blank. <a href="../hardware/diopal/">Hardware, DiOPAL</a></td>
               </tr>
               <tr>
                 <td>Activate</td>
                 <td>Hold the signal steady while running<span class="sub">Metric: light intensity variation</span></td>
                 <td>Intensity varies by no more than 10% during operation<span class="sub">Evidence: continuous light monitoring</span></td>
-                <td><span class="st st--partly">Partly met</span> The green channels sit within about 3% of each other, which is LED binning; well-to-well evenness was written as a criterion on 19&nbsp;May and never measured. <a href="../results/#light-delivery">Results, light delivery</a></td>
+                <td><span class="stamp stamp--fail">Partly met</span> The green channels sit within about 3% of each other, which is LED binning; well-to-well evenness was written as a criterion on 19&nbsp;May and never measured. <a href="../results/#light-delivery">Results, light delivery</a></td>
               </tr>
 
               <tr>
                 <td>Produce</td>
                 <td>Respond to the light signal<span class="sub">Metric: fold change, induced against non-induced</span></td>
                 <td>Significant increase in protectant under the activating condition<span class="sub">Evidence: light-plate run with an expression readout</span></td>
-                <td><span class="st st--untested">Not yet tested</span> No induction curve exists anywhere in the project. <a href="../results/#light-delivery">Results, light delivery</a>, <a href="../engineering/#claims">Engineering, sheet 02</a></td>
+                <td><span class="stamp">Not yet tested</span> No induction curve exists anywhere in the project. <a href="../results/#light-delivery">Results, light delivery</a>, <a href="../engineering/#claims">Engineering, sheet 02</a></td>
               </tr>
               <tr>
                 <td>Produce</td>
                 <td>Make the intended protectant<span class="sub">Metric: protectant present</span></td>
                 <td>Target protein detectable above the assay's validated detection limit<span class="sub">Evidence: Western blot, then anti-His ELISA</span></td>
-                <td><span class="st st--partly">Partly met</span> Two blots put ACC deaminase in the supernatant, 2&nbsp;August, and a band at about 41&nbsp;kDa in one culture, 24&nbsp;August. The ELISA and the activity assay are written and unrun. <a href="../results/#whole-system">Results, whole system</a>, <a href="../measurement/#elisa-for-acc-deaminase">Measurement, ELISA for ACC deaminase</a></td>
+                <td><span class="stamp stamp--fail">Partly met</span> Two blots put ACC deaminase in the supernatant, 2&nbsp;August, and a band at about 41&nbsp;kDa in one culture, 24&nbsp;August. The ELISA and the activity assay are written and unrun. <a href="../results/#whole-system">Results, whole system</a>, <a href="../measurement/#elisa-for-acc-deaminase">Measurement, ELISA for ACC deaminase</a></td>
               </tr>
               <tr>
                 <td>Produce</td>
                 <td>Make enough of it<span class="sub">Metric: protectant concentration</span></td>
                 <td>Reaches the minimum concentration needed at the plant after transfer and dilution<span class="sub">Evidence: quantified assay against the plant requirement</span></td>
-                <td><span class="st st--untested">Not yet tested</span> No titre exists. The model carries 5.4&nbsp;mg/L as a literature placeholder and says so. <a href="../model/#gis-economic-impact">Math Model, GIS economic impact</a></td>
+                <td><span class="stamp">Not yet tested</span> No titre exists. The model carries 5.4&nbsp;mg/L as a literature placeholder and says so. <a href="../model/#gis-economic-impact">Math Model, GIS economic impact</a></td>
               </tr>
               <tr>
                 <td>Produce</td>
                 <td>Be controllable<span class="sub">Metric: output under green against red or dark</span></td>
                 <td>Activating condition produces significantly more than the non-activating controls<span class="sub">Evidence: light-plate run with controls</span></td>
-                <td><span class="st st--untested">Not yet tested</span> The array has never run a CcaS/CcaR experiment on a live culture. <a href="../results/#light-delivery">Results, light delivery</a></td>
+                <td><span class="stamp">Not yet tested</span> The array has never run a CcaS/CcaR experiment on a live culture. <a href="../results/#light-delivery">Results, light delivery</a></td>
               </tr>
               <tr>
                 <td>Produce</td>
                 <td>Keep producing<span class="sub">Metric: output retention over time</span></td>
                 <td>Output stays at &ge;80% of its initial value across the intended operating period<span class="sub">Evidence: long reactor run with a quantified readout</span></td>
-                <td><span class="st st--untested">Not yet tested</span> A 44-hour anti-His time course was run and our own records read it three ways. <a href="../engineering/#record">Engineering, sheet 05</a></td>
+                <td><span class="stamp">Not yet tested</span> A 44-hour anti-His time course was run and our own records read it three ways. <a href="../engineering/#record">Engineering, sheet 05</a></td>
               </tr>
 
               <tr>
                 <td>Contain</td>
                 <td>Keep the engineered cells inside<span class="sub">Metric: viable cells downstream</span></td>
                 <td>No detectable viable engineered cells in the output stream<span class="sub">Evidence: shell-side plating</span></td>
-                <td><span class="st st--partly">Partly met</span> One 2&nbsp;mL shell-side plating on 6&nbsp;June grew no colonies. One plate, no replicate, incubation time and temperature unrecorded. <a href="../results/#containment">Results, containment</a></td>
+                <td><span class="stamp stamp--fail">Partly met</span> One 2&nbsp;mL shell-side plating on 6&nbsp;June grew no colonies. One plate, no replicate, incubation time and temperature unrecorded. <a href="../results/#containment">Results, containment</a></td>
               </tr>
               <tr>
                 <td>Contain</td>
                 <td>Maintain membrane and loop integrity<span class="sub">Metric: leakage, pressure and flow</span></td>
                 <td>No membrane failure, abnormal leakage or loss of containment during a run<span class="sub">Evidence: pressure and flow monitoring</span></td>
-                <td><span class="st st--not">Not met</span> The first run ended early when lumen-side culture leaked at the pump head. No cartridge integrity check is recorded before or after any session. <a href="../hardware/bioreactor/">Hardware, Bioreactor</a></td>
+                <td><span class="stamp stamp--open">Not met</span> The first run ended early when lumen-side culture leaked at the pump head. No cartridge integrity check is recorded before or after any session. <a href="../hardware/bioreactor/">Hardware, Bioreactor</a></td>
               </tr>
               <tr>
                 <td>Contain</td>
                 <td>Hold containment for the whole run<span class="sub">Metric: leakage over time</span></td>
                 <td>The containment criterion is satisfied throughout the intended run<span class="sub">Evidence: multi-day reactor test</span></td>
-                <td><span class="st st--untested">Not yet tested</span> The longest run with a membrane module fitted is hours, not days. <a href="../hardware/bioreactor/">Hardware, Bioreactor</a></td>
+                <td><span class="stamp">Not yet tested</span> The longest run with a membrane module fitted is hours, not days. <a href="../hardware/bioreactor/">Hardware, Bioreactor</a></td>
               </tr>
               <tr>
                 <td>Contain</td>
                 <td>Catch a breach before it matters<span class="sub">Metric: downstream culture or turbidity signal</span></td>
                 <td>An abnormality is detected before continued operation makes it worse<span class="sub">Evidence: downstream culture test, breach detector</span></td>
-                <td><span class="st st--untested">Not yet tested</span> The leakage detector, the membrane breach detector and the escape turbidity meter are all design only. <a href="../measurement/#state-of-each-measurement">Measurement, state of each measurement</a></td>
+                <td><span class="stamp">Not yet tested</span> The leakage detector, the membrane breach detector and the escape turbidity meter are all design only. <a href="../measurement/#state-of-each-measurement">Measurement, state of each measurement</a></td>
               </tr>
 
               <tr>
                 <td>Deliver</td>
                 <td>Get the protectant across the membrane<span class="sub">Metric: concentration on the output side</span></td>
                 <td>Target protectant detectable and quantifiable on the shell side<span class="sub">Evidence: output-side assay</span></td>
-                <td><span class="st st--not">Not met</span> The reactor time course is the one test of this and two of our own drafts read the same blot in opposite directions. <a href="../results/#whole-system">Results, whole system</a></td>
+                <td><span class="stamp stamp--open">Not met</span> The reactor time course is the one test of this and two of our own drafts read the same blot in opposite directions. <a href="../results/#whole-system">Results, whole system</a></td>
               </tr>
               <tr>
                 <td>Deliver</td>
                 <td>Deliver a useful dose<span class="sub">Metric: delivered concentration</span></td>
                 <td>Output reaches the minimum plant-effective concentration<span class="sub">Evidence: output assay against a plant-response requirement</span></td>
-                <td><span class="st st--untested">Not yet tested</span> No plant-effective concentration has been established for any of our protectants. <a href="../plant/#prediction">Plants, effective concentration prediction</a></td>
+                <td><span class="stamp">Not yet tested</span> No plant-effective concentration has been established for any of our protectants. <a href="../plant/#prediction">Plants, effective concentration prediction</a></td>
               </tr>
               <tr>
                 <td>Deliver</td>
                 <td>Deliver consistently<span class="sub">Metric: concentration CV</span></td>
                 <td>Repeated and time-series output samples agree<span class="sub">Evidence: repeated sampling</span></td>
-                <td><span class="st st--untested">Not yet tested</span> No repeated output sampling exists. <a href="../results/#whole-system">Results, whole system</a></td>
+                <td><span class="stamp">Not yet tested</span> No repeated output sampling exists. <a href="../results/#whole-system">Results, whole system</a></td>
               </tr>
               <tr>
                 <td>Deliver</td>
                 <td>Keep delivering during a run<span class="sub">Metric: transfer efficiency over time</span></td>
                 <td>Delivery stays within &plusmn;20% of the intended range at steady state<span class="sub">Evidence: time-course sampling, transmembrane pressure log</span></td>
-                <td><span class="st st--untested">Not yet tested</span> Every pressure reading is a spot value and three runs disagree threefold at the same flow. <a href="../results/#whole-system">Results, whole system</a></td>
+                <td><span class="stamp">Not yet tested</span> Every pressure reading is a spot value and three runs disagree threefold at the same flow. <a href="../results/#whole-system">Results, whole system</a></td>
               </tr>
               <tr>
                 <td>Deliver</td>
                 <td>Deliver fast enough<span class="sub">Metric: transfer efficiency</span></td>
                 <td>A measurable, reproducible fraction of what is produced reaches the output. Target &ge;50% <i>(proposal, see note below)</i><span class="sub">Evidence: flow and concentration measurements</span></td>
-                <td><span class="st st--untested">Not yet tested</span> No transfer rate has been measured; it is the reactor's second open parameter. <a href="../hardware/bioreactor/">Hardware, Bioreactor</a></td>
+                <td><span class="stamp">Not yet tested</span> No transfer rate has been measured; it is the reactor's second open parameter. <a href="../hardware/bioreactor/">Hardware, Bioreactor</a></td>
               </tr>
 
               <tr>
                 <td>Protect</td>
                 <td>Produce a biological effect at the delivered dose<span class="sub">Metric: plant response against a stressed control</span></td>
                 <td>Treated stressed plants beat stressed untreated controls on a predefined primary metric, significantly<span class="sub">Evidence: controlled plant experiment</span></td>
-                <td><span class="st st--not">Not met</span> Six trehalose sets and four peptide trials; no rescue survives its own controls, and no statistical test has been applied to any comparison. <a href="../plant/#verification">Plants, screening system verification</a></td>
+                <td><span class="stamp stamp--open">Not met</span> Six trehalose sets and four peptide trials; no rescue survives its own controls, and no statistical test has been applied to any comparison. <a href="../plant/#verification">Plants, screening system verification</a></td>
               </tr>
               <tr>
                 <td>Protect</td>
                 <td>Improve plant performance<span class="sub">Metric: root length, fresh weight or chlorophyll</span></td>
                 <td>&ge;20% improvement over the stressed control on the primary metric<span class="sub">Evidence: controlled plant experiment</span></td>
-                <td><span class="st st--not">Not met</span> Every trehalose move in set&nbsp;6 sits inside its own group's standard deviation. The one large effect, about 3.5-fold at 100&nbsp;mM, sits on a plate whose own no-salt control failed. <a href="../results/#protectant-function">Results, protectant function</a></td>
+                <td><span class="stamp stamp--open">Not met</span> Every trehalose move in set&nbsp;6 sits inside its own group's standard deviation. The one large effect, about 3.5-fold at 100&nbsp;mM, sits on a plate whose own no-salt control failed. <a href="../results/#protectant-function">Results, protectant function</a></td>
               </tr>
               <tr>
                 <td>Protect</td>
                 <td>Be dose dependent or otherwise predictable<span class="sub">Metric: response against dose</span></td>
                 <td>A dose-response relationship that can be fitted<span class="sub">Evidence: dose-response experiment</span></td>
-                <td><span class="st st--not">Not met</span> Across sets&nbsp;1 to&nbsp;6 the relationship between trehalose dose and root length is not monotonic in either direction, so there is no curve to fit. <a href="../plant/#prediction">Plants, effective concentration prediction</a></td>
+                <td><span class="stamp stamp--open">Not met</span> Across sets&nbsp;1 to&nbsp;6 the relationship between trehalose dose and root length is not monotonic in either direction, so there is no curve to fit. <a href="../plant/#prediction">Plants, effective concentration prediction</a></td>
               </tr>
               <tr>
                 <td>Protect</td>
                 <td>Have a usable treatment timing<span class="sub">Metric: response against timing</span></td>
                 <td>At least one dose or timing gives a reproducible protective effect, with an operating range identified<span class="sub">Evidence: timing experiment</span></td>
-                <td><span class="st st--not">Not met</span> Three trials of the timing series rank the three timings three different ways. <a href="../plant/#comparison">Plants, performance comparison</a></td>
+                <td><span class="stamp stamp--open">Not met</span> Three trials of the timing series rank the three timings three different ways. <a href="../plant/#comparison">Plants, performance comparison</a></td>
               </tr>
               <tr>
                 <td>Protect</td>
                 <td>Be reproducible<span class="sub">Metric: effect size across independent replicates</span></td>
                 <td>The protective effect is seen across independent biological replicates<span class="sub">Evidence: replicated plant experiment</span></td>
-                <td><span class="st st--not">Not met</span> Biological replication is one plate or one box per condition throughout, and no run has been repeated end to end at the final protocol. <a href="../plant/#verification">Plants, screening system verification</a></td>
+                <td><span class="stamp stamp--open">Not met</span> Biological replication is one plate or one box per condition throughout, and no run has been repeated end to end at the final protocol. <a href="../plant/#verification">Plants, screening system verification</a></td>
               </tr>
             </tbody>
           </table>
@@ -616,37 +628,37 @@
                 <td>1</td>
                 <td>Grow <i>Arabidopsis</i> with its root in a known concentration in water<span class="sub">Built and tested: opaque tub, 21.2&nbsp;&times;&nbsp;14.1&nbsp;&times;&nbsp;11.4&nbsp;cm, 300 to 500&nbsp;mL, seed sown into the box</span></td>
                 <td>Ten seedlings established in known medium</td>
-                <td><span class="st st--not">No</span> 4 of 10 germinated over 11 days, contaminated at the dried-medium line around the rim</td>
+                <td><span class="stamp stamp--open">No</span> 4 of 10 germinated over 11 days, contaminated at the dried-medium line around the rim</td>
               </tr>
               <tr>
                 <td>2</td>
                 <td>Cut the volume so medium can be changed often<span class="sub">Built and tested: small box, 7.5&nbsp;&times;&nbsp;7.5&nbsp;&times;&nbsp;5.3&nbsp;cm, 85&nbsp;mL, seed sown</span></td>
                 <td>Frequent medium changes hold the concentration steady</td>
-                <td><span class="st st--not">No</span> 3 of 10 germinated; the box leaked and contaminated, and the concentration moved as soon as anything evaporated</td>
+                <td><span class="stamp stamp--open">No</span> 3 of 10 germinated; the box leaked and contaminated, and the concentration moved as soon as anything evaporated</td>
               </tr>
               <tr>
                 <td>3</td>
                 <td>Buy root depth<span class="sub">Built and tested: tall box, 6.5&nbsp;&times;&nbsp;6.5&nbsp;&times;&nbsp;10&nbsp;cm, 70&nbsp;mL, seed sown</span></td>
                 <td>Depth for the root without losing the rest</td>
-                <td><span class="st st--not">No</span> 1 of 10 germinated, contaminated. Depth cost surface area and it was the worst of the five</td>
+                <td><span class="stamp stamp--open">No</span> 1 of 10 germinated, contaminated. Depth cost surface area and it was the worst of the five</td>
               </tr>
               <tr>
                 <td>4</td>
                 <td>Stop the contamination by changing what goes in<span class="sub">Built and tested: 12.8&nbsp;&times;&nbsp;10.1&nbsp;&times;&nbsp;9.5&nbsp;cm, 250&nbsp;mL, filter paper instead of an agar cap, no lid, and four-day-old seedlings transferred from agar on 7&nbsp;June</span></td>
                 <td>Seedlings that are already established do not need the box to be a germination chamber</td>
-                <td><span class="st st--met">Yes</span> 5 of 5 seedlings established over six days with no problem we could name</td>
+                <td><span class="stamp stamp--closed">Yes</span> 5 of 5 seedlings established over six days with no problem we could name</td>
               </tr>
               <tr>
                 <td>5</td>
                 <td>Test whether the float board or the seedling transfer was the fix<span class="sub">Built and tested: the same box and volume, a hand-cut styrofoam float board in place of the filter paper, and seed sown into the medium again</span></td>
                 <td>If the board was the variable, germination and cleanliness both hold</td>
-                <td><span class="st st--not">No, and it answered the question</span> 7 of 10 germinated and the contamination came back, which points at the seed and not the board</td>
+                <td><span class="stamp stamp--open">No, and it answered the question</span> 7 of 10 germinated and the contamination came back, which points at the seed and not the board</td>
               </tr>
               <tr>
                 <td>Current</td>
                 <td>Run the timing experiments<span class="sub">Built and tested: prototype 4 as Box&nbsp;B, plus three rules: seedlings in at four to seven days, no topping up of evaporated medium, and light blocked at the bottom of the box</span></td>
                 <td>A platform that holds a known dose for the length of a run</td>
-                <td><span class="st st--partly">Platform yes, replication no</span> One salinity set and one heat set completed, one box per arm</td>
+                <td><span class="stamp stamp--fail">Platform yes, replication no</span> One salinity set and one heat set completed, one box per arm</td>
               </tr>
             </tbody>
           </table>
@@ -664,19 +676,19 @@
                 <td>1 &middot; 6 Jun 2026</td>
                 <td>Find out whether a continuous loop around a hollow-fibre membrane works at all<span class="sub">Built and tested: PES cartridge, 500&nbsp;mL reservoir holding 300&nbsp;mL LB and a 20&nbsp;mL inoculum, peristaltic pump at 94&nbsp;mL/min, luer valve</span></td>
                 <td>A closed loop that circulates culture and keeps the cells on the lumen side</td>
-                <td><span class="st st--partly">Containment yes, integrity no</span> The loop ran and then leaked lumen-side culture at the pump head. OD600 0.304 in the loop against 0.480 in the comparison sample. A 2&nbsp;mL shell-side plating grew no colonies</td>
+                <td><span class="stamp stamp--fail">Containment yes, integrity no</span> The loop ran and then leaked lumen-side culture at the pump head. OD600 0.304 in the loop against 0.480 in the comparison sample. A 2&nbsp;mL shell-side plating grew no colonies</td>
               </tr>
               <tr>
                 <td>2 &middot; 14 Jun 2026</td>
                 <td>Remove the sedimentation diagnosed in cycle&nbsp;1 and get a full growth curve<span class="sub">Built and tested: 200&nbsp;rpm magnetic stirrer, sampler moved to the reservoir outlet, BPT tubing, run at 37&nbsp;&deg;C against a shake-flask control</span></td>
                 <td>A homogeneous reservoir, a representative sample and a growth curve</td>
-                <td><span class="st st--partly">Yes, on one run each</span> Nothing leaked, the pump held 94&nbsp;mL/min throughout, and the reactor reached plateau at OD600 0.8 to 0.9 in about two hours against the flask at 0.6 to 0.8 in about four and a half</td>
+                <td><span class="stamp stamp--fail">Yes, on one run each</span> Nothing leaked, the pump held 94&nbsp;mL/min throughout, and the reactor reached plateau at OD600 0.8 to 0.9 in about two hours against the flask at 0.6 to 0.8 in about four and a half</td>
               </tr>
               <tr>
                 <td>3 &middot; open</td>
                 <td>Characterise the temperature the device will actually see and qualify the tubing<span class="sub">Built and tested: nothing yet; the plan is growth kinetics at 22&nbsp;&deg;C and a tubing service-life run</span></td>
                 <td>Field-condition kinetics and a stated service interval</td>
-                <td><span class="st st--untested">Not yet tested</span> Not run</td>
+                <td><span class="stamp">Not yet tested</span> Not run</td>
               </tr>
             </tbody>
           </table>
@@ -694,31 +706,31 @@
                 <td>1</td>
                 <td>Read culture density without opening the loop<span class="sub">Built and tested: horizontal optical path, every component independently adjustable on a rail</span></td>
                 <td>A stable optical reading from flowing culture</td>
-                <td><span class="st st--not">No</span> Severe fluctuation, traced to bubbles in the flow cuvette and mounts loose enough to shift the alignment</td>
+                <td><span class="stamp stamp--open">No</span> Severe fluctuation, traced to bubbles in the flow cuvette and mounts loose enough to shift the alignment</td>
               </tr>
               <tr>
                 <td>2</td>
                 <td>Get the bubbles out of the beam<span class="sub">Built and tested: path rotated vertical inside a light-blocking box, tolerances tightened, luer valves and syringes to bleed gas from the line</span></td>
                 <td>Bubbles rise clear of the cuvette instead of lodging in the path</td>
-                <td><span class="st st--partly">Better, not measured</span> Bubble handling improved, and a procedural error found during calibration and corrected</td>
+                <td><span class="stamp stamp--fail">Better, not measured</span> Bubble handling improved, and a procedural error found during calibration and corrected</td>
               </tr>
               <tr>
                 <td>3</td>
                 <td>Drive bubbles toward the outlet instead of holding them on the wall<span class="sub">Built and tested: the column tilted 10&deg; on a printed stand</span></td>
                 <td>Agreement with a benchtop reference</td>
-                <td><span class="st st--partly">One reading</span> 8% against the Bio-Drop on one paired reading</td>
+                <td><span class="stamp stamp--fail">One reading</span> 8% against the Bio-Drop on one paired reading</td>
               </tr>
               <tr>
                 <td>4 &middot; current</td>
                 <td>Make the alignment reproducible instead of adjustable<span class="sub">Built and tested: component positions locked at their aligned defaults, TPU-lined mounts, snap-in covers along the light path, reinforced stand</span></td>
                 <td>The 8% agreement, now repeatable</td>
-                <td><span class="st st--not">No, and not yet re-tested</span> Read against the Bio-Drop once on the reactor and came out about four times high, traced to a blank taken through a cuvette that cannot be cleaned in line; hand-entering the blank overshot to 33% low against a 10% target</td>
+                <td><span class="stamp stamp--open">No, and not yet re-tested</span> Read against the Bio-Drop once on the reactor and came out about four times high, traced to a blank taken through a cuvette that cannot be cleaned in line; hand-entering the blank overshot to 33% low against a 10% target</td>
               </tr>
               <tr>
                 <td>Calibration</td>
                 <td>Characterise the optical response against a standard that does not grow<span class="sub">Built and tested: cumulative TiO<sub>2</sub> additions of 2 to 60&nbsp;mg into 400&nbsp;mL, read on our instrument and on a BioDrop in parallel</span></td>
                 <td>A linear relationship with a stated residual</td>
-                <td><span class="st st--met">Yes, for linearity</span> ours&nbsp;=&nbsp;1.018&nbsp;&times;&nbsp;BioDrop&nbsp;&minus;&nbsp;0.031, R<sup>2</sup>&nbsp;=&nbsp;0.995, residual standard deviation 0.024, and above 30&nbsp;mg ours is the steadier of the two</td>
+                <td><span class="stamp stamp--closed">Yes, for linearity</span> ours&nbsp;=&nbsp;1.018&nbsp;&times;&nbsp;BioDrop&nbsp;&minus;&nbsp;0.031, R<sup>2</sup>&nbsp;=&nbsp;0.995, residual standard deviation 0.024, and above 30&nbsp;mg ours is the steadier of the two</td>
               </tr>
             </tbody>
           </table>
@@ -736,19 +748,19 @@
                 <td>1</td>
                 <td>Switch a culture between green and red<span class="sub">Built and tested: dual LED per column, driven from a breadboard, wire-management prints</span></td>
                 <td>On and off control of protectant production</td>
-                <td><span class="st st--not">No</span> The dual-wavelength concept worked; output consistency between LEDs and interference from room light were both uncontrolled</td>
+                <td><span class="stamp stamp--open">No</span> The dual-wavelength concept worked; output consistency between LEDs and interference from room light were both uncontrolled</td>
               </tr>
               <tr>
                 <td>2</td>
                 <td>Make an intensity comparison mean something<span class="sub">Built and tested: forty LEDs measured individually at 5&nbsp;V in a fixed geometry, twenty-four kept in tight groups of four, sixteen rejected, three tiers per wavelength, coverage added against room light</span></td>
                 <td>Six defined conditions, four matched replicates each</td>
-                <td><span class="st st--partly">Structure yes, tiers unproven</span> The three-tier structure and the shielding are in place. The measured green channels span 2.33 to 2.40&nbsp;kLux, about three per cent, and the duty cycles that would separate the tiers are unrecorded</td>
+                <td><span class="stamp stamp--fail">Structure yes, tiers unproven</span> The three-tier structure and the shielding are in place. The measured green channels span 2.33 to 2.40&nbsp;kLux, about three per cent, and the duty cycles that would separate the tiers are unrecorded</td>
               </tr>
               <tr>
                 <td>3 &middot; current</td>
                 <td>Turn the rig into an instrument somebody else can run<span class="sub">Built and tested: outer frame housing the wiring and the Arduino, intensity set in code, slider prints for assembly, a printed holder for test tubes</span></td>
                 <td>Twenty-four tubes under six conditions in one run</td>
-                <td><span class="st st--untested">Apparatus yes, experiment not yet run</span> Assembled and photographed on 17&nbsp;July 2026. No CcaS/CcaR experiment has been run on it</td>
+                <td><span class="stamp">Apparatus yes, experiment not yet run</span> Assembled and photographed on 17&nbsp;July 2026. No CcaS/CcaR experiment has been run on it</td>
               </tr>
             </tbody>
           </table>
@@ -764,37 +776,37 @@
                 <td>1</td>
                 <td>Build the four-module circuit in MoClo 2.0<span class="sub">Built and tested: each part amplified with type&nbsp;IIS sites and taken straight into Level&nbsp;1 in pJUMP-29, with no verified Level&nbsp;0 stage</span></td>
                 <td>Transcription units assembled directly from PCR product</td>
-                <td><span class="st st--not">No</span> High background: empty vectors and off-target bands, Golden Gate efficiency low throughout</td>
+                <td><span class="stamp stamp--open">No</span> High background: empty vectors and off-target bands, Golden Gate efficiency low throughout</td>
               </tr>
               <tr>
                 <td>2</td>
                 <td>Move into the SubtiToolKit and adopt its own syntax<span class="sub">Built and tested: BsaI-only primers, entering Level&nbsp;1 directly from PCR product, on the kit's 1A to 1D overhangs</span></td>
                 <td>Clean assemblies inside a kit written for <i>B.&nbsp;subtilis</i></td>
-                <td><span class="st st--not">No</span> Colonies appeared and the screens stayed inconsistent, because a failed assembly and a PCR artefact still looked the same</td>
+                <td><span class="stamp stamp--open">No</span> Colonies appeared and the screens stayed inconsistent, because a failed assembly and a PCR artefact still looked the same</td>
               </tr>
               <tr>
                 <td>3</td>
                 <td>Put a donor of known sequence into the reaction<span class="sub">Built and tested: TA cloning into pGEM-T&nbsp;Easy, colony PCR between the T7 and SP6 promoters, then sequencing, then assembly. Seven sets, A to G</span></td>
                 <td>Sequence-verified Level&nbsp;0 material before any Golden Gate reaction</td>
-                <td><span class="st st--met">Yes</span> Seven coding sequences cloned, screened and sequence-confirmed. The cost was one day of picking, screening and minipreps</td>
+                <td><span class="stamp stamp--closed">Yes</span> Seven coding sequences cloned, screened and sequence-confirmed. The cost was one day of picking, screening and minipreps</td>
               </tr>
               <tr>
                 <td>4</td>
                 <td>Keep that verified donor without breaking selection<span class="sub">Built and tested: Level&nbsp;0 entry into the kit's pSTK-0C on chloramphenicol, after the ampicillin clash was found</span></td>
                 <td>A donor that can be selected away from the destination</td>
-                <td><span class="st st--met">Yes</span> Three Level&nbsp;0 screens on 14&nbsp;August came back clean at their expected sizes and three clones from each went forward</td>
+                <td><span class="stamp stamp--closed">Yes</span> Three Level&nbsp;0 screens on 14&nbsp;August came back clean at their expected sizes and three clones from each went forward</td>
               </tr>
               <tr>
                 <td>5</td>
                 <td>Build every cargo constitutively as well as light-gated<span class="sub">Built and tested: one fixed format, Pveg, EEBD-RBS0, a secretion peptide and B0015, with five cargoes, into pSTK-EXP1; the ACCD strain then run in the reactor for 44 hours</span></td>
                 <td>A negative protectant result with one fewer explanation, because the light switch is taken out of the question</td>
-                <td><span class="st st--partly">Cloning yes, blot contested</span> Five constitutive cargoes built and screened. The 44-hour anti-His time course is read three different ways in our own records</td>
+                <td><span class="stamp stamp--fail">Cloning yes, blot contested</span> Five constitutive cargoes built and screened. The 44-hour anti-His time course is read three different ways in our own records</td>
               </tr>
               <tr>
                 <td>6</td>
                 <td>Break the repeated regulatory parts, then assemble Level&nbsp;2<span class="sub">Built and tested: module&nbsp;1 rebuilt on PtagC and L3S2P21; three Golden Gate rounds at Level&nbsp;2, then a 1:5 and 1:7 ratio sweep on 28&nbsp;August</span></td>
                 <td>A four-module device in one plasmid</td>
-                <td><span class="st st--partly">Junction-checked, not sequenced</span> Eleven of twelve colonies carried the rebuilt module at 1,833&nbsp;bp and three sequenced positive. Level&nbsp;2 returned nothing three times, then both ratios gave positives, and on 19&nbsp;September three independent clones passed all three junctions on one nine-lane gel</td>
+                <td><span class="stamp stamp--fail">Junction-checked, not sequenced</span> Eleven of twelve colonies carried the rebuilt module at 1,833&nbsp;bp and three sequenced positive. Level&nbsp;2 returned nothing three times, then both ratios gave positives, and on 19&nbsp;September three independent clones passed all three junctions on one nine-lane gel</td>
               </tr>
             </tbody>
           </table>
@@ -852,19 +864,19 @@
           <table class="data">
             <thead><tr><th>Stage</th><th>Criterion, in short</th><th>Result as of 25 September 2026</th><th>Status</th></tr></thead>
             <tbody>
-              <tr><td>Detect</td><td>Accuracy, repeatability, speed, severity discrimination</td><td>The stress index is computed and forecast on real weather, sensor and land data, and no sensor has ever been scored against a known stress condition.</td><td><span class="st st--untested">Not yet tested</span></td></tr>
-              <tr><td>Activate</td><td>Correct activation decisions, within a time limit</td><td>No forecast has ever driven a light. The command path from model to array has never been closed end to end.</td><td><span class="st st--untested">Not yet tested</span></td></tr>
-              <tr><td>Activate</td><td>Wavelength and intensity held within range</td><td>The array delivers two wavelengths across three tiers with four matched replicates each; the green channels differ by about 3%, no spectral measurement of the delivered light exists, and well-to-well evenness was never measured.</td><td><span class="st st--partly">Partly met</span></td></tr>
-              <tr><td>Produce</td><td>Output changes with the light signal</td><td>No induction curve exists. Nothing in this project shows P<sub>cpcG2</sub> output changing with green light, at any intensity, on any date.</td><td><span class="st st--untested">Not yet tested</span></td></tr>
-              <tr><td>Produce</td><td>Target protein detectable</td><td>On 2&nbsp;August a fractionation blot put ACC deaminase in the supernatant lanes with both pellet lanes blank. On 24&nbsp;August a single band at about 41&nbsp;kDa appeared in the 18&nbsp;August culture. One blot each, no loading control, no quantification.</td><td><span class="st st--partly">Partly met</span></td></tr>
-              <tr><td>Produce</td><td>Enough protectant, and stable over a run</td><td>No titre exists and no long-run retention has been measured. The 44-hour time course is read three ways in our own records.</td><td><span class="st st--untested">Not yet tested</span></td></tr>
-              <tr><td>Contain</td><td>No viable cells downstream</td><td>One 2&nbsp;mL shell-side plating on 6&nbsp;June grew no colonies. One plate, no replicate, incubation time and temperature unrecorded, and no log reduction value measured.</td><td><span class="st st--partly">Partly met</span></td></tr>
-              <tr><td>Contain</td><td>Integrity held through the run</td><td>The first run lost lumen-side culture at the pump head. No cartridge integrity check is recorded, and the three safety instruments that would catch a breach are design only.</td><td><span class="st st--not">Not met</span></td></tr>
-              <tr><td>Deliver</td><td>Protectant crosses the membrane</td><td>Contested. Two of our own drafts read the same reactor blot as a faint band supporting release and as not clearly detectable. Neither reading is adopted on this wiki.</td><td><span class="st st--not">Not met</span></td></tr>
-              <tr><td>Deliver</td><td>Enough, consistently, at a known rate</td><td>No shell-side concentration has been measured at any time point. Transfer rate is the reactor's open parameter and every pressure reading is a spot value.</td><td><span class="st st--untested">Not yet tested</span></td></tr>
-              <tr><td>Protect</td><td>Measurable improvement in a stressed plant</td><td>Six trehalose sets and four peptide trials. No rescue survives its own controls; the largest effect, about 3.5-fold at 100&nbsp;mM, sits on a plate whose own no-salt control read 0.0318, below every salted arm on the same plate.</td><td><span class="st st--not">Not met</span></td></tr>
-              <tr><td>Protect</td><td>Dose dependence, timing, reproducibility</td><td>Trehalose dose against root length is not monotonic across sets&nbsp;1 to&nbsp;6. Three trials rank the three treatment timings three different ways. Biological replication is one plate or one box per condition throughout.</td><td><span class="st st--not">Not met</span></td></tr>
-              <tr><td>Protect</td><td>The assay itself</td><td>The injury side is closed: root length falls 74.95, 34.77, 11.00, 1.36&nbsp;mm across 0, 75, 100 and 150&nbsp;mM NaCl at day&nbsp;6, nine seedlings per group, spreads not overlapping.</td><td><span class="st st--met">Met</span></td></tr>
+              <tr><td>Detect</td><td>Accuracy, repeatability, speed, severity discrimination</td><td>The stress index is computed and forecast on real weather, sensor and land data, and no sensor has ever been scored against a known stress condition.</td><td><span class="stamp">Not yet tested</span></td></tr>
+              <tr><td>Activate</td><td>Correct activation decisions, within a time limit</td><td>No forecast has ever driven a light. The command path from model to array has never been closed end to end.</td><td><span class="stamp">Not yet tested</span></td></tr>
+              <tr><td>Activate</td><td>Wavelength and intensity held within range</td><td>The array delivers two wavelengths across three tiers with four matched replicates each; the green channels differ by about 3%, no spectral measurement of the delivered light exists, and well-to-well evenness was never measured.</td><td><span class="stamp stamp--fail">Partly met</span></td></tr>
+              <tr><td>Produce</td><td>Output changes with the light signal</td><td>No induction curve exists. Nothing in this project shows P<sub>cpcG2</sub> output changing with green light, at any intensity, on any date.</td><td><span class="stamp">Not yet tested</span></td></tr>
+              <tr><td>Produce</td><td>Target protein detectable</td><td>On 2&nbsp;August a fractionation blot put ACC deaminase in the supernatant lanes with both pellet lanes blank. On 24&nbsp;August a single band at about 41&nbsp;kDa appeared in the 18&nbsp;August culture. One blot each, no loading control, no quantification.</td><td><span class="stamp stamp--fail">Partly met</span></td></tr>
+              <tr><td>Produce</td><td>Enough protectant, and stable over a run</td><td>No titre exists and no long-run retention has been measured. The 44-hour time course is read three ways in our own records.</td><td><span class="stamp">Not yet tested</span></td></tr>
+              <tr><td>Contain</td><td>No viable cells downstream</td><td>One 2&nbsp;mL shell-side plating on 6&nbsp;June grew no colonies. One plate, no replicate, incubation time and temperature unrecorded, and no log reduction value measured.</td><td><span class="stamp stamp--fail">Partly met</span></td></tr>
+              <tr><td>Contain</td><td>Integrity held through the run</td><td>The first run lost lumen-side culture at the pump head. No cartridge integrity check is recorded, and the three safety instruments that would catch a breach are design only.</td><td><span class="stamp stamp--open">Not met</span></td></tr>
+              <tr><td>Deliver</td><td>Protectant crosses the membrane</td><td>Contested. Two of our own drafts read the same reactor blot as a faint band supporting release and as not clearly detectable. Neither reading is adopted on this wiki.</td><td><span class="stamp stamp--open">Not met</span></td></tr>
+              <tr><td>Deliver</td><td>Enough, consistently, at a known rate</td><td>No shell-side concentration has been measured at any time point. Transfer rate is the reactor's open parameter and every pressure reading is a spot value.</td><td><span class="stamp">Not yet tested</span></td></tr>
+              <tr><td>Protect</td><td>Measurable improvement in a stressed plant</td><td>Six trehalose sets and four peptide trials. No rescue survives its own controls; the largest effect, about 3.5-fold at 100&nbsp;mM, sits on a plate whose own no-salt control read 0.0318, below every salted arm on the same plate.</td><td><span class="stamp stamp--open">Not met</span></td></tr>
+              <tr><td>Protect</td><td>Dose dependence, timing, reproducibility</td><td>Trehalose dose against root length is not monotonic across sets&nbsp;1 to&nbsp;6. Three trials rank the three treatment timings three different ways. Biological replication is one plate or one box per condition throughout.</td><td><span class="stamp stamp--open">Not met</span></td></tr>
+              <tr><td>Protect</td><td>The assay itself</td><td>The injury side is closed: root length falls 74.95, 34.77, 11.00, 1.36&nbsp;mm across 0, 75, 100 and 150&nbsp;mM NaCl at day&nbsp;6, nine seedlings per group, spreads not overlapping.</td><td><span class="stamp stamp--closed">Met</span></td></tr>
             </tbody>
           </table>
         </div>
