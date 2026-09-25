@@ -20,6 +20,7 @@ resources loaded from outside iGEM.
 | **The pages themselves** | About 310 review notes, one at the end of every section, in a dashed amber box. Each says what a judge will credit ("Works.") and what to change ("Fix."). The switch in the bottom-right corner hides and shows them. |
 | [`review-2026-09-25/INCONSISTENCIES.md`](review-2026-09-25/INCONSISTENCIES.md) | Every place two pages disagree, grouped by fact, each re-checked against the live page, with a priority and a likely owner. The ten P1 items are at the top. |
 | [`review-2026-09-25/STRONG-WRITING.md`](review-2026-09-25/STRONG-WRITING.md) | The best student writing on the wiki, page by page, with the author where the page names one, and why each passage works. Worth reading to the team. |
+| [`review-2026-09-25/JUDGE-SIM.md`](review-2026-09-25/JUDGE-SIM.md) | A simulated judging against the 2026 criteria (checked live on competition.igem.org): a verdict and the three highest-leverage actions for every medal criterion and targeted award, which three awards to elect, and a day-by-day priority list to the 21 October freeze. **Read section 1.1 first.** |
 | `review-2026-09-25/<tab>.md` | Each agent's full report: every commit, every flag, what it left for a person. |
 
 **Before the freeze** the review notes must go: set `window.REVIEW_NOTES = false`
@@ -89,6 +90,20 @@ Student body prose was not rewritten.
 - Results had an unclosed box that pulled half of section 7 into an amber
   editor's box; fixed.
 
+**Clear-cut inconsistencies fixed** (only where the wiki itself settles the
+answer; everything needing judgement stays flagged): the Castillo-Hair 2019
+citation made identical on all six pages and checked against PubMed; the iGEM
+software address; the 150 mM root length quoted from Plants (1.364 mm) on
+Math Model, Experiments, Measurement and Results; Peptide Design's control
+ids; hollow-fibre, Dingxi, Renee Kuo, species italics. Each is marked
+"Resolved 25 Sep" in INCONSISTENCIES.md and "(Fixed overnight: ...)" in the
+review note that asked for it.
+
+**A regression check on the merged site** at 1440, 500 and 390 px on all 43
+pages found no horizontal overflow, no unstyled boxes, no duplicate ids at
+runtime, and fixed the three it found (Dry Lab Notebook week labels, the
+Hardware film's pause button under the tray, Peptide Design's rounded chips).
+
 **Drafted from the wiki's own pages** (Status: Draft, each section with a note
 saying what to check): Contribution, Safety and Security (six of eight
 sections), Notebook (March to September index), Gallery, Inclusivity.
@@ -96,6 +111,13 @@ sections), Notebook (March to September index), Gallery, Inclusivity.
 ---
 
 ## 4. Needs a person, most urgent first
+
+0. **Pick three special awards.** The judge simulation found the wiki targets
+   nine, but 2026 allows exactly three elections on the Judging Form, and Gold
+   needs all three to come back yes. Its recommendation: Measurement,
+   Integrated Human Practices, Education (reasons in JUDGE-SIM.md §6). Bronze
+   has three criteria in 2026 and #1 includes the Safety Forms: the Project
+   Safety Form is due 7 October 23:00, submitted by a PI.
 
 1. **The ten P1 inconsistencies** at the top of INCONSISTENCIES.md: the long
    photometer run (336 / 434 / 400 h), the pump floor (230 mL/min quoted, 100.3
