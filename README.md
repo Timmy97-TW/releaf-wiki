@@ -195,8 +195,29 @@ python3 -m http.server 8791
 Then open <http://localhost:8791>. A plain file:// open works too, but folder
 URLs like `/plant/` will not resolve without a server.
 
+## Checks and tools
+
+```bash
+python3 build/audit.py       # what would break or be blocked on the iGEM wiki; exits non-zero while anything blocking remains
+python3 build/ids.py --check # headings still missing a written-in id (run without --check to write them)
+```
+
+Two demo-only aids sit in the bottom-right corner of every page, in one tray:
+
+- **iGEM rules** (`assets/js/rulecheck.js`) marks what breaks an iGEM 2026
+  wiki rule on that page.
+- **Review notes** (`assets/js/review-notes.js`, styled in `nav.css`) hides and
+  shows the `<aside class="review-note">` writing review left at the end of each
+  section on 25 September 2026. The notes are asides, never headings, so they
+  stay out of the contents rail and the numbering.
+
+`404.html` at the root is the page GitHub Pages shows for a missing address.
+
 ## Before the wiki freeze
 
-See `notes/publishing.md`. The short version: re-host every image and the
-typeface on `static.igem.wiki`, put the real team number into the attributions
-iframe, and delete every remaining scaffold note.
+See `notes/publishing.md` and `notes/overnight-2026-09-25.md`. The short
+version: re-host every image and the typeface on `static.igem.wiki`, submit the
+Attributions Form, delete every remaining scaffold note, and set
+`window.RULECHECK = false` and `window.REVIEW_NOTES = false` at the end of
+`assets/data/site-nav.js` (the second removes every review note from every
+page).
