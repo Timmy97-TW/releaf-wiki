@@ -3,7 +3,7 @@
    -----------------------------------------------------------------------------
    Marks, on the page itself, everything that would break an iGEM 2026 wiki
    rule, so whoever is editing a page can see what to fix without running
-   anything. nav.js loads this file on every page unless
+   anything. nav.js and nav-rail.js load this file on every page unless
    window.RULECHECK === false (set in assets/data/site-nav.js). The copy that
    goes to gitlab.igem.org must ship with it switched off.
 
@@ -116,24 +116,23 @@
 .rc-mark { outline: 3px dashed var(--rc) !important; outline-offset: 3px; position: relative; }
 .rc-tag { position: absolute; z-index: 60; transform: translateY(-100%); margin-top: -6px;
   font: 700 11px/1.3 system-ui, -apple-system, "Segoe UI", sans-serif; letter-spacing: .04em;
-  color: #fff; background: var(--rc); padding: 3px 7px; border-radius: 0; pointer-events: none;
-  white-space: nowrap; }
-.rulecheck { position: relative; display: flex; flex-direction: column; align-items: flex-end;
+  color: #fff; background: var(--rc); padding: 3px 7px; border-radius: 4px; pointer-events: none;
+  white-space: nowrap; box-shadow: 0 2px 6px rgb(0 0 0 / .2); }
+.rulecheck { position: fixed; left: 16px; bottom: 16px; z-index: 900; max-width: min(420px, calc(100vw - 32px));
   font: 14px/1.45 system-ui, -apple-system, "Segoe UI", sans-serif; color: #1d1d1f; }
-.rulecheck__btn { display: flex; align-items: center; gap: 8px; border: 1px solid #b3261e; cursor: pointer;
-  background: #b3261e; color: #fff; font: inherit; font-size: 12px; font-weight: 700; padding: 6px 10px; min-width: 38px;
-  justify-content: center; border-radius: 0; }
-.rulecheck__btn[data-ok] { background: #23684a; border-color: #23684a; }
-.rulecheck__btn:focus-visible { outline: 2px solid #1d1d1f; outline-offset: 2px; }
-.rulecheck__panel { position: absolute; right: 0; bottom: calc(100% + 8px); width: min(420px, calc(100vw - 24px));
-  background: #fff; border: 1px solid #b9b9b9; border-radius: 0; max-height: min(60vh, 520px); overflow: auto; }
+.rulecheck__btn { display: flex; align-items: center; gap: 8px; margin-right: auto; border: 0; cursor: pointer;
+  background: #b3261e; color: #fff; font: inherit; font-weight: 700; padding: 7px 12px; min-width: 38px; justify-content: center; border-radius: 999px; opacity: .92;
+  box-shadow: 0 6px 20px rgb(0 0 0 / .25); }
+.rulecheck__btn[data-ok] { background: #23684a; }
+.rulecheck__btn:focus-visible { outline: 3px solid #1d1d1f; outline-offset: 2px; }
+.rulecheck__panel { margin-bottom: 10px; background: #fff; border: 1px solid #e3e3e3; border-radius: 12px;
+  box-shadow: 0 12px 40px rgb(0 0 0 / .22); max-height: min(60vh, 520px); overflow: auto; }
 .rulecheck__panel[hidden] { display: none; }
 .rulecheck__head { padding: 14px 16px 10px; border-bottom: 1px solid #eee; }
 .rulecheck__head b { display: block; font-size: 15px; }
 .rulecheck__head span { color: #555; font-size: 12.5px; }
 .rulecheck__list { list-style: none; margin: 0; padding: 6px 0; }
-.rulecheck__list li { padding: 8px 16px; border-top: 1px solid #eee; margin: 0; }
-.rulecheck__list li:first-child { border-top: 0; }
+.rulecheck__list li { padding: 8px 16px; border-left: 4px solid var(--rc); margin: 4px 0; }
 .rulecheck__list li[data-go] { cursor: pointer; }
 .rulecheck__list li[data-go]:hover, .rulecheck__list li[data-go]:focus-visible { background: #f6f6f6; outline: none; }
 .rulecheck__kind { display: inline-block; font-size: 11px; font-weight: 800; letter-spacing: .06em; color: var(--rc); margin-right: 6px; }
@@ -142,6 +141,9 @@
 .rc-hidden .rc-mark { outline: none !important; }
 .rc-hidden .rc-tag { display: none; }
 .rc-hidden .rc-mark.rc-flash { outline: 3px dashed var(--rc) !important; }
+/* bottom-left: bottom-right is where the pages keep their own controls (the
+   hardware film's pause button); clear the Bioreactor Calculations rail */
+body:has(aside.rail) .rulecheck { left: 64px; }
 @media print { .rulecheck, .rc-tag { display: none !important; } .rc-mark { outline: none !important; } }`;
     document.head.appendChild(s);
   }
@@ -188,7 +190,7 @@
     const panel = box.querySelector(".rulecheck__panel");
     /* compact, so it hides as little of the page as possible; the words are
        in its label and tooltip, and in the panel it opens */
-    btn.textContent = n ? "iGEM rules: " + n : "iGEM rules: clear";
+    btn.textContent = n ? "⚠ " + n : "✓";
     btn.title = n ? "iGEM rule check: " + n + " issue" + (n > 1 ? "s" : "") + " on this page" : "iGEM rule check: clear";
     btn.setAttribute("aria-label", btn.title);
     if (!n) btn.dataset.ok = "";
@@ -233,15 +235,7 @@
     document.addEventListener("keydown", (e) => {
       if (e.key === "Escape" && !panel.hidden) { panel.hidden = true; btn.setAttribute("aria-expanded", "false"); btn.focus(); }
     });
-    /* into the demo-tools tray (bottom right, shared with the review-notes
-       switch; styled in nav.css) */
-    let tray = document.querySelector(".demo-tools");
-    if (!tray) {
-      tray = document.createElement("div");
-      tray.className = "demo-tools";
-      document.body.appendChild(tray);
-    }
-    tray.appendChild(box);
+    document.body.appendChild(box);
   }
 
   const run = () => { scan(); draw(); };

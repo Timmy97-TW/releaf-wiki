@@ -48,48 +48,33 @@
 
 /* ------------------------------------------------------------- KEY FACTS -- */
 
-/* A quantity schedule, not a row of hero figures: DESIGN.md's tally with
-   ruled cells, drawn exactly as Software draws its four counts. A heavy rule
-   above and below, a hairline between cells, and each number set beside its
-   words at a modest size, so the words do the work. Scoped to .plant so it
-   outranks page.css's ".sec ul" and ".sec li + li". */
-.plant .keyfacts {
+.keyfacts {
   list-style: none;
   margin: var(--sp-6) 0;
   padding: 0;
   display: grid;
+  gap: 1px;
+  background: var(--gray-200);
+  border: 1px solid var(--gray-200);
+  border-radius: var(--radius-sm);
+  overflow: hidden;
   grid-template-columns: repeat(auto-fit, minmax(11rem, 1fr));
-  border-top: 1.5px solid var(--gray-700);
-  border-bottom: 1.5px solid var(--gray-700);
 }
-.plant .keyfacts li {
-  margin: 0;
-  padding: var(--sp-3) var(--sp-4) var(--sp-3) 0;
-  border-right: 1px solid var(--gray-200);
-  display: grid;
-  grid-template-columns: 3.25rem 1fr;
-  gap: var(--sp-3);
-  align-items: baseline;
-}
-.plant .keyfacts li:last-child { border-right: 0; }
-.plant .keyfacts b {
-  font-size: 1.5rem;
+.keyfacts li { margin: 0; padding: var(--sp-4) var(--sp-4) var(--sp-5); background: var(--white); }
+.keyfacts b {
+  display: block;
+  font-size: clamp(1.6rem, 1.3rem + 1vw, 2.15rem);
   font-weight: 700;
-  line-height: 1.2;
-  text-align: right;
+  line-height: 1;
+  letter-spacing: -.02em;
   color: var(--leaf-900);
   font-variant-numeric: tabular-nums;
 }
-.plant .keyfacts span { font-size: var(--text-sm); color: var(--gray-600); line-height: 1.4; }
-@media (max-width: 46rem) {
-  .plant .keyfacts { grid-template-columns: 1fr; }
-  .plant .keyfacts li { border-right: 0; border-bottom: 1px solid var(--gray-200); }
-  .plant .keyfacts li:last-child { border-bottom: 0; }
-}
+.keyfacts span { display: block; margin-top: .5rem; font-size: var(--text-sm); color: var(--gray-600); line-height: 1.4; }
 
 /* --------------------------------------------------------------- PIPELINE -- */
 
-.rail { margin: var(--sp-6) 0; border: 1px solid var(--gray-200); border-radius: 0; overflow: hidden; }
+.rail { margin: var(--sp-6) 0; border: 1px solid var(--gray-200); border-radius: var(--radius-sm); overflow: hidden; }
 
 .rail__strip {
   display: grid;
@@ -133,7 +118,7 @@
 .rail__shot img {
   display: block; width: 100%; height: auto;
   aspect-ratio: 3 / 2; object-fit: cover;
-  border-radius: 0; background: var(--gray-100);
+  border-radius: var(--radius-sm); background: var(--gray-100);
 }
 .rail__shot figcaption {
   margin-top: var(--sp-2);
@@ -157,20 +142,42 @@
 
 /* ----------------------------------------------------------------- STAMPS -- */
 
-/* page.css's .stamp, the component Measurement, Parts and Results use for
-   their states, keeping this page's four-way split: Closed is
-   stamp--closed; a partial run (4 trials, Inconclusive, Pretest...)
-   stamp--fail; Unmeasured and Void twice stamp--open (rust, as they were);
-   Queued, a run not yet started, the plain grey stamp (it was slate).
-   Software maps its states the same way. */
-.plant .stamp { vertical-align: .1em; }
+.stamp {
+  display: inline-block;
+  font-size: .625rem;
+  font-weight: 700;
+  letter-spacing: .13em;
+  text-transform: uppercase;
+  padding: .2em .5em;
+  border: 1px solid currentColor;
+  border-radius: 2px;
+  white-space: nowrap;
+  vertical-align: .05em;
+}
+.stamp--done    { color: var(--leaf-700); }
+.stamp--partial { color: var(--amber-700); }
+.stamp--open    { color: var(--slate-700); }
+.stamp--void    { color: var(--rust-700); }
 
 /* ----------------------------------------------------------------- LEDGER -- */
 
 .filters { display: flex; flex-wrap: wrap; gap: var(--sp-2); margin: var(--sp-5) 0 var(--sp-3); align-items: center; }
 .filters__lab { font-size: .6875rem; font-weight: 700; letter-spacing: .12em; text-transform: uppercase; color: var(--gray-450); margin-right: var(--sp-2); }
-/* The filter buttons are page.css's .filterchip; "chip" stays on them as
-   plant.js's hook. */
+.chip {
+  appearance: none;
+  font: inherit;
+  font-size: var(--text-sm);
+  cursor: pointer;
+  padding: .3rem .7rem;
+  border: 1px solid var(--gray-300);
+  border-radius: 100px;
+  background: var(--white);
+  color: var(--gray-600);
+  transition: background .12s ease, border-color .12s ease, color .12s ease;
+}
+.chip:hover { border-color: var(--leaf-500); color: var(--leaf-900); }
+.chip:focus-visible { outline: 2px solid var(--leaf-500); outline-offset: 2px; }
+.chip[aria-pressed="true"] { background: var(--leaf-900); border-color: var(--leaf-900); color: var(--white); }
 
 /* below about 46rem the columns crush into single words, so the table scrolls
    inside its wrapper instead of wrapping every cell to four lines */
@@ -178,8 +185,7 @@
 .ledger th, .ledger td { padding: var(--sp-3) var(--sp-3); text-align: left; vertical-align: top; border-bottom: 1px solid var(--gray-200); }
 .ledger thead th {
   font-size: .625rem; font-weight: 700; letter-spacing: .13em; text-transform: uppercase;
-  color: var(--gray-450); white-space: nowrap;
-  border-bottom-color: var(--gray-400);   /* the revision-block head rule, as page.css draws table.data */
+  color: var(--gray-450); background: var(--gray-50); white-space: nowrap;
 }
 .ledger tbody tr:hover { background: var(--leaf-50); }
 .ledger tbody tr[hidden] { display: none; }
@@ -202,8 +208,6 @@
 .chart .cat text { fill: var(--gray-700); font-weight: 600; }
 .chart .val text { fill: var(--gray-600); font-size: 11.5px; font-weight: 600; font-variant-numeric: tabular-nums; }
 .chart .axtitle { fill: var(--gray-450); font-size: 11px; font-weight: 700; letter-spacing: .1em; text-transform: uppercase; }
-/* a unit or a formula inside a capitalised label (.u, from page.css) keeps
-   its case: "mm" set in capitals reads as megametres, "NaCl" as NACL */
 /* whiskers are one standard deviation either side of the mean; they sit above
    the bars so a short bar's whisker is still readable */
 .chart .err line { stroke: var(--gray-700); stroke-width: 1.4; stroke-linecap: butt; }
@@ -213,7 +217,7 @@
 .chart:hover .bar rect { opacity: .5; }
 .chart .bar rect:hover { opacity: 1; }
 .chart__key { display: flex; flex-wrap: wrap; gap: var(--sp-4); margin-top: var(--sp-3); font-size: var(--text-sm); color: var(--gray-600); }
-.chart__key i { display: inline-block; width: .85rem; height: .85rem; margin-right: .4rem; vertical-align: -.1rem; }
+.chart__key i { display: inline-block; width: .85rem; height: .85rem; margin-right: .4rem; vertical-align: -.1rem; border-radius: 2px; }
 
 /* ----------------------------------------------------------------- MATRIX -- */
 
@@ -240,16 +244,16 @@
 .cell:hover { background: var(--leaf-50); }
 .cell:focus-visible { outline: 2px solid var(--leaf-500); outline-offset: -2px; }
 .cell[aria-pressed="true"] { background: var(--leaf-900); }
-.cell[aria-pressed="true"] .stamp { color: var(--white); background: transparent; }
+.cell[aria-pressed="true"] .stamp { color: var(--white); }
 .cell[aria-pressed="true"] .cell__note { color: var(--leaf-200); }
 .cell__note { display: block; margin-top: .35rem; font-size: var(--text-xs); }
-.cell--none { cursor: default; color: var(--gray-500); }   /* "Not run" is a finding, so it is text, not a rule colour */
+.cell--none { cursor: default; color: var(--gray-300); }
 .cell--none:hover { background: var(--white); }
 
 .matrix__out {
   margin-top: -1px;
   border: 1px solid var(--gray-200);
-  border-top: 1.5px solid var(--leaf-700);
+  border-top: 3px solid var(--leaf-700);
   background: var(--white);
   padding: var(--sp-5);
 }
@@ -263,8 +267,8 @@
 .windows { margin: var(--sp-6) 0; display: grid; gap: var(--sp-4); grid-template-columns: repeat(auto-fit, minmax(13rem, 1fr)); }
 .window {
   border: 1px solid var(--gray-200);
-  border-top: 1.5px solid var(--leaf-700);
-  border-radius: 0;
+  border-top: 3px solid var(--leaf-500);
+  border-radius: var(--radius-sm);
   padding: var(--sp-4);
   background: var(--white);
 }
@@ -274,12 +278,10 @@
 
 /* ------------------------------------------------------------------ NOTES -- */
 
-/* A boxed note: one step of tone and a 1px graphite rule round all four sides,
-   not a grey bar down the left. */
 .aside {
   margin: var(--sp-6) 0;
   padding: var(--sp-4) var(--sp-5);
-  border: 1px solid var(--gray-300);
+  border-left: 3px solid var(--gray-300);
   background: var(--gray-50);
   font-size: var(--text-sm);
   color: var(--gray-700);
@@ -292,11 +294,30 @@
 .fig--plain figcaption { color: var(--gray-500); }
 
 /* ------------------------------------------------------------------- FIX -- */
-/* The .fix box is drawn by page.css, the same box every wet lab page uses.
-   Only its width is set here, because this page's column is wider than the
-   measure. */
+/* An editorial marker: something the team still has to settle before the wiki
+   freeze. Numbered F1, F2... so the list in the status box matches. Same
+   component as the Sustainability, Laws and Entrepreneurship pages.          */
 
-.plant .fix { max-width: var(--measure); }
+.plant .fix {
+  margin: var(--sp-5) 0;
+  max-width: var(--measure);
+  padding: var(--sp-3) var(--sp-5);
+  border: 1px solid var(--gray-200);
+  border-left: 3px solid var(--amber-700);
+  border-radius: var(--radius-sm);
+  background: var(--white);
+  font-size: var(--text-sm);
+  color: var(--gray-700);
+}
+.plant .fix > :first-child { margin-top: 0; }
+.plant .fix > :last-child  { margin-bottom: 0; }
+.plant .fix__label {
+  display: block; margin-bottom: var(--sp-1);
+  font-size: .6875rem; font-weight: 700; letter-spacing: .09em;
+  text-transform: uppercase; color: var(--amber-700);
+}
+.plant .fix ul { margin: var(--sp-2) 0 0; padding-left: 1.2em; }
+.plant .fix li + li { margin-top: var(--sp-2); }
 .plant .fix code { font-family: var(--font-mono); font-size: .92em; }
 
 /* ---------------------------------------------------------------- PRINT ---- */
@@ -324,8 +345,8 @@
 @media (min-width: 700px)  { .protos { grid-template-columns: 1fr 1fr; } }
 .proto {
   border: 1px solid var(--gray-200);
-  border-top: 1.5px solid var(--gray-400);
-  border-radius: 0;
+  border-top: 3px solid var(--gray-300);
+  border-radius: var(--radius-sm);
   background: var(--white);
   overflow: hidden;
 }
@@ -345,7 +366,7 @@
 .story__beat:last-child { padding-bottom: 0; }
 .story__beat::before {
   content: ""; position: absolute; left: calc(-1 * var(--sp-5) - 5px); top: .55rem;
-  width: 8px; height: 8px; background: var(--leaf-700);
+  width: 8px; height: 8px; background: var(--leaf-700); border-radius: 50%;
 }
 .story__when { display: block; font-size: .6875rem; font-weight: 700; letter-spacing: .14em; text-transform: uppercase; color: var(--leaf-700); font-variant-numeric: tabular-nums; }
 .story__beat h4 { margin: .3rem 0 var(--sp-2); }
@@ -363,15 +384,11 @@
    one click away, because every image on this page opens in the lightbox. */
 
 .plant .fig img {
-  /* Full column width with the height taken from the width and height
-     attributes, so the space is held before the file arrives (width:auto
-     collapsed every lazy image to nothing and the page jumped as they
-     loaded). A tall photograph is capped at 70% of the window and contained
-     on the figure's mat rather than cropped. */
-  width: 100%;
+  width: auto;
   height: auto;
+  max-width: 100%;
   max-height: 70vh;
-  object-fit: contain;
+  margin-inline: auto;
   display: block;
 }
 
@@ -392,4 +409,3 @@
 .plant .figs--doc .fig img { aspect-ratio: 16 / 10; }
 
 .rail__shot img, .proto img { cursor: zoom-in; }
-

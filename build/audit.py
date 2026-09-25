@@ -24,11 +24,6 @@ Checks, in the order they cost the most:
   alt        an <img> with no alt attribute at all (alt="" is fine: decorative)
   leftover   scaffold notes, status boxes, pending chips, figure placeholders
   size       any single file over 5 MB
-  notes      review notes (<aside class="review-note">) per page, against the
-             page's <h2> count, and how many carry a "Fix." paragraph.
-             Informational only: it never fails the audit. The notes are
-             demo-only and must be off or deleted in the copy for iGEM
-             (window.REVIEW_NOTES in assets/data/site-nav.js).
 
 Only the Python standard library is used.
 """
@@ -360,21 +355,6 @@ def main():
             if c:
                 leftovers[rel(f)][name] = c
 
-    # review notes left on 25 September 2026: informational, never a failure
-    review = {}
-    for f in html_files:
-        text = f.read_text(encoding="utf-8", errors="replace")
-        blocks = re.findall(r'<aside\b[^>]*class="[^"]*\breview-note\b[^"]*"[^>]*>(.*?)</aside>', text, flags=re.S)
-        if not blocks and "pagebody" not in text:
-            continue
-        if rel(f) == "404.html":
-            continue
-        body = text.split('class="pagebody"', 1)[-1]
-        body = re.sub(r'<(section|div)\b[^>]*class="[^"]*\brefs\b.*?</\1>', "", body, flags=re.S)
-        h2 = len(re.findall(r"<h2\b", body))
-        fixes = sum(1 for b in blocks if re.search(r"<b>\s*Fix\.", b))
-        review[rel(f)] = (len(blocks), h2, fixes)
-
     nav_js = (ROOT / "assets/data/site-nav.js").read_text(encoding="utf-8")
     nav_slugs = set(re.findall(r'slug:\s*"([^"]+)"', nav_js))
     for slug in sorted(nav_slugs):
@@ -441,16 +421,6 @@ def main():
     out.append("| File | Leftovers |\n|---|---|")
     for f in sorted(leftovers):
         out.append(f"| `{f}` | " + ", ".join(f"{n} {k}" for k, n in leftovers[f].most_common()) + " |")
-    out.append("\n## Review notes (informational)\n")
-    out.append("Demo-only writing review. `h2` is the page's section count, so a page with")
-    out.append("fewer notes than sections has sections nobody reviewed (References not counted).\n")
-    out.append("| File | Notes | h2 | With a Fix |\n|---|---:|---:|---:|")
-    tn = tf = 0
-    for f in sorted(review):
-        n, h2, fx = review[f]
-        tn += n; tf += fx
-        out.append(f"| `{f}` | {n} | {h2} | {fx} |")
-    out.append(f"| **total** | **{tn}** | | **{tf}** |")
     out.append(f"\n## Files over {BIG // 2**20} MB\n")
     for s, f in sizes:
         out.append(f"- {s / 2**20:.1f} MB `{f}`")

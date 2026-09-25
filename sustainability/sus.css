@@ -3,20 +3,39 @@
 
    HOUSE RULES THIS FILE OBEYS
    1. One white ground. Every section is white. Boxed notes are white with a
-      hairline all round; state is named in words, not carried by a coloured
-      edge. Corners are square, as on Integrated Human Practices.
+      hairline and a 3px left edge in the colour of what they are.
    2. Figures are one component with a fixed set of frames, and every one opens
       full-window (page.js wires the lightbox; the frames are set here).
    3. Nothing important is behind a click.
    4. Numbers in any rail agree with the section numbers page.js writes.
 
-   COLOUR. The four UN goal colours used to sit on badges, target strips and
-   caption rules. They carried no information the goal number did not already
-   carry, so they are gone (25 September 2026 review): the page uses the ReLeaf
-   green, the neutrals and the three state colours, like every other page.
+   COLOUR. The page carries four UN goal colours, and they are the only colours
+   on it besides the ReLeaf green and the neutrals. Each one is confined to
+   three places in its own section: the goal badge, the 3px edge on the target
+   strip, and the caption rule under that section's figures. A goal colour is
+   never a background for prose.
    ========================================================================== */
 
+.sus {
+  --sdg-2:  #d9a326;   /* Zero hunger          */
+  --sdg-4:  #c5192d;   /* Quality education    */
+  --sdg-10: #dd1367;   /* Reduced inequalities */
+  --sdg-15: #3f9c23;   /* Life on land         */
+  --sdg: var(--leaf-700);          /* fallback for sections with no goal */
+}
 
+.sus .sec--g2  { --sdg: var(--sdg-2); }
+.sus .sec--g4  { --sdg: var(--sdg-4); }
+.sus .sec--g10 { --sdg: var(--sdg-10); }
+.sus .sec--g15 { --sdg: var(--sdg-15); }
+
+/* Callouts keep the white ground the rest of the page has. */
+.sus .pagebody .callout,
+.sus .pagebody .callout--unproven,
+.sus .pagebody .callout--borrowed {
+  background: var(--white);
+  border-left-width: 3px;
+}
 
 /* ============================================================ GOAL INDEX ===
    Four cards under the overview: which goal, what we did about it, and how
@@ -25,11 +44,9 @@
 
 .sus .goals {
   display: grid;
-  gap: 0;
+  gap: var(--sp-4);
   margin: var(--sp-6) 0;
   grid-template-columns: 1fr;
-  border-top: 1.5px solid var(--black);
-  border-bottom: 1px solid var(--gray-400);
 }
 @media (min-width: 40rem) { .sus .goals { grid-template-columns: 1fr 1fr; } }
 @media (min-width: 68rem) { .sus .goals { grid-template-columns: repeat(4, 1fr); } }
@@ -38,34 +55,44 @@
   display: grid;
   grid-template-rows: auto auto 1fr auto;
   gap: var(--sp-2);
-  padding: var(--sp-4);
-  border-bottom: 1px solid var(--gray-200);
+  padding: var(--sp-4) var(--sp-4) var(--sp-4) calc(var(--sp-4) - 3px);
+  border: 1px solid var(--gray-200);
+  border-left: 3px solid var(--sdg);
+  border-radius: var(--radius-sm);
+  background: var(--white);
   color: inherit;
   text-decoration: none;
-  transition: background-color .14s ease;
-}
-@media (min-width: 40rem) {
-  .sus .goal:nth-child(odd) { border-right: 1px solid var(--gray-200); }
-}
-@media (min-width: 68rem) {
-  .sus .goal { border-bottom: 0; border-right: 1px solid var(--gray-200); }
-  .sus .goal:last-child { border-right: 0; }
+  transition: border-color .15s, box-shadow .15s, transform .15s;
 }
 .sus a.goal:hover,
-.sus a.goal:focus-visible { background: var(--gray-50); }
-.sus a.goal:hover .goal__name { text-decoration: underline; text-underline-offset: 3px; }
-.sus .goal__no {
-  font-size: .6875rem; font-weight: 700; letter-spacing: .14em;
-  text-transform: uppercase; color: var(--gray-500);
-  font-variant-numeric: tabular-nums;
+.sus a.goal:focus-visible {
+  border-color: var(--gray-300);
+  border-left-color: var(--sdg);
+  box-shadow: var(--shadow-md);
+  transform: translateY(-2px);
 }
-.sus .goal__no::before { content: "SDG "; }
-.sus .goal__name { font-weight: 700; line-height: 1.3; color: var(--leaf-900); }
+.sus .goal__no {
+  display: inline-grid; place-items: center;
+  width: 2.25rem; height: 2.25rem;
+  border-radius: var(--radius-sm);
+  background: var(--sdg);
+  color: var(--white);
+  font-weight: 700; font-size: 1.0625rem; letter-spacing: -.02em;
+}
+.sus .goal__name { font-weight: 650; line-height: 1.3; }
 .sus .goal__what { font-size: var(--text-sm); line-height: 1.5; color: var(--gray-600); margin: 0; }
-/* The goal's state is page.css's .stamp: Measured stamp--closed, a partial
-   answer (Rescue not shown, Untested) stamp--fail, Not evidenced
-   stamp--open. */
-.sus .goal__state { justify-self: start; }
+.sus .goal__state {
+  justify-self: start;
+  padding: .15rem .5rem;
+  border: 1px solid var(--gray-300);
+  border-radius: 100px;
+  font-size: var(--text-xs); font-weight: 650;
+  letter-spacing: .04em; text-transform: uppercase;
+  color: var(--gray-600);
+}
+.sus .goal__state[data-state="measured"] { border-color: var(--leaf-500); color: var(--leaf-700); }
+.sus .goal__state[data-state="partial"]  { border-color: var(--amber-700); color: var(--amber-700); }
+.sus .goal__state[data-state="open"]     { border-color: var(--rust-700);  color: var(--rust-700); }
 
 /* ========================================================== TARGET STRIP ===
    Directly under each goal heading: the UN target the section argues against,
@@ -77,14 +104,16 @@
   margin: var(--sp-4) 0 var(--sp-5);
   padding: var(--sp-3) var(--sp-4);
   border: 1px solid var(--gray-200);
-  background: var(--gray-50);
+  border-left: 3px solid var(--sdg);
+  border-radius: var(--radius-sm);
+  background: var(--white);
   font-size: var(--text-sm);
   line-height: 1.5;
 }
 .sus .targets b {
   font-size: var(--text-xs); font-weight: 700;
   letter-spacing: .09em; text-transform: uppercase;
-  color: var(--gray-600);
+  color: var(--sdg);
 }
 .sus .targets p { margin: 0; color: var(--gray-700); flex: 1 1 22rem; }
 
@@ -101,15 +130,16 @@
 @media (min-width: 46rem) { .sus .ledger { grid-template-columns: 1fr 1fr; } }
 
 .sus .ledger > div {
-  padding: var(--sp-4);
+  padding: var(--sp-4) var(--sp-4) var(--sp-4) calc(var(--sp-4) - 3px);
   border: 1px solid var(--gray-200);
-  border-top: 1.5px solid var(--gray-400);
+  border-left: 3px solid var(--gray-300);
+  border-radius: var(--radius-sm);
   background: var(--white);
   font-size: var(--text-sm);
   line-height: 1.6;
 }
-.sus .ledger__yes { border-top-color: var(--leaf-700) !important; }
-.sus .ledger__no  { border-top-color: var(--rust-700) !important; }
+.sus .ledger__yes { border-left-color: var(--leaf-700) !important; }
+.sus .ledger__no  { border-left-color: var(--rust-700) !important; }
 .sus .ledger b {
   display: block; margin-bottom: var(--sp-2);
   font-size: var(--text-xs); font-weight: 700;
@@ -121,8 +151,27 @@
 .sus .ledger li + li { margin-top: var(--sp-2); }
 
 /* ================================================================= FIX =====
-   The .fix box (numbered S1, S2... so the list in the status box matches) is
-   page.css's, the same box every other page draws.                         */
+   An editorial marker: something the team still has to settle before the
+   wiki freeze. Numbered S1, S2... so the list in the status box matches.   */
+
+.sus .fix {
+  margin: var(--sp-5) 0;
+  padding: var(--sp-3) var(--sp-5);
+  border: 1px solid var(--gray-200);
+  border-left: 3px solid var(--amber-700);
+  border-radius: var(--radius-sm);
+  background: var(--white);
+  font-size: var(--text-sm);
+  color: var(--gray-700);
+}
+.sus .fix > :first-child { margin-top: 0; }
+.sus .fix > :last-child  { margin-bottom: 0; }
+.sus .fix__label {
+  display: block; margin-bottom: var(--sp-1);
+  font-size: .6875rem; font-weight: 700; letter-spacing: .09em;
+  text-transform: uppercase; color: var(--amber-700);
+}
+.sus .fix ul { margin: var(--sp-2) 0 0; padding-left: 1.2em; }
 
 /* ============================================================== FIGURES ====
    Two frames and nothing sized by hand.
@@ -146,6 +195,7 @@
   padding: var(--sp-3);
   background: var(--white);
   border: 1px solid var(--gray-200);
+  border-radius: var(--radius-sm);
 }
 .sus .fig__frame img {
   max-width: 100%; max-height: 100%;
@@ -181,11 +231,11 @@
 .sus .fig figcaption {
   margin-top: var(--sp-3);
   padding-left: var(--sp-4);
-  border-left: 1px solid var(--gray-400);
+  border-left: 3px solid var(--sdg);
   font-size: var(--text-sm); line-height: 1.6;
   color: var(--gray-600);
 }
-.sus .fig figcaption b { color: var(--leaf-700); font-weight: 650; }
+.sus .fig figcaption b { color: var(--gray-700); font-weight: 650; }
 
 /* A row of figures: equal columns, so equal frames. Captions are not equal
    length, so the row puts every frame on one grid row and every caption on
@@ -212,6 +262,7 @@
   margin: var(--sp-6) 0 var(--sp-3);
   padding: var(--sp-4);
   border: 1px solid var(--gray-200);
+  border-radius: var(--radius-sm);
   background: var(--white);
 }
 .sus .chart svg { display: block; width: 100%; height: auto; }
@@ -229,13 +280,13 @@
 .sus blockquote.pull {
   margin: var(--sp-6) 0;
   padding: var(--sp-2) 0 var(--sp-2) var(--sp-5);
-  border-left: 1px solid var(--gray-500);
+  border-left: 3px solid var(--leaf-500);
 }
 .sus blockquote.pull p {
   margin: 0;
   font-size: var(--text-lede);
   line-height: 1.5;
-  color: var(--leaf-900);
+  color: var(--black);
 }
 .sus blockquote.pull footer {
   margin-top: var(--sp-3);
@@ -245,7 +296,19 @@
 
 /* ============================================================== TABLES ===== */
 
-/* Tables are page.css's revision block. */
+.sus table.data { border-collapse: collapse; width: 100%; font-size: var(--text-sm); }
+.sus table.data th, .sus table.data td {
+  padding: var(--sp-3) var(--sp-4);
+  border-bottom: 1px solid var(--gray-200);
+  text-align: left; vertical-align: top;
+}
+.sus table.data thead th {
+  border-bottom: 1px solid var(--gray-400);
+  font-size: var(--text-xs); font-weight: 700;
+  letter-spacing: .07em; text-transform: uppercase;
+  color: var(--gray-600);
+}
+.sus table.data tbody tr:last-child td { border-bottom: 1px solid var(--gray-400); }
 
 /* =============================================================== PRINT ===== */
 

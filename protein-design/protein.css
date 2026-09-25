@@ -2,8 +2,8 @@
    Protein Design: the six pages of the GRAFT section share this file.
 
    HOUSE RULES THIS FILE OBEYS
-   1. One white ground on every page. Callouts and the .gap and .fix boxes
-      are page.css's: a 1px rule all round in the colour of what they are.
+   1. One white ground on every page. Boxed notes are white with a hairline and
+      a 3px left edge in the colour of what they are.
    2. Figures are one component with a fixed set of frames, and every one opens
       full-window (page.js wires the lightbox; the frames are set here).
    3. Nothing important is behind a click.
@@ -47,7 +47,7 @@
   margin-right: var(--sp-2);
   font-size: .6875rem; font-weight: 700;
   letter-spacing: .1em; text-transform: uppercase;
-  color: var(--gray-500);   /* --gray-400 is for rules, never words (tokens.css) */
+  color: var(--gray-400);
   text-decoration: none;
 }
 .stepnav__home:hover { color: var(--leaf-700); }
@@ -103,45 +103,104 @@
   display: grid;
   grid-template-rows: auto auto 1fr auto;
   gap: var(--sp-2);
-  padding: var(--sp-4);
-  border: 1px solid var(--gray-300);
-  border-top: 1.5px solid var(--leaf-700);   /* DESIGN.md's summary-card edge */
+  padding: var(--sp-4) var(--sp-4) var(--sp-4) calc(var(--sp-4) - 3px);
+  border: 1px solid var(--gray-200);
+  border-left: 3px solid var(--leaf-500);
+  border-radius: var(--radius-sm);
   background: var(--white);
   color: inherit;
   text-decoration: none;
-  transition: border-color .15s, background .15s;
+  transition: border-color .15s, box-shadow .15s, transform .15s;
 }
-/* Hover is a change of tone and rule, not a lift. */
 .pd a.stepcard:hover,
 .pd a.stepcard:focus-visible {
-  background: var(--gray-50);
-  border-color: var(--gray-400);
-  border-top-color: var(--leaf-700);
+  border-color: var(--gray-300);
+  border-left-color: var(--leaf-700);
+  box-shadow: var(--shadow-md);
+  transform: translateY(-2px);
 }
-/* The GRAFT letter: the mnemonic the section is named for, so it stays,
-   drawn as a sheet number (a letter in a 1px box), not a filled square. */
 .pd .stepcard__k {
-  justify-self: start;
-  padding: .2em .55em;
-  border: 1px solid var(--leaf-900);
-  color: var(--leaf-900);
+  display: inline-grid; place-items: center;
+  width: 2.25rem; height: 2.25rem;
+  border-radius: var(--radius-sm);
+  background: var(--leaf-700);
+  color: var(--white);
   font-family: var(--font-mono);
-  font-weight: 700; font-size: .8125rem; letter-spacing: .06em;
+  font-weight: 700; font-size: 1.0625rem;
 }
-.pd a.stepcard--aside { border-top-color: var(--slate-700); }
-.pd a.stepcard--aside:hover, .pd a.stepcard--aside:focus-visible { border-top-color: var(--slate-700); }
-.pd .stepcard--aside .stepcard__k { border-color: var(--slate-700); color: var(--slate-700); }
+.pd .stepcard--aside { border-left-color: var(--slate-700); }
+.pd .stepcard--aside .stepcard__k { background: var(--slate-700); font-size: .8125rem; }
 .pd .stepcard__name { font-weight: 650; line-height: 1.3; }
 .pd .stepcard__what { margin: 0; font-size: var(--text-sm); line-height: 1.5; color: var(--gray-600); }
-/* The state is page.css's .stamp: Written is stamp--closed, Framework
-   (headings and gaps, not yet written) stamp--open. */
-.pd .stepcard__state { justify-self: start; }
+.pd .stepcard__state {
+  justify-self: start;
+  padding: .15rem .5rem;
+  border: 1px solid var(--gray-300);
+  border-radius: 100px;
+  font-size: var(--text-xs); font-weight: 650;
+  letter-spacing: .04em; text-transform: uppercase;
+  color: var(--gray-600);
+}
+.pd .stepcard__state[data-state="written"] { border-color: var(--leaf-500); color: var(--leaf-700); }
+.pd .stepcard__state[data-state="framework"] { border-color: var(--amber-700); color: var(--amber-700); }
 
-/* ========================================================== GAP AND FIX =====
-   .gap (a section the team has not written yet, stated where it belongs,
-   with what would close it) and .fix (two sources that disagree, numbered
-   P1, P2... across the whole section) are page.css's boxes, the same ones
-   every other page uses. Callouts are page.css's too.                      */
+/* ================================================================== GAP =====
+   A section the team has not written yet, stated where the section belongs,
+   with what would close it. The Engineering page does the same thing; this is
+   the boxed version of it, because these pages have more gaps than prose and
+   a reader needs to see at a glance which is which.                         */
+
+.pd .gap {
+  margin: var(--sp-5) 0;
+  padding: var(--sp-3) var(--sp-5);
+  border: 1px solid var(--gray-200);
+  border-left: 3px solid var(--slate-700);
+  border-radius: var(--radius-sm);
+  background: var(--white);
+  font-size: var(--text-sm);
+  color: var(--gray-700);
+}
+.pd .gap > :first-child { margin-top: 0; }
+.pd .gap > :last-child  { margin-bottom: 0; }
+.pd .gap__label {
+  display: block; margin-bottom: var(--sp-1);
+  font-size: .6875rem; font-weight: 700; letter-spacing: .09em;
+  text-transform: uppercase; color: var(--slate-700);
+}
+.pd .gap ul { margin: var(--sp-2) 0 0; padding-left: 1.2em; }
+
+/* ================================================================= FIX ======
+   An editorial marker: two sources that disagree, both named, neither quietly
+   picked. Numbered P1, P2... across the whole section, so the list in each
+   page's status box and the ledger on the hub all point at the same thing.  */
+
+.pd .fix {
+  margin: var(--sp-5) 0;
+  padding: var(--sp-3) var(--sp-5);
+  border: 1px solid var(--gray-200);
+  border-left: 3px solid var(--amber-700);
+  border-radius: var(--radius-sm);
+  background: var(--white);
+  font-size: var(--text-sm);
+  color: var(--gray-700);
+}
+.pd .fix > :first-child { margin-top: 0; }
+.pd .fix > :last-child  { margin-bottom: 0; }
+.pd .fix__label {
+  display: block; margin-bottom: var(--sp-1);
+  font-size: .6875rem; font-weight: 700; letter-spacing: .09em;
+  text-transform: uppercase; color: var(--amber-700);
+}
+.pd .fix ul { margin: var(--sp-2) 0 0; padding-left: 1.2em; }
+
+/* Callouts keep the white ground the rest of the page has. */
+.pd .pagebody .callout,
+.pd .pagebody .callout--unproven,
+.pd .pagebody .callout--borrowed,
+.pd .pagebody .callout--medal {
+  background: var(--white);
+  border-left-width: 3px;
+}
 
 /* ============================================================== FIGURES =====
    Two frames and nothing sized by hand, copied from `sus.css`.
@@ -164,6 +223,7 @@
   padding: var(--sp-3);
   background: var(--white);
   border: 1px solid var(--gray-200);
+  border-radius: var(--radius-sm);
 }
 .pd .fig__frame img {
   max-width: 100%; max-height: 100%;
@@ -185,7 +245,14 @@
 .pd .fig--strip { --fr: 7 / 2; }
 .pd .fig--tall  { --fr: 3 / 2; }
 
-/* Captions are page.css's: a 1px graphite rule. */
+.pd .fig figcaption {
+  margin-top: var(--sp-3);
+  padding-left: var(--sp-4);
+  border-left: 3px solid var(--leaf-500);
+  font-size: var(--text-sm); line-height: 1.6;
+  color: var(--gray-600);
+}
+.pd .fig figcaption b { color: var(--gray-700); font-weight: 650; }
 .pd .fig .prov { display: block; margin-top: var(--sp-2); color: var(--gray-500); font-size: var(--text-xs); }
 
 /* A row of figures: equal columns, so equal frames. Captions are not equal
@@ -217,8 +284,19 @@
 
 /* ================================================================ TABLES ==== */
 
-/* The table is page.css's revision block; code and open cells are the
-   section's own. */
+.pd table.data { border-collapse: collapse; width: 100%; font-size: var(--text-sm); }
+.pd table.data th, .pd table.data td {
+  padding: var(--sp-3) var(--sp-4);
+  border-bottom: 1px solid var(--gray-200);
+  text-align: left; vertical-align: top;
+}
+.pd table.data thead th {
+  border-bottom: 1px solid var(--gray-400);
+  font-size: var(--text-xs); font-weight: 700;
+  letter-spacing: .07em; text-transform: uppercase;
+  color: var(--gray-600);
+}
+.pd table.data tbody tr:last-child td { border-bottom: 1px solid var(--gray-400); }
 .pd table.data code { font-family: var(--font-mono); font-size: .92em; }
 .pd table.data td.open { color: var(--rust-700); }
 

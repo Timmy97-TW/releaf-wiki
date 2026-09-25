@@ -2,9 +2,8 @@
    Parts: the few things page.css does not already do.
 
    HOUSE RULES THIS FILE OBEYS
-   1. One white ground. Every section is white. The .fix box and the callouts
-      are page.css's: a 1px rule on all four sides in the colour of what they
-      are, square corners, no coloured slab down the left.
+   1. One white ground. Every section is white. A boxed note is white with a
+      hairline and a 3px left edge in the colour of what it is.
    2. Figures are one component with a fixed set of frames, and every one opens
       full-window (page.js wires the lightbox; the frames are set here).
    3. Nothing important is behind a click.
@@ -25,12 +24,9 @@
    7:2 for the linear unit diagrams borrowed from Engineering.
 
    COLOUR. One ladder of five status words plus a failure word, and those six
-   stamps are the only colours on the page besides the ReLeaf green and the
-   neutrals. The word is always written out; the colour only confirms it.
-   The colours are the site's state colours (DESIGN.md): green means read
-   (stamp--closed), amber means it failed (stamp--fail, as a failed cycle is
-   on Engineering), rust means still under way (stamp--open), slate means
-   checked but not read. A status colour is never a background.
+   pills are the only colours on the page besides the ReLeaf green and the
+   neutrals. Amber means in progress, slate means checked but not read, green
+   means read, rust means it failed. A status colour is never a background.
    ========================================================================== */
 
 .parts .pagebody { max-width: 60rem; }
@@ -46,8 +42,37 @@
 .parts .pagebody > .callout,
 .parts .pagebody > .status { max-width: var(--measure); }
 
-/* The .fix box (numbered P1, P2... so the list in the status box matches) is
-   drawn by page.css, the same box the other wet lab pages use. */
+.parts .pagebody .callout,
+.parts .pagebody .callout--unproven,
+.parts .pagebody .callout--borrowed,
+.parts .pagebody .callout--medal {
+  background: var(--white);
+  border-left-width: 3px;
+}
+
+/* ================================================================= FIX =====
+   An editorial marker: something the team still has to settle before the
+   wiki freeze. Numbered P1, P2... so the list in the status box matches.   */
+
+.parts .fix {
+  margin: var(--sp-5) 0;
+  padding: var(--sp-3) var(--sp-5);
+  border: 1px solid var(--gray-200);
+  border-left: 3px solid var(--amber-700);
+  border-radius: var(--radius-sm);
+  background: var(--white);
+  font-size: var(--text-sm);
+  color: var(--gray-700);
+}
+.parts .fix > :first-child { margin-top: 0; }
+.parts .fix > :last-child  { margin-bottom: 0; }
+.parts .fix__label {
+  display: block; margin-bottom: var(--sp-1);
+  font-size: .6875rem; font-weight: 700; letter-spacing: .09em;
+  text-transform: uppercase; color: var(--amber-700);
+}
+.parts .fix ul { margin: var(--sp-2) 0 0; padding-left: 1.2em; }
+.parts .fix p + p { margin-top: var(--sp-2); }
 
 /* ============================================================== STATUS =====
    The one vocabulary. Every part in every table on this page carries exactly
@@ -55,23 +80,27 @@
    the word was earned at. The words come from the build spreadsheet's own
    states, not from anything invented here.                                 */
 
-/* Drawn with page.css's .stamp, the component Plants, Measurement and
-   Results use for their states. Three of the six words are shared states:
-     Sequence-confirmed  stamp--closed
-     Unsuccessful        stamp--fail
-     Assembled           stamp--open   (under way, not yet confirmed)
-   The other three are rungs the shared stamp does not have, so they are
-   page-scoped modifiers of the same shape. The level tag after the word
-   (L0, L1, L2) is set a step lighter so the word leads.                    */
-.parts .stamp i {
-  font-style: normal; font-weight: 700;
-  font-size: .9em; letter-spacing: .06em;
-  color: var(--gray-500);
+.parts .st {
+  display: inline-flex; align-items: baseline; gap: .4em;
+  white-space: nowrap;
+  padding: .15rem .5rem;
+  border: 1px solid var(--gray-300);
+  border-radius: 100px;
+  font-size: var(--text-xs); font-weight: 650; line-height: 1.5;
+  letter-spacing: .02em;
+  color: var(--gray-600);
 }
-.parts .stamp--designed { color: var(--gray-500); }
-.parts .stamp--designed::before { background: none; box-shadow: inset 0 0 0 1px currentColor; }
-.parts .stamp--cloned   { color: var(--gray-700); }
-.parts .stamp--pcr      { color: var(--slate-700); }
+.parts .st i {
+  font-style: normal; font-weight: 700;
+  font-size: .8em; letter-spacing: .06em;
+  color: var(--gray-400);
+}
+.parts .st--designed { border-color: var(--gray-300); color: var(--gray-500); }
+.parts .st--cloned   { border-color: var(--gray-400); color: var(--gray-700); }
+.parts .st--assembled{ border-color: var(--amber-700); color: var(--amber-700); }
+.parts .st--pcr      { border-color: var(--slate-700); color: var(--slate-700); }
+.parts .st--seq      { border-color: var(--leaf-700);  color: var(--leaf-700); }
+.parts .st--failed   { border-color: var(--rust-700);  color: var(--rust-700); }
 
 /* The ladder itself, set out once under the overview so every later table can
    be read without a key beside it. */
@@ -86,10 +115,10 @@
 }
 .parts .ladder > li:last-child { border-bottom: 1px solid var(--gray-200); }
 @media (min-width: 42rem) {
-  .parts .ladder > li { grid-template-columns: 13rem 1fr; align-items: baseline; }
+  .parts .ladder > li { grid-template-columns: 12.5rem 1fr; align-items: baseline; }
 }
 .parts .ladder p { margin: 0; color: var(--gray-700); }
-.parts .ladder .stamp { justify-self: start; }
+.parts .ladder .st { justify-self: start; }
 
 /* ============================================================== TABLES =====
    The source docx gives each part six fields: registry number, name,
@@ -99,7 +128,20 @@
    accession under the name, and Basic or Composite under the category. Four
    columns, no information dropped, and the sentence gets room to wrap.     */
 
-/* The table itself is page.css's revision block. */
+.parts table.data { border-collapse: collapse; width: 100%; font-size: var(--text-sm); }
+.parts table.data th, .parts table.data td {
+  padding: var(--sp-3) var(--sp-4);
+  border-bottom: 1px solid var(--gray-200);
+  text-align: left; vertical-align: top;
+}
+.parts table.data thead th {
+  border-bottom: 1px solid var(--gray-400);
+  font-size: var(--text-xs); font-weight: 700;
+  letter-spacing: .07em; text-transform: uppercase;
+  color: var(--gray-600);
+  white-space: nowrap;
+}
+.parts table.data tbody tr:last-child td { border-bottom: 1px solid var(--gray-400); }
 .parts table.data td b { color: var(--leaf-900); font-weight: 650; }
 
 .parts table.parts-tbl { table-layout: fixed; }
@@ -108,27 +150,9 @@
 .parts table.parts-tbl th:nth-child(2),
 .parts table.parts-tbl td:nth-child(2) { width: 8.5rem; }
 .parts table.parts-tbl th:nth-child(3),
-.parts table.parts-tbl td:nth-child(3) { width: 13.5rem; }
-/* "Sequence-confirmed L1" in capitals is wider than a fixed column can
-   spare, so in these tables the stamp may wrap onto two lines rather than
-   run into the Function text. */
-.parts table.parts-tbl .stamp { white-space: normal; }
+.parts table.parts-tbl td:nth-child(3) { width: 11.5rem; }
 .parts table.parts-tbl td { overflow-wrap: break-word; }
 .parts table.parts-tbl td:first-child b { display: block; }
-
-/* Below 46rem those three fixed columns eat the whole width and the function
-   sentence is left with almost none, which turns one row into a column of
-   single characters. Under that width the table goes back to automatic
-   layout and is given a floor, so .tablewrap scrolls it sideways instead. */
-@media (max-width: 46rem) {
-  .parts table.parts-tbl { table-layout: auto; min-width: 40rem; }
-  .parts table.parts-tbl th:nth-child(1),
-  .parts table.parts-tbl td:nth-child(1),
-  .parts table.parts-tbl th:nth-child(2),
-  .parts table.parts-tbl td:nth-child(2),
-  .parts table.parts-tbl th:nth-child(3),
-  .parts table.parts-tbl td:nth-child(3) { width: auto; }
-}
 
 /* The build-record tables run to eight and nine columns, because that is how
    many steps the progression sheet records. They get tighter cells, and their
@@ -136,7 +160,7 @@
    widest of them inside the column instead of behind a horizontal scroll. */
 .parts table.rec { table-layout: auto; }
 .parts table.rec th, .parts table.rec td { padding: var(--sp-2) var(--sp-3); }
-.parts table.rec .stamp { white-space: normal; }
+.parts table.rec .st { white-space: normal; }
 .parts table.rec th { font-size: .625rem; white-space: normal; }
 .parts table.rec td { overflow-wrap: break-word; }
 
@@ -153,7 +177,7 @@
   display: inline-block; margin-top: .2rem;
   font-size: var(--text-xs); font-weight: 700;
   letter-spacing: .07em; text-transform: uppercase;
-  color: var(--gray-500);   /* gray-400 is 2.5:1, a rule colour, not a text one */
+  color: var(--gray-400);
 }
 
 /* No registry number yet. Written out because a blank cell in a parts table
@@ -161,13 +185,13 @@
 .parts .none {
   display: inline-block; margin-top: .2rem;
   font-size: var(--text-xs); font-style: italic;
-  color: var(--gray-500);
+  color: var(--gray-400);
 }
 
 /* The build record tables use a tick and a dash rather than the spreadsheet's
    word, because six columns of "complete" is unreadable. */
 .parts .yes { color: var(--leaf-700); font-weight: 700; }
-.parts .no  { color: var(--gray-500); }
+.parts .no  { color: var(--gray-300); }
 
 /* ============================================================== FIGURES ====
    Two frames and nothing sized by hand.
@@ -194,16 +218,11 @@
   padding: var(--sp-3);
   background: var(--white);
   border: 1px solid var(--gray-200);
-  border-radius: 0;
+  border-radius: var(--radius-sm);
 }
-/* The image fills the frame and is contained inside it. It used to be sized
-   by max-height: 100%, which a grid cell of auto height does not resolve, so
-   a strip taller than its frame overflowed and was clipped (Figure 3 lost its
-   part labels), and an image that had not loaded yet collapsed to nothing. */
 .parts .fig__frame img {
-  position: absolute; inset: 0;
-  width: 100%; height: 100%;
-  padding: inherit; box-sizing: border-box;
+  max-width: 100%; max-height: 100%;
+  width: auto; height: auto;
   object-fit: contain;
   border: 0; border-radius: 0; background: none;
   cursor: zoom-in;
@@ -214,7 +233,14 @@
 .parts .fig--strip   { --fr: 7 / 2; }
 .parts .fig--strip .fig__frame { padding: var(--sp-4); }
 
-/* Captions are page.css's, as on every other page. */
+.parts .fig figcaption {
+  margin-top: var(--sp-3);
+  padding-left: var(--sp-4);
+  border-left: 3px solid var(--leaf-500);
+  font-size: var(--text-sm); line-height: 1.6;
+  color: var(--gray-600);
+}
+.parts .fig figcaption b { color: var(--gray-700); font-weight: 650; }
 
 /* A row of figures: equal columns, so equal frames. Captions are not equal
    length, so the row puts every frame on one grid row and every caption on
@@ -275,4 +301,3 @@
   font-size: var(--text-sm); line-height: 1.6;
 }
 .parts .lightbox figcaption b { color: var(--white); }
-

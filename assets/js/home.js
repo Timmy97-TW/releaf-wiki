@@ -270,18 +270,18 @@
      page here, not in the markup. */
 
   var PAGE_LINKS = {
-    "description":            ["protein-design", "hardware", "model", "human-practices", "results"],
+    "description":            ["peptide-design", "hardware", "model", "human-practices", "results"],
     "engineering":            ["hardware", "results", "milestone", "drylab-notebook"],
     "contribution":           ["parts", "software"],
     "results":                ["measurement", "experiments", "engineering"],
     "experiments":            ["plant", "measurement", "safety-and-security", "notebook", "parts"],
-    "parts":                  ["protein-design"],
+    "parts":                  ["peptide-design"],
     "plant":                  ["measurement", "geospatial-analysis"],
     "measurement":            ["hardware", "model"],
     "safety-and-security":    ["laws-and-regulations"],
-    "model":                  ["software", "hardware"],
-    "hardware":               ["software", "drylab-notebook"],
-    "protein-design":         ["model"],
+    "model":                  ["bioreactor-calculations", "software", "hardware"],
+    "hardware":               ["software", "bioreactor-calculations", "drylab-notebook"],
+    "peptide-design":         ["model"],
     "human-practices":        ["hardware", "plant", "laws-and-regulations", "entrepreneurship",
                                "education", "geospatial-analysis"],
     "education":              ["gallery", "data-physicalization"],
@@ -314,11 +314,7 @@
       byPage[c.getAttribute("data-pg")] = c;
     });
 
-    // With scripting on, the line says what pointing does; with it off the
-    // line stays empty, because pointing does nothing then.
-    var resting = read ? (read.innerHTML.trim() ||
-      "Point at any page to see the pages it is read alongside.") : "";
-    if (read) read.innerHTML = resting;
+    var resting = read ? read.innerHTML : "";
 
     function label(slug) {
       var c = byPage[slug];

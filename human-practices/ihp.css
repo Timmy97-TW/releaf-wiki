@@ -101,9 +101,25 @@
 
 /* ----------------------------------------------------------------- STAMPS -- */
 
-/* page.css's .stamp. Adopted is stamp--closed; Partly adopted and Pending
-   stamp--fail (amber, as they were); Open stamp--open; Planned, not yet
-   started, the plain grey stamp (it was slate), as Plants' Queued. */
+.stamp {
+  display: inline-flex;
+  align-items: center;
+  gap: .45em;
+  padding: .25em .55em;
+  border: 1px solid currentColor;
+  font-size: .6875rem;
+  font-weight: 700;
+  letter-spacing: .12em;
+  text-transform: uppercase;
+  line-height: 1.2;
+  white-space: nowrap;
+  font-variant-numeric: tabular-nums;
+}
+.stamp::before { content: ""; width: .5em; height: .5em; background: currentColor; }
+.stamp--done    { color: var(--leaf-700); }
+.stamp--partial { color: var(--amber-700); }
+.stamp--open    { color: var(--rust-700); }
+.stamp--kept    { color: var(--slate-700); }
 
 /* ------------------------------------------------------------------ PICKS -- */
 /* Who we asked for each project area, and what it changed. This was a four
@@ -138,9 +154,7 @@
 
 .picks__why { margin: var(--sp-3) 0 0; font-size: var(--text-sm); color: var(--gray-600); }
 .picks__did { margin: var(--sp-3) 0 0; font-size: var(--text-sm); color: var(--gray-700); }
-.picks__see { margin: var(--sp-2) 0 0; font-size: var(--text-sm); }
-/* one label style for Changed, Shown on and Method, wherever they appear */
-.picks__did b, .picks__see b, .cells .from b {
+.picks__did b {
   display: inline-block;
   margin-right: .4em;
   font-size: .6875rem; font-weight: 700; letter-spacing: .12em; text-transform: uppercase;
@@ -233,18 +247,7 @@
 .rail__no { font-size: .625rem; font-weight: 700; letter-spacing: .16em; text-transform: uppercase; color: var(--gray-500); font-variant-numeric: tabular-nums; }
 .rail__btn[aria-selected="true"] .rail__no { color: var(--leaf-700); }
 .rail__name { font-weight: 650; line-height: 1.25; font-size: var(--text-sm); }
-.rail__when { margin-bottom: .35rem; font-size: var(--text-xs); color: var(--gray-500); font-variant-numeric: tabular-nums; }
-/* the state of each thread, in words, on its tab: the whole strip reads as a
-   ledger before any tab is opened */
-.rail__state { margin-top: auto; font-size: .5625rem; padding: .2em .45em; }
-.rail__btn .rail__state { color: var(--gray-600); }
-.rail__btn .rail__state.stamp--closed { color: var(--leaf-700); }
-.rail__btn .rail__state.stamp--fail { color: var(--amber-700); }
-/* With scripts off the tabs cannot switch anything, so the strip goes and
-   every panel is shown in order, each under its own heading. */
-.rail__strip { display: none; }
-.js .rail__strip { display: grid; }
-html:not(.js) .rail__panel + .rail__panel { border-top: 1px solid var(--gray-300); }
+.rail__when { font-size: var(--text-xs); color: var(--gray-500); font-variant-numeric: tabular-nums; }
 .rail__panel { padding: var(--sp-5); background: var(--white); }
 .rail__panel[hidden] { display: none; }
 .rail__panel h4 { margin: 0 0 var(--sp-2); color: var(--leaf-900); }
@@ -284,16 +287,6 @@ html:not(.js) .rail__panel + .rail__panel { border-top: 1px solid var(--gray-300
 }
 .loop__depth b { font-weight: 700; }
 .loop__head { display: flex; flex-wrap: wrap; gap: var(--sp-3); align-items: baseline; justify-content: space-between; }
-.loop__state { display: inline-flex; flex-wrap: wrap; align-items: baseline; gap: .5rem; }
-.stamp__note { font-size: var(--text-xs); color: var(--gray-600); }
-/* who said what, what we did, how they checked: the role of each column,
-   above its date */
-.loop__role {
-  display: block;
-  margin-bottom: .2rem;
-  font-size: .625rem; letter-spacing: .14em;
-  color: var(--gray-500);
-}
 .loop__links { margin-top: var(--sp-3); font-size: var(--text-sm); }
 
 /* --------------------------------------------------------------- CHANGED -- */
@@ -314,14 +307,6 @@ html:not(.js) .rail__panel + .rail__panel { border-top: 1px solid var(--gray-300
 .changed__arrow { color: var(--leaf-700); font-weight: 700; }
 @media (max-width: 47.99rem) { .changed__arrow { display: none; } .changed__to::before { content: "Now: "; font-weight: 700; color: var(--leaf-700); } .changed__from::before { content: "Before: "; font-weight: 700; } }
 .changed__to { color: var(--gray-700); }
-/* column labels over the pairs; on a phone each cell carries its own */
-.changed__row--head {
-  display: none;
-  padding: .5rem 0 .4rem;
-  font-size: .6875rem; font-weight: 700; letter-spacing: .12em; text-transform: uppercase;
-  color: var(--gray-500);
-}
-@media (min-width: 48rem) { .changed__row--head { display: grid; } }
 
 /* -------------------------------------------------------------- CAROUSEL -- */
 /* A scroll-snap strip. With scripts off it is a strip you can swipe or
@@ -348,7 +333,6 @@ html:not(.js) .rail__panel + .rail__panel { border-top: 1px solid var(--gray-300
 .carousel__slide img {
   display: block;
   width: 100%;
-  height: auto;   /* the width and height attributes only reserve the space */
   aspect-ratio: 3 / 2;
   object-fit: cover;
   background: var(--gray-100);
@@ -442,7 +426,7 @@ html:not(.js) .rail__panel + .rail__panel { border-top: 1px solid var(--gray-300
 .cells h4 small { display: block; margin-top: .15rem; font-size: var(--text-xs); font-weight: 600; color: var(--gray-500); letter-spacing: .02em; }
 .cells p { margin: 0; font-size: var(--text-sm); line-height: 1.55; color: var(--gray-700); }
 .cells p + p { margin-top: var(--sp-2); }
-.cells .from { margin-top: var(--sp-3); font-size: var(--text-sm); color: var(--gray-700); }
+.cells .from { margin-top: var(--sp-3); font-size: var(--text-xs); color: var(--leaf-700); font-weight: 650; }
 
 /* ---------------------------------------------------------------- KAP -- */
 /* 100% stacked bars for ordered answers. One hue, dark = strongest answer,
@@ -505,7 +489,7 @@ html:not(.js) .rail__panel + .rail__panel { border-top: 1px solid var(--gray-300
   border-bottom: 1px solid var(--gray-300);
 }
 @media (min-width: 62rem) { .rubric__row { grid-template-columns: 3rem minmax(0, 22rem) minmax(0, 1fr); } }
-.rubric__no { font-size: var(--text-sm); font-weight: 700; color: var(--gray-500); line-height: 1.6; letter-spacing: .06em; font-variant-numeric: tabular-nums; }
+.rubric__no { font-size: clamp(1.5rem, 1.2rem + 1vw, 2rem); font-weight: 700; color: var(--leaf-700); line-height: 1; font-variant-numeric: tabular-nums; }
 .rubric__ask { margin: 0; font-weight: 700; color: var(--leaf-900); line-height: 1.35; }
 .rubric__ask small { display: block; margin-top: .35rem; font-weight: 400; font-size: var(--text-xs); letter-spacing: .02em; color: var(--gray-500); }
 .rubric__ans p { margin: 0 0 var(--sp-2); max-width: 72ch; }
@@ -514,10 +498,8 @@ html:not(.js) .rail__panel + .rail__panel { border-top: 1px solid var(--gray-300
 
 /* --------------------------------------------------------------- OPEN -- */
 
-/* the stamps share one column, so the items start on one line down the list */
-.ihp .openlist { list-style: none; padding: 0; margin: var(--sp-4) 0; max-width: 76ch; border-top: 1.5px solid var(--black); }
-.openlist li { display: grid; grid-template-columns: 6.5rem minmax(0, 1fr); gap: var(--sp-3); padding: var(--sp-3) 0; border-bottom: 1px solid var(--gray-200); font-size: var(--text-sm); align-items: baseline; }
-.openlist .stamp { justify-self: start; }
+.openlist { list-style: none; padding: 0; margin: var(--sp-4) 0; max-width: 76ch; }
+.openlist li { display: grid; grid-template-columns: auto 1fr; gap: var(--sp-3); padding: var(--sp-3) 0; border-bottom: 1px solid var(--gray-200); font-size: var(--text-sm); align-items: baseline; }
 
 /* ----------------------------------------------------------------- PRINT -- */
 

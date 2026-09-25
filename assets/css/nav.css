@@ -1,13 +1,15 @@
 /* =============================================================================
    ReLeaf: site navigation
    -----------------------------------------------------------------------------
-   A full-width drop panel, drawn as a register of sheets: a title rail on the
-   left naming the tab (and carrying the team's own artwork when it arrives),
-   and on the right one ruled entry per page with its title, a caption of
-   what is on it, and the award it is judged for in field lettering. No icon
-   tiles, no shadow, no gradient: the panel is separated from the page by a
-   heavy rule, the drawing-set way (DESIGN.md). One accent family only: four
-   steps of leaf green.
+   A full-width drop panel. It borrows the idea from iGEM Marburg 2024 and then
+   goes its own way:
+
+   · Marburg floods the whole row with solid purple on hover and uses filled
+     circular glyph badges. We use line art in a soft square tile, a pale leaf
+     wash on the row, and a green bar that grows down the left edge.
+   · Each panel opens with a title rail carrying the team's own artwork, so a
+     tab reads as a chapter instead of three anonymous columns of links.
+   · One accent family only: four steps of leaf green.
    ========================================================================== */
 
 /* Colours that exist in tokens.css point at the token. The hardware pages load
@@ -95,11 +97,13 @@
   content: "";
   position: absolute; left: 1.15rem; right: 1.15rem; bottom: 0;
   height: 2px; background: var(--nv-500);
+  border-radius: 2px 2px 0 0;
 }
 .sitenav__tab.is-open::after {
   content: "";
   position: absolute; left: .8rem; right: .8rem; bottom: 0;
   height: 3px; background: var(--nv-700);
+  border-radius: 3px 3px 0 0;
 }
 
 /* chevron drawn in CSS, no icon font */
@@ -126,10 +130,18 @@
   display: none;
   background: var(--white, #fff);
   border-top: 1px solid var(--nv-line);
-  border-bottom: 1.5px solid var(--nv-900);   /* the heavy rule that ends the sheet */
+  box-shadow: 0 24px 48px -28px rgb(20 64 43 / .55);
 }
-.sitenav__panel.is-open { display: block; animation: nv-in .18s ease-out; }
-@keyframes nv-in { from { opacity: 0; } }
+.sitenav__panel.is-open { display: block; animation: nv-in .22s cubic-bezier(.2,.7,.3,1); }
+@keyframes nv-in { from { opacity: 0; transform: translateY(-6px); } }
+
+/* a thread of green across the top of the open panel, the page's signature */
+.sitenav__panel::before {
+  content: "";
+  position: absolute; inset: -1px 0 auto 0;
+  height: 3px;
+  background: linear-gradient(90deg, var(--nv-900), var(--nv-500) 55%, var(--nv-100));
+}
 
 .sitenav__panelinner {
   max-width: var(--nv-max);
@@ -168,14 +180,12 @@
   max-width: 22rem;
 }
 
-/* ---- entries -------------------------------------------------------------
-   A register row: title, caption, award. Separated by hairlines, not boxed.
-   Hover lifts the row one step of tone; the current page says so in words.  */
+/* ---- entries ------------------------------------------------------------- */
 
 .sitenav__list {
   display: grid;
   grid-template-columns: repeat(1, minmax(0, 1fr));
-  gap: 0 1.5rem;
+  gap: .25rem .75rem;
   align-content: start;
 }
 @media (min-width: 700px)  { .sitenav__list { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
@@ -184,41 +194,58 @@
                              .sitenav__list[data-count="7"] { grid-template-columns: repeat(3, minmax(0, 1fr)); } }
 
 .sitenav__entry {
+  position: relative;
   display: grid;
-  align-content: start;
-  gap: .15rem;
-  padding: .7rem .75rem .8rem;
-  border-top: 1px solid var(--nv-line);
+  grid-template-columns: 38px 1fr;
+  align-items: start;
+  gap: .8rem;
+  padding: .7rem .8rem;
+  border-radius: 10px;
   text-decoration: none;
-  transition: background .18s;
+  transition: background .22s;
+}
+.sitenav__entry::before {          /* accent grows down the left edge */
+  content: "";
+  position: absolute; left: 0; top: 50%; bottom: 50%;
+  width: 3px; border-radius: 3px;
+  background: var(--nv-500);
+  transition: top .25s cubic-bezier(.2,.7,.3,1), bottom .25s cubic-bezier(.2,.7,.3,1);
 }
 .sitenav__entry:hover { background: var(--nv-50); }
-.sitenav__entry:hover .sitenav__entrytitle { text-decoration: underline; text-underline-offset: .18em; text-decoration-thickness: 1px; }
+.sitenav__entry:hover::before,
+.sitenav__entry.is-current::before { top: 18%; bottom: 18%; }
 
+.sitenav__tile {
+  width: 38px; height: 38px;
+  display: grid; place-items: center;
+  border-radius: 10px;
+  background: var(--nv-100);
+  color: var(--nv-700);
+  transition: background .22s, color .22s;
+}
+.sitenav__tile svg {
+  width: 20px; height: 20px;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.7;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+.sitenav__entry:hover .sitenav__tile { background: var(--nv-700); color: #fff; }
+
+.sitenav__entrytext { display: grid; gap: .1rem; min-width: 0; }
 .sitenav__entrytitle {
-  display: flex; flex-wrap: wrap; align-items: baseline; gap: .25rem .6rem;
-  font-size: .95rem; font-weight: 650;
+  font-size: .925rem; font-weight: 650;
   color: var(--nv-ink);
   letter-spacing: -.005em;
 }
 .sitenav__entrycap {
-  font-size: .8rem; line-height: 1.45;
+  font-size: .775rem; line-height: 1.45;
   color: var(--nv-muted);
-}
-.sitenav__award,
-.sitenav__here {
-  font-size: .625rem; font-weight: 700; line-height: 1.3;
-  letter-spacing: .12em; text-transform: uppercase;
-  font-variant-numeric: tabular-nums;
-}
-.sitenav__award { margin-top: .3rem; color: var(--nv-700); }
-.sitenav__here {
-  padding: .15em .45em;
-  border: 1px solid currentColor;
-  color: var(--nv-700);
 }
 
 .sitenav__entry.is-current { background: var(--nv-50); }
+.sitenav__entry.is-current .sitenav__tile { background: var(--nv-700); color: #fff; }
 .sitenav__entry.is-current .sitenav__entrytitle { color: var(--nv-900); }
 
 /* ---- mobile -------------------------------------------------------------- */
@@ -241,7 +268,7 @@
   overflow-y: auto;
   background: #fff;
   border-top: 1px solid var(--nv-line);
-  border-bottom: 1.5px solid var(--nv-900);
+  box-shadow: 0 24px 48px -28px rgb(20 64 43 / .55);
   padding: .5rem 1.25rem 1.5rem;
 }
 .sitenav.drawer-open .sitenav__drawer { display: block; }
@@ -259,21 +286,6 @@
 .sitenav__groupbody { display: none; padding: .5rem 0 1rem; }
 .sitenav__group.is-open .sitenav__groupbody { display: grid; gap: .2rem; }
 
-/* ---- focus ----------------------------------------------------------------
-   Drawn here rather than left to page.css, because the hardware pages load
-   this file without page.css and their own focus ring does not reach the
-   nav. Inset on the tabs and register rows so the ring is never clipped by
-   the bar or the panel edge. The one radius in the system is this 2px. */
-.sitenav a:focus-visible,
-.sitenav button:focus-visible {
-  outline: 2px solid var(--nv-500);
-  outline-offset: 2px;
-  border-radius: 2px;
-}
-.sitenav__tab:focus-visible,
-.sitenav__entry:focus-visible,
-.sitenav__grouptop:focus-visible { outline-offset: -2px; }
-
 /* ---- page offset --------------------------------------------------------- */
 
 .sitenav-spacer { height: var(--nv-h); }
@@ -285,86 +297,10 @@
 /* ---- skip link (added by nav.js) ----------------------------------------- */
 .sitenav-skip {
   position: absolute; left: 8px; top: -60px; z-index: 1000;
-  padding: .6rem 1rem; border-radius: 0;
+  padding: .6rem 1rem; border-radius: 0 0 6px 6px;
   background: #14402b; color: #fff;
   font: 600 .875rem/1.2 var(--font-body, system-ui, sans-serif);
   text-decoration: none;
 }
 .sitenav-skip:focus { top: 0; outline: 2px solid #4f9c6f; outline-offset: 2px; }
 main:focus { outline: none; }
-
-/* ---- demo tools tray ------------------------------------------------------
-   The two demo-only switches (the iGEM rule check and the review notes) share
-   one corner, bottom right, side by side, instead of stacking bottom left
-   where they covered the last entries of the contents rail at 1440px. The
-   rail is on the left at every width that shows it; the right-hand margin
-   beside the text column is empty at 1040px and up. On the hardware pages
-   the tray lifts clear of the section's own palette hint, which also lives
-   bottom right. rulecheck.js and review-notes.js each create the tray if it
-   is not there yet and put their control into it. Both are removed from the
-   copy that goes to gitlab.igem.org, and the tray goes with them.          */
-.demo-tools {
-  position: fixed; right: 12px; bottom: 12px; z-index: 55;
-  display: flex; flex-direction: row-reverse; align-items: flex-end; gap: 6px;
-  max-width: calc(100vw - 24px);
-  pointer-events: none;
-}
-.demo-tools > * { pointer-events: auto; }
-.demo-tools > .rulecheck { order: -1; }   /* always the corner itself, so its panel opens flush right */
-body:has(.palette-hint) .demo-tools { bottom: 64px; }
-/* hardware hides the palette hint below 700px, so the tray can drop back to the corner there */
-@media (max-width: 700px) { body:has(.palette-hint) .demo-tools { bottom: 12px; } }
-@media print { .demo-tools { display: none !important; } }
-
-/* ---- review notes ---------------------------------------------------------
-   The writing review left at the end of each section on 25 September 2026
-   (<aside class="review-note">; behaviour in assets/js/review-notes.js).
-   Here rather than injected by the script, so a note is styled on first
-   paint instead of flashing in unstyled, and on the hardware pages, which
-   load this file but not page.css. Every selector starts :root:root so it
-   outranks page rules such as ".sec p b" or ".meas .pagebody p"; the notes
-   are demo-only furniture and must look the same on every page.
-   Grounds: the white reading column; the dark hardware section (the nav
-   there is .sitenav--dark); print, where they are dropped.                 */
-:root:root .review-note {
-  box-sizing: border-box; clear: both;
-  grid-column: 1 / -1; flex: 0 0 100%;      /* a whole row inside a grid or flex parent */
-  max-width: min(100%, var(--measure, 68ch));
-  margin: 1.75rem 0 .5rem; padding: .85rem 1.1rem .9rem;
-  border: 1px dashed #92610c; border-radius: 0; box-shadow: none;
-  background: #fffaf0; color: #3d3320;
-  font: 400 .9rem/1.55 var(--font-body, Inter, system-ui, sans-serif); font-style: normal;
-  text-align: left; overflow-wrap: break-word;
-}
-:root:root .review-note p { margin: 0 0 .45rem; padding: 0; border: 0; max-width: none; font: inherit; color: inherit; }
-:root:root .review-note p:last-child { margin-bottom: 0; }
-:root:root .review-note b { color: #6b4708; font-weight: 650; }
-:root:root .review-note a { color: #6b4708; text-decoration: underline; text-underline-offset: 2px; }
-:root:root .review-note code { font-size: .92em; }
-:root:root .review-note .review-note__head {
-  margin-bottom: .5rem;
-  font-size: .6875rem; font-weight: 650; letter-spacing: .12em; text-transform: uppercase; color: #92610c;
-}
-:root:root .review-note .review-note__head span { text-transform: none; letter-spacing: 0; font-weight: 500; color: #6b5a3a; }
-:root:root.review-off .review-note { display: none; }
-
-:root:root:has(.sitenav--dark) .review-note { background: rgb(20 16 6 / .88); border-color: #d4a03a; color: #e9e1cf; }
-:root:root:has(.sitenav--dark) .review-note b,
-:root:root:has(.sitenav--dark) .review-note a { color: #f0c46a; }
-:root:root:has(.sitenav--dark) .review-note .review-note__head { color: #d4a03a; }
-:root:root:has(.sitenav--dark) .review-note .review-note__head span { color: #cdbf9f; }
-
-.review-toggle {
-  padding: 8px 10px; border: 1px dashed #92610c; border-radius: 0;
-  background: #fffaf0; color: #6b4708; cursor: pointer; white-space: nowrap;
-  font: 600 11px/1 var(--font-body, Inter, system-ui, sans-serif); letter-spacing: .06em;
-}
-.review-toggle:hover { background: #fff3d9; }
-.review-toggle:focus-visible { outline: 2px solid #4f9c6f; outline-offset: 2px; }
-.review-toggle .rt-long { display: none; }
-@media (min-width: 640px) { .review-toggle .rt-long { display: inline; } .review-toggle .rt-short { display: none; } }
-:root:has(.sitenav--dark) .review-toggle { background: #1a1408; color: #f0c46a; border-color: #d4a03a; }
-
-@media print { .review-note, .review-toggle { display: none !important; } }
-/* the phone menu is the whole screen while it is open; the tray waits */
-body:has(.sitenav.drawer-open) .demo-tools { display: none; }

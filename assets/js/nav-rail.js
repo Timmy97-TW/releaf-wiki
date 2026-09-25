@@ -1,0 +1,306 @@
+/* =============================================================================
+   ReLeaf: the hovering left rail
+   -----------------------------------------------------------------------------
+   Builds #nav-rail from two sources: the page's own <section class="sec" id>
+   headings, and the NAV array in assets/data/site-nav.js. Page addresses stay
+   in one file; this renderer only reads them.
+
+   Attributes on the mount point, same contract as nav.js:
+     data-base   "" at the wiki root, "../" one folder down
+     data-tab    the NAV tab this page belongs to
+     data-page   this page's slug, so its entry can be marked current
+   ========================================================================== */
+(function () {
+  "use strict";
+
+  var IDLE_MS = 3000;
+
+  function el(tag, cls, text) {
+    var n = document.createElement(tag);
+    if (cls) n.className = cls;
+    if (text != null) n.textContent = text;
+    return n;
+  }
+
+  function build(mount) {
+    var base = mount.dataset.base != null ? mount.dataset.base : "";
+    var tabId = mount.dataset.tab || "";
+    var pageSlug = mount.dataset.page || "";
+
+    var rail = el("aside", "rail");
+    rail.setAttribute("aria-label", "Section and site navigation");
+
+    var spine = el("div", "rail__spine");
+    var panel = el("nav", "rail__panel");
+
+    /* ---- home mark ---- */
+    var home = el("a", "rail__home");
+    home.href = base || "./";
+    home.title = "ReLeaf home";
+    var logo = document.createElement("img");
+    logo.src = base + "assets/img/logo.png";
+    logo.alt = "ReLeaf";
+    home.appendChild(logo);
+    spine.appendChild(home);
+
+    /* ---- ticks, one per section on this page ---- */
+    var secs = [].slice.call(document.querySelectorAll("main .sec[id]"));
+    var ticks = el("div", "rail__ticks");
+    var contents = el("ol", "rail__contents");
+    var tickFor = {};
+    var linkFor = {};
+
+    secs.forEach(function (sec, i) {
+      var h = sec.querySelector("h2");
+      var title = (h ? h.textContent : sec.id)
+        .replace(/\u00b6/g, "")
+        .replace(/^\s*\d+[.\s]*/, "")
+        .trim();
+      var n = String(i + 1).padStart(2, "0");
+
+      var t = el("button", "rail__tick");
+      t.type = "button";
+      t.title = n + "  " + title;
+      t.setAttribute("aria-label", title);
+      t.addEventListener("click", function () {
+        sec.scrollIntoView({ behavior: prefersMotion() ? "smooth" : "auto", block: "start" });
+      });
+      ticks.appendChild(t);
+      tickFor[sec.id] = t;
+
+      var li = document.createElement("li");
+      var a = el("a");
+      a.href = "#" + sec.id;
+      a.appendChild(el("i", null, n));
+      a.appendChild(el("span", null, title));
+      li.appendChild(a);
+      contents.appendChild(li);
+      linkFor[sec.id] = a;
+    });
+
+    spine.appendChild(ticks);
+
+    var menu = el("button", "rail__menu");
+    menu.type = "button";
+    menu.setAttribute("aria-label", "Open navigation");
+    menu.innerHTML = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 7h16M4 12h16M4 17h16"/></svg>';
+    spine.appendChild(menu);
+
+    /* ---- panel: this page, then the wiki ---- */
+    if (secs.length) {
+      panel.appendChild(el("p", "rail__label", "On this page"));
+      panel.appendChild(contents);
+    }
+    panel.appendChild(el("p", "rail__label", "The wiki"));
+
+    var nav = (typeof NAV !== "undefined" && NAV) || window.NAV || [];
+    nav.forEach(function (tab) {
+      var group = el("div", "rail__group");
+      var top = el("button", "rail__grouptop");
+      top.type = "button";
+      top.appendChild(el("span", null, tab.name));
+      top.appendChild(el("i", "rail__chev"));
+      var body = el("div", "rail__groupbody");
+
+      tab.pages.forEach(function (p) {
+        var a = el("a", p.slug === pageSlug ? "is-current" : null, p.title);
+        a.href = p.href || base + p.slug + "/";
+        if (p.slug === pageSlug) a.setAttribute("aria-current", "page");
+        body.appendChild(a);
+      });
+
+      if (tab.id === tabId) {
+        group.classList.add("is-here", "is-open");
+        top.setAttribute("aria-expanded", "true");
+      } else {
+        top.setAttribute("aria-expanded", "false");
+      }
+
+      top.addEventListener("click", function () {
+        var open = group.classList.toggle("is-open");
+        top.setAttribute("aria-expanded", String(open));
+      });
+
+      group.appendChild(top);
+      group.appendChild(body);
+      panel.appendChild(group);
+    });
+
+    rail.appendChild(spine);
+    rail.appendChild(panel);
+
+    var edge = el("div", "rail__edge");
+    edge.setAttribute("aria-hidden", "true");
+
+    mount.replaceWith(rail);
+    rail.after(edge);
+    document.body.classList.add("has-rail");
+
+    wire(rail, edge, menu, tickFor, linkFor, secs);
+  }
+
+  function prefersMotion() {
+    return !window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+  }
+
+  function wire(rail, edge, menu, tickFor, linkFor, secs) {
+    var idleTimer = null;
+    var pinned = false;
+
+    function wake() {
+      rail.classList.remove("is-idle");
+      clearTimeout(idleTimer);
+      if (pinned || rail.classList.contains("is-open")) return;
+      idleTimer = setTimeout(function () {
+        if (!pinned && !rail.classList.contains("is-open")) rail.classList.add("is-idle");
+      }, IDLE_MS);
+    }
+
+    function open() { rail.classList.add("is-open"); wake(); }
+    function close() { if (!pinned) { rail.classList.remove("is-open"); wake(); } }
+
+    edge.addEventListener("pointerenter", wake);
+    edge.addEventListener("pointermove", wake);
+    rail.addEventListener("pointerenter", function () { wake(); open(); });
+    rail.addEventListener("pointerleave", close);
+    rail.addEventListener("focusin", function () { wake(); open(); });
+    rail.addEventListener("focusout", function (e) {
+      if (!rail.contains(e.relatedTarget)) close();
+    });
+
+    menu.addEventListener("click", function (e) {
+      e.stopPropagation();
+      pinned = !pinned;
+      menu.setAttribute("aria-expanded", String(pinned));
+      pinned ? open() : close();
+    });
+
+    document.addEventListener("click", function (e) {
+      if (pinned && !rail.contains(e.target)) { pinned = false; close(); }
+    });
+    document.addEventListener("keydown", function (e) {
+      if (e.key === "Escape") { pinned = false; close(); }
+    });
+
+    var scrollTick = false;
+    window.addEventListener("scroll", function () {
+      if (scrollTick) return;
+      scrollTick = true;
+      requestAnimationFrame(function () { scrollTick = false; wake(); });
+    }, { passive: true });
+
+    /* clicking a contents entry should not leave the panel hanging open */
+    rail.querySelectorAll(".rail__contents a").forEach(function (a) {
+      a.addEventListener("click", function () { pinned = false; setTimeout(close, 120); });
+    });
+
+    /* ---- scrollspy ---- */
+    if (secs.length && "IntersectionObserver" in window) {
+      var seen = new Map();
+      var obs = new IntersectionObserver(function (entries) {
+        entries.forEach(function (en) { seen.set(en.target.id, en); });
+        var best = null;
+        seen.forEach(function (en) {
+          if (!en.isIntersecting) return;
+          if (!best || en.intersectionRatio > best.intersectionRatio ||
+              (en.intersectionRatio === best.intersectionRatio &&
+               en.boundingClientRect.top < best.boundingClientRect.top)) best = en;
+        });
+        if (!best) return;
+        var id = best.target.id;
+        Object.keys(tickFor).forEach(function (k) {
+          tickFor[k].classList.toggle("is-active", k === id);
+          if (linkFor[k]) linkFor[k].classList.toggle("is-active", k === id);
+        });
+      }, { rootMargin: "-12% 0px -60% 0px", threshold: [0, .25, .5, 1] });
+      secs.forEach(function (s) { obs.observe(s); });
+    }
+
+    wake();
+  }
+
+  /* A keyboard user's first Tab lands here, not on the links of the
+     navigation. It points at the page's <main>, giving it an id if it has
+     none; pages with their own skip link (hardware) or no <main> are left
+     alone. Styled in nav-rail.css, off-screen until focused. */
+  function skipLink() {
+    var main = document.querySelector("main");
+    if (!main || document.querySelector(".skip-link, .sitenav-skip")) return;
+    if (!main.id) main.id = "main";
+    if (!main.hasAttribute("tabindex")) main.setAttribute("tabindex", "-1");
+    var a = document.createElement("a");
+    a.className = "sitenav-skip";
+    a.href = "#" + main.id;
+    a.textContent = "Skip to content";
+    document.body.prepend(a);
+  }
+
+  /* A box that scrolls on its own (a wide table or chart on a phone) has to
+     be reachable from the keyboard. While, and only while, it overflows and
+     holds nothing focusable, it gets a tab stop and a name. The same function
+     sits in nav.js; see the note there. */
+  function scrollRegions() {
+    var FOCUSABLE = 'a[href], button, input, select, textarea, summary, iframe, ' +
+                    '[contenteditable], [tabindex]:not([tabindex="-1"])';
+    var scrolls = function (v) { return v === "auto" || v === "scroll"; };
+    var name = function (el, sideways) {
+      var cap = el.querySelector("caption, figcaption");
+      var t = cap ? cap.textContent.replace(/¶/g, "").replace(/\s+/g, " ").trim() : "";
+      if (t.length > 90) t = t.slice(0, 88).replace(/\s\S*$/, "") + "…";
+      return (t || (el.querySelector("table") ? "Table" : el.querySelector("svg, canvas, img") ? "Figure" : "Content")) +
+             (sideways ? ", scrolls sideways" : ", scrolls");
+    };
+    var unmark = function (el) {
+      (el.dataset.scrollstop || "").split(" ").forEach(function (a) { if (a) el.removeAttribute(a); });
+      delete el.dataset.scrollstop;
+    };
+    var check = function () {
+      var keep = new Set();
+      document.querySelectorAll("body *").forEach(function (el) {
+        var wide = el.scrollWidth > el.clientWidth + 1;
+        var tall = el.scrollHeight > el.clientHeight + 1;
+        if (!wide && !tall) return;
+        var cs = getComputedStyle(el);
+        var sideways = wide && scrolls(cs.overflowX);
+        if (!sideways && !(tall && scrolls(cs.overflowY))) return;
+        if (el.dataset.scrollstop != null) { keep.add(el); return; }
+        if (el.hasAttribute("tabindex")) return;
+        if (el.querySelector(FOCUSABLE) || el.closest('[aria-hidden="true"], [inert]')) return;
+        var added = ["tabindex"];
+        el.tabIndex = 0;
+        if (!el.hasAttribute("aria-label") && !el.hasAttribute("aria-labelledby")) {
+          if (!el.hasAttribute("role")) { el.setAttribute("role", "group"); added.push("role"); }
+          el.setAttribute("aria-label", name(el, sideways)); added.push("aria-label");
+        }
+        el.dataset.scrollstop = added.join(" ");
+        keep.add(el);
+      });
+      document.querySelectorAll("[data-scrollstop]").forEach(function (el) { if (!keep.has(el)) unmark(el); });
+    };
+    var timer = null;
+    var soon = function () { clearTimeout(timer); timer = setTimeout(check, 250); };
+    if (document.readyState === "complete") soon();
+    else window.addEventListener("load", soon);
+    window.addEventListener("resize", soon);
+    document.addEventListener("click", soon);
+    document.addEventListener("toggle", soon, true);
+  }
+
+  /* Demo wiki only: outline what breaks an iGEM rule (assets/js/rulecheck.js).
+     Switched off with window.RULECHECK = false in assets/data/site-nav.js. */
+  function ruleCheck(base) {
+    if (window.RULECHECK === false) return;
+    var s = document.createElement("script");
+    s.src = base + "assets/js/rulecheck.js?v=5";   /* bump when rulecheck.js changes: Pages lets browsers cache it for 10 minutes */
+    s.defer = true;
+    document.body.appendChild(s);
+  }
+
+  document.addEventListener("DOMContentLoaded", function () {
+    skipLink();
+    scrollRegions();
+    var mount = document.getElementById("nav-rail");
+    if (mount) build(mount);
+    ruleCheck(mount && mount.dataset.base != null ? mount.dataset.base : "");
+  });
+})();

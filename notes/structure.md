@@ -25,6 +25,7 @@ team three awards.
 | Safety | `/safety-and-security` | Safety and Security Award |
 | Notebook | `/notebook` | — |
 | Math Model | `/model` | Best Model |
+| Bioreactor Calculations | `/bioreactor-calculations` | — |
 | Hardware | `/hardware` | Best Hardware |
 | Software | `/software` | Best Software Tool |
 | Peptide Design | `/peptide-design` | — |
@@ -117,13 +118,12 @@ scratch scripts (`scratchpad/`). Neither is needed to serve the site.
 
 ## Numbers that do not agree across the wiki
 
-Not typos. Three different figures for what may be the same run, from three
-sources, and a judge reading straight through will hit all three. (A fourth,
-"3 weeks of unbroken OD600 logging", was on the homepage ledger, which the
-homepage has not carried since 21 August 2026.)
+Not typos. Four different figures for what may be the same run, from four
+sources, and a judge reading straight through will hit all four:
 
 | Page | What it says |
 |---|---|
+| Homepage ledger | 3 weeks of unbroken OD600 logging |
 | `/hardware` hub | Longest run 400 h, which is 16.7 days |
 | `/hardware/photometer` | Continuous run 14 d |
 | `/hardware/notebook`, week 21 | starting the nineteen-day run |
@@ -131,8 +131,8 @@ homepage has not carried since 21 August 2026.)
 The handoff explains part of it: the dashboard photographs are snapshots of one
 continuous run at different moments, so several point-counts and durations are
 all true and simply taken at different times. That reconciles the hardware
-pages with each other. It does not tell us which figure a page outside the
-section should quote. Decide on one number, say what it is a duration *of*, and make every
+pages with each other. It does not tell us which figure the homepage should
+carry. Decide on one number, say what it is a duration *of*, and make every
 page use it.
 
 The handoff also lists two flat contradictions inside the photometer record

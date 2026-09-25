@@ -29,15 +29,6 @@
                 "August", "September", "October", "November", "December"];
   var SHORT  = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
   var IMG    = "../assets/img/human-practices/";
-  /* Cards show faces and four photographs at about 110 CSS px; those come
-     from t/, 480 px copies of the same photographs, scaled only. The viewer
-     and the record still load the full-size file. If a small copy is ever
-     missing, the full-size one stands in. */
-  var THUMB  = IMG + "t/";
-  function small(img, name) {
-    img.src = THUMB + name + ".webp";
-    img.onerror = function () { img.onerror = null; img.src = IMG + name + ".webp"; };
-  }
 
   var byLane  = index(D.lanes, "id");
   var byEng   = index(D.engagements, "id");
@@ -117,7 +108,7 @@
     if (e.face) {
       var img = document.createElement("img");
       img.className = "evo__face" + (cls || "");
-      small(img, e.face);
+      img.src = IMG + e.face + ".webp";
       img.alt = (e.kind === "expert" || e.kind === "farmer" ? "From our meeting with " : "Photograph from ") + e.name + ", " + longDate(e.date) + ".";
       img.loading = "lazy";
       img.width = 360; img.height = 360;
@@ -320,7 +311,7 @@
       b.type = "button";
       b.setAttribute("aria-label", "Enlarge: " + p.cap);
       var img = document.createElement("img");
-      small(img, p.src);
+      img.src = IMG + p.src + ".webp";
       img.alt = "";
       img.loading = "lazy";
       b.appendChild(img);

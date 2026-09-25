@@ -632,11 +632,6 @@ CSS = r"""
        -------------------------------------------------------------------- */
 
     /* ---- the banner behind the title ---- */
-    /* the drawn banner is a schematic, not a photograph, so it takes a band
-       rather than the 21:9 photo frame page.css gives a hero; the header then
-       sits at about the height of the plain header on the five step pages */
-    .pagehead--hero .pagehead__hero { max-height: min(78vh, 440px); }
-    .pagehead--hero .pagehead__inner { padding-top: var(--sp-5); }
     .pagehead__bg { position: absolute; inset: 0; }
     .pagehead__bg svg { display: block; width: 100%; height: 100%; }
     .ban-lrr   { fill: none; stroke: var(--leaf-200); stroke-width: 1.4; stroke-linecap: round; opacity: .55; }
@@ -1170,8 +1165,7 @@ def build():
     A('    <div class="pagehead__inner">')
     A('      <p class="pagehead__lede">BoPep4 is twenty-three residues long. This page is the record of which of them we were allowed to change, how we worked that out, and which of our own answers we later took back.</p>')
     A('      <ul class="pagehead__meta">')
-    A('        <li><b>Section</b><span>Dry Lab &middot; Protein Design</span></li>')
-    A('        <li><b>Step</b><span>Worked case, all five run on BoPep4</span></li>')
+    A('        <li><b>Section</b><span>Dry Lab</span></li>')
     A('        <li><b>Written by</b><span>Dry lab, protein design</span></li>')
     A('        <li><b>Last updated</b><span>4 September 2026</span></li>')
     A('        <li><b>Status</b><span>Draft</span></li>')
@@ -1217,7 +1211,6 @@ def build():
     A('  <script src="../assets/js/nav.js"></script>')
     A('  <script src="../assets/js/page.js"></script>')
     A('  <script>' + js_payload() + '  </script>')
-    A('  <script src="../protein-design/stepnav.js"></script>')
     A('</body>')
     A('</html>')
     return "\n".join(page)
@@ -1250,6 +1243,7 @@ FOOTER = """
           <h3>Dry Lab</h3>
           <ul>
           <li><a href="../model/">Math Model</a></li>
+          <li><a href="../bioreactor-calculations/">Bioreactor Calculations</a></li>
           <li><a href="../hardware/">Hardware</a></li>
           <li><a href="../software/">Software</a></li>
           <li><a href="../protein-design/">Protein Design</a></li>
