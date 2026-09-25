@@ -115,7 +115,7 @@ const NAV = [
       { title: "Attribution", slug: "attributions", award: "Bronze #2",
         caption: "Who did what, and who helped us do it." },
       { title: "Milestone",   slug: "milestone",
-        caption: "From failure to function: what success means for the whole system, and how far each stage has got." },
+        caption: "What success means for the whole system, and how far each stage has got." },
       { title: "Gallery",     slug: "gallery",
         caption: "The year in photographs, each linked to the page it comes from." }
     ]
