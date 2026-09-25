@@ -108,14 +108,14 @@ const NAV = [
   {
     id: "team",
     name: "Team",
-    blurb: "The students, advisors and instructors, who did which part, the year in order, and the photographs.",
+    blurb: "The students, advisors and instructors, who did which part, how the system got from its first failures to where it stands, and the photographs.",
     pages: [
       { title: "Members",     slug: "team",
         caption: "The students, advisors and instructors who built ReLeaf." },
       { title: "Attribution", slug: "attributions", award: "Bronze #2",
         caption: "Who did what, and who helped us do it." },
       { title: "Milestone",   slug: "milestone",
-        caption: "The year in order, from the first meeting to the freeze." },
+        caption: "From failure to function: what success means for the whole system, and how far each stage has got." },
       { title: "Gallery",     slug: "gallery",
         caption: "The year in photographs, each linked to the page it comes from." }
     ]
