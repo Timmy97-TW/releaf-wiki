@@ -34,9 +34,7 @@
     const toc  = $(".toc");
     if (!body) return;
 
-    /* .review-note asides are demo-only furniture: never numbered, never in
-       the rail, even if a heading ever ends up inside one */
-    const heads = $$("h2, h3", body).filter((h) => !h.closest(".refs, .review-note") && !h.dataset.noToc);
+    const heads = $$("h2, h3", body).filter((h) => !h.closest(".refs") && !h.dataset.noToc);
     if (!heads.length) { if (toc) toc.remove(); return; }
 
     const list = document.createElement("ol");
@@ -145,7 +143,7 @@
     const firstMention = {};
     const walker = document.createTreeWalker($(".pagebody"), NodeFilter.SHOW_TEXT, {
       acceptNode: (n) =>
-        n.parentElement.closest(".refs, a, code, pre, .toc, .review-note")
+        n.parentElement.closest(".refs, a, code, pre, .toc")
           ? NodeFilter.FILTER_REJECT
           : /\[\d+(\s*,\s*\d+)*\]/.test(n.nodeValue)
             ? NodeFilter.FILTER_ACCEPT
