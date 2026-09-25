@@ -90,6 +90,17 @@ Student body prose was not rewritten.
 - Results had an unclosed box that pulled half of section 7 into an amber
   editor's box; fixed.
 
+**A judge's map on every award page.** The award box at the top of
+Measurement, Human Practices, Education, Math Model, Entrepreneurship,
+Sustainability, Software (which had none), Inclusivity, Safety and Security,
+Contribution, Parts and Engineering now lists the official 2026 judging
+questions for that award, each linked to the section that answers it. Where
+the page does not answer one yet, the map says "not yet on this page" instead
+of hiding it: those gaps are the fastest points left on the table
+(`review-2026-09-25/ballot.md` lists them per page, plus a ready map for
+Anton's hardware hub). Engineering's Silver #1 box names cycle 3 as the
+complete DBTL cycle with jump links to its four steps.
+
 **Clear-cut inconsistencies fixed** (only where the wiki itself settles the
 answer; everything needing judgement stays flagged): the Castillo-Hair 2019
 citation made identical on all six pages and checked against PubMed; the iGEM
