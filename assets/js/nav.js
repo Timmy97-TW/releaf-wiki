@@ -388,11 +388,22 @@
     document.body.appendChild(s);
   }
 
+  /* Demo wiki only: the writing review left at the end of each section
+     (assets/js/review-notes.js). Switched off with window.REVIEW_NOTES = false. */
+  function reviewNotes(base) {
+    if (window.REVIEW_NOTES === false && !document.querySelector(".review-note")) return;
+    const s = document.createElement("script");
+    s.src = base + "assets/js/review-notes.js?v=4";
+    s.defer = true;
+    document.body.appendChild(s);
+  }
+
   document.addEventListener("DOMContentLoaded", () => {
     const root = document.getElementById("site-nav");
     if (root) build(root);
     skipLink();
     scrollRegions();
     ruleCheck(root && root.dataset.base != null ? root.dataset.base : "");
+    reviewNotes(root && root.dataset.base != null ? root.dataset.base : "");
   });
 })();
