@@ -6,6 +6,22 @@
 (function () {
   "use strict";
 
+  /* Scripts are running: say so on <html>, as early as this file runs, so a
+     stylesheet can keep script-only controls (tab strips, filter chips,
+     "open all" buttons) out of the page when they would do nothing. Pages
+     use html.js / html:not(.js); [data-needs-js] elements are shown here too. */
+  document.documentElement.classList.add("js");
+  /* --sbw: the width of a classic (non-overlay) scrollbar, so a block sized in
+     100vw can subtract it and not push the page sideways. Same name and
+     meaning as engineering.js uses. */
+  const sbw = () => {
+    const w = window.innerWidth - document.documentElement.clientWidth;
+    document.documentElement.style.setProperty("--sbw", (w > 0 ? w : 0) + "px");
+  };
+  window.addEventListener("resize", sbw, { passive: true });
+  window.addEventListener("load", sbw);
+  const reveal = () => document.querySelectorAll("[data-needs-js][hidden]").forEach((el) => { el.hidden = false; });
+
   /* No icon per page. The panel used to give each entry a stroked line icon
      in a pale rounded tile (a document for Description, an upload arrow for
      Contribution, a lightbulb for Entrepreneurship); none of them showed the
@@ -385,6 +401,8 @@
   }
 
   document.addEventListener("DOMContentLoaded", () => {
+    sbw();
+    reveal();
     const root = document.getElementById("site-nav");
     if (root) build(root);
     skipLink();

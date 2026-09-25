@@ -1,9 +1,11 @@
 /* =============================================================================
    ReLeaf: the Integrated Human Practices page
    -----------------------------------------------------------------------------
-   Two small behaviours. With JavaScript off every rail shows its first panel
-   and every carousel is a strip you can scroll sideways; nothing on the page
-   is reachable only by clicking. The evolution map is evomap.js.
+   Two small behaviours. With JavaScript off every rail shows all of its
+   panels one under another (the tab strip is hidden, since it could not
+   switch anything) and every carousel is a strip you can scroll sideways;
+   nothing on the page is reachable only by clicking. Tabs take the arrow
+   keys, Home and End. The evolution map is evomap.js.
    ========================================================================== */
 
 (function () {
@@ -32,10 +34,13 @@
     btns.forEach(function (b, i) {
       b.addEventListener("click", function () { show(i); });
       b.addEventListener("keydown", function (e) {
-        var d = e.key === "ArrowRight" ? 1 : e.key === "ArrowLeft" ? -1 : 0;
-        if (!d) return;
+        var n;
+        if (e.key === "ArrowRight") n = (i + 1) % btns.length;
+        else if (e.key === "ArrowLeft") n = (i - 1 + btns.length) % btns.length;
+        else if (e.key === "Home") n = 0;
+        else if (e.key === "End") n = btns.length - 1;
+        else return;
         e.preventDefault();
-        var n = (i + d + btns.length) % btns.length;
         btns[n].focus();
         show(n);
       });
