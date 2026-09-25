@@ -34,6 +34,14 @@ Measurement, Results, Attribution, Gallery and the hardware hub.
 | Contents rail scrolls inside itself | long rails (Entrepreneurship: 40 entries) were unreachable past the window; page.js keeps the lit entry in view |
 | Numeric heads align right, units keep their case, list defaults yield | `th.num`, `.u`, `:where(.sec)` lists |
 
+Second pass (after the lead's merges): `html.js` set by nav.js and
+`[data-needs-js]` revealed; tab strips hidden and every panel shown without
+scripts; Home/End on tabs; breadcrumbs wrap on phones; unused `.dl` removed;
+"Wet Lab Notebook" in the nav; a focus ring on every nav control, light and
+dark (the dark nav had none); duplicate heading ids fixed in page.js and
+ids.py. All 33 pages re-shot at 1440 and 390: no horizontal overflow, no
+duplicate ids, every rail link resolves.
+
 ### The nav panels (task 2)
 
 The icons were slop and are gone. Each of 26 pages had a stroked line icon in a
@@ -54,7 +62,8 @@ test and learn cycle we went through" became "Six cloning cycles that moved a
 four-module light circuit into the production strain"; Parts "What we built,
 what we characterised, what we registered" (rule of three) became "Five
 modules, each part marked against its sequencing record"; Notebook said "week
-by week" but the page is "month by month". Blurbs: Dry Lab no longer names
+by week" but the page is "month by month", and the Wet Lab entry is now "Wet
+Lab Notebook", matching the page title and "Dry Lab Notebook". Blurbs: Dry Lab no longer names
 reactor sizing (Bioreactor Calculations is deleted); Team no longer
 hard-codes forty-seven.
 
@@ -64,9 +73,10 @@ hard-codes forty-seven.
 |---|---|---|---|
 | `hardware/index.html` lede | "four instruments ... a perfusion bioreactor, an in-line photometer, a dual-wavelength LED array and a hydroponics growth plate" | nav caption said "Three instruments" (fixed); notes/structure.md "three scroll-driven 3D teardowns" | structure.md should list the hydroponics page too |
 | `engineering/index.html` `<title>` | "Engineering Success" | nav, eyebrow and every link say "Engineering" | "Engineering \| ReLeaf · iGEM 2026" |
-| `notebook/index.html` `<title>` | "Wet Lab Notebook" | nav says "Notebook" | either is fine; make the nav entry "Wet Lab Notebook" to match Dry Lab Notebook, or the title "Notebook" |
 | `data-physicalization/listening/index.html` `<title>` | "Can you hear a plant scream?" | every other page: "Name \| ReLeaf · iGEM 2026"; a rhetorical question | "Listening to drought \| Data Physicalization · ReLeaf · iGEM 2026"; also add a meta description (it has none) |
 | `geospatial-analysis/routing/index.html` `<title>` | "Taiwan: Fertilizer Corps → Farmland (all counties)" | same pattern | "Fertilizer routing \| Geospatial Analysis · ReLeaf · iGEM 2026" |
+| `milestone/index.html` `<h1>` | "From Failure to Function" | `<title>`, eyebrow and nav say "Milestone"; an "X to Y" slogan heading of the kind the brief lists | "Milestone", with the slogan, if kept, as the lede's first words |
+| `safety-and-security/index.html` section 1 | an empty risk table (head row, no rows) | the review note there already asks for the content | fill it or remove the table until there is content |
 | `protein-design/index.html` page links | no Next link | nav order puts Dry Lab Notebook after Protein Design | add Next: Dry Lab Notebook |
 | `drylab-notebook/index.html` page links | Previous: Peptide Design | nav order: Protein Design | Previous: Protein Design |
 | `team/index.html` page links | no Previous | nav order: Data Physicalization | add Previous, or leave (Team starts its own tab) |
