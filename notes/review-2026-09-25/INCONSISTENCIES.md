@@ -641,16 +641,16 @@ missing is a source for the claim.
 
 ### a. "Where the reactor physics lives" pointers (7 sentences)
 
-| Page | Section | What it says | What it needs |
-|---|---|---|---|
-| `measurement/index.html` | Measurement map | "the reactor physics on Bioreactor Calculations" | A destination, or the clause comes out. This is the page's only pointer to the physics |
-| `software/index.html` | Adapting it to another rig | "the transport and membrane calculations on Bioreactor Calculations" | Point at Math Model section 8, or say the file is unpublished |
-| `results/index.html` | Whole system | "the hydraulics on Bioreactor Calculations" | Same |
-| `description/index.html` | Abstract, How to read this page | "Bioreactor Calculations the transport arithmetic" | Drop the clause from the reading guide |
-| `description/index.html` | Containment and delivery, Figure 4 caption | "The membrane sizing, the flux arithmetic and the pump floor are on the Bioreactor Calculations page" | Reword the caption: the pump floor is now unsourced (fact 3) |
-| `engineering/index.html` | cycle 5, ACCD in the reactor | "The reactor and its membrane are on Hardware and Bioreactor Calculations" | "on Hardware" is enough |
-| `engineering/index.html` | What is next, sheet 08 | "the perfusion reactor and the in-line photometer are on Hardware and Bioreactor Calculations" | Same |
-| `experiments/index.html` | Protocols held elsewhere | "with the derived parameters on Bioreactor Calculations" | Name the file, or point at Measurement |
+| Page | Section | What it says | What it needs | Status (overnight) |
+|---|---|---|---|---|
+| `measurement/index.html` | Measurement map | "the reactor physics on Bioreactor Calculations" | A destination, or the clause comes out. This is the page's only pointer to the physics | A-fixed: clause removed, no page holds the physics |
+| `software/index.html` | Adapting it to another rig | "the transport and membrane calculations on Bioreactor Calculations" | Point at Math Model section 8, or say the file is unpublished | A-fixed: clause removed |
+| `results/index.html` | Whole system | "the hydraulics on Bioreactor Calculations" | Same | A-fixed: now links Measurement, Pressure and flow meter |
+| `description/index.html` | Abstract, How to read this page | "Bioreactor Calculations the transport arithmetic" | Drop the clause from the reading guide | A-fixed: clause removed |
+| `description/index.html` | Containment and delivery, Figure 4 caption | "The membrane sizing, the flux arithmetic and the pump floor are on the Bioreactor Calculations page" | Reword the caption: the pump floor is now unsourced (fact 3) | A-fixed: caption now sends the membrane sizing to Hardware, Bioreactor; flux and pump floor dropped from the caption |
+| `engineering/index.html` | cycle 5, ACCD in the reactor | "The reactor and its membrane are on Hardware and Bioreactor Calculations" | "on Hardware" is enough | A-fixed: "on Hardware" |
+| `engineering/index.html` | What is next, sheet 08 | "the perfusion reactor and the in-line photometer are on Hardware and Bioreactor Calculations" | Same | A-fixed: "on Hardware" |
+| `experiments/index.html` | Protocols held elsewhere | "with the derived parameters on Bioreactor Calculations" | Name the file, or point at Measurement | A-fixed: clause removed, Hardware, Bioreactor stays |
 
 ### b. The pump floor of 230 mL/min (4 sentences)
 
@@ -661,6 +661,8 @@ Measurement, or present 230 as the vendor sheet range only, and redraw Figure 6'
 amber line. See fact 3. **This is the one to fix first**, because the page itself
 makes the pump floor the interesting question.
 
+**Status (overnight): B-reworded, all four.** Figure 6 caption, M11, and the M11 line in the fix list on Measurement, and R4 on Results, now attribute the 230 mL/min floor to "the team's reactor calculations (not currently published on the wiki)". Numbers unchanged. The decision in fact 3 is still open.
+
 ### c. Lumen volume, fibre count and module specification (3 sentences)
 
 `measurement/index.html` M13, M14, and the sources line under the pressure and
@@ -669,6 +671,8 @@ specification, the error analysis and the Darcy-Starling treatment all came from
 the deleted page. Either the derivations move onto Measurement or the team names
 the calculation file and says it is unpublished. See fact 4.
 
+**Status (overnight): B-reworded, all four** (M13, both M14 sentences, and the sources line under the pressure and flow meter). The holdup, fibre count, part number, sensor specification and Darcy-Starling treatment now name the team's reactor calculations as not currently published. Fact 4 is still open.
+
 ### d. Containment, pore size and the log reduction value (2 sentences)
 
 `measurement/index.html` membrane breach detector ("Containment argument and the
@@ -676,6 +680,8 @@ pore size") and `results/index.html` R8. R8 is the most important sentence in
 this whole section: the only page that said the log reduction value was never
 measured was the deleted one. That statement has to move onto Results or Safety
 rather than disappear, or the wiki will read as though a number exists.
+
+**Status (overnight):** membrane breach detector line on Measurement **A-fixed** (Hardware, Bioreactor carries both the containment argument and the 0.2 µm pore). Results R8, both sentences, **B-reworded**: the log reduction value is still described as unmeasured, attributed to the team's reactor calculations; the statement still needs to move into the body of Results or Safety. Results blot-mass sentence (37.6 kDa, not listed above) **B-reworded** too.
 
 ### e. Growth fit, promoter parameters and the ACC handoff (10 sentences)
 
@@ -690,6 +696,8 @@ team: bring the transport calculation into Math Model as a fourth short model, o
 cite Hardware → Bioreactor. The 105.1 min half-time should cite reference [1]
 directly, since the reference is on the page.
 
+**Status (overnight): B-reworded, all twelve** (the eleven listed above plus the M8 line in the status box at the foot of the page; fix M8's closing "amend the sentence on that page" now reads "in those calculations"). Each now names the team's reactor calculations as not currently published; fix M6 says "the two sources" for "the two pages". The Model chain paragraph now opens "The vessel physics sits outside this page". Numbers unchanged; the team decision above is still open.
+
 ### f. Human Practices (3 sentences)
 
 `human-practices/index.html`: the Modelling row of the 3.1 expert table, the
@@ -699,8 +707,12 @@ arm fitted to the dose ladder, and the deployment model), and give the open item
 a real destination or mark it unanswered. Note the lower-case "calculations"
 here, which suggests these were written as prose rather than as links.
 
+**Status (overnight): A-fixed, all three.** The Modelling row and the Prof. Chen tab link to Math Model, Fit to the salt ladder; the reactors-per-farm item links to Math Model, Units per hectare. The deleted page never covered any of these (checked against its last version, commit f99ab00).
+
 ### g. Invisible
 
 `engineering/index.html` carries the name inside the HTML comment at the top of
 the file, which no reader sees. It can go with the rest of the scope note
 whenever that comment is next edited.
+
+**Status (overnight): left alone.** HTML comment, per instructions. Three lower-case mentions in the Dry Lab Notebook (`drylab-notebook/index.html` lines 1078, 1124, 1674) are dated log entries recording that the page once existed; they are history, not pointers, and were left for the notebook owner. A grep of all published prose outside review notes and comments now finds no other mention. Every edited sentence is listed before and after in `notes/review-2026-09-25/orphans.md`.
