@@ -64,7 +64,6 @@
   /* Read by the link renderer to decide how a lane's spine is drawn. */
   --spine: vine;
 
-  --nb-shadow: 0 10px 15px -3px rgb(20 64 43 / .16), 0 4px 6px -4px rgb(20 64 43 / .12);
   --dur-fast: 130ms;
   --dur-mid:  180ms;
   --dur-slow: 260ms;
@@ -127,7 +126,7 @@
 .frame .cnt {
   position: absolute; right: 3px; bottom: 3px;
   font-family: var(--font-mono); font-size: .5625rem;
-  padding: 1px 4px; border-radius: 999px;
+  padding: 1px 4px; border-radius: 0;
   background: var(--badge); color: var(--badge-ink); letter-spacing: .02em;
 }
 /* a week nobody photographed: the same hatch page.css uses for a pending figure */
@@ -188,12 +187,12 @@
   padding: var(--sp-2) var(--sp-5);
   background: rgb(255 255 255 / .93);
   border-bottom: 1px solid var(--gray-200);
-  transition: box-shadow .18s var(--ease-out);
+  transition: border-color .18s var(--ease-out);
 }
 @media (min-width: 640px) { .nbrail { margin: 0 calc(var(--sp-6) * -1); padding-left: var(--sp-6); padding-right: var(--sp-6); } }
 @supports ((backdrop-filter: blur(8px)) or (-webkit-backdrop-filter: blur(8px))) { .nbrail { background: rgb(255 255 255 / .82); -webkit-backdrop-filter: blur(10px); backdrop-filter: blur(10px); } }
 /* only once it has actually left the flow */
-.nbrail.is-stuck { box-shadow: 0 6px 12px -10px rgb(20 64 43 / .5); }
+.nbrail.is-stuck { border-bottom-color: var(--gray-400); }
 
 .nbrail__views { display: flex; flex: none; border: 1px solid var(--gray-200); border-radius: var(--radius-sm); overflow: hidden; }
 .nbrail__view {
@@ -306,7 +305,7 @@ svg.links { position: absolute; left: 0; top: var(--headh); pointer-events: none
 .head .gi { width: 15px; height: 15px; color: var(--c); }
 .head .nm { font-size: .65rem; line-height: 1.3; color: var(--gray-600); max-width: calc(var(--lane) - 6px); }
 .head .nmv { display: none; }
-.head .bar { width: 22px; height: 2px; background: var(--c); border-radius: 2px; opacity: .8; }
+.head .bar { width: 22px; height: 2px; background: var(--c); opacity: .8; }
 /* Narrow lanes: names run up the page and shorten to their working name. */
 .compact .head .nm { display: none; }
 .compact .head .nmv {
@@ -316,7 +315,13 @@ svg.links { position: absolute; left: 0; top: var(--headh); pointer-events: none
 .compact .head { gap: .45rem; padding-bottom: .55rem; }
 .compact .head .gi { width: 13px; height: 13px; }
 .compact .head .bar { width: 16px; }
-.compact .railrow { padding: .55rem .5rem 0 .75rem; }
+.compact .railrow { padding: .45rem .4rem 0 .7rem; }
+/* A compact row is 58px: the week, the date and a month line do not fit in it,
+   and the month ran into the next week's label ("30 May" over "W09"). The date
+   already names the month and the month-start rule marks the change, so the
+   compact rail drops the extra line and keeps the date on one line. */
+.compact .railrow .mo { display: none; }
+.compact .railrow .dt { white-space: nowrap; font-size: .8125rem; }
 .head.wethead .nm, .head.wethead .nmv { color: var(--wet); }
 .head.wethead .bar { background: var(--wet); }
 
@@ -332,7 +337,7 @@ svg.links { position: absolute; left: 0; top: var(--headh); pointer-events: none
 .railrow.now .dt { color: var(--leaf-700); }
 .railrow.now::after {
   content: ""; position: absolute; right: -1px; top: .7rem; bottom: .7rem; width: 2px;
-  background: var(--leaf-700); border-radius: 2px;
+  background: var(--leaf-700);
 }
 
 /* week separators: dotted, so the board reads as ruled paper and not as a table */
@@ -434,19 +439,20 @@ svg.links { position: absolute; left: 0; top: var(--headh); pointer-events: none
   position: absolute; right: -6px; bottom: -6px;
   font-family: var(--font-mono); font-size: .5625rem; font-weight: 700;
   min-width: 16px; height: 16px; line-height: 16px; text-align: center; padding: 0 4px;
-  border-radius: 999px; background: var(--wet); color: var(--white);
-  box-shadow: 0 0 0 2px var(--white);
+  background: var(--wet); color: var(--white);
+  outline: 2px solid var(--white);
 }
 
 /* ================================================================ CARD ===== */
-/* The one place on this page that floats, so the one place with a shadow. */
+/* The one place on this page that floats. It stands off the board by a graphite
+   rule and its pipeline colour as a hairline top edge, not by a shadow or a
+   coloured slab (DESIGN.md, the Flat-Surface and No Coloured Bar rules). */
 
 .card {
   position: fixed; z-index: 60; width: min(438px, calc(100vw - 28px));
   background: var(--white);
-  border: 1px solid var(--gray-200); border-left: 4px solid var(--c);
-  border-radius: var(--radius);
-  box-shadow: var(--nb-shadow);
+  border: 1px solid var(--gray-500); border-top: 2px solid var(--c);
+  border-radius: 0;
   opacity: 0; transform: translateY(6px); pointer-events: none; overflow: hidden;
   transition: opacity var(--dur-mid) var(--ease-out), transform var(--dur-mid) var(--ease-out);
 }
@@ -518,7 +524,7 @@ svg.links { position: absolute; left: 0; top: var(--headh); pointer-events: none
 }
 .hint kbd {
   font-family: var(--font-mono); font-size: .6875rem;
-  border: 1px solid var(--gray-200); border-radius: 3px;
+  border: 1px solid var(--gray-200); border-radius: 0;
   padding: 1px 5px; background: var(--gray-50); color: var(--gray-600);
 }
 
