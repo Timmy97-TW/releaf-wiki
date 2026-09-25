@@ -27,6 +27,9 @@ horizontal scroll at any of the three widths.
 | `6dd4bde` | Engineering: the review note on the blueprint plate gets its own ink back. |
 | `e540ca1` | Engineering: the page stops scrolling sideways at every window width. |
 | `59d845d` | Engineering: the cover title block keeps each field on one line. |
+| `7c7ec0e` | Engineering: the six cycle chips on a phone say what they are. |
+| `77d6e34` | All four pages: the shared table scroll cue replaces the four page copies (see below). |
+| after merge | Engineering: the local review-note link colour removed, now that nav.css carries one. |
 
 ### Silver criterion 1 (the first thing the task asked for)
 
@@ -82,16 +85,27 @@ Two things were inconsistent and both are now fixed.
 A reader landing mid-page now gets the stage's claim and the route to its
 evidence without scrolling back to the overview.
 
-### Tables that are wider than the page
+### Tables that are wider than the page, and what happened to that change
 
 Every table on these four pages was already inside a scrolling wrap, so the
 page never widened, but nothing said the table continued. On a phone a table
-simply looked cut off. All 20 wraps now draw a 3 px bar at whichever edge still
-has table behind it, using the local-attachment background trick, so the bar
-disappears when that side is reached, and all 20 take focus so the table can be
-scrolled from the keyboard. The rule is in each page's own stylesheet, which
-means it is written four times; see the shared-layer request below.
-`contribution/contribution.css` is new and holds only that rule.
+simply looked cut off. I gave all 20 wraps an edge bar and a focus stop, in the
+four page stylesheets, because `.tablewrap` is shared and not mine.
+
+Then the shared layer landed the same idea in `page.css` and `nav.js` tonight,
+and its version is better: `nav.js` adds the focus stop, a role, an accessible
+name and a line of words under the table ("More columns to the right. Scroll
+the table sideways.") only while the table actually overflows, and takes them
+off again when it does not. My hardcoded `tabindex="0"` was in its way, because
+the script skips a wrap that already carries one, so those twenty wraps would
+have kept a tab stop and never got a name.
+
+So after merging `main` I took my whole change back out: the four local
+background rules, the twenty `tabindex` attributes, and
+`contribution/contribution.css`, which held nothing else.
+`contribution/index.html` is back to the three shared stylesheets and a plain
+`<body>`. Verified afterwards on Engineering at 390 px: the shared edge and the
+shared line of words both appear, and the page still has no horizontal scroll.
 
 ### The sideways scroll on Engineering
 
@@ -179,10 +193,7 @@ all noticed while reading for layout rather than for content:
    caption**, while the other 47 figures on the page have both. Numbering it
    would renumber every figure after it, which is a change a person should
    decide to make. Its own review note already asks for a provenance line.
-4. **`tabindex` on every table wrap** adds a tab stop even when the table fits
-   and does not scroll. The correct version sets it only when the table
-   overflows, which needs a line of shared JavaScript; see below.
-5. Everything the first pass left in its own "Needs a person" list is still
+4. Everything the first pass left in its own "Needs a person" list is still
    open. In particular the eight empty Registry entries, which are the one
    thing standing between this wiki and Bronze criterion 3.
 
@@ -190,25 +201,20 @@ all noticed while reading for layout rather than for content:
 
 ## 5. Requests for the shared layer
 
-1. **The table scroll cue belongs in `page.css`.** I wrote the same rule into
-   four page stylesheets because `.tablewrap` is shared and I may not edit it.
-   The rule is at the end of `results/results.css`; moving it to `page.css`
-   under `.tablewrap` and deleting the four local copies would be a straight
-   win, and every other page of the wiki with a wide table gets it for free.
-2. **`.review-note a` still has no colour of its own** in
-   `assets/js/review-notes.js`, so a note inside a coloured section inherits
-   that section's link colour. The first pass asked for this too. While that
-   file is open: the note's `p` colour is set as `color: inherit`, which a page
-   rule with three classes beats, and that is what made the note on
-   Engineering's blueprint plate unreadable. `.review-note p { color: #3d3320; }`
-   in the shared file would fix it for every page; I have worked around it
-   locally for sheet 04.
-3. **A scrollbar-width custom property in the shared layer.** I added `--sbw` in
-   `engineering.js` because that page's breakouts are sized against `100vw`.
-   Any page that breaks out of its column has the same bug on a browser with
-   classic scrollbars. Two lines in `nav.js` would cover the whole wiki.
-4. **A shared `data-scrollable` helper.** One line in `page.js` that adds
-   `tabindex="0"` to a `.tablewrap` only when `scrollWidth > clientWidth`, and
-   removes it on resize when it does not, would let the four pages drop the
-   hand-written attribute and would stop a table that fits from taking a tab
-   stop.
+Merged `main` at `fb220b8` before these final checks. Three of the four things
+I was going to ask for are already there, so only one request is left.
+
+1. **A scrollbar-width custom property in the shared layer.** I added `--sbw` in
+   `engineering.js`, measured once and on resize, because that page's breakouts
+   are sized against `100vw` and `100vw` includes a classic scrollbar. Any page
+   that breaks out of its column has the same bug: `page.css` itself does it at
+   line 496 (`.tablewrap--wide`) and line 856 (`.fig--wide`), both
+   `calc(100vw - 24rem)`. Two lines in `nav.js` setting `--sbw` on the root, and
+   `- var(--sbw, 0px)` in those two rules, would cover the whole wiki.
+
+Already delivered tonight by the shared pass, and my local versions removed:
+the table scroll cue and its focus stop in `page.css` and `nav.js`; the review
+note's own link colour in `nav.css`. The one review-note override I kept is
+Engineering sheet 04, where the blueprint plate's paragraph colour outranks
+`:root:root .review-note p` and the note would otherwise be pale on pale; that
+is a page fact, not a shared one.
