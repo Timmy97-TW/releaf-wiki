@@ -63,7 +63,7 @@ const NAV = [
         caption: "Thirteen measurements, each with its method, unit, control and state." },
       { title: "Safety",       slug: "safety-and-security", award: "Safety and Security",
         caption: "Containment, risk assessment and lab practice." },
-      { title: "Notebook",     slug: "notebook",
+      { title: "Wet Lab Notebook", slug: "notebook",
         caption: "The bench record, month by month." }
     ]
   },
