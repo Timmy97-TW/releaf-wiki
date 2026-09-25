@@ -5,11 +5,10 @@
    contents rail steps out of the way while it is on screen. White ground, the
    same as the rest of the page.
 
-   A judge should be able to read it without a long scroll, so the arc is stated
-   once at the top (where we started, where it ended), the engagements are a
-   two-column grid of compact cards carrying the face of the person we met and
-   thumbnails of what changed, and the full record with its evidence opens from
-   the card.
+   Laid out after iGEM Heidelberg 2025's Human Practices page: the arc is
+   stated once at the top (where we started, where it ended), then five
+   stations in date order, each a path of faces, one card, and that card's
+   four photographs. The full record folds under each card.
 
    Rendered by evomap.js from evomap-data.js.
    ========================================================================== */
@@ -94,240 +93,222 @@ html.evo-open .ihp .toc { opacity: 0; visibility: hidden; pointer-events: none; 
 .sec--evo .evo__arc h3 { font-size: 1.0625rem; font-weight: 700; color: var(--leaf-900); line-height: 1.3; margin-bottom: .3rem; }
 .evo__arc p { margin: 0; color: var(--evo-ink-2); line-height: 1.55; max-width: 60ch; }
 
-/* ------------------------------------------------------------ CONTROLS -- */
+/* ------------------------------------------------------------ STATIONS -- */
+/* Five stations in date order, after iGEM Heidelberg 2025's Human Practices
+   page. Each is built to be read in one window: the phase drawn as a shape
+   with the faces on its line (left), the card for the person selected
+   (right), and that card's four photographs under it. White ground,
+   hairlines, one green for "where we are". */
 
-.evo__controls {
-  position: sticky;
-  top: calc(var(--nav-h) - 1px);
-  z-index: 40;
-  margin: 0 0 var(--sp-4);
-  padding: .7rem 0;
-  background: rgb(255 255 255 / .94);
-  -webkit-backdrop-filter: blur(6px); backdrop-filter: blur(6px);
-  border-bottom: 1px solid var(--gray-200);
+.sec--evo .evo { max-width: 1360px; }
+
+.evo-st {
+  display: grid; grid-template-columns: minmax(0, 1fr); gap: var(--sp-4);
+  padding-top: clamp(1.5rem, 3vw, 2.25rem);
+  scroll-margin-top: calc(var(--nav-h, 68px) + .5rem);
 }
-.evo__row1, .evo__row2 { display: flex; flex-wrap: wrap; gap: .35rem; align-items: center; }
-.evo__row2 { margin-top: .45rem; }
-.evo__flabel {
-  font-size: .625rem; font-weight: 700; letter-spacing: .14em; text-transform: uppercase;
-  color: var(--evo-ink-3); margin-right: .3rem;
+.evo-st + .evo-st { margin-top: clamp(1.5rem, 3vw, 2.25rem); border-top: 1px solid var(--gray-200); }
+@media (min-width: 60rem) {
+  .evo-st {
+    grid-template-columns: minmax(0, 5fr) minmax(0, 7fr);
+    grid-template-areas: "head side" "map side" "map photos";
+    grid-template-rows: auto auto 1fr;
+    column-gap: clamp(1.5rem, 3vw, 2.75rem); row-gap: var(--sp-3);
+    align-items: start;
+  }
+  .evo-st__head   { grid-area: head; }
+  .evo-st__map    { grid-area: map; }
+  .evo-st__side   { grid-area: side; }
+  .evo-st__photos { grid-area: photos; }
 }
-.evo__chip {
-  appearance: none;
-  border: 1px solid var(--evo-line);
+
+.sec--evo .evo-st__head h3 {
+  font-size: clamp(1.25rem, 1.05rem + .7vw, 1.625rem); font-weight: 700;
+  letter-spacing: -.015em; line-height: 1.2; color: var(--leaf-900);
+}
+.evo-st__dates { margin: .2rem 0 0; font-size: var(--text-xs); color: var(--evo-ink-3); font-variant-numeric: tabular-nums; }
+.evo-st__lede { margin: .45rem 0 0; font-size: var(--text-sm); line-height: 1.55; color: var(--evo-ink-2); max-width: 52ch; }
+
+/* ---- the drawing ---- */
+.evo-st__map { margin: 0; }
+.evo-st__canvas {
+  position: relative;
+  width: min(calc(100% - 2.5rem), 60svh); aspect-ratio: 1; margin: 0 auto;
+}
+.evo-st__glyph { position: absolute; inset: 0; width: 100%; height: 100%; overflow: visible; }
+.evo-g__fill  { fill: var(--leaf-50); }
+.evo-st.is-complete .evo-g__fill { fill: var(--leaf-100); }
+@media (prefers-reduced-motion: no-preference) { .evo-g__fill { transition: fill .6s ease; } }
+.evo-g__deco  { fill: none; stroke: var(--leaf-200); stroke-width: 1.5; stroke-linecap: round; vector-effect: non-scaling-stroke; }
+.evo-g__dash  { fill: none; stroke: var(--gray-300); stroke-width: 1; stroke-dasharray: 4 4; vector-effect: non-scaling-stroke; }
+.evo-g__word  { font-size: 3.1px; fill: var(--gray-500); text-anchor: middle; letter-spacing: .02em; }
+.evo-g__track { fill: none; stroke: var(--gray-400); stroke-width: .45; stroke-linejoin: round; stroke-linecap: round; }
+.evo-g__ink   {
+  /* no non-scaling stroke here: it would break the pathLength dashes */
+  fill: none; stroke: var(--leaf-700); stroke-width: .8; stroke-linejoin: round; stroke-linecap: round;
+  stroke-dasharray: 1 1000;
+}
+@media (prefers-reduced-motion: no-preference) { .evo-g__ink { transition: stroke-dasharray .6s ease; } }
+.evo-st--bubble .evo-g__deco { stroke: var(--leaf-200); stroke-width: 7; }
+.evo-st__map figcaption {
+  max-width: 46ch; margin: 2.75rem auto 0;
+  font-size: var(--text-xs); line-height: 1.5; color: var(--evo-ink-3); text-align: center;
+}
+
+/* ---- the faces on the line ---- */
+.evo-st__nodes { list-style: none; margin: 0; padding: 0; }
+.evo-st__nodes li { position: absolute; width: 0; height: 0; }
+.evo-node {
+  appearance: none; position: absolute; left: 0; top: 0;
+  width: 3.25rem; height: 3.25rem; transform: translate(-50%, -50%);
+  padding: 0; border: 0; border-radius: 50%; background: none; cursor: pointer;
+  font: inherit; color: inherit;
+}
+.evo-node .evo-node__face {
+  display: block; width: 100%; height: 100%;
+  border: 2px solid var(--white); box-shadow: 0 0 0 1px var(--gray-300);
+}
+.evo-node__tag {
+  position: absolute; display: grid; gap: .05rem;
+  width: max-content; max-width: 7.25rem;
+  padding: .2rem .45rem;
+  background: var(--white); border: 1px solid var(--evo-line); border-radius: var(--evo-r);
+  line-height: 1.25; text-align: left; pointer-events: none;
+}
+.at-r .evo-node__tag { left: calc(100% + .45rem); top: 50%; transform: translateY(-50%); }
+.at-l .evo-node__tag { right: calc(100% + .45rem); top: 50%; transform: translateY(-50%); text-align: right; }
+.at-t .evo-node__tag { bottom: calc(100% + .35rem); left: 50%; transform: translateX(-50%); text-align: center; }
+.at-b .evo-node__tag { top: calc(100% + .35rem); left: 50%; transform: translateX(-50%); text-align: center; }
+.evo-node__tag b { font-size: .75rem; font-weight: 600; color: var(--gray-700); }
+.evo-node__tag span { font-size: .6875rem; color: var(--evo-ink-3); font-variant-numeric: tabular-nums; }
+.evo-node:hover .evo-node__face { box-shadow: 0 0 0 2px var(--leaf-500); }
+.evo-node.is-past .evo-node__face { box-shadow: 0 0 0 2px var(--leaf-200); }
+.evo-node[aria-current="true"] { z-index: 2; }
+.evo-node[aria-current="true"] .evo-node__face { box-shadow: 0 0 0 3px var(--leaf-700); }
+.evo-node[aria-current="true"] .evo-node__tag { border-color: var(--leaf-700); }
+.evo-node[aria-current="true"] .evo-node__tag b { color: var(--leaf-900); font-weight: 700; }
+.evo-node:focus-visible { outline: 2px solid var(--leaf-500); outline-offset: 4px; }
+
+/* ---- the card ---- */
+.evo-st__nav { display: flex; align-items: center; gap: .4rem; margin-bottom: var(--sp-2); }
+.evo-st__count { margin-right: auto; font-size: var(--text-xs); color: var(--evo-ink-3); font-variant-numeric: tabular-nums; }
+.evo-st__step {
+  appearance: none; width: 2.25rem; height: 2.25rem;
+  border: 1px solid var(--evo-line); border-radius: 50%; background: var(--white);
+  font: inherit; font-size: .9rem; color: var(--leaf-900); cursor: pointer;
+}
+.evo-st__step:hover:not(:disabled) { border-color: var(--leaf-700); background: var(--leaf-50); }
+.evo-st__step:disabled { opacity: .35; cursor: default; }
+
+.evo-cd {
+  border: 1px solid var(--evo-line); border-radius: var(--evo-r);
   background: var(--white);
-  color: var(--gray-700);
-  border-radius: 999px;
-  padding: .35rem .8rem;
-  font: inherit; font-size: .78rem; font-weight: 500;
-  cursor: pointer;
-  transition: border-color .14s ease, color .14s ease, background-color .14s ease;
+  padding: var(--sp-4) var(--sp-5);
+  font-size: var(--text-sm);
 }
-.evo__chip:hover { border-color: var(--leaf-700); color: var(--leaf-900); }
-.evo__chip[aria-pressed="true"] { background: var(--leaf-900); border-color: var(--leaf-900); color: var(--white); font-weight: 600; }
-.evo__chip--thread[aria-pressed="true"] { background: var(--leaf-700); border-color: var(--leaf-700); }
-.evo__jump {
-  appearance: none; border: 0; background: none; padding: .2rem .45rem;
-  font: inherit; font-size: .75rem; font-weight: 600; color: var(--gray-600);
-  cursor: pointer; border-bottom: 2px solid transparent;
+.evo-cd__meta { margin: 0 0 .25rem; font-size: var(--text-xs); color: var(--evo-ink-3); }
+.evo-cd__meta b { color: var(--leaf-700); font-weight: 700; font-variant-numeric: tabular-nums; }
+.sec--evo .evo-cd .evo-cd__head {
+  font-size: clamp(1.0625rem, .98rem + .35vw, 1.25rem); font-weight: 700;
+  letter-spacing: -.01em; line-height: 1.25; color: var(--black, #171717);
+  margin-bottom: var(--sp-3);
 }
-.evo__jump:hover { color: var(--leaf-900); border-bottom-color: var(--leaf-500); }
-.evo__count { margin-left: auto; font-size: .72rem; color: var(--evo-ink-3); font-variant-numeric: tabular-nums; white-space: nowrap; }
-
-/* --------------------------------------------------------------- MONTH -- */
-
-.evo__month {
-  display: flex; align-items: baseline; gap: .75rem;
-  margin: var(--sp-6) 0 var(--sp-3);
-  scroll-margin-top: calc(var(--nav-h) + 6rem);
-}
-.evo__month[hidden] { display: none; }
-.evo__month b {
-  font-size: .6875rem; font-weight: 700; letter-spacing: .14em; text-transform: uppercase;
-  color: var(--leaf-900); font-variant-numeric: tabular-nums;
-}
-.evo__month span { font-size: var(--text-xs); color: var(--evo-ink-3); }
-.evo__month::after { content: ""; flex: 1; border-bottom: 1px solid var(--gray-200); }
-
-/* ---------------------------------------------------------------- GRID -- */
-
-.evo__grid { display: grid; gap: var(--sp-4); align-items: stretch; }
-@media (min-width: 52rem)  { .evo__grid { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
-@media (min-width: 100rem) { .evo__grid { grid-template-columns: repeat(3, minmax(0, 1fr)); } }
-
-/* ---------------------------------------------------------------- CARD -- */
-
-.evo__card {
-  display: flex; flex-direction: column; gap: .7rem;
-  width: 100%; margin: 0;
-  padding: var(--sp-4);
-  text-align: left; font: inherit; color: inherit;
-  background: var(--white);
-  border: 1px solid var(--evo-line);
-  border-radius: var(--evo-r);
-  cursor: pointer;
-  transition: border-color .14s ease, background-color .14s ease;
-}
-.evo__card[hidden] { display: none; }
-.evo__card:hover { border-color: var(--leaf-700); background: var(--leaf-50); }
-.evo__card:hover .evo__open { color: var(--leaf-900); }
-.evo__card--thread { border-left: 3px solid var(--leaf-700); }
-.evo__card--pending { border-style: dashed; }
-
-.evo__head { display: grid; grid-template-columns: 3rem minmax(0, 1fr); gap: .75rem; align-items: center; }
+.evo-cd__head:focus { outline: none; }
+.evo-cd__who { display: grid; grid-template-columns: 2.5rem minmax(0, 1fr); gap: .65rem; align-items: center; margin-bottom: var(--sp-3); }
 .evo__face {
-  width: 3rem; height: 3rem;
+  width: 2.5rem; height: 2.5rem;
   border-radius: 50%; object-fit: cover;
   background: var(--gray-100); border: 1px solid var(--evo-line);
 }
+.evo__face--logo { object-fit: contain; padding: .25rem; background: var(--white); }
 .evo__face--none {
   display: grid; place-items: center;
   font-size: .8125rem; font-weight: 700; color: var(--leaf-700); background: var(--leaf-50);
 }
-.evo__who { font-size: 1rem; font-weight: 700; color: var(--leaf-900); line-height: 1.25; }
-.evo__who i { font-style: normal; font-weight: 600; color: var(--gray-600); }
-.evo__sub {
-  margin-top: .1rem;
-  font-size: var(--text-xs); color: var(--evo-ink-3); line-height: 1.35;
-  display: flex; flex-wrap: wrap; gap: .3rem .5rem; align-items: baseline;
-}
-.evo__date { font-weight: 700; color: var(--leaf-700); font-variant-numeric: tabular-nums; letter-spacing: .02em; }
-.evo__visit {
-  font-size: .625rem; font-weight: 700; letter-spacing: .1em; text-transform: uppercase;
-  color: var(--leaf-700); border: 1px solid var(--leaf-500); border-radius: 999px; padding: .1rem .45rem;
-}
-.evo__said {
-  margin: 0;
-  font-size: .8125rem; line-height: 1.5; color: var(--gray-700);
-  display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden;
-}
-.evo__said b { color: var(--gray-500); font-weight: 700; font-size: .625rem; letter-spacing: .12em; text-transform: uppercase; }
+.evo-cd__who p { margin: 0; line-height: 1.3; }
+.evo-cd__who b { display: block; font-size: .9375rem; color: var(--leaf-900); }
+.evo-cd__who span { display: block; font-size: var(--text-xs); color: var(--evo-ink-3); }
+.evo-cd__sum { margin: 0 0 var(--sp-3); line-height: 1.55; color: var(--gray-700); }
 
-/* four photographs across the card, each one a button into the viewer */
-.evo__thumbs { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: .3rem; }
-.evo__thumb {
-  appearance: none; display: block; padding: 0; margin: 0;
-  border: 1px solid var(--gray-200); border-radius: 2px;
-  background: var(--gray-100);
-  cursor: zoom-in; overflow: hidden;
-}
-.evo__thumb img { display: block; width: 100%; aspect-ratio: 4 / 3; object-fit: cover; transition: transform .2s ease; }
-.evo__thumb:hover img { transform: scale(1.05); }
-.evo__thumb:hover { border-color: var(--leaf-700); }
+.evo-cd__cols { display: grid; gap: var(--sp-3) var(--sp-5); padding-top: var(--sp-3); border-top: 1px solid var(--evo-hair); }
+@media (min-width: 40rem) { .evo-cd__cols { grid-template-columns: 1fr 1fr; } }
+.sec--evo .evo-cd h5 { font-size: .8125rem; font-weight: 700; color: var(--gray-700); margin-bottom: .3rem; }
+.sec--evo .evo-cd .is-to h5 { color: var(--leaf-700); }
+.evo-cd ul { margin: 0; padding-left: 1rem; line-height: 1.5; }
+.evo-cd li + li { margin-top: .25rem; }
+.evo-cd__none { margin: 0; color: var(--evo-ink-3); }
 
-.evo__logo { display: block; height: 1.4rem; width: auto; margin-top: .35rem; }
+.evo-cd__led { margin: var(--sp-3) 0 0; padding-top: var(--sp-2); border-top: 1px solid var(--evo-hair); line-height: 1.55; }
+.evo-cd__led b { margin-right: .5rem; font-size: .8125rem; color: var(--leaf-700); }
+.evo-cd__led a { color: var(--leaf-700); font-weight: 600; text-underline-offset: 3px; }
 
-.evo__foot {
-  display: flex; align-items: flex-start; gap: .5rem;
-  margin-top: auto; padding-top: .6rem;
-  border-top: 1px solid var(--gray-200);
-}
-.evo__changed { flex: 1; font-size: .8125rem; line-height: 1.45; color: var(--leaf-900); }
-.evo__changed b {
-  display: block;
-  font-size: .625rem; font-weight: 700; letter-spacing: .12em; text-transform: uppercase;
-  color: var(--leaf-700); margin-bottom: .1rem;
-}
-.evo__open {
-  flex-shrink: 0; appearance: none; border: 0; background: none; padding: 0;
-  font: inherit; font-size: var(--text-xs); font-weight: 700; color: var(--gray-500);
-  white-space: nowrap; cursor: pointer;
-}
-.evo__open:hover { color: var(--leaf-900); text-decoration: underline; text-underline-offset: 3px; }
-
-.evo__empty {
-  margin: var(--sp-6) 0; padding: var(--sp-5);
-  border: 1px dashed var(--evo-line); border-radius: var(--evo-r);
-  color: var(--evo-ink-2); text-align: center;
-}
-
-/* -------------------------------------------------------------- RECORD -- */
-
-.evo__sheet {
-  position: fixed; inset: 0; z-index: 9000;
-  display: grid; place-items: center;
-  padding: clamp(.5rem, 3vw, 2.5rem);
-  background: rgb(12 25 18 / .55);
-}
-.evo__sheet[hidden] { display: none; }
-.evo__sheetcard {
-  position: relative;
-  width: min(64rem, 100%);
-  max-height: min(88vh, 56rem);
-  overflow-y: auto;
-  background: var(--white);
-  border-radius: var(--evo-r);
-  padding: clamp(1.25rem, 3vw, 2rem);
-  font-size: var(--text-sm);
-}
-.evo__close {
-  position: absolute; top: .75rem; right: .75rem;
-  width: 2rem; height: 2rem;
-  display: grid; place-items: center;
-  border: 1px solid var(--evo-line); background: var(--white); color: var(--gray-600);
-  border-radius: 2px; font: inherit; font-size: 1rem; line-height: 1; cursor: pointer;
-}
-.evo__close:hover { background: var(--leaf-900); border-color: var(--leaf-900); color: var(--white); }
-
-.evo__sheethead { display: grid; grid-template-columns: 4.5rem minmax(0, 1fr); gap: var(--sp-4); align-items: center; padding-right: 2.5rem; }
-.evo__sheethead .evo__face { width: 4.5rem; height: 4.5rem; }
-.sec--evo .evo__sheetcard h3 { font-size: 1.35rem; font-weight: 700; color: var(--leaf-900); line-height: 1.2; }
-.sec--evo .evo__sheetcard h4 {
-  margin: var(--sp-5) 0 var(--sp-2);
-  font-size: .6875rem; font-weight: 700; letter-spacing: .14em; text-transform: uppercase; color: var(--gray-500);
-}
-.evo__sheetcard p { margin: 0 0 .7rem; line-height: 1.6; max-width: 76ch; }
-.evo__sheetcard ul { margin: 0 0 .7rem; padding-left: 1.1rem; line-height: 1.55; max-width: 76ch; }
-.evo__sheetcard li + li { margin-top: .3rem; }
-.evo__meta { color: var(--gray-500); font-size: var(--text-xs); line-height: 1.5; }
-.evo__meta b { color: var(--leaf-700); font-weight: 700; font-variant-numeric: tabular-nums; }
-
-.evo__visits { display: grid; gap: 1px; background: var(--evo-line); border: 1px solid var(--evo-line); border-radius: 2px; margin-bottom: var(--sp-4); }
-@media (min-width: 48rem) { .evo__visits { grid-template-columns: repeat(var(--n, 2), minmax(0, 1fr)); } }
-.evo__visits > div { background: var(--white); padding: .8rem 1rem 1rem; }
-.evo__visits .is-here { background: var(--leaf-50); }
-.sec--evo .evo__visits h5 { font-size: .625rem; font-weight: 700; letter-spacing: .14em; text-transform: uppercase; color: var(--leaf-700); margin-bottom: .35rem; }
-.evo__visits p { font-size: .8125rem; margin: 0; }
-.evo__visits button {
-  margin-top: .5rem; appearance: none; border: 0; background: none; padding: 0;
-  font: inherit; font-size: .8125rem; font-weight: 600; color: var(--leaf-700);
-  text-decoration: underline; text-underline-offset: 3px; cursor: pointer;
-}
-.evo__deep {
-  margin: 0 0 var(--sp-4); padding: .8rem 1rem;
-  background: var(--leaf-50); border-left: 2px solid var(--leaf-700); line-height: 1.6;
-}
-.evo__ba { display: grid; gap: 1px; background: var(--evo-line); border: 1px solid var(--evo-line); border-radius: 2px; }
-@media (min-width: 48rem) { .evo__ba { grid-template-columns: 1fr 1fr; } }
-.evo__ba > div { background: var(--white); padding: .8rem 1rem 1rem; }
-.sec--evo .evo__ba h5 { font-size: .625rem; font-weight: 700; letter-spacing: .14em; text-transform: uppercase; margin-bottom: .4rem; }
-.evo__ba .from h5 { color: var(--gray-500); }
-.evo__ba .to h5 { color: var(--leaf-700); }
-.evo__ba ul { margin: 0; padding-left: 1rem; font-size: .8125rem; }
-
-/* the evidence gallery: what changed, as photographs */
-.evo__ev { display: grid; gap: var(--sp-4); }
-@media (min-width: 40rem) { .evo__ev { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
-.evo__ev figure { margin: 0; }
-.evo__evbtn { appearance: none; display: block; width: 100%; padding: 0; border: 0; background: none; cursor: zoom-in; }
-.evo__ev img {
-  display: block; width: 100%; aspect-ratio: 4 / 3; object-fit: cover;
-  border: 1px solid var(--evo-line); border-radius: 2px; background: var(--gray-100);
-}
-.evo__evbtn:hover img { border-color: var(--leaf-700); }
-.evo__ev figcaption {
-  margin-top: .4rem; padding-left: .6rem;
-  border-left: 1px solid var(--gray-400);
-  font-size: var(--text-xs); line-height: 1.5; color: var(--gray-600);
-}
-.evo__links { display: flex; flex-wrap: wrap; gap: .5rem; margin-top: var(--sp-4); }
+.evo-cd__full { margin-top: var(--sp-2); border-top: 1px solid var(--evo-hair); padding-top: .15rem; }
+.evo-cd__full summary { cursor: pointer; padding: .3rem 0; font-weight: 600; color: var(--leaf-700); }
+.evo-cd__full summary:hover { color: var(--leaf-900); }
+.sec--evo .evo-cd__full h5 { margin-top: var(--sp-3); }
+.evo-cd__full p { margin: 0 0 .5rem; line-height: 1.6; color: var(--gray-700); }
+.evo-cd__note { font-size: var(--text-xs); color: var(--evo-ink-3); }
+.evo__links { display: flex; flex-wrap: wrap; gap: .5rem; margin-top: var(--sp-3); }
 .evo__links a {
   font-size: .75rem; font-weight: 600;
   border: 1px solid var(--evo-line); border-radius: 2px;
   padding: .35rem .7rem; text-decoration: none; color: var(--leaf-700);
 }
 .evo__links a:hover { border-color: var(--leaf-700); background: var(--leaf-50); }
-.evo__src { margin-top: var(--sp-4); font-size: var(--text-xs); color: var(--gray-500); }
+.evo__src { margin-top: var(--sp-3); font-size: var(--text-xs); color: var(--gray-500); }
+
+/* ---- the four photographs, under the card ---- */
+.evo-ph { display: grid; gap: var(--sp-2); grid-template-columns: repeat(2, minmax(0, 1fr)); }
+@media (min-width: 40rem) { .evo-ph { grid-template-columns: repeat(4, minmax(0, 1fr)); } }
+.evo-ph figure { margin: 0; }
+.evo-ph__btn { appearance: none; display: block; width: 100%; padding: 0; border: 0; background: none; cursor: zoom-in; }
+.evo-ph img {
+  display: block; width: 100%; aspect-ratio: 3 / 2; object-fit: cover;
+  border: 1px solid var(--evo-line); border-radius: var(--evo-r); background: var(--gray-100);
+}
+.evo-ph__btn:hover img { border-color: var(--leaf-700); }
+.evo-ph figcaption { margin-top: .3rem; font-size: .75rem; line-height: 1.4; color: var(--gray-600); }
+
+/* shorter laptop screens: the same station, tightened so it still fits one
+   window. The full caption is always there in the viewer. */
+@media (min-width: 60rem) and (max-height: 56rem) {
+  .evo-st__canvas { width: min(calc(100% - 2.5rem), 58svh); }
+  .evo-cd { padding: .75rem 1.25rem; }
+  .sec--evo .evo-cd .evo-cd__head { margin-bottom: var(--sp-2); }
+  .evo-cd__who { margin-bottom: var(--sp-2); }
+  .evo-cd__sum { margin-bottom: var(--sp-2); line-height: 1.45; }
+  .evo-cd__cols { padding-top: var(--sp-2); }
+  .evo-cd ul { line-height: 1.4; }
+  .evo-cd__led { margin-top: var(--sp-2); padding-top: var(--sp-1); }
+  .evo-ph img { aspect-ratio: 16 / 9; }
+  .evo-ph figcaption { display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 2; line-clamp: 2; overflow: hidden; }
+  .evo-st__map figcaption { margin-top: 2.25rem; }
+}
+
+@media (min-width: 60rem) and (max-height: 50rem) {
+  .evo-st__canvas { width: min(calc(100% - 2.5rem), 55svh); }
+  .evo-st__step { width: 2rem; height: 2rem; }
+  .evo-st__nav { margin-bottom: var(--sp-1); }
+  .evo-cd { padding: .6rem 1.1rem; }
+  .evo-ph img { aspect-ratio: 2 / 1; }
+}
+
+/* one card and one set of photographs per station; print shows them all */
+.evo-cd:not(.is-current), .evo-ph:not(.is-current) { display: none; }
+
+/* narrow: the drawing gives way to a row of faces to swipe through */
+@media (max-width: 59.99rem) {
+  .evo-st__canvas { width: auto; aspect-ratio: auto; overflow-x: auto; padding: var(--sp-3); border: 1px solid var(--evo-hair); border-radius: var(--evo-r); background: var(--leaf-50); }
+  .evo-st__glyph { display: none; }
+  .evo-st__nodes { display: flex; gap: var(--sp-3); width: max-content; }
+  .evo-st__nodes li { position: static; width: auto; height: auto; }
+  .evo-node { position: static; transform: none; display: grid; justify-items: center; gap: .35rem; width: 6.5rem; height: auto; border-radius: 0; }
+  .evo-node .evo-node__face { width: 3.25rem; height: 3.25rem; }
+  .evo-node__tag, .at-r .evo-node__tag, .at-l .evo-node__tag, .at-t .evo-node__tag, .at-b .evo-node__tag {
+    position: static; transform: none; border: 0; background: none; padding: 0; text-align: center; max-width: none; width: auto;
+  }
+  .evo-st__map figcaption { text-align: left; margin-left: 0; }
+}
 
 /* -------------------------------------------------------------- VIEWER -- */
 
@@ -367,8 +348,10 @@ html.evo-open .ihp .toc { opacity: 0; visibility: hidden; pointer-events: none; 
 
 @media print {
   .sec--evo { margin: 0; width: auto; border: 0; }
-  .evo__controls, .evo__open { display: none; }
-  .evo__grid { display: block; }
-  .evo__card { break-inside: avoid; margin-bottom: var(--sp-4); }
+  .evo-cd:not(.is-current), .evo-ph:not(.is-current) { display: block; }
+  .evo-ph:not(.is-current) { display: grid; }
+  .evo-st__map, .evo-st__nav { display: none; }
+  .evo-st { display: block; }
+  .evo-cd { break-inside: avoid; }
   html.evo-open .ihp .toc { opacity: 1; visibility: visible; }
 }
