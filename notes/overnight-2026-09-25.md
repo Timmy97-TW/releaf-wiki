@@ -119,13 +119,13 @@ sections), Notebook (March to September index), Gallery, Inclusivity.
    has three criteria in 2026 and #1 includes the Safety Forms: the Project
    Safety Form is due 7 October 23:00, submitted by a PI.
 
-1. **The ten P1 inconsistencies** at the top of INCONSISTENCIES.md: the long
-   photometer run (336 / 434 / 400 h), the pump floor (230 mL/min quoted, 100.3
-   measured, 94 run), the membrane fibre count and lumen volume, the ACC
-   deaminase mass (36 / 37.6 / 41 / 42 kDa), the 150 mM root length (1.8 vs
-   1.364 mm), the light wavelengths, the 34 sentences naming the deleted page,
-   the containment layers, the software repository address, the Castillo-Hair
-   citation.
+1. **The P1 inconsistencies still open** at the top of INCONSISTENCIES.md,
+   each needing the team to say which record is right: the long photometer
+   run (336 / 434 / 400 h), the pump floor (230 mL/min quoted, 100.3 measured,
+   94 run), the membrane fibre count and lumen volume, the ACC deaminase mass
+   (36 / 37.6 / 41 / 42 kDa), the light wavelengths, the sentences naming the
+   deleted page, and the containment layers. (The root length, the software
+   address and the Castillo-Hair citation were fixed overnight.)
 2. **Farmer Chen's image consent** is not on record (a comment in the homepage
    source says so). Her photograph and words open the site.
 3. **Attributions**: the form frame now uses team 6072 instead of the 0000
