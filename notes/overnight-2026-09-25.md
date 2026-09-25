@@ -120,6 +120,16 @@ pages found no horizontal overflow, no unstyled boxes, no duplicate ids at
 runtime, and fixed the three it found (Dry Lab Notebook week labels, the
 Hardware film's pause button under the tray, Peptide Design's rounded chips).
 
+**A computed contrast sweep** of 42 pages at two widths (measuring the real
+pixels behind every line of text, photos included) fixed seven clear
+regressions: Engineering's cover subtitle (body grey on the dark photograph),
+a link on the homepage's dark section, an unstyled link on Hardware:
+Bioreactor, words in the rule-only grey on Math Model, Protein Design, Peptide
+Design and Experiments, and Hydroponics' contents rail printing over its text
+between 390 and 1100 px. Hardware's share is in
+`hardware-upstream-2026-09-25-contrast.patch` for Anton. What is dim on
+purpose, or needs a designer, is listed in `review-2026-09-25/contrast.md`.
+
 **Drafted from the wiki's own pages** (Status: Draft, each section with a note
 saying what to check): Contribution, Safety and Security (six of eight
 sections), Notebook (March to September index), Gallery, Inclusivity.
