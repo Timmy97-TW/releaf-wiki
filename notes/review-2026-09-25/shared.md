@@ -34,6 +34,14 @@ Measurement, Results, Attribution, Gallery and the hardware hub.
 | Contents rail scrolls inside itself | long rails (Entrepreneurship: 40 entries) were unreachable past the window; page.js keeps the lit entry in view |
 | Numeric heads align right, units keep their case, list defaults yield | `th.num`, `.u`, `:where(.sec)` lists |
 
+Second pass (after the lead's merges): `html.js` set by nav.js and
+`[data-needs-js]` revealed; tab strips hidden and every panel shown without
+scripts; Home/End on tabs; breadcrumbs wrap on phones; unused `.dl` removed;
+"Wet Lab Notebook" in the nav; a focus ring on every nav control, light and
+dark (the dark nav had none); duplicate heading ids fixed in page.js and
+ids.py. All 33 pages re-shot at 1440 and 390: no horizontal overflow, no
+duplicate ids, every rail link resolves.
+
 ### The nav panels (task 2)
 
 The icons were slop and are gone. Each of 26 pages had a stroked line icon in a
