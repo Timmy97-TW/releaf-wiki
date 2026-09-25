@@ -31,8 +31,10 @@ and naming.
    7.2 mL weighed, "roughly 200 mL" hold-up.
 4. **ACC deaminase mass.** 36, 37.6, 41 and 42 kDa for what a reader takes to
    be one protein, on the pages that carry the project's only protein result.
-5. **The 150 mM root length.** Plants, Results and Milestone publish 1.36 mm;
-   Math Model still says the Plants page carries 1.8 mm and 43-fold.
+5. **The 150 mM root length.** Resolved 25 Sep (d6b4f4a, bf86ef4) for the
+   stale quotations: Math Model M1, Experiments E9, Measurement M6 and Results
+   R2 now say Plants publishes 1.364 mm. The dead-seedling convention and the
+   docx correction are still for the team.
 6. **Green and red wavelengths.** 520 and 660 nm (LEDs) against 535 and 670 nm
    (literature) against 672 nm (Engineering) against 525 nm (Milestone).
 7. **The deleted Bioreactor Calculations page** is still named in 34 sentences
@@ -41,12 +43,12 @@ and naming.
 8. **Containment layers.** Entrepreneurship promises three independent layers
    including a kill switch; Safety and Human Practices say the second layer has
    not been built.
-9. **The software mirror address.** Software says the mirror goes to
-   `gitlab.igem.org/2026/software-tools/`; the 2026 address is
-   `gitlab.igem.org/2026/software/<team>/`. Best Software Tool requires it.
-10. **The Castillo-Hair citation.** One volume and one page number carry two
-    different paper titles across five pages, and one page also gives a
-    different author list.
+9. **The software mirror address.** Resolved 25 Sep (d10c538). Software now
+   gives `gitlab.igem.org/2026/software/<team>/`. The mirror itself is still to
+   be made before 21 October.
+10. **The Castillo-Hair citation.** Resolved 25 Sep (d928cb1). The DOI is the
+    *B. subtilis* optogenetics paper, and all six pages that cite it now carry
+    the same title and author list.
 
 ---
 
@@ -185,9 +187,11 @@ two that did not grow, and Plants, Results, Milestone and Sustainability already
 publish it. The three fix boxes that still say the wiki carries 1.8 mm are the
 stale part, not the data.
 
-Fix: update M1 on Math Model (including the 43-fold against 55-fold sentence),
-E9 on Experiments and M6 on Measurement to say Plants and the raw workbook now
-agree, and that the docx summaries are the files out of step.
+Fix: **Resolved 25 Sep (d6b4f4a, bf86ef4).** M1 on Math Model (including the
+43-fold sentence), E9 on Experiments, M6 on Measurement and R2 on Results now
+say Plants and the raw workbook agree and name the docx summaries as the files
+out of step. What is left for the team: write the dead-seedling convention down
+and correct or withdraw `Experiment Set 6 Root Length.docx`.
 Owners: Math Model (dry lab, modelling), Experiments and Measurement (wet lab). **P1**
 
 ## 7. The photometer's position in the loop
@@ -234,8 +238,10 @@ Owners: Entrepreneurship (entrepreneurship, human practices), Safety officer. **
 What the wiki supports: the publishing checklist. `2026/software-tools` does not
 exist.
 
-Fix: correct the sentence and do the mirror before 21 October. Best Software
-Tool requires the code on iGEM's GitLab, so this is worth marks on its own.
+Fix: **Address resolved 25 Sep (d10c538).** The sentence now reads
+`gitlab.igem.org/2026/software/<team>/`. The mirror itself is still outstanding
+and is due before 21 October; Best Software Tool requires the code on iGEM's
+GitLab.
 Owner: Software (dry lab, software sub-team). **P1**
 
 ## 10. The Castillo-Hair citation
@@ -252,8 +258,14 @@ optogenetics paper. So either Peptide Design and Packaging have the wrong title
 on the right reference, or they mean a second paper and have copied the wrong
 volume and pages. Math Model's author list is a third variant of the same entry.
 
-Fix: open the DOI, write one correct reference, and paste it into all five
-pages. Packaging's whole codon argument rests on it.
+Fix: **Resolved 25 Sep (d928cb1).** The DOI resolves to Castillo-Hair, Baerman,
+Fujita, Igoshin and Tabor, *Optogenetic control of Bacillus subtilis gene
+expression*, *Nature Communications* 10, 3099 (2019), checked through PubMed
+(PMID 31308373). Peptide Design and Packaging now carry that title with the DOI,
+and Math Model's author list was corrected. Still for the team: the sentence on
+Packaging that cites this reference for messenger RNA structure around the
+ribosome binding site needs its own source, because the codon argument rests on
+it.
 Owners: Peptide Design and Protein Design (dry lab, protein design), Math Model. **P2
 as a fact, P1 as a citation, because five pages carry it.**
 
@@ -272,8 +284,8 @@ the stronger record for dates; "Dingxi" is the more standard romanisation and is
 what Education uses. The second Dingxi date is 14 July on Education and 2 July
 on Plants and Notebook, and nothing on the wiki settles which.
 
-Fix: team to decide the dates from the survey sheets, then one spelling and one
-set of dates on Education, Plants and Notebook in one commit, and fill
+Fix: **Spelling resolved 25 Sep (e10f52c)**, Dingxi on Plants and Notebook, as
+on Education. Team to decide the dates from the survey sheets and to fill
 Education's two "school name to add" cells (Fushing is the likely high school,
 from the Milestone photo file name; confirm the romanisation with the school).
 Owners: Education team, Plants (wet lab, plant sub-team). **P2**
@@ -341,7 +353,9 @@ Plants, Safety, Notebook and Milestone are the **syringe filter** used to prepar
 the spray, which is a different object and is correct; only Entrepreneurship
 applies 0.22 µm to the membrane.
 
-Fix: 0.2 µm on Entrepreneurship, from the datasheet, in two places.
+Fix: **Resolved 25 Sep (1ba25fa).** Both membrane mentions on Entrepreneurship
+now read 0.2 µm. The containment-layer claim in the same sentence (fact 8) is
+untouched and still open.
 Owner: Entrepreneurship. **P2**
 
 ## 16. HADDOCK version and campaign count
@@ -374,7 +388,8 @@ Owner: Dry lab, protein design. **P2**
 What the wiki supports: Packaging. D-01 is the 9–23 lead, D-03 is the wild type,
 so Peptide Design's sentence has the wrong identifier.
 
-Fix: change D-01 to D-03 in that sentence on Peptide Design.
+Fix: **Resolved 25 Sep (9196383).** Peptide Design now reads D-03, D-06 and
+D-02, which matches its own cassette list and Packaging's table.
 Owner: Dry lab, protein design. **P2**
 
 ## 18. How many Pep sequences were aligned
@@ -437,8 +452,9 @@ Owner: Engineering. **P2**
 | `results/index.html` | R5, last sentence | "Engineering gives the 661 bp junction as CcaR F against CcaSm3 R" |
 | `engineering/index.html` | F11 | prints CcaR F against Csn R, from the gel legend |
 
-Fix: one date for module I; strike the last sentence of R5, which describes a
-version of Engineering that no longer exists.
+Fix: one date for module I, still open. **R5 resolved 25 Sep (6f0875c):** the
+primer sentence was struck, because both pages now print CcaR F against Csn R
+for junction C.
 Owners: Engineering, Results. **P2**
 
 ## 23. Temperature of the long run
@@ -521,17 +537,17 @@ than "never run", or say why the soil arm does not count. **P2**
 | Bilingual slides | `education/index.html` "Every slide we showed was bilingual" against the later finding that the decks became bilingual after trial 2 | P2 |
 | Lesson rebuild count | `sustainability/index.html` "rebuilt the lesson four times" against Education's four trials, which is three rounds of changes. The Milestone "third rewrite" sentence the notes cited came off the page with the old timeline | P3 |
 | SDG sets | `entrepreneurship/index.html` claims SDGs 2, 8, 11, 12, 13, 15; `sustainability/index.html` claims 2, 10, 4, 15 and explicitly declines 13 and 12 with reasons | P2 |
-| Geospatial routing tool | `geospatial-analysis/index.html` says the tool "fetches Leaflet from a CDN"; Leaflet is bundled locally | P2 |
+| Geospatial routing tool | Resolved 25 Sep (d277324). The bullet now says Leaflet is vendored under `routing/vendor/leaflet-1.9.4/` and keeps the OpenStreetMap tiles and OSRM routes as the open items | P2 |
 | Farmer's method | `entrepreneurship/index.html` says Ms. Chen "farms organically"; Human Practices, Sustainability and Geospatial all say natural farming, which is a different thing in Taiwan | P3 |
 | ReLeaf's sensing mechanism | `education/index.html` twice says ReLeaf is "built on a stress-responsive promoter"; Description and Engineering describe a green-light CcaS–CcaR switch driven by a forecast | P2 |
 | Prof. Cheng's name | `hardware/hydroponics/index.html` "Prof. Cheng Mei Jun" against "Cheng Mei-Chun" on Plants, Human Practices, Notebook, Safety and Gallery (and once on the hydroponics page itself) | P3 |
-| Renée Kuo | `assets/data/roster.js` and `team/index.html` have "Renee Kuo"; `drylab-notebook/index.html` and one line of `team/index.html` have "Renée Kuo" | P3 |
+| Renée Kuo | Resolved 25 Sep (071afa6). The notebook's three entries now read Renee Kuo, as on the roster and in her own profile | P3 |
 | Dr. Pak | `assets/data/roster.js` has "Dr. Pak"; `drylab-notebook/index.html` has "Dr. Pak K. Yuet" seven times | P3 |
 | Ambiguous first names | `engineering/index.html` credits "Olivia, Sophia"; the roster holds two Olivias and two Sophias. The same page writes "Sophie C" elsewhere, which is the pattern to copy | P3 |
 | Part naming | `description/index.html` says "LEA14"; Engineering and Parts call it "Lea", "Csn:LEA" and "LEA" | P3 |
-| fibre against fiber | `hardware/bioreactor/index.html` uses "fiber" 26 times and "fibre" once; `hardware/photometer/index.html` "fiber" 3 times; `description/index.html` "fiber" 7 times; `index.html` uses both 4 times each; everything else on the wiki (Measurement 16, drylab notebook 21, Entrepreneurship 11, Results 7, Software 5, Human Practices 8) uses "fibre" | P3 |
+| fibre against fiber | Description resolved 25 Sep (cf5c3d1): six places now read hollow-fibre. Still open on Anton's pages: `hardware/bioreactor/index.html` 27, its four `js/` files, `hardware/photometer/index.html` 3, and `software/ui/0906UI.html` 36 (hash-pinned). The FiberCell brand name in the dry lab notebook is correct as it stands | P3 |
 | American against British spelling | `description/index.html` mixes *recognize, localized, specialized, centralized, labor, fiber* with *colour, neighbour, labour, modelling, kilometres, defences*. Already tabulated in `notes/qa-2026-09-23/typos.md` §4 | P3 |
-| wetlab against wet lab | In visible prose this is down to two member bios in `assets/data/roster.js` ("one of wetlab instructors") and two data-folder names quoted on Measurement and Results. The `data-tab="wetlab"` attributes and CSS class names are code, not prose, and need no change | P3 |
+| wetlab against wet lab | Checked again 25 Sep: every remaining occurrence in prose is a file or folder name (`0923wetlab data/`, `Wiki 2/Wetlab/...`), a Zotero library folder (Engineering, Parts) or a member's own bio in `assets/data/roster.js`, so nothing on a page needs changing. The roster bio is the lead's call | P3 |
 | RELEAF / GEMS-Taiwan | Hardware prose still spells the project and team that way in places; titles and meta were fixed on 25 September. Rest of the wiki: ReLeaf, GEMS Taiwan | P3 |
 | Lower-case first names | The hardware notebook scans read "abby" and "jacquelyn"; the roster has two Abbys (Kao, Tsai) and Jacquelyn Inocencio. Fixing these means editing the scan source and re-exporting | P3 |
 | Photometer section numbering | `hardware/photometer/index.html` jumps 2.4 → 2.7, 3.2 → 3.5 and 4.3 → 4.5, and the bioreactor page cites "Photometer 3.5", so both change together | P3 |
