@@ -330,7 +330,7 @@ const SECTIONS = [
       },
       {
         name: "Neo Su", role: "Student Advisor",
-        photo: "assets/img/members/neo-su.jpg", workPhoto: "", goofyPhoto: "assets/img/members/goofy/neo-su.jpg",
+        photo: "assets/img/members/neo-su.jpg", workPhoto: "assets/img/members/work/neo-su.jpg", goofyPhoto: "assets/img/members/goofy/neo-su.jpg",
         grade: "", school: "", track: "",
         bio: "",
         tasks: ["Hardware", "Bioreactor", "Wiki"]
