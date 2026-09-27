@@ -113,6 +113,152 @@ PAGES = [
  ]},
 
 {
+ "slug": "biomanufacturing", "tab": "project", "title": "Biomanufacturing",
+ "lede": "What ReLeaf contributes to making things with biology, and the "
+         "evidence behind every claim we make about it.",
+ "owner": "Project leads",
+ "award": ("medal", "Biomanufacturing Village",
+           "ReLeaf competes in the Biomanufacturing Village. This page is "
+           "where the village question gets answered in one place: what does "
+           "this project contribute to making things with biology?",
+           "https://competition.igem.org/participation/villages"),
+ "sections": [
+   {"h": "What biomanufacturing means on this page",
+    "note": "Define the word before using it, in two sentences a judge and a "
+            "first-year student would both accept. The working definition: "
+            "biomanufacturing is using living cells as the production step "
+            "for something useful, under conditions somebody else could "
+            "repeat. It covers the organism, the vessel, the measurement, the "
+            "control and the product together, which is why a page about only "
+            "the organism is not a biomanufacturing page. Then state the "
+            "scope rule and hold to it for the rest of the page: every claim "
+            "here is about how the thing is made, not about what the peptide "
+            "does once it arrives. Plant results belong on the Plants page."},
+
+   {"h": "How to write this page",
+    "note": "Read this before writing anything below. Three rules. One: every "
+            "number carries a unit, a sample size and a source. Two: the "
+            "limit goes in the same paragraph as the result, never in a "
+            "footnote. Three: if we did not measure it, do not use a verb "
+            "that implies we did. The table is the house tone. Copy the "
+            "middle column.",
+    "table": (["Do not write", "Write instead", "Why"],
+              [["The reactor achieves stable continuous growth.",
+                "OD600 rose from A to B over C hours. A linear fit gives D per "
+                "hour, R-squared E, from one run.",
+                "A verb like achieves cannot be checked by a reader. A fit "
+                "statistic can."],
+               ["Fouling was negligible.",
+                "Fouling was not resolved. The pressure change over the run "
+                "sat below the accuracy of the sensor, so we report an upper "
+                "bound rather than a curve.",
+                "Saying what the instrument could not see is stronger than "
+                "drawing a flat line and hoping."],
+               ["Our system is low cost.",
+                "Nothing. Write no cost figure and no percentage saving until "
+                "a bill of materials exists in the repository.",
+                "The project brief forbids a cost claim without a BOM, and an "
+                "unsupported one discredits the numbers around it."],
+               ["The model shows a safe operating point.",
+                "The model outputs X at its default settings. This is a model "
+                "output, not a measurement. The experiment that would test it "
+                "is Y.",
+                "Labelling which numbers are modelled is what makes a reader "
+                "believe the measured ones."]])},
+
+   {"h": "Our claim, in one sentence",
+    "note": "One sentence, under forty words, naming what ReLeaf contributes "
+            "to biomanufacturing rather than to plant science. Write it last, "
+            "after the ledger below is filled, then move it up here. Test it "
+            "before you keep it: if another team could write the same "
+            "sentence about their own project, it is not specific yet."},
+
+   {"h": "Claim ledger",
+    "note": "Fill this table before writing any section below, because every "
+            "section below is one row expanded into prose. One row per claim "
+            "the page makes. Evidence tier is exactly one of: measured, "
+            "derived from our measurements, model output, literature value, "
+            "not yet established. A row with nothing in the last column is "
+            "not a claim, it is an opinion, and it comes off the page.",
+    "table": (["Claim", "Evidence tier", "Where the data lives",
+               "What would falsify it"],
+              [["", "", "", ""], ["", "", "", ""], ["", "", "", ""],
+               ["", "", "", ""], ["", "", "", ""]])},
+
+   {"h": "Making it where it is used",
+    "note": "Why this product is made at the point of use instead of in a "
+            "factory, argued on two axes that need no price: distance from "
+            "the point of use, and who has to agree before the machine makes "
+            "something different. Data to collect: the regulatory route for a "
+            "purified peptide against the route for a live engineered "
+            "organism, and at least one published failure of the do-it-"
+            "yourself alternative. One sourced failure beats three paragraphs "
+            "of benefit."},
+
+   {"h": "The reactor as a characterised unit operation",
+    "note": "The point of this section is that the vessel is characterised "
+            "rather than merely built. Every number needs the run it came "
+            "from.",
+    "subs": [
+      {"h": "Growth regime", "note": "Which run, how long, how many rows, and "
+       "the fit. Report both the linear and the exponential fit so the reader "
+       "can see why one was chosen, then name the operating mode the winning "
+       "fit implies. Data to collect if missing: a continuous OD log of at "
+       "least 100 hours with no gaps, and a volumetric check of the feed "
+       "rate, which is currently untraceable."},
+      {"h": "Hydraulics", "note": "Pressure drop against flow, with the rig "
+       "measured separately and subtracted. Report the module share of the "
+       "total, not the raw number, or the module resistance is overstated. "
+       "Data to collect if missing: replicate points, since the existing "
+       "sweep is one reading per setting."},
+      {"h": "Scale-up", "note": "State the transform explicitly: which "
+       "quantities stay constant as the unit count grows, and which one is "
+       "not protected by it. If a number here is a model output rather than a "
+       "bench measurement, say so in the same sentence as the number."},
+    ],
+    "figs": ["Pressure drop against flow for the module and for the rig "
+             "alone, with the difference plotted separately."]},
+
+   {"h": "Measurement you can trust without a technician",
+    "note": "The argument is not that our instrument is accurate. It is that "
+            "it reports when to stop believing it, because nobody is standing "
+            "next to it on a farm. Give the transfer function, the range over "
+            "which it was checked against a reference instrument, and the "
+            "ceiling above which we do not use it. Then give one worked "
+            "example of the instrument catching its own fault. Data to "
+            "collect if missing: a cell dilution series against dry weight or "
+            "plate counts, with replicates and a stated limit of detection. "
+            "Absorbance against a particle standard proves linearity, not "
+            "cell count."},
+
+   {"h": "Control: light as the actuator",
+    "note": "Why light rather than a chemical inducer, argued in "
+            "manufacturing terms: what it removes from the process and what "
+            "it adds. Name the timescale of the biological response against "
+            "the timescale of our sensing, because that ratio is the whole "
+            "case for controlling in real time. Then state the physical limit "
+            "honestly, which is how far light penetrates at high cell "
+            "density. Data to collect if missing: a calibrated intensity at "
+            "the vessel wall in µmol per square metre per second, and a plain "
+            "statement of whether the light panel is built or still only "
+            "specified."},
+
+   {"h": "Product, yield, and what we are not claiming",
+    "note": "Give the yield as a bound with its arithmetic shown, not as a "
+            "prediction, and say how far below that bound a real result could "
+            "reasonably fall. Then list the blockers between the current "
+            "construct and a measured titre, each with the evidence that "
+            "identified it. A blocker written down with its cause is a "
+            "result. A blocker left off the page is a hole a judge finds "
+            "instead of you.",
+    "callout": ("unproven", "State this plainly",
+                "If no titre, no activity assay and no induction curve exist "
+                "in our hands at the freeze, this page says so in one "
+                "sentence and stops. An unmeasured number presented as a "
+                "result costs more than an absent one.")},
+ ]},
+
+{
  "slug": "engineering", "tab": "project", "title": "Engineering Success",
  "lede": "Fifteen design, build, test and learn cycles across a perfusion "
          "reactor, an in-line photometer and an LED array, and what each one "
