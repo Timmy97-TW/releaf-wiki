@@ -76,14 +76,14 @@ const SECTIONS = [
       },
       {
         name: "Abigail Lin",
-        photo: "assets/img/members/abigail-lin.jpg", workPhoto: "", goofyPhoto: "",
+        photo: "assets/img/members/abigail-lin.jpg", workPhoto: "", goofyPhoto: "assets/img/members/goofy/abigail-lin.jpg",
         grade: "Freshman", school: "KCIS", track: "Wet Lab",
         bio: "Hi I'm Abigail! I love solving mystery novels, and to me, the plant world is the ultimate unsolved case. Outside of biology, I enjoy painting, diving, and scouting. I joined iGEM to explore the \"art\" of biological systems. Just like playing the cello, iGEM requires lots of harmony and creativity!",
         tasks: ["Lab", "Cloning", "Plant", "Art", "Education", "Video"]
       },
       {
         name: "Alex Li",
-        photo: "assets/img/members/alex-li.jpg", workPhoto: "assets/img/members/work/alex-li.jpg", goofyPhoto: "",
+        photo: "assets/img/members/alex-li.jpg", workPhoto: "assets/img/members/work/alex-li.jpg", goofyPhoto: "assets/img/members/goofy/alex-li.jpg",
         grade: "Sophomore", school: "KCIS", track: "Wet Lab",
         bio: "Hi! I'm Alex. I love to play board games and listen to music. I joined iGEM because I enjoy learning biology and I am looking foward to create a significant project that will really impact the world.",
         tasks: ["Lab", "Plant"]
@@ -97,7 +97,7 @@ const SECTIONS = [
       },
       {
         name: "Anton Lin",
-        photo: "assets/img/members/anton-lin.jpg", workPhoto: "", goofyPhoto: "",
+        photo: "assets/img/members/anton-lin.jpg", workPhoto: "assets/img/members/work/anton-lin.jpg", goofyPhoto: "",
         grade: "Freshman", school: "TAS", track: "Dry Lab",
         bio: "Hi, I’m Anton. I’m interested in engineering and robotics, and I joined iGEM to learn more about synthetic biology and how to solve real-world problems. Outside of that, I also enjoy golf, traveling, and music.",
         tasks: ["Bioreactor", "Hardware", "Outreach", "Wiki", "Lab Notebook", "Education"]
@@ -111,7 +111,7 @@ const SECTIONS = [
       },
       {
         name: "Audrey Hsieh",
-        photo: "assets/img/members/audrey-hsieh.jpg", workPhoto: "", goofyPhoto: "",
+        photo: "assets/img/members/audrey-hsieh.jpg", workPhoto: "assets/img/members/work/audrey-hsieh.jpg", goofyPhoto: "assets/img/members/goofy/audrey-hsieh.jpg",
         grade: "Freshman", school: "KCIS", track: "Wet Lab",
         bio: "Hi! I'm Audrey and I enjoy listening to music and traveling. I joined iGEM to learn more about synthetic biology and to make more friends from different schools with the same passion!",
         tasks: ["Lab", "Plant", "Education", "Entrepreneurship", "Art", "Video"]
@@ -153,7 +153,7 @@ const SECTIONS = [
       },
       {
         name: "Jacquelyn Inocencio",
-        photo: "assets/img/members/jacquelyn-inocencio.jpg", workPhoto: "", goofyPhoto: "",
+        photo: "assets/img/members/jacquelyn-inocencio.jpg", workPhoto: "assets/img/members/work/jacquelyn-inocencio.jpg", goofyPhoto: "assets/img/members/goofy/jacquelyn-inocencio.jpg",
         grade: "Junior", school: "TAS", track: "Dry Lab",
         bio: "Hi! I’m Jacquelyn, and I joined iGEM because I’m really interested in using synthetic biology to create practical, real-world solutions. I love hands-on science and figuring out how ideas can actually work outside the lab. Outside the lab, I enjoy trying new food spots, hanging out with my friends, and shopping!",
         tasks: ["Outreach", "Wiki", "Education", "Video"]
@@ -181,7 +181,7 @@ const SECTIONS = [
       },
       {
         name: "Noah Tau",
-        photo: "assets/img/members/noah-tau.jpg", workPhoto: "", goofyPhoto: "assets/img/members/goofy/noah-tau.jpg",
+        photo: "assets/img/members/noah-tau.jpg", workPhoto: "assets/img/members/work/noah-tau.jpg", goofyPhoto: "assets/img/members/goofy/noah-tau.jpg",
         grade: "Sophomore", school: "TAS", track: "Dry Lab",
         bio: "Hi, my name is Noah and my passion lies in robotics, specfically FRC at the moment. I joined iGEM because of my deep passion towards countless facets of engineering and I'd love to explore different types to broaden my horizons and learn more about the world we live in. I look forward to working alongside other passionate hardworkers to understand difficult topics and learn how to better work as a group.",
         tasks: ["Bioreactor", "Hardware", "Wiki"]
@@ -202,7 +202,7 @@ const SECTIONS = [
       },
       {
         name: "Phoebe Chen",
-        photo: "assets/img/members/phoebe-chen.jpg", workPhoto: "", goofyPhoto: "",
+        photo: "assets/img/members/phoebe-chen.jpg", workPhoto: "assets/img/members/work/phoebe-chen.jpg", goofyPhoto: "",
         grade: "Sophomore", school: "WEGO", track: "Wet Lab",
         bio: "Hi, I'm Phoebe! One thing about me is that I love animals and listening to music, but I'm obsessed with reading novels. I joined iGEM due to my interest in biology and partly in hopes of meeting people with the same passion as I have. Looking forward to having a great time at Paris in October!",
         tasks: ["Model", "Lab", "Education"]
@@ -216,7 +216,7 @@ const SECTIONS = [
       },
       {
         name: "Ryan Wei",
-        photo: "assets/img/members/ryan-wei.jpg", workPhoto: "", goofyPhoto: "assets/img/members/goofy/ryan-wei.jpg",
+        photo: "assets/img/members/ryan-wei.jpg", workPhoto: "assets/img/members/work/ryan-wei.jpg", goofyPhoto: "assets/img/members/goofy/ryan-wei.jpg",
         grade: "Junior", school: "FHJH", track: "Wet Lab",
         bio: "Hi, I'm Ryan Wei! I love music and anime. I'm passionate of math and biology and I am looking forward to solve problems in the world using synthetic biology.",
         tasks: ["Lab", "Protectant", "Education"]
@@ -258,7 +258,7 @@ const SECTIONS = [
       },
       {
         name: "Sophie Chen",
-        photo: "assets/img/members/sophie-chen.jpg", workPhoto: "", goofyPhoto: "assets/img/members/goofy/sophie-chen.jpg",
+        photo: "assets/img/members/sophie-chen.jpg", workPhoto: "assets/img/members/work/sophie-chen.jpg", goofyPhoto: "assets/img/members/goofy/sophie-chen.jpg",
         grade: "Sophomore", school: "TES", track: "Wet Lab",
         bio: "Hi, I’m Sophie. I'm interested in math and chemistry and joined iGEM to work on a meaningful project that could make a difference. Outside of that, I like sports, art, and music.",
         tasks: ["Lab", "Cloning"]
@@ -272,7 +272,7 @@ const SECTIONS = [
       },
       {
         name: "Sophie Liu",
-        photo: "assets/img/members/sophie-liu.jpg", workPhoto: "", goofyPhoto: "",
+        photo: "assets/img/members/sophie-liu.jpg", workPhoto: "assets/img/members/work/sophie-liu.jpg", goofyPhoto: "",
         grade: "Sophomore", school: "TAS", track: "Wet Lab",
         bio: "Hi, I'm Sophie! I love listening to music, studying at cafes, and going out with my friends. I joined igem to collaborate with like-minded peers to work on a meaningful real-world project.",
         tasks: ["Video", "Lab", "Plant", "Model", "Education", "Entrepreneurship"]
@@ -330,7 +330,7 @@ const SECTIONS = [
       },
       {
         name: "Neo Su", role: "Student Advisor",
-        photo: "assets/img/members/neo-su.jpg", workPhoto: "", goofyPhoto: "",
+        photo: "assets/img/members/neo-su.jpg", workPhoto: "", goofyPhoto: "assets/img/members/goofy/neo-su.jpg",
         grade: "", school: "", track: "",
         bio: "",
         tasks: ["Hardware", "Bioreactor", "Wiki"]
@@ -344,7 +344,7 @@ const SECTIONS = [
       },
       {
         name: "Venus Tay", role: "Student Advisor",
-        photo: "assets/img/members/venus-tay.jpg", workPhoto: "assets/img/members/work/venus-tay.jpg", goofyPhoto: "",
+        photo: "assets/img/members/venus-tay.jpg", workPhoto: "assets/img/members/work/venus-tay.jpg", goofyPhoto: "assets/img/members/goofy/venus-tay.jpg",
         grade: "Sophomore", school: "TAS", track: "",
         bio: "",
         tasks: ["Lab"]
@@ -368,7 +368,7 @@ const SECTIONS = [
     { title: "", members: [
       {
         name: "Timmy", role: "Dry Lab Instructor",
-        photo: "assets/img/members/timmy.jpg", workPhoto: "", goofyPhoto: "",
+        photo: "assets/img/members/timmy.jpg", workPhoto: "assets/img/members/work/timmy.jpg", goofyPhoto: "",
         grade: "", school: "", track: "",
         bio: "Timmy the drylab instructor here. This year we put plants under stress and watch who breaks first, sometimes it’s the system, sometimes it’s us. That’s fine. Not everything survives hardships. But often times that’s how you find the gems.",
         tasks: []
@@ -411,7 +411,7 @@ const SECTIONS = [
       },
       {
         name: "Dr. Pak", role: "Project Advisor",
-        photo: "", workPhoto: "", goofyPhoto: "",
+        photo: "", workPhoto: "assets/img/members/work/dr-pak.jpg", goofyPhoto: "",
         grade: "", school: "", track: "",
         bio: "",
         tasks: []
