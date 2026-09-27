@@ -15,6 +15,7 @@
     engineering: '<path d="M20.2 12a8.2 8.2 0 1 1-2.7-6.1"/><path d="M20.6 3.8v4.4h-4.4"/><circle cx="12" cy="12" r="2.4"/>',
     contribution: '<path d="M12 19.5V8"/><path d="M7.6 12.4 12 8l4.4 4.4"/><path d="M4.5 20.5h15"/>',
     results: '<path d="M4.5 20h15"/><path d="M6.8 17.5v-5M11.4 17.5v-9M16 17.5v-6.5"/><path d="M5.5 8.5 10 5l3.4 2.6L19 3.5"/>',
+    biomanufacturing: '<path d="M4.6 5.4h8.8v11.2a4.4 4.4 0 0 1-8.8 0Z"/><path d="M4.6 11.7c1.5 1.2 2.9 1.2 4.4 0s2.9-1.2 4.4 0"/><path d="M6.6 3.4h4.8"/><path d="M15.6 9.6h4.6"/><path d="M18 7.3l2.4 2.3-2.4 2.3"/>',
     /* Wetlab */
     experiments: '<path d="M10 3.5v5.6l-4.6 8.3A2 2 0 0 0 7.2 20.5h9.6a2 2 0 0 0 1.8-3.1L14 9.1V3.5"/><path d="M9 3.5h6"/><path d="M7.4 14.5h9.2"/>',
     parts: '<rect x="3.8" y="4.2" width="7" height="7" rx="1.6"/><rect x="13.2" y="12.8" width="7" height="7" rx="1.6"/><path d="M10.8 7.7h3.6a2 2 0 0 1 2 2v3.1"/>',

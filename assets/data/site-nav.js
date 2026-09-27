@@ -33,6 +33,8 @@ const NAV = [
     pages: [
       { title: "Description",  slug: "description",  icon: "description",
         caption: "The problem we picked, the system we designed, and why it had to be alive." },
+      { title: "Biomanufacturing", slug: "biomanufacturing", icon: "biomanufacturing",
+        caption: "What ReLeaf contributes to making things with biology, and the evidence behind each claim." },
       { title: "Engineering",  slug: "engineering",  icon: "engineering",
         caption: "Every design, build, test and learn cycle we went through." },
       { title: "Contribution", slug: "contribution", icon: "contribution",
