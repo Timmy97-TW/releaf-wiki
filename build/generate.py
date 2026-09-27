@@ -276,9 +276,9 @@ def build(page):
 {pagenav}  </nav>
 
 {footer}
-  <script src="{base}assets/data/site-nav.js"></script>
-  <script src="{base}assets/js/nav.js"></script>
-  <script src="{base}assets/js/page.js"></script>
+  <script src="{base}assets/data/site-nav.js" fetchpriority="high"></script>
+  <script src="{base}assets/js/nav.js" fetchpriority="high"></script>
+  <script src="{base}assets/js/page.js" fetchpriority="high"></script>
 </body>
 </html>
 """.format(
