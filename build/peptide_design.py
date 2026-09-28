@@ -4,9 +4,9 @@
 
     python3 build/peptide_design.py
 
-The page carries four things that are the same data drawn four ways — the
+The page carries four things that are the same data drawn four ways, the
 per-residue interface map, the seventeen-sequence Pep alignment, the truncation
-ladder and the Pearce benchmark — and every one of them is a grid or a chart
+ladder and the Pearce benchmark, and every one of them is a grid or a chart
 with more cells than anyone should type by hand. So the markup is generated
 here, from the numbers as they came off the analyses, and the result is a
 plain static file: the sequence strip, the alignment, both charts and every
@@ -38,27 +38,27 @@ OUT = os.path.join(ROOT, "peptide-design", "index.html")
 # cons   fraction of the 17 aligned Pep sequences carrying the modal residue
 RES = [
     # i  aa  sasa  hb sb  cls        p1 partner                    p2           cons   note
-    (1,  "G",   0, 0, 0, "none",    "—",                     "none",      0.353, "Disordered in 5GR8. Deleted in the 9–23 constructs."),
-    (2,  "I",   0, 0, 0, "none",    "—",                     "none",      0.294, "Disordered in 5GR8."),
-    (3,  "L",   0, 0, 0, "none",    "—",                     "none",      0.353, "Disordered in 5GR8."),
-    (4,  "I",   0, 0, 0, "none",    "—",                     "none",      0.353, "The one residue separating BoPep4 from <i>B.&nbsp;rapa</i> Pep4, which carries Val here."),
-    (5,  "G",   0, 0, 0, "none",    "—",                     "none",      0.294, "Disordered in 5GR8."),
-    (6,  "S",   0, 0, 0, "none",    "—",                     "none",      0.294, "Last residue before the interface starts."),
+    (1,  "G",   0, 0, 0, "none",    "none",                     "none",      0.353, "Disordered in 5GR8. Deleted in the 9–23 constructs."),
+    (2,  "I",   0, 0, 0, "none",    "none",                     "none",      0.294, "Disordered in 5GR8."),
+    (3,  "L",   0, 0, 0, "none",    "none",                     "none",      0.353, "Disordered in 5GR8."),
+    (4,  "I",   0, 0, 0, "none",    "none",                     "none",      0.353, "The one residue separating BoPep4 from <i>B.&nbsp;rapa</i> Pep4, which carries Val here."),
+    (5,  "G",   0, 0, 0, "none",    "none",                     "none",      0.294, "Disordered in 5GR8."),
+    (6,  "S",   0, 0, 0, "none",    "none",                     "none",      0.294, "Last residue before the interface starts."),
     (7,  "K",  70, 1, 1, "anchor",  "Glu199",                     "conserved", 0.647, "First rung of the basic belt. Lost at truncation 8–23."),
-    (8,  "K",  14, 0, 0, "none",    "—",                     "unmapped",  0.353, "Inside the bound stretch and still solvent-facing: nothing within 4.5&nbsp;&Aring; on PEPR1 in any model. This is the position K8Q was meant to exploit."),
+    (8,  "K",  14, 0, 0, "none",    "none",                     "unmapped",  0.353, "Inside the bound stretch and still solvent-facing: nothing within 4.5&nbsp;&Aring; on PEPR1 in any model. This is the position K8Q was meant to exploit."),
     (9,  "R", 123, 3, 3, "anchor",  "Asp179",                     "conserved", 0.529, "The strongest single anchor in the peptide, and the residue the truncation ladder was built around."),
-    (10, "P",   0, 0, 0, "none",    "—",                     "unmapped",  0.412, "Solvent-exposed proline."),
-    (11, "R",  78, 2, 1, "anchor",  "Asp294",                     "degraded",  0.588, "PEPR2 has no acidic partner here — one of the two mid-belt losses that narrow its selectivity."),
+    (10, "P",   0, 0, 0, "none",    "none",                     "unmapped",  0.412, "Solvent-exposed proline."),
+    (11, "R",  78, 2, 1, "anchor",  "Asp294",                     "degraded",  0.588, "PEPR2 has no acidic partner here, one of the two mid-belt losses that narrow its selectivity."),
     (12, "E",  86, 1, 0, "buried",  "His227",                     "degraded",  0.412, "PEPR2 has no basic partner here."),
-    (13, "P",  12, 0, 0, "none",    "—",                     "unmapped",  0.412, "Solvent-exposed proline."),
+    (13, "P",  12, 0, 0, "none",    "none",                     "unmapped",  0.412, "Solvent-exposed proline."),
     (14, "H",  80, 0, 0, "buried",  "packing",                    "unmapped",  0.235, "Buried by packing, with no polar partner. AtPep1 carries Val at this position."),
     (15, "S",  96, 2, 0, "core",    "Asp273",                     "conserved", 1.000, "Invariant across all seventeen aligned Peps. Pearce measured a hundredfold activity loss for S15A."),
     (16, "S",  40, 1, 0, "core",    "Asn321",                     "conserved", 1.000, "Invariant across all seventeen aligned Peps."),
-    (17, "G",  25, 0, 0, "partial", "—",                     "unmapped",  1.000, "Invariant, and the most expensive residue in the peptide to touch: G17A costs more than four thousandfold."),
+    (17, "G",  25, 0, 0, "partial", "none",                     "unmapped",  1.000, "Invariant, and the most expensive residue in the peptide to touch: G17A costs more than four thousandfold."),
     (18, "K",  85, 2, 2, "anchor",  "Glu324, Asp348",             "partial",   0.471, "Salt-bridges Asp348 and sits over Phe371. AtPep1 has Arg here, which is why K18R was proposed and then withdrawn."),
-    (19, "P",   0, 0, 0, "none",    "—",                     "unmapped",  0.765, "Solvent-exposed proline."),
+    (19, "P",   0, 0, 0, "none",    "none",                     "unmapped",  0.765, "Solvent-exposed proline."),
     (20, "G",  45, 0, 0, "buried",  "packing",                    "unmapped",  1.000, "Invariant across all seventeen aligned Peps."),
-    (21, "G",  37, 2, 0, "partial", "—",                     "unmapped",  0.471, "AtPep1 carries Gln here and inserts it into a BAK1 cavity. A glycine cannot fill that cavity."),
+    (21, "G",  37, 2, 0, "partial", "none",                     "unmapped",  0.471, "AtPep1 carries Gln here and inserts it into a BAK1 cavity. A glycine cannot fill that cavity."),
     (22, "H", 104, 1, 3, "anchor",  "Glu439",                     "conserved", 0.471, "Second-most-buried residue in the peptide."),
     (23, "N", 170, 4, 0, "anchor",  "Asp441, Asn465, Arg487",     "conserved", 0.706, "The master clamp. Its free α-carboxylate salt-bridges Arg487 at 2.40&nbsp;&Aring; in the crystal. Anything fused after it removes that bond."),
 ]
@@ -89,7 +89,7 @@ ALN = [
     ("AtPep5",       "SLNVMRKGIRK-QPVSSGKRGGVN", "Arabidopsis"),
     ("AtPep6",       "-ITAVLRRRPRPPPYSSGRPGQNN", "Arabidopsis"),
     ("AtPep7",       "VSGNVAARKGK-QQTSSGKGGGTN", "Arabidopsis"),
-    ("BoPep4",       "GILIGSKKRPR-EPHSSGKPGGHN", "B. oleracea — our design"),
+    ("BoPep4",       "GILIGSKKRPR-EPHSSGKPGGHN", "B. oleracea, our design"),
     ("BnPep1 B6E2",  "SRGVKAKTKKK-EQKSSGRPGQHH", "B. napus"),
     ("BnPep4 E5L6",  "GILVGSKKRPR-EPHSSGKPGGHS", "B. napus"),
     ("BnPep4 UY23",  "PRKPPKKLQQK-PRDSSGKPGRIN", "B. napus"),
@@ -195,7 +195,7 @@ LEDGER = [
      "AlphaFold3 confidence, our docking, Pearce&nbsp;2008 and Cui&nbsp;2024 all agree the N-terminal third is dispensable.",
      "Four independent lines."),
     ("qualified", "The binding cliff sits at Arg9",
-     "Our docking places it at 9–23 and AlphaFold3 places it at 14–23 — five residues apart. The docking component of that verdict is a length threshold (see&nbsp;§6).",
+     "Our docking places it at 9–23 and AlphaFold3 places it at 14–23, five residues apart. The docking component of that verdict is a length threshold (see&nbsp;§6).",
      "State it as a range, 9 to 14, with both methods named."),
     ("qualified", "PEPR2 conserves the anchors and degrades the mid-belt",
      "The PEPR2 ectodomain has no experimental structure. Every PEPR2 number rests on an AlphaFold model, and no per-residue confidence filter was applied before docking it.",
@@ -451,8 +451,8 @@ def ladder_block():
             "<tr><td>%d&ndash;23</td><td class=\"mono\">%s</td><td>%d</td><td>%+d</td>"
             "<td>%.1f</td><td>%s</td><td>%.1f</td><td>%s</td><td>%s</td><td>%s</td></tr>"
             % (s, frag, len(frag), net_charge(frag), sc1,
-               ("%.2f" % ip1) if ip1 else "&mdash;", sc1 / b1 * 1000,
-               ("%.2f" % ip2) if ip2 else "&mdash;",
+               ("%.2f" % ip1) if ip1 else ",", sc1 / b1 * 1000,
+               ("%.2f" % ip2) if ip2 else ",",
                ", ".join(SEQ[p - 1] + str(p) for p in kept), verdict)
         )
     table = ('<div class="tablewrap tablewrap--wide"><table class="data">\n'
@@ -525,7 +525,7 @@ def bench_chart():
     g.append('<line class="pd-axis" x1="%.1f" y1="%.1f" x2="%.1f" y2="%.1f" />' % (x0 - 14, y1 + 12, x1 + 14, y1 + 12))
     for s in (-144, -150, -156, -162, -168):
         g.append('<text class="pd-ax" x="%.1f" y="%.1f" text-anchor="middle">%d</text>' % (bx(s), y1 + 28, s))
-    g.append('<text class="pd-ax pd-ax--t" x="470" y="252" text-anchor="middle">HADDOCK score, pooled over both receptors &mdash; the model predicts stronger binding to the right</text>')
+    g.append('<text class="pd-ax pd-ax--t" x="470" y="252" text-anchor="middle">HADDOCK score, pooled over both receptors , the model predicts stronger binding to the right</text>')
     g.append('<text class="pd-ax" x="%.1f" y="30" text-anchor="start">less active</text>' % (x0 - 14))
     # fourteen of the sixteen sit on the same activity value, so their labels
     # collide. Stagger them in a fixed cycle instead of moving any point.
@@ -1014,8 +1014,8 @@ JS = r"""
       $("#lr-len").textContent = d.seq.length + " aa / " + (d.q >= 0 ? "+" : "") + d.q;
       $("#lr-s1").innerHTML = "−" + Math.abs(d.s1).toFixed(1);
       $("#lr-n1").innerHTML = "−" + Math.abs(d.n1).toFixed(1);
-      $("#lr-ip").innerHTML = (d.ip1 ? d.ip1.toFixed(2) : "—") +
-        " · PEPR2 " + (d.ip2 ? d.ip2.toFixed(2) : "—");
+      $("#lr-ip").innerHTML = (d.ip1 ? d.ip1.toFixed(2) : "none") +
+        " · PEPR2 " + (d.ip2 ? d.ip2.toFixed(2) : "none");
       $("#lr-anch").textContent = d.anchors;
     }
     slider.addEventListener("input", function () { readRung(Number(slider.value)); });
@@ -1195,7 +1195,7 @@ def build():
     A('      <div class="toc__inner"><p class="toc__title">On this page</p></div>')
     A('    </details>')
     A('')
-    A('    <main class="pagebody">')
+    A('    <main class="pagebody ai">')
     A(BODY)
     A('    </main>')
     A('  </div>')
@@ -1400,7 +1400,7 @@ BODY = """
           block sits exactly where the crystal puts the interface, which is the subject of
           the next section. The second is Asn23: it is the last residue in twelve of the
           seventeen, and the others end in His, Ser, Asp or Thr. So the family does not
-          conserve the asparagine side chain as strictly as it conserves Gly17 &mdash; and
+          conserve the asparagine side chain as strictly as it conserves Gly17 , and
           Pearce measured the same thing directly, since replacing Asn23 with alanine is
           tolerated while <i>removing</i> it costs about 400-fold&nbsp;[2]. What is
           conserved is the free carboxylate at the end of the chain, not the side chain
@@ -1433,8 +1433,8 @@ BODY = """
         <p>
           The shape of that strip is the whole design brief. Nothing is buried until
           Lys7. From there the peptide runs a belt of basic residues along a row of
-          receptor carboxylates &mdash; Lys7 to Glu199, Arg9 to Asp179, Arg11 to Asp294,
-          Lys18 to Glu324 and Asp348, His22 to Glu439 &mdash; and finishes with Asn23
+          receptor carboxylates , Lys7 to Glu199, Arg9 to Asp179, Arg11 to Asp294,
+          Lys18 to Glu324 and Asp348, His22 to Glu439 , and finishes with Asn23
           buried in a pocket at 170&nbsp;&Aring;&sup2;, more than any other residue, held
           by three receptor side chains at once.
         </p>
@@ -1500,7 +1500,7 @@ BODY = """
               The invariant core <code>Ser15, Ser16, Gly17, Gly20</code> and the C-terminal
               <code>Asn23</code>, plus the belt anchors <code>Lys7, Arg9, Arg11, Lys18,
               His22</code>. Every one of these is either invariant across the family, buried
-              at the interface, or measured as costly by Pearce &mdash; and most are all three.
+              at the interface, or measured as costly by Pearce , and most are all three.
             </p>
           </div>
           <div class="pd-rule pd-rule--free">
@@ -1528,7 +1528,7 @@ BODY = """
           If residues 1&ndash;6 do nothing at the receptor, how much further can the
           peptide be cut? Cutting is worth something: a shorter payload is cheaper to
           synthesise, and moving the mature N-terminus changes the charge the signal
-          peptidase sees. So the whole ladder was built rather than one guess &mdash;
+          peptidase sees. So the whole ladder was built rather than one guess ,
           every N-terminal truncation from 1&ndash;23 down to 17&ndash;23, docked against
           both receptors and co-folded in AlphaFold3. Seventeen fragments, two receptors,
           thirty-four complexes.
@@ -1636,9 +1636,9 @@ BODY = """
         <p>
           The audit started as a complaint. A team member pointed out that the docking had
           been run without an inspectable statement of its restraints and search space.
-          That objection is partly a category error &mdash; HADDOCK has no search box to
+          That objection is partly a category error , HADDOCK has no search box to
           report, because its search space <i>is</i> the list of residues declared active
-          at the interface&nbsp;[4] &mdash; and partly correct, because that list had never
+          at the interface&nbsp;[4] , and partly correct, because that list had never
           been written down anywhere a reader could find it. Reconstructing it from the run
           trees turned up four problems, and the one that mattered was not the missing
           documentation.
@@ -1828,10 +1828,10 @@ BODY = """
 
         <p>
           A sequence the receptor accepts is worth nothing if the chassis will not initiate
-          translation on its messenger RNA. The expression cassette is fixed &mdash; a
+          translation on its messenger RNA. The expression cassette is fixed , a
           green-light-inducible promoter, the MF001 ribosome binding site with its
           <code>AAGGAGG</code> core, the SamyQ secretion signal, the payload, the tag, the
-          terminator &mdash; so the only free variable is synonymous codon choice, and the
+          terminator , so the only free variable is synonymous codon choice, and the
           objective is the unpaired probability of two regions computed from the ViennaRNA
           base-pair matrix at 37&nbsp;&deg;C: the fifteen bases from the start codon, and
           the Shine&ndash;Dalgarno core. The reference is a gene that works in this chassis,
@@ -1857,7 +1857,7 @@ BODY = """
           <figcaption>
             <b>Figure 5.</b> The initiation bottleneck by payload and stage. Optimising for
             codon usage alone gives an adaptation index of 0.87 to 0.89 and a bottleneck
-            near 0.054 &mdash; the Shine&ndash;Dalgarno core essentially fully occluded in
+            near 0.054 , the Shine&ndash;Dalgarno core essentially fully occluded in
             every case.
             <span class="prov">Generated from our own ViennaRNA output. Scaled only.</span>
           </figcaption>
@@ -1880,8 +1880,8 @@ BODY = """
         <h3>The signal peptide was screened and then left alone</h3>
         <p>
           A panel of <i>B.&nbsp;subtilis</i> Sec signal peptides was ranked on the
-          determinants known to matter &mdash; n-region charge, h-region hydrophobicity and
-          length, and the &minus;3/&minus;1 cleavage rule &mdash; from verified UniProt
+          determinants known to matter , n-region charge, h-region hydrophobicity and
+          length, and the &minus;3/&minus;1 cleavage rule , from verified UniProt
           sequences. SamyQ, the signal peptide already in our cassette, lands in the
           favourable zone with an n-region charge of +4, a hydrophobic core mean of 1.65
           and a clean A-X-A cleavage site; AprE is the best-matched alternative and AmyE
@@ -2035,7 +2035,7 @@ BODY = """
           The remaining computational item is a narrow, pre-registered re-run: the sixteen
           equal-length analogues against PEPR1 only, from unbound conformer ensembles, with
           crystal-derived restraints, full sampling, three seeds, and cluster-mean scoring.
-          The pass criterion is committed before the runs start &mdash; Spearman &rho;
+          The pass criterion is committed before the runs start , Spearman &rho;
           above +0.5 at p&nbsp;&lt;&nbsp;0.05, with at least two of G17A, G17P and S15A in
           the four worst-scoring analogues. Anything less means the protocol has no
           substitution-level resolution and every remaining score-difference claim comes
@@ -2098,7 +2098,7 @@ BODY = """
           <li>Brockmeier, U. <i>et al.</i> Systematic screening of all signal peptides from <i>Bacillus subtilis</i>. <i>J. Molecular Biology</i> <b>362</b>, 393&ndash;402 (2006).</li>
           <li>Cui, J. <i>et al.</i> Plant elicitor peptides and abiotic stress tolerance. <i>Antioxidants</i> <b>13</b>, 549 (2024).</li>
           <li>Sun, Y. <i>et al.</i> Structural basis for flg22-induced activation of the Arabidopsis FLS2&ndash;BAK1 immune complex. <i>Science</i> <b>342</b>, 624&ndash;628 (2013). PDB&nbsp;4MN8.</li>
-          <li>Bonvin Lab. HADDOCK best practice guide &mdash; peptide docking. <a href="https://www.bonvinlab.org/software/bpg/peptides/">bonvinlab.org/software/bpg/peptides</a>.</li>
+          <li>Bonvin Lab. HADDOCK best practice guide , peptide docking. <a href="https://www.bonvinlab.org/software/bpg/peptides/">bonvinlab.org/software/bpg/peptides</a>.</li>
         </ol>
       </section>
 """
