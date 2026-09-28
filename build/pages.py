@@ -22,9 +22,9 @@ tabs      Turns the section into a tab group, one panel per name.
 
 The section outlines follow iGEM Brno 2025's corresponding sub-pages, with the
 iGEM page brief folded in where Brno was following it. Where Brno has no
-corresponding page (bioreactor calculations, peptide design, laws and
-regulations, geospatial analysis, data physicalization, AI responsibility,
-milestone, gallery) the outline keeps Brno's shape: state the question, give
+corresponding page (peptide design, laws and regulations, geospatial analysis,
+data physicalization, AI responsibility, milestone, gallery) the outline keeps
+Brno's shape: state the question, give
 the method, give the result, then state the limit.
 """
 
@@ -625,44 +625,9 @@ PAGES = [
             "here, not in a footnote."},
  ]},
 
-{
- "slug": "bioreactor-calculations", "tab": "drylab",
- "title": "Bioreactor Calculations",
- "lede": "Sizing, flow and mass transfer for a hollow-fibre vessel small "
-         "enough to sit where the crop is.",
- "owner": "Dry lab, reactor",
- "award": None,
- "sections": [
-   {"h": "Design brief and constraints",
-    "note": "Volume, footprint, power, and what is fixed versus what is "
-            "chosen. Reactor dimensions are not on record; settle them first."},
-   {"h": "Geometry and volumes",
-    "note": "Fibre count, length, inner diameter, packing fraction, "
-            "extracapillary volume. Use the compartment vocabulary exactly."},
-   {"h": "Flow, shear and residence time",
-    "note": "Cross-flow rate, wall shear at the fibre surface, and the "
-            "residence time distribution."},
-   {"h": "Mass transfer and oxygen",
-    "note": "Oxygen is usually what limits a dense culture. Show the "
-            "calculation and the margin."},
-   {"h": "Membrane selection",
-    "note": "0.2 micron and 50 kDa are not two candidate values, they are two "
-            "different devices with opposite consequences. Work both and say "
-            "which one makes 'passes only protein' true.",
-    "callout": ("unproven", "The unmade decision",
-                "Membrane cutoff is unchosen. This is the central open design "
-                "decision in the project, not a discrepancy in the notes.")},
-   {"h": "Scale-up rules",
-    "note": "Scale on wall shear and flux below critical, not geometric "
-            "similarity, and declare which similarity group is being "
-            "sacrificed. Credit the advice on the Human Practices page."},
-   {"h": "Worked example",
-    "note": "One vessel, all the way through, with units at every line."},
-   {"h": "Assumption register",
-    "note": "Every number used above that is not measured.",
-    "table": (["Assumption", "Value used", "Basis", "Effect if wrong"],
-              [["", "", "", ""] for _ in range(5)])},
- ]},
+# The Bioreactor Calculations page (/bioreactor-calculations) was removed on
+# purpose on 25 September 2026: its entry is gone from this list deliberately
+# and must not be added back, or a bare run of generate.py would recreate it.
 
 # NOT GENERATED: hardware.
 #
@@ -730,8 +695,9 @@ PAGES = [
     "note": "Codon usage for B. subtilis, signal peptide, tags, and what each "
             "costs."},
    {"h": "What this sets for the membrane",
-    "note": "Carry the size straight into the cutoff decision and link to the "
-            "Bioreactor Calculations page."},
+    "note": "Carry the size straight into the cutoff decision. The page that "
+            "used to hold that calculation is gone; the reactor record is at "
+            "/hardware/bioreactor."},
    {"h": "Validation status",
     "note": "Nothing here has been confirmed at the bench. Say it plainly."},
  ]},
