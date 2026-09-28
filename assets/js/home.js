@@ -9,9 +9,9 @@
      2  darkact     scroll progress -> CSS custom properties on .stagewrap
      3  parts       the five engineering highlights <-> the WebGL reactor
      4  doors       cross-highlighting between related pages in Explore
-     5  timeline    show the iHP figure only if its artwork exists
+     5  art slots   show a figure only if its artwork exists (none left today)
      6  chapters    marks the chapter the reader is in on the right-hand rail
-     7  dose        runs the green dashes in the vision schematics, on screen only
+     7  dose        ran the vision schematics; they are gone, so it stops at once
 
    THE RESTING STATE IS THE FINISHED STATE. Every default in home.css shows the
    final frame, and this file only moves things once it has taken control. With
@@ -270,18 +270,20 @@
      page here, not in the markup. */
 
   var PAGE_LINKS = {
-    "description":            ["peptide-design", "hardware", "model", "human-practices", "results"],
-    "engineering":            ["hardware", "results", "milestone", "drylab-notebook"],
+    "description":            ["protein-design", "hardware", "model", "human-practices", "results"],
+    "biomanufacturing":       ["description", "hardware", "development"],
+    "engineering":            ["hardware", "results", "milestone", "drylab-notebook", "development"],
+    "development":            ["results", "hardware"],
     "contribution":           ["parts", "software"],
     "results":                ["measurement", "experiments", "engineering"],
     "experiments":            ["plant", "measurement", "safety-and-security", "notebook", "parts"],
-    "parts":                  ["peptide-design"],
+    "parts":                  ["protein-design"],
     "plant":                  ["measurement", "geospatial-analysis"],
     "measurement":            ["hardware", "model"],
     "safety-and-security":    ["laws-and-regulations"],
-    "model":                  ["bioreactor-calculations", "software", "hardware"],
-    "hardware":               ["software", "bioreactor-calculations", "drylab-notebook"],
-    "peptide-design":         ["model"],
+    "model":                  ["software", "hardware"],
+    "hardware":               ["software", "drylab-notebook"],
+    "protein-design":         ["model"],
     "human-practices":        ["hardware", "plant", "laws-and-regulations", "entrepreneurship",
                                "education", "geospatial-analysis"],
     "education":              ["gallery", "data-physicalization"],

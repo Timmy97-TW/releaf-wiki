@@ -2,7 +2,7 @@
    ReLeaf: homepage problem section behaviour
    Three independent pieces, each stops if its element is missing:
      1  map       01's toggle, opening on the weather and then laying farms over it
-     2  journey   03's camera, following a new product from research centre to shop
+     2  journey   02's camera, following a new product from research centre to farmer
      3  sources   citations open the collapsed source list
    With JS off or motion reduced, both show their final state.
    ========================================================================== */
@@ -128,7 +128,7 @@
     function draw(m) {
       var p = m.p, unit = m.unit, vw = m.vw;
 
-      // 0–0.08 in the lab, 0.08–0.86 on the road, then the camera moves on to her
+      // 0 to 0.08 in the lab, 0.08 to 0.86 on the road, then the camera moves on to her
       var ox, oy;
       if (p < 0.08) {
         var t = ease(span(p, 0, 0.08));
@@ -156,12 +156,12 @@
       var done = clamp01((ox - X0) / (SHELF - X0));
       put("tick", (Math.max(0, ox - X0) + 5).toFixed(1), function (v) { tickRect.setAttribute("width", v); });
       var windows = Math.round(done * WINDOWS);
-      put("windows", String(windows), function (v) { winEl.textContent = v; });
+      if (winEl) put("windows", String(windows), function (v) { winEl.textContent = v; });
       var year = Math.min(YEARS, Math.floor(windows / 73));
       if (year !== last) {
         last = year;
         yearEl.textContent = year;
-        ageEl.textContent = AGE + year;
+        if (ageEl) ageEl.textContent = AGE + year;
         posts.forEach(function (g) { g.classList.toggle("on", +g.dataset.y <= year); });
         suns.forEach(function (g) { g.classList.toggle("on", +g.dataset.y <= year); });
       }
