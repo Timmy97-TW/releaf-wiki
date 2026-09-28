@@ -6,6 +6,10 @@
 (function () {
   "use strict";
 
+  /* Drafting marks off: window.AI_MARK = false in site-nav.js paints every
+     .ai passage in the normal ink again (see the .ai rule in nav.css). */
+  if (window.AI_MARK === false) document.documentElement.classList.add("ai-off");
+
   /* ---- icon set ------------------------------------------------------------
      Line art, 24x24, stroked with currentColor. Lighter than the solid glyphs
      most wikis reach for, so the panel stays quiet.                           */
@@ -15,6 +19,7 @@
     engineering: '<path d="M20.2 12a8.2 8.2 0 1 1-2.7-6.1"/><path d="M20.6 3.8v4.4h-4.4"/><circle cx="12" cy="12" r="2.4"/>',
     contribution: '<path d="M12 19.5V8"/><path d="M7.6 12.4 12 8l4.4 4.4"/><path d="M4.5 20.5h15"/>',
     results: '<path d="M4.5 20h15"/><path d="M6.8 17.5v-5M11.4 17.5v-9M16 17.5v-6.5"/><path d="M5.5 8.5 10 5l3.4 2.6L19 3.5"/>',
+    development: '<path d="M4 19.5h16"/><path d="M5.5 16.5 9.5 12l3 2.6 6-7.1"/><path d="M15 7.5h3.5V11"/><circle cx="5.5" cy="16.5" r="1"/>',
     biomanufacturing: '<path d="M4.6 5.4h8.8v11.2a4.4 4.4 0 0 1-8.8 0Z"/><path d="M4.6 11.7c1.5 1.2 2.9 1.2 4.4 0s2.9-1.2 4.4 0"/><path d="M6.6 3.4h4.8"/><path d="M15.6 9.6h4.6"/><path d="M18 7.3l2.4 2.3-2.4 2.3"/>',
     /* Wetlab */
     experiments: '<path d="M10 3.5v5.6l-4.6 8.3A2 2 0 0 0 7.2 20.5h9.6a2 2 0 0 0 1.8-3.1L14 9.1V3.5"/><path d="M9 3.5h6"/><path d="M7.4 14.5h9.2"/>',
@@ -28,6 +33,7 @@
     bioreactor: '<path d="M7.2 4.5h9.6v10.8a4.8 4.8 0 0 1-9.6 0Z"/><path d="M7.2 11.6c1.6 1.3 3.2 1.3 4.8 0s3.2-1.3 4.8 0"/><path d="M9.6 2.5h4.8"/>',
     hardware: '<rect x="7.2" y="7.2" width="9.6" height="9.6" rx="2"/><path d="M10 4.2v3M14 4.2v3M10 16.8v3M14 16.8v3M4.2 10h3M4.2 14h3M16.8 10h3M16.8 14h3"/>',
     software: '<path d="M9.2 7.4 4.8 12l4.4 4.6"/><path d="M14.8 7.4 19.2 12l-4.4 4.6"/><path d="M13.2 5.2l-2.4 13.6"/>',
+    twin: '<rect x="3.4" y="5.2" width="7.4" height="10.6" rx="1.6"/><rect x="13.2" y="5.2" width="7.4" height="10.6" rx="1.6"/><path d="M10.8 10.5h2.4"/><path d="M5.6 19h12.8"/>',
     md: '<circle cx="9" cy="9.2" r="2.2"/><circle cx="15.6" cy="15" r="2.2"/><path d="M10.7 10.8l3.2 2.7"/><path d="M5.6 14.4A7.6 7.6 0 0 1 14.2 5.8"/><path d="M18.4 9.6a7.6 7.6 0 0 1-8.6 8.6"/>',
     peptide: '<circle cx="5.4" cy="9.2" r="2.1"/><circle cx="11.4" cy="14.2" r="2.1"/><circle cx="17.4" cy="8.4" r="2.1"/><path d="M7 10.6l2.8 2.3M13.2 12.9l2.7-2.9"/><path d="M19.3 9.6l1.9 1.6"/>',
     /* Engagement */

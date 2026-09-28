@@ -37,6 +37,8 @@ const NAV = [
         caption: "What ReLeaf contributes to making things with biology, and the evidence behind each claim." },
       { title: "Engineering",  slug: "engineering",  icon: "engineering",
         caption: "Every design, build, test and learn cycle we went through." },
+      { title: "Development",  slug: "development",  icon: "development",
+        caption: "What success means for the whole system, and how we got there." },
       { title: "Contribution", slug: "contribution", icon: "contribution",
         caption: "What we are leaving behind for the teams that come after us." },
       { title: "Results",      slug: "results",      icon: "results",
@@ -65,16 +67,14 @@ const NAV = [
   {
     id: "drylab",
     name: "Dry Lab",
-    blurb: "The maths, the machine and the code. Reactor sizing, the model behind the light switch, our hardware and software, and the peptide designed to go with them.",
+    blurb: "The maths, the machine and the code. The stress index behind the light switch, our hardware, the digital twin that runs the reactor, and the peptide designed to go with them.",
     pages: [
       { title: "Math Model",              slug: "model",                   icon: "model",
         caption: "The equations behind sensing, expression and release." },
-      { title: "Bioreactor Calculations", slug: "bioreactor-calculations", icon: "bioreactor",
-        caption: "Sizing, flow and mass transfer for the vessel." },
       { title: "Hardware",                slug: "hardware",                icon: "hardware",
         caption: "Three instruments, taken apart. Plus the build notebook." },
-      { title: "Software",                slug: "software",                icon: "software",
-        caption: "Control code, analysis and tooling." },
+      { title: "Digital Twin",            slug: "software",                icon: "twin",
+        caption: "A virtual copy of the bioreactor that tracks each batch and decides when to act." },
       { title: "Protein Design",          slug: "protein-design",          icon: "peptide",
         caption: "The five-step pipeline that took a peptide from a family alignment to an order form." },
       { title: "Dry Lab Notebook",        slug: "drylab-notebook",         icon: "notebook",
@@ -143,3 +143,9 @@ const NAV_UNLISTED = [
    teaching aid for this demo copy. Set to false in the copy that goes to
    gitlab.igem.org, or delete the line and the file.                        */
 window.RULECHECK = true;
+
+/* Drafting marks: text an AI assistant drafted to fill a page, not yet
+   rewritten by a student, carries class="ai" and shows in orange. Set to false
+   (or delete the line) to show everything in the normal ink, e.g. before the
+   wiki freeze once every orange passage has been replaced or approved.     */
+window.AI_MARK = true;
