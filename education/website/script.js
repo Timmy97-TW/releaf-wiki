@@ -233,7 +233,7 @@ document.addEventListener("DOMContentLoaded", () => {
    AUTO-ADVANCING IMAGE CAROUSEL
    Works by duplicating slides so the
    CSS animation loops seamlessly.
-   No JS timer needed — pure CSS scroll
+   No JS timer needed: pure CSS scroll
    with JS only for dot sync.
 ══════════════════════════════════════ */
 
@@ -252,7 +252,7 @@ function initCarousels() {
       track.appendChild(clone);
     });
 
-    // Optional dot indicators — only for the real (non-cloned) slides
+    // Optional dot indicators: only for the real (non-cloned) slides
     const dotsContainer = carousel.parentElement.querySelector('.carousel-dots');
     if (!dotsContainer) return;
 
@@ -272,7 +272,7 @@ function initCarousels() {
         getComputedStyle(track).animationDuration
       ) * 1000 || 24000;
 
-      const elapsed = (Date.now() % duration) / duration; // 0–1
+      const elapsed = (Date.now() % duration) / duration; // 0 to 1
       const index = Math.floor(elapsed * slideCount) % slideCount;
 
       dots.forEach((d, i) => d.classList.toggle('active', i === index));
@@ -297,7 +297,7 @@ function initCarousels() {
   });
 }
 
-// Call in DOMContentLoaded (already defined above — extend it)
+// Call in DOMContentLoaded (already defined above: extend it)
 document.addEventListener('DOMContentLoaded', () => {
   initCarousels();
 });

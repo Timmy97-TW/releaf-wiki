@@ -1,4 +1,4 @@
-// nav.js — shared bilingual header + footer
+// nav.js: shared bilingual header + footer
 // English pages live in root folder.
 // Mandarin pages live in /zh/.
 
