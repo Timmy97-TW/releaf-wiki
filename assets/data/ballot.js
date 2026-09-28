@@ -397,7 +397,7 @@ window.RELEAF_BALLOT = {
   "engineering": {
     "award": "Silver Medal Criterion #1",
     "criterion": "Demonstrate engineering success in a technical aspect of your project by going through at least one iteration of the engineering design cycle.",
-    "lead": "The criterion and its guidance, and where this page answers each part. PREPARED, NOT APPLIED: this page has no ballot markers yet.",
+    "lead": "The criterion and its guidance, and where this page answers each part.",
     "questions": [
       {
         "q": "Document the effort to follow the design cycle: Design, Build, Test, Learn.",
@@ -425,7 +425,7 @@ window.RELEAF_BALLOT = {
   "parts": {
     "award": "Part Collection",
     "criterion": "The Part Collection award is scored on four aspects. Part awards are scored on the Registry entries themselves, so this page is the map to them and not the submission.",
-    "lead": "The four questions a judge is given for this award, and where this page answers each one. PREPARED, NOT APPLIED: this page has no ballot markers yet.",
+    "lead": "The four questions a judge is given for this award, and where this page answers each one.",
     "questions": [
       {
         "q": "Is this a coherent group of parts meant to be used as a collection, or just a list of all the parts the team made?",
