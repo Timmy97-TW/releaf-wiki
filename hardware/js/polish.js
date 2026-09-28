@@ -242,6 +242,7 @@
        It recomputes from the DOM, so it cannot drift from the table it
        describes: the day someone types a price in, this moves. */
     (function summarise() {
+      if (table.dataset.summary === "off") return;
       const rows = Array.prototype.slice.call(table.tBodies[0].rows);
       let priced = 0, identified = 0, sum = 0;
       rows.forEach(function (tr) {
@@ -263,9 +264,9 @@
           "<div><dt>With a part number</dt><dd>" + identified + " / " + rows.length + "</dd></div>" +
           "<div><dt>Costed</dt><dd>" + priced + " / " + rows.length + "</dd></div>" +
           "<div><dt>Priced so far</dt><dd>" +
-            (priced ? sum.toFixed(2) : "&mdash;") + "</dd></div>" +
+            (priced ? sum.toFixed(2) : "none") + "</dd></div>" +
         "</dl>" +
-        '<p class="bom-note">' + (
+        '<p class="bom-note ai">' + (
           priced === rows.length
             ? "Every line is costed, so the figure above is the build cost."
             : priced === 0

@@ -110,7 +110,7 @@
 
     const drift = Math.abs(r.mean - r.med);
     el.note.textContent = r.rejected === 0
-      ? "No bubbles to throw out — mean and median agree to " + drift.toFixed(2) + " lux."
+      ? "No bubbles to throw out: mean and median agree to " + drift.toFixed(2) + " lux."
       : "The mean has been pulled " + drift.toFixed(2) + " lux off the clean readings. The median moved with them, so the "
         + r.rejected + " bubble" + (r.rejected > 1 ? "s are" : " is") + " outside the band and get thrown out.";
   }
