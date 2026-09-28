@@ -76,7 +76,7 @@ const NAV = [
       { title: "Digital Twin",            slug: "software",                icon: "twin",
         caption: "A virtual copy of the bioreactor that tracks each batch and decides when to act." },
       { title: "Protein Design",          slug: "protein-design",          icon: "peptide",
-        caption: "The five-step pipeline that took a peptide from a family alignment to an order form." },
+        caption: "Methodology, design sprints and molecular dynamics behind the protectant peptide." },
       { title: "Dry Lab Notebook",        slug: "drylab-notebook",         icon: "notebook",
         caption: "The computational record, week by week." }
     ]
