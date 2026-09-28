@@ -1860,7 +1860,7 @@
   //                     caption that hands straight to the next one
   const CAPS = [
     { win: [0.156, 0.262], drop: 0.145, bot: 0.242, handoff: true, n: "01", name: "Thirteen seats", role: "Bore pattern",
-      body: "&empty;11.26&nbsp;mm bores on a 21.59&nbsp;mm pitch, staggered <span class='nw'>4&ndash;5&ndash;4</span> so the outer rows sit half a pitch off the middle one." },
+      body: "&empty;11.26&nbsp;mm bores on a 21.59&nbsp;mm pitch, staggered <span class='nw'>4, 5, 4</span> so the outer rows sit half a pitch off the middle one." },
     // The holders fall through the type band (0.300-0.3856, left to right), and
     // with the type on win it was solid from 0.334 while cones crossed the
     // headline and the body copy until 0.369 at every viewport. The TYPE now
