@@ -8,10 +8,10 @@
       full-window. The system is the Sustainability one, unchanged.
    3. Nothing important is behind a click.
    4. Numbers in any rail agree with the section numbers page.js writes.
-   5. Nothing loads from outside iGEM. That rules out a maths typesetting
-      library, so the equations here are HTML and CSS: .eqn sets the block,
-      <i> carries the variables, and the browser's own italic is the whole
-      typography. It is enough for the ten equations this page states.
+   5. Nothing loads from outside iGEM, and KaTeX is vendored inside the repo
+      (assets/vendor/katex), so every equation on this page is LaTeX written
+      into the HTML and rendered locally by assets/js/math.js. .eqn sets the
+      block around it; the equation number is a \tag in the LaTeX itself.
 
    COLOUR. Three provenance colours and no others: leaf for a number we
    measured, slate for a number from a paper, amber for a number someone chose.
@@ -137,12 +137,22 @@
   font-size: var(--text-sm); font-style: normal; line-height: 1.6;
   color: var(--gray-600);
 }
-.mm .eqn .no {                 /* the equation number, right-aligned */
-  float: right;
-  font-size: var(--text-sm);
-  color: var(--gray-400);
-  font-variant-numeric: tabular-nums;
-}
+/* the maths itself. KaTeX sets its own metrics; these rules only keep a long
+   display line scrollable on a phone instead of widening the page, and stop
+   the block's own left rule fighting the equation's indent. */
+.mm .eqn .math--display { margin: .35rem 0; }
+.mm .eqn .katex-display { margin: 0; }
+.mm .eqn .katex { font-size: 1.05em; }
+@media (max-width: 30rem) { .mm .eqn .katex { font-size: .95em; } }
+
+/* the composed hero: it is a laid-out plate, not a photograph, so it is not
+   pushed down the way a face or a horizon would be. */
+.mm .pagehead__hero img { object-position: center center; }
+.mm .pagehead--hero .pagehead__inner { padding-top: var(--sp-5); }
+
+/* a paragraph sitting beside a figure inside .figs reads as body text, not as
+   a caption, so it keeps the prose measure. */
+.mm .figs > div > p:first-child { margin-top: 0; }
 
 /* ============================================================ PROVENANCE ===
    Every parameter carries one of these three and never none of them.      */
