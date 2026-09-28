@@ -147,7 +147,11 @@
       var pan = Math.max(0, Math.min(maxPan, camX * unit - vw / 2));
       put("scene", "translate3d(" + (-pan).toFixed(1) + "px,0,0)",
           function (v) { scene.style.transform = v; });
-      var panUnits = pan / unit;
+      // The first frame can run before the scene has a height, and then unit is
+      // 0 and this division is NaN, which the SVG rejects with a console error
+      // on every page load. Nothing is off screen at that point, so 0 is the
+      // right answer until a real measurement arrives.
+      var panUnits = unit ? pan / unit : 0;
       put("far", "translate(" + (panUnits * 0.55).toFixed(1) + " 0)",
           function (v) { far.setAttribute("transform", v); });
       put("mid", "translate(" + (panUnits * 0.25).toFixed(1) + " 0)",
