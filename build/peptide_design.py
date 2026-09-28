@@ -1179,15 +1179,13 @@ def build():
     A('  <nav class="stepnav" aria-label="Protein Design section">')
     A('    <div class="stepnav__inner">')
     A('      <a class="stepnav__home" href="../protein-design/">Protein Design</a>')
-    A('      <a class="step" href="../protein-design/generate/"><span class="step__k">G</span>Generate</a>')
-    A('      <a class="step" href="../protein-design/restraints/"><span class="step__k">R</span>Restraints</a>')
-    A('      <a class="step" href="../protein-design/assembly/"><span class="step__k">A</span>Assembly</a>')
-    A('      <a class="step" href="../md-simulations/"><span class="step__k">F</span>Flex</a>')
-    A('      <a class="step" href="../protein-design/triage/"><span class="step__k">T</span>Triage</a>')
-    A('      <a class="step" href="../protein-design/packaging/"><span class="step__k" data-off>&middot;</span>Packaging</a>')
-    # this page is not a GRAFT step, it is the pipeline run once end to end, so
-    # it gets its own entry at the end of the strip rather than a letter
-    A('      <a class="step" href="./" aria-current="page"><span class="step__k" data-off>&middot;</span>Worked case</a>')
+    A('      <a class="step" href="../protein-design/methodology/">Methodology</a>')
+    A('      <a class="step" href="../protein-design/sprints/">Sprints and Results</a>')
+    A('      <a class="step" href="../protein-design/molecular-dynamics/">Molecular Dynamics</a>')
+    A('      <a class="step" href="../md-simulations/">MD reports</a>')
+    # this page is not one of the three subpages, it is the pipeline run once
+    # end to end, so it keeps its own entry at the end of the strip
+    A('      <a class="step" href="./" aria-current="page">Worked case</a>')
     A('    </div>')
     A('  </nav>')
     A('')
@@ -1203,7 +1201,7 @@ def build():
     A('  </div>')
     A('')
     A('  <nav class="pagenav" aria-label="Neighbouring pages">')
-    A('    <a class="is-prev" href="../protein-design/packaging/"><b>Previous</b><span>Packaging</span></a>')
+    A('    <a class="is-prev" href="../md-simulations/"><b>Previous</b><span>MD Simulations</span></a>')
     A('    <a class="is-next" href="../drylab-notebook/"><b>Next</b><span>Dry Lab Notebook</span></a>')
     A('  </nav>')
     A(FOOTER)
@@ -1243,9 +1241,8 @@ FOOTER = """
           <h3>Dry Lab</h3>
           <ul>
           <li><a href="../model/">Math Model</a></li>
-          <li><a href="../bioreactor-calculations/">Bioreactor Calculations</a></li>
           <li><a href="../hardware/">Hardware</a></li>
-          <li><a href="../software/">Software</a></li>
+          <li><a href="../software/">Digital Twin</a></li>
           <li><a href="../protein-design/">Protein Design</a></li>
           <li><a href="../drylab-notebook/">Dry Lab Notebook</a></li>
           </ul>
