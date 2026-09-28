@@ -46,8 +46,8 @@
        the fifth meeting, which is where the project ended up */
     box: {
       d: "M 38 92 C 33 88, 42 84, 36 80 S 30 72, 30 66 L 30 16 L 70 16 L 70 66 L 30 66",
-      t: [0, .27, .47, .64, 1],
-      place: ["r", "l", "t", "r", "l"],
+      t: [0, .3, .55, .8],
+      place: ["r", "l", "t", "r"],
       fill: ["M 30 16 H 70 V 66 H 30 Z"],
       dash: ["M 6 76 H 94"],
       words: [[8, 83, "soil"], [50, 43, "sealed vessel"]]
@@ -55,8 +55,8 @@
     /* First builds: a flask, for the first reactor and the plant screen */
     flask: {
       d: "M 43 8 L 43 34 L 28 80 Q 26 88 34 88 L 66 88 Q 74 88 72 80 L 57 34 L 57 8",
-      t: [0, .25, .44, .56, .75, 1],
-      place: ["l", "l", "l", "r", "r", "r"],
+      t: [0, .17, .34, .5, .66, .83, 1],
+      place: ["l", "l", "l", "b", "r", "r", "r"],
       fill: ["M 33.5 64 L 66.5 64 L 72 80 Q 74 88 66 88 L 34 88 Q 26 88 28 80 Z"],
       deco: ["M 38 8 H 62"],
       words: [[50, 79, "first reactor"]]
@@ -64,16 +64,16 @@
     /* Industry and farms: a leaf, for the people who grow and sell plants */
     leaf: {
       d: "M 50 94 L 50 80 C 26 72, 22 38, 50 10 C 78 38, 74 72, 50 80",
-      t: [0, .3, .52, .74, 1],
-      place: ["r", "l", "r", "r", "l"],
+      t: [0, .38, .8],
+      place: ["r", "l", "r"],
       fill: ["M 50 80 C 26 72, 22 38, 50 10 C 78 38, 74 72, 50 80 Z"],
       deco: ["M 50 80 L 50 18", "M 50 64 L 39 55", "M 50 64 L 61 55", "M 50 47 L 41 39", "M 50 47 L 59 39", "M 50 31 L 44 25", "M 50 31 L 56 25"]
     },
     /* Dose and delivery: a drop, for how much reaches the plant, and when */
     drop: {
       d: "M 50 8 C 43 21, 26 42, 26 62 A 24 24 0 0 0 74 62 C 74 42, 57 21, 50 8",
-      t: [0, .3, .55, .8],
-      place: ["r", "l", "b", "r"],
+      t: [0, .2, .42, .62, .82],
+      place: ["r", "l", "l", "r", "r"],
       fill: ["M 50 8 C 43 21, 26 42, 26 62 A 24 24 0 0 0 74 62 C 74 42, 57 21, 50 8 Z"],
       deco: ["M 36 60 Q 36 72 46 76"],
       dash: ["M 22 95 Q 50 99 78 95"]
@@ -83,8 +83,8 @@
        on its tip. */
     bubble: {
       d: "M 50 64 L 38 84 L 41 64 L 34 64 Q 24 64 24 54 L 24 24 Q 24 14 34 14 L 66 14 Q 76 14 76 24 L 76 54 Q 76 64 66 64 L 50 64",
-      t: [0, .1, .32, .6, .75],
-      place: ["r", "l", "r", "t", "l"],
+      t: [0, .1, .3, .52, .7, .86],
+      place: ["r", "l", "r", "t", "t", "l"],
       fill: ["M 34 14 L 66 14 Q 76 14 76 24 L 76 54 Q 76 64 66 64 L 50 64 L 38 84 L 41 64 L 34 64 Q 24 64 24 54 L 24 24 Q 24 14 34 14 Z"],
       deco: ["M 42 39 h .01", "M 50 39 h .01", "M 58 39 h .01"]
     }
@@ -160,6 +160,15 @@
     }
     return el("span", "evo__face evo__face--none" + (cls ? " " + cls : ""), initials(e.name));
   }
+  /* Provenance. Text written by the students (key suggestions, what we had
+     before and what we changed, their quotes, their stage paragraphs) prints
+     black. Everything else on the map (headlines, summaries, takeaways,
+     captions, glyph notes, area states) is AI-drafted and carries the site's
+     .ai class, which prints it orange. A record can hand a normally-student
+     field to the AI side with ai: ["after", ...]. */
+  function isAI(e, field) { return !!(e && e.ai && e.ai.indexOf(field) > -1); }
+  function ai(n, yes) { if (yes !== false) n.classList.add("ai"); return n; }
+
   function list(items) {
     var ul = el("ul");
     items.forEach(function (t) { ul.appendChild(el("li", null, t)); });
@@ -178,6 +187,7 @@
     wrap.appendChild(arcBox);
     fill(arcStart, { tag: "Where we started", title: "Bacteria in the soil", text: D.meta.startState });
     fill(arcEnd, { tag: "Where it ended", title: "Bacteria in a box", text: D.meta.endState });
+    ai(arcStart); ai(arcEnd);
 
     D.stations.forEach(function (s, k) { wrap.appendChild(station(s, k)); });
     root.appendChild(wrap);
@@ -201,7 +211,7 @@
     var head = el("div", "evo-st__head");
     head.appendChild(el("h3", null, s.name));
     head.appendChild(el("p", "evo-st__dates", s.dates + " · " + es.length + " engagements"));
-    head.appendChild(el("p", "evo-st__lede", s.lede));
+    head.appendChild(ai(el("p", "evo-st__lede", s.lede), !s.ledeStudent));
     box.appendChild(head);
 
     /* the map: the phase drawn as a shape, the faces placed along its line in
@@ -243,7 +253,7 @@
     });
     canvas.appendChild(nodes);
     map.appendChild(canvas);
-    if (s.glyphNote) map.appendChild(el("figcaption", null, s.glyphNote));
+    if (s.glyphNote) map.appendChild(ai(el("figcaption", null, s.glyphNote)));
     box.appendChild(map);
 
     /* the cards, one visible at a time, with the stepper above them */
@@ -323,7 +333,7 @@
     if (bits.length) meta.appendChild(document.createTextNode(" · " + bits.join(" · ")));
     c.appendChild(meta);
 
-    var h = el("h4", "evo-cd__head", e.headline || e.name);
+    var h = ai(el("h4", "evo-cd__head", e.headline || e.name), !!e.headline);
     h.id = "evo-" + e.id + "-h";
     h.tabIndex = -1;
     c.appendChild(h);
@@ -336,17 +346,28 @@
     who.appendChild(wp);
     c.appendChild(who);
 
-    if (e.summary) c.appendChild(el("p", "evo-cd__sum", e.summary));
+    /* the students' own line leads: their key suggestion, else a quote they
+       recorded; the AI summary only where they wrote neither */
+    if (e.keyPoint) {
+      var kp = el("p", "evo-cd__key");
+      kp.appendChild(el("b", null, e.keyLabel || "Key suggestion"));
+      kp.appendChild(document.createTextNode(" " + e.keyPoint));
+      c.appendChild(kp);
+    } else if (e.quote) {
+      c.appendChild(el("p", "evo-cd__key evo-cd__quote", "“" + e.quote + "”"));
+    } else if (e.summary) {
+      c.appendChild(ai(el("p", "evo-cd__sum", e.summary)));
+    }
 
     var cols = el("div", "evo-cd__cols");
     var told = el("div");
     told.appendChild(el("h5", null, e.kind === "expert" || e.kind === "company" ? "What they told us" : "What we heard"));
-    told.appendChild(list(e.takeaways || []));
+    told.appendChild(ai(list(e.takeaways || [])));
     cols.appendChild(told);
     var did = el("div", "is-to");
     did.appendChild(el("h5", null, "What we changed"));
-    if (e.after && e.after.length) did.appendChild(list(e.after));
-    else did.appendChild(el("p", "evo-cd__none", "No change recorded in our log."));
+    if (e.after && e.after.length) did.appendChild(ai(list(e.after), isAI(e, "after")));
+    else did.appendChild(ai(el("p", "evo-cd__none", "No change recorded in our log.")));
     cols.appendChild(did);
     c.appendChild(cols);
 
@@ -395,25 +416,28 @@
   function record(e) {
     var d = el("details", "evo-cd__full");
     d.appendChild(el("summary", null, "Full record"));
-    if (e.quote) {
+    if (e.summary && (e.keyPoint || e.quote)) {
+      d.appendChild(el("h5", null, "Summary"));
+      d.appendChild(ai(el("p", null, e.summary)));
+    }
+    if (e.quote && e.keyPoint) {
       d.appendChild(el("h5", null, "In their words"));
       d.appendChild(el("p", null, "“" + e.quote + "”"));
     }
-    if (e.suggestion || e.keyPoint) {
-      d.appendChild(el("h5", null, "Key suggestion"));
-      d.appendChild(el("p", null, e.keyPoint || e.suggestion));
-      if (e.keyPoint && e.suggestion) d.appendChild(el("p", null, e.suggestion));
+    if (e.suggestion) {
+      d.appendChild(el("h5", null, "The advice, in short"));
+      d.appendChild(ai(el("p", null, e.suggestion)));
     }
     if (e.before && e.before.length) {
       d.appendChild(el("h5", null, "What we had before"));
-      d.appendChild(list(e.before));
+      d.appendChild(ai(list(e.before), isAI(e, "before")));
     }
     var ds = D.laneStates.filter(function (s) { return s.by === e.id; });
     if (ds.length) {
       d.appendChild(el("h5", null, ds.length > 1 ? "Areas that changed" : "Area that changed"));
-      d.appendChild(list(ds.map(function (s) { return byLane[s.lane].name + ": " + s.label; })));
+      d.appendChild(ai(list(ds.map(function (s) { return byLane[s.lane].name + ": " + s.label; }))));
     }
-    if (e.dateNote) d.appendChild(el("p", "evo-cd__note", e.dateNote));
+    if (e.dateNote) d.appendChild(ai(el("p", "evo-cd__note", e.dateNote)));
     if (e.links && e.links.length) {
       var links = el("p", "evo__links");
       e.links.forEach(function (l) {
@@ -423,7 +447,7 @@
       });
       d.appendChild(links);
     }
-    if (e.source) d.appendChild(el("p", "evo__src", "Source: " + e.source));
+    if (e.source) d.appendChild(ai(el("p", "evo__src", "Source: " + e.source)));
     return d;
   }
 
@@ -443,7 +467,7 @@
       b.appendChild(img);
       b.addEventListener("click", function () { viewer(e.evidence, n, b); });
       fig.appendChild(b);
-      fig.appendChild(el("figcaption", null, p.cap));
+      fig.appendChild(ai(el("figcaption", null, p.cap)));
       row.appendChild(fig);
     });
     return row;
@@ -501,6 +525,7 @@
     lbImg.src = IMG + p.src + ".webp";
     lbImg.alt = p.cap;
     lbCap.textContent = p.cap;
+    lbCap.classList.add("ai");
     lbCount.textContent = (lbAt + 1) + " / " + lbSet.length;
   }
   function step(d) {

@@ -13,7 +13,7 @@
             for the evolution roadmap.html), used where it phrases a takeaway
             more completely than the log.
      PLANT  wiki/plant/index.html, the plant screening page, which writes up
-            the advisory threads for Prof. Cheng, Dr. Kyle, Dr. Verslues and
+            the advisory threads for Prof. Cheng, Dr. Verslues and
             CH Biotech with dates.
      HW     wiki/hardware/ notebook, which dates the pivot document, the
             bioreactor prototypes and Prof. Chang's consultation.
@@ -222,14 +222,15 @@ window.EVOMAP = (function () {
       headline: "The first interview put Medicago and the kill switch in doubt",
       role: "Plant and stress biology",
       lanes: ["plant", "circuit", "reactor"],
+      keyPoint: "Assess the real-world applicability and value of the system, research more suitable plants for our project.",
+      before: ["Design a kill switch to avoid cells living outside the incubator", "Focusing on Medicago as our target plant"],
+      after: ["Consider not doing a kill switch", "Consider changing the target plant", "Consider hydroponics", "Shifted focus to seedling-stage testing"],
       suggestion: "Assess the real-world applicability and value of the system, and research more suitable plants for the project.",
       summary: "Our first interview, while the plant model and the stress method were still open. We went in with Medicago and a kill switch; both came out in doubt.",
       takeaways: [
         "Measure what PGPR does to germination speed and early growth, treated against untreated seedlings.",
         "Simulate drought with particles that block water uptake, and salinity by watering every few days."
       ],
-      before: ["Design a kill switch so cells cannot survive outside the incubator", "Medicago truncatula as the target plant"],
-      after: ["Reconsider whether a kill switch is needed at all", "Reconsider the target plant", "Consider hydroponics and seedling-stage testing"],
       photos: [{ src: "exp-0319-lin.webp", alt: "The team in an online meeting with Dr. Lin, March 2026." }],
       links: [W("Plant screening record", "../plant/"), W("Safety and security", "../safety-and-security/")],
       source: "LOG + ROAD"
@@ -247,6 +248,9 @@ window.EVOMAP = (function () {
       headline: "Arabidopsis on agar first, soil after, and seed to start",
       role: "Plant and stress biology, NTU", where: "Her laboratory at NTU",
       lanes: ["plant"],
+      keyPoint: "Consider shifting the plant model to Arabidopsis thaliana. Prioritize agar plate growth for early-stage control, followed by transferring to soil.",
+      before: ["Considered heat, salinity, drought, and osmotic stresses as our stress targets", "Rely on hydroponics for proof-of-concept"],
+      after: ["Use moderate stress conditions to prevent killing plants", "Avoid hydroponics as the main experimental system", "Move toward a plate to soil transition model instead of purely controlled systems"],
       suggestion: "Move the plant model to Arabidopsis thaliana, grown on agar plates first for control, then transferred to soil.",
       summary: "We arrived with no plants and no protocol. She confirmed heat, salinity and drought as the stresses, warned that hydroponics alone was unstable, and gave us seed.",
       takeaways: [
@@ -254,8 +258,6 @@ window.EVOMAP = (function () {
         "Control environmental transitions and stress timing, and use ROS staining to see stress.",
         "Osmotic stress leaves the target list."
       ],
-      before: ["Heat, salinity, drought and osmotic stress as targets", "Hydroponics as the proof-of-concept system"],
-      after: ["Moderate stress, so plants survive the test", "Hydroponics no longer the main system", "A plate-to-soil transition model"],
       links: [W("Plant screening record", "../plant/")],
       source: "LOG + ROAD + PLANT"
     },
@@ -271,6 +273,10 @@ window.EVOMAP = (function () {
       headline: "Work with the plant's own drought response",
       role: "Plant stress biology and protectant design", where: "Academia Sinica",
       lanes: ["plant", "protect"],
+      keyPoint: "Work with the plant's natural response rather than simply supplying more proline.",
+      before: ["Engineered Bacillus subtilis (PGPR) detects environmental stresses (drought, salinity, heat, and osmotic stress) and responds by producing plant-protective compounds such as trehalose and ACC deaminase"],
+      after: ["Explore a shift from a proline-delivery system toward a plant-regulation system, using bacterial signals or precursors to enhance the plant's natural drought response", "Consider testing stress priming approaches and measuring indicators such as root growth and biomass"],
+      face: "face-verslues",
       suggestion: "Work with the plant's natural response instead of supplying more proline.",
       summary: "A session on drought mechanics and proline delivery. It moved the protectant from supplying compounds to regulating the plant's own response.",
       takeaways: [
@@ -278,8 +284,6 @@ window.EVOMAP = (function () {
         "Try stress priming, measure root growth and biomass, and detect stress early.",
         "His vertical plate rack became ours, and the August soil salt ramp was his proposal."
       ],
-      before: ["Bacteria sense four stresses and respond with trehalose and ACC deaminase", "Signal molecules keep the bacteria alive under stress"],
-      after: ["Move from proline delivery to plant regulation with bacterial signals", "Test stress priming, tracking root growth and biomass"],
       links: [W("Plant screening record", "../plant/")],
       source: "LOG + ROAD + PLANT"
     },
@@ -297,6 +301,8 @@ window.EVOMAP = (function () {
       role: "AIoT and smart agriculture, founder of Agritalk", where: "Online",
       lanes: ["circuit", "reactor", "model", "deploy"],
       keyPoint: "Design the hardware as the printer and the biofertilizer as the ink.",
+      before: ["Focused on Bacillus subtilis through the process of PGPR to detect plant stress and produce stress-priming protectants"],
+      after: ["Shifted toward a controlled bioreactor-based system that detects stress signals and activates B. subtilis to produce protectants", "Define clear input-output relationships and strengthen our dry-lab modeling and calibration strategy", "Conduct a competitive analysis to identify existing products and key competitors that are related to us"],
       suggestion: "Define a clear input to output mapping, and move to a bioreactor-based system instead of soil release.",
       summary: "The meeting that changed the project's shape. He sells into the smart-agriculture market we aimed at, and told us to leave the part we could not win.",
       takeaways: [
@@ -304,8 +310,6 @@ window.EVOMAP = (function () {
         "Bacteria released into open soil are a far harder biosafety case than bacteria in a vessel.",
         "The local market is too small; adoption, fertiliser, market size and regulation are the obstacles."
       ],
-      before: ["B. subtilis detects plant stress in soil and produces stress-priming protectants there"],
-      after: ["A controlled bioreactor that activates B. subtilis on stress signals", "A clear input-to-output mapping, and stronger dry-lab modelling", "Sell the consumable, not the device, after a competitive analysis"],
       photos: [{ src: "exp-0410-chen.webp", alt: "Online meeting with Prof. Chen, 10 April 2026." }],
       links: [W("Hardware notebook", "../hardware/"), W("Modelling", "../model/"), W("Entrepreneurship", "../entrepreneurship/")],
       source: "LOG + ROAD + HW"
@@ -323,15 +327,15 @@ window.EVOMAP = (function () {
       headline: "Containment becomes the primary safety layer",
       role: "Gene circuit design, protectant design, bioreactor hardware",
       lanes: ["protect", "circuit", "reactor"],
-      keyPoint: "Physical containment should be the primary safety mechanism, rather than relying only on a kill switch.",
+      keyPoint: "Physical containment should be the primary safety mechanism rather than relying only on a kill switch.",
+      before: ["Design a kill switch to prevent B. sub leakage and cause pollution", "Designed bioreactor v1"],
+      after: ["Treat physical containment as the primary biosafety mechanism, while evaluating whether an additional kill switch is necessary", "Design a semi-permeable membrane that retains bacteria while allowing the target protectants to diffuse through"],
       suggestion: "Treat physical containment as the primary biosafety mechanism and design a membrane that retains bacteria while letting protectant through.",
       summary: "The second expert in a month to question the kill switch. Dr. Lin had asked whether it was needed; Dr. Brophy named why it could not be what we relied on.",
       takeaways: [
         "A biological kill switch alone is not a reliable guard against environmental harm.",
         "A semi-permeable membrane can hold the organism and still deliver the product."
       ],
-      before: ["A kill switch to prevent B. subtilis leaking into the environment", "Bioreactor v1 designed"],
-      after: ["Physical containment first, with a kill switch evaluated as an addition", "A semi-permeable membrane that keeps bacteria in and lets protectant out"],
       photos: [{ src: "exp-0418-brophy.webp", alt: "Online meeting with Dr. Jennifer Brophy, 18 April 2026." }],
       links: [W("Safety and security", "../safety-and-security/"), W("Hardware notebook", "../hardware/")],
       source: "LOG + ROAD"
@@ -349,7 +353,9 @@ window.EVOMAP = (function () {
       headline: "Farmers named weather, water and price before salt",
       role: "Smallholder and organic farmers", where: "Taipei",
       lanes: ["deploy"],
-      quote: "Small-scale farmers need solutions that are affordable, accessible and practical for their farms.",
+      after: ["This event significantly shaped our project direction by not only focusing on abiotic but also on biotic stresses in order to protect the plants more comprehensively.", "Another valuable takeaway from the farmers is that they are not against using technology in the field as long as it is affordable, accessible, and practical for their farms."],
+      quote: "Diseases and pests have led to a decrease in our crop yields.",
+      before: [],
       suggestion: "Build for the farm that exists, at a price it can carry.",
       summary: "We asked stallholders what goes wrong in their fields. Nobody started with salt: weather came first, then water, then the price of every fix.",
       takeaways: [
@@ -357,8 +363,6 @@ window.EVOMAP = (function () {
         "Farmers told us how they feel about technology in the field, which the business plan had to answer.",
         "Useful information sits on government pages and never reaches them. The LINE assistant starts here."
       ],
-      before: ["Abiotic stress only"],
-      after: ["Cover biotic as well as abiotic stress"],
       photos: [{ src: "farm-expo-group.webp", alt: "The team with farmers at the Taipei farmers' expo, 16 May 2026." }],
       links: [W("Farmer engagement and the LINE platform", "../human-practices/"), W("Entrepreneurship", "../entrepreneurship/")],
       source: "LOG + ROAD + PLANT"
@@ -376,43 +380,17 @@ window.EVOMAP = (function () {
       headline: "Acceptance depends on showing environmental safety and benefit",
       role: "Smallholder farming and climate resilience",
       lanes: ["deploy"],
+      after: ["focus more on a sustainable farming label, and to stay on the path of heat stress, because other stresses aren't as easily combatted. If we want to deal with pathogens, then it would also be best if we try to sense root pressure instead."],
+      before: [],
       suggestion: "",
       summary: "What smallholder farming is up against: climate resilience, and biotic and abiotic stress together. The log records no single quoted suggestion.",
       takeaways: [
         "Traditional and natural farmers accept what is shown to be safe, beneficial and sustainable.",
         "GMO regulation needs research of its own before we claim no environmental harm."
       ],
-      before: [],
-      after: ["Lean toward a sustainable farming label", "Stay on heat stress; the others are harder to combat well", "For pathogens, consider sensing root pressure"],
       photos: [{ src: "exp-0522-worldveg.webp", alt: "Meeting with the World Vegetable Center, 22 May 2026." }],
       links: [W("Entrepreneurship", "../entrepreneurship/"), W("Safety and security", "../safety-and-security/")],
       source: "LOG + ROAD"
-    },
-    {
-      id: "e08", date: "2026-06-17", recurring: true,
-      face: "face-kyle",
-      evidence: [
-        { src: "ev-kyle-bench", cap: "Dr. Kyle at our bench, where the plate rules were set." },
-        { src: "ev-kyle-inspect", cap: "31 May. His lab inspection." },
-        { src: "ev-contamination", cap: "17 June. A contaminated plate: excluded whole." },
-        { src: "ev-hydro-dead", cap: "23 July. A failed hydroponic run, taken apart." }
-      ],
-      dateNote: "A standing thread, not a single meeting. The plant page records advice weekly from June; 17 June is the dated entry, and the July ruling on the salt ceiling is in the same thread.",
-      name: "Dr. Kyle", zh: "", kind: "expert",
-      headline: "The rules the plant screen still runs on",
-      role: "Plant screening advisor, weekly from June",
-      lanes: ["plant"],
-      suggestion: "Never top up evaporated medium: the water leaves, the salt stays, and the concentration rises.",
-      summary: "A weekly advisor from June. Almost every correction on the plant page traces back to this thread.",
-      takeaways: [
-        "A contaminated plate is excluded whole, not seedling by seedling.",
-        "Plot chlorophyll with and without fresh-weight normalisation; that is how the artefact became visible.",
-        "Chlorine-gas seed sterilisation, advised in June and not applied consistently. It cost us a trial."
-      ],
-      before: ["Two-day stratification, 1% agar, medium topped up when it evaporated"],
-      after: ["Four-day stratification from July", "Exclusion rules written down and applied", "Salt screened at 75 and 100 mM, below the 200 mM ceiling"],
-      links: [W("Plant screening record", "../plant/")],
-      source: "PLANT. This thread is not in the interview log; it is written up on the plant page."
     },
     {
       id: "e09", date: "2026-06-18",
@@ -428,6 +406,10 @@ window.EVOMAP = (function () {
       role: "Biomanufacturing and bioreactor engineering, chair professor of chemical engineering",
       where: "He visited the team",
       lanes: ["reactor"],
+      keyPoint: "For the hollow fiber membrane, he noted that monitoring the flow rate and transmembrane pressure is essential for filtration (indicates the caking issue).",
+      keyLabel: "From our notes",
+      before: [],
+      after: ["Based on his recommendations, we built pressure tracking protocols and physical foam-breaking mechanisms directly into our initial hardware specifications"],
       suggestion: "Put a valve after the membrane to build pressure and push the permeate through.",
       summary: "He has published on B. subtilis bioreactors and spent longer on containment than on the biology. He found a hole none of us had seen.",
       takeaways: [
@@ -435,8 +417,6 @@ window.EVOMAP = (function () {
         "Foaming from B. subtilis surfactant needs a mechanical bubble breaker.",
         "Flow rate and transmembrane pressure show when the membrane is caking."
       ],
-      before: ["No mechanism for moving protectant out of the membrane", "No valve on any plan"],
-      after: ["A stepper pinch valve posted the next day, with a 27 June target", "Monitor flow rate and transmembrane pressure", "Break foam mechanically"],
       links: [W("Hardware notebook", "../hardware/")],
       source: "LOG + ROAD + HW week 16"
     },
@@ -453,6 +433,10 @@ window.EVOMAP = (function () {
       headline: "Model and bench have to feed each other",
       role: "AIoT and smart agriculture, founder of Agritalk", where: "He visited the team",
       lanes: ["plant", "reactor", "model", "deploy"],
+      keyPoint: "He highlighted the importance of connecting the experimental data with modeling, identifying the inputs and outputs clearly, and ensuring every model is refined through experimental validation and feedback loops.",
+      keyLabel: "From our notes",
+      before: ["Developed the mathematical model and experimental system as relatively separate components", "Planned to evaluate plant responses under a limited set of experimental conditions", "Focused on whether the bioreactor could produce the target protectant"],
+      after: ["Establish a feedback loop between mathematical modeling and wet-lab experiments", "For the plant model, test different salt concentrations and treatment durations to determine the relationship between dosage, treatment time, and plant response", "Monitor dissolved oxygen and other hydroponic conditions to maintain stable plant growth during experiments"],
       suggestion: "Connect the experimental data to the model, identify the inputs and outputs, and refine every model through experimental validation.",
       summary: "His second visit, across the model, plants, protectant, hydroponics, circuit and reactor at once. He took apart the auto-filling reservoir we had drawn.",
       takeaways: [
@@ -460,8 +444,6 @@ window.EVOMAP = (function () {
         "The ReLeaf database can hold the experimental data for later optimisation.",
         "Visit Yes Health iFarm to understand hydroponic deployment."
       ],
-      before: ["Model and experimental system developed separately", "Plant responses tested under a limited set of conditions", "Bioreactor judged only on whether it made protectant"],
-      after: ["A feedback loop between model and bench", "Salt concentration tested against treatment duration", "Longer reactor runs, with dissolved oxygen monitored"],
       photos: [{ src: "exp-0410-chen-b.webp", alt: "Prof. Chen reviewing the team's slides." }],
       links: [W("Modelling", "../model/"), W("Plant screening record", "../plant/"), W("Hardware notebook", "../hardware/")],
       source: "LOG + ROAD + PLANT"
@@ -480,6 +462,8 @@ window.EVOMAP = (function () {
       role: "Protectant design, Stanford",
       lanes: ["protect"],
       keyPoint: "Validation of the protectant itself before integrating it into the full system.",
+      before: ["Focused on integrating protectant production into the bioreactor before fully validating the effectiveness of the protectant itself"],
+      after: ["Test the purified protectant directly on plants to demonstrate its effectiveness and strengthen our proof of concept", "Define clearer project goals, milestones, and measurable outcomes before further developing the complete system", "Use the results of direct plant assays to determine whether a protectant is worth integrating into the engineered B. subtilis bioreactor"],
       suggestion: "Test the purified protectant directly on plants, and pick one stress and do it well.",
       summary: "She was direct that our proof of concept might not hold, and that goals and milestones had to be written down before building further.",
       takeaways: [
@@ -487,8 +471,6 @@ window.EVOMAP = (function () {
         "One stress done well beats several done at surface level.",
         "Other molecule types are worth exploring, peptides among them."
       ],
-      before: ["Protectant production integrated into the bioreactor before the protectant itself was validated"],
-      after: ["Test purified protectant directly on plants", "Set clearer goals, milestones and measurable outcomes", "Let the plant assay decide whether a protectant enters the reactor"],
       photos: [{ src: "exp-0627-sattely.webp", alt: "Online meeting with Dr. Elizabeth Sattely, 27 June 2026." }],
       links: [W("Plant screening record", "../plant/"), W("Engineering record", "../engineering/")],
       source: "LOG + ROAD"
@@ -506,14 +488,16 @@ window.EVOMAP = (function () {
       headline: "Farmers need room to raise problems we did not expect",
       role: "Agricultural media",
       lanes: ["deploy"],
+      keyPoint: "During the meeting with Green Media in early July, we learned that stakeholders from different backgrounds may hold different perspectives on farming, and many farmers may face challenges that we had not anticipated.",
+      keyLabel: "From our notes",
+      after: ["To provide participants with opportunities to share their research, experiences, and perspectives, we structured the forum to ensure that every participant's voice could be heard."],
+      before: [],
       suggestion: "",
       summary: "The agricultural and the media view together: people from different backgrounds see farming differently, and an event has to run with that in mind.",
       takeaways: [
         "Outreach is how the science reaches smallholder farmers at all.",
         "Farmers may bring problems we have not anticipated; the event needs room for them."
       ],
-      before: ["A public forum where participants share experiences, challenges and research"],
-      after: ["A discussion session where every participant talks, not only listens"],
       photos: [{ src: "logo-greenmedia.webp", alt: "Green Media's logo." }],
       links: [W("Public engagement", "../human-practices/")],
       source: "LOG + ROAD"
@@ -531,7 +515,9 @@ window.EVOMAP = (function () {
       headline: "Delivery method and cost per area decide what is usable",
       role: "Biostimulant development and regulation", where: "Their site, with Prof. Chen present",
       lanes: ["plant", "protect", "deploy"],
+      after: ["Research into biostimulant and farming equipment", "Compare testing of protectant distribution methods: root irrigation / foliar spray / drone spray; consider production cost per area covered", "Look into AI as a diverse tool for protectant testing and design", "Apply computational screening to optimize protectant", "Protective motifs and truncated peptide + mutation", "Research on regulation"],
       keyPoint: "Different crops and protectants require different application methods.",
+      before: ["Focused broadly on developing a bioreactor capable of producing and delivering plant protectants under different stress conditions"],
       suggestion: "Show better plant performance under heat or drought, measured several ways, and confirm Taiwanese regulation first.",
       summary: "Their researchers walked us past their published work and finished products, and their regulatory specialist explained registering a biostimulant. We left with a peptide to test.",
       takeaways: [
@@ -539,8 +525,6 @@ window.EVOMAP = (function () {
         "Production cost per area covered decides whether a method is usable.",
         "Computational screening and truncated peptides are a route to better candidates."
       ],
-      before: ["A bioreactor that produces and delivers protectants under different stress conditions, in general"],
-      after: ["Compare delivery methods and cost per area", "Screen protectant candidates computationally", "Research Taiwan's biostimulant regulation"],
       links: [W("Plant screening record", "../plant/"), W("Entrepreneurship", "../entrepreneurship/")],
       source: "LOG + ROAD + PLANT"
     },
@@ -557,6 +541,8 @@ window.EVOMAP = (function () {
       headline: "Oxygen matters as much as containment",
       role: "Companies, experts and researchers across biotechnology",
       lanes: ["protect", "reactor", "deploy"],
+      after: ["After hearing different advice from different booths, we realized that we should prioritize an O2 sensor and feedback loop in our design.", "For business plans, we should also research the GMO regulatory landscape in Taiwan and other countries, including the Philippines, Malaysia, and EU.", "Utilizing agricultural waste through methods such as hay infusion for the business plan."],
+      before: ["On-site production avoids shelf life and transportation cost", "Farmers only need to buy the bioreactor machine and replace the B. subtilis powder or liquid once a year", "Protectant candidates include ACCD, LEA14, and BoPep4"],
       suggestion: "",
       summary: "Stress tolerance depends on how protective molecules are regulated and used, as well as whether they are present. Oxygen came home as the main question.",
       takeaways: [
@@ -564,8 +550,6 @@ window.EVOMAP = (function () {
         "An oxygen sensor with a feedback loop moves up the priority list.",
         "Some validation must move from agar and hydroponics into soil, with larger samples."
       ],
-      before: ["Sensor to microcontroller to production, delivered by pipeline and spray", "Farmers buy the reactor once and replace the bacteria yearly", "Protectant candidates: ACCD, LEA14, BoPep4"],
-      after: ["Prioritise an oxygen sensor and its feedback loop", "Consider delivery through the irrigation system", "Research GMO rules in Taiwan, the Philippines, Malaysia and the EU"],
       links: [W("Hardware notebook", "../hardware/"), W("Entrepreneurship", "../entrepreneurship/")],
       source: "LOG + ROAD"
     },
@@ -582,6 +566,8 @@ window.EVOMAP = (function () {
       headline: "Too much help can take away a plant's own resilience",
       role: "Natural farming, Happy Farm", where: "Tamsui",
       lanes: ["deploy"],
+      after: ["This suggestion then further affects our business plan on the amount of protectant that will be released in order to support the crops in a way that will not affect their ability to develop resilience.", "Therefore, we designed a seed exchange platform that will allow us to track the owners of the seeds."],
+      before: [],
       quote: "Sometimes, giving too much is not necessarily beneficial for a living organism; instead, it can take away its ability to survive and thrive on its own.",
       suggestion: "Ask whether external support stops a plant building its own resilience, and answer that concern in the design.",
       summary: "We harvested okra and luffa, knelt in her beds while she read the soil, and ate what we picked. Her objection is the hardest the project has faced.",
@@ -590,8 +576,6 @@ window.EVOMAP = (function () {
         "Over-intervention can interfere with natural farming processes.",
         "What she wanted was not a device. It was a way to exchange seed."
       ],
-      before: [],
-      after: ["Build an online seed exchange platform", "Answer the resilience objection directly"],
       photos: [{ src: "farm-tamsui-group.webp", alt: "The team with Ms. Chen at Happy Farm, Tamsui, 21 July 2026." }],
       links: [W("Farmer engagement and the LINE platform", "../human-practices/"), W("Software", "../software/")],
       source: "LOG + ROAD + PLANT"
@@ -609,6 +593,8 @@ window.EVOMAP = (function () {
       headline: "Act at the seedling stage, and only when stress hits",
       role: "Dean at NCHU; plant stress biology and gene circuits", where: "Online",
       lanes: ["plant", "circuit", "model"],
+      before: [],
+      after: ["Combine sensors (pH value, moisture) with weather forecasting and AI to predict stress and release protectants early", "Set the bioreactor to clear free radicals periodically when stress hits, rather than running continuously", "Use dense cell pellets and DNA (>10k) for electroporation, troubleshoot ligation, and verify the green reporter gene in B. sub"],
       suggestion: "Apply biostimulants at the seedling stage, set thresholds, and validate the dose before trusting it.",
       summary: "A consultation on timing, dose, sensing and application that changed when we think the reactor should act at all.",
       takeaways: [
@@ -616,8 +602,6 @@ window.EVOMAP = (function () {
         "Too much stress or protectant harms the plant, so validate thresholds and doses.",
         "Some protectants prime before stress; others work better once stress arrives."
       ],
-      before: ["A reactor that runs continuously", "Cloning troubleshooting without controls for native resistance"],
-      after: ["Forecasts plus pH and moisture sensors to release protectant early", "Run the reactor periodically, when stress hits", "Electroporation with dense pellets, larger DNA and control groups"],
       photos: [{ src: "exp-0728-huang.webp", alt: "The online consultation with Prof. Huang, 28 July 2026." }],
       links: [W("Engineering record", "../engineering/"), W("Modelling", "../model/")],
       source: "LOG + ROAD"
@@ -635,6 +619,8 @@ window.EVOMAP = (function () {
       headline: "Secretion proves nothing if the protein is inactive",
       role: "Dean at NCHU; plant stress biology and gene circuits", where: "In person at NCHU",
       lanes: ["plant", "protect", "circuit"],
+      after: ["We recognized that only improving secretion is insufficient if the resulting protein does not retain its activity, so protein quantity, identity, solubility, and function need to be evaluated together."],
+      before: [],
       suggestion: "Evaluate protein quantity, identity, solubility and function together. Improving secretion alone proves nothing.",
       summary: "Nine days later we went to NCHU in person, with the wet lab, the plant model and the dry lab each bringing one question.",
       takeaways: [
@@ -642,14 +628,12 @@ window.EVOMAP = (function () {
         "Salinity and heat each need a stated rationale on agar, hydroponics and soil.",
         "For the dry lab: shorter or modified peptides that keep activity, guided by receptor interactions."
       ],
-      before: ["Secretion treated as the measure of success"],
-      after: ["Evaluate quantity, identity, solubility and function together", "State the rationale for each stress on each growth system", "Truncated or modified peptides, guided by receptor interactions"],
       links: [W("Engineering record", "../engineering/"), W("Plant screening record", "../plant/")],
       source: "LOG + ROAD"
     },
     {
       id: "e18", date: "2026-08-06",
-      face: "ev-huangzb-group",
+      face: "face-huangtb",
       evidence: [
         { src: "ev-huangzb-group", cap: "6 August. With Prof. Huang 黃姿碧 at NCHU." },
         { src: "ev-nchu-gate", cap: "The same visit." },
@@ -660,6 +644,8 @@ window.EVOMAP = (function () {
       headline: "Dose, timing and frequency at the plant decide the effect",
       role: "Plant and stress biology, protectant delivery, NCHU", where: "In person at NCHU",
       lanes: ["plant", "protect", "circuit"],
+      after: ["This interview helped us better understand that our system effectiveness doesn't only depend on whether B. sub produces protectants, but also on how much protectant reaches the plant, when it is delivered, and how frequently it is applied.", "We also learned that optimizing the culture medium may help reduce metabolic trade-offs while supporting bacterial growth and protein production."],
+      before: [],
       suggestion: "What matters is how much protectant reaches the plant, when it is delivered, and how often.",
       summary: "A second NCHU consultation the same day. With the bacteria kept inside the reactor, delivery is the step that decides the plant response.",
       takeaways: [
@@ -667,8 +653,6 @@ window.EVOMAP = (function () {
         "Irrigation, spraying and seed coating are the delivery methods to compare.",
         "A better culture medium may ease the trade-off between growth and protein output."
       ],
-      before: [],
-      after: ["Compare irrigation, spraying and seed coating", "Treat delivered dose and timing as the measured quantity", "Optimise the medium for growth and protein output together"],
       links: [W("Engineering record", "../engineering/")],
       source: "LOG + ROAD"
     },
@@ -685,6 +669,8 @@ window.EVOMAP = (function () {
       headline: "A working hydroponic farm changed what our chamber had to do",
       role: "Controlled-environment hydroponic farm",
       lanes: ["plant", "reactor", "model", "deploy"],
+      before: [],
+      after: ["Reconsider our current 8/16 light cycle and investigate whether a 12/12 cycle would produce more natural and reliable growth conditions", "Modify our growth chamber to provide continuous circulation and gentle aeration rather than relying on pure oxygen", "Minimize plant transfers during experiments because transplantation itself can induce stress"],
       suggestion: "",
       summary: "Prof. Chen sent us. Seeing a fully controlled hydroponic farm changed our growth chamber plans. Some technical data we asked for was not available to us.",
       takeaways: [
@@ -692,8 +678,6 @@ window.EVOMAP = (function () {
         "Treat plants as organisms with individual needs.",
         "Transplanting is itself a stress, so keep transfers to a minimum."
       ],
-      before: ["An 8/16 light cycle", "Pure oxygen into the growth chamber", "Dissolved oxygen aerated but not measured"],
-      after: ["Reconsider the 8/16 light cycle against 12/12", "Circulation and gentle aeration instead of pure oxygen", "Measure dissolved oxygen, and possibly OD"],
       links: [W("Hardware notebook", "../hardware/"), W("Modelling", "../model/")],
       source: "LOG + ROAD"
     },
@@ -710,6 +694,8 @@ window.EVOMAP = (function () {
       headline: "Ten-day plants, a 200 mM ceiling, treatment by transfer",
       role: "Plant and stress biology, NTU",
       lanes: ["plant"],
+      before: ["Used inconsistent plant ages and treatment conditions"],
+      after: ["Standardize plant age, treatment timing, and sample conditions", "Optimize hydroponic conditions and investigate contamination", "Revise soil and agar protocols to reduce unintended plant stress"],
       suggestion: "Use ten- to twenty-day-old plants, cap salt at 200 mM, and treat by transfer instead of spray.",
       summary: "Five months after the seed, we took the whole screen back to her. The log entry is empty; her rulings, written up on 2 September, are the record.",
       takeaways: [
@@ -717,8 +703,6 @@ window.EVOMAP = (function () {
         "Do not spray salt or protectant; move plants onto plates that already contain it.",
         "The gradual soil salt ramp is too mild, and watering between doses washes it out."
       ],
-      before: ["Seedlings transferred at four days old", "Treatment applied by pipette, then by spray", "Soil salt built up 25 mM per day toward 100 mM, with watering in between"],
-      after: ["Ten-day-old plants in experiment set 8", "Treatment by transfer onto prepared plates", "Soil doses of 100, 200 and 300 mM, no watering between"],
       links: [W("Plant screening record", "../plant/")],
       source: "PLANT, rulings written up 2 September. The interview log entry for 28 August is blank."
     },
@@ -735,6 +719,8 @@ window.EVOMAP = (function () {
       headline: "The membrane leaks at rest, and a farmer must run it",
       role: "Biomanufacturing and bioreactor engineering", where: "Second visit to the team",
       lanes: ["reactor", "model", "deploy"],
+      after: ["As a result of this follow-up loop, we adjusted our membrane parameters to prevent leakage and shifted our hardware architecture toward a modular, farmer-friendly capsule unit."],
+      before: [],
       suggestion: "Improve the membrane delivery and the experimental reliability, and make the reactor something a farmer can understand and operate.",
       summary: "Eleven weeks on, we showed him the built reactor and two problems: material crossing the membrane with no driving force, and data we could not interpret.",
       takeaways: [
@@ -742,8 +728,6 @@ window.EVOMAP = (function () {
         "A replaceable bacterial capsule and AIoT control would make the system practical on a farm.",
         "The membrane leak at rest is an open problem, recorded here as open."
       ],
-      before: ["Membrane treated as a solved containment layer", "Usability treated as a later problem"],
-      after: ["Investigate the leak at rest before claiming containment", "Design toward a replaceable bacterial capsule", "Integrate AIoT so a farmer can operate it"],
       links: [W("Hardware notebook", "../hardware/"), W("Safety and security", "../safety-and-security/")],
       source: "LOG. The log's Project Impact and Action fields for this visit are blank; the summary and feedback fields are not."
     },
@@ -762,6 +746,9 @@ window.EVOMAP = (function () {
       role: "Experts, farmers and the public, more than 50 participants",
       where: "Taipei Water Garden Organic Farmers' Market, with Green Media",
       lanes: ["protect", "deploy"],
+      keyPoint: "He stated that rather than simply maximizing plant growth or continuously increasing protection, the goal should be to find a balance between growth and defense.",
+      keyLabel: "From CH Biotech at the forum",
+      ai: ["before", "after"],
       suggestion: "Protect on the basis of whether the plant can keep growing under the stress it is in.",
       summary: "Three speakers, then the farmers, with more than 50 people in the room. Natural farming, smart agriculture and plant metabolism reached the same limit: balance growth and defence.",
       takeaways: [
@@ -780,7 +767,6 @@ window.EVOMAP = (function () {
     },
     {
       id: "e23", date: "2026-09-09",
-      face: "booth-intro",
       evidence: [
         { src: "booth-intro", cap: "The device explained to the public." },
         { src: "ev-reactor-case", cap: "One device doing several jobs: the price case." },
@@ -791,6 +777,8 @@ window.EVOMAP = (function () {
       headline: "Young farmers adopt first; older farmers and regulation are harder",
       role: "Agricultural technology exhibition",
       lanes: ["deploy"],
+      before: [],
+      after: [],
       suggestion: "",
       summary: "We took the business case to an exhibition floor to see where it broke.",
       takeaways: [
@@ -798,8 +786,6 @@ window.EVOMAP = (function () {
         "Regulation will be difficult for a product that uses GMOs.",
         "One system replaces several products, and government sectors signalled they may subsidise it."
       ],
-      before: [],
-      after: [],
       links: [W("Entrepreneurship", "../entrepreneurship/")],
       source: "LOG. Action fields blank."
     },
@@ -818,6 +804,10 @@ window.EVOMAP = (function () {
       role: "2nd International Symposium on Living Systems Design Research, NCHU and JSLSDR",
       where: "National Chung Hsing University, Taichung, 10 to 13 September",
       lanes: ["protect", "deploy"],
+      keyPoint: "They mentioned that we need a deeper understanding of our experimental data and the ACCD mechanism.",
+      keyLabel: "From our notes",
+      after: ["It also encouraged us to focus more on farmers' demand and make our project narrative more problem-driven while presenting our scientific motivation and findings more clearly to different audiences and stakeholders."],
+      before: [],
       suggestion: "Put the finding in the title of every slide, and keep the evidence under it simple enough to prove it.",
       summary: "Dean Huang invited us after our NCHU visit. We presented a poster on host, microbe and molecule communication to researchers who study exactly that.",
       takeaways: [
@@ -825,12 +815,6 @@ window.EVOMAP = (function () {
         "Know ACC deaminase's mechanism in full. Visitors asked about it most.",
         "State the farmers' problem first and win the first 30 seconds."
       ],
-      before: [
-        "Slide titles named the experiment",
-        "Presentations opened with the reactor",
-        "ACC deaminase explained as a name, not a mechanism"
-      ],
-      after: ["Rewrite every results slide title as its finding", "Open with the farmers' problem, then the reactor", "A step-by-step ACC deaminase explanation for booth and pitch"],
       links: [W("Results", "../results/"), W("Entrepreneurship", "../entrepreneurship/")],
       source: "Team notes from the symposium, 11 to 12 September"
     },
@@ -847,6 +831,10 @@ window.EVOMAP = (function () {
       headline: "Show the bacteria make and secrete ACCD, with controls",
       role: "Protectant design and synthetic biology, Stanford",
       lanes: ["protect", "circuit"],
+      keyPoint: "Most importantly, they mentioned clearly communicating the purpose and results of each experiment is crucial.",
+      keyLabel: "From our notes",
+      after: ["We also need to provide appropriate controls to rule out alternative explanations and verify ACCD production at both the protein and RNA levels, and make our mechanism of action and biosafety rationale easier for judges and audiences to understand."],
+      before: [],
       suggestion: "Distinguish clearly between the engineered bacteria and the protectant delivered to plants, and show that the bacteria produce and secrete ACCD.",
       summary: "Dr. Sattely's second reading, now with Prof. Endy. June asked whether the protectant works; September asked whether our results say what we claim.",
       takeaways: [
@@ -854,11 +842,30 @@ window.EVOMAP = (function () {
         "Verify ACCD production at protein and RNA level.",
         "Add controls that rule out alternatives, and say what each result shows."
       ],
-      before: ["Results presented without controls that rule out the alternatives", "Bacteria and protectant described together"],
-      after: ["Verify ACCD at protein and RNA level", "Add controls that rule out alternative explanations", "Separate the organism from the delivered protectant in every explanation"],
       photos: [{ src: "exp-0912-sattely-endy.webp", alt: "Online meeting with Dr. Sattely and Prof. Endy, 12 September 2026." }],
       links: [W("Engineering record", "../engineering/"), W("Safety and security", "../safety-and-security/")],
       source: "LOG + ROAD"
+    },
+    {
+      id: "e26", date: "2026-09-24",
+      dateNote: "The draft gives no date for this meeting. We date it from the screenshot of the online call, taken on 24 September.",
+      evidence: [
+        { src: "lanyang-call", cap: "The online meeting with Mr. Chen and the team." }
+      ],
+      name: "Lanyang River Cooperative", zh: "", kind: "farm",
+      headline: "A bioreactor on a farm has to survive typhoons and animals",
+      role: "Mr. Chen, farmer and founder of Lanyang River Friendly Farming Production Cooperative",
+      where: "Online",
+      lanes: ["reactor", "deploy"],
+      after: ["In response, we incorporated this potential risk into the threat analysis of our business plan and reconsidered our approach to biosafety accordingly.", "Based on this feedback, he encouraged us to develop a more targeted marketing strategy focused on specific crop groups."],
+      summary: "A farmer who grows without pesticides, chemical fertilizers or herbicides told us what could go wrong with a bioreactor in a real field.",
+      takeaways: [
+        "The reactor could be damaged by natural disasters or wild animals, releasing B. subtilis.",
+        "Some crops, such as strawberries, may need little or no intervention."
+      ],
+      before: [],
+      links: [W("Entrepreneurship", "../entrepreneurship/"), W("Safety and security", "../safety-and-security/")],
+      source: "IHP draft, 28 September"
     }
   ];
 
@@ -1023,38 +1030,39 @@ window.EVOMAP = (function () {
   /* --------------------------------------------------------------- STATIONS */
 
   var stations = [
-    { id: "redesign", glyph: "box",
-      glyphNote: "Drawn as the box the project ended in. The line starts in the soil, where the bacteria were first meant to live, and closes the vessel at the last meeting.",
-      name: "Redesign", dates: "19 March to 18 April",
-      lede: "Five conversations took the project from bacteria in the soil to bacteria in a sealed vessel.",
-      ids: ["e01", "e02", "e03", "e04", "e05"] },
-    { id: "first-builds", glyph: "flask",
-      glyphNote: "Drawn as a flask: the first reactor and the plant screen were both built in this phase.",
-      name: "First builds", dates: "16 May to 27 June",
-      lede: "Farmers at the market, and the advisors who set the rules for the first reactor and the plant screen.",
-      ids: ["e06", "e07", "e08", "e09", "e10", "e11"] },
-    { id: "industry-farms", glyph: "leaf",
-      glyphNote: "Drawn as a leaf: this phase took the project to the people who grow, sell and regulate plants.",
-      name: "Industry and farms", dates: "7 to 28 July",
-      lede: "Media, a biostimulant company, an exhibition floor, a natural farm and a dean's first call.",
-      ids: ["e12", "e13", "e14", "e15", "e16"] },
-    { id: "dose-delivery", glyph: "drop",
+    { id: "idea", glyph: "leaf", ledeStudent: true,
+      glyphNote: "Drawn as a leaf: plant biologists helped us choose the plant and the stresses to test.",
+      name: "Idea formation", dates: "March to April",
+      lede: "We began by defining the biological problem and testing our original concept. Feedback from Dr. Lin, Prof. Cheng, and Dr. Verslues helped us narrow our focus from a broad PGPR system targeting multiple stresses to a more controlled and testable biological concept towards plants.",
+      ids: ["e01", "e02", "e03"] },
+    { id: "design", glyph: "box", ledeStudent: true,
+      glyphNote: "Drawn as the box the project ended in. The line starts in the soil, where the bacteria were first meant to live, and closes around the sealed vessel.",
+      name: "System design", dates: "April to May",
+      lede: "We changed the biological concept into a practical bioreactor system. Prof. Chen's feedback shifted us toward a controlled bioreactor, whereas Dr. Brophy led us to implement physical containment and membrane-based delivery. Additionally, interviewing with the World Vegetable Center and visiting the Farmer Expo encouraged us to consider environmental safety, sustainability, and farmers' needs. They also led to our awareness of biological stresses.",
+      ids: ["e04", "e05", "e06", "e07"] },
+    { id: "optimise", glyph: "flask", ledeStudent: true,
+      glyphNote: "Drawn as a flask: the first reactor and the plant screen were refined in this phase.",
+      name: "System optimization", dates: "June to July",
+      lede: "With the overall system design structured, we focused on refining its individual components. We started to interview experts for feedback that led to improvements to the bioreactor, protectant validation, dosage and delivery, and plant-testing conditions. We also adjusted our experimental design to make our results more accurate and precise.",
+      ids: ["e09", "e10", "e11", "e12", "e13", "e14", "e15"] },
+    { id: "dose", glyph: "drop",
       glyphNote: "Drawn as a drop: every conversation here was about how much reaches the plant, and when.",
-      name: "Dose and delivery", dates: "6 to 28 August",
-      lede: "How much protectant reaches the plant, when, and in what kind of growing system.",
-      ids: ["e17", "e18", "e19", "e20"] },
-    { id: "forum-reviews", glyph: "bubble",
+      name: "System optimization, continued", dates: "July to August",
+      lede: "The second half of the same stage: dose, timing and delivery at the plant, and the growing conditions of the plant screen.",
+      ids: ["e16", "e17", "e18", "e19", "e20"] },
+    { id: "real-world", glyph: "bubble", ledeStudent: true,
       glyphNote: "Drawn as a speech bubble: the project was presented, questioned and reviewed in public. The forum sits on the tail.",
-      name: "Forum and reviews", dates: "4 to 12 September",
-      lede: "Two advisors came back to judge what we had built, and we took the project to a forum, an exhibition and a symposium.",
-      ids: ["e21", "e22", "e23", "e24", "e25"] }
+      name: "Real-world implementation", dates: "September",
+      lede: "In the final stage, we connected our development to real-world application. We focused on system reliability, farmer usability, regulation, and whether our experiments clearly demonstrated our proposed mechanism. We collected feedback from agricultural forums and experts, which makes ReLeaf a more practical solution to farmers.",
+      ids: ["e21", "e22", "e23", "e24", "e25", "e26"] }
   ];
+
 
   return {
     stations: stations,
     meta: {
       start: "2026-03-10",
-      end: "2026-09-20",
+      end: "2026-09-30",
       title: "Project Evolution Map",
       standfirst: "Six project areas, six months, and every place an outside voice changed one of them.",
       startState: "Engineered bacteria released into soil, with a kill switch as the safeguard, sensing stress themselves and supplying trehalose on a Medicago model.",
