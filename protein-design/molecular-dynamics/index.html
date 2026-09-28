@@ -1,0 +1,329 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Molecular Dynamics | Protein Design | ReLeaf &middot; iGEM 2026</title>
+  <meta name="description" content="Nine all-atom trajectories of BoPEP4 on the PEPR1 ectodomain: what each run was for, what the set says that no single run can, and where the full report for each one lives." />
+  <link rel="icon" href="../../assets/img/logo.png" />
+  <link rel="stylesheet" href="../../assets/css/tokens.css" />
+  <link rel="stylesheet" href="../../assets/css/nav.css" />
+  <link rel="stylesheet" href="../../assets/css/page.css" />
+  <link rel="stylesheet" href="../../assets/vendor/katex/katex.min.css" />
+  <link rel="stylesheet" href="../protein.css?v=202609281" />
+</head>
+<body class="pd">
+<!--
+  SOURCE. Built 28 September 2026. The writing document for this subpage
+  ("3. Molecular Dynamics Subpage/Untitled document.docx") is empty, so the
+  page is assembled from three things the team did produce:
+
+    1. the run roster in "Layout - Protein Design Page.docx" section 3, which
+       lists WT, 7-23, 9-23, 15-23, CHis, WT pH 5.5, 9-23 pH 5.5, a future
+       ternary run, and ACC D and LEA14 as not yet started;
+    2. the paragraph defining molecular dynamics in "Methodology
+       Writing.docx", quoted whole under "What the method is";
+    3. /md-simulations/, which holds the analysis of all nine trajectories
+       and a full report for each.
+
+  The layout document names bopep4-chis-vs-wt as the current basis for this
+  subpage, so that run is given its own section. Everything written here that
+  is not from source 2 carries class="ai". /md-simulations/ keeps its URL.
+-->
+
+  <div id="site-nav" data-base="../../" data-tab="drylab" data-page="protein-design"></div>
+  <div class="sitenav-spacer"></div>
+
+  <header class="pagehead pagehead--hero">
+    <div class="pagehead__hero">
+      <img src="../../assets/img/protein-design/hero-md.webp"
+           alt="Molecular surface of the PEPR1 binding groove with the C-terminal end of the BoPEP4 peptide running along it and the final residue, Asn23, buried in a pocket at the closed end of the groove."
+           width="1800" height="787" fetchpriority="high" />
+      <div class="pagehead__heroinner">
+        <p class="pagehead__eyebrow">
+          <a href="../../">ReLeaf</a> <i>/</i> Dry Lab <i>/</i> <a href="../">Protein Design</a> <i>/</i> Molecular Dynamics
+        </p>
+        <h1 class="pagehead__title">Molecular Dynamics</h1>
+      </div>
+    </div>
+
+    <div class="pagehead__inner">
+      <p class="pagehead__herocap ai"><b>The contact everything is measured against.</b> Asn23, the last residue of BoPEP4, buried at the closed end of the PEPR1 groove where its free carboxylate reaches Arg487. Seven of the nine runs are, in the end, a question about whether that one bond holds.</p>
+      <p class="pagehead__lede ai">Docking scores a pose. Molecular dynamics asks whether the pose survives being shaken. Nine all-atom trajectories were run on the PEPR1 ectodomain, eight of them carrying a peptide, and the set answers questions that no single run can: how much receptor motion would have happened anyway, what the acceptance criteria are actually measuring, and what the acidity outside a plant cell does to the interface.</p>
+      <ul class="pagehead__meta">
+        <li><b>Section</b><span>Dry Lab</span></li>
+        <li><b>Written by</b><span>Dry lab, protein design</span></li>
+        <li><b>Last updated</b><span>28 September 2026</span></li>
+        <li><b>Status</b><span>Nine runs complete, ternary and other protectants outstanding</span></li>
+      </ul>
+    </div>
+  </header>
+
+  <nav class="stepnav" aria-label="Protein Design section">
+    <div class="stepnav__inner">
+      <a class="stepnav__home" href="../">Protein Design</a>
+      <a class="step" href="../methodology/">Methodology</a>
+      <a class="step" href="../sprints/">Sprints and Results</a>
+      <a class="step" href="./" aria-current="page">Molecular Dynamics</a>
+      <a class="step" href="../../md-simulations/">MD reports</a>
+      <a class="step" href="../../peptide-design/">Worked case</a>
+    </div>
+  </nav>
+
+  <div class="pagewrap">
+    <details class="toc" open>
+      <summary>Contents</summary>
+      <div class="toc__inner"><p class="toc__title">On this page</p></div>
+    </details>
+
+    <main class="pagebody">
+
+      <!-- ===================================================== 1 · METHOD --->
+      <section class="sec" id="what-the-method-is">
+        <h2>What the method is</h2>
+
+        <p>Molecular Dynamics (MD) simulation is a fundamental computational methodology that uses statistical mechanics to evaluate the physical properties, structural stability, and mechanism of action of engineered proteins and peptides. By integrating Newtonian equations of motion, MD tracks the velocities, positions, and interactions between molecules over time. We applied this to our project to understand the translation and secretion efficiency of our protectants by analyzing the interactions between different receptors.</p>
+
+        <div class="finds">
+          <div class="find">
+            <span class="find__n">9</span>
+            <span class="find__t">trajectories</span>
+            <p class="ai">Eight carrying a peptide, one with the receptor alone.</p>
+          </div>
+          <div class="find">
+            <span class="find__n">30 ns</span>
+            <span class="find__t">production each</span>
+            <p class="ai">270&nbsp;ns in total, 13,500 saved frames, one random seed per system.</p>
+          </div>
+          <div class="find">
+            <span class="find__n">127,600</span>
+            <span class="find__t">atoms per system</span>
+            <p class="ai">The PEPR1 ectodomain, residues 29 to 738, solvated in explicit water.</p>
+          </div>
+          <div class="find">
+            <span class="find__n">25.9</span>
+            <span class="find__t">GPU-hours</span>
+            <p class="ai">One A100, about 250&nbsp;ns per day, one analysis pass over all nine runs.</p>
+          </div>
+        </div>
+
+        <p class="ai">Every system was built on the PEPR1 ectodomain from PDB&nbsp;5GR8 and solvated in OPC water with AMBER ff19SB&nbsp;[1][2]. Hydrogen mass repartitioning allows a \( 4\,\mathrm{fs} \) time step. Because the numbers on every run come from one analysis codebase applied to all nine trajectories, the columns mean the same thing from row to row, which is what makes the cross-run reading in section 3 possible at all. The protocol in full, with the equilibration schedule, is on <a href="../../md-simulations/#how">MD Simulations</a>.</p>
+      </section>
+
+      <!-- ====================================================== 2 · THE SET -->
+      <section class="sec" id="the-nine-runs">
+        <h2>The nine runs</h2>
+
+        <p class="ai">Four things change across the set and nothing else does: which ligand is in the groove, which residues of it are present, whether the C-terminus is free, and whether three histidines are protonated. Each run below links to its own report, which carries the trajectory, the per-residue occupancies and the plots.</p>
+
+        <h3 id="the-controls">The two controls</h3>
+
+        <p class="ai">These are the runs that can falsify the rest. One has an experimental structure to check against; the other has no peptide at all, which puts a measured floor under every receptor-side number in the set.</p>
+
+        <ul class="runs">
+          <li class="run" data-state="good">
+            <div class="run__top"><span class="run__name"><a href="../../md-simulations/atpep1-benchmark-vs-bopep4.html">AtPEP1 7 to 23 benchmark</a></span><span class="run__seq">KQRGKEKVSSGRPGQHN</span><span class="run__role">Benchmark</span></div>
+            <p class="ai">The peptide actually resolved in the 5GR8 crystal structure, run under settings identical to the other eight. It is the only system with an experimental structure to check against, so it sets the scale the rest are read on.</p>
+          </li>
+          <li class="run" data-state="good">
+            <div class="run__top"><span class="run__name"><a href="../../md-simulations/apo-PEPR1.html">Receptor alone</a></span><span class="run__role">Negative control</span></div>
+            <p class="ai">The peptide removed entirely. The receptor is no looser, the groove does not collapse, and the per-residue flexibility profile barely moves. That is what makes a receptor-side difference on any other run readable as a real difference.</p>
+          </li>
+        </ul>
+
+        <h3 id="the-ladder">The truncation ladder, in motion</h3>
+
+        <p class="ai">The same four constructs the <a href="../sprints/#the-truncation-ladder">docking ladder</a> produced, taken into simulation to see whether the plateau it found survives. It does not survive uniformly.</p>
+
+        <ul class="runs">
+          <li class="run" data-state="good">
+            <div class="run__top"><span class="run__name"><a href="../../md-simulations/bopep4-wt-round1.html">BoPEP4 wild type, 1 to 23</a></span><span class="run__role">Reference state</span></div>
+            <p class="ai">The complete mature sequence with a free C-terminus. The other seven BoPEP4 trajectories are all read against this one.</p>
+          </li>
+          <li class="run" data-state="good">
+            <div class="run__top"><span class="run__name"><a href="../../md-simulations/bopep4-7-23.html">BoPEP4 7 to 23</a></span><span class="run__role">Hypothesis falsified</span></div>
+            <p class="ai">Putting Lys7 and Lys8 back onto 9 to 23 restores the clamp, and not because a free-terminus artefact went away: Lys7 grips Asp129, a salt bridge that is not on Tang's list of eight. This is also the first construct that is like for like with the benchmark.</p>
+          </li>
+          <li class="run" data-state="warn">
+            <div class="run__top"><span class="run__name"><a href="../../md-simulations/bopep4-9-23-vs-wt.html">BoPEP4 9 to 23</a></span><span class="run__role">The construct that was ordered</span></div>
+            <p class="ai">Deleting residues 1 to 8 loosens the anchor at the far end of the peptide. The clamp flickers open 94 times in 30&nbsp;ns, none of the gaps longer than 0.68&nbsp;ns.</p>
+          </li>
+          <li class="run" data-state="warn">
+            <div class="run__top"><span class="run__name"><a href="../../md-simulations/bopep4-15-23-vs-wt.html">BoPEP4 15 to 23</a></span><span class="run__role">Control that did not fail</span></div>
+            <p class="ai">Planned as a negative control that would fall off and supply a leaving time. It did not fall off, and it could not have: unbinding runs on microseconds to milliseconds, three to six orders of magnitude past 30&nbsp;ns.</p>
+          </li>
+        </ul>
+
+        <h3 id="the-tag">The histidine tag</h3>
+
+        <ul class="runs">
+          <li class="run" data-state="bad">
+            <div class="run__top"><span class="run__name"><a href="../../md-simulations/bopep4-chis-vs-wt.html">BoPEP4 with a C-terminal 6xHis</a></span><span class="run__role">False pass</span></div>
+            <p class="ai">Six histidines fused after Asn23. All four acceptance criteria pass and the C-terminus scores as steadier than wild type. But Asn23 is no longer a C-terminus: its carboxylate was spent forming the amide bond to His24, so the criterion is measuring a neutral carbonyl rather than a salt bridge.</p>
+          </li>
+        </ul>
+
+        <aside class="callout callout--unproven ai">
+          <b class="callout__label">Why this run is the one the layout document points at</b>
+          <p>It is the clearest case in the project of a check passing for the wrong reason. Ranked on backbone RMSD, the tagged construct comes first in the whole set, and it is the one construct whose salt bridge does not exist. A criterion written before a construct existed can measure atoms that construct does not have, and nothing in the score says so. This is the argument for putting the tag at the N-terminus, and it is why <a href="../sprints/#the-runs">N-His against C-His</a> stopped being an arbitrary choice.</p>
+        </aside>
+
+        <h3 id="protonation">Protonation: the apoplast at pH 5.5</h3>
+
+        <p class="ai">The peptide does its work outside the plant cell, where the pH is nearer 5.5 than 7. Two runs test what that changes, by switching three histidines to their protonated form and touching nothing else.</p>
+
+        <ul class="runs">
+          <li class="run" data-state="good">
+            <div class="run__top"><span class="run__name"><a href="../../md-simulations/bopep4-lowph-vs-wt.html">BoPEP4 1 to 23 at pH 5.5</a></span><span class="run__role">Positive result</span></div>
+            <p class="ai">A Glu12 and His227 pair appears at once and holds, and the AtPEP1 benchmark already makes that same pair at neutral pH. The C-terminal anchor is untouched.</p>
+          </li>
+          <li class="run" data-state="bad">
+            <div class="run__top"><span class="run__name"><a href="../../md-simulations/bopep4-9-23-lowph.html">BoPEP4 9 to 23 at pH 5.5</a></span><span class="run__role">Failed the gate</span></div>
+            <p class="ai">Truncation crossed with protonation. Every metric except the anchor improved and the anchor collapsed: the now-positive His22 folds back onto the peptide's own C-terminal carboxylate and displaces Arg487.</p>
+          </li>
+        </ul>
+
+        <aside class="callout ai">
+          <b class="callout__label">What &ldquo;pH 5.5&rdquo; means here</b>
+          <p>Molecular dynamics has no pH. The label names a protonation state held fixed for the whole 30&nbsp;ns: His14 and His22 on the peptide and His227 on the receptor carry a positive charge, every other histidine is neutral, and all aspartates and glutamates are deprotonated. The assignment comes from model p<i>K</i><sub>a</sub> values, not from a constant-pH simulation.</p>
+        </aside>
+
+        <h3 id="not-yet-run">Not yet run</h3>
+
+        <ul class="runs">
+          <li class="run" data-state="pending">
+            <div class="run__top"><span class="run__name">The ternary complex</span><span class="run__role">Future</span></div>
+            <p class="ai">PEPR1, BoPEP4 and BAK1 together. The docked ternary model exists; no trajectory has been run on it, so everything the section says about the three-body complex is still a statement about geometry rather than about stability.</p>
+          </li>
+          <li class="run" data-state="pending">
+            <div class="run__top"><span class="run__name">ACC deaminase</span><span class="run__role">Future</span></div>
+            <p class="ai">Listed in the layout document. Not started.</p>
+          </li>
+          <li class="run" data-state="pending">
+            <div class="run__top"><span class="run__name">LEA14</span><span class="run__role">Future</span></div>
+            <p class="ai">Listed in the layout document. Not started.</p>
+          </li>
+        </ul>
+      </section>
+
+      <!-- ==================================================== 3 · READINGS -->
+      <section class="sec" id="what-the-set-says">
+        <h2>What the set says</h2>
+
+        <p class="ai">Four results need all nine runs to exist. Each is stated here in one line, with the full working on <a href="../../md-simulations/#reading-the-set">MD Simulations</a>.</p>
+
+        <h3>A stability score does not track the bond it is standing in for</h3>
+        <p class="ai">Backbone RMSD over the shared 15 to 23 window, the kind of number constructs usually get ranked on, correlates with the Asn23 and Arg487 salt bridge at Spearman \( +0.29 \), and against the four-contact clamp it runs \( +0.03 \) the wrong way. The practical consequence appears twice in this set: ranked on RMSD, the tagged construct comes first and the failed run comes second.</p>
+
+        <h3>Ten receptor residues hold in every run</h3>
+        <p class="ai">Pool the per-residue contact occupancies across all eight peptide-bearing runs and ten receptor residues stay above 50% in every one, whatever the peptide is doing at the other end. Five of the ten are on the list of eight hotspots Tang and colleagues read off the AtPEP1 complex&nbsp;[3], and five are not.</p>
+
+        <h3>The apo run sets the floor</h3>
+        <p class="ai">With no peptide at all, the receptor C&alpha; RMSD is \( 1.57\,\text{Å} \), below all seven peptide-bearing runs it can be compared with, and the binding groove holds at \( 35.91 \pm 0.55\,\text{Å} \). Any receptor-side difference smaller than about half an &aring;ngstr&ouml;m elsewhere in the set is inside that floor and should not be read as a result.</p>
+
+        <h3>Acidity recovers a contact the benchmark already has</h3>
+        <p class="ai">At pH&nbsp;5.5 the Glu12 carboxylate locks onto the His227 ring at \( 2.75 \pm 0.11\,\text{Å} \) in 99.9% of frames; at pH&nbsp;7 the same pair sits \( 5.33\,\text{Å} \) apart and appears in 0.8%. The AtPEP1 benchmark makes that contact natively at neutral pH. The recommendation that follows is that future BoPEP4 simulations default to pH&nbsp;5.5 with pH&nbsp;7 as the control.</p>
+      </section>
+
+      <!-- ====================================================== 4 · LIMITS -->
+      <section class="sec" id="limits">
+        <h2>Limits</h2>
+
+        <p class="ai">Thirty nanoseconds is three to six orders of magnitude short of a dissociation event, so nothing on this page is a binding affinity, a leaving time or a free energy. Each system has one random seed, so a difference between two runs may be a difference between two relaxation paths rather than between two constructs. The acceptance gate was written before the tagged construct existed and, on that construct, measures atoms it does not have. And none of it has been checked at the bench: no binding assay, no thermal shift, no plant.</p>
+
+        <p class="ai">What the set is good for is deciding what to build and what to measure next, which is the job it did: it is the reason the tag moved to the N-terminus, and the reason pH is now a parameter rather than an assumption.</p>
+
+        <aside class="callout callout--borrowed ai">
+          <b class="callout__label">The full analysis</b>
+          <p><a href="../../md-simulations/">MD Simulations</a> carries the cross-run table, the run map, the trace plots and the nine reports, in English and Traditional Chinese. This page is the way into it from the Protein Design section; nothing has moved.</p>
+        </aside>
+      </section>
+
+      <!-- ================================================== 5 · REFERENCES -->
+      <section class="refs" id="references">
+        <h2 data-no-toc>References</h2>
+        <ol>
+          <li>Tian, C. et al. ff19SB: amino-acid-specific protein backbone parameters trained against quantum mechanics energy surfaces in solution. <i>Journal of Chemical Theory and Computation</i> 16, 528 to 552 (2020).</li>
+          <li>Izadi, S., Anandakrishnan, R. &amp; Onufriev, A. V. Building water models: a different approach. <i>Journal of Physical Chemistry Letters</i> 5, 3863 to 3871 (2014). OPC.</li>
+          <li>Tang, J., Han, Z., Sun, Y., Zhang, H., Gong, X. &amp; Chai, J. Structural basis for recognition of an endogenous peptide by the plant receptor kinase PEPR1. <i>Cell Research</i> 25, 110 to 120 (2015). PDB&nbsp;5GR8.</li>
+          <li>Eastman, P. et al. OpenMM 7: rapid development of high performance algorithms for molecular dynamics. <i>PLoS Computational Biology</i> 13, e1005659 (2017).</li>
+        </ol>
+      </section>
+    </main>
+  </div>
+
+  <nav class="pagenav" aria-label="Neighbouring pages">
+    <a class="is-prev" href="../sprints/"><b>Previous</b><span>Sprints and Results</span></a>
+    <a class="is-next" href="../../md-simulations/"><b>Next</b><span>MD Simulations</span></a>
+  </nav>
+
+  <footer class="footer2">
+    <div class="footer2__inner">
+        <div>
+          <h3>Project</h3>
+          <ul>
+          <li><a href="../../description/">Description</a></li>
+          <li><a href="../../engineering/">Engineering</a></li>
+          <li><a href="../../contribution/">Contribution</a></li>
+          <li><a href="../../results/">Results</a></li>
+          </ul>
+        </div>
+        <div>
+          <h3>Wet Lab</h3>
+          <ul>
+          <li><a href="../../experiments/">Experiments</a></li>
+          <li><a href="../../parts/">Parts</a></li>
+          <li><a href="../../plant/">Plants</a></li>
+          <li><a href="../../measurement/">Measurement</a></li>
+          <li><a href="../../safety-and-security/">Safety</a></li>
+          <li><a href="../../notebook/">Notebook</a></li>
+          </ul>
+        </div>
+        <div>
+          <h3>Dry Lab</h3>
+          <ul>
+          <li><a href="../../model/">Math Model</a></li>
+          <li><a href="../../hardware/">Hardware</a></li>
+          <li><a href="../../software/">Digital Twin</a></li>
+          <li><a href="../">Protein Design</a></li>
+          <li><a href="../../drylab-notebook/">Dry Lab Notebook</a></li>
+          </ul>
+        </div>
+        <div>
+          <h3>Engagement</h3>
+          <ul>
+          <li><a href="../../human-practices/">Integrated Human Practices</a></li>
+          <li><a href="../../education/">Education</a></li>
+          <li><a href="../../entrepreneurship/">Entrepreneurship</a></li>
+          <li><a href="../../sustainability/">Sustainability</a></li>
+          <li><a href="../../laws-and-regulations/">Laws and Regulations</a></li>
+          <li><a href="../../geospatial-analysis/">Geospatial Analysis</a></li>
+          <li><a href="../../data-physicalization/">Data Physicalization</a></li>
+          </ul>
+        </div>
+        <div>
+          <h3>Team</h3>
+          <ul>
+          <li><a href="../../team/">Members</a></li>
+          <li><a href="../../attributions/">Attribution</a></li>
+          <li><a href="../../milestone/">Milestone</a></li>
+          <li><a href="../../gallery/">Gallery</a></li>
+          </ul>
+        </div>
+      <div class="footer2__legal">
+        <p><b>ReLeaf</b> &middot; GEMS Taiwan &middot; iGEM 2026 &middot; Biomanufacturing Village</p>
+        <p>&copy; 2026 &middot; Content on this wiki is licensed under a <a href="https://creativecommons.org/licenses/by/4.0/" rel="license">Creative Commons Attribution 4.0 International license</a>.</p>
+        <p>The repository used to create this website is available at <a href="https://gitlab.igem.org/2026/gems-taiwan">gitlab.igem.org/2026/gems-taiwan</a>.</p>
+        <p>Nothing on this wiki is fetched from a server outside iGEM. Before the wiki freeze, every image and font has to be re-hosted on <code>static.igem.wiki</code>.</p>
+      </div>
+    </div>
+  </footer>
+
+  <script src="../../assets/data/site-nav.js" fetchpriority="high"></script>
+  <script src="../../assets/js/nav.js" fetchpriority="high"></script>
+  <script src="../../assets/js/page.js" fetchpriority="high"></script>
+  <script defer src="../../assets/vendor/katex/katex.min.js"></script>
+  <script defer src="../../assets/vendor/katex/contrib/mhchem.min.js"></script>
+  <script defer src="../../assets/js/math.js"></script>
+</body>
+</html>
