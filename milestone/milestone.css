@@ -1,0 +1,137 @@
+/* =============================================================================
+   Milestone: the year as a vertical timeline, one section per month.
+   Each entry is a date, a short title, a line or two, and a strip of
+   photographs; extra photographs from the same day sit in a toggle. The strip
+   keeps every photograph's own shape: each image's flex-grow is its aspect
+   ratio (set inline), so a row comes out at one height without cropping.
+   The lightbox from page.js opens the large file (milestone.js).
+   ========================================================================== */
+
+/* ---- four phases ----------------------------------------------------------- */
+.phases {
+  list-style: none;
+  counter-reset: phase;
+  display: grid;
+  gap: var(--sp-4);
+  grid-template-columns: repeat(auto-fit, minmax(15rem, 1fr));
+  margin: var(--sp-5) 0 var(--sp-3);
+  padding: 0;
+}
+.sec .phases li + li { margin-top: 0; }
+.phases__item {
+  counter-increment: phase;
+  padding: var(--sp-4) var(--sp-5);
+  border: 1px solid var(--gray-200);
+  border-top: 3px solid var(--leaf-500);
+  border-radius: var(--radius-sm);
+  background: var(--white);
+  font-size: var(--text-sm);
+  line-height: 1.55;
+}
+.sec .phases__title {
+  margin: 0 0 var(--sp-2);
+  font-size: var(--text-base);
+  color: var(--leaf-900);
+}
+.sec .phases__title::before {
+  content: counter(phase) ".";
+  margin-right: .45em;
+  color: var(--leaf-500);
+  font-variant-numeric: tabular-nums;
+}
+.phases__note { font-size: var(--text-sm); color: var(--gray-500); }
+
+/* ---- the timeline ------------------------------------------------------------ */
+.milestone { --tl-date: 6.75rem; --tl-gap: 2.25rem; --tl-h: 10.5rem; }
+
+.sec ol.tl {
+  position: relative;
+  list-style: none;
+  margin: var(--sp-5) 0 0;
+  padding: 0;
+}
+/* the rail: one continuous line down the date column's right edge */
+.sec ol.tl::before {
+  content: "";
+  position: absolute;
+  top: .55rem; bottom: .55rem;
+  left: calc(var(--tl-date) + var(--tl-gap) / 2 - 1px);
+  width: 2px;
+  background: var(--leaf-200);
+}
+.sec ol.tl > li.tl__item {
+  position: relative;
+  display: grid;
+  grid-template-columns: var(--tl-date) minmax(0, 1fr);
+  column-gap: var(--tl-gap);
+  margin: 0;
+  padding-bottom: var(--sp-7);
+}
+.sec ol.tl > li.tl__item:last-child { padding-bottom: 0; }
+.sec ol.tl > li.tl__item::before {
+  content: "";
+  position: absolute;
+  top: .42rem;
+  left: calc(var(--tl-date) + var(--tl-gap) / 2 - 7px);
+  width: 14px; height: 14px;
+  border-radius: 50%;
+  background: var(--leaf-700);
+  box-shadow: 0 0 0 4px var(--white);
+}
+.sec ol.tl--ahead > li.tl__item::before { background: var(--white); border: 2px solid var(--leaf-500); }
+
+.sec .tl__date {
+  margin: 0;
+  padding-top: .12rem;
+  text-align: right;
+  font-size: var(--text-sm);
+  font-weight: 650;
+  line-height: 1.35;
+  color: var(--leaf-700);
+  font-variant-numeric: tabular-nums;
+}
+.tl__body { min-width: 0; }
+.sec .tl__title {
+  margin: 0 0 var(--sp-2);
+  font-size: 1.125rem;
+  line-height: 1.35;
+  color: var(--leaf-900);
+}
+.sec .tl__body > p { margin: 0; max-width: var(--measure); }
+
+/* ---- photo strip ------------------------------------------------------------- */
+.fig.tl__fig { margin: var(--sp-4) 0 0; }
+.tl__strip {
+  display: flex;
+  gap: var(--sp-2);
+  max-width: calc(var(--ar) * var(--tl-h) + (var(--n) - 1) * var(--sp-2));
+}
+.tl__strip img {
+  flex-shrink: 1;
+  flex-basis: 0;
+  width: 0;
+  min-width: 0;
+  height: auto;
+}
+.tl__fig figcaption { max-width: var(--measure); }
+.tl__more { margin: var(--sp-4) 0 0; max-width: var(--measure); }
+.tl__more .fig.tl__fig { margin-top: 0; }
+.tl__more .tl__strip { max-width: calc(var(--ar) * 8.5rem + (var(--n) - 1) * var(--sp-2)); }
+
+/* ---- phone: dates move above the titles, the rail moves to the edge --------- */
+@media (max-width: 720px) {
+  .milestone { --tl-h: 8rem; }
+  .sec ol.tl::before { left: .4rem; }
+  .sec ol.tl > li.tl__item {
+    grid-template-columns: minmax(0, 1fr);
+    padding-left: 1.75rem;
+    padding-bottom: var(--sp-6);
+  }
+  .sec ol.tl > li.tl__item::before { left: calc(.4rem - 6px); width: 12px; height: 12px; top: .3rem; }
+  .sec .tl__date { text-align: left; padding: 0; margin-bottom: var(--sp-1); }
+}
+
+/* a lone photograph or a diagram gets more height than a row of three */
+.tl__strip--one { --tl-h: 15rem; }
+@media (max-width: 720px) { .tl__strip--one { --tl-h: 13rem; } }
+.tl__more .tl__strip--one { max-width: calc(var(--ar) * 12rem); }
