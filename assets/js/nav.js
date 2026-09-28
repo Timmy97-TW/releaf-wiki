@@ -102,7 +102,11 @@
         "</div>" +
       "</div>" +
       '<div class="sitenav__panels"></div>' +
-      '<div class="sitenav__drawer"></div>';
+      '<div class="sitenav__drawer"></div>' +
+      /* the page behind an open panel softens: a fixed, unclickable blur that
+         sits under the panel and over the page. Decoration only, so it is
+         hidden from assistive technology. */
+      '<div class="sitenav__scrim" aria-hidden="true"></div>';
 
     const tabs   = root.querySelector(".sitenav__tabs");
     const panels = root.querySelector(".sitenav__panels");
@@ -124,28 +128,17 @@
       panel.dataset.tab = tab.id;
       const inner = el("div", "sitenav__panelinner");
 
-      const rail = el("div", "sitenav__rail");
-
-      /* student artwork, only for tabs that name it in site-nav.js: `art: true`
-         means assets/img/tab-icons/<id>.png, a string is a path from the wiki
-         root. Probing for files that are not there would put five 404s in the
-         console of every page. */
-      if (tab.art) {
-        const art = document.createElement("img");
-        art.className = "sitenav__railart";
-        art.src = BASE + (tab.art === true ? "assets/img/tab-icons/" + tab.id + ".png" : tab.art);
-        art.alt = "";
-        art.onerror = () => art.remove();
-        rail.appendChild(art);
-      }
-
-      rail.appendChild(el("h2", "sitenav__railtitle", tab.name));
-      rail.appendChild(el("p", "sitenav__railblurb", tab.blurb));
-      inner.appendChild(rail);
-
+      /* No title rail. The tab the reader just opened is lit in the bar above,
+         so repeating its name inside the panel said nothing, and the paragraph
+         under it cost the links half the width. One grid of pages instead,
+         lined up with the logo. `--i` is the entry's place in that grid; the
+         stylesheet staggers the rise by 25ms a step. */
       const list = el("div", "sitenav__list");
-      list.dataset.count = tab.pages.length;
-      tab.pages.forEach((p) => list.appendChild(entry(p, currentPage)));
+      tab.pages.forEach((p, i) => {
+        const a = entry(p, currentPage);
+        a.style.setProperty("--i", i);
+        list.appendChild(a);
+      });
       inner.appendChild(list);
 
       panel.appendChild(inner);
@@ -159,7 +152,11 @@
       gbtn.appendChild(el("span", null, tab.name));
       gbtn.appendChild(el("i", "sitenav__chev"));
       const gbody = el("div", "sitenav__groupbody");
-      tab.pages.forEach((p) => gbody.appendChild(entry(p, currentPage)));
+      tab.pages.forEach((p, i) => {
+        const a = entry(p, currentPage);
+        a.style.setProperty("--i", i);
+        gbody.appendChild(a);
+      });
       gbtn.addEventListener("click", () => {
         const open = group.classList.toggle("is-open");
         gbtn.setAttribute("aria-expanded", String(open));
