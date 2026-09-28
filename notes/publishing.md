@@ -21,7 +21,8 @@ the season is running.
 Moving over is not just a copy. iGEM's GitLab limits (checked on
 gitlab.igem.org/help/instance_configuration, 23 September 2026): a push can be at
 most **11 MiB** and a CI job artifact, which is what GitLab Pages deploys, at most
-**10 MiB**. This repository is about 150 MB, nearly all of it images, video,
+**10 MiB**. This repository is about 264 MB (the figure `build/audit.py` prints
+at the top of its report, excluding `.git`), nearly all of it images, video,
 PDFs and 3D models, so every one of those files has to move to
 `static.igem.wiki` (video to `video.igem.org`) and only the code goes into the
 GitLab repository, pushed in pieces under 11 MiB. The official template builds
@@ -37,13 +38,17 @@ packaging. The things that have to change:
    - `src` and `srcset` in `index.html`
    - the two `@font-face` rules, in `assets/css/tokens.css` and
      `assets/css/team.css`
-2. **Put the real team number in the attributions iframe.** Replace `0000` in
-   `attributions/index.html` with **6072** (GEMS Taiwan's 2026 team ID). The 2026
-   template also shows attributions on the team page itself; check it first.
+2. ~~**Put the real team number in the attributions iframe.**~~ Done:
+   `attributions/index.html` embeds `teams.igem.org/wiki/6072/attributions`,
+   which is GEMS Taiwan's 2026 team ID. The 2026 template also shows
+   attributions on the team page itself; that is still unchecked.
 3. **Check every slug survived.** `notes/structure.md` has the table. This is
    the step that costs awards if it is skipped.
-4. **Delete every scaffold note.** Search for `class="scaffold"` and for
-   `class="status"`; nothing carrying either should be on a published page.
+4. **Delete every scaffold note.** Run `python3 build/audit.py` and read the
+   leftovers table rather than grepping: a status box is written `class="status"`
+   on two pages and `class="status ai"` on three, and a bare search for the first
+   spelling misses the others. Nothing carrying either should be on a published
+   page.
 
 ## Before the freeze, in order
 
@@ -89,17 +94,18 @@ remains.
 Its own list, because it is the largest single body of content on the wiki and
 none of it is covered by the generator's scaffold markers.
 
-- [ ] **151 pending chips filled or removed.** 51 photometer, 74 DiOPAL, 26
-      bioreactor. The class comes in three forms, so match the word, not the
-      attribute: `grep -rno 'pending' hardware/*/index.html | wc -l`
-- [ ] **15 empty photo slots** filled or removed, 6 photometer, 4 DiOPAL, 5
-      bioreactor: `grep -rn 'frame[a-z ]*empty' hardware/*/index.html`
-- [ ] **44 open items** resolved, 18 photometer, 8 DiOPAL, 18 bioreactor:
+- [ ] **117 pending chips filled or removed.** 69 DiOPAL, 35 photometer, 13
+      hydroponics; the bioreactor page has none left. Counted by
+      `python3 build/audit.py`, whose leftovers table lists them per page. A bare
+      `grep -rno 'pending' hardware/*/index.html | wc -l` answers 118, because
+      one of them is the word in a sentence on the bioreactor page
+- [x] **Empty photo slots** all filled or removed:
+      `grep -rn 'frame[a-z ]*empty' hardware/*/index.html` finds none
+- [ ] **1 open item** resolved, on the photometer page:
       `grep -rn 'openitem' hardware/*/index.html`
-- [ ] **3 unwritten sections** on the photometer page: `grep -n 'blank-slot'
-      hardware/photometer/index.html`
-- [ ] Photometer §3.1 and §3.6 written; §3.1 has an empty heading as well as an
-      empty body
+- [x] **Unwritten sections** all written: `grep -n 'blank-slot'
+      hardware/photometer/index.html` finds none, and no heading on the page is
+      empty
 - [ ] The open contradictions settled: 8% against 7.7% accuracy, 10° against
       8.1° tilt, and the run-duration figures in `notes/structure.md`
 - [ ] Every photograph under `hardware/*/photos/` and `hardware/img/` re-hosted

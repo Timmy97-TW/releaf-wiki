@@ -15,7 +15,9 @@ team three awards.
 | Page | Address | Judged for |
 |---|---|---|
 | Description | `/description` | — |
+| Biomanufacturing | `/biomanufacturing` | — |
 | Engineering | `/engineering` | Silver #1 |
+| Development | `/development` | — |
 | Contribution | `/contribution` | Bronze #3 |
 | Results | `/results` | — |
 | Experiments | `/experiments` | — |
@@ -25,9 +27,9 @@ team three awards.
 | Safety | `/safety-and-security` | Safety and Security Award |
 | Notebook | `/notebook` | — |
 | Math Model | `/model` | Best Model |
-| Bioreactor Calculations | `/bioreactor-calculations` | — |
 | Hardware | `/hardware` | Best Hardware |
 | Software | `/software` | Best Software Tool |
+| Protein Design | `/protein-design` | — |
 | Peptide Design | `/peptide-design` | — |
 | Dry Lab Notebook | `/drylab-notebook` | — |
 | Integrated Human Practices | `/human-practices` | Silver #2, Best IHP |
@@ -42,6 +44,10 @@ team three awards.
 | Attribution | `/attributions` | Bronze #2 |
 | Milestone | `/milestone` | — |
 | Gallery | `/gallery` | — |
+
+`/bioreactor-calculations` is **not** in the table because the page was removed
+on purpose on 25 September 2026. It is not a standard address and no award is
+judged from it. Do not add the row, the page or a link to it back.
 
 `/inclusivity` exists but is deliberately not in the tab panels. Gold requires
 three special awards; if Inclusivity becomes one of the three, add it to the
@@ -171,5 +177,7 @@ host, and a full CJK face is 10 to 20 MB.
   across the wiki are hatched placeholder boxes until then.
 - **Gallery and Milestone bodies.** Both need the photograph set chosen and
   cleared first.
-- **The attributions team number.** `attributions/index.html` has `0000` in the
-  iframe `src`.
+- ~~**The attributions team number.**~~ Done: `attributions/index.html` embeds
+  `teams.igem.org/wiki/6072/attributions`, which is GEMS Taiwan's 2026 team ID.
+  What is still unchecked is whether the 2026 template also wants attributions
+  on the team page itself.

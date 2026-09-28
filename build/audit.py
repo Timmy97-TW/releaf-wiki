@@ -335,13 +335,21 @@ def main():
             findings["case"].append((rel(f), line, url))
 
     # leftovers the team has to clear before the freeze
+    # One class out of a list, whatever order it is written in: class="status",
+    # class="status ai" and class="ai status" all count once, and a longer word
+    # that merely contains the marker (stk__pending, openitem-tag) does not
+    # count at all. Matching class="status" alone missed the boxes on model,
+    # parts and results, which carry class="status ai".
+    def cls(name):
+        return r'class="(?:[^"]*\s)?' + name + r'(?:\s[^"]*)?"'
+
     leftover_pats = {
-        "scaffold note": r'class="[^"]*\bscaffold\b',
-        "status box": r'class="status"',
-        "pending chip": r'class="[^"]*\bpending\b',
-        "figure placeholder": r'class="[^"]*\bfig--pending\b',
+        "scaffold note": cls("scaffold"),
+        "status box": cls("status"),
+        "pending chip": cls("pending"),
+        "figure placeholder": cls("fig--pending"),
         "empty photo frame": r'class="[^"]*\bframe\b[^"]*\bempty\b',
-        "open item": r'class="[^"]*\bopenitem\b',
+        "open item": cls("openitem"),
         "TODO/TBD/XXX": r"\b(TODO|TBD|FIXME|XXX)\b",
         "lorem ipsum": r"(?i)lorem ipsum",
     }
