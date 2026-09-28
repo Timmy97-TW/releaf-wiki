@@ -89,7 +89,28 @@
     update();
   }
 
-  /* ---- 3. short labels in the contents rail ------------------------------ */
+  /* ---- 3. pipelines: filter the interview cards by domain --------------- */
+  /* Without JavaScript every card shows and the buttons do nothing. */
+
+  function pipes(root) {
+    var btns  = $$(".pipes__btn", root);
+    var cards = $$(".stk", root);
+    var status = $(".pipes__status", root);
+    function has(c, area) { return area === "all" || (" " + c.dataset.areas + " ").indexOf(" " + area + " ") > -1; }
+    btns.forEach(function (b) {
+      var n = cards.filter(function (c) { return has(c, b.dataset.area); }).length;
+      var out = $(".pipes__n", b);
+      if (out) out.textContent = n;
+      b.addEventListener("click", function () {
+        var area = b.dataset.area, shown = 0;
+        btns.forEach(function (x) { x.setAttribute("aria-pressed", x === b ? "true" : "false"); });
+        cards.forEach(function (c) { var on = has(c, area); c.hidden = !on; if (on) shown++; });
+        if (status) status.textContent = area === "all" ? "" : "Showing " + shown + " of " + cards.length + " interviews: " + b.firstChild.textContent.trim() + ".";
+      });
+    });
+  }
+
+  /* ---- 4. short labels in the contents rail ------------------------------ */
   /* page.js builds the rail from the heading text. Our headings are long,
      deliberately: each one is a claim, not a category. A rail of claims is a
      rail you have to scroll, so the rail gets the short name instead. Every
@@ -127,6 +148,7 @@
   function start() {
     $$("[data-rail]").forEach(rail);
     $$("[data-carousel]").forEach(carousel);
+    $$("[data-pipes]").forEach(pipes);
 
     /* This file is loaded after page.js, so the rail is already there. If the
        load order is ever changed back, watch for it rather than give up.     */
