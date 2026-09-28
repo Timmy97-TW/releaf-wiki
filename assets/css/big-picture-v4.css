@@ -1,0 +1,361 @@
+/* =============================================================================
+   ReLeaf: the big picture, V4
+   -----------------------------------------------------------------------------
+   V2 hung twenty-nine pieces of work off five steps. It is a record of a year,
+   and a reader who wants to know what the machine IS has to assemble it from
+   twenty-nine small parts. V3 answered at one level up and lost the flow. V4
+   keeps V2's five steps and replaces the twenty-nine with FIFTEEN COMPONENTS,
+   three to a step, each one a thing the system is made of rather than a task
+   somebody did:
+
+     THE STRESS -> THE PROTEIN -> THE CELLS -> THE BIOREACTOR -> THE FIELD
+
+   FOUR RULES GOVERN EVERY EDIT.
+
+   1  A COMPONENT IS A PART OF THE MACHINE, NOT A PIECE OF WORK. "Sensor suite"
+      is one component, not four probes; "digital twin" is a component even
+      though no photograph of it exists. If an edit turns a row back into a task
+      ("Sanger clone verification"), the figure has become V2 again and has
+      stopped answering the question it was built to answer.
+
+   2  THE JOINTS CARRY THE ARGUMENT. Between two steps sits a joint bar naming
+      what passes and saying whether that hand-over has happened. Two of the
+      four are closed and two are open, and the return loop is open. A reader
+      who reads nothing but the joints has the true state of the project. Never
+      dress an open joint as a closed one.
+
+   3  EVERY STEP CARRIES A PERSON. The voice strip under each step names who
+      changed that part of the design and what they changed. This is the whole
+      reason the figure can call itself humane biomanufacturing: the machine has
+      people in its causal chain, at the same size as the hardware.
+
+   4  A LIMIT SITS IN THE SAME SENTENCE AS THE CLAIM IT LIMITS. No small print,
+      no disclosure, nothing that opens. Every word is in the markup before the
+      script runs.
+
+   COLOUR, AND IT IS NOT DECORATION.
+     leaf   structure: rails, hairlines, the step numbers
+     green  a state that is measured or built
+     amber  a state that is modelled, designed or run once
+     rust   a state that is open, and rust never means anything else
+   The voice strips are the one amber-tinted ground on the figure, so the human
+   column reads as one thing down the page.
+   ========================================================================== */
+
+/* ── the icon palette ─────────────────────────────────────────────────────
+   Carried over from V2 unchanged so one sprite serves both figures. Every
+   value is a wiki token or an interpolation between two of them; the mid tones
+   exist because tokens.css carries only a 700 and a 100 per signal colour and
+   flat colour art needs a middle. This block has to live here now, because the
+   homepage no longer loads big-picture-v2.css. */
+:root {
+  --i-k:  var(--black);
+  --i-p:  var(--white);
+  --i-n:  var(--gray-400);
+  --i-g9: var(--leaf-900);
+  --i-g7: var(--leaf-700);
+  --i-g5: var(--leaf-500);
+  --i-g2: var(--leaf-200);
+  --i-lt: #35e08a;                 /* the 520 nm the reactor runs on */
+  --i-a7: var(--amber-700);
+  --i-a5: #d9a13c;                 /* interpolated: amber 700 to 100 */
+  --i-a2: #f2ddb0;
+  --i-a1: var(--amber-100);
+  --i-r7: var(--rust-700);
+  --i-r3: #edc0ae;                 /* interpolated: rust 700 to 100 */
+  --i-r1: var(--rust-100);
+  --i-s7: var(--slate-700);
+  --i-s2: #c3d4e2;                 /* interpolated: slate 700 to 100 */
+  --i-s1: var(--slate-100);
+}
+
+.bp4-sprite { position: absolute; width: 0; height: 0; overflow: hidden; }
+.bp4-ico { display: block; }
+
+.bpv4 {
+  --bp4-rail: 15rem;          /* the step rail: number, name, photograph */
+  --bp4-gap:  var(--sp-5);
+  --bp4-line: rgb(0 0 0 / .14);
+  --bp4-ok:   var(--leaf-700);
+  --bp4-part: var(--amber-700);
+  --bp4-open: var(--rust-700);
+}
+
+/* ── head ─────────────────────────────────────────────────────────────── */
+
+.bpv4__kicker {
+  margin: 0 0 var(--sp-4);
+  font-size: .6875rem; font-weight: 700; letter-spacing: .12em;
+  text-transform: uppercase; color: var(--leaf-700);
+}
+
+.bpv4__lede {
+  max-width: 62ch;
+  margin: var(--sp-4) 0 0;
+  font-size: var(--text-lede); line-height: 1.55; color: var(--gray-700);
+}
+
+.bpv4__legend {
+  display: flex; flex-wrap: wrap; gap: var(--sp-2) var(--sp-5);
+  margin: var(--sp-5) 0 0; padding: 0; list-style: none;
+  font-size: var(--text-xs); color: var(--gray-500);
+}
+.bpv4__legend li { display: flex; align-items: center; gap: var(--sp-2); }
+.bpv4__legend i {
+  width: .625rem; height: .625rem; border-radius: 50%;
+  background: currentColor; flex: none;
+}
+.bpv4__legend [data-k="ok"]   i { color: var(--bp4-ok); }
+.bpv4__legend [data-k="part"] i { color: var(--bp4-part); }
+.bpv4__legend [data-k="open"] i { color: var(--bp4-open); }
+
+/* ── the glance strip ─────────────────────────────────────────────────────
+   The whole figure in one line, for the reader who has ninety seconds. The
+   arrow between two parts is coloured by the joint below it, so the strip and
+   the chain can never tell two different stories: if a joint's state changes,
+   this strip changes with it. */
+
+.bp4-glance {
+  display: flex; flex-wrap: wrap; align-items: center;
+  gap: var(--sp-2) var(--sp-3);
+  margin: var(--sp-6) 0 0; padding: 0; list-style: none;
+}
+.bp4-glance li { display: flex; align-items: center; gap: var(--sp-3); }
+
+.bp4-glance a {
+  display: inline-flex; align-items: baseline; gap: var(--sp-2);
+  padding: var(--sp-2) var(--sp-4);
+  border: 1px solid var(--bp4-line); border-radius: 2rem;
+  background: var(--leaf-50);
+  font-size: var(--text-sm); font-weight: 700; color: var(--leaf-900);
+  text-decoration: none; white-space: nowrap;
+}
+.bp4-glance a:hover { border-color: var(--leaf-500); }
+.bp4-glance a:focus-visible { outline: 2px solid var(--leaf-700); outline-offset: 2px; }
+.bp4-glance__n {
+  font-family: var(--font-mono); font-size: var(--text-xs); font-weight: 700;
+  color: var(--leaf-500);
+}
+.bp4-glance__arrow svg { width: 1.625rem; height: 1rem; display: block; }
+.bp4-glance [data-joint="ok"]   .bp4-glance__arrow { color: var(--bp4-ok); }
+.bp4-glance [data-joint="part"] .bp4-glance__arrow { color: var(--bp4-part); }
+.bp4-glance [data-joint="open"] .bp4-glance__arrow { color: var(--bp4-open); }
+
+.bp4-glance__note {
+  max-width: 62ch; margin: var(--sp-4) 0 0;
+  font-size: var(--text-sm); line-height: 1.55; color: var(--gray-700);
+}
+
+/* ── the chain ────────────────────────────────────────────────────────── */
+
+.bp4-chain { margin: var(--sp-7) 0 0; padding: 0; list-style: none; }
+
+/* ── one step ─────────────────────────────────────────────────────────── */
+
+.bp4-step {
+  border: 1px solid var(--bp4-line);
+  border-radius: var(--radius);
+  background: var(--white);
+  overflow: hidden;
+  transition: opacity .18s ease, box-shadow .18s ease;
+}
+.bp4-step__body { display: grid; gap: var(--bp4-gap); padding: var(--sp-5); }
+
+.bp4-step__rail { display: grid; gap: var(--sp-3); align-content: start; }
+
+.bp4-step__no {
+  display: block;
+  font-family: var(--font-mono);
+  font-size: var(--text-xs); font-weight: 700; letter-spacing: .08em;
+  color: var(--leaf-500);
+}
+.bp4-step__name {
+  margin: 0;
+  font-size: var(--text-h3); font-weight: 700; letter-spacing: -.01em;
+  color: var(--leaf-900);
+}
+.bp4-step__what { margin: 0; font-size: var(--text-sm); line-height: 1.5; color: var(--gray-600); }
+
+/* The photograph is the step's face, not its evidence, so it is capped. Below
+   the desktop breakpoint the rail is the full column width and an uncapped
+   frame would put a 500px photograph above three 90px cards. */
+.bp4-step__shot {
+  margin: var(--sp-1) 0 0;
+  max-width: 20rem;
+  aspect-ratio: 16 / 10;
+  display: grid; place-items: center;
+  background: var(--leaf-50);
+  border-radius: var(--radius-sm);
+  overflow: hidden;
+}
+.bp4-step__shot img {
+  width: 100%; height: 100%;
+  object-fit: contain;
+  padding: var(--sp-2);
+}
+/* photographs fill their frame; cut-outs and renders sit inside it */
+.bp4-step__shot[data-fit="cover"] img { object-fit: cover; padding: 0; }
+
+/* Every component name is the door to the page that carries its evidence, so a
+   judge checking one claim never has to guess which page to open. */
+.bp4-comp__name a {
+  color: inherit; text-decoration: none;
+  border-bottom: 1px solid var(--leaf-200);
+}
+.bp4-comp__name a:hover { border-bottom-color: var(--leaf-700); }
+.bp4-comp__name a:focus-visible { outline: 2px solid var(--leaf-700); outline-offset: 3px; border-radius: 2px; }
+
+/* ── the components ───────────────────────────────────────────────────── */
+
+.bp4-step__comps {
+  display: grid; gap: var(--sp-4);
+  margin: 0; padding: 0; list-style: none;
+  align-content: start;
+}
+
+/* Three rows: name, fact, state. The fact row takes the slack, so the state
+   chip sits on the same baseline across a row of cards however long the facts
+   are. A state that drifts up the card reads as a caption; on the floor of the
+   card it reads as the card's verdict, which is what it is. */
+.bp4-comp {
+  display: grid;
+  grid-template-columns: 2rem 1fr;
+  grid-template-rows: auto 1fr auto;
+  gap: var(--sp-2) var(--sp-3);
+  padding: var(--sp-4);
+  border: 1px solid var(--bp4-line);
+  border-radius: var(--radius-sm);
+  background: var(--white);
+  transition: border-color .18s ease, box-shadow .18s ease, opacity .18s ease;
+}
+.bp4-comp:focus-visible { outline: 2px solid var(--leaf-700); outline-offset: 2px; }
+
+.bp4-comp__ico { grid-row: span 3; }
+.bp4-comp__ico svg { width: 2rem; height: 2rem; display: block; }
+
+.bp4-comp__name {
+  margin: 0;
+  font-size: var(--text-base); font-weight: 700; line-height: 1.3;
+  color: var(--leaf-900);
+}
+.bp4-comp__fact {
+  margin: 0;
+  font-size: var(--text-sm); line-height: 1.5; color: var(--gray-700);
+}
+.bp4-comp__state {
+  align-self: end;
+  display: inline-flex; align-items: center; gap: var(--sp-2);
+  font-size: var(--text-xs); font-weight: 600; line-height: 1.35;
+}
+.bp4-comp__state::before {
+  content: ""; width: .5rem; height: .5rem; border-radius: 50%;
+  background: currentColor; flex: none;
+}
+.bp4-comp[data-state="ok"]   .bp4-comp__state { color: var(--bp4-ok); }
+.bp4-comp[data-state="part"] .bp4-comp__state { color: var(--bp4-part); }
+.bp4-comp[data-state="open"] .bp4-comp__state { color: var(--bp4-open); }
+
+/* ── the voice strip: one person per step ─────────────────────────────── */
+
+.bp4-step__voice {
+  display: flex; align-items: center; gap: var(--sp-4);
+  padding: var(--sp-4) var(--sp-5);
+  border-top: 1px solid var(--bp4-line);
+  background: var(--amber-100);
+}
+.bp4-step__voice img {
+  width: 2.75rem; height: 2.75rem; flex: none;
+  border-radius: 50%; object-fit: cover;
+  background: var(--white);
+}
+.bp4-step__voice p {
+  margin: 0;
+  font-size: var(--text-sm); line-height: 1.5; color: var(--gray-700);
+}
+.bp4-step__voice b { color: var(--leaf-900); }
+.bp4-step__voice q { font-style: italic; }
+
+/* ── the joints ───────────────────────────────────────────────────────── */
+
+.bp4-joint {
+  display: grid;
+  grid-template-columns: var(--bp4-rail) 1fr;
+  gap: var(--bp4-gap);
+  align-items: center;
+  padding: var(--sp-4) var(--sp-5);
+}
+.bp4-joint__mark { display: flex; justify-content: center; }
+.bp4-joint__mark svg { width: 1.5rem; height: 2.25rem; display: block; }
+
+.bp4-joint__text { display: flex; flex-wrap: wrap; align-items: baseline; gap: var(--sp-2) var(--sp-4); }
+.bp4-joint__pass {
+  margin: 0;
+  font-size: var(--text-sm); line-height: 1.5; color: var(--gray-700);
+}
+.bp4-joint__pass b { color: var(--leaf-900); }
+.bp4-joint__state {
+  display: inline-flex; align-items: center; gap: var(--sp-2);
+  font-size: var(--text-xs); font-weight: 700;
+  letter-spacing: .04em; text-transform: uppercase;
+}
+.bp4-joint__state::before {
+  content: ""; width: .5rem; height: .5rem; border-radius: 50%;
+  background: currentColor; flex: none;
+}
+.bp4-joint[data-state="ok"]   .bp4-joint__state { color: var(--bp4-ok); }
+.bp4-joint[data-state="ok"]   .bp4-joint__mark  { color: var(--bp4-ok); }
+.bp4-joint[data-state="part"] .bp4-joint__state { color: var(--bp4-part); }
+.bp4-joint[data-state="part"] .bp4-joint__mark  { color: var(--bp4-part); }
+.bp4-joint[data-state="open"] .bp4-joint__state { color: var(--bp4-open); }
+.bp4-joint[data-state="open"] .bp4-joint__mark  { color: var(--bp4-open); }
+
+/* the return loop closes the figure: the field asks for the next run */
+.bp4-chain .bp4-joint--return { border-top: 1px solid var(--bp4-line); margin-top: var(--sp-4); }
+
+/* ── the footing ──────────────────────────────────────────────────────── */
+
+.bpv4__foot {
+  margin: var(--sp-6) 0 0;
+  padding-top: var(--sp-5);
+  border-top: 1px solid var(--bp4-line);
+  display: grid; gap: var(--sp-4);
+}
+.bpv4__foot p { margin: 0; max-width: 72ch; font-size: var(--text-sm); line-height: 1.6; color: var(--gray-700); }
+.bpv4__foot a { color: var(--leaf-700); font-weight: 600; }
+
+/* ── emphasis. Pointing at a component holds its step and every joint and
+      step downstream of it, which answers the one question worth asking of a
+      figure like this: how does this part reach a farm. Nothing opens. ──── */
+
+.bp4-chain[data-hold] .bp4-step,
+.bp4-chain[data-hold] .bp4-joint { opacity: .38; }
+.bp4-chain[data-hold] .bp4-step[data-lit],
+.bp4-chain[data-hold] .bp4-joint[data-lit] { opacity: 1; }
+.bp4-chain[data-hold] .bp4-step[data-lit] { box-shadow: var(--shadow-md); }
+.bp4-chain[data-hold] .bp4-comp { opacity: .55; }
+.bp4-chain[data-hold] .bp4-comp[data-held] { opacity: 1; border-color: var(--leaf-500); }
+
+@media (prefers-reduced-motion: reduce) {
+  .bp4-step, .bp4-comp, .bp4-joint { transition: none; }
+}
+
+/* ── layout ───────────────────────────────────────────────────────────── */
+
+/* One column below 720: rail, then the three components, then the voice. The
+   source order is the reading order, so nothing has to be re-ordered. */
+.bp4-step__comps { grid-template-columns: 1fr; }
+.bp4-joint { grid-template-columns: 2.5rem 1fr; }
+
+@media (min-width: 720px) {
+  .bp4-step__comps { grid-template-columns: repeat(2, 1fr); }
+}
+
+@media (min-width: 1000px) {
+  .bp4-step__body {
+    grid-template-columns: var(--bp4-rail) 1fr;
+    align-items: start;
+  }
+  .bp4-step__comps { grid-template-columns: repeat(3, 1fr); }
+  .bp4-step__voice { padding-left: calc(var(--sp-5) + var(--bp4-rail) + var(--bp4-gap)); }
+  .bp4-joint { grid-template-columns: var(--bp4-rail) 1fr; }
+}
