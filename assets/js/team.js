@@ -52,6 +52,13 @@
   };
   const tagsOf = (m) => tasksOf(m).map((t) => ({ label: t, own: false }));
 
+  /* A bio can run to several paragraphs, separated in roster.js by a blank
+     line ("\n\n"). The card shows them as one clamped run of text; the
+     profile gives each its own paragraph. `bioAI: true` marks a bio the
+     students did not write, so it takes the orange drafting colour. */
+  const parasOf = (m) => (m.bio || "").split(/\n\s*\n/).map((t) => t.trim()).filter(Boolean);
+  const bioClass = (base, m) => base + (m.bioAI ? " ai" : "");
+
   const metaOf = (m) => [m.grade, m.school].filter(Boolean).join(" · ");
 
   /* The subteam, and only the subteam. Major and minor used to ride along
@@ -177,7 +184,7 @@
     if (tags) body.appendChild(tags);
 
     if (m.bio) {
-      body.appendChild(el("p", "card__bio", m.bio));
+      body.appendChild(el("p", bioClass("card__bio", m), parasOf(m).join(" ")));
       body.appendChild(el("span", "card__more", "Read more"));
     }
 
@@ -225,8 +232,9 @@
       const h = el("h2", "section__title", sec.title);
       h.id = sec.id;
       s.appendChild(h);
+      /* noteAI: the note was drafted for the team, not written by them */
       if (sec.note) sec.note.split("\n").forEach((line) =>
-        s.appendChild(el("p", "section__note", line)));
+        s.appendChild(el("p", "section__note" + (sec.noteAI ? " ai" : ""), line)));
 
       let count = 0;
 
@@ -258,7 +266,7 @@
 
       /* a section with an explanatory note does not also need an empty box */
       if (!count && !sec.note) {
-        s.appendChild(el("div", "empty", "Coming soon. This section fills in as roles are confirmed."));
+        s.appendChild(el("div", "empty ai", "Coming soon. This section fills in as roles are confirmed."));
       }
 
       main.appendChild(s);
@@ -273,8 +281,10 @@
   }
 
   function legend() {
+    /* The legend's wording was drafted for the team rather than written by
+       the students, so its text carries the orange drafting mark. */
     const wrap = el("div", "legend");
-    wrap.appendChild(el("p", "legend__title", "What a major means"));
+    wrap.appendChild(el("p", "legend__title ai", "What a major means"));
 
     const tracks = el("div", "legend__tracks");
     [
@@ -293,7 +303,7 @@
     ].forEach(([label, text]) => {
       const col = el("div", "legend__track");
       col.appendChild(el("span", "card__track card__track--major", label));
-      col.appendChild(el("p", "legend__def", text));
+      col.appendChild(el("p", "legend__def ai", text));
       tracks.appendChild(col);
     });
     wrap.appendChild(tracks);
@@ -306,7 +316,7 @@
       pill.appendChild(document.createTextNode("Task"));
       item.appendChild(pill);
       item.appendChild(el("b", "legend__term", term));
-      item.appendChild(el("span", "legend__def", def));
+      item.appendChild(el("span", "legend__def ai", def));
       return item;
     };
     tasks.appendChild(task(true, "Task owner",
@@ -428,7 +438,11 @@
     modal.querySelector(".modal__name").textContent = m.name;
     modal.querySelector(".modal__meta").textContent =
       [metaOf(m), trackOf(m)].filter(Boolean).join(" · ");
-    modal.querySelector(".modal__text").textContent = m.bio || "Bio coming soon.";
+    const text = modal.querySelector(".modal__text");
+    text.innerHTML = "";
+    const paras = parasOf(m);
+    if (paras.length) paras.forEach((t) => text.appendChild(el("p", m.bioAI ? "ai" : null, t)));
+    else text.appendChild(el("p", "modal__soon ai", "Bio coming soon."));
     modal.querySelector(".modal__role").className = "modal__role modal__role--" + kind;
 
     const holder = modal.querySelector(".modal__tags");
@@ -465,9 +479,21 @@
 
   /* --------------------------------------------------------------- boot -- */
 
+  /* A link to #member-<name> opens that person's profile, so a profile can
+     be shared or checked directly. */
+  function openFromHash() {
+    const id = decodeURIComponent(location.hash.slice(1));
+    if (!/^member-/.test(id)) return;
+    for (const sec of SECTIONS) for (const g of sec.groups || [])
+      for (const m of g.members || [])
+        if ("member-" + slug(m.name) === id) { openModal(m); return; }
+  }
+
   document.addEventListener("DOMContentLoaded", () => {
     render();
     scrollSpy();
     wireModal();
+    openFromHash();
+    window.addEventListener("hashchange", openFromHash);
   });
 })();
