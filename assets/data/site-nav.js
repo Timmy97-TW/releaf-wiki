@@ -70,7 +70,7 @@ const NAV = [
     blurb: "The maths, the machine and the code. The stress index behind the light switch, our hardware, the digital twin that runs the reactor, and the peptide designed to go with them.",
     pages: [
       { title: "Math Model",              slug: "model",                   icon: "model",
-        caption: "The equations behind sensing, expression and release." },
+        caption: "The stress index behind the green light, and the chain that follows it." },
       { title: "Hardware",                slug: "hardware",                icon: "hardware",
         caption: "Three instruments, taken apart. Plus the build notebook." },
       { title: "Digital Twin",            slug: "software",                icon: "twin",
