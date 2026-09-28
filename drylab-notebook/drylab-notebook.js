@@ -127,10 +127,14 @@ function fitMetrics(){
   let railW=96, gapW=34, wetW=156, rowH=68, headH=86, nodeSz=44, wetT=44, compact=false;
   let lane=Math.floor((avail-railW-gapW-wetW-TAIL)/NL);
   if(lane<78){
+    /* Narrow lanes: names turn vertical. The wet lab keeps room for its words
+       unless that would squeeze the lanes below a readable width. */
     compact=true;
-    railW=74; gapW=20; wetW=76; rowH=58; headH=104; nodeSz=34; wetT=34;
+    railW=78; gapW=22; rowH=62; headH=104; nodeSz=36; wetT=38;
     lane=Math.floor((avail-railW-gapW-wetW-TAIL)/NL);
+    if(lane<54){ wetW=76; wetT=34; lane=Math.floor((avail-railW-gapW-wetW-TAIL)/NL); }
   }
+  WETWORDS = wetW>100;
   lane=Math.max(40,Math.min(lane,110));
   const s=FX.style;
   s.setProperty('--rail',railW+'px');
@@ -144,7 +148,7 @@ function fitMetrics(){
   frame.classList.toggle('compact',compact);
   COMPACT=compact;
 }
-let COMPACT=false;
+let COMPACT=false, WETWORDS=true;
 function readMetrics(){
   RAIL=cssnum('--rail'); LANE=cssnum('--lane'); ROW=cssnum('--row');
   GAP=cssnum('--gap'); WETW=cssnum('--wetw'); HEAD=cssnum('--headh');
@@ -153,7 +157,7 @@ const laneX = i => RAIL + i*LANE + LANE/2;
 const wetL  = () => RAIL + NL*LANE + GAP;
 /* The thumbnail sits to the left of the wet lab column, so the words saying
    how each send came back have room beside it. */
-const wetX  = () => COMPACT ? wetL()+WETW/2 : wetL()+30;
+const wetX  = () => WETWORDS ? wetL()+28 : wetL()+WETW/2;
 const rowY  = w => ((NW-1)-w)*ROW + ROW/2;
 const totalW = () => RAIL + NL*LANE + GAP + WETW + 16;
 const totalH = () => NW*ROW;
@@ -235,7 +239,7 @@ function build(){
       <span class="bar"></span></${tag}>`;
   });
   h+=`<div class="head wethead" style="left:${wetL()}px;width:${WETW}px" title="Wet Lab">
-    ${gicon('wet')}<span class="nm">Wet Lab</span><span class="nmv">Wet Lab</span>${COMPACT?'':'<span class="sub">sent, and what came back</span>'}<span class="bar"></span></div>`;
+    ${gicon('wet')}<span class="nm">Wet Lab</span><span class="nmv">Wet Lab</span>${WETWORDS?'<span class="sub">sent, and what came back</span>':''}<span class="bar"></span></div>`;
   h+=`</div>`;
 
   h+=`<div style="position:relative;width:${W}px;height:${H}px">`;
@@ -393,16 +397,16 @@ function links(){
   HANDOFFS.forEach((hf,j)=>{
     const p=P_BY_ID[hf.p];
     const y=rowY(hf.w), x1=nodeX(hf.p,hf.w);
-    const d=`M ${x1+14} ${y} C ${x1+(wx-x1)*.45} ${y}, ${wx-(wx-x1)*.28} ${y}, ${wx-(COMPACT?19:25)} ${y}`;
+    const d=`M ${x1+14} ${y} C ${x1+(wx-x1)*.45} ${y}, ${wx-(wx-x1)*.28} ${y}, ${wx-(WETWORDS?25:19)} ${y}`;
     s+=`<path d="${d}" fill="none" style="stroke:${p.cv}" stroke-width="2" opacity=".55" stroke-dasharray="6 5" stroke-linecap="round" data-hand="${j}"/>`;
-    const tip=wx-(COMPACT?17:23);
+    const tip=wx-(WETWORDS?23:17);
     s+=`<path d="M ${tip-7} ${y-4.5} L ${tip} ${y} L ${tip-7} ${y+4.5} Z" style="fill:${p.cv}" opacity=".75"/>`;
     /* and back: where the notebook dates the answer, the line returns to the
        pipeline it landed on, in the wet lab's colour */
     const r=hf.ret;
     if(r && r.to){
       const ty=rowY(r.w), tx=nodeX(r.to,r.w);
-      const sx=wx-(COMPACT?17:23), sy=y-8;
+      const sx=wx-(WETWORDS?23:17), sy=y-8;
       const ex=tx+15, ey=ty;
       const rd=`M ${sx} ${sy} C ${sx-(sx-ex)*.25} ${sy-(sy-ey)*.9}, ${ex+(sx-ex)*.35} ${ey}, ${ex} ${ey}`;
       s+=`<path d="${rd}" fill="none" style="stroke:var(--wet)" stroke-width="2" opacity=".7" stroke-dasharray="2 5" stroke-linecap="round" data-ret="${j}"/>`;
@@ -438,7 +442,7 @@ function nodes(){
       style="left:${x}px;top:${y}px;--wtilt:${tilt(j+11).toFixed(2)}deg"
       aria-label="Sent to the wet lab, ${fmtLong(hf.date)}: ${attr(hf.t)}. ${attr(hf.ret.state)}.">
       ${face}${pix.length>1?`<span class="wetcnt">${pix.length}</span>`:''}</button>`;
-    if(!COMPACT){
+    if(WETWORDS){
       const open=/open/i.test(hf.ret.state);
       s+=`<span class="wetstate ai${open?' open':''}" style="left:${x+30}px;top:${y}px">${esc(hf.ret.state)}</span>`;
     }
@@ -858,7 +862,7 @@ function buildGallery(){
   for(let w=0;w<NW;w++){
     const pick=weekPick(w), n=(PIX_BY_WEEK[w]||[]).length;
     if(!pick){
-      h+=`<div class="frame empty" title="Week ${w+1}: nothing photographed"><span class="shot"><img class="mascot-sm" src="${MASCOT}" alt=""></span><span class="n">${wk2(w)}</span></div>`;
+      h+=`<div class="frame nopix" title="Week ${w+1}: nothing photographed"><span class="shot"><img class="mascot-sm" src="${MASCOT}" alt=""></span><span class="n">${wk2(w)}</span></div>`;
     }else{
       h+=`<button type="button" class="frame" data-week="${w}" title="${attr(pick.c)}" style="--tilt:${tilt(w+7).toFixed(2)}deg"
         aria-label="Week ${w+1}, ${fmtLong(WEEKS[w])}: ${n} photograph${n>1?'s':''}">
@@ -999,6 +1003,14 @@ record.addEventListener('click',e=>{
   });
   /* Each written entry can be found on the board, and each week on the board
      can be found in the writing. */
+  /* The record's pipeline dots take the same pens as the board. */
+  const NAME_TO_ID={'Data Physicalization':'dataphys','Wiki & Notebook':'wiki','Plant Growth Chamber':'chamber','Hydroponics':'hydro',
+    'Math Modeling':'math','GIS & Stress Forecast':'gis','Genetic Circuit Design':'circuit','Bioreactor':'reactor','OD600 Photometer':'photo',
+    'Light Plate Apparatus':'lpa','Chlorophyll Fluorometer':'fluor','Protectant Design':'protect','Codon Optimization':'codon','Wet Lab Handoff':'wet'};
+  record.querySelectorAll('.pipe').forEach(li=>{
+    const id=NAME_TO_ID[(li.querySelector('b')||{}).textContent];
+    if(id) li.style.setProperty('--c', id==='wet'?'var(--wet)':`var(--p-${id})`);
+  });
   record.querySelectorAll('article.entry').forEach(a=>{
     const w=Math.floor((new Date(a.id.slice(2)+'T00:00:00')-new Date(WEEKS[0]+'T00:00:00'))/(7*864e5));
     if(w<0||w>=NW) return;

@@ -294,9 +294,9 @@
   position:absolute;right:3px;bottom:3px;font-family:var(--mono);font-size:8.5px;line-height:1.4;
   padding:1px 4px;border-radius:999px;background:var(--badge);color:var(--badge-ink);letter-spacing:.02em;
 }
-.fx .frame.empty{cursor:default;transform:none}
-.fx .frame.empty .shot{display:flex;align-items:center;justify-content:center;box-shadow:none;border:1px solid var(--rule);background:var(--panel)}
-.fx .frame.empty .n{opacity:.55}
+.fx .frame.nopix{cursor:default;transform:none}
+.fx .frame.nopix .shot{display:flex;align-items:center;justify-content:center;box-shadow:none;border:1px solid var(--rule);background:var(--panel)}
+.fx .frame.nopix .n{opacity:.55}
 .fx .mascot-sm{width:78%;height:78%;object-fit:contain;opacity:.6}
 
 .fx[data-skin="notebook"] .strip-scroll{background:var(--panel-2);border:1px solid var(--rule)}
@@ -305,7 +305,7 @@
 .fx[data-skin="notebook"] .frame .n{font-size:9.5px}
 .fx[data-skin="notebook"] .frame .cnt{border-radius:0}
 /* A tab of tape over the top edge of every print in the strip. */
-.fx[data-skin="notebook"] .frame:not(.empty) .shot::after{
+.fx[data-skin="notebook"] .frame:not(.nopix) .shot::after{
   content:"";position:absolute;left:50%;top:-7px;width:34px;height:13px;margin-left:-17px;
   background:linear-gradient(168deg,rgba(228,211,166,.85),rgba(203,183,134,.7));
   clip-path:polygon(0 14%,18% 0,38% 15%,60% 2%,80% 16%,100% 4%,100% 86%,80% 100%,60% 85%,38% 98%,18% 84%,0 97%);
@@ -419,7 +419,7 @@ a.head:hover .nm,a.head:hover .nmv{color:var(--ink);text-decoration:underline;te
 .fx .railrow:hover .dt,.fx .railrow:focus-visible .dt{color:var(--accent-ink);text-decoration:underline;text-underline-offset:3px}
 .fx .railrow.pinned{background:var(--accent-wash)}
 .fx .railrow .wk{font-family:var(--mono);font-size:9.5px;letter-spacing:.08em;color:var(--ink-4);display:block}
-.fx .railrow .dt{font-family:var(--serif);font-size:15px;font-weight:600;color:var(--ink);letter-spacing:-.01em;display:block;line-height:1.25}
+.fx .railrow .dt{font-family:var(--serif);font-size:15px;font-weight:600;color:var(--ink);letter-spacing:-.01em;display:block;line-height:1.25;white-space:nowrap}
 .fx .railrow .mo{font-family:var(--serif);font-style:italic;font-size:12.5px;color:var(--accent-ink);display:block}
 .fx .railrow.now .dt{color:var(--accent-ink)}
 .fx .compact .railrow{padding:7px 6px 0 10px}
@@ -491,7 +491,7 @@ html:not(.ai-off) .fx .node.is-ai::after{
 .fx[data-skin="notebook"] .wetthumb{border-width:3px;outline-offset:-3px}
 .fx[data-skin="notebook"] .wetcnt{border-radius:0;font-family:var(--mono);font-size:8.5px}
 .fx[data-skin="notebook"] .wetstate{font-family:var(--hand);font-size:16px;line-height:1.02;transform:translateY(-50%) rotate(-2deg)}
-.fx .compact .wetstate{display:none}
+
 
 /* The notebook board: a bigger sheet taped onto the page. */
 .fx[data-skin="notebook"] .boardframe{
@@ -519,7 +519,7 @@ html:not(.ai-off) .fx .node.is-ai::after{
 .fx[data-skin="notebook"] .rail{border-right:1px solid var(--red-wash);box-shadow:2px 0 0 -1px rgba(187,74,60,.18)}
 .fx[data-skin="notebook"] .railrow .wk{font-size:9.5px;letter-spacing:.06em}
 .fx[data-skin="notebook"] .railrow .dt{font-family:var(--hand);font-size:25px;font-weight:600;line-height:1.02}
-.fx[data-skin="notebook"] .compact .railrow .dt{font-size:21px}
+.fx[data-skin="notebook"] .compact .railrow .dt{font-size:20px}
 .fx[data-skin="notebook"] .railrow .mo{font-family:var(--mono);font-style:normal;font-size:9.5px;letter-spacing:.11em;color:var(--red-ink);text-transform:uppercase}
 .fx[data-skin="notebook"] :is(.heads,.corner){background:var(--panel);border-color:var(--rule)}
 .fx[data-skin="notebook"] .corner{font-family:var(--hand);font-style:normal;font-size:21px;color:var(--ink-3)}
@@ -906,7 +906,7 @@ a.pipe:hover{text-decoration:underline !important}
 .fx .contrib dd{margin:0}
 .fx .contrib ul{margin:.15rem 0 0;padding-left:1.1em;color:var(--ink-2)}
 .fx .contrib li + li{margin-top:.15rem}
-.fx .onboard{margin-left:.35rem;font-family:var(--sans);font-size:12px;font-weight:600;color:var(--accent-ink);background:none;border:0;padding:0;cursor:pointer;text-decoration:underline;text-underline-offset:2px}
+.fx .onboard{order:5;align-self:flex-start;margin:.35rem 0 0;font-family:var(--sans);font-size:12px;font-weight:600;color:var(--accent-ink);background:none;border:0;padding:0;cursor:pointer;text-decoration:underline;text-underline-offset:2px}
 .fx[data-skin="notebook"] .onboard{font-family:var(--mono);font-weight:400}
 
 .fx .fx-foot{
@@ -978,3 +978,9 @@ html:not(.ai-off) .fx .lb-meta .cap.ai{color:#fb923c}
   .fx .record{display:block !important}
   .fx .photos.is-collapsed .is-extra{display:block}
 }
+
+/* The wiki's drafting mark: text an AI assistant drafted is orange, and it
+   has to win over the board's own colours. */
+html:not(.ai-off) .fx .ai,
+html:not(.ai-off) .fx .ai :is(p,li,span,b,a,button,h3,h4){color:var(--ai-ink,#c2410c) !important}
+html:not(.ai-off) .fx .card .state.ai{border-color:currentColor}
