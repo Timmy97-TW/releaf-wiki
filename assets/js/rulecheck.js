@@ -34,9 +34,6 @@
   const PAGE_NOTES = {
     "geospatial-analysis": [
       ["BLOCKED", "The interactive routing map (loaded below on click) draws its basemap from tile.openstreetmap.org and asks router.project-osrm.org for every route. Both are outside iGEM. Precompute the routes into a data file and use a basemap image hosted on static.igem.wiki."]
-    ],
-    "attributions": [
-      ["TO FINISH", "The form iframe still points at team 0000. Team GEMS Taiwan is 6072. The 2026 template also shows attributions on the team page itself; check the current template before keeping this page."]
     ]
   };
 
@@ -142,7 +139,7 @@
 .rc-hidden .rc-tag { display: none; }
 .rc-hidden .rc-mark.rc-flash { outline: 3px dashed var(--rc) !important; }
 /* bottom-left: bottom-right is where the pages keep their own controls (the
-   hardware film's pause button); clear the Bioreactor Calculations rail */
+   hardware film's pause button); clear any page-level rail on the left */
 body:has(aside.rail) .rulecheck { left: 64px; }
 @media print { .rulecheck, .rc-tag { display: none !important; } .rc-mark { outline: none !important; } }`;
     document.head.appendChild(s);
