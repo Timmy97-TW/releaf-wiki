@@ -1,8 +1,11 @@
 /* =============================================================================
    ReLeaf: site navigation
    -----------------------------------------------------------------------------
-   Five tabs. Each opens a full-width panel: a title rail on the left, the
-   sub-pages on the right, every one with its own icon and a one-line caption.
+   Five tabs. Each opens a full-width panel: one grid of sub-pages, every one
+   with its own icon and a caption of three to five words that sits on a single
+   line. The panel carries no section title and no section blurb: the open tab
+   already names the section, and a newcomer reads the captions faster than a
+   paragraph.
 
    THE `slug` FIELD IS THE URL AND IS NOT FREE TO CHANGE.
    iGEM fixes the URL of every judged page (2026 Judge Handbook, "Standard Pages
@@ -16,105 +19,97 @@
    To add a page:  drop an entry into the right tab's `pages` array. `slug` is
                    the folder under the wiki root; nav.js prefixes it with the
                    page's own `data-base`, so the same file works at any depth.
+                   Keep `caption` to three to five words: the panel gives each
+                   one a single line and clips anything longer.
    To add an icon: add a key to ICONS in nav.js (inner SVG markup, stroked,
                    24x24 viewBox) and reference it with `icon:`.
-   Tab artwork:    drop the drawing into assets/img/tab-icons/<id>.png and set
-                   `art: true` on that tab, or `art: "assets/img/tab-icons/x.svg"`
-                   (a path from the wiki root) for another name. Tabs without
-                   `art` request nothing, so the console stays clean until the
-                   drawings arrive.
    ========================================================================== */
 
 const NAV = [
   {
     id: "project",
     name: "Project",
-    blurb: "The whole arc of the work, from the first sketch of the problem through the build cycles to the numbers we finished with.",
     pages: [
       { title: "Description",  slug: "description",  icon: "description",
-        caption: "The problem we picked, the system we designed, and why it had to be alive." },
+        caption: "The problem and our answer" },
       { title: "Biomanufacturing", slug: "biomanufacturing", icon: "biomanufacturing",
-        caption: "What ReLeaf contributes to making things with biology, and the evidence behind each claim." },
+        caption: "Protectant made on the farm" },
       { title: "Engineering",  slug: "engineering",  icon: "engineering",
-        caption: "Every design, build, test and learn cycle we went through." },
+        caption: "Every build and test cycle" },
       { title: "Development",  slug: "development",  icon: "development",
-        caption: "What success means for the whole system, and how we got there." },
+        caption: "Success criteria, stage by stage" },
       { title: "Contribution", slug: "contribution", icon: "contribution",
-        caption: "What we are leaving behind for the teams that come after us." },
+        caption: "Tools future teams can reuse" },
       { title: "Results",      slug: "results",      icon: "results",
-        caption: "What the system actually did on the bench." }
+        caption: "What worked on the bench" }
     ]
   },
   {
     id: "wetlab",
     name: "Wet Lab",
-    blurb: "Everything that happened at the bench: the runs and protocols, the parts we built and characterised, the plants we stressed, and how we measured and contained it all.",
     pages: [
       { title: "Experiments",  slug: "experiments",         icon: "experiments",
-        caption: "Protocols, conditions and every run we made." },
+        caption: "Every protocol we ran" },
       { title: "Parts",        slug: "parts",               icon: "parts",
-        caption: "What we built, what we characterised, what we registered." },
+        caption: "Our BioBricks and constructs" },
       { title: "Plants",       slug: "plant",               icon: "plants",
-        caption: "Agar, hydroponics and soil, from seedling to stress." },
+        caption: "Salt and heat stress trials" },
       { title: "Measurement",  slug: "measurement",         icon: "measurement",
-        caption: "How we quantified expression and output." },
+        caption: "Calibrated, repeatable readouts" },
       { title: "Safety",       slug: "safety-and-security", icon: "safety",
-        caption: "Containment, risk assessment and lab practice." },
+        caption: "Containment and lab safety" },
       { title: "Notebook",     slug: "notebook",            icon: "notebook",
-        caption: "The wet lab record, week by week." }
+        caption: "Wet lab records by month" }
     ]
   },
   {
     id: "drylab",
     name: "Dry Lab",
-    blurb: "The maths, the machine and the code. The stress index behind the light switch, our hardware, the digital twin that runs the reactor, and the peptide designed to go with them.",
     pages: [
       { title: "Math Model",              slug: "model",                   icon: "model",
-        caption: "The stress index behind the green light, and the chain that follows it." },
+        caption: "From plant stress to light" },
       { title: "Hardware",                slug: "hardware",                icon: "hardware",
-        caption: "Three instruments, taken apart. Plus the build notebook." },
+        caption: "Photometer, LEDs and bioreactor" },
       { title: "Digital Twin",            slug: "software",                icon: "twin",
-        caption: "A virtual copy of the bioreactor that tracks each batch and decides when to act." },
+        caption: "Software that watches each batch" },
       { title: "Protein Design",          slug: "protein-design",          icon: "peptide",
-        caption: "Methodology, design sprints and molecular dynamics behind the protectant peptide." },
+        caption: "Designing the BoPep4 peptide" },
       { title: "Dry Lab Notebook",        slug: "drylab-notebook",         icon: "notebook",
-        caption: "The computational record, week by week." }
+        caption: "Computational work, week by week" }
     ]
   },
   {
     id: "engagement",
     name: "Engagement",
-    blurb: "The world the project has to survive in. Who we talked to, what we taught, the rules we would have to meet, and where the need for this actually sits.",
     pages: [
       { title: "Integrated Human Practices", slug: "human-practices",      icon: "ihp",
-        caption: "The people who changed the project, and what they changed about it." },
+        caption: "Voices that reshaped ReLeaf" },
       { title: "Education",                  slug: "education",            icon: "education",
-        caption: "What we taught, who we taught it to, and what stuck." },
+        caption: "Lessons across three school levels" },
       { title: "Entrepreneurship",           slug: "entrepreneurship",     icon: "entrepreneurship",
-        caption: "The business case, what it costs, and how it would reach a field." },
+        caption: "From prototype to farm business" },
       { title: "Sustainability",             slug: "sustainability",       icon: "sustainability",
-        caption: "Measuring ReLeaf against the SDGs." },
+        caption: "Our impact on the SDGs" },
       { title: "Laws and Regulations",       slug: "laws-and-regulations", icon: "legal",
-        caption: "Regulation, approval routes and compliance in Taiwan." },
+        caption: "Approval routes, Taiwan and beyond" },
       { title: "Geospatial Analysis",        slug: "geospatial-analysis",  icon: "gis",
-        caption: "Mapping where plant stress actually bites." },
+        caption: "Mapping stress across Taiwan" },
       { title: "Data Physicalization",       slug: "data-physicalization", icon: "physical",
-        caption: "Our data, rebuilt as objects you can pick up." }
+        caption: "Stress data you can touch" }
     ]
   },
   {
     id: "team",
     name: "Team",
-    blurb: "The forty-seven of us, a record of who did which part, the year in order, and the photographs from all of it.",
     pages: [
       { title: "Members",     slug: "team",         icon: "members",
-        caption: "The students, advisors and instructors who built ReLeaf." },
+        caption: "The people behind ReLeaf" },
       { title: "Attribution", slug: "attributions", icon: "attribution",
-        caption: "Who did what, and who helped us do it." },
+        caption: "Who did what" },
       { title: "Milestone",   slug: "milestone",    icon: "milestone",
-        caption: "The year in order, from the first meeting to the freeze." },
+        caption: "Our season, month by month" },
       { title: "Gallery",     slug: "gallery",      icon: "gallery",
-        caption: "Photographs from the bench, the field and the road to Paris." }
+        caption: "Photos from lab and field" }
     ]
   }
 ];
@@ -126,16 +121,16 @@ const NAV = [
    -------------------------------------------------------------------------- */
 const NAV_UNLISTED = [
   { title: "Inclusivity", slug: "inclusivity",
-    caption: "Who the project is built for, and who it would leave out." },
+    caption: "Who the project serves" },
 
   /* The two pages below used to be Dry Lab tabs of their own. Since
      23 September 2026 they are steps inside Protein Design, reached from
      /protein-design/. Their addresses have not changed, so every existing
      link and every footer entry still resolves. */
   { title: "MD Simulations", slug: "md-simulations",
-    caption: "Step F of the pipeline. Nine trajectories of BoPep4 on its receptor." },
+    caption: "BoPep4 on its receptor" },
   { title: "Peptide Design", slug: "peptide-design",
-    caption: "The worked case. BoPep4 run end to end, including what we retracted." }
+    caption: "BoPep4, designed end to end" }
 ];
 
 /* iGEM rule check (assets/js/rulecheck.js): outlines on every page whatever
