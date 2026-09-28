@@ -12,7 +12,7 @@ const BIO_COMPONENTS = [
     role: "Separates culture from product",
     note: "PES fibers, ~200 mL lumen volume. Protectant crosses the fiber wall into the shell space; B. subtilis cannot.",
     flow: "both",
-    bom: "PES hollow fiber membrane",
+    bom: "Hollow Fiber Membrane",
     meshes: ["membrane-shell", "membrane-fiber"],
   },
   {
@@ -21,7 +21,7 @@ const BIO_COMPONENTS = [
     role: "Reads OD600 without sampling",
     note: "The V4 instrument, sitting in the return leg. Dual-sensor ratiometric, 0.2 mm optical path.",
     flow: "lumen",
-    bom: "In-line photometer",
+    bom: "Spectrophotometer",
     href: "../photometer/index.html",
     // the sensor harness spans the whole rig; excluded from tour framing
     frameSkip: ["sensor-electronics"],
@@ -36,7 +36,7 @@ const BIO_COMPONENTS = [
     role: "Where the culture grows",
     note: "500 mL vessel, 300 mL working volume, stirred at 200 rpm to stop the cells settling out.",
     flow: "lumen",
-    bom: "Medium reservoir",
+    bom: "Reservoir",
     meshes: ["media-bottle", "media-cap"],
   },
   {
@@ -51,9 +51,9 @@ const BIO_COMPONENTS = [
     id: "pump",
     label: "Peristaltic pump",
     role: "Drives the loop at 94 mL/min",
-    note: "Non-contact pumping — the fluid only ever touches tubing, so the path stays sterile.",
+    note: "Non-contact pumping: the fluid only ever touches tubing, so the path stays sterile.",
     flow: "lumen",
-    bom: "Peristaltic pump",
+    bom: "Pump",
     meshes: ["pump-box", "pump-lid", "pump-casing", "pump-panel", "pump-knob",
              "pump-rotor-back", "pump-rotor-front", "pump-oled", "pump-motor",
              "pump-pinion", "pump-bearing", "pump-grill", "pump-fan-plate",
@@ -65,7 +65,7 @@ const BIO_COMPONENTS = [
     role: "Collects cell-free protectant",
     note: "Shell-side fluid ends here. Medium drawn from this side and plated produced no colonies.",
     flow: "shell",
-    bom: "Harvest vessel",
+    bom: "Reservoir",
     meshes: ["main-bottle", "main-cap", "main-cap-plate"],
   },
   {
@@ -74,7 +74,7 @@ const BIO_COMPONENTS = [
     role: "pH and optical monitoring",
     note: "Submerged in the harvest vessel. Black rather than grey so they read through the glass.",
     flow: "shell",
-    bom: "pH sensor + regulator",
+    bom: "pH sensor",
     meshes: ["probe-a", "probe-b"],
   },
 ];

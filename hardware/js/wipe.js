@@ -47,7 +47,7 @@
       shots.forEach(function (s, i) {
         const b = document.createElement("button");
         b.type = "button";
-        b.textContent = s.cap.split("—")[0].trim() || String(i + 1);
+        b.textContent = s.cap.split(/[\u2014\u00b7]/)[0].trim() || String(i + 1);
         b.title = s.cap;
         b.addEventListener("click", function () {
           if (which === "a") { ai = i; if (bi === ai) bi = (i + 1) % shots.length; }

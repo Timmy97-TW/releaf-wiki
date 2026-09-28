@@ -439,7 +439,7 @@
     g.fillText(text, 56, 116);
     g.fillStyle = "#8fc3e8";
     g.font = "400 50px ui-monospace, Menlo, monospace";
-    g.fillText("— " + sub, 56, 196);
+    g.fillText(sub, 56, 196);
     const tex = new THREE.CanvasTexture(c);
     tex.encoding = THREE.sRGBEncoding;
     tex.generateMipmaps = false;

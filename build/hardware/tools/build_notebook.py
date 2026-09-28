@@ -79,7 +79,7 @@ def pages_html(entries, npages):
     for n in range(1, npages + 1):
         ids = f' id="{anchor[n]}"' if n in anchor else ""
         e = meta.get(n)
-        lbl = (f'{e["week"]} — {e["title"]}' if e else f'Notebook page {n}')
+        lbl = (f'{e["week"]}: {e["title"]}' if e else f'Notebook page {n}')
         mark = (e["mark"] or "--") if e else ""
         dm = f' data-mark="{esc(mark)}"' if mark else ""
         o.append(f'  <figure class="nbr-page" data-page="{n}"{dm}>')
@@ -106,7 +106,7 @@ def strip_html(entries, href_base="notebook/index.html"):
                 out.append(
                     f'      <a class="nb-cell" data-mark="{esc(mark)}" '
                     f'href="{href_base}#w{e["weekno"]:02d}-{i}" '
-                    f'title="W{w:02d} — {esc(e["title"])}"><span>{esc(mark)}</span></a>')
+                    f'title="W{w:02d}: {esc(e["title"])}"><span>{esc(mark)}</span></a>')
         else:
             out.append('      <span class="nb-cell" aria-hidden="true"></span>')
         out.append(f'      <div class="nb-wk-n">{w:02d}</div>')
@@ -131,13 +131,13 @@ def band_html(entries, npages):
          f'      <p class="nb-lede">The hardware notebook, kept as the work happened rather than '
          f'written up afterwards. <b>{len(entries)} entries</b> over <b>{len(weeks)} weeks</b>, each '
          'carrying the decision we made, the option we turned down, and what was still broken when '
-         'the week closed. Weeks 1&ndash;3 are missing because nothing happened, and we would rather '
+         'the week closed. Weeks 1 to 3 are missing because nothing happened, and we would rather '
          'say so than invent them.</p>',
          '      <div class="nb-figures">',
          f'        <div><span class="nb-fig-n">{len(entries)}</span><span class="nb-fig-l">Entries</span></div>',
          f'        <div><span class="nb-fig-n">{len(weeks)}</span><span class="nb-fig-l">Weeks</span></div>',
          f'        <div><span class="nb-fig-n">{npages}</span><span class="nb-fig-l">Pages</span></div>',
-         '        <div><span class="nb-fig-n nb-fig-span">23 Mar &ndash; 13 Aug</span>'
+         '        <div><span class="nb-fig-n nb-fig-span">23 Mar to 13 Aug</span>'
          '<span class="nb-fig-l">2026</span></div>',
          '      </div>',
          '    </div>',
@@ -179,7 +179,7 @@ def page_html(entries, npages):
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
-<title>Hardware Notebook — GEMS-Taiwan</title>
+<title>Hardware Notebook: GEMS-Taiwan</title>
 <meta name="description" content="The GEMS-Taiwan hardware notebook: {len(entries)} weekly entries across {npages} pages, 23 March to 13 August 2026, covering the photometer, DiOPAL, the perfusion bioreactor and five earlier builds." />
 <link rel="stylesheet" href="../css/hub.css" />
 <link rel="stylesheet" href="../css/polish.css" />
@@ -206,7 +206,7 @@ def page_html(entries, npages):
     <div class="eyebrow">Hardware notebook</div>
     <h1>Week by week,<br />23 March to 13 August 2026</h1>
     <p class="standfirst">
-      The pages below are the notebook itself, exactly as the team laid it out &mdash;
+      The pages below are the notebook itself, exactly as the team laid it out:
       {npages} pages covering {len(weeks)} weeks. They run top to bottom in one
       continuous scroll rather than a page at a time, so you can read straight
       through or jump by week from the index on the left.

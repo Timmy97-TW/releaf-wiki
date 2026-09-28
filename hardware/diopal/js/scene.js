@@ -70,7 +70,7 @@
     ["Housing", "The frame it all goes into"],
     ["Board &amp; LED holder", "Slide up from underneath"],
     ["Base plate", "Closes the bottom"],
-    ["Sliders", "In from both sides — no tools"],
+    ["Sliders", "In from both sides, no tools"],
     ["Tube holder", "Drops in on top"],
   ];
 
