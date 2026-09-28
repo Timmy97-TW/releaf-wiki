@@ -8,7 +8,6 @@
      1  reveal      one-shot fade-and-rise for .rise and the pathway
      2  darkact     scroll progress -> CSS custom properties on .stagewrap
      3  parts       the five engineering highlights <-> the WebGL reactor
-     4  doors       cross-highlighting between related pages in Explore
      5  art slots   show a figure only if its artwork exists (none left today)
      6  chapters    marks the chapter the reader is in on the right-hand rail
      7  dose        ran the vision schematics; they are gone, so it stops at once
@@ -256,103 +255,6 @@
 
     document.addEventListener("keydown", function (e) {
       if (e.key === "Escape" && pinned) { pinned = null; show(null); }
-    });
-  })();
-
-  /* ═══════════════════════════════════════════════════════════ 4  DOORS ══ */
-  /* Four boxes in a row say nothing about how the pages inside them relate.
-     This puts the relationships back without drawing a diagram: point at any
-     page and the pages it actually works with light up, wherever they live,
-     and the line underneath names them.
-
-     PAGE_LINKS is declared one way and mirrored below, so "hardware works with
-     measurement" automatically means "measurement works with hardware". Add a
-     page here, not in the markup. */
-
-  var PAGE_LINKS = {
-    "description":            ["protein-design", "hardware", "model", "human-practices", "results"],
-    "biomanufacturing":       ["description", "hardware", "development"],
-    "engineering":            ["hardware", "results", "milestone", "drylab-notebook", "development"],
-    "development":            ["results", "hardware"],
-    "contribution":           ["parts", "software"],
-    "results":                ["measurement", "experiments", "engineering"],
-    "experiments":            ["plant", "measurement", "safety-and-security", "notebook", "parts"],
-    "parts":                  ["protein-design"],
-    "plant":                  ["measurement", "geospatial-analysis"],
-    "measurement":            ["hardware", "model"],
-    "safety-and-security":    ["laws-and-regulations"],
-    "model":                  ["software", "hardware"],
-    "hardware":               ["software", "drylab-notebook"],
-    "protein-design":         ["model"],
-    "human-practices":        ["hardware", "plant", "laws-and-regulations", "entrepreneurship",
-                               "education", "geospatial-analysis"],
-    "education":              ["gallery", "data-physicalization"],
-    "entrepreneurship":       ["sustainability"],
-    "sustainability":         ["entrepreneurship"],
-    "data-physicalization":   ["results"],
-    "team":                   ["attributions", "milestone", "gallery"],
-    "milestone":              ["gallery"]
-  };
-
-  (function doors() {
-    var wrap = document.getElementById("doors");
-    var read = document.getElementById("doors-read");
-    if (!wrap) return;
-
-    // mirror the map so every relationship reads both ways
-    var links = {};
-    function add(a, b) {
-      if (a === b) return;
-      (links[a] = links[a] || {})[b] = true;
-      (links[b] = links[b] || {})[a] = true;
-    }
-    Object.keys(PAGE_LINKS).forEach(function (a) {
-      PAGE_LINKS[a].forEach(function (b) { add(a, b); });
-    });
-
-    var chips = wrap.querySelectorAll(".pg");
-    var byPage = {};
-    Array.prototype.forEach.call(chips, function (c) {
-      byPage[c.getAttribute("data-pg")] = c;
-    });
-
-    var resting = read ? read.innerHTML : "";
-
-    function label(slug) {
-      var c = byPage[slug];
-      return c ? c.querySelector("span").textContent : slug;
-    }
-
-    function light(slug) {
-      if (!slug) {
-        wrap.classList.remove("hot");
-        Array.prototype.forEach.call(chips, function (c) {
-          c.classList.remove("lit", "src");
-        });
-        if (read) read.innerHTML = resting;
-        return;
-      }
-      var near = links[slug] || {};
-      wrap.classList.add("hot");
-      Array.prototype.forEach.call(chips, function (c) {
-        var id = c.getAttribute("data-pg");
-        c.classList.toggle("src", id === slug);
-        c.classList.toggle("lit", id !== slug && !!near[id]);
-      });
-      if (read) {
-        var names = Object.keys(near).filter(function (n) { return byPage[n]; }).map(label);
-        read.innerHTML = names.length
-          ? "<b>" + label(slug) + "</b> is read alongside " + names.join(", ") + "."
-          : "<b>" + label(slug) + "</b> stands on its own.";
-      }
-    }
-
-    Array.prototype.forEach.call(chips, function (c) {
-      var id = c.getAttribute("data-pg");
-      c.addEventListener("mouseenter", function () { light(id); });
-      c.addEventListener("focus", function () { light(id); });
-      c.addEventListener("mouseleave", function () { light(null); });
-      c.addEventListener("blur", function () { light(null); });
     });
   })();
 

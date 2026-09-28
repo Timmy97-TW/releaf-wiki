@@ -19,7 +19,7 @@
      8  big picture    the whole year: five steps and the work that feeds them
      9  reach          the same map as beat 2, read forward. It is JOINED to
                        beat 8 by the trunk's tail and the two must stay adjacent
-    10  vision         where this goes next, in the systems farmers already run
+    10  explore        five gates: what the project is, what it did, three prizes
     11  explore        a map of the wiki, drawn as relationships
 
    Rules that survived the redesign and should survive the next one:
@@ -965,172 +965,76 @@ h2.band__title {
 }
 .pkg__props .prop p i { color: rgb(255 255 255 / .82); font-style: italic; }
 
-/* ========================================================== 8  VISION ===== */
-/* One figure, the team's own: the two application scenarios side by side.
-   It replaced two drawn schematics and their "render pending" slots. */
-
-.vision-fig {
-  margin: var(--sp-6) 0 0; max-width: 60rem;
-  border-radius: var(--radius); overflow: hidden;
-  border: 1px solid var(--gray-200); background: var(--white);
-}
-.vision-fig img { display: block; width: 100%; height: auto; }
-.vision-fig figcaption { padding: var(--sp-4) var(--sp-5); font-size: var(--text-sm); line-height: 1.55; color: var(--gray-600); }
-.vision-fig figcaption b { color: var(--leaf-900); }
-
 /* ========================================================= 9  EXPLORE ===== */
-/* Four doors in a row, then the team as a full-width banner.
+/* Five gates. The nav already carries every page on the wiki, so this band
+   does not have to: it carries the two pages that say what the project is and
+   what it did, and the three the team is entering for a special prize.
 
-   Two problems this layout had to solve. First, a photograph in a rounded card
-   reads as a sticker unless its edges are dissolved into the card, so every
-   shot is masked out at the bottom and softened at the sides. Second, a row of
-   four boxes says nothing about how the pages inside them relate, which a map
-   used to. The answer is cross-highlighting: point at any page and the pages
-   it actually works with light up in the OTHER boxes, and the line underneath
-   names them. The relationships live in PAGE_LINKS in home.js. */
+   THE ART IS A SET, NOT FIVE PICTURES. One drawn object per gate, flat colour,
+   no outlines except where an edge has to read, and the 520 nm green somewhere
+   in every one. That green is the only thing all five have in common, which is
+   also true of the project. Draw the sixth one the same way or do not draw it.
 
-.doors { display: grid; gap: var(--sp-4); }
-@media (min-width: 720px)  { .doors { grid-template-columns: repeat(2, 1fr); } }
-@media (min-width: 1120px) { .doors { grid-template-columns: repeat(4, 1fr); } }
-.door--team { grid-column: 1 / -1; }
+   The gate is one link, so the whole card is the target and there is no nested
+   anchor to make invalid. */
 
-.door {
-  --accent: var(--leaf-700);
-  position: relative;
+.gates { display: grid; gap: clamp(.75rem, 1.4vw, 1.25rem); }
+@media (min-width: 560px)  { .gates { grid-template-columns: repeat(2, 1fr); } }
+@media (min-width: 1000px) { .gates { grid-template-columns: repeat(5, 1fr); } }
+
+.gate {
   display: flex; flex-direction: column;
-  overflow: hidden;
   border: 1px solid var(--gray-200);
-  border-radius: var(--radius);
+  border-radius: 1.125rem;
   background: var(--white);
-  transition: border-color .25s, box-shadow .25s, transform .25s;
-}
-.door--project { --accent: #23684a; }
-.door--wetlab  { --accent: #2f7d8c; }
-.door--drylab  { --accent: #7a5cb8; }
-.door--hp      { --accent: #b3721f; }
-.door--team    { --accent: #a8443a; }
-
-.door:hover, .door:focus-within { border-color: var(--accent); box-shadow: var(--shadow-md); }
-.door:hover { transform: translateY(-2px); }
-
-/* the photograph, dissolved rather than cropped: it fades out at the bottom
-   into the card and softens at both sides, so there is no rectangle edge */
-.door__shot { position: relative; overflow: hidden; background: var(--gray-100); }
-.door__shot::after {
-  content: ""; position: absolute; inset: 0;
-  background: linear-gradient(180deg, transparent 45%, rgb(255 255 255 / .55) 82%, var(--white) 100%);
-}
-.door__shot img {
-  display: block; width: 100%; aspect-ratio: 10 / 7; object-fit: cover;
-  filter: saturate(.94);
-  transition: transform .6s cubic-bezier(.2,.7,.2,1), filter .4s;
-  -webkit-mask-image: linear-gradient(180deg, #000 62%, transparent 100%),
-                      linear-gradient(90deg, transparent 0, #000 7%, #000 93%, transparent 100%);
-          mask-image: linear-gradient(180deg, #000 62%, transparent 100%),
-                      linear-gradient(90deg, transparent 0, #000 7%, #000 93%, transparent 100%);
-  -webkit-mask-composite: source-in;
-          mask-composite: intersect;
-}
-.door:hover .door__shot img { transform: scale(1.04); filter: saturate(1.04); }
-
-.door__body { position: relative; margin-top: -12%; padding: 0 var(--sp-5) var(--sp-5); }
-
-.door h3 {
-  margin: 0;
-  font-family: var(--font-display);
-  font-size: clamp(1.25rem, 1.05rem + .6vw, 1.55rem);
-  font-weight: 750; letter-spacing: -.02em; line-height: 1.1;
-}
-.door h3 a { color: var(--leaf-900); text-decoration: none; }
-.door h3 a::after {
-  content: " \2192"; display: inline-block; color: var(--accent);
-  transition: transform .3s;
-}
-.door:hover h3 a::after { transform: translateX(.28rem); }
-.door h3 a:hover { color: var(--accent); }
-
-.door__hook {
-  margin: var(--sp-3) 0 var(--sp-4);
-  font-size: var(--text-sm); line-height: 1.55; color: var(--gray-600);
-}
-
-/* ---- the page chips ---- */
-
-.door__pages { display: flex; flex-direction: column; gap: .3rem; margin: 0; padding: 0; list-style: none; }
-.pg {
-  display: flex; align-items: center; gap: .5rem;
-  padding: .32rem .6rem;
-  margin-left: -.6rem;
-  border: 1px solid transparent; border-radius: 999px;
-  font-size: var(--text-xs); line-height: 1.3; color: var(--gray-600);
+  overflow: hidden;
   text-decoration: none;
-  transition: color .18s, border-color .18s, background .18s, opacity .2s;
+  transition: transform .45s cubic-bezier(.32,.72,0,1),
+              box-shadow .45s cubic-bezier(.32,.72,0,1),
+              border-color .45s cubic-bezier(.32,.72,0,1);
 }
-.pg__i { flex: 0 0 auto; width: 16px; height: 16px; color: var(--accent); opacity: .75; transition: opacity .18s; }
-.pg:hover { color: var(--accent); border-color: color-mix(in srgb, var(--accent) 35%, transparent); background: color-mix(in srgb, var(--accent) 7%, transparent); }
-.pg:hover .pg__i { opacity: 1; }
+.gate:hover, .gate:focus-visible {
+  transform: translateY(-4px);
+  border-color: var(--leaf-200);
+  box-shadow: 0 16px 36px rgb(20 64 43 / .11);
+}
+.gate:focus-visible { outline: 2px solid var(--leaf-700); outline-offset: 3px; }
 
-/* cross-highlighting. `.src` is the page being pointed at; `.lit` is a page it
-   works with, wherever it lives. Everything else steps back. */
-.doors.hot .pg { opacity: .32; }
-.doors.hot .pg.lit, .doors.hot .pg.src { opacity: 1; }
-.doors.hot .pg.src {
-  color: var(--accent);
-  border-color: var(--accent);
-  background: color-mix(in srgb, var(--accent) 10%, transparent);
+.gate__panel {
+  display: grid; place-items: center;
+  padding: clamp(1rem, 2vw, 1.5rem);
+  background: var(--leaf-50);
+  border-bottom: 1px solid var(--leaf-100);
 }
-.doors.hot .pg.lit {
-  border-color: color-mix(in srgb, currentColor 28%, transparent);
-  background: var(--gray-50);
+.gate__panel svg {
+  display: block; width: 100%; height: auto; max-width: 9rem;
+  transition: transform .45s cubic-bezier(.32,.72,0,1);
 }
-.doors.hot .door { border-color: var(--gray-200); box-shadow: none; }
-.doors.hot .door__shot img { filter: saturate(.5) opacity(.55); }
+.gate:hover .gate__panel svg { transform: scale(1.045); }
 
-.doors__read {
-  margin: var(--sp-5) 0 0; min-height: 2.75rem;
-  padding: var(--sp-3) var(--sp-4);
-  border-left: 3px solid var(--leaf-500);
-  border-radius: 0 var(--radius-sm) var(--radius-sm) 0;
-  background: var(--white);
-  font-size: var(--text-sm); line-height: 1.6; color: var(--gray-600);
+.gate__body {
+  display: flex; flex-direction: column; gap: .375rem;
+  flex: 1 1 auto;
+  padding: clamp(.9rem, 1.6vw, 1.25rem);
 }
-.doors__read b { color: var(--leaf-900); }
-
-/* ---- the team banner ---- */
-/* Landscape, with the group shot bled into the section background on the left
-   and dissolved out under the text on the right. */
-.door--team { flex-direction: row; align-items: stretch; min-height: 15rem; background: var(--white); }
-.door--team .door__shot { position: absolute; inset: 0; background: none; }
-.door--team .door__shot::after {
-  background: linear-gradient(90deg, rgb(255 255 255 / .12) 0 26%, rgb(255 255 255 / .82) 62%, var(--white) 86%);
+.gate__title {
+  font-size: 1.0625rem; font-weight: 700; letter-spacing: -.01em; line-height: 1.25;
+  color: var(--leaf-900);
 }
-.door--team .door__shot img {
-  width: 100%; height: 100%; aspect-ratio: auto; object-fit: cover; object-position: 50% 42%;
-  -webkit-mask-image: linear-gradient(90deg, #000 0 44%, transparent 88%);
-          mask-image: linear-gradient(90deg, #000 0 44%, transparent 88%);
-  -webkit-mask-composite: source-over;
-          mask-composite: add;
+.gate__hook {
+  font-size: var(--text-xs); line-height: 1.5; color: var(--gray-600);
 }
-.door--team .door__body {
-  position: relative; z-index: 1;
-  margin: 0 0 0 auto; padding: var(--sp-6);
-  width: min(46%, 30rem);
-  align-self: center;
-}
-.door--team .door__pages { flex-direction: row; flex-wrap: wrap; gap: .35rem; }
-.door--team .pg { margin-left: 0; border-color: var(--gray-200); background: rgb(255 255 255 / .7); }
-@media (max-width: 719px) {
-  .door--team { flex-direction: column; }
-  .door--team .door__shot { position: relative; }
-  .door--team .door__shot img { aspect-ratio: 16 / 9; -webkit-mask-image: none; mask-image: none; }
-  .door--team .door__shot::after { background: linear-gradient(180deg, transparent 40%, var(--white) 100%); }
-  .door--team .door__body { width: auto; margin: -12% 0 0; padding: 0 var(--sp-5) var(--sp-5); }
+.gate__prize {
+  margin-top: auto; padding-top: .625rem;
+  align-self: flex-start;
+  font-size: .6875rem; font-weight: 700; letter-spacing: .08em;
+  text-transform: uppercase; color: var(--amber-700);
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .door, .door__shot img, .door h3 a::after, .pg { transition: none; }
-  .door:hover { transform: none; }
-  .door:hover .door__shot img { transform: none; }
+  .gate, .gate__panel svg { transition: none; }
+  .gate:hover, .gate:focus-visible { transform: none; }
+  .gate:hover .gate__panel svg { transform: none; }
 }
 
 /* ============================================================== FOOTER ==== */
