@@ -16,10 +16,11 @@ index.html                the homepage
 <slug>/index.html         one folder per page, so the URL is /<slug>
 hardware/                 the hardware section: hub, three 3D teardowns,
                           the build notebook, and its own css/ js/ models/
-protein-design/           the Dry Lab section that holds the peptide pipeline:
-                          a hub plus five subpages named for the pipeline's own
-                          steps. Two of its steps are the pages below, which
-                          keep their original addresses
+protein-design/           the Dry Lab section on the protectant peptide: a
+                          homepage plus three subpages (methodology/, sprints/,
+                          molecular-dynamics/). The five older step pages
+                          (triage/ restraints/ generate/ assembly/ packaging/)
+                          are redirects into methodology/
 md-simulations/           step F of protein design: the overview with the map of
                           the nine runs, plus the nine self-contained reports
 peptide-design/           the worked case, BoPep4 run end to end
@@ -84,27 +85,10 @@ their entries in `build/pages.py` so the generator goes on skipping them. The
 addresses live, as always, in `assets/data/site-nav.js`, where the two pages
 have moved into `NAV_UNLISTED`.
 
-**Bioreactor Calculations** is the fourth exception. `bioreactor-calculations/`
-keeps the wiki's palette and prose styles but drops the five-tab bar for the
-hovering left rail in `assets/css/nav-rail.css`, and adds `reactor.css` and
-`reactor.js` of its own. The rail rests as a 46 px spine of tick marks, slides
-off after three seconds of no pointer and no scroll, and expands on hover into a
-panel carrying this page's contents above the five wiki sections. It reads the
-same `assets/data/site-nav.js` as `nav.js`, so page addresses still live in one
-file. Below 1080 px it becomes a floating pill and a sheet.
+**Bioreactor Calculations was removed on 25 September 2026**, on purpose. Do not restore it or link to it.
 
-`reactor.js` holds one state object, one `compute()` and five panels that
-subscribe to it, so the cross-flow slider in section 1 also moves the operating
-dot on the shear chart in section 3. The startup transient integrates the
-Level-1 two-compartment model with Runge-Kutta 4 and reproduces the tables in
-the 2 September 2026 modelling handoff exactly (1.12 and 0.876 µg/mL at eight
-hours under the mid bracket), which is the check to re-run after any edit to the
-physics. Three fixes carried over from the internal explorer this page replaces
-are commented at the top of the file: no `innerHTML` rebuilds during animation,
-`ResizeObserver` instead of per-render `clientWidth` reads, and a critical flux
-that is predicted from cell density instead of tuned by a slider. The first
-paint does not depend on `requestAnimationFrame`, because a background tab never
-gets a frame and the page has to be right the moment it becomes visible.
+**Drafting marks (28 September 2026).** Student writing is in the normal ink. Text an AI assistant drafted to fill a page carries `class="ai"` and shows in orange (the rule is at the end of `assets/css/nav.css`, so every page has it). `window.AI_MARK = false` in `assets/data/site-nav.js` turns the orange off, e.g. for the freeze. Maths is written as LaTeX and rendered by the KaTeX copy in `assets/vendor/katex/` through `assets/js/math.js`. The Project tab gained **Development** (`/development/`), and the Dry Lab page at `/software/` is titled **Digital Twin** (its judged address is unchanged).
+
 
 **The MD Simulations section** is the third exception. `md-simulations/index.html`
 is a hand-written overview: a map of the nine trajectories with BoPep4 at the
