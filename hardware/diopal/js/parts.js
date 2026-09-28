@@ -72,8 +72,8 @@ const ALL_PARTS = [
       "condition at once, under identical surroundings.",
     specs: [
       ["Layout", "6 columns × 4 rows"],
-      ["Green", "~535 nm — induces"],
-      ["Red", "~670 nm — halts"],
+      ["Green", "~535 nm, induces"],
+      ["Red", "~670 nm, halts"],
       ["Tiers", "Low · Mid · High"],
       ["Replicates", "4 per condition"],
     ],
@@ -164,8 +164,8 @@ const ALL_PARTS = [
     name: "Housing",
     role: "Light shield · enclosure",
     desc:
-      "The black outer frame. It encloses the wiring and the Arduino, and — more " +
-      "importantly — blocks ambient light from reaching the cultures. Without it the " +
+      "The black outer frame. It encloses the wiring and the Arduino, and, more " +
+      "importantly, blocks ambient light from reaching the cultures. Without it the " +
       "low-intensity conditions would be confounded by room light.",
     specs: [
       ["Function", "Shields from ambient light"],

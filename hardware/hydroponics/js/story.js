@@ -703,7 +703,7 @@
     if (loader) loader.classList.add("hide");
     onScroll(true); draw();
   }).catch(function (e) {
-    if (loader) loader.textContent = "Could not load the model — " + e.message;
+    if (loader) loader.textContent = "Could not load the model: " + e.message;
   });
 
   /* ---------- water ---------- */

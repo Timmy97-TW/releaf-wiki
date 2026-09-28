@@ -65,7 +65,7 @@ const ALL_PARTS = [
     desc:
       "The functional core. A 45° angled slot holds the beamsplitter, which taps a " +
       "reference beam to one GY-302 sensor while the rest passes through the flow " +
-      "cuvette — cradled in the twin U-rests at the back — to the sample GY-302.",
+      "cuvette (cradled in the twin U-rests at the back) to the sample GY-302.",
     specs: [
       ["Splitter", "45° beamsplitter slot"],
       ["Cuvette", "Twin U-rests (rear)"],
@@ -101,7 +101,7 @@ const ALL_PARTS = [
     name: "Angled Wedge Base",
     role: "Tilt stand",
     desc:
-      "An open square frame that tilts the whole column — the trick that lets air " +
+      "An open square frame that tilts the whole column, the trick that lets air " +
       "bubbles rise out of the flow cuvette instead of scattering the beam.",
     specs: [
       ["Function", "Tilts column, sheds bubbles"],
@@ -176,7 +176,7 @@ ALL_PARTS.push(
     name: "Amber LED",
     role: "Light source",
     desc:
-      "A 5 mm amber LED, roughly 590 nm — close enough to the 600 nm absorbance " +
+      "A 5 mm amber LED, roughly 590 nm, close enough to the 600 nm absorbance " +
       "peak to track cell density. It fires straight down the optical axis from " +
       "the top of the mast.",
     specs: [
@@ -227,7 +227,7 @@ ALL_PARTS.push(
     role: "Splits the beam 45°",
     desc:
       "Held at 45° in the optical head. It passes most of the beam down through " +
-      "the cuvette and reflects the rest sideways to the reference sensor — the " +
+      "the cuvette and reflects the rest sideways to the reference sensor: the " +
       "trick that lets the instrument cancel LED drift.",
     specs: [
       ["Angle", "45° to the beam"],
@@ -289,7 +289,7 @@ ALL_PARTS.push(
     desc:
       "An identical GY-302 mounted to one side, catching the beamsplitter's " +
       "reflection before it ever reaches the sample. If the LED dims, both " +
-      "readings fall together and their ratio holds — so the OD stays honest.",
+      "readings fall together and their ratio holds, so the OD stays honest.",
     specs: [
       ["Sensor", "GY-302 (BH1750)"],
       ["Reads", "Reflected reference beam"],
