@@ -54,6 +54,7 @@ window.__homeRx = (function () {
     isReady: function () { return false; },
     redraw: function () {},
     highlight: function () {},
+    park: function () {},
     failed: true,
   };
 
@@ -528,7 +529,10 @@ window.__homeRx = (function () {
   // GPU for nothing and makes scrolling stutter, so the loop parks itself
   // whenever the stage leaves the viewport and picks the clock back up where
   // it left it.
-  var visible = true, paused = false, clock = 0, lastNow = 0;
+  // parked: home.js (piece 7) holds the loop while the model is hidden in
+  // the scene before it pops in, so the scroll-scrubbed scene has the
+  // frame to itself
+  var visible = true, paused = false, parked = false, clock = 0, lastNow = 0;
   if ("IntersectionObserver" in window) {
     new IntersectionObserver(function (entries) {
       visible = entries[0].isIntersecting;
@@ -603,7 +607,7 @@ window.__homeRx = (function () {
     lastNow = performance.now();
     (function tick(now) {
       if (!ready) return;
-      if (!visible || document.hidden) { paused = true; return; }
+      if (!visible || parked || document.hidden) { paused = true; return; }
       var real = Math.max(0, (now - lastNow) / 1000);
       var dt = Math.min(0.05, real);                     // cap the step so a
       clock += dt;                                       // long park does not
@@ -711,6 +715,12 @@ window.__homeRx = (function () {
     start: boot,
     isReady: function () { return ready; },
     redraw: function () { if (ready) render(); },
+    park: function (on) {
+      on = !!on;
+      if (on === parked) return;
+      parked = on;
+      if (!on && paused && visible && ready && !reduced) { paused = false; lastNow = performance.now(); run(); }
+    },
     failed: false,
     // One card on the homepage can name several components at once — the
     // Monitored card points at the photometer and the vent together — so
