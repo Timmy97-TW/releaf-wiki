@@ -1,1 +1,90 @@
-/* HOMEPAGE 9, sponsors. Owned by #sponsors. */
+/* HOMEPAGE 9, sponsors. Owned by #sponsors.
+
+   The organisations the wiki already names as working with us, and only
+   those: the heading on the left, their logos running on the right.
+
+   THE MARQUEE is CSS only. The track holds the list twice, the second copy
+   aria-hidden with its links out of the tab order, and slides left by
+   exactly one copy (-50%), so the loop has no seam. Each copy is at least as
+   wide as the window onto it (100cqw of .sp-run), with the logos spaced
+   evenly inside it, so a short list still fills the row. It pauses while the
+   pointer is on it or a logo has focus. Only transform moves.
+
+   Logos sit in one ink (greyscale, a little faded) and take their own colour
+   back on hover and focus. The edges fade through a mask.
+
+   Reduced motion: no movement, the copy is gone and the logos sit in one
+   wrapped row. Without scripting nothing changes: there is no script. */
+
+.sp { padding-top: 0; }
+.sp__grid {
+  display: grid; gap: var(--sp-5);
+  grid-template-columns: minmax(0, 1fr);
+  align-items: center;
+}
+@media (min-width: 900px) {
+  .sp__grid { grid-template-columns: minmax(0, 17rem) minmax(0, 1fr); column-gap: var(--sp-7); }
+}
+
+.sp__title {
+  margin: 0;
+  font-family: var(--font-display);
+  font-size: var(--text-h2);
+  font-weight: 700; line-height: 1.14; letter-spacing: -.018em;
+  color: var(--leaf-900);
+  text-wrap: balance;
+}
+
+.sp-run {
+  container-type: inline-size;
+  overflow: hidden;
+  padding-block: var(--sp-3);
+  -webkit-mask-image: linear-gradient(90deg, transparent, #000 12%, #000 88%, transparent);
+          mask-image: linear-gradient(90deg, transparent, #000 12%, #000 88%, transparent);
+}
+.sp-track {
+  display: flex; width: max-content;
+  animation: sp-run 30s linear infinite;
+}
+.sp-run:hover .sp-track,
+.sp-run:focus-within .sp-track { animation-play-state: paused; }
+@keyframes sp-run { to { transform: translateX(-50%); } }
+
+.sp-list {
+  flex: none;
+  display: flex; align-items: center; justify-content: space-around;
+  gap: var(--sp-7);
+  min-width: 100cqw;
+  margin: 0; padding: 0 calc(var(--sp-7) / 2);
+  list-style: none;
+}
+.sp-list li { flex: none; }
+.sp-list a {
+  display: block; border-radius: var(--radius-sm);
+  text-decoration: none;
+}
+.sp-list a:focus-visible { outline: 2px solid var(--leaf-700); outline-offset: 6px; }
+.sp-list img {
+  display: block; width: auto;
+  filter: grayscale(1); opacity: .7;
+  transition: filter .3s ease, opacity .3s ease;
+}
+/* optical sizes: the Green Media mark carries a line of small type under
+   its name, so it stands taller than the one-line ISLSDR mark */
+.sp-list .sp-logo--gm { height: 3.5rem; }
+.sp-list .sp-logo--islsdr { height: 2.25rem; }
+.sp-list a:hover img,
+.sp-list a:focus-visible img { filter: none; opacity: 1; }
+
+@media (max-width: 639px) {
+  .sp-list .sp-logo--gm { height: 3rem; }
+  .sp-list .sp-logo--islsdr { height: 1.9rem; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .sp-track { animation: none; width: auto; }
+  .sp-list[aria-hidden="true"] { display: none; }
+  .sp-list { flex-wrap: wrap; justify-content: flex-start; min-width: 0; padding: 0; gap: var(--sp-5) var(--sp-6); }
+  .sp-run { -webkit-mask-image: none; mask-image: none; }
+  .sp-list img { transition: none; }
+}
