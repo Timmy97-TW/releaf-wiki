@@ -533,28 +533,29 @@
   /* ═══════════════════════════════════════════ 7  DEMANDS INTO THE ANSWER ══ */
   /* #dx wraps the five demands (#demands) and the answer (#solution). Where
      the answer's stage fits one screen, this adds .is-live (home-demands.css):
-     .dx__pin holds the screen for a runway, and the scroll, read as p from 0
-     to 1, scrubs one continuous scene. Everything is transform and opacity,
-     written once a frame through window.__homeFrame.
+     .dx__pin holds the screen for a runway of RUN screens, and the scroll,
+     read in screens from the moment the pin holds, scrubs one calm hand-off.
+     Transform and opacity only, written once a frame through
+     window.__homeFrame.
 
-       .00 to .27  "An answer has to meet five demands." alone, then the five
-                   chips arrive one by one under it
-       .30 to .47  the heading goes, ink opens over the paper from where the
-                   reactor will stand, and each chip glides onto the tag of
-                   its card round the reactor, changing to the tag's outline
-                   on the way
-       .47 to .51  a green point opens where the reactor will stand
-       .53 to .63  the view dives into it: the five fly out, green fills the
-                   screen, and it says what the green light does
-       .68 to .77  and back out to the five
-       .79 to .88  the reactor pops out of the point, lit by its own green
-                   light at first
-       .84 to .97  "Make it where it grows." and the lede settle; the cards
-                   open round their tags
+       0.10 to 1.16  "An answer has to meet five demands." alone, then the
+                     five chips arrive under it, one by one
+       1.16 to 1.30  the five, held
+       1.30 to 1.55  the heading fades out, on white
+       1.58 to 1.88  the white turns to ink, quickly and on a steep curve so
+                     it hardly lingers in grey; the chips stay where they
+                     are (dark green on white, then the tag's look on ink)
+       1.90 to 2.45  each chip glides straight onto the tag of its card round
+                     the reactor
+       2.35 to 2.70  the reactor comes up from the middle of the five,
+                     0.85 to 1 with its opacity; no overshoot
+       2.55 to 3.00  "Make it where it grows." and the lede settle, then the
+                     cards open round their tags
+       3.00 to 3.10  the finished band, held
 
      The chips land exactly on the tags and are drawn like them (they share
-     the proportions, home-demands.css), so at .78 the chips hand over to the
-     real tags without a visible step.
+     the proportions, home-demands.css), so at 2.47 the chips hand over to
+     the real tags without a visible step.
 
      THE RESTING STATE IS THE FINISHED LAYOUT: the two sections stacked. No
      scene with reduced motion, on a narrow or short screen, while printing,
@@ -571,9 +572,6 @@
     var pin = dx.querySelector(".dx__pin");
     var runwayEl = dx.querySelector(".dx__runway");
     var paper = dx.querySelector(".dx__paper");
-    var ink = dx.querySelector(".dx__ink");
-    var glow = dx.querySelector(".dx__glow");
-    var say = dx.querySelector(".dx__say");
     var row = dmd.querySelector(".dmd__chips");
     var title = dmd.querySelector(".dmd__title");
     var chips = [].slice.call(dmd.querySelectorAll(".dmd__chip"));
@@ -589,7 +587,7 @@
       var el = sol.querySelector(q);
       return el ? el.querySelector(".rxs-card__tag") : null;
     });
-    if (!pin || !runwayEl || !paper || !ink || !glow || !say || !row || !title || chips.length !== 5 ||
+    if (!pin || !runwayEl || !paper || !row || !title || chips.length !== 5 ||
         tags.indexOf(null) !== -1 || !stage || !head || !lede || !model || !grid) return;
     var rx = window.__homeRx;
 
@@ -607,9 +605,12 @@
     }
 
     if (reduced || !window.matchMedia) return;
+    // the runway in screens: the same number as .dx__runway's height in
+    // home-demands.css
+    var RUN = 3.1;
     var fits = window.matchMedia("(min-width: 980px) and (min-height: 640px)");
-    var live = false, geo = null, navH = 68, lit = false, parked = null;
-    var moved = [title, head, lede, model, sol, glow, say, paper, ink].concat(chips);
+    var live = false, geo = null, navH = 68, parked = null, printing = false;
+    var moved = [title, head, lede, model, sol, paper].concat(chips);
     var cache = new Map();
 
     // write only what changed since the last frame
@@ -621,52 +622,35 @@
       if (prop.charAt(0) === "-") el.style.setProperty(prop, v);
       else el.style[prop] = v;
     }
-    function clear() {
-      moved.forEach(function (el) {
-        el.style.removeProperty("transform");
-        el.style.removeProperty("opacity");
-      });
-      [glow, ink].forEach(function (el) { el.style.removeProperty("left"); el.style.removeProperty("top"); });
-      dmd.style.removeProperty("--dmd-m");
-      grid.style.removeProperty("--dx-card");
-      grid.style.removeProperty("--dx-tag");
-      dx.classList.remove("is-early");
-      cache = new Map();
-      if (lit && rx && rx.highlight) { rx.highlight(null); lit = false; }
-      park(false);
-    }
     function park(on) {
       if (parked === on || !rx || !rx.park) return;
       parked = on;
       rx.park(on);
     }
+    function clear() {
+      moved.forEach(function (el) {
+        el.style.removeProperty("transform");
+        el.style.removeProperty("opacity");
+      });
+      dmd.style.removeProperty("--dmd-m");
+      grid.style.removeProperty("--dx-card");
+      grid.style.removeProperty("--dx-tag");
+      dx.classList.remove("is-early");
+      cache = new Map();
+      park(false);
+    }
 
-    // Where everything sits in the finished layout, in the pin's pixels,
-    // with every transform off. Runs when the scene starts and after any
-    // change of size or type.
+    // Where each chip sits in its row and where its tag sits in the
+    // finished band, in the pin's pixels, with every transform off. Runs
+    // when the scene starts and after any change of size or type.
     function measure() {
       clear();
       var pr = pin.getBoundingClientRect();
       var box = function (el) {
         var r = el.getBoundingClientRect();
-        return { x: r.left - pr.left + r.width / 2, y: r.top - pr.top + r.height / 2, w: r.width, h: r.height };
+        return { x: r.left - pr.left + r.width / 2, y: r.top - pr.top + r.height / 2, w: r.width };
       };
-      var m = box(model);
-      geo = {
-        w: pr.width, h: pr.height,
-        run: Math.max(1, runwayEl.offsetHeight),
-        from: chips.map(box),
-        to: tags.map(box),
-        dot: { x: m.x, y: m.y }
-      };
-      // the point's disc is 200px across: at rest a dot of 14px, at full
-      // dive large enough that its solid core covers the far corner
-      var far = Math.max(Math.hypot(m.x, m.y), Math.hypot(geo.w - m.x, m.y),
-                         Math.hypot(m.x, geo.h - m.y), Math.hypot(geo.w - m.x, geo.h - m.y));
-      geo.s0 = 14 / 200;
-      geo.sMax = (far + 40) / (200 * 0.58 / 2) ;
-      geo.inkMax = (far + 24) / 100;
-      [glow, ink].forEach(function (el) { el.style.left = m.x + "px"; el.style.top = m.y + "px"; });
+      geo = { run: Math.max(1, runwayEl.offsetHeight), from: chips.map(box), to: tags.map(box) };
     }
 
     function decide() {
@@ -687,92 +671,64 @@
       if (live) { measure(); write(read()); }
     }
 
+    // progress in screens of runway, 0 when the pin takes hold, RUN when it
+    // lets go
     function read() {
       if (!live || !geo) return;
-      return { p: clamp01((navH - dx.getBoundingClientRect().top) / geo.run) };
+      return { s: RUN * clamp01((navH - dx.getBoundingClientRect().top) / geo.run) };
     }
 
-    var easeIn = function (t) { return t * t * t; };
     var easeOut = function (t) { return 1 - Math.pow(1 - t, 3); };
     var inOut = function (t) { return t < .5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2; };
-    // a pop that goes a little past and settles
-    var back = function (t) { var c = 1.4; t = t - 1; return 1 + (c + 1) * t * t * t + c * t * t; };
     var f3 = function (v) { return (Math.round(v * 1000) / 1000).toString(); };
     var px = function (v) { return (Math.round(v * 10) / 10) + "px"; };
 
     function write(m) {
       if (!m || !geo) return;
-      var p = m.p, g = geo;
+      var s = m.s, g = geo;
 
-      // the ink opens from where the reactor will stand and covers the
-      // paper; once it has, both step aside for the band's own ink
-      var inked = span(p, 0.345, 0.45), covered = inked >= 1;
-      put(ink, "transform", "scale(" + f3(g.inkMax * inOut(inked)) + ")");
-      put(ink, "opacity", covered ? "0" : "1");
-      put(paper, "opacity", covered ? "0" : "1");
-      // the heading, and the chips' change of skin
-      var tOut = inOut(span(p, 0.3, 0.36));
+      // the heading fades out while the page is still white
+      var tOut = inOut(span(s, 1.3, 1.55));
       put(title, "opacity", f3(1 - tOut));
-      put(title, "transform", "translateY(" + px(-48 * tOut) + ") scale(" + f3(1 - 0.05 * tOut) + ")");
-      put(dmd, "--dmd-m", f3(inOut(span(p, 0.37, 0.46))));
+      put(title, "transform", tOut <= 0 ? "none" : "translateY(" + px(-20 * tOut) + ")");
+      // then the paper gives way to the band's ink, fast and steep (a
+      // smoothstep of a smoothstep), so the grey in between barely shows;
+      // the chips change skin with it, where they stand
+      put(paper, "opacity", f3(1 - ease(ease(span(s, 1.58, 1.88)))));
+      put(dmd, "--dmd-m", f3(ease(span(s, 1.68, 1.9))));
       // the answer's band stays below the pin until the page turns, so the
       // chapters rail reads the demands until then
-      put(sol, "transform", p < 0.33 ? "translateY(100%)" : "none");
+      put(sol, "transform", s < 1.58 ? "translateY(100%)" : "none");
 
-      // the dive: z runs 0 to 1 into the point and back to 0
-      var z = inOut(span(p, 0.53, 0.63)) * (1 - inOut(span(p, 0.68, 0.77)));
-      // one camera for the point and the five: as the point grows by cam,
-      // the five move away from it by cam, so they leave the screen early
-      // and the point goes on growing until it fills it
-      var cam = Math.pow(g.sMax / g.s0, z);
-      var handed = p >= 0.78;                         // the tags have taken over
-
+      var handed = s >= 2.47;                         // the tags have taken over
       chips.forEach(function (c, k) {
-        var a = easeOut(span(p, 0.03 + 0.042 * k, 0.11 + 0.042 * k));
-        var f = inOut(span(p, 0.31 + 0.014 * k, 0.45 + 0.014 * k));
+        var a = easeOut(span(s, 0.1 + 0.18 * k, 0.44 + 0.18 * k));
+        var f = inOut(span(s, 1.9 + 0.025 * k, 2.35 + 0.025 * k));
         var s0 = g.from[k], s1 = g.to[k];
-        var sc = s1.w / s0.w;
-        var x = s0.x + (s1.x - s0.x) * f, y = s0.y + (s1.y - s0.y) * f;
-        var s = 1 + (sc - 1) * f;
-        // the camera: away from the point, and a little larger
-        x = g.dot.x + (x - g.dot.x) * cam;
-        y = g.dot.y + (y - g.dot.y) * cam;
-        s = s * Math.pow(cam, 0.5);
-        var rise = (1 - a) * 22;
-        put(c, "transform", "translate(" + px(x - s0.x) + "," + px(y - s0.y + rise) + ") scale(" + f3(s * (0.9 + 0.1 * a)) + ")");
-        put(c, "opacity", f3(handed ? 0 : a * (1 - span(cam, 1.5, 3))));
+        var sc = 1 + (s1.w / s0.w - 1) * f;
+        var x = (s1.x - s0.x) * f, y = (s1.y - s0.y) * f + (1 - a) * 22;
+        put(c, "transform", "translate(" + px(x) + "," + px(y) + ") scale(" + f3(sc * (0.9 + 0.1 * a)) + ")");
+        put(c, "opacity", f3(handed ? 0 : a));
       });
       put(grid, "--dx-tag", handed ? "1" : "0");
 
-      // the green point: it opens, dives to fill the screen, comes back,
-      // and swells and fades as the reactor comes out of it
-      var dot = easeOut(span(p, 0.47, 0.51));
-      var pop = span(p, 0.79, 0.88);
-      var gs = g.s0 * cam * (0.2 + 0.8 * dot) * (1 + 5 * easeOut(pop));
-      put(glow, "transform", "scale(" + f3(gs) + ")");
-      put(glow, "opacity", f3(dot * (1 - easeOut(span(pop, 0, 0.55)))));
-      var sayIn = span(z, 0.82, 1);
-      put(say, "opacity", f3(inOut(sayIn)));
-      put(say, "transform", "translate(-50%,-50%) scale(" + f3(0.94 + 0.06 * easeOut(sayIn)) + ")");
-
-      // the reactor pops out of the point
-      put(model, "opacity", f3(easeOut(span(pop, 0, 0.45))));
-      put(model, "transform", pop >= 1 ? "none" : "scale(" + f3(0.12 + 0.88 * back(pop)) + ")");
-      // the band's words settle, and the cards open round their tags
-      var h = easeOut(span(p, 0.84, 0.91)), l = easeOut(span(p, 0.86, 0.93));
+      // the reactor comes up from the middle of the five
+      var r = easeOut(span(s, 2.35, 2.7));
+      put(model, "opacity", f3(r));
+      put(model, "transform", r >= 1 ? "none" : "scale(" + f3(0.85 + 0.15 * r) + ")");
+      // then its words settle and the cards open round their tags
+      var h = easeOut(span(s, 2.55, 2.82)), l = easeOut(span(s, 2.62, 2.9));
       put(head, "opacity", f3(h));
-      put(head, "transform", h >= 1 ? "none" : "translateY(" + px(28 * (1 - h)) + ")");
+      put(head, "transform", h >= 1 ? "none" : "translateY(" + px(16 * (1 - h)) + ")");
       put(lede, "opacity", f3(l));
-      put(lede, "transform", l >= 1 ? "none" : "translateY(" + px(20 * (1 - l)) + ")");
-      var card = easeOut(span(p, 0.9, 0.97));
+      put(lede, "transform", l >= 1 ? "none" : "translateY(" + px(12 * (1 - l)) + ")");
+      var card = easeOut(span(s, 2.7, 3.0));
       put(grid, "--dx-card", f3(card));
       dx.classList.toggle("is-early", card < 0.6);
 
-      // the model's own loop is held until it is about to be seen, and it
-      // comes up lit by its green light alone, then whole
-      park(p < 0.74);
-      var glowing = p >= 0.77 && p < 0.9;
-      if (glowing !== lit && rx && rx.highlight) { lit = glowing; rx.highlight(glowing ? "light" : null); }
+      // the model's own loop is held until it is about to be seen, so the
+      // hand-off has the frame to itself
+      park(s < 2.15);
     }
 
     function fail() { live = false; dx.classList.remove("is-live"); clear(); }
@@ -786,7 +742,6 @@
     });
     if (fits.addEventListener) fits.addEventListener("change", decide);
     else if (fits.addListener) fits.addListener(decide);
-    var printing = false;
     window.addEventListener("beforeprint", function () { printing = true; decide(); });
     window.addEventListener("afterprint", function () { printing = false; decide(); });
     if (document.fonts && document.fonts.ready) document.fonts.ready.then(decide);
@@ -808,7 +763,7 @@
     // chips are in, the answer at its finished frame
     function spot(id) {
       var top = dx.getBoundingClientRect().top + window.scrollY - navH;
-      return top + geo.run * (id === "demands" ? 0.28 : 1);
+      return top + geo.run * (id === "demands" ? 1.25 / RUN : 1);
     }
     function go(id, how) {
       if (!live || !geo) return false;
@@ -840,7 +795,7 @@
     });
 
     decide();
-    if (live) { armed && dmd.classList.add("in"); fromHash("instant"); }
+    if (live) { if (armed) dmd.classList.add("in"); fromHash("instant"); }
   })();
 
 })();
