@@ -7,12 +7,14 @@
 
    SIX RULES GOVERN EVERY EDIT.
 
-   1  IT FITS, ARITHMETICALLY. The drawing is a fixed canvas of 1320 x 385
-      design pixels. Every size inside it is a number of design pixels times
-      --k, one design pixel measured in the stage's own container units. Add a
-      row and the drawing gets smaller; it cannot spill. The two load-bearing
-      properties are min-height: 0 and container-type: size on the stage.
-      Remove either and 100cqh has nothing to measure.
+   1  IT FITS, ARITHMETICALLY. The drawing is a fixed canvas of 1320 x 505
+      design pixels: the brand and its bracket (120) over the five steps
+      (385). Every size inside it is a number of design pixels times --k,
+      one design pixel, the smaller of the stage's width over 1320 and the
+      screen's height, less the title and the band's padding, over 505. Add
+      a row and the drawing gets smaller; it cannot spill. The band no longer
+      owns the viewport: it is as tall as its title and its drawing, which
+      fits one screen with room around it.
    2  NO CAPTIONS. Not under the figures, not on the joints, not under the
       names. An earlier version explained itself in sentences and ended up a
       wall of small print. A name and a colour is the whole of what a component
@@ -22,10 +24,12 @@
       stock illustration, and never a drawing of something we have not built.
    4  A ROW IS A COMPONENT, NOT A TASK. Three to a step, each marked with the
       object it is, from the sprite drawn off our own CAD and schematics.
-   5  COLOUR IS THE ONLY STATEMENT ABOUT STATE, and the key at the top is what
-      reads it. Green is built or measured, amber is designed or run once, rust
-      is open. Rust never means anything else, and a component that closes has
-      to change colour here on the same day it changes on its page.
+   5  STATE IS RECORDED, NOT PAINTED (29 Sep). The key that read the colours
+      is gone at the owner's request, and a colour nobody can read is noise,
+      so every component and joint wears one quiet ground. data-state (ok,
+      part, open) stays in the markup: a component that closes still changes
+      there on the same day it changes on its page, and the old palette comes
+      back by restoring the three state rules marked below.
    6  BIOMANUFACTURING IS SHOWN, NOT LABELLED. The cells and the reactor stand
       on one tinted ground, because together they are the thing that makes the
       protein at the farm. There is no badge on it and there does not need to
@@ -67,9 +71,13 @@
   --bp4-open: var(--rust-700);
   --bp4-line: rgb(0 0 0 / .12);
 
-  padding: 0;
-  min-height: calc(100svh - var(--bp4-nav));
-  display: flex;
+  --bp4-ink:  var(--leaf-900);
+  --bp4-tile: rgb(20 64 43 / .06);
+  --bp4-arrow: var(--gray-400);
+  /* what the title and the band's padding take from the screen's height */
+  --bp4-reserve: 15rem;
+
+  padding: clamp(2.5rem, 6vh, 4.5rem) 0 clamp(2rem, 5vh, 3.5rem);
 }
 /* This band is allowed to be wider than the rest of the page: five columns of
    evidence need the room, and on a large screen the figure should fill the
@@ -77,58 +85,33 @@
 .bpv4 > .band__inner {
   width: 100%;
   max-width: min(1560px, 100% - 3rem);
-  display: flex; flex-direction: column;
-  padding-top: clamp(1.5rem, 3.4vh, 3rem);
-  padding-bottom: clamp(1.25rem, 2.6vh, 2.25rem);
 }
 
-/* ── head ─────────────────────────────────────────────────────────────── */
+/* ── head: one centred title, and nothing else ──────────────────────── */
 
-.bp4-head { flex: none; display: grid; gap: .5rem; }
-.bp4-head__row {
-  display: flex; flex-wrap: wrap; align-items: baseline;
-  gap: .5rem clamp(1rem, 2.5vw, 2rem);
-}
-.bp4-kicker {
-  margin: 0;
-  font-size: .6875rem; font-weight: 700; letter-spacing: .12em;
-  text-transform: uppercase; color: var(--leaf-700);
-}
+.bp4-head { text-align: center; }
 .bpv4 h2.bp4-title {
   margin: 0;
-  font-size: clamp(1.375rem, .9rem + 1.5vw, 2.125rem);
-  font-weight: 800; letter-spacing: -.02em; line-height: 1.12;
-  color: var(--leaf-900);
+  font-family: var(--font-display);
+  font-size: clamp(2.25rem, 1.2rem + 3vw, 3.75rem);
+  font-weight: 700; letter-spacing: -.035em; line-height: 1.05;
+  color: var(--bp4-ink);
+  text-wrap: balance;
 }
-.bp4-lede {
-  margin: 0; max-width: 62ch;
-  font-size: clamp(.875rem, .8rem + .3vw, 1.0625rem);
-  line-height: 1.5; color: var(--gray-600);
-}
-.bp4-key {
-  display: flex; flex-wrap: wrap; gap: .3rem 1.25rem;
-  margin: 0; padding: 0; list-style: none;
-  font-size: .75rem; color: var(--gray-500);
-}
-.bp4-key li { display: flex; align-items: center; gap: .4rem; }
-.bp4-key i { width: .5rem; height: .5rem; border-radius: 50%; background: currentColor; flex: none; }
-.bp4-key [data-k="ok"]   i { color: var(--bp4-ok); }
-.bp4-key [data-k="part"] i { color: var(--bp4-part); }
-.bp4-key [data-k="open"] i { color: var(--bp4-open); }
 
 /* ── the stage, and the canvas that measures itself into it ─────────────── */
 
 .bp4-stage {
-  flex: 1 1 auto; min-height: 0;
-  container-type: size;
-  display: grid; place-items: center;
-  margin: clamp(1rem, 3vh, 2.5rem) 0;
+  container-type: inline-size;
+  display: grid; justify-items: center;
+  margin-top: clamp(1.25rem, 3.5vh, 2.5rem);
 }
 
 .bp4-flow {
-  --k: min(calc(100cqw / 1320), calc(100cqh / 385));
+  --k: min(calc(100cqw / 1320),
+           calc((100svh - var(--bp4-nav) - var(--bp4-reserve)) / 505));
   width: calc(1320 * var(--k));
-  height: calc(385 * var(--k));
+  height: calc(505 * var(--k));
 
   display: grid;
   grid-template-columns:
@@ -137,21 +120,62 @@
     calc(212 * var(--k)) calc(65 * var(--k))
     calc(212 * var(--k)) calc(65 * var(--k))
     calc(212 * var(--k));
+  grid-template-rows: calc(120 * var(--k)) calc(385 * var(--k));
   align-content: start;
 }
 
 /* A browser with no size containment gets an arithmetic estimate instead of a
    measurement. It is close, not exact, and it is the only case where this
    figure can overflow. */
-@supports not (container-type: size) {
-  .bp4-flow { --k: calc((100vw - 4rem) / 1320); }
+@supports not (container-type: inline-size) {
+  .bp4-flow { --k: min(calc((100vw - 4rem) / 1320), calc((100vh - 18rem) / 505)); }
+}
+
+/* ── the brand, and the bracket that makes the five steps its own ─────────
+   Logo and wordmark centred over the row; one solid hairline leaves them,
+   runs from the middle of the first step to the middle of the last, and
+   turns down at both ends onto them. */
+.bp4-brand {
+  grid-row: 1; grid-column: 1 / -1;
+  display: grid; grid-template-rows: auto 1fr;
+  justify-items: center;
+}
+.bp4-brand__mark {
+  margin: 0;
+  display: flex; align-items: center; gap: calc(14 * var(--k));
+}
+.bp4-brand__logo {
+  width: calc(68 * var(--k)); height: calc(68 * var(--k));
+  border-radius: 50%;
+  box-shadow: 0 calc(2 * var(--k)) calc(10 * var(--k)) rgb(20 64 43 / .18);
+}
+.bp4-brand__word {
+  display: block;
+  width: auto; height: calc(64 * var(--k));
+}
+.bp4-brace {
+  --bp4-brace: rgb(79 156 111 / .5);
+  position: relative;
+  justify-self: stretch;
+  margin: calc(24 * var(--k)) calc(106 * var(--k)) calc(4 * var(--k));
+  border: calc(1.5 * var(--k)) solid var(--bp4-brace);
+  border-bottom: 0;
+  border-radius: calc(18 * var(--k)) calc(18 * var(--k)) 0 0;
+}
+/* the stem, from the mark down to the bar */
+.bp4-brace::before {
+  content: ""; position: absolute;
+  left: 50%; bottom: 100%;
+  width: calc(1.5 * var(--k)); height: calc(18 * var(--k));
+  transform: translateX(-50%);
+  background: var(--bp4-brace);
 }
 
 /* ── biomanufacturing, shown rather than labelled ─────────────────────────
    One tinted ground under the cells and the reactor. No badge, no link, no
    word: the two steps that make the protein simply stand on the same floor. */
 .bp4-made {
-  grid-row: 1; grid-column: 5 / 8;
+  grid-row: 2; grid-column: 5 / 8;
   margin: calc(-14 * var(--k)) calc(-12 * var(--k));
   border-radius: calc(24 * var(--k));
   background: var(--leaf-50);
@@ -160,7 +184,7 @@
 /* ── a step ───────────────────────────────────────────────────────────── */
 
 .bp4-step {
-  grid-row: 1;
+  grid-row: 2;
   position: relative;
   display: grid; gap: calc(9 * var(--k));
   align-content: start;
@@ -218,9 +242,11 @@
   border-radius: calc(9 * var(--k));
 }
 .bp4-part__i svg { width: calc(20 * var(--k)); height: calc(20 * var(--k)); display: block; }
-.bp4-part[data-state="ok"]   .bp4-part__i { background: var(--leaf-100); }
-.bp4-part[data-state="part"] .bp4-part__i { background: var(--amber-100); }
-.bp4-part[data-state="open"] .bp4-part__i { background: var(--rust-100); }
+/* one ground for every state (rule 5). The three state rules were:
+     ok   .bp4-part__i { background: var(--leaf-100); }
+     part .bp4-part__i { background: var(--amber-100); }
+     open .bp4-part__i { background: var(--rust-100); }                  */
+.bp4-part__i { background: var(--bp4-tile); }
 
 .bp4-part a {
   font-size: calc(14 * var(--k)); font-weight: 600; line-height: 1.2;
@@ -230,10 +256,10 @@
 .bp4-part a:hover { border-bottom-color: var(--leaf-500); }
 .bp4-part a:focus-visible { outline: 2px solid var(--leaf-700); outline-offset: 3px; border-radius: 2px; }
 
-/* ── the joints. No words: the colour is the statement. ───────────────── */
+/* ── the joints. No words, and (rule 5) no painted state. ───────────────── */
 
 .bp4-joint {
-  grid-row: 1;
+  grid-row: 2;
   align-self: start;
   margin-top: calc(78 * var(--k));
   display: grid; place-items: center;
@@ -243,13 +269,12 @@
 .bp4-joint:nth-of-type(3) { grid-column: 6; }
 .bp4-joint:nth-of-type(4) { grid-column: 8; }
 .bp4-joint svg { width: calc(34 * var(--k)); height: calc(18 * var(--k)); display: block; }
-.bp4-joint[data-state="ok"]   { color: var(--bp4-ok); }
-.bp4-joint[data-state="part"] { color: var(--bp4-part); }
-.bp4-joint[data-state="open"] { color: var(--bp4-open); }
+/* was: [data-state="ok"|"part"|"open"] { color: var(--bp4-ok|part|open); } */
+.bp4-joint { color: var(--bp4-arrow); }
 
 /* ── emphasis, and no script anywhere ─────────────────────────────────── */
 
-.bp4-flow:hover .bp4-step:not(:hover),
+.bp4-flow:has(.bp4-step:hover) .bp4-step:not(:hover),
 .bp4-flow:focus-within .bp4-step:not(:focus-within):not(:hover) { opacity: .4; }
 .bp4-step:hover, .bp4-step:focus-within { transform: translateY(calc(-4 * var(--k))); }
 
@@ -261,11 +286,10 @@
 /* ── footing ──────────────────────────────────────────────────────────── */
 
 .bp4-foot {
-  flex: none;
-  display: flex; flex-wrap: wrap; gap: .4rem clamp(1rem, 2.2vw, 1.75rem);
-  padding-top: clamp(.6rem, 1.4vh, 1rem);
-  border-top: 1px solid var(--bp4-line);
-  font-size: clamp(.75rem, .7rem + .2vw, .875rem);
+  display: flex; flex-wrap: wrap; justify-content: center;
+  gap: .4rem clamp(1.25rem, 2.6vw, 2.25rem);
+  margin-top: clamp(1.5rem, 3.2vh, 2.25rem);
+  font-size: clamp(.8125rem, .75rem + .2vw, .9375rem);
 }
 .bp4-foot a { color: var(--leaf-700); font-weight: 600; }
 
@@ -275,16 +299,22 @@
    stacked list: step, joint, step. It scrolls, and a list is allowed to. */
 
 @media (max-width: 1180px), (max-height: 520px) {
-  .bpv4 { min-height: 0; padding: var(--sp-8) 0; display: block; }
-  .bpv4 > .band__inner { display: block; max-width: var(--max); }
+  .bpv4 { padding: var(--sp-8) 0; }
+  .bpv4 > .band__inner { max-width: var(--max); }
 
-  .bp4-stage { container-type: normal; display: block; margin: var(--sp-6) 0; }
+  .bp4-stage { container-type: normal; display: block; justify-items: normal; margin: var(--sp-5) 0 var(--sp-4); }
   .bp4-flow {
     --k: 1px;
     width: auto; height: auto;
-    display: grid; grid-template-columns: 1fr;
+    max-width: 34rem; margin-inline: auto;
+    display: grid; grid-template-columns: 1fr; grid-template-rows: none;
   }
   .bp4-made { display: none; }
+  .bp4-brand { grid-row: auto; grid-column: 1; padding-bottom: var(--sp-4); }
+  .bp4-brand__mark { gap: .75rem; }
+  .bp4-brand__logo { width: 3.25rem; height: 3.25rem; }
+  .bp4-brand__word { height: 3rem; }
+  .bp4-brace { display: none; }
   .bp4-step, .bp4-joint { grid-column: 1 !important; grid-row: auto !important; }
 
   .bp4-step {
@@ -304,14 +334,21 @@
   .bp4-joint { margin: 0 0 0 3.5rem; justify-items: start; }
   .bp4-joint svg { width: 1.125rem; height: 2rem; transform: rotate(90deg); }
 
-  .bp4-flow:hover .bp4-step:not(:hover),
+  .bp4-flow:has(.bp4-step:hover) .bp4-step:not(:hover),
   .bp4-flow:focus-within .bp4-step:not(:focus-within):not(:hover) { opacity: 1; }
   .bp4-step:hover, .bp4-step:focus-within { transform: none; }
 }
 
+/* a phone keeps the figure beside the step, narrower, so the five steps stay
+   a short scroll rather than five full-width photographs */
 @media (max-width: 560px) {
-  .bp4-step { grid-template-columns: 1fr; }
-  .bp4-step__fig { grid-row: auto; height: 9rem; }
-  .bp4-step__no, .bp4-step__name, .bp4-parts { grid-column: 1; }
-  .bp4-joint { margin-left: 0; }
+  .bp4-step { grid-template-columns: 6.5rem 1fr; column-gap: var(--sp-4); padding: var(--sp-3) 0; }
+  .bp4-step__fig { height: 6.5rem; }
+  .bp4-step__name { font-size: 1.1875rem; }
+  .bp4-parts { margin-top: var(--sp-1); gap: .375rem; }
+  .bp4-part { gap: .5rem; }
+  .bp4-part__i { width: 1.5rem; height: 1.5rem; border-radius: .4rem; }
+  .bp4-part__i svg { width: 1rem; height: 1rem; }
+  .bp4-joint { margin-left: 2.7rem; }
+  .bp4-joint svg { height: 1.5rem; }
 }
