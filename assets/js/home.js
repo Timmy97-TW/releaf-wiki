@@ -15,7 +15,7 @@
      (4 doors was retired on 28 September 2026 with the section it drove;
      the numbers of the others were kept.)
 
-   Elsewhere: 03's entrance and the source list (home-problem.js), the model
+   Elsewhere: the model
    itself (home-reactor.js, loaded before this file), the big picture's one
    control that opens every block (big-picture.js) and the vision's pull-back
    (home-vision.js, loaded after this file because it scrolls on the

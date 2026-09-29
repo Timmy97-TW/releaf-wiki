@@ -38,7 +38,6 @@ assets/
          page.js          numbering, contents rail, citations, tabs, lightbox
          team.js          builds the member cards and profiles
          big-picture-v2.js   the figure's highlighting, the map legend, the dial
-         home-problem.js     the problem section: map toggle, 03 journey, sources
   data/  site-nav.js      every page address, in one place
          roster.js        the forty-seven people
   img/   logo, group shot, members/, home/, tab-icons/, bigpicture/
