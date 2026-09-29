@@ -1,0 +1,212 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Vision layers: placeholder render</title>
+<style>
+  body { margin: 0; padding: 24px; background: #111; color: #ddd; font: 14px/1.5 system-ui, sans-serif; }
+  h1 { font-size: 18px; margin: 0 0 8px; }
+  figure { margin: 0 0 28px; }
+  figure img { display: block; max-width: 100%; background: repeating-conic-gradient(#222 0 25%, #2a2a2a 0 50%) 0 0 / 24px 24px; }
+  figcaption { margin-top: 6px; }
+  a { color: #7fe0a8; }
+</style>
+</head>
+<body>
+<h1>Vision section: placeholder layers painted from Neo's generated valley</h1>
+<p>Serve the repository (for example <code>python3 -m http.server</code> in its root), open
+  <code>/build/vision/render.html</code>, and save each PNG below into one folder. Then run
+  <code>python3 build/vision-layers.py &lt;that folder&gt;</code>. See assets/img/home/vision/README.md.
+  The design team's hand-drawn layers replace these PNGs; this page is only for the placeholder.</p>
+<div id="out"></div>
+<script>
+/* Paints the drawing made by build/vision-valley.py (valley.json, next to this
+   page) as separate picture layers on the section's artboard:
+
+     artboard   1600 x 1800 units, x 0..1600, y -800..1000 in the drawing's own
+                units (the valley's horizon is at y 404, the first farm's
+                reactor at 725.9, 763.3)
+
+   Each layer is painted at first light (the finished state, every farm lit),
+   without the reactors' glows (the page draws those over the pictures), and
+   then graded brighter, towards the owner's reference clip. The drawing code
+   is Neo's (assets/js/home-vision.js before 29 Sep 2026), reduced to one
+   still frame. */
+"use strict";
+// the layers: which of the drawing's layers go in each, the rectangle (in
+// drawing units) and the resolution (pixels per unit)
+var AB = { x: 0, y: -800, w: 1600, h: 1800 };
+var LAYERS = [
+  { name: "sky",    from: 0,  to: 8,   x: 0,   y: -800, w: 1600, h: 1270, ppu: 1.25, u: 1.6, sat: 1.45 },
+  { name: "ridges", from: 9,  to: 15,  x: 0,   y: 270,  w: 1600, h: 200,  ppu: 2.5,  u: 1.1, sat: 1.25 },
+  { name: "valley", from: 16, to: 116, x: 0,   y: 215,  w: 1600, h: 785,  ppu: 2.5,  u: 1.1, near: 0 },
+  { name: "farm",   from: 16, to: 116, x: 540, y: 590,  w: 460,  h: 340,  ppu: 6,    u: 0.5, near: 1 },
+  { name: "lights", lights: true,      x: 640, y: 670,  w: 140,  h: 120,  ppu: 6,    u: 0.5, near: 1 }
+];
+// the grade: lift the darks (a gamma curve) and a little more colour (more
+// in the sky, for a warmer sunrise, as in the reference clip)
+var GAMMA = 1 / 1.38, SAT = 1.14;
+
+fetch("valley.json").then(function (r) { return r.json(); }).then(function (V) {
+  var ctx0 = document.createElement("canvas").getContext("2d");
+  function rgb(hex) { var n = parseInt(hex.slice(1), 16); return [n >> 16, (n >> 8) & 255, n & 255]; }
+  function mixed(a, b, t) {
+    return "rgb(" + Math.round(a[0] + (b[0] - a[0]) * t) + "," + Math.round(a[1] + (b[1] - a[1]) * t) + "," + Math.round(a[2] + (b[2] - a[2]) * t) + ")";
+  }
+  function stops(g, list) {
+    list.forEach(function (s) { var c = rgb(s[1]); g.addColorStop(s[0], "rgba(" + c[0] + "," + c[1] + "," + c[2] + "," + s[2] + ")"); });
+    return g;
+  }
+  var dawnRGB = {};
+  Object.keys(V.cD || {}).forEach(function (k) { if (V.c[k]) dawnRGB[k] = [rgb(V.c[k]), rgb(V.cD[k])]; });
+  function fillAt(key, dawn) { var d = dawnRGB[key]; return d ? mixed(d[0], d[1], dawn) : (V.c[key] || key); }
+  V.layers.forEach(function (l) { if (l.d) l.path = new Path2D(l.d); });
+  Object.keys(V.glyphs).forEach(function (k) { V.glyphs[k].forEach(function (p) { p.path = new Path2D(p.d); }); });
+  var farms = V.farms.map(function (r) { return { x: r[0], y: r[1], s: r[2], typ: r[3], hero: !!r[4], hdr: r[5] ? new Path2D(r[5]) : null }; });
+  var hero = farms.filter(function (f) { return f.hero; })[0];
+  var props = V.props.map(function (r) {
+    return r[0] === "r" ? { farm: farms[r[1]] } : { g: V.glyphs[r[0]], k: r[0], x: r[1], y: r[2], s: r[3], flip: !!r[4], col: r[5] };
+  });
+  var VON = rgb(V.c.vessel);
+
+  function paint(L) {
+    var cv = document.createElement("canvas");
+    cv.width = Math.round(L.w * L.ppu); cv.height = Math.round(L.h * L.ppu);
+    var ctx = cv.getContext("2d");
+    var D = L.ppu, DX = -L.x * D, DY = -L.y * D, u = L.u, dawn = 1;
+    ctx.setTransform(D, 0, 0, D, DX, DY);
+    ctx.lineCap = "butt"; ctx.lineJoin = "round";
+    var skyTop = V.sky.y, skyBot = V.hy + 2;
+    var grads = {
+      sky: stops(ctx.createLinearGradient(0, skyTop, 0, skyBot), V.g.sky),
+      dawn: stops(ctx.createLinearGradient(0, skyTop, 0, skyBot), V.g.dawn),
+      sun: stops(ctx.createRadialGradient(0, 0, 0, 0, 0, V.sun.rx), V.g.sun),
+      wn: stops(ctx.createLinearGradient(0, V.water.y0, 0, V.water.y1), V.g.wnight),
+      wd: stops(ctx.createLinearGradient(0, V.water.y0, 0, V.water.y1), V.g.wdawn)
+    };
+    var n = 256, pc = document.createElement("canvas"); pc.width = pc.height = n;
+    var pg = pc.getContext("2d");
+    pg.fillStyle = stops(pg.createRadialGradient(n / 2, n / 2, 0, n / 2, n / 2, n / 2), V.g.wsun); pg.fillRect(0, 0, n, n);
+    grads.ws = ctx.createPattern(pc, "no-repeat");
+    grads.ws.setTransform(new DOMMatrix([2 * V.sun.rx / n, 0, 0, 2 * V.sun.ry / n, V.sun.cx - V.sun.rx, V.water.cy - V.sun.ry]));
+
+    function glyph(parts, x, y, sx, sy, fillOwn, vessel, only) {
+      ctx.setTransform(D * sx, 0, 0, D * sy, D * x + DX, D * y + DY);
+      var lw = u / Math.abs(sy);
+      for (var j = 0; j < parts.length; j++) {
+        var part = parts[j];
+        if (only && !only(part)) continue;
+        if (part.v) { ctx.fillStyle = vessel; ctx.fill(part.path); continue; }
+        if (part.w) { ctx.fillStyle = V.c.window; ctx.fill(part.path); continue; }
+        if (part.fill) { ctx.fillStyle = part.fill === "$" ? fillOwn : V.c[part.fill]; ctx.fill(part.path); }
+        if (part.stroke) { ctx.strokeStyle = V.c[part.stroke]; ctx.lineWidth = lw; ctx.stroke(part.path); }
+      }
+      ctx.setTransform(D, 0, 0, D, DX, DY);
+    }
+
+    if (L.lights) {
+      // what shines before first light: the lit windows, and the first
+      // farm's reactor (its vessel and its line into the field)
+      props.forEach(function (q) {
+        if (q.farm) {
+          var f = q.farm;
+          if (!f.hero) return;
+          glyph(V.glyphs["r" + f.typ], f.x, f.y, f.s / 100, f.s / 100, null, mixed(VON, VON, 1), function (p) { return p.v; });
+          ctx.lineWidth = 2 * u; ctx.strokeStyle = V.c.hdrHero; ctx.stroke(f.hdr);
+          return;
+        }
+        if (q.k !== "h") return;
+        glyph(q.g, q.x, q.y, (q.flip ? -1 : 1) * q.s / 100, q.s / 100, q.col, null, function (p) { return p.w; });
+      });
+      return cv;
+    }
+
+    for (var li = L.from; li <= L.to; li++) {
+      var l = V.layers[li];
+      ctx.setTransform(D, 0, 0, D, DX, DY);
+      switch (l.k) {
+        case "sky": ctx.fillStyle = grads.sky; ctx.fillRect(V.sky.x, V.sky.y, V.sky.w, V.sky.h + 200); break;
+        case "stars": break;                                   // gone by first light
+        case "dawn": ctx.fillStyle = grads.dawn; ctx.fillRect(V.sky.x, V.sky.y, V.sky.w, V.sky.h); break;
+        case "sun":
+          ctx.save(); ctx.translate(V.sun.cx, V.sun.cy); ctx.scale(1, V.sun.ry / V.sun.rx);
+          ctx.fillStyle = grads.sun; ctx.fillRect(-V.sun.rx, -V.sun.rx, 2 * V.sun.rx, 2 * V.sun.rx); ctx.restore(); break;
+        case "grad": case "light":
+          ctx.fillStyle = stops(ctx.createLinearGradient(0, l.y, 0, l.y + l.h), V.g[l.g]); ctx.fillRect(l.x, l.y, l.w, l.h); break;
+        case "lightfill": ctx.fillStyle = V.c[l.fill]; ctx.fill(l.path); break;
+        case "fill":
+          ctx.fillStyle = fillAt(l.fill, dawn); ctx.fill(l.path);
+          if (l.stroke) { ctx.strokeStyle = V.c[l.stroke]; ctx.lineWidth = l.w * u; ctx.stroke(l.path); }
+          break;
+        case "water":
+          ctx.fillStyle = grads.wn; ctx.fill(l.path);
+          ctx.fillStyle = grads.wd; ctx.fill(l.path);
+          ctx.fillStyle = grads.ws; ctx.fill(l.path); break;
+        case "stroke": ctx.strokeStyle = V.c[l.stroke]; ctx.lineWidth = l.w * u; ctx.stroke(l.path); break;
+        case "plants":
+          ctx.globalAlpha = 0.32 + 0.68 * L.near; ctx.strokeStyle = V.c.plants; ctx.lineWidth = u;
+          ctx.lineCap = "round"; ctx.stroke(l.path); ctx.lineCap = "butt"; ctx.globalAlpha = 1; break;
+        case "dose": break;
+        case "headers":
+          farms.forEach(function (f) {
+            if (!f.hdr) return;
+            ctx.lineWidth = (f.hero ? 2 : 1.2) * u; ctx.strokeStyle = f.hero ? V.c.hdrHero : V.c.hdr; ctx.stroke(f.hdr);
+          });
+          break;
+        case "props":
+          props.forEach(function (q) {
+            if (q.farm) {
+              var f = q.farm;
+              if (!f.typ || f.s * D < 2.2) {
+                ctx.fillStyle = mixed(VON, VON, 1);
+                ctx.beginPath(); ctx.arc(f.x, f.y - f.s * 0.5, Math.max(0.85, f.s * 0.4), 0, Math.PI * 2); ctx.fill();
+                return;
+              }
+              glyph(V.glyphs["r" + f.typ], f.x, f.y, f.s / 100, f.s / 100, null, mixed(VON, VON, 1));
+              return;
+            }
+            if (q.s * D < 1.2) return;
+            glyph(q.g, q.x, q.y, (q.flip ? -1 : 1) * q.s / 100, q.s / 100, q.col, null);
+          });
+          break;
+      }
+    }
+    return cv;
+  }
+
+  function grade(cv, sat) {
+    var SATN = sat || SAT;
+    var g = cv.getContext("2d"), im = g.getImageData(0, 0, cv.width, cv.height), a = im.data;
+    var lut = new Uint8ClampedArray(256);
+    for (var i = 0; i < 256; i++) lut[i] = Math.round(255 * Math.pow(i / 255, GAMMA));
+    for (var p = 0; p < a.length; p += 4) {
+      if (!a[p + 3]) continue;
+      var r = lut[a[p]], gg = lut[a[p + 1]], b = lut[a[p + 2]];
+      var y = 0.2126 * r + 0.7152 * gg + 0.0722 * b;
+      a[p] = y + (r - y) * SATN; a[p + 1] = y + (gg - y) * SATN; a[p + 2] = y + (b - y) * SATN;
+    }
+    g.putImageData(im, 0, 0);
+    return cv;
+  }
+
+  var out = document.getElementById("out");
+  window.__layers = {};
+  LAYERS.forEach(function (L) {
+    var cv = grade(paint(L), L.sat);
+    var url = cv.toDataURL("image/png");
+    window.__layers[L.name] = url;
+    var fig = document.createElement("figure");
+    fig.innerHTML = '<img alt="" src="' + url + '"><figcaption>' + L.name + ".png, " + cv.width + " x " + cv.height +
+      " px, covers x " + L.x + " to " + (L.x + L.w) + ", y " + L.y + " to " + (L.y + L.h) + ' &middot; <a download="' + L.name + '.png" href="' + url + '">save</a></figcaption>';
+    out.appendChild(fig);
+  });
+  // the reactors, in % of the artboard, for the page's glow list
+  window.__reactors = farms.map(function (f) {
+    return [+((f.x - f.s * 0.16 - AB.x) / AB.w * 100).toFixed(2), +((f.y - f.s * 0.45 - AB.y) / AB.h * 100).toFixed(2), +(f.s / AB.w * 100).toFixed(3), f.hero ? 1 : 0];
+  });
+  window.__done = true;
+});
+</script>
+</body>
+</html>
