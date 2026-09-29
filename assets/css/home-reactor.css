@@ -1,22 +1,19 @@
 /* =============================================================================
-   ReLeaf homepage: the five demands (2b) and our answer, the reactor (3)
+   ReLeaf homepage: our answer, the reactor (3)
    -----------------------------------------------------------------------------
    Replaces the dark act (chain, turn lines, spark, name card), the five
    engineering highlights in their scrolling column and the product band.
 
-   · THE DEMANDS CLOSE THE PROBLEM ARC, on white, in the problem sections'
-     own language (.pb-index, .pb-title, .pb-lede, .pb-tag, .pb-ref and the
-     .pb-src list from home-problem.css). Everything here is prefixed .dmd-.
+   · The five demands (2b) and the scene that carries them here are in
+     home-demands.css.
    · THE REACTOR IS THE MAIN CHARACTER. One ink section, the model in the
      middle, the same five demands round it: two on each side and Farm-owned
      under it. Everything here is prefixed .rxs- so no generic class name
      elsewhere on the page can reach it.
    · THE RESTING STATE IS THE FINISHED LAYOUT. Every custom property below
-     falls back to its final value. home.js writes --rxs-s and --rxs-c1…5 as
-     inline styles only after it adds .is-live, only where the whole stage
-     fits one screen, and only until the entrance has played once; with
-     scripting off, motion reduced or on paper nothing moves and nothing is
-     missing.
+     falls back to its final value. home.js (piece 7) moves this band only
+     inside the scene (.dx.is-live, home-demands.css); with scripting off,
+     motion reduced or on paper nothing moves and nothing is missing.
    · ONE WEBGL CANVAS, AND NEVER AN EMPTY BOX. The photograph of the rig is
      the default. It gives way only when home-reactor.js says the model is
      built (#rx.is-ready), and it stays with scripting off, without WebGL,
@@ -24,120 +21,8 @@
    ========================================================================== */
 
 
-/* =================================================== 2b  THE FIVE DEMANDS == */
-
-.dmd { background: var(--white); padding: var(--screen-pad, 2.5rem) 0 var(--sp-8); }
-/* the problem sections are one sheet of paper; the rule above the heading is
-   what separates this block from the section before it */
-.dmd__head { padding-top: var(--sp-5); border-top: 1.5px solid var(--leaf-900); margin-bottom: var(--sp-6); }
-.dmd__head .pb-title { max-width: none; margin-bottom: var(--sp-3); }
-.dmd__head .pb-lede { margin: 0; max-width: 70ch; }
-
-.dmd__list {
-  list-style: none; margin: 0; padding: 0;
-  display: grid; grid-template-columns: minmax(0, 1fr); gap: var(--sp-5);
-}
-/* five, flat and in order: one column, then three and two, then one row */
-@media (min-width: 768px)  { .dmd__list { grid-template-columns: repeat(3, minmax(0, 1fr)); row-gap: var(--sp-6); } }
-@media (min-width: 1280px) { .dmd__list { grid-template-columns: repeat(5, minmax(0, 1fr)); } }
-
-.dmd__item {
-  display: flex; flex-direction: column; align-items: flex-start; gap: var(--sp-3);
-  padding-top: var(--sp-4); border-top: 1px solid var(--gray-200);
-}
-/* the demand's own icon takes the place of the tag's dot, so the white tag
-   and the ink one on the reactor card are the same object */
-.dmd__tag::before { content: none; }
-.dmd__tag { padding-left: .6rem; }
-.dmd__tag svg { width: 1rem; height: 1rem; flex: none; color: var(--sig-green); }
-.dmd__why { margin: 0; font-size: var(--text-sm); line-height: 1.55; color: var(--gray-700); max-width: 36ch; }
-.dmd__from {
-  margin: auto 0 0; padding-top: var(--sp-1);
-  font-size: var(--text-xs); line-height: 1.5; color: var(--gray-600);
-}
-.dmd__from a {
-  color: var(--leaf-700); font-weight: 600;
-  text-decoration: underline; text-decoration-thickness: 1px; text-underline-offset: .2em;
-  text-decoration-color: rgb(35 104 74 / .35);
-}
-.dmd__from a:hover { text-decoration-color: currentColor; }
-.dmd__from a span { font-variant-numeric: tabular-nums; }
-
-/* the problem arc's sources end the arc */
-.dmd__src { margin-top: var(--sp-7); padding-top: var(--sp-4); border-top: 1px solid var(--gray-200); }
-
-
-/* ------------------------------------------------------- the merge --- */
-/* home.js piece 7 adds .is-live where the recap fits the screen: the stage
-   pins for a runway, and the script writes, on the section,
-     --dmd-fade   1 to 0, the words and rules fading
-   on each tag
-     --tx --ty    how far it has moved from its place, toward the ring and
-                  then the centre
-     --ts         its scale
-   and on the curtain
-     --r          the radius of the dark circle opening from the centre
-     --edge       the opacity of the thin green edge that leads it
-   Without .is-live none of this applies: the recap is an ordinary block. */
-.dmd__stage { position: relative; }
-.dmd__curtain, .dmd__runway { display: none; }
-
-.dmd.is-live { padding: 0; }
-.dmd.is-live .dmd__stage {
-  position: sticky; top: var(--nav-h);
-  height: calc(100svh - var(--nav-h));
-  display: flex; flex-direction: column; justify-content: center;
-  overflow: hidden;
-}
-.dmd.is-live .dmd__runway { display: block; height: 170vh; height: 170svh; }
-.dmd.is-live .dmd__head { opacity: var(--dmd-head, 1); }
-.dmd.is-live .dmd__why,
-.dmd.is-live .dmd__from { opacity: var(--dmd-fade, 1); }
-.dmd.is-live .dmd__item { border-top-color: rgb(229 229 229 / var(--dmd-fade, 1)); }
-.dmd.is-live .dmd__tag {
-  position: relative; z-index: 2;
-  transform: translate(var(--tx, 0px), var(--ty, 0px)) scale(var(--ts, 1));
-  opacity: var(--to, 1);
-  will-change: transform, opacity;
-}
-.dmd.is-live .dmd__curtain {
-  display: block; position: absolute; inset: 0; z-index: 3; pointer-events: none;
-  background: var(--ink);
-  clip-path: circle(var(--r, 0px) at 50% calc(50% + var(--oy, 0px)));
-}
-.dmd__edge {
-  position: absolute; left: 50%; top: calc(50% + var(--oy, 0px));
-  width: calc(2 * var(--r, 0px)); height: calc(2 * var(--r, 0px));
-  transform: translate(-50%, -50%);
-  border-radius: 50%;
-  box-shadow: inset 0 0 0 2px rgb(53 224 138 / .95), inset 0 0 28px 4px rgb(53 224 138 / .45);
-  opacity: var(--edge, 0);
-}
-/* a soft green lift while the circle opens; it is gone by the time the
-   circle covers the screen, so the dark here is exactly the reactor
-   section's --ink and there is no line where one meets the other */
-.dmd__glow {
-  position: absolute; inset: 0;
-  background: radial-gradient(circle at 50% calc(50% + var(--oy, 0px)), rgb(40 70 55 / .4), rgb(7 11 9 / 0) 60%);
-  opacity: var(--glow, 0);
-}
-/* where the tags met a green point stays, and at the end a line drops from
-   it to the bottom of the screen; the reactor section's kicker line carries
-   it on from its top edge down to "Our answer" */
-.dmd__dot, .dmd__line { position: absolute; left: 50%; top: calc(50% + var(--oy, 0px)); }
-.dmd__dot {
-  width: 10px; height: 10px; margin: -5px 0 0 -5px; border-radius: 50%;
-  background: var(--sig-green); box-shadow: 0 0 14px 4px rgb(53 224 138 / .55);
-  opacity: var(--dot, 0);
-}
-.dmd__line {
-  bottom: 0; width: 1.5px; margin-left: -.75px;
-  background: linear-gradient(rgb(53 224 138 / .95), rgb(53 224 138 / .7));
-  transform: scaleY(var(--line, 0)); transform-origin: top;
-}
-
-/* the words fade, so a faded link must not take a click */
-.dmd.is-live.is-merging .dmd__from a { pointer-events: none; }
+/* The five demands (2b) and the scene that carries them into this band are
+   in home-demands.css. */
 
 /* ========================================= 3  OUR ANSWER: THE REACTOR ===== */
 
@@ -158,8 +43,6 @@
      between the cards. */
   --rxs-h: min(80vw, 24rem);
   --pad-x: var(--sp-5);
-  /* the line from the top edge of the ink down to the kicker */
-  --drop: clamp(3rem, 1rem + 8vh, 6.5rem);
 }
 @media (min-width: 640px) { .rxs { --pad-x: var(--sp-6); } }
 /* From 1180px the chapters rail is fixed in the right margin. The opening
@@ -181,23 +64,8 @@
   padding: 0 0 var(--sp-4);
   text-align: center;
 }
-/* the same kicker as every section (.kicker, home.css), with the line above
-   it. The line starts at the section's top edge, so it reads as coming out
-   of the demands block into this one. */
-.rxs__kicker {
-  display: flex; flex-direction: column; align-items: center; gap: var(--sp-5);
-  margin: 0 0 var(--sp-5);
-  color: var(--sig-green);
-}
-/* The line runs up from the kicker to the top edge of the stage (it is far
-   longer than it looks; the stage clips it), so it meets the line the recap's
-   merge drops to the bottom of the screen, and the two read as one. Only
-   --drop of it counts in the layout. */
-.rxs__kicker::before {
-  content: ""; width: 1.5px; height: 70vh;
-  margin-top: calc(var(--drop) - 70vh);
-  background: rgb(53 224 138 / .7);
-}
+/* the same kicker as every section (.kicker, home.css), in signal green */
+.rxs__kicker { margin: 0 0 var(--sp-3); color: var(--sig-green); }
 .rxs__title {
   margin: 0 auto var(--sp-5);
   font-family: var(--font-display);
@@ -239,11 +107,10 @@
 /* ------------------------------------------------------------------ stage - */
 /* clip, not hidden: a hidden overflow would make this the scroll container
    for the model's sticky position on narrow screens */
-.rxs__stage { position: relative; overflow: hidden; overflow: clip; padding: 0 0 var(--sp-8); }
+.rxs__stage { position: relative; overflow: hidden; overflow: clip; padding: clamp(3.5rem, 2rem + 6vh, 6rem) 0 var(--sp-6); }
 .rxs__inner { position: relative; width: 100%; max-width: var(--max); margin: 0 auto; padding: 0 var(--pad-x); }
-.rxs__runway { display: none; }
 /* the line under the stage: outside it, so the pinned stage keeps its room */
-.rxs-after { background: var(--ink); padding: 0 var(--sp-5) var(--sp-8); text-align: center; }
+.rxs-after { background: var(--ink); padding: var(--sp-5) var(--sp-5) var(--sp-8); text-align: center; }
 
 /* ------------------------------------------------------------------- grid - */
 /* one column below 980px: the model, then the cards; flex rather than grid so
@@ -264,8 +131,6 @@
 .rxs__model {
   position: relative; z-index: 1; order: -1;
   min-height: var(--rxs-h);
-  opacity: var(--rxs-s, 1);
-  transform: translateY(calc((1 - var(--rxs-s, 1)) * 2.5rem)) scale(calc(1 + (1 - var(--rxs-s, 1)) * .08));
 }
 /* the canvas runs the full width of the screen behind the cards: the field of
    view is vertical, so a canvas as narrow as the middle column would crop the
@@ -324,25 +189,34 @@
 
 /* ------------------------------------------------------------------ cards - */
 .rxs-card {
+  position: relative; isolation: isolate;
   display: grid; gap: var(--sp-2); justify-items: start;
   width: 100%; margin: 0; text-align: left;
   padding: .875rem var(--sp-4) var(--sp-4);
-  border: 1px solid rgb(255 255 255 / .12); border-radius: var(--radius);
-  background: rgb(7 11 9 / .78);
+  border: 1px solid transparent; border-radius: var(--radius);
+  background: none;
   color: inherit; font: inherit; cursor: default;
-  transition: border-color .2s, background-color .2s, opacity .3s;
+  transition: opacity .3s;
 }
-.rxs-card:hover, .rxs-card.is-on { border-color: rgb(53 224 138 / .55); background: rgb(16 28 21 / .92); }
+/* the card's box is drawn on ::before, so the scene (home-demands.css) can
+   bring it in with opacity alone while the tag is already in place */
+.rxs-card::before {
+  content: ""; position: absolute; inset: -1px; z-index: -1;
+  border: 1px solid rgb(255 255 255 / .12); border-radius: inherit;
+  background: rgb(7 11 9 / .78);
+  transition: border-color .2s, background-color .2s;
+}
+.rxs-card:hover::before, .rxs-card.is-on::before { border-color: rgb(53 224 138 / .55); background: rgb(16 28 21 / .92); }
 /* No model to light (scripting off, or home.js gave the cards up with the
    model, .rx-static): the cards are plain text beside the photograph, so
    they do not answer the pointer as if they were controls */
-.rxs.rx-static .rxs-card:hover { border-color: rgb(255 255 255 / .12); background: rgb(7 11 9 / .78); }
+.rxs.rx-static .rxs-card:hover::before { border-color: rgb(255 255 255 / .12); background: rgb(7 11 9 / .78); }
 @media (scripting: none) {
-  .rxs-card:hover { border-color: rgb(255 255 255 / .12); background: rgb(7 11 9 / .78); }
+  .rxs-card:hover::before { border-color: rgb(255 255 255 / .12); background: rgb(7 11 9 / .78); }
 }
 /* pressed (a click, a tap, Enter or Space): it stays lit when the pointer
    or the focus moves on, and its edge says so */
-.rxs-card[aria-pressed="true"] { border-color: var(--sig-green); }
+.rxs-card[aria-pressed="true"]::before { border-color: var(--sig-green); }
 /* while one card is lit the others step back, as the model's other parts
    do; at .55 their white text is still about 6:1 on the ink */
 .rxs__grid.is-pointing .rxs-card:not(.is-on) { opacity: .55; }
@@ -374,7 +248,7 @@
 /* one plain line to close the section, and the way into the record */
 .rxs__foot {
   position: relative; z-index: 2;
-  margin: var(--sp-7) 0 0; text-align: center;
+  margin: 0; text-align: center;
   font-size: var(--text-base); line-height: 1.5; color: rgb(255 255 255 / .74);
 }
 .rxs__foot a {
@@ -443,15 +317,11 @@
     /* the clear space between the two card columns */
     --gap-x: calc(min(100vw, var(--stage-max)) - 2 * var(--stage-pad) - 2 * var(--card-w));
     --rxs-h: min(calc(100svh - var(--nav-h) - 22rem), calc(var(--gap-x) / 1.24), 38rem);
-    /* how far a side card travels in from its side */
-    --slide: 4rem;
   }
   .rxs__head { padding-bottom: var(--sp-3); }
   /* in the stage the heading is one step smaller than the site's h1, so the
      model keeps most of its height */
   .rxs__title { font-size: clamp(2.1rem, 1.1rem + 1.9vw, 3rem); margin-bottom: 0; }
-  .rxs__kicker { margin-bottom: var(--sp-3); gap: var(--sp-3); }
-  .rxs.is-live { --drop: 1.5rem; }
   .rxs__inner { max-width: var(--stage-max); padding: 0 var(--stage-pad); }
   .rxs__stage {
     min-height: calc(100svh - var(--nav-h));
@@ -488,55 +358,14 @@
   }
   .rxs-card--wide .rxs-card__tag { margin: 0; }
   .rxs__foot { margin-top: 0; }
-
-  /* the cards come in once, from their own side; Farm-owned rises last.
-     Final values are the fallbacks. */
-  .rxs__side--l > li:nth-child(1) { --c: var(--rxs-c1, 1); }
-  .rxs__side--l > li:nth-child(2) { --c: var(--rxs-c2, 1); }
-  .rxs__side--r > li:nth-child(1) { --c: var(--rxs-c3, 1); }
-  .rxs__side--r > li:nth-child(2) { --c: var(--rxs-c4, 1); }
-  .rxs__wide { --c: var(--rxs-c5, 1); }
-  .rxs__side > li, .rxs__wide { opacity: var(--c, 1); }
-  .rxs__side--l > li { transform: translateX(calc((1 - var(--c, 1)) * -1 * var(--slide))); }
-  .rxs__side--r > li { transform: translateX(calc((1 - var(--c, 1)) * var(--slide))); }
-  .rxs__wide { transform: translateY(calc((1 - var(--c, 1)) * 1.5rem)); }
-  /* a card that has focus is always all the way in */
-  .rxs__side > li:focus-within, .rxs__wide:focus-within { opacity: 1; transform: none; }
-  /* a card still on its way in (home.js marks it) takes no pointer: it
-     cannot light the model under a resting cursor or take a click */
-  .rxs.is-live .is-out, .rxs.is-live .is-out .rxs-card { pointer-events: none; }
 }
-/* From 1180px the chapters rail is fixed in the right margin (home.css:
-   about 3.1rem from the window edge at most). A right-hand card coming in
-   must never pass under it, so the slide is what is left of the margin
-   beside the stage once the rail and half a rem are paid, at most 4rem and
-   at least .75rem (at 1280px about 22px, at 1440px about 38px). The left
-   cards travel the same distance so the two sides stay a pair. */
+/* From 1180px the chapters rail is fixed in the right margin: the stage
+   keeps 5rem from each edge, which clears it. */
 @media (min-width: 1180px) {
-  .rxs {
-    --stage-pad: 5rem;
-    --slide: clamp(.75rem, calc((100vw - min(100vw, var(--stage-max))) / 2 + var(--stage-pad) - 3.6rem), 4rem);
-  }
-}
-
-/* pinned: only once home.js has taken control, and only where it fits. The
-   opening scrolls away under the nav; the stage then holds one screen. */
-@media (min-width: 980px) and (min-height: 700px) {
-  .rxs.is-live .rxs__stage {
-    position: sticky; top: var(--nav-h);
-    height: calc(100svh - var(--nav-h)); min-height: 0;
-    padding: var(--sp-4) 0;
-  }
-  .rxs.is-live .rxs__runway { display: block; height: 70vh; height: 70svh; }
+  .rxs { --stage-pad: 5rem; }
 }
 
 /* on paper everything is in and nothing is pinned */
 @media print {
-  .rxs__model, .rxs__side > li, .rxs__wide { opacity: 1 !important; transform: none !important; }
-  .rxs.is-live .rxs__stage { position: static; height: auto; }
-  .rxs.is-live .rxs__runway { display: none; }
-/* the line under the stage: outside it, so the pinned stage keeps its room */
-.rxs-after { background: var(--ink); padding: 0 var(--sp-5) var(--sp-8); text-align: center; }
   .rxs__model { position: relative; }
-  .rxs__kicker::before { content: none; }
 }

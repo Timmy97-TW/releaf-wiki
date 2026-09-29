@@ -7,11 +7,11 @@
 
      0  spotlight   the pointer opens a light in the hero's photograph onto the reactor
      1  reveal      one-shot fade-and-rise for .rise
-     2  reactor     wakes the WebGL reactor; pins its section for a short entrance
+     2  reactor     wakes the WebGL reactor before it is needed
      3  parts       point at a demand card, its parts light in the WebGL reactor
      5  ihp tabs    the five demands and the objection as tabs over one panel
      6  chapters    marks the chapter the reader is in on the right-hand rail
-     7  merge       the recap's five demands merge and open onto the answer
+     7  scene       the five demands become the labels round the reactor
      (4 doors was retired on 28 September 2026 with the section it drove;
      the numbers of the others were kept.)
 
@@ -199,210 +199,25 @@
   })();
 
   /* ══════════════════════════════════════════════════════ 2  THE REACTOR ══ */
-  /* Two jobs. The first always runs: wake the reactor (home-reactor.js loads
-     nothing until start() is called) once #rx is within 1.6 screens, so the
-     model is usually ready before the reader arrives. The second runs only
-     with motion allowed and only where the whole stage fits one screen with
-     room to spare: it pins the stage for a short runway (.is-live adds it)
-     while the reactor settles and the five demand cards come in, the side
-     ones from their own sides and Farm-owned from below.
-
-     IT PLAYS ONCE. When the last card is in, or when the reader arrives by a
-     jump (a link to #solution, the chapters rail, a reload in the middle of
-     the page, a drag of the scrollbar, keyboard focus on a demand card),
-     the entrance is over: the properties
-     are removed and the section stays built. Scrolling back up does not take
-     it apart again, and nobody lands on a stage with its cards missing.
-
-     THE RESTING STATE IS THE FINISHED LAYOUT. Every property written here
-     falls back to its final value in home-reactor.css, and they are removed
-     again whenever the pinned layout stops applying (a resize to a narrow or
-     short window). read() only measures; it never throws. */
+  /* Wakes the reactor: home-reactor.js loads nothing until start() is
+     called, and this calls it once #rx is within 1.6 screens. Inside the
+     scene (piece 7) #rx sits at the top of the pinned screen, so it wakes
+     as the demands come up, several screens before the model pops in.
+     Reduced motion and narrow screens need it too. */
 
   (function reactor() {
-    var sec = document.getElementById("solution");
-    if (!sec) return;
     var host = document.getElementById("rx");
-    var stage = sec.querySelector(".rxs__stage");
-    // the heading now sits inside the stage, so nothing scrolls away before
-    // the stage pins: the lead is zero
-    var head = null;
     var rx = window.__homeRx;
-
-    // --- wake: reduced motion and narrow screens need it too
-    if (rx && !rx.failed && host) {
-      var woken = false;
-      var wake = function () { if (!woken) { woken = true; rx.start(); } };
-      if ("IntersectionObserver" in window) {
-        var io = new IntersectionObserver(function (entries) {
-          for (var i = 0; i < entries.length; i++) {
-            if (entries[i].isIntersecting) { io.disconnect(); wake(); return; }
-          }
-        }, { rootMargin: "0px 0px 160% 0px" });
-        io.observe(host);
-      } else {
-        wake();
+    if (!host || !rx || rx.failed) return;
+    var woken = false;
+    var wake = function () { if (!woken) { woken = true; rx.start(); } };
+    if (!("IntersectionObserver" in window)) { wake(); return; }
+    var io = new IntersectionObserver(function (entries) {
+      for (var i = 0; i < entries.length; i++) {
+        if (entries[i].isIntersecting) { io.disconnect(); wake(); return; }
       }
-    }
-
-    // --- the pinned entrance
-    if (reduced || !stage || !window.matchMedia) return;
-    // the same test as the pinned rules in home-reactor.css
-    var fits = window.matchMedia("(min-width: 980px) and (min-height: 700px)");
-    var NAMES = ["--rxs-s", "--rxs-c1", "--rxs-c2", "--rxs-c3", "--rxs-c4", "--rxs-c5"];
-    // the five cards' wrappers, in the order of --rxs-c1 to --rxs-c5 (left
-    // pair, right pair, Farm-owned). A card that is not yet most of the way in
-    // is marked .is-out, and home-reactor.css takes the pointer off it: an
-    // invisible card must not light the model under a resting cursor, or
-    // take a click that ends the entrance with every card popping in.
-    var wraps = [].slice.call(sec.querySelectorAll(".rxs__side--l > li, .rxs__side--r > li, .rxs__wide"));
-    // the stage has to fit with this much to spare, or it stays an ordinary
-    // band: a stage that only just fits reads as crammed, not as a moment
-    var SPARE = 24;
-    var live = false, done = false, navH = 68, pad = 0, written = {}, lastT = null;
-
-    function set(name, v) {
-      var s = String(Math.round(v * 1000) / 1000);
-      if (written[name] === s) return;
-      written[name] = s;
-      sec.style.setProperty(name, s);
-    }
-    function clear() {
-      NAMES.forEach(function (n) { sec.style.removeProperty(n); });
-      wraps.forEach(function (w) { w.classList.remove("is-out"); });
-      written = {};
-    }
-    // the entrance is over: everything goes to its resting (final) value
-    function finish() {
-      if (done) return;
-      done = true;
-      clear();
-    }
-
-    // the nav height the stage pins under
-    function metrics() {
-      var v = parseFloat(window.getComputedStyle(document.documentElement).getPropertyValue("--nav-h"));
-      navH = v > 0 ? v : 68;
-    }
-    // how far below the section's top the stage starts: the opening (kicker,
-    // heading, lede) sits above it and scrolls away before the stage pins.
-    // Read every frame, because the heading's height changes when the web
-    // font arrives.
-    function lead() {
-      return head ? head.offsetTop + head.offsetHeight : 0;
-    }
-
-    function setLive(on) {
-      if (on === live) return;
-      live = on;
-      sec.classList.toggle("is-live", on);
-      if (!on) clear();
-      metrics();
-      lastT = null;
-      homeFrame.request();
-    }
-
-    // Pin only if the whole stage fits one screen under the nav, with SPARE
-    // to spare. The media query is the cheap first answer; the real one is to
-    // try it and measure, since the cards' height depends on the words in
-    // them. Once the entrance has played the pin stays as it is (dropping it
-    // would pull the page up by the runway under the reader), unless the
-    // window stops matching at all.
-    function decide() {
-      var on = fits.matches;
-      if (on && !(done && live)) {
-        sec.classList.add("is-live");
-        var inner = stage.firstElementChild;
-        var cs = window.getComputedStyle(stage);
-        var room = stage.clientHeight - parseFloat(cs.paddingTop) - parseFloat(cs.paddingBottom);
-        on = inner ? inner.offsetHeight + SPARE <= room : false;
-        if (!live) sec.classList.remove("is-live");
-      }
-      setLive(on);
-    }
-
-    function measure() {
-      if (!live || done) return;
-      var r = sec.getBoundingClientRect();
-      pad = lead();
-      return { top: r.top, h: window.innerHeight, pad: pad,
-               runway: Math.max(1, sec.offsetHeight - pad - stage.offsetHeight) };
-    }
-
-    // t is how far the section's top has come up from the bottom of the
-    // window. The stage's top reaches the bottom of the window at t = pad,
-    // pins at t = h − nav + pad and lets go R later.
-    function frame(m) {
-      if (!live || done) return;
-      var t = m.h - m.top, pin = m.h - navH + m.pad, R = m.runway;
-      // Arriving already inside the entrance (a reload in the middle of the
-      // page, the first frame after a resize), or by a jump of more than
-      // three quarters of a screen between two frames, is not someone
-      // scrolling through it: land them on the finished section.
-      var begun = t > pin - R * 0.14;
-      if (begun && (lastT === null || Math.abs(t - lastT) > m.h * 0.75)) { finish(); return; }
-      lastT = t;
-      // the reactor rises into place while its stage comes up the screen,
-      // and is settled a tenth of the way into the pin
-      set("--rxs-s", ease(span(t, m.pad + m.h * 0.08, pin + R * 0.1)));
-      // the five cards in the demands' own order (left pair, right pair,
-      // then Protective under the model), each over 36% of the runway; the
-      // last one lands at about 62%, and the rest is a hold
-      var last = 0;
-      for (var k = 0; k < 5; k++) {
-        var a = pin - R * 0.14 + k * R * 0.1;
-        last = ease(span(t, a, a + R * 0.36));
-        set(NAMES[k + 1], last);
-        if (wraps[k]) wraps[k].classList.toggle("is-out", last < 0.6);
-      }
-      if (last >= 1) finish();
-    }
-
-    // a throw in either phase ends the entrance on the finished layout
-    homeFrame.add(measure, frame, finish);
-    window.addEventListener("scroll", homeFrame.request, { passive: true });
-
-    // arriving by a link: the chapters rail, "Our answer" anywhere, or the
-    // address itself. The click lands before the scroll does.
-    function isHere(href) { return href && href.slice(href.indexOf("#")) === "#solution"; }
-    if (location.hash === "#solution") finish();
-    document.addEventListener("click", function (e) {
-      var a = e.target.closest && e.target.closest("a[href*='#solution']");
-      if (a && isHere(a.getAttribute("href"))) finish();
-    });
-    window.addEventListener("hashchange", function () { if (location.hash === "#solution") finish(); });
-    // Tab onto a card: piece 3 brings the stage to its pinned place, and the
-    // reader should find it built there
-    sec.addEventListener("focusin", function (e) {
-      var t = e.target;
-      if (t && t.hasAttribute && t.hasAttribute("data-comp")) finish();
-    });
-
-    var sized = 0;
-    window.addEventListener("resize", function () {
-      metrics();
-      homeFrame.request();
-      window.clearTimeout(sized);
-      sized = window.setTimeout(decide, 150);
-    });
-    if (fits.addEventListener) fits.addEventListener("change", decide);
-    else if (fits.addListener) fits.addListener(decide);
-    decide();
-    // The check depends on how tall the words set, which changes when Inter
-    // arrives after the fallback face; watch the content instead of guessing
-    // when that is. Toggling .is-live does not change the content's own size,
-    // so this cannot feed itself.
-    var inner = stage.firstElementChild;
-    if (inner && "ResizeObserver" in window) {
-      var queued = 0;
-      new ResizeObserver(function () {
-        window.cancelAnimationFrame(queued);
-        queued = window.requestAnimationFrame(decide);
-      }).observe(inner);
-    }
-    window.addEventListener("load", decide);
-    var first = measure();
-    if (first) frame(first);
+    }, { rootMargin: "0px 0px 160% 0px" });
+    io.observe(host);
   })();
 
   /* ═══════════════════════════════════════════════════════════ 3  PARTS ══ */
@@ -490,8 +305,8 @@
     }
 
     // Keyboard focus lands on a card: make sure the model is on screen with
-    // it. Where the stage pins, its place is right under the nav (the
-    // entrance has been finished by piece 2, so every card is in). Where
+    // it. Inside the scene (piece 7) the whole stage is the pinned screen,
+    // and piece 7 takes a card that is not in yet to the finished frame. Where
     // the model sticks on a narrow screen, the card has to come out below
     // it. In an ordinary band, the model and the card both, when they fit.
     // Instant with reduced motion.
@@ -500,8 +315,9 @@
       var v = parseFloat(window.getComputedStyle(document.documentElement).getPropertyValue("--nav-h"));
       var top = v > 0 ? v : 68, vh = window.innerHeight, gap = 12, dy = 0;
       var c = card.getBoundingClientRect();
-      if (sec.classList.contains("is-live")) {
-        dy = stage.getBoundingClientRect().top - top;
+      var dx = document.getElementById("dx");
+      if (dx && dx.classList.contains("is-live")) {
+        return;
       } else if (window.getComputedStyle(model).position === "sticky") {
         var floor = top + model.offsetHeight + 2 * gap;
         if (c.top < floor) dy = c.top - floor;
@@ -714,126 +530,317 @@
     update(measure());
   })();
 
-  /* ═════════════════════════════════════════════════════════ 7  THE MERGE ══ */
-  /* The recap (#demands) closes the problem arc; this turns it into the way
-     in to the answer. Where the recap fits the screen, the section pins for
-     a runway (.is-live, home-reactor.css) and scroll progress drives, in
-     order: the words fade; the five tags gather in a ring at the centre of
-     the screen; the ring closes and the tags merge; a dark circle opens from
-     where they met until it covers the screen, a thin green edge leading it.
-     The reactor section, also dark, follows on.
+  /* ═══════════════════════════════════════════ 7  DEMANDS INTO THE ANSWER ══ */
+  /* #dx wraps the five demands (#demands) and the answer (#solution). Where
+     the answer's stage fits one screen, this adds .is-live (home-demands.css):
+     .dx__pin holds the screen for a runway, and the scroll, read as p from 0
+     to 1, scrubs one continuous scene. Everything is transform and opacity,
+     written once a frame through window.__homeFrame.
 
-     THE RESTING STATE IS THE PLAIN RECAP. Nothing happens with reduced
-     motion, on screens where the recap does not fit, or if this throws (the
-     fail() puts the recap back). A keyboard reader who tabs into a faded
-     link is scrolled back to where the recap can be read. */
-  (function merge() {
-    var sec = document.getElementById("demands");
-    if (!sec || reduced || !window.matchMedia) return;
-    var stage = sec.querySelector(".dmd__stage");
-    var curtain = sec.querySelector(".dmd__curtain");
-    var tags = [].slice.call(sec.querySelectorAll(".dmd__tag"));
-    if (!stage || !curtain || tags.length !== 5) return;
+       .00 to .27  "An answer has to meet five demands." alone, then the five
+                   chips arrive one by one under it
+       .30 to .47  the heading goes, ink opens over the paper from where the
+                   reactor will stand, and each chip glides onto the tag of
+                   its card round the reactor, changing to the tag's outline
+                   on the way
+       .47 to .51  a green point opens where the reactor will stand
+       .53 to .63  the view dives into it: the five fly out, green fills the
+                   screen, and it says what the green light does
+       .68 to .77  and back out to the five
+       .79 to .88  the reactor pops out of the point, lit by its own green
+                   light at first
+       .84 to .97  "Make it where it grows." and the lede settle; the cards
+                   open round their tags
 
-    var fits = window.matchMedia("(min-width: 1024px) and (min-height: 640px)");
-    var live = false, rest = [], navH = 68, headB = 0;
-    var headEl = sec.querySelector(".dmd__head");
+     The chips land exactly on the tags and are drawn like them (they share
+     the proportions, home-demands.css), so at .78 the chips hand over to the
+     real tags without a visible step.
 
+     THE RESTING STATE IS THE FINISHED LAYOUT: the two sections stacked. No
+     scene with reduced motion, on a narrow or short screen, while printing,
+     or if this throws (fail() puts it all back). Without the scene the
+     chips come in one by one the first time they are seen. A link to either
+     section, and keyboard focus on a card, land on the finished frame of
+     their part of the scene. */
+
+  (function scene() {
+    var dx = document.getElementById("dx");
+    var dmd = document.getElementById("demands");
+    var sol = document.getElementById("solution");
+    if (!dx || !dmd || !sol) return;
+    var pin = dx.querySelector(".dx__pin");
+    var runwayEl = dx.querySelector(".dx__runway");
+    var paper = dx.querySelector(".dx__paper");
+    var ink = dx.querySelector(".dx__ink");
+    var glow = dx.querySelector(".dx__glow");
+    var say = dx.querySelector(".dx__say");
+    var row = dmd.querySelector(".dmd__chips");
+    var title = dmd.querySelector(".dmd__title");
+    var chips = [].slice.call(dmd.querySelectorAll(".dmd__chip"));
+    var stage = sol.querySelector(".rxs__stage");
+    var head = sol.querySelector(".rxs__head");
+    var lede = sol.querySelector(".rxs__lede");
+    var model = document.getElementById("rx");
+    var grid = document.getElementById("partlist");
+    // the card tags, in the chips' order: Protective (under the model), On
+    // demand and Automatic (left), Cell-free and Monitored (right)
+    var tags = [".rxs__wide", ".rxs__side--l > li:nth-child(1)", ".rxs__side--l > li:nth-child(2)",
+                ".rxs__side--r > li:nth-child(1)", ".rxs__side--r > li:nth-child(2)"].map(function (q) {
+      var el = sol.querySelector(q);
+      return el ? el.querySelector(".rxs-card__tag") : null;
+    });
+    if (!pin || !runwayEl || !paper || !ink || !glow || !say || !row || !title || chips.length !== 5 ||
+        tags.indexOf(null) !== -1 || !stage || !head || !lede || !model || !grid) return;
+    var rx = window.__homeRx;
+
+    /* ---- without the scene: the chips come in one by one, once ---- */
+    var armed = false;
+    if (!reduced && "IntersectionObserver" in window && row.getBoundingClientRect().top > window.innerHeight) {
+      armed = true;
+      dmd.classList.add("is-armed");
+      var seen = new IntersectionObserver(function (entries) {
+        if (!entries[0].isIntersecting) return;
+        dmd.classList.add("in");
+        seen.disconnect();
+      }, { rootMargin: "0px 0px -10% 0px", threshold: 0.4 });
+      seen.observe(row);
+    }
+
+    if (reduced || !window.matchMedia) return;
+    var fits = window.matchMedia("(min-width: 980px) and (min-height: 640px)");
+    var live = false, geo = null, navH = 68, lit = false, parked = null;
+    var moved = [title, head, lede, model, sol, glow, say, paper, ink].concat(chips);
+    var cache = new Map();
+
+    // write only what changed since the last frame
+    function put(el, prop, v) {
+      var c = cache.get(el);
+      if (!c) { c = {}; cache.set(el, c); }
+      if (c[prop] === v) return;
+      c[prop] = v;
+      if (prop.charAt(0) === "-") el.style.setProperty(prop, v);
+      else el.style[prop] = v;
+    }
     function clear() {
-      ["--dmd-fade", "--dmd-head"].forEach(function (k) { sec.style.removeProperty(k); });
-      ["--r", "--edge", "--oy", "--glow", "--dot", "--line"].forEach(function (k) { curtain.style.removeProperty(k); });
-      tags.forEach(function (t) { ["--tx", "--ty", "--ts", "--to"].forEach(function (k) { t.style.removeProperty(k); }); });
-      sec.classList.remove("is-merging");
-    }
-    // where each tag sits at rest, from the stage's centre (transforms off)
-    function measureRest() {
-      tags.forEach(function (t) { t.style.removeProperty("--tx"); t.style.removeProperty("--ty"); t.style.removeProperty("--ts"); });
-      var sr = stage.getBoundingClientRect();
-      var cx = sr.left + sr.width / 2, cy = sr.top + sr.height / 2;
-      rest = tags.map(function (t) {
-        var r = t.getBoundingClientRect();
-        return { x: r.left + r.width / 2 - cx, y: r.top + r.height / 2 - cy };
+      moved.forEach(function (el) {
+        el.style.removeProperty("transform");
+        el.style.removeProperty("opacity");
       });
-      headB = headEl ? headEl.getBoundingClientRect().bottom - cy : 0;
+      [glow, ink].forEach(function (el) { el.style.removeProperty("left"); el.style.removeProperty("top"); });
+      dmd.style.removeProperty("--dmd-m");
+      grid.style.removeProperty("--dx-card");
+      grid.style.removeProperty("--dx-tag");
+      dx.classList.remove("is-early");
+      cache = new Map();
+      if (lit && rx && rx.highlight) { rx.highlight(null); lit = false; }
+      park(false);
     }
+    function park(on) {
+      if (parked === on || !rx || !rx.park) return;
+      parked = on;
+      rx.park(on);
+    }
+
+    // Where everything sits in the finished layout, in the pin's pixels,
+    // with every transform off. Runs when the scene starts and after any
+    // change of size or type.
+    function measure() {
+      clear();
+      var pr = pin.getBoundingClientRect();
+      var box = function (el) {
+        var r = el.getBoundingClientRect();
+        return { x: r.left - pr.left + r.width / 2, y: r.top - pr.top + r.height / 2, w: r.width, h: r.height };
+      };
+      var m = box(model);
+      geo = {
+        w: pr.width, h: pr.height,
+        run: Math.max(1, runwayEl.offsetHeight),
+        from: chips.map(box),
+        to: tags.map(box),
+        dot: { x: m.x, y: m.y }
+      };
+      // the point's disc is 200px across: at rest a dot of 14px, at full
+      // dive large enough that its solid core covers the far corner
+      var far = Math.max(Math.hypot(m.x, m.y), Math.hypot(geo.w - m.x, m.y),
+                         Math.hypot(m.x, geo.h - m.y), Math.hypot(geo.w - m.x, geo.h - m.y));
+      geo.s0 = 14 / 200;
+      geo.sMax = (far + 40) / (200 * 0.58 / 2) ;
+      geo.inkMax = (far + 24) / 100;
+      [glow, ink].forEach(function (el) { el.style.left = m.x + "px"; el.style.top = m.y + "px"; });
+    }
+
     function decide() {
-      var on = fits.matches;
+      var on = fits.matches && !printing;
       if (on) {
-        sec.classList.add("is-live");
+        dx.classList.add("is-live");
+        clear();
+        // the whole finished stage must fit the pinned screen, with room
         var inner = stage.firstElementChild;
-        on = inner ? inner.offsetHeight + 24 <= stage.clientHeight : false;
-        if (!on) sec.classList.remove("is-live");
+        var cs = window.getComputedStyle(stage);
+        var room = stage.clientHeight - parseFloat(cs.paddingTop) - parseFloat(cs.paddingBottom);
+        on = inner ? inner.offsetHeight + 16 <= room : false;
       }
-      if (!on) { sec.classList.remove("is-live"); clear(); }
+      if (!on) { dx.classList.remove("is-live"); clear(); geo = null; }
       live = on;
       var v = parseFloat(window.getComputedStyle(document.documentElement).getPropertyValue("--nav-h"));
       navH = v > 0 ? v : 68;
-      if (live) measureRest();
-      homeFrame.request();
+      if (live) { measure(); write(read()); }
     }
 
     function read() {
-      if (!live) return;
-      var r = sec.getBoundingClientRect();
-      var run = sec.offsetHeight - stage.offsetHeight;
-      return { p: clamp01((navH - r.top) / Math.max(1, run)), w: stage.clientWidth, h: stage.clientHeight };
+      if (!live || !geo) return;
+      return { p: clamp01((navH - dx.getBoundingClientRect().top) / geo.run) };
     }
+
+    var easeIn = function (t) { return t * t * t; };
+    var easeOut = function (t) { return 1 - Math.pow(1 - t, 3); };
+    var inOut = function (t) { return t < .5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2; };
+    // a pop that goes a little past and settles
+    var back = function (t) { var c = 1.4; t = t - 1; return 1 + (c + 1) * t * t * t + c * t * t; };
+    var f3 = function (v) { return (Math.round(v * 1000) / 1000).toString(); };
+    var px = function (v) { return (Math.round(v * 10) / 10) + "px"; };
+
     function write(m) {
-      var p = m.p;
-      var fade = 1 - ease(span(p, 0.08, 0.24));      // the lines under the tags
-      var head = 1 - ease(span(p, 0.40, 0.52));      // the heading stays while they gather
-      var gather = ease(span(p, 0.14, 0.42));
-      var close = ease(span(p, 0.44, 0.6));
-      var open = span(p, 0.6, 0.94);
-      sec.style.setProperty("--dmd-fade", fade.toFixed(3));
-      sec.style.setProperty("--dmd-head", head.toFixed(3));
-      sec.classList.toggle("is-merging", fade < 0.6);
-      // an ellipse, wider than tall, so the pills do not overlap in the ring
-      var ry = Math.min(m.w, m.h) * 0.2, rx = Math.min(m.w * 0.3, ry * 1.9);
-      // the ring sits under the heading, which stays up while the tags gather;
-      // the tags meet, and the circle opens, at the ring's centre
-      var oy = Math.min(m.h / 2 - ry - 28, Math.max(0, headB + ry + 36));
-      tags.forEach(function (t, i) {
-        var a = -Math.PI / 2 + i * (2 * Math.PI / 5);
-        var ring = { x: rx * Math.cos(a), y: oy + ry * Math.sin(a) };
-        var s0 = rest[i] || { x: 0, y: 0 };
-        var x = s0.x + (ring.x - s0.x) * gather, y = s0.y + (ring.y - s0.y) * gather;
-        x = x * (1 - close); y = y + (oy - y) * close;
-        t.style.setProperty("--tx", (x - s0.x).toFixed(1) + "px");
-        t.style.setProperty("--ty", (y - s0.y).toFixed(1) + "px");
-        // they swell a little in the ring, then shrink to nothing as they meet
-        t.style.setProperty("--ts", Math.max(0.05, 1 + 0.15 * gather - 0.95 * close).toFixed(3));
-        t.style.setProperty("--to", (1 - span(close, 0.55, 1)).toFixed(3));
+      if (!m || !geo) return;
+      var p = m.p, g = geo;
+
+      // the ink opens from where the reactor will stand and covers the
+      // paper; once it has, both step aside for the band's own ink
+      var inked = span(p, 0.345, 0.45), covered = inked >= 1;
+      put(ink, "transform", "scale(" + f3(g.inkMax * inOut(inked)) + ")");
+      put(ink, "opacity", covered ? "0" : "1");
+      put(paper, "opacity", covered ? "0" : "1");
+      // the heading, and the chips' change of skin
+      var tOut = inOut(span(p, 0.3, 0.36));
+      put(title, "opacity", f3(1 - tOut));
+      put(title, "transform", "translateY(" + px(-48 * tOut) + ") scale(" + f3(1 - 0.05 * tOut) + ")");
+      put(dmd, "--dmd-m", f3(inOut(span(p, 0.37, 0.46))));
+      // the answer's band stays below the pin until the page turns, so the
+      // chapters rail reads the demands until then
+      put(sol, "transform", p < 0.33 ? "translateY(100%)" : "none");
+
+      // the dive: z runs 0 to 1 into the point and back to 0
+      var z = inOut(span(p, 0.53, 0.63)) * (1 - inOut(span(p, 0.68, 0.77)));
+      // one camera for the point and the five: as the point grows by cam,
+      // the five move away from it by cam, so they leave the screen early
+      // and the point goes on growing until it fills it
+      var cam = Math.pow(g.sMax / g.s0, z);
+      var handed = p >= 0.78;                         // the tags have taken over
+
+      chips.forEach(function (c, k) {
+        var a = easeOut(span(p, 0.03 + 0.042 * k, 0.11 + 0.042 * k));
+        var f = inOut(span(p, 0.31 + 0.014 * k, 0.45 + 0.014 * k));
+        var s0 = g.from[k], s1 = g.to[k];
+        var sc = s1.w / s0.w;
+        var x = s0.x + (s1.x - s0.x) * f, y = s0.y + (s1.y - s0.y) * f;
+        var s = 1 + (sc - 1) * f;
+        // the camera: away from the point, and a little larger
+        x = g.dot.x + (x - g.dot.x) * cam;
+        y = g.dot.y + (y - g.dot.y) * cam;
+        s = s * Math.pow(cam, 0.5);
+        var rise = (1 - a) * 22;
+        put(c, "transform", "translate(" + px(x - s0.x) + "," + px(y - s0.y + rise) + ") scale(" + f3(s * (0.9 + 0.1 * a)) + ")");
+        put(c, "opacity", f3(handed ? 0 : a * (1 - span(cam, 1.5, 3))));
       });
-      // where they met, a small glowing seed; then the dark circle opens from it
-      var seed = span(p, 0.56, 0.62);
-      var rmax = Math.sqrt(m.w * m.w / 4 + Math.pow(m.h / 2 + Math.abs(oy), 2)) + 24;
-      var e = open * open * (3 - 2 * open);
-      var r = seed > 0 ? 10 * ease(seed) + (rmax - 10) * e * e : 0;
-      curtain.style.setProperty("--r", r.toFixed(1) + "px");
-      curtain.style.setProperty("--oy", (oy * (1 - e)).toFixed(1) + "px");
-      curtain.style.setProperty("--edge", (seed > 0 ? ease(seed) * (1 - e) : 0).toFixed(3));
-      curtain.style.setProperty("--glow", (seed > 0 ? 1 - e : 0).toFixed(3));
-      curtain.style.setProperty("--dot", ease(seed).toFixed(3));
-      curtain.style.setProperty("--line", ease(span(p, 0.88, 1)).toFixed(3));
+      put(grid, "--dx-tag", handed ? "1" : "0");
+
+      // the green point: it opens, dives to fill the screen, comes back,
+      // and swells and fades as the reactor comes out of it
+      var dot = easeOut(span(p, 0.47, 0.51));
+      var pop = span(p, 0.79, 0.88);
+      var gs = g.s0 * cam * (0.2 + 0.8 * dot) * (1 + 5 * easeOut(pop));
+      put(glow, "transform", "scale(" + f3(gs) + ")");
+      put(glow, "opacity", f3(dot * (1 - easeOut(span(pop, 0, 0.55)))));
+      var sayIn = span(z, 0.82, 1);
+      put(say, "opacity", f3(inOut(sayIn)));
+      put(say, "transform", "translate(-50%,-50%) scale(" + f3(0.94 + 0.06 * easeOut(sayIn)) + ")");
+
+      // the reactor pops out of the point
+      put(model, "opacity", f3(easeOut(span(pop, 0, 0.45))));
+      put(model, "transform", pop >= 1 ? "none" : "scale(" + f3(0.12 + 0.88 * back(pop)) + ")");
+      // the band's words settle, and the cards open round their tags
+      var h = easeOut(span(p, 0.84, 0.91)), l = easeOut(span(p, 0.86, 0.93));
+      put(head, "opacity", f3(h));
+      put(head, "transform", h >= 1 ? "none" : "translateY(" + px(28 * (1 - h)) + ")");
+      put(lede, "opacity", f3(l));
+      put(lede, "transform", l >= 1 ? "none" : "translateY(" + px(20 * (1 - l)) + ")");
+      var card = easeOut(span(p, 0.9, 0.97));
+      put(grid, "--dx-card", f3(card));
+      dx.classList.toggle("is-early", card < 0.6);
+
+      // the model's own loop is held until it is about to be seen, and it
+      // comes up lit by its green light alone, then whole
+      park(p < 0.74);
+      var glowing = p >= 0.77 && p < 0.9;
+      if (glowing !== lit && rx && rx.highlight) { lit = glowing; rx.highlight(glowing ? "light" : null); }
     }
-    function fail() { live = false; sec.classList.remove("is-live"); clear(); }
+
+    function fail() { live = false; dx.classList.remove("is-live"); clear(); }
 
     homeFrame.add(read, write, fail);
     window.addEventListener("scroll", homeFrame.request, { passive: true });
-    window.addEventListener("resize", function () { decide(); });
-    if (fits.addEventListener) fits.addEventListener("change", decide);
-    // a keyboard reader who tabs onto a faded link is taken back to where
-    // the recap can be read
-    sec.addEventListener("focusin", function () {
-      if (!live) return;
-      var f = parseFloat(sec.style.getPropertyValue("--dmd-fade") || "1");
-      if (f < 0.9) window.scrollTo(0, window.scrollY + sec.getBoundingClientRect().top - navH);
+    var sized = 0;
+    window.addEventListener("resize", function () {
+      window.clearTimeout(sized);
+      sized = window.setTimeout(decide, 120);
     });
-    window.addEventListener("beforeprint", function () { sec.classList.remove("is-live"); clear(); });
-    window.addEventListener("afterprint", decide);
+    if (fits.addEventListener) fits.addEventListener("change", decide);
+    else if (fits.addListener) fits.addListener(decide);
+    var printing = false;
+    window.addEventListener("beforeprint", function () { printing = true; decide(); });
+    window.addEventListener("afterprint", function () { printing = false; decide(); });
     if (document.fonts && document.fonts.ready) document.fonts.ready.then(decide);
+    window.addEventListener("load", decide);
+    // whether the stage fits depends on how tall its words set, which
+    // changes when Inter arrives after the fallback face; watch the content
+    // rather than guess when. The scene does not change the content's own
+    // size, so this cannot feed itself.
+    if ("ResizeObserver" in window && stage.firstElementChild) {
+      var rq = 0;
+      new ResizeObserver(function () {
+        window.cancelAnimationFrame(rq);
+        rq = window.requestAnimationFrame(decide);
+      }).observe(stage.firstElementChild);
+    }
+
+    /* ---- arriving by a link or by the keyboard ---- */
+    // where in the scene a section is "found": the demands once all five
+    // chips are in, the answer at its finished frame
+    function spot(id) {
+      var top = dx.getBoundingClientRect().top + window.scrollY - navH;
+      return top + geo.run * (id === "demands" ? 0.28 : 1);
+    }
+    function go(id, how) {
+      if (!live || !geo) return false;
+      window.scrollTo({ top: spot(id), left: 0, behavior: how || "auto" });
+      return true;
+    }
+    document.addEventListener("click", function (e) {
+      var a = e.target.closest && e.target.closest("a[href*='#']");
+      if (!a || e.defaultPrevented || e.button !== 0 || e.metaKey || e.ctrlKey || e.shiftKey || e.altKey) return;
+      var href = a.getAttribute("href"), id = href.slice(href.indexOf("#") + 1);
+      if (id !== "demands" && id !== "solution") return;
+      if (href.charAt(0) !== "#" && a.pathname !== location.pathname) return;
+      if (go(id)) {
+        e.preventDefault();
+        if (history.pushState) history.pushState(null, "", "#" + id);
+      }
+    });
+    function fromHash(how) {
+      var id = location.hash.slice(1);
+      if (id === "demands" || id === "solution") go(id, how);
+    }
+    window.addEventListener("hashchange", function () { fromHash("instant"); });
+    // keyboard focus on a card, while the cards are not in yet: to the
+    // finished frame at once, so the reader finds it built
+    sol.addEventListener("focusin", function (e) {
+      if (!live || !dx.classList.contains("is-early")) return;
+      var t = e.target;
+      if (t && t.hasAttribute && t.hasAttribute("data-comp")) go("solution", "instant");
+    });
+
     decide();
+    if (live) { armed && dmd.classList.add("in"); fromHash("instant"); }
   })();
 
 })();
