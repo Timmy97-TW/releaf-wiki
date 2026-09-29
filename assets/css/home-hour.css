@@ -1,16 +1,26 @@
 /* =============================================================================
-   ReLeaf homepage: 02 THE HOUR (simplified 29 Sep)
+   ReLeaf homepage: 02 THE HOUR (simplified 29 Sep, set left in round 3)
    -----------------------------------------------------------------------------
-   One idea on one screen: the damage starts before anyone can see it, and
-   the forecast is the only warning that comes in time.
+   The damage starts before anyone can see it, and the forecast is the only
+   warning that comes in time. Set in the rhythm of the threat and the gap:
+   the shared .pb-title and .pb-lede on the left, the line full width under
+   them, then the closing words and the demands this section earns (.pb-need,
+   the same box as the threat's), side by side from 900px.
 
-   One line, to scale, from three days before the heat (the forecast) to
-   three weeks after it (the next check): -3 to 21 days, so a moment at day d
-   sits at --x = (d + 3) / 24 * 100. The green stretch is the warning; the
-   rust stretch is the damage, faint while nobody can see it and full by the
-   next check. From 760px the line runs across and the moments sit above it,
-   the unseen one below it; on phones the line stands on end and the long
-   empty wait before the next check is the point.
+   THE LINE, from 900px. One line, to scale, from three days before the heat
+   (the forecast) to three weeks after it (the next check): -3 to 21 days.
+   The figure is a grid of 24 columns, one per day, so a moment at day d
+   starts on column line d + 4: the forecast on 1, day 0 on 4, the first
+   sign (about day 3) on 7, and the next check ends on 25. Three rows: the
+   moments above the line, the line, the unseen damage below it. The list
+   of moments is a subgrid of the figure's rows, so the line always sits
+   between them whatever the text wraps to. The green stretch is the
+   warning; the rust stretch is the damage, faint while nobody can see it
+   and full by the next check.
+
+   BELOW 900px the line stands on end and the moments are in plain flow,
+   each drawing its own stretch of the line down to the next; the long empty
+   stretch before the next check is the point.
 
    RESTING STATE IS THE FINISHED STATE. The scroll-driven draw at the end of
    this file runs only where animation-timeline is supported and motion is
@@ -19,51 +29,34 @@
 
 .hr3 {
   background: var(--white);
-  padding: clamp(4rem, 10vh, 7rem) 0 clamp(4rem, 10vh, 7rem);
+  padding: clamp(4rem, 10vh, 7rem) 0;
 }
-.hr3__inner { text-align: center; }
-
-.hr3__title {
-  margin: 0 auto;
-  max-width: 19ch;
-  font-family: var(--font-display);
-  font-size: clamp(2.25rem, 1.2rem + 3.2vw, 4rem);
-  font-weight: 700; line-height: 1.04; letter-spacing: -.035em;
-  color: var(--leaf-900);
-  text-wrap: balance;
-}
-.hr3__lede {
-  margin: var(--sp-4) auto 0;
-  max-width: 48ch;
-  font-size: clamp(1.0625rem, .95rem + .45vw, 1.375rem);
-  line-height: 1.45; color: var(--gray-500);
-  text-wrap: balance;
-}
+.hr3__head { max-width: 40rem; }
+.hr3__head .pb-lede { margin-bottom: 0; text-wrap: pretty; }
 
 /* -------------------------------------------------------------- the line --- */
 
-.hr3-fig {
-  --line: 6px;
-  margin: clamp(3rem, 7vh, 5rem) auto 0;
-  max-width: 64rem;
-  text-align: left;
-}
-
+.hr3-fig { --line: 6px; margin: clamp(2.5rem, 6vh, 4rem) 0 0; }
 .hr3-line { position: relative; border-radius: var(--line); background: var(--gray-100); }
 .hr3-warn, .hr3-harm { position: absolute; display: block; border-radius: inherit; }
 
-.hr3-moments { list-style: none; margin: 0; padding: 0; position: relative; }
-.hr3-m { position: absolute; display: flex; flex-direction: column; gap: .3rem; }
+.hr3-moments { list-style: none; margin: 0; padding: 0; }
+.hr3-m { position: relative; display: flex; flex-direction: column; gap: .25rem; }
 .hr3-when {
   font-size: .75rem; font-weight: 600; letter-spacing: .08em; text-transform: uppercase;
   color: var(--gray-500); font-variant-numeric: tabular-nums;
 }
 .hr3-what {
-  font-size: clamp(1.0625rem, .95rem + .35vw, 1.3125rem);
+  font-size: clamp(1.0625rem, .98rem + .3vw, 1.25rem);
   font-weight: 600; line-height: 1.25; letter-spacing: -.012em; color: var(--black);
 }
 .hr3-m--fore .hr3-what { color: var(--leaf-700); }
 .hr3-m--start .hr3-what { color: var(--rust-700); }
+.hr3-desc {
+  margin-top: .2rem;
+  font-size: var(--text-sm); line-height: 1.5; color: var(--gray-600);
+  text-wrap: pretty;
+}
 
 /* the mark on the line, drawn by each moment so it moves with it */
 .hr3-m::before {
@@ -76,8 +69,14 @@
 .hr3-m--check::before { border-color: var(--black); background: var(--black); }
 
 /* wide: the line across ------------------------------------------------------ */
-@media (min-width: 760px) {
-  .hr3-fig { display: grid; grid-template-rows: 5.25rem var(--line) 5.25rem; }
+@media (min-width: 900px) {
+  .hr3-fig {
+    --gap: 1.1rem;
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+    grid-template-rows: auto var(--line) auto;
+    row-gap: var(--gap);
+  }
   .hr3-line { grid-row: 2; grid-column: 1; }
   .hr3-warn { inset: 0 auto 0 0; width: 12.5%; background: var(--leaf-500); border-radius: var(--line) 0 0 var(--line); }
   .hr3-harm {
@@ -85,99 +84,95 @@
     background: linear-gradient(90deg, rgb(154 61 34 / .14), rgb(154 61 34 / .5) 14%, var(--rust-700));
     border-radius: 0 var(--line) var(--line) 0;
   }
-  .hr3-moments { grid-row: 1 / 4; grid-column: 1; }
-  .hr3-m { left: calc(var(--x) * 1%); bottom: calc(50% + var(--line) / 2 + 1.1rem); max-width: 11rem; }
-  .hr3-m::before { left: -7px; bottom: calc(-1.1rem - var(--line) / 2 - 7px); }
-  /* the unseen damage sits under the line */
-  .hr3-m--start { bottom: auto; top: calc(50% + var(--line) / 2 + 1.1rem); }
-  .hr3-m--start::before { bottom: auto; top: calc(-1.1rem - var(--line) / 2 - 7px); }
-  /* the last moment hangs back from the end of the line */
-  .hr3-m--check { left: auto; right: 0; align-items: flex-end; text-align: right; }
+  .hr3-moments {
+    grid-row: 1 / 4; grid-column: 1;
+    display: grid;
+    grid-template-columns: repeat(24, minmax(0, 1fr));
+    grid-template-rows: subgrid;
+  }
+  .hr3-m { grid-row: 1; align-self: end; padding-right: var(--sp-5); }
+  .hr3-m--fore  { grid-column: 1 / 7; }
+  .hr3-m--seen  { grid-column: 7 / 16; }
+  .hr3-m--check { grid-column: 17 / 25; justify-self: end; padding-right: 0; align-items: flex-end; text-align: right; max-width: 19rem; }
+  .hr3-m--start { grid-row: 3; grid-column: 4 / 14; align-self: start; }
+  .hr3-m::before { left: -7px; bottom: calc(-1 * var(--gap) - var(--line) / 2 - 7px); }
+  .hr3-m--start::before { bottom: auto; top: calc(-1 * var(--gap) - var(--line) / 2 - 7px); }
   .hr3-m--check::before { left: auto; right: -7px; }
+  .hr3-desc { max-width: 24rem; }
 }
 
-/* phones: the line on end ------------------------------------------------------ */
-@media (max-width: 759.98px) {
-  .hr3-fig { display: grid; grid-template-columns: 2.25rem minmax(0, 1fr); }
-  .hr3-line { grid-area: 1 / 1; justify-self: start; width: var(--line); margin: .45rem 0 .45rem .5rem; }
-  .hr3-warn { inset: 0 0 auto 0; height: 12.5%; background: var(--leaf-500); border-radius: var(--line) var(--line) 0 0; }
-  .hr3-harm {
-    inset: 12.5% 0 0 0;
-    background: linear-gradient(180deg, rgb(154 61 34 / .14), rgb(154 61 34 / .5) 14%, var(--rust-700));
-    border-radius: 0 0 var(--line) var(--line);
+/* narrow: the line on end, the moments in flow --------------------------------- */
+@media (max-width: 899.98px) {
+  .hr3-fig { max-width: 34rem; }
+  .hr3-line { display: none; }
+  .hr3-moments { padding-left: 2.25rem; }
+  .hr3-m { padding-bottom: var(--sp-6); }
+  .hr3-m--seen { padding-bottom: clamp(8rem, 26vw, 12rem); }   /* the wait */
+  .hr3-m--check { padding-bottom: 0; }
+  .hr3-m::before { left: calc(-2.25rem + .5rem + var(--line) / 2 - 7px); top: .05rem; }
+  /* each moment draws the line down to the next one */
+  .hr3-m::after {
+    content: ""; position: absolute;
+    left: calc(-2.25rem + .5rem); top: 1rem; bottom: .05rem; width: var(--line);
   }
-  .hr3-moments { grid-area: 1 / 2; height: 30rem; }
-  .hr3-say { grid-area: 2 / 1 / 3 / 3; }
-  .hr3-m { left: 0; right: 0; top: calc(var(--x) * 1%); gap: .15rem; }
-  .hr3-m--check { top: auto; bottom: 0; }
-  .hr3-m::before { left: calc(-2.25rem + .5rem + var(--line) / 2 - 7px); top: .1rem; }
-  .hr3-m--check::before { top: auto; bottom: .35rem; }
-  .hr3-what { font-size: 1.0625rem; }
+  .hr3-m--fore::after  { background: var(--leaf-500); border-radius: var(--line) var(--line) 0 0; }
+  .hr3-m--start::after { background: linear-gradient(180deg, rgb(154 61 34 / .14), rgb(154 61 34 / .5)); }
+  .hr3-m--seen::after  { background: linear-gradient(180deg, rgb(154 61 34 / .5), var(--rust-700)); border-radius: 0 0 var(--line) var(--line); }
+  .hr3-m--check::after { content: none; }
 }
 
 /* ----------------------------------------------------------- the ending --- */
 
+.hr3-end { margin-top: clamp(2.5rem, 6vh, 4rem); display: grid; gap: var(--sp-6); }
+@media (min-width: 900px) {
+  .hr3-end {
+    grid-template-columns: minmax(0, 36rem) minmax(0, 34rem);
+    justify-content: space-between;
+    column-gap: clamp(2rem, 5vw, 5rem);
+    align-items: start;
+  }
+}
 .hr3-say {
-  margin: clamp(2.5rem, 6vh, 4rem) auto 0;
-  max-width: 26ch;
-  text-align: center;
-  font-size: clamp(1.375rem, 1.05rem + 1.1vw, 2.125rem);
-  font-weight: 600; line-height: 1.2; letter-spacing: -.02em;
-  color: var(--gray-500);
-  text-wrap: balance;
+  margin: 0; max-width: 40rem;
+  font-size: clamp(1rem, .92rem + .3vw, 1.125rem); line-height: 1.6; color: var(--gray-600);
+  text-wrap: pretty;
 }
-.hr3-say strong { font-weight: inherit; color: var(--leaf-900); }
-@media (max-width: 759.98px) { .hr3-say { margin-top: var(--sp-7); } }
-
-.hr3-need {
-  display: flex; flex-wrap: wrap; align-items: center; justify-content: center;
-  gap: var(--sp-3) var(--sp-4);
-  margin: var(--sp-6) auto 0;
+.hr3-say strong {
+  display: block; margin-bottom: var(--sp-2);
+  font-size: clamp(1.125rem, 1rem + .45vw, 1.3125rem); line-height: 1.35;
+  font-weight: 700; letter-spacing: -.01em; color: var(--leaf-900);
 }
-.hr3-need__k {
-  margin: 0;
-  font-size: .75rem; font-weight: 600; letter-spacing: .08em; text-transform: uppercase; color: var(--gray-500);
-}
-.hr3-need__list { list-style: none; margin: 0; padding: 0; display: flex; flex-wrap: wrap; justify-content: center; gap: var(--sp-2); }
-
+.hr3-end .pb-need { margin-top: 0; }
 
 /* ---------------------------------------- the draw, tied to the scroll --- */
 /* The figure is the timeline: the line grows from the forecast to the next
    check as the figure rises into view, and each moment arrives as the line
-   reaches it. Scrolling back runs it back. */
+   reaches it. Scrolling back runs it back. On phones each moment arrives on
+   its own as it enters. */
 @supports (animation-timeline: view()) {
   @media (prefers-reduced-motion: no-preference) {
-    .hr3-fig { view-timeline: --hr3 block; }
-    .hr3-warn, .hr3-harm, .hr3-m, .hr3-say {
-      animation-timeline: --hr3;
+    .hr3-warn, .hr3-harm, .hr3-m {
       animation-fill-mode: both;
       animation-timing-function: linear;
       animation-duration: auto;
     }
-    .hr3-warn { animation-name: hr3-grow; animation-range: entry 5% entry 35%; }
-    .hr3-harm { animation-name: hr3-grow; animation-range: entry 35% cover 30%; }
     .hr3-m { animation-name: hr3-arrive; animation-timing-function: cubic-bezier(.2, .7, .2, 1); }
-    .hr3-m--fore  { animation-range: entry 5% entry 30%; }
-    .hr3-m--start { animation-range: entry 30% entry 55%; }
-    .hr3-m--seen  { animation-range: entry 45% entry 75%; }
-    .hr3-m--check { animation-range: cover 22% cover 30%; }
-    .hr3-say { animation-name: hr3-arrive; animation-range: cover 24% cover 34%; }
 
-    @media (min-width: 760px) {
-      .hr3-warn, .hr3-harm { transform-origin: left center; }
+    @media (min-width: 900px) {
+      .hr3-fig { view-timeline: --hr3 block; }
+      .hr3-warn, .hr3-harm, .hr3-m { animation-timeline: --hr3; }
+      .hr3-warn, .hr3-harm { animation-name: hr3-grow; transform-origin: left center; }
+      .hr3-warn { animation-range: entry 5% entry 35%; }
+      .hr3-harm { animation-range: entry 35% cover 35%; }
+      .hr3-m--fore  { animation-range: entry 5% entry 30%; }
+      .hr3-m--start { animation-range: entry 30% entry 55%; }
+      .hr3-m--seen  { animation-range: entry 45% entry 75%; }
+      .hr3-m--check { animation-range: cover 25% cover 35%; }
     }
-    @media (max-width: 759.98px) {
-      .hr3-warn, .hr3-harm { transform-origin: center top; animation-name: hr3-grow-v; }
-      .hr3-warn { animation-range: entry 10% entry 30%; }
-      .hr3-harm { animation-range: entry 30% cover 55%; }
-      .hr3-m--fore  { animation-range: entry 10% entry 25%; }
-      .hr3-m--start { animation-range: entry 18% entry 34%; }
-      .hr3-m--seen  { animation-range: entry 26% entry 42%; }
-      .hr3-m--check { animation-range: cover 45% cover 58%; }
-      .hr3-say { animation-range: cover 52% cover 66%; }
+    @media (max-width: 899.98px) {
+      .hr3-m { animation-timeline: view(); animation-range: entry 0% entry 80%; }
     }
   }
 }
 @keyframes hr3-grow   { from { transform: scaleX(0); } to { transform: none; } }
-@keyframes hr3-grow-v { from { transform: scaleY(0); } to { transform: none; } }
 @keyframes hr3-arrive { from { opacity: 0; transform: translateY(.75rem); } to { opacity: 1; transform: none; } }
