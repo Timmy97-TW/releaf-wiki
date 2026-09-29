@@ -30,7 +30,7 @@ OUT = os.path.join(ROOT, "md-simulations", "data", "runs.js")
 LABELS = {
     "REF": dict(
         branch="control", state="neutral", short_en="AtPep1", short_zh="AtPep1",
-        name_en="AtPep1 7–23 benchmark", name_zh="AtPep1 7–23 基準",
+        name_en="AtPep1 7-23 benchmark", name_zh="AtPep1 7-23 基準",
         role_en="Benchmark", role_zh="基準",
         gist_en="The peptide actually resolved in the 5GR8 crystal structure, run "
                 "under settings identical to the other eight. It is the only "
@@ -49,35 +49,35 @@ LABELS = {
         gist_zh="把胜肽整個移除。受體並沒有變鬆，凹槽沒有塌陷，逐殘基柔性分布幾乎不動。"
                 "這替另外八頁所有受體端的數字量出了一條雜訊底線。"),
     "WT": dict(
-        branch="ladder", state="neutral", short_en="1–23 (WT)", short_zh="1–23（野生型）",
-        name_en="BoPep4 wild type 1–23", name_zh="BoPep4 野生型 1–23",
+        branch="ladder", state="neutral", short_en="1-23 (WT)", short_zh="1-23（野生型）",
+        name_en="BoPep4 wild type 1-23", name_zh="BoPep4 野生型 1-23",
         role_en="Reference state", role_zh="參考狀態",
         gist_en="The complete mature sequence with a free C-terminus. The other "
                 "seven BoPep4 trajectories are all read against this one.",
         gist_zh="完整的成熟序列，C 端為自由羧基。其餘七條 BoPep4 軌跡都是對照這一條來讀的。"),
     "T723": dict(
-        branch="ladder", state="good", short_en="7–23", short_zh="7–23",
-        name_en="BoPep4 7–23", name_zh="BoPep4 7–23",
+        branch="ladder", state="good", short_en="7-23", short_zh="7-23",
+        name_en="BoPep4 7-23", name_zh="BoPep4 7-23",
         role_en="Hypothesis falsified", role_zh="假設被推翻",
-        gist_en="Putting Lys7 and Lys8 back onto 9–23 restores the clamp. Not "
+        gist_en="Putting Lys7 and Lys8 back onto 9-23 restores the clamp. Not "
                 "because a free-terminus artefact went away: Lys7 grips Asp129, "
                 "a salt bridge that is not on Tang's list of eight. This is also "
                 "the first construct that is like-for-like with the benchmark.",
-        gist_zh="把 Lys7 與 Lys8 加回 9–23 之後，鉗合恢復。原因不是自由 N 端的假影消失，"
+        gist_zh="把 Lys7 與 Lys8 加回 9-23 之後，鉗合恢復。原因不是自由 N 端的假影消失，"
                 "而是 Lys7 抓住了 Asp129，而這條鹽橋並不在 Tang 的八個熱點名單上。"
                 "這也是第一個能與基準逐殘基對比的構築。"),
     "T923": dict(
-        branch="ladder", state="warn", short_en="9–23", short_zh="9–23",
-        name_en="BoPep4 9–23", name_zh="BoPep4 9–23",
+        branch="ladder", state="warn", short_en="9-23", short_zh="9-23",
+        name_en="BoPep4 9-23", name_zh="BoPep4 9-23",
         role_en="The construct that was ordered", role_zh="已下單的構築",
-        gist_en="Deleting residues 1–8 loosens the anchor at the far end of the "
+        gist_en="Deleting residues 1-8 loosens the anchor at the far end of the "
                 "peptide. The clamp flickers open 94 times in 30 ns, none of the "
                 "gaps longer than 0.68 ns.",
-        gist_zh="刪掉殘基 1–8 之後，鬆掉的是胜肽另一端的錨。鉗合在 30 奈秒內斷開 94 次，"
+        gist_zh="刪掉殘基 1-8 之後，鬆掉的是胜肽另一端的錨。鉗合在 30 奈秒內斷開 94 次，"
                 "沒有一次超過 0.68 奈秒。"),
     "T1523": dict(
-        branch="ladder", state="warn", short_en="15–23", short_zh="15–23",
-        name_en="BoPep4 15–23", name_zh="BoPep4 15–23",
+        branch="ladder", state="warn", short_en="15-23", short_zh="15-23",
+        name_en="BoPep4 15-23", name_zh="BoPep4 15-23",
         role_en="Control that did not fail", role_zh="沒有失敗的對照",
         gist_en="Planned as a negative control that would fall off and supply a "
                 "leaving time. It did not fall off, and it could not have: "
@@ -98,18 +98,18 @@ LABELS = {
                 "但 Asn23 已經不是 C 端：它的羧基被用去形成醯胺鍵，"
                 "所以這項標準量到的是一個中性羰基，不是鹽橋。"),
     "LOWPH": dict(
-        branch="ph", state="good", short_en="1–23 pH 5.5", short_zh="1–23 pH 5.5",
-        name_en="BoPep4 1–23 at pH 5.5", name_zh="BoPep4 1–23，pH 5.5",
+        branch="ph", state="good", short_en="1-23 pH 5.5", short_zh="1-23 pH 5.5",
+        name_en="BoPep4 1-23 at pH 5.5", name_zh="BoPep4 1-23，pH 5.5",
         role_en="Positive result", role_zh="正面結果",
         gist_en="Three histidines near the interface switched to their protonated "
-                "form, with no other atom touched. A Glu12–His227 pair appears at "
+                "form, with no other atom touched. A Glu12-His227 pair appears at "
                 "once, and the AtPep1 benchmark already makes that same pair at "
                 "neutral pH.",
         gist_zh="把介面附近的三個組胺酸換成質子化形式，其餘原子一個都沒動。"
-                "Glu12–His227 這一對立刻出現，而 AtPep1 基準在中性 pH 下本來就有這一對。"),
+                "Glu12-His227 這一對立刻出現，而 AtPep1 基準在中性 pH 下本來就有這一對。"),
     "T923L": dict(
-        branch="ph", state="bad", short_en="9–23 pH 5.5", short_zh="9–23 pH 5.5",
-        name_en="BoPep4 9–23 at pH 5.5", name_zh="BoPep4 9–23，pH 5.5",
+        branch="ph", state="bad", short_en="9-23 pH 5.5", short_zh="9-23 pH 5.5",
+        name_en="BoPep4 9-23 at pH 5.5", name_zh="BoPep4 9-23，pH 5.5",
         role_en="Failed the gate", role_zh="未通過驗收",
         gist_en="Truncation crossed with protonation. Every metric except the "
                 "anchor improved and the anchor collapsed: the now-positive His22 "

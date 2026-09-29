@@ -199,7 +199,7 @@
             </tbody>
           </table>
         </div>
-        <p class="ai">This is the part of the design we have not seen elsewhere, and it comes straight out of our own long run: on that batch a single-channel threshold would have fired on the instrument failure and stayed silent on the real process event, which is exactly backwards. Tier 3 sits outside the rule altogether: however confident the twin is, it only recommends.</p>
+        <p class="ai">The rule comes from our own long run. On that batch a single-channel threshold would have fired on the instrument failure and stayed silent on the real process event. Tier 3 sits outside the rule altogether: however confident the twin is, it only recommends.</p>
       </section>
 
       <!-- ================================================== 4 · TWIN ======= -->
@@ -413,9 +413,9 @@
                 </tbody>
               </table>
             </div>
-            <p class="ai"><b>Latency was found the hard way.</b> In the first merged build an OD600 measurement blocked the microcontroller loop for about 2.7&nbsp;s, and up to 8&nbsp;s when a light sensor failed to answer. For those seconds the 100&nbsp;Hz pressure window went blind, the TMP excursion check missed its peaks, and a stop command from the dashboard waited in a queue. The 1 September 2026 build split the measurement into a state machine that reads one sensor value per loop pass, cut the sensor read timeout from 200 to 3&nbsp;ms, and moved a nested RPC call out of a callback. The self-check that reports pressure samples per second (it should read close to 100) exists so that the same fault is seen, not guessed at, if it comes back.</p>
-            <p class="ai"><b>When the link drops.</b> Calibration values live in microcontroller RAM and vanish on a reboot, which in the middle of a batch cannot be redone: the flow cell cannot be emptied for a new blank with culture in it. The Linux side therefore writes every blank, pressure zero and baseline to a file with its source, detects an MCU reboot from its uptime, pushes the saved values back, and keeps a warning on screen until a fresh calibration replaces them. What does not survive yet is the batch record itself (section&nbsp;9), and the pump holds its last PWM if the Linux side dies; the watchdog that would stop it exists only in the prototype firmware (section&nbsp;11).</p>
-            <p class="ai"><b>Edge inference.</b> The derived state, alarms and steady-state test run on the board. The trust layer and the model fitting still run off-board in Python on a laptop, and reach the board as constants. Moving the trust-layer scoring onto the Linux side is small (it needs numpy and a 2&nbsp;h buffer) and is the next software step.</p>
+            <p class="ai">We found the latency problem on the rig. In the first merged build an OD600 measurement blocked the microcontroller loop for about 2.7&nbsp;s, and up to 8&nbsp;s when a light sensor failed to answer. For those seconds the 100&nbsp;Hz pressure window went blind, the TMP excursion check missed its peaks, and a stop command from the dashboard waited in a queue. The 1 September 2026 build split the measurement into a state machine that reads one sensor value per loop pass, cut the sensor read timeout from 200 to 3&nbsp;ms, and moved a nested RPC call out of a callback. The self-check that reports pressure samples per second (it should read close to 100) exists so that the same fault shows up in the data if it comes back.</p>
+            <p class="ai">Calibration values live in microcontroller RAM and vanish on a reboot, which in the middle of a batch cannot be redone: the flow cell cannot be emptied for a new blank with culture in it. The Linux side therefore writes every blank, pressure zero and baseline to a file with its source, detects an MCU reboot from its uptime, pushes the saved values back, and keeps a warning on screen until a fresh calibration replaces them. What does not survive yet is the batch record itself (section&nbsp;9), and the pump holds its last PWM if the Linux side dies; the watchdog that would stop it exists only in the prototype firmware (section&nbsp;11).</p>
+            <p class="ai">The derived state, alarms and steady-state test run on the board. The trust layer and the model fitting still run off-board in Python on a laptop, and reach the board as constants. Moving the trust-layer scoring onto the Linux side is small (it needs numpy and a 2&nbsp;h buffer) and is the next software step.</p>
 
             <details class="disclose disclose--solo ai">
               <summary><span class="disclose__title">The operator interface prototype</span><span class="disclose__hint">A single-file touchscreen interface drafted for the 7-inch panel of a field unit. It runs here on simulated data and is not the software on the rig.</span></summary>
@@ -437,7 +437,7 @@
           <!-- --------------------------------------------------- cut --- -->
           <div class="tabs__panel ai" role="tabpanel" id="t-cut" aria-labelledby="tab-t-cut" hidden>
             <h4>The cut list</h4>
-            <p>A twin is defined as much by what it leaves out. These are left out on purpose, and each is a place where the twin's prediction should not be trusted.</p>
+            <p>These are left out on purpose, and each is a place where the twin's prediction should not be trusted.</p>
             <div class="tablewrap">
               <table class="data">
                 <thead><tr><th scope="col">Not modelled</th><th scope="col">Why</th><th scope="col">What it would need</th></tr></thead>
@@ -490,7 +490,7 @@
         <p>The same batch argues against the obvious closed loop. Two induction policies applied to it after the fact, a fixed clock at 100&nbsp;h and a live trigger on &mu; falling below 0.006&nbsp;h<sup>&minus;1</sup>, both fire at about 100 to 103&nbsp;h, at OD around 0.90. The culture then falls to 0.629, grows for another hundred hours, and settles at a plateau of 1.473. Both policies induce at 61% of final biomass. The reference channel reads 26.67 to 26.69&nbsp;lux through that window, so it is not a sensor artefact. A threshold loop is not better than a fixed recipe here; it is wrong in a different way. This is why the state call has to be made by a model of the growth phase, and why arm B of the experiment in section&nbsp;6 is expected to fail.</p>
 
         <h3 id="calibration-gp">Calibration with interval coverage</h3>
-        <p>The photometer's calibration against a BioDrop (45 paired TiO&#8322; points, 23 August 2026) was fitted two ways. The linear fit in use wins inside its own range (RMSE 0.0235 OD against 0.0254 for a Gaussian process), and is kept. Extrapolated past OD 1.2, as happens in a batch nobody is watching, its error rises to 0.1715; the GP holds 0.067. The GP also found its own validity ceiling at OD 1.55 without being told where the hand-drawn limit was. Its 95% predictive band covered 88.9% of held-out points, short of the 95% it claims, so its intervals are too narrow; that check is reported because it is the one most often skipped.</p>
+        <p>The photometer's calibration against a BioDrop (45 paired TiO&#8322; points, 23 August 2026) was fitted two ways. The linear fit in use wins inside its own range (RMSE 0.0235 OD against 0.0254 for a Gaussian process), and is kept. Extrapolated past OD 1.2, as happens in a batch nobody is watching, its error rises to 0.1715; the GP holds 0.067. The GP also found its own validity ceiling at OD 1.55 without being told where the hand-drawn limit was. Its 95% predictive band covered 88.9% of held-out points, short of the 95% it claims, so its intervals are too narrow.</p>
 
         <aside class="callout callout--unproven">
           <b class="callout__label">What this evidence is, and is not</b>
@@ -627,7 +627,7 @@
             </tbody>
           </table>
         </div>
-        <p>The learning loop is ordinary and deliberate: a new batch is first scored by the frozen models (prediction error, state-call error, trust-layer false alarms), and only then added to the training set and the models refitted. A future team extends the database by adding columns, never by renaming them, and by writing a new constants version rather than editing an old one. Framed this way the database is a contribution another team can use, which is a stronger claim than a learning result drawn from a few dozen batches.</p>
+        <p>The learning loop is simple: a new batch is first scored by the frozen models (prediction error, state-call error, trust-layer false alarms), and only then added to the training set and the models refitted. A future team extends the database by adding columns, never by renaming them, and by writing a new constants version rather than editing an old one. The database is what another team can reuse; a learning result drawn from a few dozen batches would be a weak claim.</p>
       </section>
 
       <!-- ================================================= 9 · GMP ========= -->
@@ -657,13 +657,13 @@
       <section class="sec" id="limits">
         <h2 class="ai">Limits</h2>
         <ul class="ai">
-          <li><b>No dissolved oxygen.</b> \(k_La\) stays modelled, and the 45.7 against 60&nbsp;h<sup>&minus;1</sup> question stays open.</li>
-          <li><b><i>n</i>&nbsp;=&nbsp;1 on the long run.</b> Every statement about the trust layer rests on one batch with two events.</li>
-          <li><b>37&nbsp;&deg;C fits, 22&nbsp;&deg;C operation.</b> The growth parameters that are fast to fit come from 37&nbsp;&deg;C; the field unit runs near 22&nbsp;&deg;C. Whether they transfer is a test, not an assumption.</li>
-          <li><b>Beer-Lambert at scale.</b> The photometer is linear only to about OD 1.2 in its 2&nbsp;mm cell, and the induction light will be attenuated by a dense culture in a way nothing on the rig measures.</li>
-          <li><b>The 120 to 160&nbsp;h event is unexplained.</b> The layer called it correctly as biological; nobody knows what the culture did.</li>
-          <li><b>Flow sensor not verified</b>, and TMP below the resolution of the pressure transducers.</li>
-          <li><b>The loop is not closed.</b> Every action on the culture still goes through a person.</li>
+          <li>No dissolved oxygen. \(k_La\) stays modelled, and the 45.7 against 60&nbsp;h<sup>&minus;1</sup> question stays open.</li>
+          <li><i>n</i>&nbsp;=&nbsp;1 on the long run. Every statement about the trust layer rests on one batch with two events.</li>
+          <li>37&nbsp;&deg;C fits, 22&nbsp;&deg;C operation. The growth parameters that are fast to fit come from 37&nbsp;&deg;C; the field unit runs near 22&nbsp;&deg;C. Whether they transfer is a test, not an assumption.</li>
+          <li>Beer-Lambert at scale. The photometer is linear only to about OD 1.2 in its 2&nbsp;mm cell, and the induction light will be attenuated by a dense culture in a way nothing on the rig measures.</li>
+          <li>The 120 to 160&nbsp;h event is unexplained. The layer called it correctly as biological; nobody knows what the culture did.</li>
+          <li>Flow sensor not verified, and TMP below the resolution of the pressure transducers.</li>
+          <li>The loop is not closed. Every action on the culture still goes through a person.</li>
         </ul>
         <p class="ai">One lead on the unexplained event comes from the team's own draft of the photometer's development:</p>
         <p>During the run, the photometer even captured a sudden change caused by a recirculation-pump failure, demonstrating that continuous monitoring could reveal problems that would otherwise occur between manual measurements.</p>
@@ -701,7 +701,7 @@
           <li><b>The batch-record schema</b>: the 41-column window row and the five-table database, with provenance columns built in.</li>
           <li><b>The trust-layer code</b>: two independent axes, trained on the healthy start of a run and thresholded before scoring, with the 434&nbsp;h batch as a test case.</li>
           <li><b>The calibration method</b>: a dual-beam in-line photometer calibrated against known TiO&#8322; doses so that both instruments are scored against truth, plus the interval-coverage check.</li>
-          <li><b>The tier ladder</b>: actions ordered by reversibility, with an autonomy ceiling set by measurement confidence and a human-approval tier that no confidence can unlock.</li>
+          <li><b>The tier ladder</b>: actions ordered by reversibility, with an autonomy ceiling set by measurement confidence and a human-approval tier that stays manual at any confidence.</li>
         </ol>
 
         <details class="disclose disclose--solo">
