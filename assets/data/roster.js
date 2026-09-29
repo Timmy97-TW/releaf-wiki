@@ -289,7 +289,7 @@ const SECTIONS = [
     id: "advisors",
     title: "Student Advisors",
     noteAI: true,
-    note: "Student advisors are not just here to help out. Each of them turned a year of experience into something the team did not have: an education site that finally strings our teaching work together across the years, the logistics and software behind advanced peptide design, a firmer structure for our videos, a photography initiative putting plant stress in front of a global audience through one distinct lens, and lab technique passed down bench to bench.",
+    note: "Each student advisor turned a year of experience into something the team did not have: an education site that strings our teaching work together across the years, the logistics and software behind advanced peptide design, a firmer structure for our videos, a photography initiative that puts plant stress in front of a global audience, and lab technique passed down bench to bench.",
     groups: [
     { title: "", members: [
       {
@@ -362,7 +362,7 @@ const SECTIONS = [
     id: "support-team",
     title: "Support Team",
     noteAI: true,
-    note: "Every team finds its own rhythm, and not everyone can give it the same hours. This section is kept for members whose contribution to the project has been lighter. It is empty today, and we would be glad for it to stay that way.",
+    note: "Not everyone can give the project the same hours. This section is for members whose contribution has been lighter, and it is empty today.",
     groups: [
     { title: "", members: [] },
     ]
