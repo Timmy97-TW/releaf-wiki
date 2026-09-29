@@ -1,0 +1,177 @@
+/* =============================================================================
+   ReLeaf homepage: 02 THE HOUR
+   -----------------------------------------------------------------------------
+   One spell of heat and drought on one farm, on one axis in days: from three
+   days before it (the forecast) to three weeks after (Farmer Chen's next
+   check). Three lanes, the weather, the crop and the farmer, and a hatched
+   band from day 0 to the next check where nothing protects the field.
+
+   Every bar is placed from its start and end day, --a and --b, on a -3 to 21
+   scale:  left = (a + 3) / 24,  width = (b - a) / 24.
+
+   The chart is aria-hidden. The ordered list under it (.hr2-list) carries the
+   same content: it is the figure on phones (below 760px) and is read by
+   screen readers everywhere; from 760px it is visually hidden.
+
+   The resting state is the finished chart. home-problem.js piece 2 may arm a
+   one-shot entrance (.hr2-armed, then .hr2-go) in which each bar grows from
+   its start day in day order.
+   ========================================================================== */
+
+.hr2 { background: var(--white); border-top: 1px solid var(--gray-200); }
+.hr2__head { max-width: 46rem; margin-bottom: var(--sp-6); }
+.hr2__head .pb-title { max-width: none; }
+.hr2__head .pb-lede { margin: 0; }
+.hr2-fig { margin: 0; }
+.hr2-nw { white-space: nowrap; }
+
+/* ------------------------------------------------------------ the chart --- */
+
+.hr2-chart {
+  --days: 24;
+  position: relative;
+  display: grid;
+  grid-template-columns: 5.5rem minmax(0, 1fr);
+  grid-template-rows: auto repeat(3, 3.5rem);
+  row-gap: .5rem;
+}
+.hr2-scale, .hr2-gapband, .hr2-track { grid-column: 2; position: relative; }
+
+/* the day scale */
+.hr2-scale { grid-row: 1; height: 1.9rem; border-bottom: 1px solid var(--gray-300); }
+.hr2-scale span {
+  position: absolute; bottom: .45rem;
+  left: calc((var(--d) + 3) / var(--days) * 100%);
+  transform: translateX(-50%);
+  font-size: .6875rem; font-weight: 700; letter-spacing: .08em; text-transform: uppercase;
+  color: var(--gray-500); white-space: nowrap;
+}
+.hr2-scale span::after {
+  content: ""; position: absolute; left: 50%; top: calc(100% + .45rem - 5px);
+  width: 1px; height: 9px; background: var(--gray-400);
+}
+.hr2-scale span:first-child { transform: none; }
+.hr2-scale span:first-child::after { left: 0; }
+.hr2-scale span:last-child { transform: translateX(-100%); }
+.hr2-scale span:last-child::after { left: 100%; }
+.hr2-scale span[style*="--d:0"] { color: var(--leaf-900); }
+
+/* the band where nothing protects the field: day 0 to the next check */
+.hr2-gapband {
+  grid-row: 2 / span 3;
+  pointer-events: none;
+}
+.hr2-gapband::before {
+  content: ""; position: absolute; top: -.25rem; bottom: -.25rem;
+  left: calc((var(--a) + 3) / var(--days) * 100%);
+  width: calc((var(--b) - var(--a)) / var(--days) * 100%);
+  background: repeating-linear-gradient(135deg, rgb(154 61 34 / .07) 0 6px, transparent 6px 12px);
+  border-left: 2px solid var(--vol-5);
+}
+.hr2-gapband span {
+  position: absolute; top: calc(100% + .5rem); left: calc(3 / var(--days) * 100%);
+  font-size: .75rem; color: var(--gray-600);
+}
+
+/* the lanes */
+.hr2-lane { display: contents; }
+.hr2-lane__k {
+  grid-column: 1; align-self: center; margin: 0;
+  font-size: .75rem; font-weight: 700; letter-spacing: .06em; text-transform: uppercase;
+  color: var(--gray-600);
+}
+.hr2-lane--w > * { grid-row: 2; }
+.hr2-lane--c > * { grid-row: 3; }
+.hr2-lane--f > * { grid-row: 4; }
+
+.hr2-bar {
+  position: absolute; top: .3rem; bottom: .3rem;
+  left: calc((var(--a) + 3) / var(--days) * 100%);
+  width: calc((var(--b) - var(--a)) / var(--days) * 100% - 3px);
+  display: flex; flex-direction: column; justify-content: center;
+  padding: 0 .65rem; border-radius: 6px; overflow: hidden;
+  font-size: .75rem; line-height: 1.25;
+}
+.hr2-bar b { font-weight: 700; }
+/* the numbers that pair a mark on the chart with its line in the list */
+.hr2-n, .hr2-no {
+  display: inline-grid; place-items: center; flex: none;
+  width: 1.1rem; height: 1.1rem; margin-right: .4rem; border-radius: 50%;
+  background: var(--leaf-900); color: var(--white);
+  font-size: .6875rem; font-style: normal; font-weight: 700; line-height: 1; vertical-align: -.15rem;
+}
+.hr2-bar--heat .hr2-n, .hr2-bar--seen .hr2-n { background: var(--white); color: var(--vol-5); }
+.hr2-bar sup { font-size: .8em; font-weight: 700; }
+
+.hr2-bar--fore { background: var(--white); border: 1.5px dashed var(--leaf-700); color: var(--leaf-900); }
+.hr2-bar--heat { background: var(--vol-5); color: var(--white); }
+.hr2-bar--hidden { background: #f7e9e3; border: 1.5px dashed var(--vol-5); color: #7a2e17; }
+.hr2-bar--seen { background: #b5563a; color: var(--white); }
+.hr2-bar--wait { background: var(--gray-100); color: var(--gray-600); }
+
+/* the next check: a disc at day 21 with its label below the lane */
+.hr2-dot {
+  position: absolute; top: 50%;
+  left: calc((var(--a) + 3) / var(--days) * 100%);
+  width: 1.1rem; height: 1.1rem; margin: -.55rem 0 0 -1.1rem;
+  border-radius: 50%; background: var(--leaf-900); box-shadow: 0 0 0 3px var(--white);
+}
+.hr2-dot b {
+  position: absolute; right: 0; top: calc(100% + .55rem);
+  font-size: .75rem; line-height: 1.25; color: var(--leaf-900); white-space: nowrap;
+}
+
+
+/* ------------------------------------------------------ list and caption --- */
+
+.hr2-list { list-style: none; margin: 0; padding: 0; }
+.hr2-when {
+  margin: 0; font-size: .75rem; font-weight: 700; letter-spacing: .08em; text-transform: uppercase;
+  color: var(--leaf-700);
+}
+.hr2-say { margin: .2rem 0 0; font-size: var(--text-sm); line-height: 1.55; color: var(--gray-700); }
+
+.hr2-cap { margin-top: var(--sp-5); max-width: 68ch; }
+.hr2-cap > p:first-child {
+  margin: 0; font-size: var(--text-base, 1rem); line-height: 1.6; color: var(--gray-700); text-wrap: pretty;
+}
+
+/* wide: the list explains the chart, five numbered notes under it */
+@media (min-width: 760px) {
+  .hr2-list {
+    margin-top: var(--sp-6); display: grid; grid-template-columns: repeat(5, minmax(0, 1fr));
+    gap: var(--sp-4); padding-top: var(--sp-4); border-top: 1px solid var(--gray-200);
+  }
+  .hr2-list li { display: grid; grid-template-columns: auto minmax(0, 1fr); column-gap: .15rem; align-content: start; }
+  .hr2-no { grid-row: 1; margin-top: .05rem; }
+  .hr2-when { grid-row: 1; grid-column: 2; }
+  .hr2-say { grid-column: 1 / -1; font-size: .8125rem; }
+}
+/* narrow: the list is the figure, a dated line down its left edge */
+@media (max-width: 759px) {
+  .hr2-chart { display: none; }
+  .hr2-list { display: grid; gap: var(--sp-4); border-left: 2px solid var(--gray-200); padding-left: var(--sp-4); }
+  .hr2-list li { position: relative; }
+  .hr2-list li::before {
+    content: ""; position: absolute; left: calc(-1 * var(--sp-4) - 6px); top: .2rem;
+    width: 10px; height: 10px; border-radius: 50%; background: var(--vol-5);
+  }
+  .hr2-list li::before { display: none; }
+  .hr2-no { position: absolute; left: calc(-1 * var(--sp-4) - .6rem); top: 0; margin: 0; box-shadow: 0 0 0 3px var(--white); }
+  .hr2-cap { margin-top: var(--sp-6); }
+}
+
+/* -------------------------------------------------------------- entrance --- */
+/* armed by home-problem.js only while the figure is below the fold */
+.hr2-armed .hr2-bar, .hr2-armed .hr2-dot, .hr2-armed .hr2-gapband::before {
+  transform: scaleX(0); transform-origin: left center; opacity: 0;
+}
+.hr2-go .hr2-bar, .hr2-go .hr2-dot, .hr2-go .hr2-gapband::before {
+  transform: none; opacity: 1;
+  transition: transform .6s cubic-bezier(.2, .7, .2, 1), opacity .3s ease;
+  transition-delay: calc((var(--a) + 3) * 55ms);
+}
+.hr2-go .hr2-gapband::before { transition-delay: 500ms; }
+@media (prefers-reduced-motion: reduce) {
+  .hr2-armed .hr2-bar, .hr2-armed .hr2-dot, .hr2-armed .hr2-gapband::before { transform: none; opacity: 1; }
+}

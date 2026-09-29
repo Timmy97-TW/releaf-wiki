@@ -1,26 +1,44 @@
 /* =============================================================================
    The homepage reactor.
    -----------------------------------------------------------------------------
-   The same assembly as hardware/bioreactor/, rendered into the homepage's dark
-   act. Everything it knows comes from files that section already owns:
+   The same assembly as hardware/bioreactor/, rendered into the homepage's
+   reactor section (#solution). Everything it knows comes from files that
+   section already owns:
 
      BIO_PARTS       hardware/bioreactor/js/parts.js
      FLOW_PATHS      hardware/bioreactor/js/flow-paths.js
      BIO_COMPONENTS  hardware/bioreactor/js/components.js
-     the meshes      hardware/bioreactor/models/*.stl
+     the meshes      hardware/bioreactor/models/_pack.json + _pack.bin
 
    Nothing about the device is described twice, so the homepage cannot end up
    claiming a part the technical record has dropped.
 
    Three things make this different from the record page's scene.js:
 
-     · IT DOES NOT LOAD UNTIL ASKED. 55 STL files is 6 MB, and a reader who
-       never scrolls past the problem section should never pay for it. home.js
-       calls start() when the dark act is one screen away.
-     · IT DEGRADES TO A PHOTOGRAPH. No WebGL context, or a load that fails,
-       adds .no-gl to #rx and the poster underneath takes over.
-     · IT EXPOSES highlight(), so the parts list beside the stage can light a
-       component up without a second copy of the picker.
+     · IT DOES NOT LOAD UNTIL ASKED. three.js (about 0.6 MB), the device files
+       above and the packed assembly (2.4 MB) are all fetched by start(), and
+       the WebGL renderer is only created then, so a reader who never scrolls
+       past the problem section pays for none of it. home.js calls start()
+       when #rx is 1.6 screens away. The page has no <script> tag for any of
+       them; DEPS below is the list, in the order they must run.
+     · IT STARTS AS A PHOTOGRAPH. The photograph of the rig under the canvas
+       is what #rx shows until the model is built: tally() then adds
+       .is-ready (the canvas fades in over it) and takes aria-hidden off the
+       canvas, so until then the photograph's alt text speaks for it. No
+       WebGL context, or a load that fails, adds .no-gl and the photograph
+       simply stays. With scripting off neither is added, and the box is
+       never empty.
+     · IT EXPOSES highlight(), so the five demand cards around the model can
+       light components up without a second copy of the picker. A lit set is
+       painted in the signal green of the cards and everything else, the
+       plinth's glow included, goes dark, because a glow on its own is too
+       faint to find in a rotating assembly. Besides the ids in
+       components.js it knows two of its own: "light", the induction light
+       just outside the culture vessel's wall, which is only on while it is
+       asked for, and "unit", every part of the machine (not the plinth).
+       On this page "harvest" also takes the shell-side line: the tubes and
+       the green flow that carry the harvest from outside the fibre to the
+       harvest bottle.
 
    The materials, lighting and flow colours are copied from scene.js on purpose
    rather than imported: that file is an IIFE with no exports, and the two
@@ -43,31 +61,60 @@ window.__homeRx = (function () {
   var host = document.getElementById("rx");
   if (!canvas || !host) return api;
 
-  function giveUp() { host.classList.add("no-gl"); }
-
-  if (typeof THREE === "undefined" || typeof BIO_PARTS === "undefined") {
-    giveUp();
-    return api;
+  // Anything that goes wrong, at any stage, including a WebGL context lost
+  // after the model was built: the photograph stays or comes back, the
+  // loading pill goes, and #rx says so ("rx-giveup"), so home.js can turn the
+  // demand cards back into plain text. (loadEl is declared with the loader,
+  // and self is the object this returns, both further down.)
+  var gaveUp = false;
+  function giveUp() {
+    if (gaveUp) return;
+    gaveUp = true;
+    ready = false;
+    host.classList.add("no-gl");
+    canvas.setAttribute("aria-hidden", "true");
+    if (loadEl) loadEl.hidden = true;
+    if (self) self.failed = true;
+    try { host.dispatchEvent(new CustomEvent("rx-giveup")); } catch (e) { /* old browser: the class is enough */ }
   }
 
-  var renderer;
-  try {
-    renderer = new THREE.WebGLRenderer({ canvas: canvas, antialias: true, alpha: true });
-  } catch (e) {
-    giveUp();
-    return api;
+  /* ---------- the files it needs, fetched by start() ----------
+     The same vendor bundle, part list, flow centerlines and component
+     definitions as hardware/bioreactor/, in the order they must run. Classic
+     scripts inserted with async = false run in insertion order. */
+  var DEPS = [
+    "hardware/js/vendor/three.min.js",
+    "hardware/js/packed-loader.js",
+    "hardware/js/render-quality.js",
+    "hardware/bioreactor/js/parts.js",
+    "hardware/bioreactor/js/flow-paths.js",
+    "hardware/bioreactor/js/components.js"
+  ];
+  function haveDeps() {
+    return typeof THREE !== "undefined" && typeof BIO_PARTS !== "undefined" &&
+      typeof PackedModel !== "undefined" && typeof RQ !== "undefined";
   }
-  if (!renderer || !renderer.getContext()) { giveUp(); return api; }
+  function loadDeps(done) {
+    if (haveDeps()) { done(true); return; }
+    var left = DEPS.length, over = false;
+    function end(ok) { if (!over) { over = true; done(ok); } }
+    DEPS.forEach(function (src) {
+      var el = document.createElement("script");
+      el.src = src;
+      el.async = false;
+      el.onload = function () { if (--left === 0) end(haveDeps()); };
+      el.onerror = function () { end(false); };
+      document.head.appendChild(el);
+    });
+  }
 
-  renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
-  renderer.outputEncoding = THREE.sRGBEncoding;
-  renderer.toneMapping = THREE.ACESFilmicToneMapping;
-  renderer.toneMappingExposure = 1.05;
-
-  var scene = new THREE.Scene();
-  var camera = new THREE.PerspectiveCamera(26, 16 / 9, 1, 8000);
-  var TARGET = new THREE.Vector3(-80, 128, 0);
-  var yaw = -0.62, pitch = 0.14, dist = 1780;
+  var renderer, scene, camera, TARGET, key, sig, cultureLight;
+  // dist is 1550 here, not the record page's 1780: the model sits between
+  // two columns of cards, and at this distance it is about 1.1 × the canvas
+  // height wide (the field of view is vertical), which home-reactor.css
+  // counts on when it sizes the canvas.
+  var HOME = -0.62;        // the three-quarter view every part is visible from
+  var yaw = HOME, pitch = 0.14, dist = 1550;
 
   function place() {
     camera.position.set(
@@ -77,17 +124,49 @@ window.__homeRx = (function () {
     camera.lookAt(TARGET);
   }
 
-  /* ---------- lighting ---------- */
-  scene.environment = RQ.studioEnv(renderer);
-  var key = new THREE.DirectionalLight(0xfff6ec, 0.38);
-  key.position.set(300, 500, 600);
-  scene.add(key);
-  RQ.enableShadows(renderer, key);
-  var rimW = new THREE.DirectionalLight(0xffd9a8, 0.22); rimW.position.set(500, -100, -500); scene.add(rimW);
-  var rimC = new THREE.DirectionalLight(0xbcd0e6, 0.30); rimC.position.set(-500, 200, -550); scene.add(rimC);
-  // the 520 nm the circuit actually runs on, thrown from the reader's left so
-  // the reveal's green light and the scene's green light are the same light
-  var sig = new THREE.DirectionalLight(0x3ddc8b, 0.30); sig.position.set(-620, 240, 380); scene.add(sig);
+  /* ---------- renderer, scene and lighting, once the files are in ----------
+     Returns false when there is no WebGL context. */
+  function init() {
+    try {
+      renderer = new THREE.WebGLRenderer({ canvas: canvas, antialias: true, alpha: true });
+    } catch (e) {
+      return false;
+    }
+    if (!renderer || !renderer.getContext()) return false;
+    // A phone reclaiming GPU memory, a GPU reset or switch: the canvas would
+    // go blank over a hidden photograph. Give up instead, so it comes back.
+    canvas.addEventListener("webglcontextlost", function (e) {
+      e.preventDefault();
+      giveUp();
+    }, false);
+
+    renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+    renderer.outputEncoding = THREE.sRGBEncoding;
+    renderer.toneMapping = THREE.ACESFilmicToneMapping;
+    renderer.toneMappingExposure = 1.05;
+
+    scene = new THREE.Scene();
+    camera = new THREE.PerspectiveCamera(26, 16 / 9, 1, 8000);
+    TARGET = new THREE.Vector3(-80, 128, 0);
+
+    scene.environment = RQ.studioEnv(renderer);
+    key = new THREE.DirectionalLight(0xfff6ec, 0.38);
+    key.position.set(300, 500, 600);
+    scene.add(key);
+    RQ.enableShadows(renderer, key);
+    var rimW = new THREE.DirectionalLight(0xffd9a8, 0.22); rimW.position.set(500, -100, -500); scene.add(rimW);
+    var rimC = new THREE.DirectionalLight(0xbcd0e6, 0.30); rimC.position.set(-500, 200, -550); scene.add(rimC);
+    // the 520 nm the circuit actually runs on, thrown from the reader's left so
+    // the reveal's green light and the scene's green light are the same light
+    sig = new THREE.DirectionalLight(0x3ddc8b, SIG_I); sig.position.set(-620, 240, 380); scene.add(sig);
+    // the induction light itself, just outside the culture vessel's wall:
+    // off until a card asks for "light"; placed by the bottle once the
+    // model is in
+    cultureLight = new THREE.PointLight(0x3ddc8b, 0, 360, 1.4);
+    scene.add(cultureLight);
+    SIG_COL = new THREE.Color(SIGNAL);
+    return true;
+  }
 
   /* ---------- materials ---------- */
   var std = function (c, m, r, e) {
@@ -169,6 +248,9 @@ window.__homeRx = (function () {
       var mat = new THREE.MeshBasicMaterial({
         map: tex, transparent: true, depthWrite: false, blending: THREE.AdditiveBlending });
       flowMats.push(mat);
+      // the green shell-side flow is the harvest leaving the fibre from
+      // outside it: it stays up while the harvest is lit
+      if (fp.loop === "shell") glowOf.set(mat, "harvest");
       var mesh = new THREE.Mesh(geo, mat);
       mesh.renderOrder = 2;
       scene.add(mesh);
@@ -177,16 +259,18 @@ window.__homeRx = (function () {
       new THREE.MeshBasicMaterial({ color: 0xff8a2e, transparent: true, opacity: .5,
         blending: THREE.AdditiveBlending, depthWrite: false }));
     core.position.set(-405.3, 195.4, 0); core.renderOrder = 2; scene.add(core);
+    glowOf.set(core.material, "membrane");
     var halo = new THREE.Mesh(new THREE.CylinderGeometry(6.6, 6.6, 285, 16),
       new THREE.MeshBasicMaterial({ color: 0x3ddc8b, transparent: true, opacity: .22,
         blending: THREE.AdditiveBlending, depthWrite: false }));
     halo.position.set(-405.3, 195.4, 0); halo.renderOrder = 2; scene.add(halo);
+    glowOf.set(halo.material, "membrane");
   }
 
   /* ---------- the plinth ---------- */
-  // The record page's stage carries a wordmark. This one does not: the name
-  // card beside the reactor is already saying it, and saying it twice in the
-  // same frame reads as a placeholder nobody removed.
+  // The record page's stage carries a wordmark. This one does not: the
+  // heading above the reactor is already saying it, and saying it twice in
+  // the same frame reads as a placeholder nobody removed.
   var GROUND = -72;
   function roundedRect(w, d, r) {
     var s = new THREE.Shape(), x = -w / 2, y = -d / 2;
@@ -248,49 +332,190 @@ window.__homeRx = (function () {
     mast.position.set(-398, GROUND + 231, -12); scene.add(mast);
   }
 
-  /* ---------- highlight, for the parts list ---------- */
-  var comps = {};          // id -> [{ mat, hex, ei }]
-  var ACCENT = { lumen: 0xff8a2e, shell: 0x3ddc8b, both: 0x5aa9ff };
+  /* ---------- highlight, for the demand cards ---------- */
+  // A card lights the components it names and dims everything else, the one
+  // highlight primitive the homepage uses elsewhere (the big picture dims;
+  // nothing moves). Tinting alone was too faint to find on a turning model;
+  // taking the rest down, the plinth's green rim and the flow pulses
+  // included, is what makes the lit part findable at a glance. Every lit
+  // part takes the same green as the cards' border, so a card and its parts
+  // read as one thing. The dim eases in and out on the render loop; with
+  // reduced motion it is applied in one step.
+  var SIGNAL = 0x3ddc8b;   // the circuit's 520 nm, and the cards' green
+  var SIG_COL = null;      // THREE is not loaded yet; made in init()
+  var SIG_I = 0.30;        // the scene's green fill light
+  var LIT = 0.5;           // emissive added to a lit part
+  var TINT = 0.4;          // how far a lit part's own colour moves to the green
+  var DIM = 0.84;          // how far everything else goes down at full dim
+  // "unit" lights the whole machine: every part at once in full green reads
+  // as one flat shape, so each keeps more of its own colour
+  var UNIT_LIT = 0.22, UNIT_TINT = 0.16;
+  var GLOW_L = 2.3;        // the induction light at full strength
+  // Clear glass (the membrane shell, the harvest bottle, the tubes) is
+  // mostly transmission, and the renderer draws a transmissive surface
+  // nearly see-through over this transparent canvas, so a green glow on it
+  // barely shows. While it is lit it is made less clear (GLASS_TR, GLASS_LIT
+  // in paint()). Lit glass, the frosted culture bottle included, also takes
+  // the green further into its own colour (GLASS_TINT in shade()), so it
+  // reads as green glass rather than white.
+  var GLASS_TR = 0.4, GLASS_TINT = 0.8, GLASS_LIT = 0.45, GLASS_ENV = 0.55;
+  var comps = {};          // id -> [{ mat, hex, ei, tr }]
   var litIds = [];
-  // What the parts list last asked for. A part can be pointed at while the
-  // model is still loading; the request is kept and applied once it is ready.
+  // What the cards last asked for. A card can be pointed at while the model
+  // is still loading; the request is kept and applied once it is ready.
   var wantIds = [];
+  var shades = [];         // every material in the scene, with its own values
+  var litMats = null;      // the lit materials (a Set), or null
+  var glowOf = new Map();  // an additive glow that belongs to a component
+  var unitMats = new Set();// every material of the machine itself
+  var dimNow = 0, dimWant = 0, lightNow = 0, lightWant = 0;
+
+  function has(id) { return litIds.indexOf(id) >= 0; }
 
   function applyHighlight() {
     if (!ready) return;
     if (wantIds.join(" ") === litIds.join(" ")) return;
     litIds.forEach(function (x) { paint(x, 0); });
     litIds = wantIds.slice();
-    litIds.forEach(function (x) { paint(x, 0.45); });
+    litIds.forEach(function (x) { paint(x, x === "unit" ? UNIT_LIT : LIT); });
+    litMats = null;
+    if (litIds.length) {
+      litMats = new Set();
+      litIds.forEach(function (x) {
+        (comps[x] || []).forEach(function (m) { litMats.add(m.mat); });
+      });
+    }
+    dimWant = litIds.length ? 1 : 0;
+    lightWant = has("light") ? 1 : 0;
+    if (reduced) { dimNow = dimWant; lightNow = lightWant; }
+    shade();              // at once for the parts that changed sides
     if (reduced) render();
   }
 
+  // Additive glows (the flow pulses, the plinth light) fade; surfaces darken,
+  // so depth sorting is left alone and nothing turns see-through. A lit part
+  // also takes some of the green into its own colour, so a white fibre or a
+  // clear bottle reads as lit rather than just brighter. A glow that belongs
+  // to a lit component (the beam in the photometer, the glow inside the
+  // membrane) stays up with it, and with "unit" every glow of the machine
+  // does. The scene's green fill goes down with the rest, or the dimmed
+  // glass picks it up and reads as tinted.
+  function shade() {
+    var k = 1 - DIM * dimNow, unit = has("unit");
+    var tint = unit ? UNIT_TINT : TINT;
+    shades.forEach(function (s) {
+      var m = s.mat, lit = !!(litMats && litMats.has(m)), f = lit ? 1 : k;
+      if (s.additive) {
+        if ((s.comp && has(s.comp)) || (unit && s.unit)) f = 1;
+        m.opacity = s.op * f;
+        return;
+      }
+      if (s.color) {
+        m.color.copy(s.color);
+        if (lit) m.color.lerp(SIG_COL, !unit && s.glass ? GLASS_TINT : tint);
+        else m.color.multiplyScalar(f);
+      }
+      // lit glass also reflects less of the studio, whose white would wash
+      // its green out
+      if (s.env !== undefined) m.envMapIntensity = s.env * (lit && !unit && s.glass ? GLASS_ENV : f);
+      if (s.ei !== undefined && !lit) m.emissiveIntensity = s.ei * f;
+    });
+    if (sig) sig.intensity = SIG_I * (1 - 0.8 * dimNow);
+    if (cultureLight) cultureLight.intensity = GLOW_L * lightNow;
+  }
+
+  function entry(o) {
+    return { mat: o.material, hex: o.material.emissive.getHex(), ei: o.material.emissiveIntensity || 0,
+             tr: o.material.transmission || 0 };
+  }
   function indexComponents() {
     if (typeof BIO_COMPONENTS === "undefined") return;
     BIO_COMPONENTS.forEach(function (def) {
       var found = [];
       def.meshes.forEach(function (n) {
         var o = scene.getObjectByName(n);
-        if (!o || !o.material || !o.material.emissive) return;
-        found.push({ mat: o.material, hex: o.material.emissive.getHex(), ei: o.material.emissiveIntensity || 0 });
+        if (!o || !o.material) return;
+        // a glow with no surface of its own (the photometer's beam) is
+        // kept up while its component is lit
+        if (o.material.blending === THREE.AdditiveBlending) { glowOf.set(o.material, def.id); return; }
+        if (o.material.emissive) found.push(entry(o));
       });
-      if (found.length) comps[def.id] = { flow: def.flow, meshes: found };
+      if (found.length) comps[def.id] = found;
+    });
+    // the harvest line: the shell-side tubes named in FLOW_PATHS
+    if (typeof FLOW_PATHS !== "undefined") {
+      FLOW_PATHS.forEach(function (fp) {
+        var o = fp.loop === "shell" && scene.getObjectByName(fp.name);
+        if (!o || !o.material || !o.material.emissive) return;
+        (comps.harvest = comps.harvest || []).push(entry(o));
+      });
+    }
+    // the whole machine: every part in the part list
+    var unit = [];
+    BIO_PARTS.forEach(function (p) {
+      var o = scene.getObjectByName(p.file);
+      if (!o || !o.material) return;
+      unitMats.add(o.material);
+      if (o.material.emissive) unit.push(entry(o));
+    });
+    comps.unit = unit;
+    // every material in the scene, plinth and flow included, with the values
+    // shade() scales from
+    var seen = new Set();
+    scene.traverse(function (o) {
+      var m = o.isMesh && o.material;
+      if (!m || seen.has(m)) return;
+      seen.add(m);
+      shades.push({
+        mat: m,
+        additive: m.blending === THREE.AdditiveBlending,
+        comp: glowOf.get(m) || null,
+        unit: unitMats.has(m) || flowMats.indexOf(m) >= 0 || glowOf.has(m),
+        color: m.color ? m.color.clone() : null,
+        glass: (m.transmission || 0) >= 0.6,   // clear and frosted glass
+        env: m.envMapIntensity,
+        op: m.opacity,
+        ei: m.emissiveIntensity
+      });
     });
   }
 
+  // an opaque part has no emissive of its own (black at intensity 1), so its
+  // lit strength is the whole intensity; glass already glows a little, so
+  // its strength goes on top. Glass (the membrane shell, the harvest
+  // bottle, the tubes, the frosted culture bottle) is made less clear while
+  // it is lit (GLASS_TR), or the Cell-free card lights little more than a
+  // cap, and it gets a gentler glow of its own (GLASS_LIT), because a bright
+  // one tone-maps to white. With "unit" the glass keeps its clearness, so
+  // the whole machine does not turn milky.
   function paint(id, strength) {
-    var c = comps[id];
-    if (!c) return;
-    var col = ACCENT[c.flow] || ACCENT.both;
-    c.meshes.forEach(function (m) {
+    (comps[id] || []).forEach(function (m) {
+      var clear = m.tr >= 0.6 && id !== "unit";
       if (strength > 0) {
-        m.mat.emissive.setHex(col);
-        m.mat.emissiveIntensity = m.ei + strength;
+        m.mat.emissive.setHex(SIGNAL);
+        m.mat.emissiveIntensity = m.hex === 0 ? strength
+          : m.ei + (clear ? GLASS_LIT : strength);
+        if (clear) m.mat.transmission = GLASS_TR;
       } else {
         m.mat.emissive.setHex(m.hex);
         m.mat.emissiveIntensity = m.ei;
+        if (m.tr) m.mat.transmission = m.tr;
       }
     });
+  }
+
+  // The induction light sits just outside the culture vessel's wall, on the
+  // side the reader looks from, a third of the way up: it lights the culture
+  // through the wall and throws green onto the plinth round it.
+  function placeCultureLight() {
+    var o = scene.getObjectByName("media-bottle");
+    if (!o || !cultureLight) return;
+    o.geometry.computeBoundingBox();
+    var b = o.geometry.boundingBox;
+    var cx = (b.min.x + b.max.x) / 2, cz = (b.min.z + b.max.z) / 2;
+    var r = Math.max(b.max.x - b.min.x, b.max.z - b.min.z) / 2 + 45;
+    cultureLight.position.set(cx + r * Math.sin(HOME), b.min.y + (b.max.y - b.min.y) * 0.32,
+                              cz + r * Math.cos(HOME));
   }
 
   /* ---------- drive ---------- */
@@ -298,7 +523,7 @@ window.__homeRx = (function () {
   var dragging = false, userHeld = false, px = 0, py = 0;
   var ready = false, booted = false;
 
-  // The stage is one screen in a page that is roughly fifteen. A render loop
+  // The model is one screen in a page that is roughly fifteen. A render loop
   // that keeps drawing while the reader is down in the vision section costs a
   // GPU for nothing and makes scrolling stutter, so the loop parks itself
   // whenever the stage leaves the viewport and picks the clock back up where
@@ -315,19 +540,32 @@ window.__homeRx = (function () {
     if (paused && visible && ready && !reduced) { paused = false; lastNow = performance.now(); run(); }
   });
 
+  // The reader takes the turn over only by actually dragging. A tap leaves
+  // the idle turn running, and so does a swipe the browser takes for
+  // scrolling (touch-action: pan-y): that gesture ends in pointercancel,
+  // sometimes after a first move, so a cancel puts back whatever the reader
+  // had before it began.
+  var sx = 0, sy = 0, heldBefore = false;
   canvas.addEventListener("pointerdown", function (e) {
-    dragging = true; userHeld = true; px = e.clientX; py = e.clientY;
+    dragging = true; heldBefore = userHeld; px = sx = e.clientX; py = sy = e.clientY;
     canvas.setPointerCapture(e.pointerId);
   });
   canvas.addEventListener("pointermove", function (e) {
     if (!dragging) return;
+    if (!userHeld) {
+      if (Math.abs(e.clientX - sx) + Math.abs(e.clientY - sy) <= 3) return;
+      userHeld = true;
+    }
     yaw -= (e.clientX - px) * .005;
     pitch = Math.max(-.35, Math.min(.9, pitch + (e.clientY - py) * .004));
     px = e.clientX; py = e.clientY;
     if (reduced) render();
   });
   canvas.addEventListener("pointerup", function () { dragging = false; });
-  canvas.addEventListener("pointercancel", function () { dragging = false; });
+  // the loop picks up a new box size on its next frame; a reduced-motion page
+  // has no loop, so it redraws here instead of waiting for a drag
+  window.addEventListener("resize", function () { if (ready && reduced) render(); });
+  canvas.addEventListener("pointercancel", function () { dragging = false; userHeld = heldBefore; });
 
   function size() {
     var w = canvas.clientWidth || 1280, h = canvas.clientHeight || 720;
@@ -340,17 +578,50 @@ window.__homeRx = (function () {
   }
   function render() { size(); place(); renderer.render(scene, camera); }
 
+  // The idle turn. While a card has parts lit, the model comes round to the
+  // three-quarter view it opens on, where every part can be seen, and holds
+  // there; the swing is capped at a gentle speed so a far turn never whips.
+  // When the light goes out the turn picks up again from wherever it
+  // stopped, easing back to speed. A reader who has dragged the model keeps
+  // the view they chose (the caller skips this).
+  var TAU = Math.PI * 2, SPIN = 0.055, spin = 1;
+  function turn(dt) {
+    if (litIds.length) {
+      var goal = HOME + Math.round((yaw - HOME) / TAU) * TAU;
+      var step = (goal - yaw) * Math.min(1, dt * 3);
+      var cap = dt * 0.9;
+      yaw += Math.max(-cap, Math.min(cap, step));
+      spin = 0;
+    } else {
+      spin += (1 - spin) * Math.min(1, dt * 1.2);
+      yaw += dt * SPIN * spin;
+    }
+  }
+
   function run() {
     if (reduced) { render(); return; }
     lastNow = performance.now();
     (function tick(now) {
+      if (!ready) return;
       if (!visible || document.hidden) { paused = true; return; }
-      clock += Math.min(0.05, (now - lastNow) / 1000);   // cap the step so a
-      lastNow = now;                                     // long park does not
-      var t = clock;                                     // spin the reactor
-      if (!dragging && !userHeld) yaw = -0.62 + t * 0.055;
+      var real = Math.max(0, (now - lastNow) / 1000);
+      var dt = Math.min(0.05, real);                     // cap the step so a
+      clock += dt;                                       // long park does not
+      lastNow = now;                                     // spin the reactor
+      var t = clock;
+      if (!dragging && !userHeld) turn(dt);
       flowMats.forEach(function (m) { m.map.offset.x = -(t * FLOW_SPEED) / DASH_MM; });
       rotors.forEach(function (r) { r.rotation.z = t * 1.7; });
+      if (dimNow !== dimWant || lightNow !== lightWant) {
+        // the fades run on real time, not the capped step, so a slow frame
+        // rate does not leave the last card's light up for seconds
+        var e = Math.min(real, 0.5);
+        dimNow += (dimWant - dimNow) * (1 - Math.exp(-e * 9));
+        if (Math.abs(dimWant - dimNow) < 0.004) dimNow = dimWant;
+        lightNow += (lightWant - lightNow) * (1 - Math.exp(-e * 7));
+        if (Math.abs(lightWant - lightNow) < 0.004) lightNow = lightWant;
+        shade();
+      }
       render();
       requestAnimationFrame(tick);
     })(performance.now());
@@ -367,14 +638,27 @@ window.__homeRx = (function () {
     done++;
     if (loadPct) loadPct.textContent = Math.round((done / BIO_PARTS.length) * 100) + "%";
     if (done < BIO_PARTS.length) return;
-    if (failedParts > BIO_PARTS.length / 3) { giveUp(); if (loadEl) loadEl.hidden = true; return; }
-    buildFlow();
-    buildStage();
-    RQ.shadowAll(scene);
-    RQ.fitShadow(key, scene);
-    indexComponents();
+    if (failedParts > BIO_PARTS.length / 3) { giveUp(); return; }
+    // this runs inside the loader's promise, where nothing would catch a
+    // throw: any failure in the build leaves the photograph, not a stuck pill
+    try {
+      buildFlow();
+      buildStage();
+      RQ.shadowAll(scene);
+      RQ.fitShadow(key, scene);
+      indexComponents();
+      placeCultureLight();
+    } catch (e) {
+      giveUp();
+      return;
+    }
     if (loadEl) loadEl.hidden = true;
     ready = true;
+    // the photograph underneath gives way only now, so the box is never
+    // empty; until now the canvas was hidden from assistive tech and the
+    // photograph's alt stood for it
+    host.classList.add("is-ready");
+    canvas.removeAttribute("aria-hidden");
     applyHighlight();
     run();
   }
@@ -383,42 +667,60 @@ window.__homeRx = (function () {
     if (booted) return;
     booted = true;
     if (loadEl) loadEl.hidden = false;
-    // The record page moved its geometry into models/_pack.json + _pack.bin;
-    // the 55 .stl files this used to read no longer exist, which is why the
-    // canvas fell back to the poster on every load. PackedModel.bundle() is a
+    loadDeps(function (ok) {
+      if (!ok) { giveUp(); return; }
+      try {
+        if (!init()) { giveUp(); return; }
+        loadModel();
+      } catch (e) {
+        giveUp();
+      }
+    });
+  }
+
+  function loadModel() {
+    // The geometry is one packed bundle, models/_pack.json + _pack.bin (the
+    // 55 separate .stl files no longer exist). PackedModel.bundle() is a
     // drop-in for THREE.STLLoader: same load(url, ok, progress, fail) shape,
     // resolved by basename, one 2.4 MB fetch for the whole assembly.
     var stl = PackedModel.bundle(MODEL_BASE);
     BIO_PARTS.forEach(function (p) {
       stl.load(MODEL_BASE + p.file + ".stl", function (geo) {
-        RQ.smoothNormals(geo);
-        var mesh = new THREE.Mesh(geo, (MATERIALS[p.mat] || MATERIALS.blackPrint)());
-        mesh.name = p.file;
-        if (p.mat === "beam") mesh.renderOrder = 3;
-        if (p.file === "pump-rotor-back" || p.file === "pump-rotor-front") {
-          geo.translate(-ROTOR.x, -ROTOR.y, 0);
-          mesh.position.set(ROTOR.x, ROTOR.y, 0);
-          rotors.push(mesh);
+        // a part that cannot be built counts as a failed part, never as a
+        // throw inside the loader's promise (which would leave the pill up)
+        try {
+          RQ.smoothNormals(geo);
+          var mesh = new THREE.Mesh(geo, (MATERIALS[p.mat] || MATERIALS.blackPrint)());
+          mesh.name = p.file;
+          if (p.mat === "beam") mesh.renderOrder = 3;
+          if (p.file === "pump-rotor-back" || p.file === "pump-rotor-front") {
+            geo.translate(-ROTOR.x, -ROTOR.y, 0);
+            mesh.position.set(ROTOR.x, ROTOR.y, 0);
+            rotors.push(mesh);
+          }
+          scene.add(mesh);
+        } catch (e) {
+          failedParts++;
         }
-        scene.add(mesh);
         tally();
       }, undefined, function () { failedParts++; tally(); });
     });
   }
 
-  return {
+  var self = {
     start: boot,
     isReady: function () { return ready; },
     redraw: function () { if (ready) render(); },
     failed: false,
     // One card on the homepage can name several components at once — the
-    // closed-loop claim points at the pump, the vent and the photometer
-    // together — so this takes an id, a space-separated list of ids, or an
-    // array, and lights the whole set.
+    // Monitored card points at the photometer and the vent together — so
+    // this takes an id, a space-separated list of ids, or an array, and
+    // lights the whole set.
     highlight: function (id) {
       wantIds = (id == null ? [] : (Array.isArray(id) ? id : String(id).split(/\s+/)))
                   .filter(Boolean);
       applyHighlight();
     },
   };
+  return self;
 })();

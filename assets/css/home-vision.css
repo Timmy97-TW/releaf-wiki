@@ -1,0 +1,199 @@
+/* =============================================================================
+   VISION: "Every farmer a biomanufacturer."  One becomes many.
+   -----------------------------------------------------------------------------
+   One ink band, and the page's last word. The words set up one farm and the
+   reactor at the end of its field; the drawing starts on that farm and pulls
+   back, scroll-linked and short, until the frame holds a whole valley of
+   small farms at first light, each with its own reactor lit green. The line
+   lands as the last ones light, and its full stop lights last. Then two
+   short notes (what it is for, how it gets there), and the band ends on ink,
+   straight into #explore.
+
+   THE RESTING STATE IS THE FINISHED STATE. The drawing is an <img> of the last
+   frame and the line sits on its sky, full stop lit, so with scripting off or
+   reduced motion the section is static and complete. home-vision.js adds
+   .is-live (the runway and the sticky stage) only once its drawing has loaded
+   and only while the section is below the screen, then .is-ready once its
+   canvas is drawing, and .is-lit when the last farm is on; every "not there
+   yet" rule below is scoped under one of those. The reactors' glows sit on a
+   second canvas (.vl-glows) so the fireflies can move them alone.
+
+   The drawing's colours live in build/vision-valley.py, which writes both the
+   <img> (the SVG) and the canvas's layers (the JSON). This file only lays the
+   section out.
+
+   Classes are prefixed vl- (valley) so they cannot collide with the big
+   picture's generic names (.node, .link, .task) or anything else on the
+   page.
+   ========================================================================== */
+
+#vision.vl {
+  --vl-h: clamp(30rem, calc(100svh - var(--nav-h)), 64rem);
+  /* the words on the sky; the static picture's tall-screen rule below
+     estimates where they end from the same four values */
+  --vl-pad: clamp(1.25rem, 5svh, 3.5rem);
+  --vl-fs: clamp(2.125rem, .75rem + 4.9vw, 5.25rem);
+  --vl-gap: var(--sp-4);
+  --vl-gfs: var(--text-lede);
+  --vl-glines: 2;
+  padding: 0; background-color: var(--ink); color: var(--leaf-100);
+}
+.vl :focus-visible { outline-color: var(--sig-green); }
+
+/* ---- the words before the drawing ---- */
+.vl-head { padding-top: var(--sp-8); padding-bottom: var(--sp-5); }
+.vl-intro {
+  margin: 0 0 var(--sp-4); max-width: 22ch;
+  font-family: var(--font-display);
+  font-size: var(--text-h2); font-weight: 700; line-height: 1.14; letter-spacing: -.018em;
+  color: var(--white); text-wrap: balance;
+}
+.vl-head .lede { margin: 0; }
+
+/* ---- the stage: one frame, the height of the screen under the nav ---- */
+.vl-run { position: relative; }
+.vl-stage {
+  position: relative; overflow: hidden;
+  height: var(--vl-h);
+  background-color: var(--ink);
+  isolation: isolate; contain: layout paint;
+}
+.vl-img, .vl-canvas {
+  position: absolute; inset: 0; z-index: 0;
+  display: block; width: 100%; height: 100%;
+}
+/* The picture is 1600 x 1800: the valley at the foot, a tall sky above it.
+   A phone shows its whole height and about half its width. A wide screen
+   shows its whole width, so the picture is 112.5vw tall and only its lower
+   part fits: it is moved up until the horizon (two thirds of the way down
+   the picture, 75.25vw from its top) sits about 72px below the end of the
+   words, which end near 5svh + 10vw + 104px (the same rule home-vision.js
+   uses for its own last frame), and never so far that the stage shows past
+   the picture's foot. */
+.vl-img { object-fit: cover; object-position: 50% 91%; }
+@media (min-aspect-ratio: 1/1) {
+  .vl-img {
+    object-position: 50% min(0px, max(calc(var(--vl-h) - 112.5vw), calc(5svh - 65.25vw + 176px)));
+  }
+}
+/* A tall screen (a phone, a tablet held upright) shows about half the
+   valley's width, as the script's last frame does: the picture is up to 1.3
+   times the stage's height with its foot on the stage's foot, so the valley
+   fills the lower half of the frame instead of a strip under a tall sky.
+   Up to: the highest streak of lit cloud (its top 1095 of the picture's
+   1800 units above the foot) must sit 36px under the sentence, as it does
+   on the canvas, so the picture is no taller than 1800/1095 of the stage
+   left below that point, and never shorter than the stage. */
+@media (max-aspect-ratio: 1/1) {
+  .vl-img {
+    --vl-words: calc(var(--vl-pad) + 2.04 * var(--vl-fs) + var(--vl-gap) + var(--vl-glines) * 1.5 * var(--vl-gfs));
+    top: auto; object-position: 50% 100%;
+    height: clamp(100%, calc(164.4% - 1.644 * (var(--vl-words) + 36px)), 130%);
+  }
+}
+/* once the canvas is drawing, the <img> stays in the page for its alt text */
+.vl.is-ready .vl-img { opacity: 0; }
+/* The drawing has no hard edges: its top melts out of the words above it and
+   its foot into the ink the notes sit on. Over the canvases (it is later in
+   the stage at the same level), under the words. */
+.vl-stage::after {
+  content: ""; position: absolute; inset: 0; z-index: 0; pointer-events: none;
+  background:
+    linear-gradient(to bottom, var(--ink), rgb(7 11 9 / 0) 3rem),
+    linear-gradient(to top, var(--ink), rgb(7 11 9 / .6) 5%, rgb(7 11 9 / 0) 10%);
+}
+
+/* the sky: the line, and the sentence under it */
+.vl-sky {
+  position: absolute; left: 0; right: 0; top: 0; z-index: 1;
+  padding-top: var(--vl-pad);
+  pointer-events: none;
+}
+.vl-line {
+  margin: 0; max-width: 16ch;
+  font-family: var(--font-display);
+  font-size: var(--vl-fs);
+  font-weight: 750; line-height: 1.02; letter-spacing: -.034em;
+  color: var(--white);
+  text-wrap: balance;
+}
+.vl-gloss {
+  margin: var(--vl-gap) 0 0; max-width: 46ch; text-wrap: balance;
+  font-size: var(--vl-gfs); line-height: 1.5;
+  color: var(--leaf-200);
+}
+/* A soft dark halo keeps the words at reading contrast wherever the sky
+   behind them brightens, without a box round them. */
+.vl-line, .vl-gloss { text-shadow: 0 1px 2px rgb(7 11 9 / .7), 0 0 18px rgb(7 11 9 / .75); }
+/* The full stop is one more reactor coming on: --sig-green, the only thing on
+   the page that glows, and on ink only. Lit in the resting state. */
+.vl-stop {
+  color: var(--sig-green);
+  text-shadow: 0 0 .28em rgb(53 224 138 / .55), 0 1px 2px rgb(7 11 9 / .7);
+  transition: color .5s ease, text-shadow .5s ease;
+}
+.vl.is-ready:not(.is-lit) .vl-stop { color: var(--white); text-shadow: 0 1px 2px rgb(7 11 9 / .7), 0 0 18px rgb(7 11 9 / .75); }
+
+/* the first reactor's label: in the opening frame only, placed by the
+   script under the reactor with a leader line up to its plinth */
+.vl-rx {
+  position: absolute; left: 0; top: 0; z-index: 1;
+  display: none;
+  margin: 0; max-width: 17rem; padding-left: .6rem;
+  font-size: var(--text-sm); line-height: 1.4; font-weight: 500;
+  color: var(--leaf-100);
+  text-shadow: 0 1px 2px rgb(7 11 9 / .85), 0 0 14px rgb(7 11 9 / .85);
+  pointer-events: none;
+}
+.vl-rx::before {
+  content: ""; position: absolute; left: 0; bottom: calc(100% - .55em);
+  width: 1px; height: calc(var(--vl-lead, 14px) + .55em);
+  background: rgb(227 240 232 / .55);
+}
+.vl.is-ready .vl-rx { display: block; }
+
+/* ---- the scroll-linked version (script only) ----
+   The runway is the stage plus one screen of scroll. The stage sticks under
+   the nav while the camera pulls back (the first 60 % of that screen), and
+   holds the finished frame, line landed, for the last 35 %. */
+.vl.is-live .vl-run { height: calc(var(--vl-h) + 100svh); }
+.vl.is-live .vl-stage { position: sticky; top: var(--nav-h); }
+/* the line and its sentence wait for the last farm, and land together;
+   --vl-land is written by the script */
+.vl.is-ready .vl-line,
+.vl.is-ready .vl-gloss {
+  opacity: var(--vl-land, 1);
+  transform: translateY(calc((1 - var(--vl-land, 1)) * 1rem));
+}
+
+/* ---- the notes ---- */
+.vl-notes {
+  display: grid; gap: var(--sp-5);
+  padding-top: var(--sp-6); padding-bottom: var(--sp-8);
+}
+@media (min-width: 760px) { .vl-notes { grid-template-columns: repeat(2, minmax(0, 27rem)); gap: var(--sp-7); } }
+.vl-note { border-top: 1px solid rgb(255 255 255 / .16); padding-top: var(--sp-4); }
+.vl-note h3 {
+  margin: 0 0 var(--sp-2);
+  font-family: var(--font-display); font-size: var(--text-base); font-weight: 650;
+  color: var(--white);
+}
+.vl-note p { margin: 0; max-width: 46ch; text-wrap: pretty; font-size: var(--text-sm); line-height: 1.6; color: var(--leaf-200); }
+.vl-more {
+  display: inline-block; margin-top: var(--sp-3);
+  font-size: var(--text-sm); font-weight: 600; color: var(--leaf-200);
+  text-decoration: underline; text-underline-offset: 3px; text-decoration-thickness: 1px;
+}
+.vl-more::after { content: " \2192"; }
+.vl-more:hover { color: var(--white); }
+
+/* a short screen: the words climb, so the sentence stays on the sky */
+@media (max-height: 760px) and (min-width: 640px) {
+  #vision.vl { --vl-pad: 1.25rem; --vl-fs: clamp(2rem, .8rem + 3.3vw, 3.6rem); --vl-gap: var(--sp-3); }
+}
+
+@media (max-width: 639px) {
+  #vision.vl { --vl-gfs: var(--text-base); }
+  .vl-rx { max-width: 14rem; }
+}
+@media (max-width: 359px) { #vision.vl { --vl-glines: 3; } }

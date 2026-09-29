@@ -1,44 +1,48 @@
 /* =============================================================================
    ReLeaf: the homepage
    -----------------------------------------------------------------------------
-   The page is one argument told in eleven beats, in this order:
+   The page is one argument told in eight beats, in this order:
 
-     1  first visual   two photographs, one farm and one reactor, and the
-                       sentence that names the gap between them
-    1b  chapters       a dot rail in the right margin: which beat you are in,
-                       and a way to jump. Wide screens only
-     2  problem        three beats in home-problem.css: the threat, the gap
-                       between the routes in use today, and the years a new
-                       biological spends before it reaches a farmer
-     3  solution       the dark act: the pathway collapses, then light, then
-                       the machine, then the name
-     4  system         the same machine, held still, with five decisions named
-     5  synbio         four modules from stress signal to secreted protein
-     6  iHP            the people who changed the design
-     7  product        the packaged design turning, five properties beside it
-     8  big picture    the whole year: five steps and the work that feeds them
-     9  reach          the same map as beat 2, read forward. It is JOINED to
-                       beat 8 by the trunk's tail and the two must stay adjacent
-    10  explore        five gates: what the project is, what it did, three prizes
-    11  explore        a map of the wiki, drawn as relationships
+     1  first visual   Farmer Chen's farm on top and a render of the housed
+                       reactor under it, found with the pointer (the spotlight)
+    1b  chapters       a dot rail in the right margin, one dot per section
+                       kicker: which beat you are in, and a way to jump. Wide
+                       screens only
+     2  problem        01 the threat, 02 the gap, 03 the hour and the five
+                       demands they earn, on white. home-problem.css holds
+                       their shared frame, and each has its own sheet:
+                       home-threat.css, home-gap.css, home-distance.css and
+                       (with the reactor) home-reactor.css
+     3  our answer     the reactor, the main character: one WebGL model on
+                       ink with the same five demands around it; pointing at
+                       a demand lights its parts (home-reactor.css)
+     4  synbio         the inside of the reactor: a header row, one figure,
+                       then the four modules as one run from light to protein
+     5  iHP            the people who shaped the five demands, and the one
+                       objection that became a design rule (home-ihp.css)
+     6  big picture    one line of seven stations from the forecast to the
+                       crop, with the work beside it (big-picture.css)
+     7  vision         "Every farmer a biomanufacturer.": one farm becomes a
+                       valley of them (home-vision.css)
+     8  explore        where to read next: a few pages, one line each
 
    Rules that survived the redesign and should survive the next one:
 
    · NOTHING HERE IS A NUMBER, QUOTE, DATE OR RESULT that is not also on a
      sub-page with its evidence attached. The homepage is a door, not a source.
-   · THE PROBLEM SECTION LIVES IN home-problem.css. Beat 2 is three sections
-     of its own; what remains here is the pathway, which is the last beat of
-     the problem and the first frame of the dark act.
-   · THE PATHWAY IS THE PROBLEM'S CLOSING ARGUMENT, not the climate. Climate is the reason the
-     pathway is running out of slack. Section 2 has to keep those apart or the
-     project reads as one more climate poster.
+     The problem arc may cite outside literature, only through its numbered
+     source list.
+   · NO DISCLAIMERS ("still a plan", "design intent", "illustration", "nothing
+     deployed"). Design is described as what the system does; an unmeasured
+     result is never stated as a measurement.
    · THE PHOTOGRAPHS ARE ORDINARY on purpose. A cleanroom argues that you need
      a facility; a folding table argues that you do not.
-   · THE DARK ACT (3 and 4) shares ONE WebGL stage between its beats. Do not
-     add a second canvas — the reactor is 55 STL files and they are parsed once.
+   · ONE WebGL canvas, in #solution. Do not add a second one: the reactor is
+     one packed bundle (hardware/bioreactor/models/_pack.*), parsed once.
    · EVERY SCROLL-DRIVEN EFFECT has a resting state that is correct with no
-     JavaScript and no motion. Check with prefers-reduced-motion before
-     shipping any change to .stagewrap.
+     JavaScript and no motion. Check with prefers-reduced-motion and with
+     scripting off before shipping any change to the reactor, 03's figure or
+     the vision.
    ========================================================================== */
 
 *, *::before, *::after { box-sizing: border-box; }
@@ -65,14 +69,16 @@ a { color: var(--leaf-700); text-underline-offset: .18em; }
   overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; border: 0;
 }
 .sitenav-spacer { height: var(--nav-h); }
+/* nav.js draws the site bar; without scripting there is no bar to clear, so
+   nothing sticks, pins or scrolls to a place 68px below the top edge */
+@media (scripting: none) { :root { --nav-h: 0px; } .sitenav-spacer { display: none; } }
 
-/* homepage-only tokens: the dark act, and the one accent that is allowed to
-   glow. --sig-green is the 520 nm the reactor actually runs on. */
+/* homepage-only tokens: the ink ground, and the one accent that is allowed
+   to glow. --sig-green is the 520 nm the reactor actually runs on. */
 :root {
   --ink:        #070b09;
-  --ink-2:      #0d1512;
   --sig-green:  #35e08a;
-  --sig-dim:    #1b7f4d;
+  --sig-dim:    #1b7f4d;   /* the chapters rail's current dot on white */
 }
 
 /* ---------------------------------------------------------------- bands --- */
@@ -80,6 +86,16 @@ a { color: var(--leaf-700); text-underline-offset: .18em; }
 .band { padding: var(--sp-8) 0; }
 .band__inner { max-width: var(--max); margin: 0 auto; padding: 0 var(--sp-5); }
 @media (min-width: 640px) { .band__inner { padding: 0 var(--sp-6); } }
+/* THE RAIL GUTTER. From 1180px the chapters rail (1b) is fixed in the right
+   margin, and below about 1345px that margin is narrower than the rail. Every
+   column on the page (.band__inner here, .pb-inner in home-problem.css, the
+   reactor's --pad-x in home-reactor.css) pads by this one value, so the
+   sections keep one left edge and all of them clear the rail: 64px from the
+   window edge until the page's own margin is wider than that. */
+@media (min-width: 1180px) {
+  :root { --rail-gutter: max(var(--sp-6), calc(64px - max(0px, (100vw - var(--max)) / 2))); }
+  .band__inner { padding-inline: var(--rail-gutter); }
+}
 /* TWO GROUNDS ONLY: white and ink. The "tint" bands used to be pale leaf with a
    leaf hairline top and bottom; they are plain white now, like every other light
    band. The class stays so the markup does not have to change. */
@@ -102,26 +118,23 @@ h2.band__title {
   color: var(--leaf-900);
   max-width: 26ch;
 }
-.band--dark h2.band__title { color: var(--white); }
 
 .lede { max-width: 62ch; font-size: var(--text-lede); line-height: 1.55; color: var(--gray-600); }
 .band--dark .lede { color: var(--leaf-200); }
 
-/* The drafting mark (class="ai", nav.css) is a dark orange tuned for white.
-   On this page's ink grounds it uses the light orange the dark pages use. */
-.hero, .pb-dist, .stagewrap, .band--dark { --ai-ink: #fb923c; }
-.stagewrap .chainhead, .stagewrap .chainfoot { --ai-ink: #c2410c; }   /* these two sit on white paper */
-
-/* a small utility the page uses in four places: fade-and-rise once, on entry */
-.rise { opacity: 0; transform: translateY(18px); transition: opacity .7s ease, transform .7s ease; }
-.rise.in { opacity: 1; transform: none; }
-@media (prefers-reduced-motion: reduce) { .rise { opacity: 1; transform: none; transition: none; } }
+/* a small utility: fade-and-rise once, on entry (home.js piece 1). Visible
+   by default: only home.js hides it (.is-armed), and only for an element that
+   is still below the screen, so with scripting off, or a script that never
+   runs, it is simply there. */
+.rise { transition: opacity .7s ease, transform .7s ease; }
+.rise.is-armed:not(.in) { opacity: 0; transform: translateY(18px); }
+@media (prefers-reduced-motion: reduce) { .rise { transition: none; } }
+/* printed before the reader scrolled to it, an armed element is still there */
+@media print { .rise.is-armed { opacity: 1 !important; transform: none !important; transition: none !important; } }
 
 /* ============================================================= 1  HERO ==== */
-/* Two photographs meeting in a wash. Left is a farm at work, right is the
-   reactor at work, and the fade between them is the distance the project is
-   trying to close. On narrow screens the split turns vertical, because a
-   two-up at 380px is two thumbnails and reads as neither.
+/* Farmer Chen's field, full bleed, and the reactor under it: the pointer is a
+   light that finds the machine standing among the people in the photograph.
 
    COMPOSITION CONTRACT. Almost everything below is holding one arrangement in
    place, and the arrangement is the point:
@@ -130,25 +143,75 @@ h2.band__title {
        face. That is solved in the CROP, not by moving type around. The farm
        file is cut so her head sits low and centre-left, below the headline.
        Re-export the crop and you will move her face into the type.
-     · the student on the right is meant to half-dissolve into the lab. Chen is
-       not the project; the team is. Her hand, her basket and one listening
-       student read, and the seam eats the rest of him.
-     · the reactor frame is about the MACHINE. Both of the faces that stood in
-       that photograph are cropped out of the file on purpose.
+     · the student on the right is sunk by the wash. Chen is not the project;
+       the team is. Her hand, her basket and one listening student read.
+     · the reactor frame is the MACHINE and nothing else: a render of the
+       housed reactor on the hero's own ink, so the light finds an object
+       rather than a second photograph. It stands between Chen and the
+       listening student.
+     · the only other text is the foot, bottom right: the cue for the light
+       and where and when the photograph was taken.
 
    Read the notes on each rule before changing a number. */
 
 .hero { position: relative; background: var(--ink); color: var(--white); isolation: isolate; }
 
-/* The farm photograph is the base layer and spans the whole frame. The reactor
-   sits in a column of its own on the right, so each photograph is cropped to
-   the shape it is actually seen in. The reactor's left edge is masked, so the
-   seam is a fade onto the farm rather than a cut. */
-.hero__frames { position: absolute; inset: 0; display: grid; grid-template-columns: 46% 54%; }
-.hero__frame { grid-row: 1; position: relative; overflow: hidden; }
+/* THE SPOTLIGHT (Marburg 2024 did it first). Both images fill the whole
+   hero, stacked: a render of the housed reactor underneath, the farm on top.
+   The farm's mask has two layers, and the farm shows through by
+   light x zone:
+
+     · THE LIGHT, a radial gradient around (--spot-x, --spot-y) that is
+       see-through out to --spot-r and solid from --spot-fall times that.
+     · THE ZONE, a fixed soft ellipse over the machine (placed with the
+       machine, further down). Over the machine it lets the light open all
+       the way; everywhere else it lets it open only to --spot-min.
+
+   home.js writes --spot-x, --spot-y and --spot-near and says when the light
+   is on; nothing here depends on it. At rest --spot-r is 0 and the light is
+   solid everywhere, so without scripting the farm is simply whole.
+
+   THE FADE is a smoothstep (3t^2 - 2t^3) laid down as eight straight pieces
+   between --spot-r and --spot-fall x --spot-r. It leaves the core and arrives
+   at the solid farm with no slope, which is what keeps a ring from showing;
+   a straight ramp between two stops always draws one at each end. The core
+   is small and the fade is long, so the machine surfaces out of the field
+   instead of appearing behind a cut-out.
+
+   --spot-r is registered so that it transitions: the light swells open when
+   the pointer arrives and closes again when it leaves. --spot-size is
+   registered so that home.js can read the core in pixels. */
+@property --spot-r { syntax: "<length>"; inherits: true; initial-value: 0px; }
+@property --spot-size { syntax: "<length>"; inherits: true; initial-value: 0px; }
+
+.hero__frames {
+  --spot-x: 50%; --spot-y: 50%; --spot-r: 0px;
+  --spot-size: clamp(64px, 6vw, 110px);
+  --spot-fall: 2.4;
+  --spot-mask: radial-gradient(circle at var(--spot-x) var(--spot-y),
+    rgb(0 0 0 / 0)    var(--spot-r),
+    rgb(0 0 0 / .043) calc(var(--spot-r) * (1 + (var(--spot-fall) - 1) * .125)),
+    rgb(0 0 0 / .156) calc(var(--spot-r) * (1 + (var(--spot-fall) - 1) * .25)),
+    rgb(0 0 0 / .316) calc(var(--spot-r) * (1 + (var(--spot-fall) - 1) * .375)),
+    rgb(0 0 0 / .5)   calc(var(--spot-r) * (1 + (var(--spot-fall) - 1) * .5)),
+    rgb(0 0 0 / .684) calc(var(--spot-r) * (1 + (var(--spot-fall) - 1) * .625)),
+    rgb(0 0 0 / .844) calc(var(--spot-r) * (1 + (var(--spot-fall) - 1) * .75)),
+    rgb(0 0 0 / .957) calc(var(--spot-r) * (1 + (var(--spot-fall) - 1) * .875)),
+    #000              calc(var(--spot-r) * var(--spot-fall) + 1px));
+  position: absolute; inset: 0;
+  transition: --spot-r .55s cubic-bezier(.2, .7, .2, 1);
+}
+.hero__frames.is-lit { --spot-r: var(--spot-size); }
+@media (prefers-reduced-motion: reduce) { .hero__frames { transition: none; } }
+
+.hero__frame { position: absolute; inset: 0; overflow: hidden; }
 .hero__frame img { width: 100%; height: 100%; object-fit: cover; }
 
-.hero__frame--farm { grid-column: 1 / -1; }
+.hero__frame--farm {
+  z-index: 1;
+  -webkit-mask-image: var(--spot-mask), var(--spot-zone);
+          mask-image: var(--spot-mask), var(--spot-zone);
+}
 
 /* hero-farm-*.jpg is cut from the original at 6150x3705+22+8, which is very
    nearly the full width of the negative and the top 90% of its height. That
@@ -158,8 +221,8 @@ h2.band__title {
        arrive in shot rather than only her portrait;
      · it puts her head around 42% across and 44% down, which is under the
        headline horizontally but well clear of it vertically;
-     · it leaves the student's face out near 67% across, i.e. inside the seam,
-       where the mask below can dissolve him.
+     · it leaves the student's face out near 67% across, with room for the
+       machine between her and Chen.
    The file is cut at 1.66:1, a little taller than the frame it usually lands
    in (about 1.75:1 at 1280x800), so on a normal desktop window the browser
    trims HEIGHT and the horizontal arrangement above is exactly what shows.
@@ -168,96 +231,87 @@ h2.band__title {
    Below about 1.66:1, which is a short wide window or a narrow tall one, the
    trim flips to width and the frame closes in on Chen and the basket from
    both sides. That is a fair second reading rather than a bug, but it is why
-   the student is not guaranteed at every size, and why the seam has to work
-   without him. */
-.hero__frame--farm img { object-position: 50% 26%; }
+   the student is not guaranteed at every size. */
+.hero__frame--farm img { object-position: 50% 42%; }
 
-/* SINCE 28 SEPTEMBER 2026 the hero is ONE photograph, the one the team asked
-   for in Homepage Content.docx: all of us walking single file into Farmer
-   Chen's plot behind her. The reactor half, the wordmark and her quote are
-   gone at the team's request. The notes above describe the old two-frame
-   crop and are kept for the day it comes back. The walkers sit in the lower
-   middle of the frame, under the claim. */
-.hero__frame--farm img[src*="hero-walk"] { object-position: 50% 58%; }
+/* THE MACHINE. hero-bench-*.jpg is a render of the bench reactor (the same
+   model the reactor section turns; made with build/hero-bench-render.html
+   and home-reactor.js, reduced motion, 2400x1500) on the hero's own ink, and every edge of the file is exactly --ink, so it is
+   LETTERBOXED rather than cropped: the whole machine shows at any hero shape
+   and the bars are the same colour as the hero behind them. It is contained
+   in a box that starts --r-top down the hero, which keeps the top of the
+   machine under the claim and makes it a little smaller than the full height.
+   In the wide file the machine is 56% of the file wide and 75% of it tall,
+   centred 59% across and 52% down, so in a wide hero it spans the space
+   between Chen and the listening student. The portrait file (a phone held
+   upright, picked in index.html) has it centred, 54% down.
 
-.hero__frame--reactor { grid-column: 2; }
+   THE ZONE. Most of the render is ink, so a full-strength light over Chen's
+   face would put a black hole in it. The zone is an ellipse over the machine:
+   inside it the light opens all the way, outside it only to --spot-min, a
+   faint dimming. How much the inside opens is --spot-near, which home.js sets
+   from how far the pointer is from the machine: 1 on it, falling smoothly to
+   0 one and a half lights away. So a light held on Chen's face is the same
+   faint dimming everywhere it falls, and the machine's green edge does not
+   show through its tail as a bright bar; as the light comes to the machine,
+   the zone opens with it.
 
-/* hero-reactor-*.jpg is cut at 948x1318+732+624, a third of the width of the
-   original. The instructor stood on the left of the negative and the student
-   on the right; the crop walls BOTH faces off outside the frame, so what is
-   left is the vessel on its stand, the feed lines, the two carboys, the pump
-   and the lit bench. His forearm and hands stay in shot at the left, which is
-   what the picture needs: someone working, nobody posing. The wider cut that
-   included the whiteboard read as "students in a room" and buried the machine;
-   this one reads as the machine. Do not recentre it on the people.
-   Portrait, 0.72 against a frame near 0.79, so the trim is vertical and
-   object-position Y picks the band. 74% spends the trim on ceiling and holds
-   the LED strip and the pump display. */
-.hero__frame--reactor img { object-position: 50% 50%; }
-
-/* The seam. The old fade closed by 30% of the reactor column, which cut the
-   student off at full strength and left her as a clean portrait on the farm
-   side. She now falls INSIDE the ramp: about half farm across her face, so
-   she resolves into the bench instead of standing in front of it. The stops
-   are uneven for that reason. A single linear ramp either exposes her as a
-   portrait or swallows her whole.
-
-   The ramp closes at 38% rather than 58% because the lab photograph is now a
-   much wider cut: with the long ramp the rig itself sat inside the dissolve
-   and disappeared. Widen the crop again and this number has to come down
-   with it. */
-.hero__frame--reactor {
-  -webkit-mask-image: linear-gradient(90deg,
-    transparent 0%, rgb(0 0 0 / .28) 8%, rgb(0 0 0 / .55) 16%, rgb(0 0 0 / .85) 28%, #000 38%);
-          mask-image: linear-gradient(90deg,
-    transparent 0%, rgb(0 0 0 / .28) 8%, rgb(0 0 0 / .55) 16%, rgb(0 0 0 / .85) 28%, #000 38%);
+   The machine, the zone and home.js all work from the same arithmetic, in
+   container units of .hero__frames: the size of the contained file (--img-w,
+   --img-h), then the machine's centre and half-size in it (--r-cx, --r-cy,
+   --r-hw, --r-hh, fractions of the file, measured on the render). Re-render
+   the file with a different framing and these four numbers are the ones to
+   change. */
+.hero__frames {
+  container-type: size;
+  --spot-min: .3; --spot-near: 1;
+  --r-top: 9cqh; --r-bot: 0px; --r-ar: 1.6; --r-ox: .5; --r-oy: .5;
+  --r-cx: .5; --r-cy: .472; --r-hw: .436; --r-hh: .446;
+  --box-h: calc(100cqh - var(--r-top) - var(--r-bot));
+  --img-w: min(100cqw, var(--r-ar) * var(--box-h));
+  --img-h: min(var(--box-h), 100cqw / var(--r-ar));
+  --zone-x: calc(var(--r-ox) * (100cqw - var(--img-w)) + var(--r-cx) * var(--img-w));
+  --zone-y: calc(var(--r-top) + var(--r-oy) * (var(--box-h) - var(--img-h)) + var(--r-cy) * var(--img-h));
+  --zone-a: calc(1 - var(--spot-min));
+  --spot-zone: radial-gradient(calc(1.9 * var(--r-hw) * var(--img-w)) calc(1.7 * var(--r-hh) * var(--img-h))
+      at var(--zone-x) var(--zone-y),
+    rgb(0 0 0 / calc(var(--zone-a) * (1 - var(--spot-near))))        55%,
+    rgb(0 0 0 / calc(var(--zone-a) * (1 - var(--spot-near) * .844))) 66%,
+    rgb(0 0 0 / calc(var(--zone-a) * (1 - var(--spot-near) * .5)))   77.5%,
+    rgb(0 0 0 / calc(var(--zone-a) * (1 - var(--spot-near) * .156))) 89%,
+    rgb(0 0 0 / var(--zone-a)) 100%);
 }
-
-/* The lab's left edge is white brick and a lit whiteboard, and the student
-   fading into it wears a cream t-shirt, so at the seam a pale figure was
-   dissolving into a pale wall and simply vanished. This gradient sinks the
-   reactor photograph's own left edge before the two are blended, which gives
-   the student something dark to be a silhouette against and quietly drops the
-   instructor's forearm back a plane. It sits INSIDE the masked element on
-   purpose: it has to darken the lab pixels only, not the farm behind them.
-   The second layer does the same job downwards. Everything above the bench in
-   that photograph is white brick, a whiteboard and a teammate's back, and all
-   of it was competing with the rig; sinking the top half of the frame leaves
-   the lit bench as the brightest thing on that side, which is the whole
-   reason the picture is there. */
-.hero__frame--reactor::after {
-  content: ""; position: absolute; inset: 0; z-index: 1;
-  background:
-    linear-gradient(90deg,
-      rgb(7 11 9 / .93) 0%, rgb(7 11 9 / .78) 20%, rgb(7 11 9 / .44) 40%, rgb(7 11 9 / .14) 60%, transparent 76%),
-    linear-gradient(180deg,
-      rgb(7 11 9 / .90) 0%, rgb(7 11 9 / .68) 22%, rgb(7 11 9 / .24) 46%, transparent 66%);
+.hero__frame--reactor { top: var(--r-top); bottom: var(--r-bot); }
+.hero__frame--reactor img {
+  object-fit: contain;
+  object-position: calc(var(--r-ox) * 100%) calc(var(--r-oy) * 100%);
 }
 
 /* The wash. Three layers, and the first one is why Chen keeps her daylight:
    a corner shadow anchored at the top left, sized so it has faded out before
    it reaches her, holds the headline without dropping a grey sheet over the
-   whole field. The vertical layer is for the quote and the credits at the
-   bottom; the horizontal one is a light edge vignette. If you flatten these
-   back into one full-frame gradient, her face goes grey. */
-.hero__frames::after {
+   whole field. The vertical layer is for the foot at the bottom; the
+   horizontal one is an edge vignette, heavy on the right, where a second
+   student leans into the frame out of focus. If you flatten these back into
+   one full-frame gradient, her face goes grey. The wash belongs to the farm
+   frame, so the light takes it away with the farm and the machine shows at
+   the render's own exposure. */
+.hero__frame--farm::after {
   content: ""; position: absolute; inset: 0; z-index: 2;
   background:
     radial-gradient(125% 80% at 0% 0%,
       rgb(7 11 9 / .82) 0%, rgb(7 11 9 / .46) 30%, rgb(7 11 9 / .12) 54%, transparent 72%),
     linear-gradient(180deg,
       rgb(7 11 9 / .28) 0%, rgb(7 11 9 / .04) 36%, rgb(7 11 9 / .22) 72%, rgb(7 11 9 / .72) 100%),
-    linear-gradient(90deg, rgb(7 11 9 / .20) 0%, rgb(7 11 9 / .02) 52%, rgb(7 11 9 / .10) 100%);
+    linear-gradient(90deg, rgb(7 11 9 / .20) 0%, rgb(7 11 9 / .02) 52%, rgb(7 11 9 / .22) 74%, rgb(7 11 9 / .70) 100%);
 }
 
-/* One column, not two. The headline and the quote both live on the left now,
-   pinned to opposite ends of the same edge, and the middle row is the spring
-   that pushes them apart. Widths are set per block rather than by the grid so
-   the headline can run wider than the quote. */
+/* One column. The headline is pinned top left and the foot bottom right, and
+   the middle row is the spring that pushes them apart. */
 .hero__inner {
   position: relative; z-index: 3;
   max-width: var(--max); margin: 0 auto;
-  padding: clamp(1.75rem, 3.2vw, 2.75rem) var(--sp-5) clamp(2.5rem, 5vw, 4rem);
+  padding: clamp(1.75rem, 3.2vw, 2.75rem) var(--sp-5) var(--sp-5);
   min-height: min(90vh, 800px);
   display: grid;
   grid-template-columns: minmax(0, 1fr);
@@ -274,7 +328,7 @@ h2.band__title {
 .hero__head { grid-row: 1; justify-self: start; max-width: 41rem; }
 
 .hero__claim {
-  margin: var(--sp-4) 0 0;
+  margin: 0;
   font-family: var(--font-display);
   font-size: clamp(1.6rem, 3.45vw, 2.75rem);
   font-weight: 750; line-height: 1.06; letter-spacing: -.028em;
@@ -283,101 +337,90 @@ h2.band__title {
   text-shadow: 0 2px 24px rgb(7 11 9 / .5);
 }
 
-/* The team's own hand-drawn wordmark, lifted out of the full-resolution
-   official logo (the same mark in logo-720.png), straightened by the 26
-   degrees it is drawn at inside the badge, keyed off the navy and refilled
-   flat in --sig-green. iGEM blocks any font served from outside the wiki, so
-   a licensed display face was never on the table, and the team's own
-   lettering says more than one would have anyway.
-
-   It is an independent mark, not the first word of the headline, so its size
-   is set on its own rather than tracking the type beside it. */
-.hero__mark {
-  display: block;
-  height: clamp(1.6rem, 3.45vw, 2.75rem); width: auto;
-  filter: drop-shadow(0 2px 18px rgb(7 11 9 / .55));
+/* The foot: Farmer Chen's words bottom left, in a neutral box (a grey
+   rule and white type, no green), and the cue for the light bottom right.
+   The cue shows only once home.js runs (.has-spot) and fades for good the
+   first time the light opens (.is-found). */
+.hero__foot {
+  grid-row: 3; align-self: end;
+  display: flex; align-items: flex-end; justify-content: space-between; gap: var(--sp-5);
 }
-
-/* Farmer Chen, bottom left, over her own field. Verbatim, so it is marked up
-   as a real quotation, and italic because it is her voice rather than ours.
-   Deliberately SMALL: at 20rem it stops short of the basket on her arm, which
-   sits around two thirds of the way across, so the box no longer sits on the
-   part of the photograph it is quoting. Widen it and you cover the basket. */
 .hero__note {
-  grid-row: 3;
-  align-self: end; justify-self: start;
-  max-width: 34rem;
-  margin: 0;
-  padding: var(--sp-4) var(--sp-5) var(--sp-4) var(--sp-5);
-  border-left: 3px solid var(--sig-green);
-  border-radius: 0;
-  background: rgb(7 11 9 / .52);
-  backdrop-filter: blur(7px);
-  -webkit-backdrop-filter: blur(7px);
+  margin: 0; max-width: 30rem;
+  padding: var(--sp-3) var(--sp-4);
+  border-left: 2px solid rgb(255 255 255 / .55);
+  background: rgb(7 11 9 / .5);
+  -webkit-backdrop-filter: blur(6px); backdrop-filter: blur(6px);
 }
 .hero__note p {
-  margin: 0;
-  font-style: italic;
-  font-size: var(--text-sm); line-height: 1.5; color: rgb(255 255 255 / .93);
+  margin: 0; font-style: italic;
+  font-size: var(--text-sm); line-height: 1.5; color: rgb(255 255 255 / .92);
   text-wrap: pretty;
 }
 .hero__note p::before { content: "\201C"; }
 .hero__note p::after  { content: "\201D"; }
-.hero__note footer { margin-top: var(--sp-3); }
-.hero__note b { display: block; font-size: var(--text-xs); color: var(--sig-green); }
-.hero__note em {
-  display: block; margin-top: .12rem; font-style: normal;
-  font-size: .6875rem; line-height: 1.5; color: rgb(255 255 255 / .55);
+.hero__note footer { margin-top: .5rem; display: flex; flex-wrap: wrap; gap: .1rem .6rem; font-size: .75rem; line-height: 1.4; }
+.hero__note footer b { color: var(--white); font-weight: 700; }
+.hero__note footer span { color: rgb(255 255 255 / .6); }
+.hero__hint {
+  display: none; margin: 0; flex: none;
+  font-size: .75rem; letter-spacing: .02em; line-height: 1.5;
+  color: rgb(255 255 255 / .8); text-shadow: 0 1px 12px rgb(7 11 9 / .8);
+  pointer-events: none;
+  transition: opacity .6s ease;
 }
-
-
+.hero__hint::before {
+  content: ""; display: inline-block; width: .6rem; height: .6rem; margin-right: .5rem;
+  border-radius: 50%; vertical-align: -.05rem;
+  background: radial-gradient(circle, rgb(255 255 255 / .9), rgb(255 255 255 / 0) 70%);
+}
+.hero.has-spot .hero__hint { display: block; }
+.hero.is-found .hero__hint { opacity: 0; }
 
 @media (max-width: 800px) {
-  .hero__frames { grid-template-columns: 1fr; grid-template-rows: 52% 48%; }
-  .hero__frame--farm { grid-column: 1; grid-row: 1 / -1; }
-  /* Stacked, the farm frame is tall and narrow, so the browser trims WIDTH and
+  /* The farm frame is tall and narrow here, so the browser trims WIDTH and
      only about a third of the picture survives. There is no arrangement of
      hand, basket and student that fits a 375px column, so this one gives up on
-     the group and keeps Chen: 42% centres her in what is left. Do not copy the
-     wide layout's reasoning down here, it does not apply. */
-  .hero__frame--farm img { object-position: 42% 50%; }
-  .hero__frame--farm img[src*="hero-walk"] { object-position: 30% 50%; }
-  .hero__frame--reactor { grid-column: 1; grid-row: 2; }
-  /* and here the reactor frame is short and wide, so the trim is vertical
-     again but far deeper: 76% pushes past the wall and holds the vessel, the
-     pump and the LED strip in the band that is not behind the quote. */
-  .hero__frame--reactor img { object-position: 50% 76%; }
-  .hero__frame--reactor::after { background: none; }
-  .hero__frame--reactor {
-    -webkit-mask-image: linear-gradient(180deg, transparent 0%, #000 22%);
-            mask-image: linear-gradient(180deg, transparent 0%, #000 22%);
-  }
-  .hero__frames::after {
+     the group and keeps Chen: 42% centres her in what is left. */
+  .hero__frame--farm img { object-position: 45% 50%; }
+  .hero__foot { flex-direction: column; align-items: stretch; }
+  .hero__hint { align-self: flex-end; }
+  /* A bigger light, since a fingertip is not a cursor, and a shorter fade,
+     since three times this core would cover the whole column. */
+  .hero__frames { --spot-size: clamp(64px, 18vw, 100px); --spot-fall: 2.2; }
+  .hero__frame--farm::after {
     background:
       linear-gradient(180deg,
         rgb(7 11 9 / .72) 0%, rgb(7 11 9 / .22) 30%, rgb(7 11 9 / .48) 62%, rgb(7 11 9 / .93) 100%);
   }
-  /* Stacked, the quote is full width and lands square on the reactor, which
-     left the machine as a rumour behind a text box. The extra bottom padding
-     buys a strip of frame under the quote wide enough for the lit bench to
-     show, so the mobile hero still has both halves of the argument in it. */
-  .hero__inner {
-    min-height: min(92vh, 720px);
-    padding-bottom: 5.5rem;
-    row-gap: var(--sp-6);
-  }
+  .hero__inner { min-height: min(92vh, 720px); }
   .hero__head { max-width: none; }
-  .hero__note { max-width: none; }
+}
+/* A phone held upright gets the portrait render (index.html): the machine
+   centred, 42% down the file and 48% of it tall. Its box runs from the foot
+   of the claim (--r-top, the height of the two-line head) to just above the
+   foot (--r-bot), so on a short phone the machine gets smaller instead of
+   running into the type. */
+@media (max-aspect-ratio: 2/3) {
+  .hero__frames {
+    --r-top: 7.75rem; --r-bot: 5rem; --r-ar: .75; --r-oy: .5;
+    --r-cx: .5; --r-cy: .498; --r-hw: .39; --r-hh: .187;
+  }
+  /* and a portrait crop of the farm (index.html), cut from the 2400px file
+     around the part the 42% position used to keep, at full resolution: on a
+     phone the landscape 1400px file was stretched about 2.2x. Centred, it
+     frames the same Chen as before. */
+  .hero__frame--farm img { object-position: 50% 50%; }
 }
 
 /* ========================================================= 1b  CHAPTERS === */
 /* A dot rail in the right margin. It has to survive white paper, the ink of
-   the dark act and a photograph, so it carries its own blurred pill rather
-   than a colour chosen for one of them.
+   the reactor and the vision, and a photograph, so it carries its own blurred
+   pill rather than a colour chosen for one of them.
 
-   ONLY THE CURRENT CHAPTER SPEAKS. Nine labels sitting open in the margin is a
-   second navigation bar competing with the real one; nine dots and one name is
-   a position indicator. The rest arrive on hover and on focus, so a keyboard
+   ONLY THE CURRENT CHAPTER SPEAKS. Ten labels sitting open in the margin are
+   a second navigation bar competing with the real one; ten dots and one
+   name are a position indicator. The rest arrive on hover and on focus, so a keyboard
    reader gets the same page a mouse does.
 
    It appears after the hero and hides itself below 1180px, where the margin it
@@ -390,6 +433,9 @@ h2.band__title {
   transition: opacity .35s ease;
 }
 .chapters.is-shown { opacity: 1; pointer-events: auto; }
+/* a Tab into the rail shows it, in the hero and with scripting off too, so
+   focus never lands on a link nobody can see */
+.chapters:focus-within { opacity: 1; pointer-events: auto; }
 @media (max-width: 1179px) { .chapters { display: none; } }
 
 .chapters ol {
@@ -428,12 +474,18 @@ h2.band__title {
    of the way when you stop to read. Left open permanently it sits on the
    right-hand column of the big picture; shown only on hover it is not a
    position indicator at all. Scrolling is exactly the moment you want it. */
+/* It is a pill of its own, not bare text, so where it passes over the column
+   it reads as an overlay rather than printing onto the words under it. */
 .chapters.is-moving [aria-current] span {
   opacity: 1; transform: none;
-  background: transparent; color: var(--leaf-900);
-  font-weight: 700; text-shadow: 0 1px 8px var(--white), 0 1px 3px var(--white);
+  background: rgb(255 255 255 / .94); color: var(--leaf-900);
+  font-weight: 700;
+  box-shadow: 0 0 0 1px rgb(120 140 130 / .22), 0 4px 14px -6px rgb(7 11 9 / .45);
 }
-.chapters.is-moving.on-ink [aria-current] span { color: var(--white); text-shadow: 0 1px 10px rgb(7 11 9 / .95), 0 1px 3px rgb(7 11 9 / .9); }
+.chapters.is-moving.on-ink [aria-current] span {
+  background: rgb(7 11 9 / .9); color: var(--white);
+  box-shadow: 0 0 0 1px rgb(255 255 255 / .16), 0 4px 14px -6px rgb(0 0 0 / .8);
+}
 .chapters.on-ink i { background: rgb(255 255 255 / .38); }
 .chapters.on-ink [aria-current] i { background: var(--sig-green); }
 .chapters.on-ink ol { background: rgb(7 11 9 / .42); border-color: rgb(255 255 255 / .16); }
@@ -442,600 +494,155 @@ h2.band__title {
   .chapters, .chapters i, .chapters span { transition: none; }
 }
 
-/* ========================================================== 2  PROBLEM ==== */
-/* One continuous pathway, drawn once. Its length is the whole point, so it is
-   not summarised into three tidy cards. */
+/* ========================================================== 4  SYNBIO ===== */
+/* One header column, then one card: the circuit figure on top and the four
+   modules under it, on one line, each with a numbered disc in the colour of
+   its box in the figure. One numbering (1 to 4), one type family, and the
+   caption closes the card. */
 
-/* ================================================= 3 + 4  THE DARK ACT ==== */
-/* One sticky stage, four beats, one WebGL scene. The wrapper is tall; the
-   stage inside it is one screen and never moves. Beats are ordinary blocks
-   that scroll past and hand progress to home.js. */
+.sb__head { max-width: 46rem; margin-bottom: var(--sp-6); }
+.sb__head .kicker { margin-bottom: var(--sp-3); }
+.sb__head .band__title { margin-bottom: var(--sp-3); max-width: 26ch; }
+.sb__lede { margin: 0; max-width: 58ch; text-wrap: pretty; }
 
-.stagewrap {
-  position: relative; background: var(--ink); color: var(--white);
-  /* The act opens on white, because the chain arrives on the same paper the
-     problem section is printed on. --paper fades that away as the dots start
-     to move, so the page dims rather than cuts. */
-  /* THE RESTING STATE IS THE FINISHED FRAME. home.js overwrites these as
-     inline styles once it takes control; with no JavaScript the reader gets
-     the reactor, the name and the slogan, lit and centred. */
-  /* --hubY is the one number that places the collapse: the dot row sits on
-     it, the copy above and below is measured from it, and the light blooms
-     there. Move it and the whole act moves together. */
-  --hubY: 36%;
-  --paper: 0; --spark: 0; --sparkOn: 0;
-  --chainIn: 0; --conv: 1; --recentre: 1; --chainGrey: 0; --railText: 0; --railLine: 0;
-  --turn1: 0; --turn2: 0;
-  --rxIn: 1; --rxShift: 1; --nameIn: 1; --sloganIn: 1;
-}
-.stagewrap::before {
-  content: ""; position: absolute; inset: 0; background: var(--white);
-  opacity: var(--paper); pointer-events: none; z-index: 0;
-}
-
-/* Every layer in the stage is absolutely positioned. A grid with centred items
-   looks tidier in source but sizes the row to the tallest child, and the
-   poster image is 1600px tall, which silently turned the "one screen" stage
-   into a three-screen one. */
-.stage {
-  position: sticky; top: 0; height: 100vh; height: 100svh;
-  overflow: hidden; z-index: 1;
-}
-.stage > * { position: absolute; }
-
-/* the single green light, and the glow it grows into */
-.stage__spark {
-  inset: 0;
-  background:
-    radial-gradient(circle at 50% var(--hubY),
-      rgb(53 224 138 / .95) 0,
-      rgb(53 224 138 / .55) calc(var(--spark) * 1.4%),
-      rgb(27 127 77 / .28) calc(var(--spark) * 6%),
-      transparent calc(18% + var(--spark) * 34%));
-  opacity: var(--sparkOn);
-  pointer-events: none;
-}
-
-.stage__canvas { position: absolute; inset: 0; }
-.stage__canvas canvas { width: 100%; height: 100%; display: block; touch-action: pan-y; }
-
-/* the reactor group: fades in, then slides left to make room for the name */
-.stage__reactor {
-  inset: 0;
-  opacity: var(--rxIn);
-  transform: translateX(calc(var(--rxShift) * -19%)) scale(calc(1 - var(--rxShift) * .06));
-  will-change: opacity, transform;
-}
-.stage__reactor picture { position: absolute; inset: 0; }
-.stage__poster {
-  width: 100%; height: 100%; object-fit: contain; padding: 8vh 5vw;
-  opacity: 0; transition: opacity .5s;
-}
-.stage__reactor.no-gl .stage__poster { opacity: 1; }
-.stage__reactor.no-gl .stage__canvas { display: none; }
-
-.stage__loading {
-  position: absolute; left: 50%; bottom: 12%; transform: translateX(-50%);
-  font-size: var(--text-xs); letter-spacing: .22em; text-transform: uppercase;
-  color: rgb(255 255 255 / .35);
-}
-.stage__loading[hidden] { display: none; }
-
-/* the name card, entering from the right */
-.stage__name {
-  right: clamp(1rem, 6vw, 6rem); top: 50%;
-  width: min(42%, 30rem);
-  text-align: center;
-  opacity: var(--nameIn);
-  transform: translateY(-50%) translateX(calc((1 - var(--nameIn)) * 40px));
-  pointer-events: none;
-}
-.stage__name img { width: min(15rem, 46%); margin: 0 auto var(--sp-5); filter: drop-shadow(0 8px 30px rgb(0 0 0 / .5)); }
-.stage__name h2 {
+.sb-card {
   margin: 0;
-  font-family: var(--font-display);
-  font-size: clamp(2.4rem, 5.4vw, 4.25rem);
-  font-weight: 800; letter-spacing: -.03em; line-height: 1;
-  color: var(--white);
-}
-.stage__name h2 { font-size: clamp(1.3rem, 2.3vw, 1.85rem); font-weight: 650; line-height: 1.3; letter-spacing: -.012em; color: var(--sig-green); }
-.stage__word {
-  display: block; margin-bottom: var(--sp-3);
-  font-size: clamp(2.4rem, 5.4vw, 4.25rem); font-weight: 800; letter-spacing: -.03em; line-height: 1;
-  color: var(--white);
-}
-.stage__more { margin: var(--sp-4) 0 0; opacity: var(--sloganIn); }
-.stage__more a { pointer-events: auto; color: var(--sig-green); font-weight: 650; text-underline-offset: 3px; }
-.stage__slogan {
-  margin: var(--sp-4) 0 0;
-  font-family: var(--font-display);
-  font-size: clamp(1.05rem, 1.9vw, 1.5rem);
-  font-weight: 600; line-height: 1.3; letter-spacing: -.012em;
-  color: var(--sig-green);
-  opacity: var(--sloganIn);
-  transform: translateY(calc((1 - var(--sloganIn)) * 14px));
-}
-.stage__gloss {
-  margin: var(--sp-4) 0 0; font-size: var(--text-sm); line-height: 1.55;
-  color: rgb(255 255 255 / .62);
-  opacity: var(--sloganIn);
-}
-
-/* ---- the chain, and its collapse ---- */
-/* This is the pathway itself, not a copy of it. The nine steps arrive on white
-   with their icons and their names, hold for a screen while the reader takes
-   the length in, and are then collapsed: the labels and the line go, the six
-   steps that happen before the farmer is involved fade out on the way in, and
-   the farmer's three land together and become the single green light the
-   reactor runs on.
-
-   Since 28 September 2026 the chain is the eight stages of the pathway in
-   section 02 (research centre to farmer), every one a green dot, and all of
-   them survive the collapse: the team's storyboard has the green lights
-   merging into one.
-
-   Convergence is done with the grid rather than measured offsets. A column
-   width is exactly 100% of one item, so translating item i by (8 - i) * 100%
-   * --conv walks every dot onto column EIGHT at any screen size. Eight is the
-   farmer: the chain does not collapse to an arbitrary middle, it collapses
-   onto the person it was always trying to reach.
-
-   That leaves the merged dot 3.5 columns right of centre, so --recentre then
-   slides the whole rail left by 3.5/8 of its width to put it under the light.
-   Change the number of steps n (farmer last) and it becomes ((n - 1) / 2) / n. */
-
-.chainhead, .chainfoot {
-  position: absolute; left: 0; right: 0;
-  max-width: var(--max); margin: 0 auto;
-  padding: 0 var(--sp-6);
-  opacity: var(--railText, 0);
-  pointer-events: none;
-}
-/* measured off the dot row, not off the stage, so a longer title never pushes
-   the dots away from the point the light appears at */
-.chainhead { bottom: calc(100% - var(--hubY) + 3.9rem); }
-.chainfoot {
-  /* clears the tallest label, which is two lines. Any tighter and the
-     paragraph touches "Centralised factory". */
-  top: calc(var(--hubY) + 5.4rem);
-  font-size: var(--text-lede); line-height: 1.5; color: var(--gray-600);
-}
-/* the measure is capped on the inner span, so the paragraph still starts on
-   the same left edge as the title above it rather than centring itself */
-.chainfoot span { display: block; max-width: 66ch; }
-.chainhead .kicker { margin-bottom: var(--sp-3); }
-.chainhead h2 {
-  margin: 0;
-  font-family: var(--font-display);
-  font-size: clamp(1.4rem, 2.55vw, 2.1rem);
-  font-weight: 700; line-height: 1.15; letter-spacing: -.018em;
-  color: var(--leaf-900);
-  /* one row at desktop: the sentence IS the shape of the argument, and broken
-     over two lines it reads as two claims */
-  white-space: nowrap;
-}
-@media (max-width: 880px) {
-  .chainhead h2 { white-space: normal; }
-}
-
-.chainwrap {
-  position: absolute; left: 0; right: 0;
-  top: calc(var(--hubY) - .5rem);
-  padding: 0 var(--sp-6);
-  opacity: var(--chainIn, 0);
-  pointer-events: none;
-}
-.chain {
-  position: relative;
-  display: grid; grid-auto-flow: column; grid-auto-columns: 1fr;
-  max-width: var(--max); margin: 0 auto; padding: 0;
-  list-style: none;
-  transform: translateX(calc(var(--recentre, 0) * -43.75%));
-}
-
-/* the rail, drawn from the first dot's centre to the last */
-.chain::before {
-  content: ""; position: absolute; left: 6.25%; right: 6.25%; top: .47rem; height: 2px;
-  background: linear-gradient(90deg, var(--leaf-500), var(--leaf-700));
-  transform-origin: left center; transform: scaleX(0);
-  opacity: var(--railLine, 0);
-  transition: transform 1.6s cubic-bezier(.2,.7,.2,1);
-}
-.pathway.in .chain::before { transform: scaleX(1); }
-
-.chain .step {
-  position: relative;
-  padding: 0 var(--sp-2);
-  text-align: center;
-  color: var(--gray-500);
-  transform: translateX(calc((8 - var(--i)) * var(--conv, 0) * 100%));
-}
-.chain .step:nth-child(1) { --i: 1; }
-.chain .step:nth-child(2) { --i: 2; }
-.chain .step:nth-child(3) { --i: 3; }
-.chain .step:nth-child(4) { --i: 4; }
-.chain .step:nth-child(5) { --i: 5; }
-.chain .step:nth-child(6) { --i: 6; }
-.chain .step:nth-child(7) { --i: 7; }
-.chain .step:nth-child(8) { --i: 8; }
-.chain .step:nth-child(9) { --i: 9; }
-
-/* hollow with a coloured rim, so the same dot reads on white and on ink */
-.chain .step__dot {
-  display: block; width: 1rem; height: 1rem; margin: 0 auto;
-  border-radius: 50%;
-  border: 2px solid var(--gray-400);
-  background: transparent;
-  position: relative; z-index: 1;
-  transform: scale(.3); opacity: 0;
-  transition: transform .5s cubic-bezier(.2,1.5,.4,1), opacity .4s ease;
-}
-.pathway.in .chain .step__dot { transform: scale(1); opacity: var(--chainGrey, 1); }
-.chain .step:nth-child(1) .step__dot { transition-delay: .05s; }
-.chain .step:nth-child(2) .step__dot { transition-delay: .20s; }
-.chain .step:nth-child(3) .step__dot { transition-delay: .35s; }
-.chain .step:nth-child(4) .step__dot { transition-delay: .50s; }
-.chain .step:nth-child(5) .step__dot { transition-delay: .65s; }
-.chain .step:nth-child(6) .step__dot { transition-delay: .80s; }
-.chain .step:nth-child(7) .step__dot { transition-delay: .95s; }
-.chain .step:nth-child(8) .step__dot { transition-delay: 1.10s; }
-.chain .step:nth-child(9) .step__dot { transition-delay: 1.25s; }
-
-/* the farmer's three: they keep their colour and they survive the collapse */
-.chain .step--farm { color: var(--leaf-700); }
-.chain .step--farm .step__dot { border-color: var(--sig-green); background: var(--sig-green); }
-.pathway.in .chain .step--farm .step__dot { opacity: 1; }
-
-/* The farmer is the node the whole chain lands on, so it is drawn as a target
-   rather than as one green dot among three: a wider ring, and a halo that the
-   other two do not have. */
-.chain .step--hub .step__dot {
-  width: 1.35rem; height: 1.35rem;
-  border-width: 3px; border-color: var(--leaf-700);
-  background: var(--sig-green);
-  box-shadow: 0 0 0 .35rem rgb(53 224 138 / .18), 0 0 0 .7rem rgb(53 224 138 / .08);
-}
-.chain .step--hub b { font-weight: 750; }
-
-/* icon above the dot, name below. Both belong to the white half of the act and
-   are gone before the ink arrives, which is why they never need a light
-   colour. */
-.chain .step__icon {
-  /* hung above the dot, which is the step's first in-flow box, so this is
-     measured off the step's top rather than its bottom: the step's height
-     changes with the label and a bottom offset would ride onto it */
-  position: absolute; left: 50%; top: -2.25rem;
-  width: 1.75rem; height: 1.75rem;
-  transform: translateX(-50%);
-  opacity: var(--railText, 0);
-}
-.chain .step b {
-  display: block; margin-top: var(--sp-3);
-  font-size: var(--text-sm); font-weight: 650; line-height: 1.3;
-  color: var(--leaf-900);
-  opacity: var(--railText, 0);
-}
-.chain .step--farm b { color: var(--leaf-700); }
-
-/* Under 760px nine names cannot sit side by side at any size a person would
-   read, and the stage clips rather than scrolls, so the last steps would
-   simply be gone. The icons carry the chain on their own there: a factory, a
-   fermenter, a truck, a warehouse, a shed, a sprayer. The names are in the
-   figure's alt text and the section above says what the chain is. */
-@media (max-width: 760px) {
-  .chainwrap { padding: 0 var(--sp-3); }
-  .chain .step { padding: 0 2px; }
-  .chain .step b { display: none; }
-  .chain .step__icon { width: 1.35rem; height: 1.35rem; top: -1.9rem; }
-  .chain .step__dot { width: .8rem; height: .8rem; }
-  .chain .step--hub .step__dot {
-    width: 1.05rem; height: 1.05rem; border-width: 2px;
-    box-shadow: 0 0 0 .28rem rgb(53 224 138 / .18);
-  }
-  .chain::before { top: .37rem; }
-  /* the labels are gone here, so the block is shorter and can ride higher */
-  .stagewrap { --hubY: 31%; }
-  .chainhead { bottom: calc(100% - var(--hubY) + 3rem); }
-  .chainfoot { top: calc(var(--hubY) + 2.6rem); font-size: var(--text-sm); }
-}
-
-@media (prefers-reduced-motion: reduce) {
-  .chain::before { transform: scaleX(1); transition: none; }
-  .chain .step__dot { transform: scale(1); transition: none; }
-}
-
-/* the two lines that carry the turn. They cross-fade rather than stack, so the
-   reader is never reading one while the other is arriving. */
-.turn {
-  position: absolute; left: 50%; top: calc(var(--hubY) + 16%);
-  width: min(90%, 34rem); margin: 0;
-  transform: translateX(-50%);
-  text-align: center; text-wrap: balance;
-  font-family: var(--font-display);
-  font-size: clamp(1.05rem, .95rem + .7vw, 1.5rem);
-  font-weight: 600; line-height: 1.4; letter-spacing: -.012em;
-  color: var(--leaf-100);
-  pointer-events: none;
-}
-.turn--1 { opacity: var(--turn1, 0); }
-.turn--2 { opacity: var(--turn2, 0); color: var(--sig-green); }
-
-/* the beats. Each is one screen of scroll; only the last carries visible copy
-   beside the stage. */
-.beat { position: relative; z-index: 2; height: 100vh; height: 100svh; pointer-events: none; }
-.beat--short { height: 100vh; height: 100svh; }
-.beat--tail { height: 45vh; height: 45svh; }
-.beat--parts { pointer-events: auto; height: auto; min-height: 100vh; display: flex; align-items: center; }
-/* the reactor is still behind this section, so the copy carries its own
-   ground. On one column that ground is the whole width. */
-.beat--parts::before {
-  content: ""; position: absolute; inset: 0; z-index: 0; pointer-events: none;
-  background: linear-gradient(180deg, rgb(7 11 9 / .55), rgb(7 11 9 / .93) 22%);
-}
-@media (min-width: 980px) {
-  .beat--parts::before { background: linear-gradient(90deg, rgb(7 11 9 / 0) 20%, rgb(7 11 9 / .62) 40%, rgb(7 11 9 / .96) 54%); }
-}
-.beat__inner {
-  position: relative; z-index: 1;
-  width: 100%; max-width: var(--max); margin: 0 auto;
-  padding: var(--sp-7) var(--sp-5);
-  display: grid; gap: var(--sp-5);
-}
-@media (min-width: 980px) {
-  /* one column, held in the right half, because the left half is the machine */
-  .beat__inner { padding-inline: var(--sp-6); padding-left: 52%; }
-}
-
-.partlist { margin: 0; padding: 0; list-style: none; }
-.part {
-  display: block; width: 100%; text-align: left;
-  padding: var(--sp-4) var(--sp-4) var(--sp-4) var(--sp-6);
-  border: 0; border-top: 1px solid rgb(255 255 255 / .12);
-  background: transparent; color: inherit; font: inherit;
-  cursor: pointer; position: relative;
-  transition: background .2s;
-}
-.partlist li:last-child .part { border-bottom: 1px solid rgb(255 255 255 / .12); }
-.part::before {
-  content: ""; position: absolute; left: var(--sp-3); top: 1.55rem;
-  width: .5rem; height: .5rem; border-radius: 50%;
-  background: var(--flow, #5aa9ff); opacity: .55; transition: opacity .2s, box-shadow .2s;
-}
-.part[data-flow="lumen"] { --flow: #ff8a2e; }
-.part[data-flow="shell"] { --flow: #3ddc8b; }
-.part[data-flow="both"]  { --flow: #5aa9ff; }
-.part b { display: block; font-size: var(--text-base); font-weight: 650; color: var(--white); max-width: 34ch; }
-.part span { display: block; font-size: var(--text-sm); color: rgb(255 255 255 / .55); }
-/* a button may not contain a paragraph, so the body is a span */
-.part .part__body { display: block; margin: var(--sp-3) 0 0; font-size: var(--text-sm); line-height: 1.62; color: rgb(255 255 255 / .72); max-width: 54ch; }
-.part:hover, .part:focus-visible { background: rgb(255 255 255 / .05); }
-.part:hover::before, .part.is-on::before { opacity: 1; box-shadow: 0 0 0 4px color-mix(in srgb, var(--flow) 22%, transparent); }
-.part.is-on { background: rgb(255 255 255 / .07); }
-.part.is-on .part__body { color: rgb(255 255 255 / .86); }
-
-.partlist__open {
-  margin: var(--sp-5) 0 0;
-  font-size: var(--text-sm); line-height: 1.62; max-width: 54ch;
-  color: rgb(255 255 255 / .58);
-}
-.partlist__open a { color: rgb(255 255 255 / .8); }
-
-.flowkey { display: flex; flex-wrap: wrap; gap: var(--sp-4); margin-top: var(--sp-5); font-size: var(--text-xs); color: rgb(255 255 255 / .6); }
-.flowkey i { display: inline-block; width: .6rem; height: .6rem; border-radius: 50%; margin-right: .4rem; vertical-align: -.05rem; }
-
-/* This copy sits on the dark ground the stage paints, but .band__title and
-   .lede are written for white paper. Without these three lines the section
-   heading is dark green on near-black and the lede is mid-grey on it — the
-   same treatment .band--dark gives every other dark section. */
-.beat--parts .beat__copy h2 { max-width: 20ch; color: var(--white); }
-.beat--parts .beat__copy .kicker { color: var(--sig-green); }
-.beat--parts .beat__copy .lede { color: var(--leaf-200); }
-
-/* Under 980px the stage has no left half to give away: the name card sits at
-   the foot of the frame and the reactor stays centred. */
-@media (max-width: 979px) {
-  .stage__reactor { transform: none; }
-  .stage__name {
-    left: 50%; right: auto; top: auto; bottom: 7vh;
-    width: min(88%, 26rem);
-    transform: translateX(-50%) translateY(calc((1 - var(--nameIn)) * 24px));
-  }
-  .stage__name img { width: 6.5rem; margin-bottom: var(--sp-4); }
-  .stage__gloss { display: none; }
-}
-
-/* ========================================================== 5  SYNBIO ===== */
-
-.figwide { margin: var(--sp-6) 0 0; }
-.figwide__scroll { overflow-x: auto; background: var(--white); border: 1px solid var(--gray-200); border-radius: var(--radius); }
-.figwide img { min-width: 46rem; width: 100%; }
-.figwide figcaption { margin-top: var(--sp-3); font-size: var(--text-sm); color: var(--gray-500); max-width: 72ch; }
-
-.modules { display: grid; gap: var(--sp-4); margin-top: var(--sp-6); grid-template-columns: repeat(auto-fit, minmax(15rem, 1fr)); }
-.module {
-  padding: var(--sp-5);
-  border: 1px solid var(--gray-200); border-top: 3px solid var(--mod, var(--leaf-500));
-  border-radius: var(--radius-sm); background: var(--white);
-}
-.module:nth-child(1) { --mod: #4a7c3f; }
-.module:nth-child(2) { --mod: #3f9ab0; }
-.module:nth-child(3) { --mod: #4f76c4; }
-.module:nth-child(4) { --mod: #c58a26; }
-/* direct child only: the module bodies use <i> for gene and species names and
-   must not pick up the eyebrow's monospace */
-.module > i {
-  font-style: normal; font-family: var(--font-mono);
-  font-size: var(--text-xs); font-weight: 700; letter-spacing: .1em;
-  color: var(--mod);
-}
-.module b { display: block; margin: var(--sp-2) 0 var(--sp-3); font-family: var(--font-display); font-size: var(--text-h3); font-weight: 700; color: var(--leaf-900); }
-.module p { margin: 0; font-size: var(--text-sm); color: var(--gray-600); }
-
-.switch {
-  display: grid; gap: var(--sp-4); margin-top: var(--sp-6);
-  grid-template-columns: repeat(auto-fit, minmax(16rem, 1fr));
-}
-.switch div { padding: var(--sp-4) var(--sp-5); border-radius: var(--radius-sm); }
-.switch b { display: block; font-size: var(--text-sm); letter-spacing: .06em; text-transform: uppercase; }
-.switch p { margin: var(--sp-2) 0 0; font-size: var(--text-sm); }
-.switch__green { background: #e8f7ee; border: 1px solid #b9e4cb; }
-.switch__green b { color: #1b7f4d; }
-.switch__red   { background: var(--rust-100); border: 1px solid #f0cfc3; }
-.switch__red b { color: var(--rust-700); }
-
-/* ============================================================= 6  iHP ===== */
-
-.timeline { margin: var(--sp-6) 0 0; }
-.timeline__scroll { overflow-x: auto; border: 1px solid var(--gray-200); border-radius: var(--radius); background: var(--white); }
-.timeline img { min-width: 68rem; width: 100%; }
-.timeline figcaption { margin-top: var(--sp-3); font-size: var(--text-sm); color: var(--gray-500); }
-
-.visits { display: grid; gap: var(--sp-4); margin-top: var(--sp-6); grid-template-columns: repeat(auto-fit, minmax(14rem, 1fr)); }
-.visit { border: 1px solid var(--gray-200); border-radius: var(--radius); overflow: hidden; background: var(--white); }
-.visit img { aspect-ratio: 4 / 3; object-fit: cover; width: 100%; height: auto; }
-.visit div { padding: var(--sp-4) var(--sp-5) var(--sp-5); }
-.visit b { display: block; color: var(--leaf-900); font-size: var(--text-base); }
-.visit em { display: block; font-style: normal; font-size: var(--text-xs); color: var(--gray-500); margin: .1rem 0 var(--sp-3); }
-.visit p { margin: 0; font-size: var(--text-sm); color: var(--gray-600); }
-
-/* ========================================================= 7  PRODUCT ===== */
-/* The packaged design turning on the left, the five properties it was drawn
-   for on the right. Under 1040px the model goes on top and the properties
-   read as a list, which is the same information in the same order.
-
-   The model is mounted by hardware/js/deck3d.js, which sizes its canvas off
-   the media box, so that box carries the dimensions. */
-
-.pkg { display: grid; gap: var(--sp-6); margin-top: var(--sp-6); align-items: center; }
-@media (min-width: 1040px) { .pkg { grid-template-columns: minmax(0, 1.15fr) minmax(0, 1fr); gap: var(--sp-7); } }
-
-.pkg__fig { margin: 0; }
-
-/* The hub's own card, borrowed: the blue halo, the dotted orbit and the live
-   model inside it. hardware/css/hub.css scopes those styles to body.hub, so
-   the few rules the card needs are restated here rather than pulling a
-   thousand-line stylesheet onto the homepage. Proportions are the hub's:
-   inside a 538-unit square the rim sits at r166 and the model's box is
-   262 x 322. */
-.pkgorb { position: relative; width: min(100%, 34rem); margin-inline: auto; aspect-ratio: 1; }
-.pkgorb__halo { position: absolute; inset: 0; width: 100%; height: 100%; overflow: visible; opacity: .9; }
-.pkgorb__rim   { fill: none; stroke-width: 1.6; }
-.pkgorb__dots  { fill: none; stroke-width: 1.2; transform-origin: 50% 50%; }
-.pkgorb__arc   { fill: none; stroke-width: 2.4; stroke-linecap: round; }
-.pkgorb__ticks { stroke-width: 1.2; stroke-opacity: .8; }
-@media (prefers-reduced-motion: no-preference) {
-  .pkgorb__dots { animation: pkgorb-turn 90s linear infinite; }
-}
-@keyframes pkgorb-turn { to { transform: rotate(360deg); } }
-
-.pkgorb__media {
-  position: absolute; left: 50%; top: 50%;
-  width: 48.7%; height: 59.9%;
-  translate: -50% -50%;
-}
-.pkgorb__media img {
-  display: block; width: 100%; height: 100%; object-fit: contain;
-  filter: drop-shadow(0 18px 26px rgb(0 0 0 / .6));
-  transition: opacity .5s ease;
-}
-/* deck3d.js inserts the canvas and raises this class once the model is framed */
-.pkgorb__media .deck-gl { position: absolute; inset: 0; width: 100%; height: 100%; opacity: 0; transition: opacity .5s ease; }
-.pkgorb__media.gl-ready .deck-gl { opacity: 1; }
-.pkgorb__media.gl-ready img { opacity: 0; pointer-events: none; }
-.pkg__fig figcaption { margin-top: var(--sp-3); font-size: var(--text-xs); line-height: 1.55; color: rgb(255 255 255 / .5); max-width: 52ch; }
-.pkg__fig a { color: rgb(255 255 255 / .8); }
-
-.prop {
-  padding: var(--sp-4) var(--sp-5);
-  border: 1px solid rgb(255 255 255 / .12);
-  border-radius: var(--radius);
-  background: rgb(255 255 255 / .03);
-  transition: border-color .2s, background .2s, transform .2s;
-}
-.prop:hover { border-color: var(--sig-dim); background: rgb(53 224 138 / .07); transform: translateY(-2px); }
-.prop b { display: block; font-family: var(--font-display); font-size: var(--text-h3); font-weight: 700; color: var(--white); }
-.prop p { margin: var(--sp-2) 0 0; font-size: var(--text-sm); line-height: 1.6; color: rgb(255 255 255 / .68); }
-
-.pkg__props { margin: 0; padding: 0; list-style: none; display: grid; gap: var(--sp-3); counter-reset: pkg; }
-.pkg__props .prop { counter-increment: pkg; }
-.pkg__props .prop b::before {
-  content: counter(pkg, decimal-leading-zero);
-  margin-right: .6rem; font-size: .75rem; font-weight: 700;
-  font-variant-numeric: tabular-nums; color: var(--sig-green);
-}
-.pkg__props .prop p i { color: rgb(255 255 255 / .82); font-style: italic; }
-
-/* ========================================================= 9  EXPLORE ===== */
-/* Five gates. The nav already carries every page on the wiki, so this band
-   does not have to: it carries the two pages that say what the project is and
-   what it did, and the three the team is entering for a special prize.
-
-   THE ART IS A SET, NOT FIVE PICTURES. One drawn object per gate, flat colour,
-   no outlines except where an edge has to read, and the 520 nm green somewhere
-   in every one. That green is the only thing all five have in common, which is
-   also true of the project. Draw the sixth one the same way or do not draw it.
-
-   The gate is one link, so the whole card is the target and there is no nested
-   anchor to make invalid. */
-
-.gates { display: grid; gap: clamp(.75rem, 1.4vw, 1.25rem); }
-@media (min-width: 560px)  { .gates { grid-template-columns: repeat(2, 1fr); } }
-@media (min-width: 1000px) { .gates { grid-template-columns: repeat(5, 1fr); } }
-
-.gate {
-  display: flex; flex-direction: column;
-  border: 1px solid var(--gray-200);
-  border-radius: 1.125rem;
+  border: 1px solid var(--gray-200); border-radius: var(--radius);
   background: var(--white);
   overflow: hidden;
-  text-decoration: none;
-  transition: transform .45s cubic-bezier(.32,.72,0,1),
-              box-shadow .45s cubic-bezier(.32,.72,0,1),
-              border-color .45s cubic-bezier(.32,.72,0,1);
 }
-.gate:hover, .gate:focus-visible {
-  transform: translateY(-4px);
-  border-color: var(--leaf-200);
-  box-shadow: 0 16px 36px rgb(20 64 43 / .11);
-}
-.gate:focus-visible { outline: 2px solid var(--leaf-700); outline-offset: 3px; }
 
-.gate__panel {
+/* the figure: its own width reserved by the <img>'s attributes. Narrower
+   than 42rem it scrolls sideways (60rem on a phone, so the labels stay
+   readable); the frame is a keyboard scroll container with a focus ring. */
+.sb-fig__frame { overflow-x: auto; }
+.sb-fig__frame:focus-visible { outline: 2px solid var(--leaf-700); outline-offset: -3px; }
+.sb-card img { display: block; min-width: 42rem; width: 100%; height: auto; }
+.sb-fig__swipe { display: none; }
+@media (max-width: 740px) {
+  .sb-fig__plate { position: relative; }
+  .sb-fig__plate::after {
+    content: ""; position: absolute; top: 0; right: 0; bottom: 0; width: 3rem;
+    pointer-events: none;
+    background: linear-gradient(90deg, rgb(255 255 255 / 0), rgb(255 255 255 / .92));
+  }
+  .sb-fig__swipe { display: block; margin-top: .25rem; }
+  .sb-card img { min-width: 60rem; }
+}
+
+/* the four modules: numbered discs on one rail, under the figure */
+.sb-seq {
+  list-style: none; margin: 0; padding: var(--sp-5) var(--sp-5) var(--sp-4);
+  border-top: 1px solid var(--gray-200);
+  display: grid; grid-template-columns: repeat(4, minmax(0, 1fr));
+  column-gap: var(--sp-5);
+  position: relative;
+}
+.sb-step { position: relative; }
+/* the rail: from each disc to the next one */
+.sb-step:not(:last-child)::after {
+  content: ""; position: absolute; top: .8rem; left: 1.6rem; right: calc(-1 * var(--sp-5));
+  height: 1px; background: var(--gray-300);
+}
+/* --sb is the colour of that module's box in the BioRender figure, darkened
+   until white text on it clears 4.5:1 */
+.sb-step:nth-child(1) { --sb: #456f3c; }   /* module 1, green  */
+.sb-step:nth-child(2) { --sb: #2d6f80; }   /* module 2, blue   */
+.sb-step:nth-child(3) { --sb: #42639f; }   /* module 3, indigo */
+.sb-step:nth-child(4) { --sb: #7d5512; }   /* module 4, amber  */
+.sb-step__n {
+  position: relative;
   display: grid; place-items: center;
-  padding: clamp(1rem, 2vw, 1.5rem);
-  background: var(--leaf-50);
-  border-bottom: 1px solid var(--leaf-100);
+  width: 1.6rem; height: 1.6rem; border-radius: 50%;
+  background: var(--sb); color: var(--white);
+  font-size: .8rem; font-weight: 700; font-variant-numeric: tabular-nums;
+  box-shadow: 0 0 0 4px var(--white);
 }
-.gate__panel svg {
-  display: block; width: 100%; height: auto; max-width: 9rem;
-  transition: transform .45s cubic-bezier(.32,.72,0,1);
+.sb-step__t {
+  margin: var(--sp-3) 0 var(--sp-2);
+  font-family: var(--font-display); font-size: var(--text-base);
+  font-weight: 700; line-height: 1.25; color: var(--leaf-900);
 }
-.gate:hover .gate__panel svg { transform: scale(1.045); }
+.sb-step__p { margin: 0; font-size: var(--text-sm); line-height: 1.55; color: var(--gray-600); text-wrap: pretty; }
 
-.gate__body {
-  display: flex; flex-direction: column; gap: .375rem;
-  flex: 1 1 auto;
-  padding: clamp(.9rem, 1.6vw, 1.25rem);
-}
-.gate__title {
-  font-size: 1.0625rem; font-weight: 700; letter-spacing: -.01em; line-height: 1.25;
-  color: var(--leaf-900);
-}
-.gate__hook {
-  font-size: var(--text-xs); line-height: 1.5; color: var(--gray-600);
-}
-.gate__prize {
-  margin-top: auto; padding-top: .625rem;
-  align-self: flex-start;
-  font-size: .6875rem; font-weight: 700; letter-spacing: .08em;
-  text-transform: uppercase; color: var(--amber-700);
+.sb-card__cap {
+  padding: var(--sp-3) var(--sp-5) var(--sp-4);
+  border-top: 1px solid var(--gray-100);
+  font-size: var(--text-xs); line-height: 1.5; color: var(--gray-500);
 }
 
-@media (prefers-reduced-motion: reduce) {
-  .gate, .gate__panel svg { transition: none; }
-  .gate:hover, .gate:focus-visible { transform: none; }
-  .gate:hover .gate__panel svg { transform: none; }
+@media (max-width: 899px) {
+  .sb-seq { grid-template-columns: repeat(2, minmax(0, 1fr)); row-gap: var(--sp-5); }
+  .sb-step::after { display: none; }
 }
+@media (max-width: 559px) {
+  .sb-seq { grid-template-columns: 1fr; }
+  .sb-step { display: grid; grid-template-columns: 1.6rem minmax(0, 1fr); column-gap: var(--sp-3); }
+  .sb-step__n { grid-row: 1 / span 2; }
+  .sb-step__t { margin-top: .1rem; }
+}
+
+/* ========================================================= 8  EXPLORE ===== */
+/* Five pages as picture cards. The menu reaches every page, so this only
+   names where to start: two "Start here" cards, then the three pages the
+   team is nominated for. A card is one link: photograph, a small label, the
+   page name and one line. Hover lifts the photograph slightly and underlines
+   the name; focus is the page's own ring. */
+.xp .lede { margin-bottom: var(--sp-6); }
+.xp-cards {
+  list-style: none; margin: 0; padding: 0;
+  display: grid; gap: var(--sp-4);
+  grid-template-columns: repeat(6, minmax(0, 1fr));
+}
+.xp-card { grid-column: span 2; }
+.xp-card--big { grid-column: span 3; }
+.xp-card a {
+  display: flex; flex-direction: column; height: 100%;
+  border-radius: var(--radius); overflow: hidden;
+  background: var(--white); box-shadow: 0 0 0 1px var(--gray-200);
+  color: inherit; text-decoration: none;
+  transition: box-shadow .2s ease, transform .2s ease;
+}
+.xp-card img {
+  display: block; width: 100%; aspect-ratio: 16 / 9; height: auto; object-fit: cover;
+  transition: transform .4s ease;
+}
+.xp-card--big img { aspect-ratio: 21 / 9; }
+.xp-card img.xp-card__dark { background: #000; object-fit: contain; }
+.xp-card__k {
+  margin: var(--sp-4) var(--sp-4) 0;
+  font-size: .6875rem; font-weight: 700; letter-spacing: .1em; text-transform: uppercase; color: var(--leaf-700);
+}
+.xp-card__k--prize { display: inline-flex; align-items: center; gap: .4rem; color: #7d5512; }
+.xp-card__k--prize::before {
+  content: ""; width: .55rem; height: .55rem; border-radius: 50%; background: #c2984e;
+  box-shadow: 0 0 0 2px rgb(194 152 78 / .3);
+}
+.xp-card__name {
+  margin: .3rem var(--sp-4) 0;
+  font-family: var(--font-display); font-size: 1.25rem; font-weight: 700; line-height: 1.2; color: var(--leaf-900);
+}
+.xp-card--big .xp-card__name { font-size: 1.5rem; }
+.xp-card__name::after { content: " \2192"; color: var(--leaf-700); }
+.xp-card__line {
+  margin: .35rem var(--sp-4) var(--sp-4);
+  font-size: var(--text-sm); line-height: 1.5; color: var(--gray-600); text-wrap: pretty;
+}
+.xp-card a:hover { box-shadow: 0 0 0 1px var(--leaf-200), 0 8px 24px rgb(7 11 9 / .08); }
+.xp-card a:hover img { transform: scale(1.03); }
+.xp-card a:hover .xp-card__name { text-decoration: underline; text-underline-offset: .15em; }
+.xp-card a:focus-visible { outline: 2px solid var(--leaf-700); outline-offset: 3px; }
+@media (prefers-reduced-motion: reduce) { .xp-card a, .xp-card img { transition: none; } .xp-card a:hover img { transform: none; } }
+
+@media (max-width: 899px) {
+  .xp-cards { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .xp-card, .xp-card--big { grid-column: span 1; }
+}
+@media (max-width: 559px) {
+  .xp-cards { grid-template-columns: 1fr; }
+}
+/* with scripting off there is no menu at the top: drop the sentence about it */
+@media (scripting: none) { .xp-menu { display: none; } }
 
 /* ============================================================== FOOTER ==== */
 /* footer2 comes from page.css; the homepage loads it for that alone.
