@@ -156,9 +156,12 @@
        working and goofy photos wait inside the profile */
     const media = el("div", "card__media");
     const img = el("img");
+    /* lazy before src: an image not yet in the page starts loading the
+       moment it has a src, so the order matters */
+    img.loading = "lazy";
+    img.decoding = "async";
     img.src = photo(m);
     img.alt = m.name;
-    img.loading = "lazy";
     media.appendChild(img);
     card.appendChild(media);
 
