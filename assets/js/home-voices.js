@@ -3,7 +3,7 @@
 
    Each of the four photographs arrives inset (scale .86 on a wide screen,
    .92 on a phone) and grows to the full width of the window as its top
-   climbs the lower three quarters of the screen. Inside it, the picture
+   climbs most of the screen. Inside it, the picture
    drifts: a little larger and a little lower when the scene comes in, a
    little smaller and higher as it leaves, so the moment feels alive rather
    than pasted in. The text under each photograph comes in with home.js's
@@ -54,7 +54,7 @@
     m.forEach(function (d, i) {
       var s = scenes[i];
       if (d.top > d.vh * 1.1 || d.top + d.h < -d.vh * 0.1) return;   // off screen: leave as is
-      // grow: top from the bottom of the screen to a quarter of the way down
+      // grow: top from the bottom of the screen to a tenth of the way down
       var g = ease(clamp01((d.vh - d.top) / (d.vh * 0.9)));
       var s0 = d.phone ? 0.92 : 0.86;
       var k = s0 + (1 - s0) * g;
