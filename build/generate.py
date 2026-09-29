@@ -172,9 +172,7 @@ def footer(base):
         'rel="license">Creative Commons Attribution 4.0 International license</a>.</p>\n'
         '        <p>The repository used to create this website is available '
         'at <a href="https://gitlab.igem.org/2026/gems-taiwan">gitlab.igem.org/2026/gems-taiwan</a>.</p>\n'
-        '        <p>Nothing on this wiki is fetched from a server outside iGEM. '
-        'Before the wiki freeze, every image and font has to be re-hosted on '
-        '<code>static.igem.wiki</code>.</p>\n'
+        '        <p>Nothing on this wiki is fetched from a server outside iGEM.</p>\n'
         '      </div>\n'
         '    </div>\n'
         '  </footer>\n' % "".join(cols))

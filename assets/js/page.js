@@ -34,7 +34,7 @@
     const toc  = $(".toc");
     if (!body) return;
 
-    const heads = $$("h2, h3", body).filter((h) => !h.closest(".refs") && !h.dataset.noToc);
+    const heads = $$("h2, h3", body).filter((h) => !h.closest(".refs") && !("noToc" in h.dataset));
     if (!heads.length) { if (toc) toc.remove(); return; }
 
     const list = document.createElement("ol");
