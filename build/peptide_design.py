@@ -915,12 +915,12 @@ CSS = r"""
     .pd-rules { display: grid; gap: var(--sp-4); grid-template-columns: minmax(0,1fr); margin: var(--sp-5) 0; }
     @media (min-width: 620px) { .pd-rules { grid-template-columns: repeat(2, minmax(0,1fr)); } }
     .pd-rule { margin: 0; padding: var(--sp-4) var(--sp-5); border-radius: var(--radius-sm); border: 1px solid var(--gray-200); }
-    .pd-rule h4 { margin: 0 0 var(--sp-2); font-size: var(--text-sm); letter-spacing: .04em; text-transform: uppercase; }
     .pd-rule p { margin: 0; font-size: var(--text-sm); line-height: 1.6; color: var(--gray-700); }
+    .pd-rule p.pd-rule__label { margin: 0 0 var(--sp-2); font-weight: 700; letter-spacing: .04em; text-transform: uppercase; }
     .pd-rule--keep { background: var(--leaf-50); border-color: var(--leaf-200); }
-    .pd-rule--keep h4 { color: var(--leaf-900); }
+    .pd-rule--keep .pd-rule__label { color: var(--leaf-900); }
     .pd-rule--free { background: var(--amber-100); border-color: #f0e2c0; }
-    .pd-rule--free h4 { color: var(--amber-700); }
+    .pd-rule--free .pd-rule__label { color: var(--amber-700); }
     .pd-rule code { font-family: var(--font-mono); font-size: .92em; }
 
     @media print {
@@ -1495,7 +1495,7 @@ BODY = """
 
         <div class="pd-rules">
           <div class="pd-rule pd-rule--keep">
-            <h4>Do not touch</h4>
+            <p class="pd-rule__label">Do not touch</p>
             <p>
               The invariant core <code>Ser15, Ser16, Gly17, Gly20</code> and the C-terminal
               <code>Asn23</code>, plus the belt anchors <code>Lys7, Arg9, Arg11, Lys18,
@@ -1504,7 +1504,7 @@ BODY = """
             </p>
           </div>
           <div class="pd-rule pd-rule--free">
-            <h4>Free to edit</h4>
+            <p class="pd-rule__label">Free to edit</p>
             <p>
               The N-terminus <code>1-6</code>, which buries nothing on either receptor
               and is invisible in the crystal, and the solvent-facing
