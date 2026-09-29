@@ -262,7 +262,7 @@ window.EVOMAP = (function () {
       source: "LOG + ROAD + PLANT"
     },
     {
-      id: "e03", date: "2026-04-03", dateNote: "The interview log dates this 3 April; the plant page dates the same visit to Academia Sinica 4 April. Both are ours and they disagree.",
+      id: "e03", date: "2026-04-03", dateNote: "The interview log dates this 3 April; the plant page dates the same visit to Academia Sinica 4 April. The two team records disagree.",
       evidence: [
         { src: "ev-verslues-rack", cap: "4 April, Academia Sinica. His vertical plate rack." },
         { src: "ev-vertical-start", cap: "16 June. Our own vertical plates, set up the same way." },
@@ -304,7 +304,7 @@ window.EVOMAP = (function () {
       before: ["Focused on Bacillus subtilis through the process of PGPR to detect plant stress and produce stress-priming protectants"],
       after: ["Shifted toward a controlled bioreactor-based system that detects stress signals and activates B. subtilis to produce protectants", "Define clear input-output relationships and strengthen our dry-lab modeling and calibration strategy", "Conduct a competitive analysis to identify existing products and key competitors that are related to us"],
       suggestion: "Define a clear input to output mapping, and move to a bioreactor-based system instead of soil release.",
-      summary: "The meeting that changed the project's shape. He sells into the smart-agriculture market we aimed at, and told us to leave the part we could not win.",
+      summary: "He sells into the smart-agriculture market we aimed at, and told us to leave the part we could not win.",
       takeaways: [
         "Drop soil moisture sensing: cheap sensors own that market, and calibration takes months per soil type.",
         "Bacteria released into open soil are a far harder biosafety case than bacteria in a vessel.",
@@ -411,7 +411,7 @@ window.EVOMAP = (function () {
       before: [],
       after: ["Based on his recommendations, we built pressure tracking protocols and physical foam-breaking mechanisms directly into our initial hardware specifications"],
       suggestion: "Put a valve after the membrane to build pressure and push the permeate through.",
-      summary: "He has published on B. subtilis bioreactors and spent longer on containment than on the biology. He found a hole none of us had seen.",
+      summary: "He has published on B. subtilis bioreactors and spent longer on containment than on the biology.",
       takeaways: [
         "We could not yet explain to a judge why hollow fibre specifically.",
         "Foaming from B. subtilis surfactant needs a mechanical bubble breaker.",
@@ -570,7 +570,7 @@ window.EVOMAP = (function () {
       before: [],
       quote: "Sometimes, giving too much is not necessarily beneficial for a living organism; instead, it can take away its ability to survive and thrive on its own.",
       suggestion: "Ask whether external support stops a plant building its own resilience, and answer that concern in the design.",
-      summary: "We harvested okra and luffa, knelt in her beds while she read the soil, and ate what we picked. Her objection is the hardest the project has faced.",
+      summary: "We harvested okra and luffa, knelt in her beds while she read the soil, and ate what we picked.",
       takeaways: [
         "Traditional and natural farmers may doubt that a technological solution helps at all.",
         "Over-intervention can interfere with natural farming processes.",
