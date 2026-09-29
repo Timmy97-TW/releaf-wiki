@@ -1,622 +1,388 @@
 /* =============================================================================
    VISION: "Every farmer a biomanufacturer." One becomes many.
 
-   Replaces home.js piece 7 ("the dose runs"), which drove the two old vision
-   schematics. It only needs window.__homeFrame, which only home.js creates,
-   so it loads after home.js; without it this returns at once and the section
-   stays the finished <img>.
+   The picture is a stack of image layers on one artboard, 1600 x 1800 units
+   (assets/img/home/vision/, README there): sky, ridges, valley, and the focal
+   farm again at higher detail, plus that farm's lit windows. This script is
+   the camera. It starts close on the focal farm at night and, as the reader
+   scrolls through a pinned stage, pulls back to the whole valley while first
+   light comes up; each farm's reactor lights a moment after it comes into
+   the frame; the line lands on the sky and its full stop lights last.
 
-   What it does, in order:
-     1. When the section is within a screen and a half, fetches the drawing's
-        layers (the JSON made by build/vision-valley.py from the same geometry
-        as the <img>) and builds them. Until then, and if anything fails, the
-        reader sees the <img>: the finished frame, complete on its own.
-     2. Only then, and only while the section is still below the screen, it
-        arms the section (.is-live): the stage becomes sticky inside a runway
-        one screen longer than the stage. Arming changes the page's height, so
-        it never happens where the reader can see it; a reader who arrives
-        in the middle of the section (a link, the chapters rail) gets the
-        finished frame, and the drawing arms the next time the section is
-        below them.
-     3. Draws the right frame on a canvas over the <img>, then shows it
-        (.is-ready). On every scroll frame while the run is on screen (read()
-        checks, from the one rectangle it reads anyway): the
-        camera goes from the first farm to the whole valley; each farm lights
-        a moment after it comes into the frame, with one brighter swell as it
-        comes on; first light comes up as more of them are lit; the dose runs
-        down the first farm's rows with the scroll; the line lands as the last
-        farms light, and its full stop lights last (.is-lit). Once the frame
-        has stopped changing, scrolling redraws nothing.
-     4. FIREFLIES. The reactors' glows are drawn on a second canvas, over the
-        first. While the section is on screen and the tab is visible, a slow
-        loop (about 30 frames a second, 20 on a phone; glows only: a hundred
-        and sixty small images) lets each lit reactor's glow flash now and then, out of step
-        with its neighbours, quickly up and slowly down. The reactor itself
-        stays lit: only the light around it moves. The loop stops when the
-        section leaves the screen or the tab is hidden.
+   HOW IT MOVES, AND WHY IT IS SMOOTH
+   - One transform per layer (translate + scale, GPU composited); nothing is
+     repainted when the camera moves. The pictures are never redrawn.
+   - The glows are the only drawing: one small canvas the size of the stage,
+     about 160 soft sprites (REACTORS below), at one pixel per CSS pixel.
+   - The scroll only sets a target. Each animation frame moves the shown
+     progress a fraction of the way towards it (an exponential ease, TAU),
+     so a wheel's steps and a flick's jumps turn into one glide.
+   - Per frame it reads one rectangle and writes transforms and opacities.
 
-   WHY A CANVAS. The drawing is about three thousand shapes. As SVG, moving
-   the camera re-rasterises all of them every frame; drawn from cached Path2D
-   objects on one canvas it is a few hundred fill calls.
+   WHAT IT NEEDS: nothing but this file and the pictures. No fetch (so it
+   works from file:// and on any host), no other script, no library.
 
-   THE RESTING STATE IS THE FINISHED STATE. With reduced motion this returns
-   before touching anything, so the <img> stays (and if reduced motion is
-   switched on later, the fireflies stop). read() never throws (a throw
-   there would stop every other scroll job on the page), and neither does
-   write(): a failure in the drawing puts the <img> back and stops.
+   THE RESTING STATE IS THE FINISHED STATE. Without script, home-vision.css
+   shows the last frame. With reduced motion this script draws that same
+   last frame (glows on, line landed) and never moves it. If anything throws,
+   it takes its additions out and leaves the CSS's last frame.
    ========================================================================== */
 
 (function () {
   "use strict";
 
+  /* ---- the reactors ----
+     One entry per reactor: [x, y, size] in % of the artboard (x of its
+     1600-unit width, y of its 1800-unit height, size of its width), at the
+     centre of the reactor's vessel. The entry marked 1 is the focal farm's:
+     the camera starts on it. New artwork only needs a new list here. */
+  var REACTORS = [
+    [97.81, 58.47, 0.161], [92.95, 59.62, 0.107], [96.55, 60.28, 0.146], [88.49, 60.42, 0.128], [90.81, 61.69, 0.186], [90.81, 62.76, 0.192],
+    [86.16, 63.43, 0.146], [13.3, 63.78, 0.138], [93.15, 63.86, 0.149], [11.69, 64.16, 0.163], [98.87, 64.28, 0.212], [88.28, 64.33, 0.152],
+    [7.22, 64.41, 0.158], [80.65, 64.51, 0.133], [10.58, 65.09, 0.146], [80.43, 65.12, 0.139], [13.76, 65.53, 0.187], [76.83, 65.56, 0.148],
+    [80.42, 65.7, 0.203], [75.14, 65.73, 0.157], [98.65, 65.74, 0.244], [10.41, 65.94, 0.189], [83.18, 66.27, 0.233], [4.5, 66.67, 0.184],
+    [75.98, 66.79, 0.154], [15.21, 66.94, 0.12], [9.62, 67.02, 0.142], [76.4, 67.03, 0.207], [98.87, 67.17, 0.207], [82.13, 67.41, 0.182],
+    [69.59, 67.47, 0.041], [64.92, 67.48, 0.043], [60.88, 67.49, 0.044], [58.31, 67.5, 0.044], [18.24, 67.48, 0.159], [51.84, 67.53, 0.046],
+    [46.14, 67.54, 0.047], [44.18, 67.55, 0.048], [36.59, 67.57, 0.049], [32.42, 67.59, 0.05], [67.95, 67.6, 0.051], [63.64, 67.61, 0.052],
+    [21.52, 67.62, 0.052], [52.02, 67.66, 0.055], [14.89, 67.63, 0.137], [24.78, 67.76, 0.063], [78.73, 67.73, 0.231], [66.54, 67.81, 0.066],
+    [63.95, 67.82, 0.067], [59.06, 67.84, 0.069], [55.4, 67.86, 0.07], [51.91, 67.88, 0.071], [70.22, 67.99, 0.079], [30.22, 67.99, 0.079],
+    [65.87, 68.01, 0.081], [12.17, 67.97, 0.184], [61.72, 68.03, 0.083], [9.14, 68.02, 0.146], [47.31, 68.13, 0.089], [41.57, 68.16, 0.091],
+    [39.19, 68.17, 0.092], [29.57, 68.23, 0.096], [25.21, 68.26, 0.098], [65.76, 68.29, 0.1], [61.86, 68.31, 0.102], [59.51, 68.34, 0.104],
+    [80.85, 68.36, 0.198], [74.06, 68.36, 0.247], [44.24, 68.45, 0.112], [77.88, 68.51, 0.225], [25.79, 68.59, 0.122], [69.52, 68.62, 0.124],
+    [21.92, 68.62, 0.124], [65.15, 68.65, 0.127], [62.17, 68.68, 0.129], [2.74, 68.75, 0.224], [49.75, 68.8, 0.138], [42.68, 68.87, 0.142],
+    [39.6, 68.9, 0.144], [32.11, 68.97, 0.149], [67.54, 69.02, 0.152], [23.05, 69.05, 0.156], [61.61, 69.09, 0.158], [18.25, 69.11, 0.133],
+    [35.57, 69.39, 0.179], [65.54, 69.6, 0.194], [98.81, 69.72, 0.203], [55.52, 69.75, 0.205], [92.33, 69.84, 0.212], [17.11, 69.89, 0.226],
+    [44.83, 69.9, 0.216], [0.82, 69.95, 0.24], [40.51, 69.97, 0.221], [10.57, 69.99, 0.214], [82.48, 70.03, 0.225], [6.26, 70.09, 0.199],
+    [76.79, 70.13, 0.233], [28.04, 70.15, 0.234], [21.28, 70.22, 0.157], [72.97, 70.2, 0.237], [21.13, 70.3, 0.113], [67.3, 70.31, 0.245],
+    [19.52, 70.36, 0.176], [63.13, 70.38, 0.251], [51.38, 70.6, 0.266], [21.44, 70.77, 0.169], [88.27, 70.74, 0.276], [85.88, 70.8, 0.281],
+    [31.45, 70.97, 0.293], [75.27, 71.05, 0.298], [25.78, 71.08, 0.301], [9.92, 71.14, 0.253], [2.9, 71.18, 0.193], [19.99, 71.39, 0.224],
+    [57.25, 71.47, 0.329], [98.06, 71.48, 0.33], [18.56, 71.62, 0.161], [92.75, 71.65, 0.341], [48.58, 71.68, 0.344], [32.45, 72.06, 0.371],
+    [27.9, 72.17, 0.379], [71.09, 72.29, 0.388], [62.54, 72.55, 0.406], [51.58, 72.88, 0.43], [92.54, 72.96, 0.436], [47.47, 73, 0.439],
+    [83.01, 73.33, 0.462], [36.49, 73.33, 0.463], [27.92, 73.59, 0.481], [75.21, 73.62, 0.483], [96.66, 74.06, 0.514], [9.18, 74.15, 0.521],
+    [60.02, 74.21, 0.525], [92.55, 74.26, 0.528], [53.85, 74.44, 0.542], [43.06, 74.85, 0.571], [30.64, 75.33, 0.606], [60.89, 75.72, 0.634],
+    [48.47, 76.3, 0.675], [92.27, 76.37, 0.68], [42.64, 76.57, 0.694], [81.78, 76.99, 0.725], [33.17, 77.01, 0.726], [69.2, 77.74, 0.779],
+    [16.09, 77.8, 0.783], [4.09, 78.35, 0.823], [53.31, 78.69, 0.847], [91.54, 79.05, 0.873], [84.13, 79.61, 0.913], [29.05, 80.14, 0.951],
+    [69.66, 80.71, 0.992], [6.29, 81.5, 1.048], [83.8, 82.65, 1.131], [76, 83.39, 1.184], [87.36, 85.46, 1.333], [45.15, 86.29, 1.393, 1],
+    [91.68, 88.91, 1.581], [5.22, 90.05, 1.662], [8.3, 94.42, 1.975], [68.36, 98.44, 2.264]
+  ];
+
+  var AB_W = 1600, AB_H = 1800;     // the artboard, in units
+  var HORIZON = 1204;               // where the valley's horizon is, units from the top
+  var LIGHTS_RECT = "640 1470 140 120";   // the focal farm's lit windows (lights.webp)
+
+  // the schedule, as fractions of the pinned scroll
+  var Z_FROM = 0.05, Z_TO = 0.68;   // the camera pulls back between these
+  var Z_TO_PHONE = 0.62;            // a little sooner on a phone (flicks, not a wheel)
+  var FIRST_LIGHT = 0.08;           // the neighbours wait this long
+  var LAST_LIGHT = 0.70;            // every farm is lit by here
+  var FADE = 0.04;                  // how long one farm takes to light
+  var LABEL_OUT = [0.02, 0.09];     // the focal reactor's label leaves as the pull-back starts
+  var NIGHT = 0.64;                 // how dark the night tint is before first light
+  var OPEN = 0.105, OPEN_TALL = 0.08;   // at the start the focal reactor is this share of the frame tall
+  var TAU = 95;                     // ms: how quickly the shown progress follows the scroll
+
+  // the fireflies: every 6 to 14 s, at its own time, each lit reactor's glow
+  // flashes, up in RISE s and down over FALL s, from GLOW_REST of full
+  var RISE = 0.3, FALL = 1.1, GLOW_REST = 0.74, GROW = 0.38;
+
   var sec = document.getElementById("vision");
   var run = document.getElementById("vl-run");
   var stage = document.getElementById("vl-stage");
-  var frame = window.__homeFrame;
-  if (!sec || !run || !stage || !frame) return;
-  if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
-  var img = stage.querySelector(".vl-img");
-  var sky = stage.querySelector(".vl-sky");
+  var art = document.getElementById("vl-art");
+  if (!sec || !run || !stage || !art || !window.requestAnimationFrame) return;
   var line = stage.querySelector(".vl-line");
   var gloss = stage.querySelector(".vl-gloss");
   var label = stage.querySelector(".vl-rx");
-  var src = stage.getAttribute("data-live");
-  if (!img || !sky || !line || !gloss || !src || !window.fetch || !window.Path2D || !("IntersectionObserver" in window)) return;
+  var imgs = Array.prototype.slice.call(art.querySelectorAll("img.vl-layer"));
+  if (!line || !gloss || !imgs.length) return;
   var cv = document.createElement("canvas");
-  var ctx = cv.getContext && cv.getContext("2d");
-  if (!ctx) return;
-  cv.className = "vl-canvas";
-  cv.setAttribute("aria-hidden", "true");
-  // the glows, on their own canvas so the fireflies never redraw the valley
-  var cg = document.createElement("canvas");
-  var gtx = cg.getContext("2d");
+  var gtx = cv.getContext && cv.getContext("2d");
   if (!gtx) return;
-  cg.className = "vl-canvas vl-glows";
-  cg.setAttribute("aria-hidden", "true");
-  var still = window.matchMedia("(prefers-reduced-motion: reduce)");
+
+  var mq = window.matchMedia ? window.matchMedia("(prefers-reduced-motion: reduce)") : { matches: false };
+  var still = mq.matches;
 
   var clamp01 = function (v) { return v < 0 ? 0 : v > 1 ? 1 : v; };
   var span = function (v, a, b) { return clamp01((v - a) / (b - a)); };
   var ease = function (t) { return t * t * (3 - 2 * t); };
 
-  // the camera's schedule, as fractions of the runway
-  var ZOOM_FROM = 0.02, ZOOM_TO = 0.6;    // pull back between these
-  var FIRST_LIGHT = 0.07;                 // the neighbours wait this long
-  var LAST_LIGHT = 0.61;                  // every farm is lit by here, and the
-                                          // line has landed by 0.65, so it holds
-                                          // for the last 35 % of the runway
-  var FADE = 0.04;                        // how long one farm takes to light
-  var LAND = 0.07;                        // the line takes this long to land,
-  var LAND_LEAD = 0.03;                   // starting this far before the last
-                                          // farm is lit; then it holds
-  var DARK = 0.18;                        // how much first light there is
-                                          // before any farm but the first is lit
-  var LABEL_OUT = [0.02, 0.1];            // the reactor's label leaves as the
-                                          // pull-back starts
-  var OPEN = 0.105, OPEN_TALL = 0.075;   // at the start the first reactor
-                                          // stands about this share of the frame
-                                          // tall, so its farm is round it: its
-                                          // house, its palms and its field
-  // A phone is scrolled by flicks, not a wheel: the same schedule would keep
-  // the line dark for most of the runway and hold it for barely a flick.
-  // Below 640px the pull-back and the last farm come a little sooner still,
-  // so the line has landed by 0.6 and holds for the last two fifths.
-  var ZOOM_TO_PHONE = 0.52, LAST_LIGHT_PHONE = 0.56;
+  /* ---- the pieces this script adds ---- */
+  var night = document.createElement("div");
+  night.className = "vl-night"; night.setAttribute("aria-hidden", "true");
+  var lit = document.createElement("img");
+  lit.className = "vl-lit"; lit.alt = ""; lit.decoding = "async";
+  lit.setAttribute("aria-hidden", "true");
+  lit.setAttribute("data-rect", LIGHTS_RECT);
+  var farmImg = art.querySelector('img[data-layer="farm"]') || imgs[imgs.length - 1];
+  lit.src = farmImg.getAttribute("src").replace(/farm\.(\w+)(\?.*)?$/, "lights.$1$2");
+  cv.className = "vl-glows"; cv.setAttribute("aria-hidden", "true");
 
-  // the fireflies: once every 6 to 14 seconds, at its own time, each lit
-  // reactor's glow flashes: up in RISE seconds, back down over FALL. GLOW_REST
-  // is how bright a glow is between flashes, as a share of full; a flash takes
-  // it to full and makes it GROW wider. The first farm flashes the same way,
-  // at half the depth, since in the opening frame its glow is large.
-  var RISE = 0.3, FALL = 1.1, GLOW_REST = 0.66, GROW = 0.38;
-  function zoomTo(v) { return v.sw < 640 ? ZOOM_TO_PHONE : ZOOM_TO; }
-  function lastLight(v) { return v.sw < 640 ? LAST_LIGHT_PHONE : LAST_LIGHT; }
+  // the reactors, in units
+  var farms = [], hero = null;
+  REACTORS.forEach(function (r, i) {
+    var f = { x: r[0] / 100 * AB_W, y: r[1] / 100 * AB_H, s: r[2] / 100 * AB_W, hero: !!r[3], t: 0, a: 1,
+              per: 6 + ((i * 7919) % 1000) / 1000 * 8, ph: ((i * 104729) % 1000) / 1000, jit: ((i * 2654435761) % 1000) / 1000 };
+    if (f.hero) hero = f;
+    farms.push(f);
+  });
+  if (!hero) return;
 
-  var V = null, farms = [], props = [], clouds = [], hero = null, lastT = LAST_LIGHT, pStill = 1;
-  var size = null, sizeDirty = true, navTop = 0, lastKey = "";
-  var armed = false, ready = false, dead = false, lit = false;
-  var grads = {}, sprite = null, dpr = 1, gdpr = 1, dawnRGB = {};
-  var G = null, glowAt = 0, onScreen = false, looping = false;
+  // every moving layer: its element and its rectangle on the artboard
+  var layers = imgs.concat([lit]).map(function (el) {
+    var r = (el.getAttribute("data-rect") || "0 0 1600 1800").split(/\s+/).map(Number);
+    return { el: el, x: r[0], y: r[1], w: r[2], h: r[3], L: null };
+  });
 
-  /* ---- the camera ----
-     The finished frame. The width follows the screen's shape: a wide screen
-     holds the whole valley; a tall one (a phone) holds half of it, and gives
-     the extra height to the sky instead of cropping the valley to its middle
-     third. The horizon always sits well below the words, so the sentence
-     under the line reads on open sky, not on the hills.
-     No lit cloud runs behind the words: if a streak would, the camera pulls
-     back a little further (on a tall screen that lowers the whole drawing,
-     cloud and all) until the streak sits CLEAR px under the sentence. The
-     static <img> follows the same rule in home-vision.css. Only a window
-     close to square can run out of drawing first; there, that streak is left
-     out. */
-  var CLEAR = 36, CLEAR_UP = 8;
-  function frameAt(wu, sw, sh, textBottom) {
-    var W = V.vb[0], foot = V.vb[1];
-    var k = sw / wu, hu = sh / k;
-    var hz = Math.min(0.72 * sh, Math.max(0.4 * sh, textBottom + 72));
-    var y = V.hy - hz / k;
-    if (y > foot - hu) y = foot - hu;              // never below the drawing's foot
-    if (y < V.view.top) y = V.view.top;            // never above its sky
-    return { k: k, x: (W - wu) / 2, y: y, w: wu, h: hu, sw: sw, sh: sh, skip: null };
+  // a round glow, drawn once and stamped for every reactor
+  var sprite = document.createElement("canvas");
+  sprite.width = sprite.height = 128;
+  (function () {
+    var s = sprite.getContext("2d"), g = s.createRadialGradient(64, 64, 0, 64, 64, 64);
+    g.addColorStop(0, "rgba(53,224,138,.9)"); g.addColorStop(0.2, "rgba(53,224,138,.38)");
+    g.addColorStop(0.55, "rgba(53,224,138,.09)"); g.addColorStop(1, "rgba(53,224,138,0)");
+    s.fillStyle = g; s.fillRect(0, 0, 128, 128);
+  })();
+
+  /* ---- the frame: where the artboard sits at the end, and the camera ---- */
+  var M = null;                     // measured: stage size, the last frame, the opening
+  function measure() {
+    var sw = stage.clientWidth, sh = stage.clientHeight;
+    if (!sw || !sh) return null;
+    // where the words end, inside the stage (by layout; their fade does not count)
+    var tb = 0, e = gloss;
+    while (e && e !== stage) { tb += e.offsetTop; e = e.offsetParent; }
+    tb += gloss.offsetHeight;
+    // The last frame. A wide screen holds the whole valley; a tall one (a
+    // phone) about a third of its width, so the valley still fills the lower
+    // half of the frame. The horizon sits well below the words, and the
+    // artboard's foot never above the stage's foot.
+    var wu = AB_W * Math.pow(Math.min(1, (sw / sh) / 1.2), 1.2);
+    var k = sw / wu;
+    var hz = Math.min(0.72 * sh, Math.max(0.4 * sh, tb + 72));
+    var yTop = HORIZON - hz / k;
+    yTop = Math.max(0, Math.min(yTop, AB_H - sh / k));
+    var xLeft = (AB_W - wu) / 2;
+    var m = { sw: sw, sh: sh, k: k, ax: -xLeft * k, ay: -yTop * k, phone: sw < 640, tall: sw < sh };
+    m.hx = m.ax + hero.x * k; m.hy = m.ay + hero.y * k;
+    // the opening: close enough that the focal reactor is about a tenth of
+    // the frame tall, with its house up to the left and its field to the right
+    m.z0 = Math.max(1.5, (m.tall ? OPEN_TALL : OPEN) * sh / (hero.s * k));
+    m.sx0 = (m.tall ? 0.62 : 0.44) * sw;
+    m.sy0 = (m.tall ? 0.5 : 0.46 + 0.04 * clamp01((sh - 730) / 100)) * sh;
+    m.navTop = parseFloat(getComputedStyle(stage).top) || 0;
+    return m;
   }
-  // the streaks of lit cloud that would sit behind the words (t: their box)
-  function behindWords(v, t) {
-    return clouds.filter(function (e) {
-      var l = (e.x0 - v.x) * v.k, r = (e.x1 - v.x) * v.k, top = (e.y0 - v.y) * v.k, bot = (e.y1 - v.y) * v.k;
-      return r > t.l - CLEAR_UP && l < t.r + CLEAR_UP && bot > t.t - CLEAR_UP && top < t.b + CLEAR;
-    });
-  }
-  function view(sw, sh, t) {
-    var W = V.vb[0];
-    var wu = W * Math.pow(Math.min(1, (sw / sh) / 1.2), 0.95);
-    var v = frameAt(wu, sw, sh, t.b), hit = behindWords(v, t);
-    while (hit.length && wu < W) {
-      wu = Math.min(W, wu * 1.01);
-      v = frameAt(wu, sw, sh, t.b); hit = behindWords(v, t);
-    }
-    if (hit.length) v.skip = hit;
-    return v;
-  }
-  function camera(p, v) {
-    var e = ease(span(p, ZOOM_FROM, zoomTo(v)));
-    // close enough that the first reactor stands about a tenth of the frame
-    // tall (an upright frame, a phone's or a tablet's, is narrow, so a little
-    // less there), with its house, its palms and its field around it
-    var tall = v.sw < v.sh;
-    var z0 = Math.max(1.5, (tall ? OPEN_TALL : OPEN) * v.sh / (hero.s * v.k));
-    var z = Math.pow(z0, 1 - e);
-    // where that reactor sits at the start: a little below the middle, with
-    // its farmhouse up to the left and its field to the right. Left of centre
-    // on a wide screen; right of it in an upright frame, whose narrow width
-    // would otherwise lose the house. High enough that it is on screen, whole,
-    // while the words above the drawing are still being read.
-    var ay = tall ? 0.5 : 0.46 + 0.04 * clamp01((v.sh - 730) / 100);   // a little higher on a short laptop
-    var ax0 = v.x + (tall ? 0.55 : 0.44) * v.w, ay0 = v.y + ay * v.h;
-    return { z: z, ax: ax0 + (hero.x - ax0) * e, ay: ay0 + (hero.y - ay0) * e };
+  function camera(p) {
+    var e = ease(span(p, Z_FROM, M.phone ? Z_TO_PHONE : Z_TO));
+    return { e: e, z: Math.pow(M.z0, 1 - e), sx: M.sx0 + (M.hx - M.sx0) * e, sy: M.sy0 + (M.hy - M.sy0) * e };
   }
   // a farm lights a moment after it comes into the frame; the ones that
-  // never do light near the end
-  function thresholds(v) {
-    var m = 0.03, lo = v.x + m * v.w, hi = v.x + (1 - m) * v.w, top = v.y + m * v.h, bot = v.y + (1 - m) * v.h;
-    var samples = [], LL = lastLight(v);
-    for (var p = 0; p <= 1.0001; p += 0.004) samples.push({ p: p, c: camera(p, v) });
+  // never do (hidden at the edges) light near the end
+  var lastT = LAST_LIGHT;
+  function thresholds() {
+    var samples = [];
+    for (var p = 0; p <= 1.0001; p += 0.004) samples.push({ p: p, c: camera(p) });
+    var mx = 0.03 * M.sw, my = 0.03 * M.sh;
     lastT = 0;
-    farms.forEach(function (f, i) {
+    farms.forEach(function (f) {
       if (f.hero) { f.t = -1; return; }
-      var jit = ((i * 2654435761) % 1000) / 1000;         // steady per farm
-      var pe = -1;
+      var fx = M.ax + f.x * M.k, fy = M.ay + f.y * M.k, pe = -1;
       for (var s = 0; s < samples.length; s++) {
-        var c = samples[s].c;
-        var x = c.ax + (f.x - hero.x) * c.z, y = c.ay + (f.y - hero.y) * c.z;
-        if (x > lo && x < hi && y > top && y < bot) { pe = samples[s].p; break; }
+        var c = samples[s].c, x = c.sx + (fx - M.hx) * c.z, y = c.sy + (fy - M.hy) * c.z;
+        if (x > mx && x < M.sw - mx && y > my && y < M.sh - my) { pe = samples[s].p; break; }
       }
-      var t = pe < 0 ? LL - 0.1 + jit * 0.08 : pe + 0.03 + jit * 0.05;
-      f.t = Math.min(LL - FADE, Math.max(FIRST_LIGHT + jit * 0.04, t));
+      var t = pe < 0 ? LAST_LIGHT - 0.1 + f.jit * 0.08 : pe + 0.03 + f.jit * 0.05;
+      f.t = Math.min(LAST_LIGHT - FADE, Math.max(FIRST_LIGHT + f.jit * 0.04, t));
       if (f.t + FADE > lastT) lastT = f.t + FADE;
-      // each farm's own firefly: its period, and where in it the farm starts
-      f.per = 6 + ((i * 7919) % 1000) / 1000 * 8;
-      f.ph = ((i * 104729) % 1000) / 1000;
     });
-    // past this the frame no longer changes: the camera has stopped, every
-    // farm is lit, the line has landed and its full stop is lit
-    pStill = Math.min(1, Math.max(zoomTo(v), lastT, lastT - LAND_LEAD + LAND + 0.02));
-  }
-  function landAt(p) { return ease(span(p, lastT - LAND_LEAD, lastT - LAND_LEAD + LAND)); }
-
-  /* ---- colour ---- */
-  function rgb(hex) { var n = parseInt(hex.slice(1), 16); return [n >> 16, (n >> 8) & 255, n & 255]; }
-  function mixed(a, b, t) {
-    return "rgb(" + Math.round(a[0] + (b[0] - a[0]) * t) + "," + Math.round(a[1] + (b[1] - a[1]) * t) + "," +
-      Math.round(a[2] + (b[2] - a[2]) * t) + ")";
-  }
-  var VON, VOFF;
-  function stops(g, list) {
-    list.forEach(function (s) {
-      var c = rgb(s[1]);
-      g.addColorStop(s[0], "rgba(" + c[0] + "," + c[1] + "," + c[2] + "," + s[2] + ")");
-    });
-    return g;
-  }
-  // a fill that changes with first light (the far ranges, the hills, the floor)
-  function fillAt(key, dawn) {
-    var d = dawnRGB[key];
-    return d ? mixed(d[0], d[1], dawn) : (V.c[key] || key);
   }
 
-  /* ---- taking the data ---- */
-  function build(data) {
-    V = data;
-    if (!V.view) V.view = { top: 0, h: 1000 };
-    V.layers.forEach(function (l) {
-      if (l.d) l.path = new Path2D(l.d);
-      if (l.k === "grad" || l.k === "light") l.grad = stops(ctx.createLinearGradient(0, l.y, 0, l.y + l.h), V.g[l.g]);
-      if (l.k === "lightfill") {
-        // a streak is a few flat ellipses, each written "Mx y a rx ry 0 1 0 ..."
-        // from its left end (build/vision-valley.py, cloud())
-        l.ells = [];
-        var re = /M(-?[\d.]+) (-?[\d.]+)a([\d.]+) ([\d.]+) /g, m;
-        while ((m = re.exec(l.d))) {
-          var x = +m[1], y = +m[2], rx = +m[3], ry = +m[4];
-          var e = { cx: x + rx, cy: y, rx: rx, ry: ry, x0: x, x1: x + 2 * rx, y0: y - ry, y1: y + ry };
-          l.ells.push(e); clouds.push(e);
-        }
+  function layout() {
+    M = measure();
+    if (!M) return false;
+    art.style.left = M.ax + "px"; art.style.top = M.ay + "px";
+    art.style.width = AB_W * M.k + "px"; art.style.height = AB_H * M.k + "px";
+    art.style.bottom = "auto";
+    layers.forEach(function (l) {
+      // each layer's box at the last frame, relative to the stage
+      l.L = { x: M.ax + l.x * M.k, y: M.ay + l.y * M.k };
+      var st = l.el.style;
+      if (l.el === lit) {                 // outside the artboard, so it can sit over the night
+        st.left = l.L.x + "px"; st.top = l.L.y + "px";
+      } else {
+        st.left = (l.x / AB_W * 100) + "%"; st.top = (l.y / AB_H * 100) + "%";
       }
+      st.width = l.w * M.k + "px"; st.height = l.h * M.k + "px";
     });
-    Object.keys(V.glyphs).forEach(function (k) {
-      V.glyphs[k].forEach(function (part) { part.path = new Path2D(part.d); });
-    });
-    V.farms.forEach(function (r) {
-      var f = { x: r[0], y: r[1], s: r[2], typ: r[3], hero: !!r[4], hdr: r[5] ? new Path2D(r[5]) : null, t: 0, a: 1 };
-      if (f.hero) hero = f;
-      farms.push(f);
-    });
-    if (!hero) return false;
-    V.props.forEach(function (r) {
-      props.push(r[0] === "r" ? { farm: farms[r[1]] }
-        : { g: V.glyphs[r[0]], x: r[1], y: r[2], s: r[3], flip: !!r[4], col: r[5] });
-    });
-    VON = rgb(V.c.vessel); VOFF = rgb(V.c.vesselOff);
-    Object.keys(V.cD || {}).forEach(function (k) {
-      if (V.c[k]) dawnRGB[k] = [rgb(V.c[k]), rgb(V.cD[k])];
-    });
-    var skyTop = V.sky.y, skyBot = V.hy + 2;
-    grads.sky = stops(ctx.createLinearGradient(0, skyTop, 0, skyBot), V.g.sky);
-    grads.dawn = stops(ctx.createLinearGradient(0, skyTop, 0, skyBot), V.g.dawn);
-    // the sunrise glow is an ellipse: a round gradient drawn in squashed space
-    grads.sun = stops(ctx.createRadialGradient(0, 0, 0, 0, 0, V.sun.rx), V.g.sun);
-    // and the water mirrors all three, flipped about the horizon
-    grads.wn = stops(ctx.createLinearGradient(0, V.water.y0, 0, V.water.y1), V.g.wnight);
-    grads.wd = stops(ctx.createLinearGradient(0, V.water.y0, 0, V.water.y1), V.g.wdawn);
-    // (the sun's reflection is an ellipse too; a pattern can carry the
-    // squash where a gradient cannot, so it is painted once and reused)
-    grads.ws = sunPattern();
-    sprite = document.createElement("canvas");
-    sprite.width = sprite.height = 128;
-    var sc = sprite.getContext("2d");
-    sc.fillStyle = stops(sc.createRadialGradient(64, 64, 0, 64, 64, 64), V.g.glow);
-    sc.fillRect(0, 0, 128, 128);
+    var gd = Math.min(window.devicePixelRatio || 1, M.sw > 1600 ? 1 : 1.5);
+    cv.width = Math.round(M.sw * gd); cv.height = Math.round(M.sh * gd);
+    M.gd = gd;
+    M.lw = label ? label.offsetWidth : 0;     // so the label never runs off the stage
+    thresholds();
     return true;
   }
 
-  function sunPattern() {
-    if (!window.DOMMatrix) return null;
-    var n = 256, pc = document.createElement("canvas");
-    pc.width = pc.height = n;
-    var g = pc.getContext("2d");
-    g.fillStyle = stops(g.createRadialGradient(n / 2, n / 2, 0, n / 2, n / 2, n / 2), V.g.wsun);
-    g.fillRect(0, 0, n, n);
-    var pat = ctx.createPattern(pc, "no-repeat");
-    if (!pat || !pat.setTransform) return null;
-    // the n-pixel square onto the ellipse's box, in drawing units
-    var sx = 2 * V.sun.rx / n, sy = 2 * V.sun.ry / n;
-    pat.setTransform(new DOMMatrix([sx, 0, 0, sy, V.sun.cx - V.sun.rx, V.water.cy - V.sun.ry]));
-    return pat;
-  }
-
-  // m: what read() measured (stage size, where the words end, the sticky top)
-  function resize(m) {
-    dpr = Math.min(window.devicePixelRatio || 1, m.sw < 640 ? 1.5 : 2);
-    cv.width = Math.round(m.sw * dpr); cv.height = Math.round(m.sh * dpr);
-    // the glows are soft, so their canvas needs no more than one pixel per
-    // CSS pixel: a quarter of the work, and of the memory, on a 2x screen
-    gdpr = Math.min(dpr, 1);
-    cg.width = Math.round(m.sw * gdpr); cg.height = Math.round(m.sh * gdpr);
-    size = view(m.sw, m.sh, m.t);
-    thresholds(size);
-    navTop = m.navTop;
-  }
-
-  /* ---- drawing ---- */
-  function draw(p) {
-    var v = size, c = camera(p, v), S = v.k * c.z;
-    var ox = v.k * (c.ax - hero.x * c.z - v.x), oy = v.k * (c.ay - hero.y * c.z - v.y);
-    var u = 1 / S;                                   // one screen pixel, in drawing units
-    var x0 = -ox / S, y0 = -oy / S, x1 = (v.sw - ox) / S, y1 = (v.sh - oy) / S;
-    var near = clamp01((c.z - 1.6) / 3);
-    var i, f, q, share = 0;
-    for (i = 0; i < farms.length; i++) {
-      f = farms[i];
-      f.a = f.hero ? 1 : clamp01((p - f.t) / FADE);
-      share += f.a;
-    }
-    share /= farms.length;
-    var dawn = DARK + (1 - DARK) * ease(share);
-    var D = dpr * S, DX = dpr * ox, DY = dpr * oy;
-
-    ctx.setTransform(1, 0, 0, 1, 0, 0);
-    ctx.globalAlpha = 1;
-    ctx.fillStyle = "#070b09";
-    ctx.fillRect(0, 0, cv.width, cv.height);
-    ctx.setTransform(D, 0, 0, D, DX, DY);
-    ctx.lineCap = "butt"; ctx.lineJoin = "round";
-
-    function glyph(parts, x, y, sx, sy, fillOwn, vessel) {
-      ctx.setTransform(D * sx, 0, 0, D * sy, D * x + DX, D * y + DY);
-      var lw = u / Math.abs(sy);
-      for (var j = 0; j < parts.length; j++) {
-        var part = parts[j];
-        if (part.v) { ctx.fillStyle = vessel; ctx.fill(part.path); continue; }
-        if (part.w) { ctx.fillStyle = V.c.window; ctx.fill(part.path); continue; }
-        if (part.fill) { ctx.fillStyle = part.fill === "$" ? fillOwn : V.c[part.fill]; ctx.fill(part.path); }
-        if (part.stroke) { ctx.strokeStyle = V.c[part.stroke]; ctx.lineWidth = lw; ctx.stroke(part.path); }
+  /* ---- drawing one frame ---- */
+  var shownP = -1, shownKey = "";
+  function frame(p, now) {
+    var c = camera(p), z = c.z, i, f, share = 0;
+    // the pictures: one transform each
+    var key = p.toFixed(5);
+    if (key !== shownKey) {
+      shownKey = key;
+      for (i = 0; i < layers.length; i++) {
+        var l = layers[i], L = l.L;
+        if (l.el === lit) {
+          // the lit windows sit outside the artboard, so their origin is the stage
+          l.el.style.transform = "translate3d(" + (c.sx + (L.x - M.hx) * z - L.x).toFixed(2) + "px," +
+            (c.sy + (L.y - M.hy) * z - L.y).toFixed(2) + "px,0) scale(" + z.toFixed(5) + ")";
+          continue;
+        }
+        l.el.style.transform = "translate3d(" + (c.sx + (L.x - M.hx) * z - L.x).toFixed(2) + "px," +
+          (c.sy + (L.y - M.hy) * z - L.y).toFixed(2) + "px,0) scale(" + z.toFixed(5) + ")";
+      }
+      for (i = 0; i < farms.length; i++) {
+        f = farms[i];
+        f.a = still || f.hero ? 1 : clamp01((p - f.t) / FADE);
+        share += f.a;
+      }
+      share /= farms.length;
+      night.style.opacity = still ? "0" : (NIGHT * (1 - ease(share)) * (1 - 0.5 * c.e)).toFixed(3);
+      // the words land as the last farms light; the full stop after them
+      var land = still ? 1 : ease(span(p, lastT - 0.03, lastT + 0.05));
+      var o = land.toFixed(3), ty = "translate3d(0," + ((1 - land) * 16).toFixed(2) + "px,0)";
+      line.style.opacity = o; gloss.style.opacity = o;
+      line.style.transform = ty; gloss.style.transform = ty;
+      sec.classList.toggle("is-lit", still || p >= lastT + 0.06);
+      if (label) {
+        var la = still ? 0 : 1 - span(p, LABEL_OUT[0], LABEL_OUT[1]);
+        label.style.opacity = la.toFixed(3);
+        if (la > 0) {
+          // under the reactor's plinth, with a leader line up to it
+          var hk = hero.s * M.k * z, lead = Math.round(Math.max(12, hk * 0.16));
+          label.style.setProperty("--vl-lead", lead + "px");
+          label.style.transform = "translate3d(" + Math.round(Math.min(c.sx, M.sw - M.lw - 12)) + "px," + Math.round(c.sy + 0.45 * hk + lead) + "px,0)";
+        }
       }
     }
-
-    V.layers.forEach(function (l) {
-      if (l.k !== "sun") ctx.setTransform(D, 0, 0, D, DX, DY);
-      switch (l.k) {
-        case "sky":
-          ctx.fillStyle = grads.sky; ctx.fillRect(V.sky.x, V.sky.y, V.sky.w, V.sky.h); break;
-        case "stars":
-          ctx.globalAlpha = l.a * (1 - V.starFade * dawn); ctx.fillStyle = "#ffffff"; ctx.fill(l.path);
-          ctx.globalAlpha = 1; break;
-        case "dawn":
-          ctx.globalAlpha = dawn; ctx.fillStyle = grads.dawn; ctx.fillRect(V.sky.x, V.sky.y, V.sky.w, V.sky.h);
-          ctx.globalAlpha = 1; break;
-        case "sun":
-          ctx.save(); ctx.globalAlpha = dawn;
-          ctx.translate(V.sun.cx, V.sun.cy); ctx.scale(1, V.sun.ry / V.sun.rx);
-          ctx.fillStyle = grads.sun; ctx.fillRect(-V.sun.rx, -V.sun.rx, 2 * V.sun.rx, 2 * V.sun.rx);
-          ctx.restore(); break;
-        case "grad":
-          ctx.fillStyle = l.grad; ctx.fillRect(l.x, l.y, l.w, l.h); break;
-        case "light":
-          // warm air that only first light brings
-          if (dawn < 0.01) break;
-          ctx.globalAlpha = dawn; ctx.fillStyle = l.grad; ctx.fillRect(l.x, l.y, l.w, l.h);
-          ctx.globalAlpha = 1; break;
-        case "lightfill":
-          // lit cloud: only once there is light enough to catch
-          var ca = ease(span(dawn, 0.4, 1));
-          if (ca < 0.01) break;
-          ctx.globalAlpha = ca; ctx.fillStyle = V.c[l.fill];
-          if (!v.skip) ctx.fill(l.path);
-          else {
-            ctx.beginPath();
-            l.ells.forEach(function (e) {
-              if (v.skip.indexOf(e) >= 0) return;
-              ctx.moveTo(e.cx + e.rx, e.cy); ctx.ellipse(e.cx, e.cy, e.rx, e.ry, 0, 0, Math.PI * 2);
-            });
-            ctx.fill();
-          }
-          ctx.globalAlpha = 1; break;
-        case "fill":
-          ctx.fillStyle = fillAt(l.fill, dawn); ctx.fill(l.path);
-          if (l.stroke) { ctx.strokeStyle = V.c[l.stroke]; ctx.lineWidth = l.w * u; ctx.stroke(l.path); }
-          break;
-        case "water":
-          // standing water mirrors the sky, so it warms with it
-          ctx.fillStyle = grads.wn; ctx.fill(l.path);
-          ctx.globalAlpha = dawn; ctx.fillStyle = grads.wd; ctx.fill(l.path);
-          if (grads.ws) { ctx.fillStyle = grads.ws; ctx.fill(l.path); }
-          ctx.globalAlpha = 1; break;
-        case "stroke":
-          ctx.strokeStyle = V.c[l.stroke]; ctx.lineWidth = l.w * u; ctx.stroke(l.path); break;
-        case "plants":
-          ctx.globalAlpha = 0.32 + 0.68 * near; ctx.strokeStyle = V.c.plants; ctx.lineWidth = u;
-          ctx.lineCap = "round"; ctx.stroke(l.path); ctx.lineCap = "butt"; ctx.globalAlpha = 1; break;
-        case "dose":
-          // the protectant running out along the first farm's rows; it moves
-          // with the scroll, so it only moves while someone is reading it
-          if (near < 0.02) break;
-          ctx.globalAlpha = 0.8 * near; ctx.strokeStyle = V.c.dose; ctx.lineWidth = 1.8 * u; ctx.lineCap = "round";
-          ctx.setLineDash([0.1 * u, 8 * u]); ctx.lineDashOffset = -p * 900 * u;
-          ctx.stroke(l.path); ctx.setLineDash([]); ctx.lineCap = "butt"; ctx.globalAlpha = 1; break;
-        case "headers":
-          for (i = 0; i < farms.length; i++) {
-            f = farms[i];
-            if (!f.hdr || f.x > x1 + 10 || f.x + 700 < x0 || f.y < y0 - 200 || f.y > y1 + 200) continue;
-            ctx.lineWidth = (f.hero ? 2 : 1.2) * u;
-            if (f.a < 1) { ctx.globalAlpha = 1 - f.a; ctx.strokeStyle = V.c.hdrOff; ctx.stroke(f.hdr); }
-            if (f.a > 0) { ctx.globalAlpha = f.a; ctx.strokeStyle = f.hero ? V.c.hdrHero : V.c.hdr; ctx.stroke(f.hdr); }
-          }
-          ctx.globalAlpha = 1; break;
-        case "props":
-          // reactors, houses, trees, palms and bananas, back to front
-          for (i = 0; i < props.length; i++) {
-            q = props[i];
-            if (q.farm) {
-              f = q.farm;
-              if (f.x < x0 - 30 || f.x > x1 + 30 || f.y < y0 - 5 || f.y - f.s > y1 + 5) continue;
-              if (!f.typ || f.s * S < 2.2) {
-                ctx.setTransform(D, 0, 0, D, DX, DY);
-                ctx.fillStyle = mixed(VOFF, VON, f.a);
-                ctx.beginPath(); ctx.arc(f.x, f.y - f.s * 0.5, Math.max(0.85, f.s * 0.4, 0.6 * u), 0, Math.PI * 2); ctx.fill();
-                continue;
-              }
-              ctx.globalAlpha = 0.5 + 0.5 * f.a;
-              glyph(V.glyphs["r" + f.typ], f.x, f.y, f.s / 100, f.s / 100, null, mixed(VOFF, VON, f.a));
-              ctx.globalAlpha = 1;
-              continue;
-            }
-            if (q.x + q.s < x0 || q.x - q.s > x1 || q.y < y0 || q.y - 1.1 * q.s > y1) continue;
-            if (q.s * S < 1.2) continue;
-            glyph(q.g, q.x, q.y, (q.flip ? -1 : 1) * q.s / 100, q.s / 100, q.col, null);
-          }
-          ctx.setTransform(D, 0, 0, D, DX, DY);
-          break;
-      }
-    });
-
-    // the glows, on their own canvas: remember where they go, so the
-    // fireflies can redraw them without the valley
-    var q = gdpr / dpr;
-    G = { D: D * q, DX: DX * q, DY: DY * q, u: u, x0: x0, y0: y0, x1: x1, y1: y1 };
-    glows(performance.now());
-
-    // the words: the line and its sentence land together as the last farms
-    // light; the full stop lights after them
-    var land = landAt(p);
-    stage.style.setProperty("--vl-land", land.toFixed(3));
-    var nowLit = p >= lastT - LAND_LEAD + LAND + 0.012;
-    if (nowLit !== lit) { lit = nowLit; sec.classList.toggle("is-lit", lit); }
-
-    // the first reactor's label, beside it in the close-up only
-    if (label) {
-      var la = 1 - span(p, LABEL_OUT[0], LABEL_OUT[1]);
-      label.style.opacity = la.toFixed(3);
-      if (la > 0) {
-        // its leader line drops from the middle of the reactor's plinth, below
-        // the brightest of its glow
-        var hx = v.k * (c.ax - v.x), hy = v.k * (c.ay - v.y), lead = Math.round(Math.max(12, hero.s * S * 0.16));
-        label.style.setProperty("--vl-lead", lead + "px");
-        label.style.transform = "translate(" + Math.round(hx) + "px," + Math.round(hy + lead) + "px)";
-      }
-    }
+    glows(c, now);
   }
 
   /* ---- the glows, and the fireflies ----
      A lit reactor's glow rests a little below full and flashes to full, and
-     wider, once a period, at its own time: quickly up and slowly down, the
-     way a firefly does. As a farm first comes on, its glow swells once with
-     the scroll, so the light spreads across the valley as a scatter of small
-     flares rather than a fade. */
-  function flash(f, sec) {
-    var x = ((sec / f.per + f.ph) % 1) * f.per;  // seconds into its period
+     wider, once a period, at its own time: quickly up, slowly down. As a
+     farm first comes on, its glow swells once with the scroll, so the light
+     spreads across the valley as a scatter of small flares. */
+  function flash(f, s) {
+    var x = ((s / f.per + f.ph) % 1) * f.per;
     if (x < RISE) { x /= RISE; return x * x * (3 - 2 * x); }
     x = 1 - (x - RISE) / FALL;
     return x > 0 ? x * x : 0;
   }
-  function glows(now) {
-    if (!G) return;
+  var glowAt = 0;
+  function glows(c, now) {
     glowAt = now;
-    var g = G, sec = now / 1000, i, f;
+    var g = M.gd, K = M.k * c.z, s = now / 1000, W = M.sw, H = M.sh;
     gtx.setTransform(1, 0, 0, 1, 0, 0);
-    gtx.clearRect(0, 0, cg.width, cg.height);
-    gtx.setTransform(g.D, 0, 0, g.D, g.DX, g.DY);
-    for (i = 0; i < farms.length; i++) {
-      f = farms[i];
+    gtx.clearRect(0, 0, cv.width, cv.height);
+    gtx.setTransform(g, 0, 0, g, 0, 0);
+    for (var i = 0; i < farms.length; i++) {
+      var f = farms[i];
       if (f.a <= 0) continue;
-      // a far farm is at least a small point of light, so a phone's
-      // wide last frame still reads as many farms, each lit
-      var r = f.hero ? f.s * 2.3 : Math.max(5.5, f.s * 1.9, 3.4 * g.u);
-      var b = flash(f, sec) * (f.hero ? 0.5 : 1);
-      var on = f.a < 1 ? Math.sin(Math.PI * f.a) : 0;   // the swell as it comes on
-      var k = 1 + GROW * Math.max(b, on);
-      var gx = f.x - f.s * 0.16, gy = f.y - f.s * 0.45, R = r * k;
-      if (gx + R < g.x0 || gx - R > g.x1 || gy + R < g.y0 || gy - R > g.y1) continue;
-      gtx.globalAlpha = f.a * (GLOW_REST + (1 - GLOW_REST) * Math.max(b, on));
-      gtx.drawImage(sprite, gx - R, gy - R, 2 * R, 2 * R);
+      // a far farm is at least a small point of light
+      var R = f.hero ? f.s * (2.9 - 0.6 * c.e) * K : Math.max(5.5 * K, f.s * 1.9 * K, 4.2);
+      var x = c.sx + (M.ax + f.x * M.k - M.hx) * c.z, y = c.sy + (M.ay + f.y * M.k - M.hy) * c.z;
+      var b = still ? 0 : flash(f, s) * (f.hero ? 0.5 : 1);
+      var on = f.a < 1 ? Math.sin(Math.PI * f.a) : 0;
+      var q = Math.max(b, on);
+      R *= 1 + GROW * q;
+      if (x + R < 0 || x - R > W || y + R < 0 || y - R > H) continue;
+      // the focal farm's glow is the whole light of the opening frame
+      gtx.globalAlpha = f.hero ? 1 - 0.25 * c.e * (1 - q) : f.a * (GLOW_REST + (1 - GLOW_REST) * q);
+      gtx.drawImage(sprite, x - R, y - R, 2 * R, 2 * R);
     }
     gtx.globalAlpha = 1;
   }
-  // the loop: only while the section is on screen, the tab is visible and
-  // motion is welcome; a scroll frame that already drew the glows counts.
-  // About 30 redraws a second, and 20 on a phone: a glow changes slowly, so
-  // the steps do not show, and a phone's battery is spared.
-  function tick(now) {
-    try {
-      if (!onScreen || dead || !ready || still.matches || document.hidden) { looping = false; if (!dead) glows(now); return; }
-      if (now - glowAt > (size && size.sw < 640 ? 45 : 30)) glows(now);
-    } catch (e) { looping = false; fail(); return; }
-    requestAnimationFrame(tick);
-  }
-  function wake() {
-    if (looping || !onScreen || dead || !ready || still.matches || document.hidden) return;
-    looping = true;
-    requestAnimationFrame(tick);
-  }
 
-  /* ---- the frame job ---- */
-  // an element's box in the stage, by layout (the landing transform does
-  // not count)
-  function box(el) {
-    var x = 0, y = 0, e = el;
-    while (e && e !== stage) { x += e.offsetLeft; y += e.offsetTop; e = e.offsetParent; }
-    return { l: x, t: y, r: x + el.offsetWidth, b: y + el.offsetHeight };
-  }
-  function measure() {
-    var a = box(line), b = box(gloss);
-    return {
-      sw: stage.clientWidth, sh: stage.clientHeight,
-      tb: b.b,
-      t: { l: Math.min(a.l, b.l), r: Math.max(a.r, b.r), t: a.t, b: b.b },
-      navTop: parseFloat(getComputedStyle(stage).top) || 0
-    };
-  }
-  function read(force) {
-    if (!V || dead) return undefined;
+  /* ---- the loop ---- */
+  var p = 0, target = 0, last = 0, queued = false, dead = false, dirty = true;
+  function readTarget() {
     var r = run.getBoundingClientRect(), vh = window.innerHeight;
-    // arm only while the whole section is still below the screen
-    if (!armed) return r.top > vh ? { arm: true } : undefined;
-    // off screen, nothing to draw; except the first frame, drawn at once
-    // (still below the screen) so the canvas takes over from the <img> unseen
-    if ((r.bottom < -60 || r.top > vh + 60) && !force && ready) return undefined;
-    var m = null;
-    if (sizeDirty || !size) {
-      m = measure();
-      if (size && m.sw === size.sw && m.sh === size.sh && Math.abs(m.tb - size.tb) < 1) m = null;
-      else r = run.getBoundingClientRect();
-      sizeDirty = false;
-    }
-    var sh = m ? m.sh : size.sh;
-    var travel = r.height - sh;
-    var p = travel > 0 ? clamp01(((m ? m.navTop : navTop) - r.top) / travel) : 1;
-    if (!m && size) p = Math.min(p, pStill);    // past it, every frame is the same
-    var key = p.toFixed(4);
-    if (!m && !force && key === lastKey) return undefined;
-    lastKey = key;
-    return { p: p, m: m };
+    var travel = r.height - M.sh;
+    target = still ? 1 : travel > 0 ? clamp01((M.navTop - r.top) / travel) : 1;
+    return r.bottom > -40 && r.top < vh + 40;      // on screen
   }
-  function write(s) {
+  function tick(now) {
+    queued = false;
     if (dead) return;
     try {
-      if (s.arm) {
-        armed = true;
-        sec.classList.add("is-live");
-        sizeDirty = true;
-        frame.request();                 // the next frame measures the new layout
-        return;
+      if (dirty) { if (!layout()) return; dirty = false; shownKey = ""; }
+      var onScreen = readTarget();
+      var dt = last ? Math.min(64, now - last) : 16;
+      last = now;
+      if (!onScreen || p < 0 || still) p = target;       // off screen: jump, nobody sees it
+      else {
+        p += (target - p) * (1 - Math.exp(-dt / TAU));
+        if (Math.abs(target - p) < 0.0004) p = target;
       }
-      if (s.m) { resize(s.m); size.tb = s.m.tb; }
-      draw(s.p);
-      if (!ready) {
-        img.insertAdjacentElement("afterend", cv);
-        cv.insertAdjacentElement("afterend", cg);
-        ready = true;
-        sec.classList.add("is-ready");
-        wake();
-      }
-    } catch (e) { fail(); }
+      var moving = p !== target;
+      if (onScreen && (shownKey !== p.toFixed(5) || (!still && now - glowAt > (M.phone ? 45 : 30)))) frame(p, now);
+      else if (!onScreen && shownKey !== p.toFixed(5)) frame(p, now);
+      // keep going while it glides, and while it is on screen (the fireflies)
+      if (moving || (onScreen && !still && !document.hidden)) request();
+      else last = 0;
+    } catch (err) { fail(); }
   }
-  // anything wrong in the drawing: back to the <img>, and stop
+  function request() { if (!queued && !dead) { queued = true; requestAnimationFrame(tick); } }
+
+  // anything wrong: take the additions out, and the CSS's last frame stays
   function fail() {
     dead = true;
-    sec.classList.remove("is-ready", "is-lit");
-    if (cv.parentNode) cv.parentNode.removeChild(cv);
-    if (cg.parentNode) cg.parentNode.removeChild(cg);
-    if (run.getBoundingClientRect().top > window.innerHeight) sec.classList.remove("is-live");
+    sec.classList.remove("is-live", "is-lit", "is-still");
+    [night, lit, cv].forEach(function (el) { if (el.parentNode) el.parentNode.removeChild(el); });
+    art.removeAttribute("style");
+    imgs.forEach(function (el, i) { el.style.transform = ""; el.style.width = ""; el.style.height = ""; });
+    [line, gloss, label].forEach(function (el) { if (el) { el.style.opacity = ""; el.style.transform = ""; } });
+    // the inline % positions of each layer are the markup's own; put them back
+    layers.forEach(function (l) {
+      if (l.el === lit) return;
+      l.el.style.left = (l.x / AB_W * 100) + "%"; l.el.style.top = (l.y / AB_H * 100) + "%";
+      l.el.style.width = (l.w / AB_W * 100) + "%"; l.el.style.height = (l.h / AB_H * 100) + "%";
+    });
   }
 
-  function load() {
-    fetch(src, { credentials: "same-origin" }).then(function (r) {
-      if (!r.ok) throw new Error(r.status);
-      return r.json();
-    }).then(function (data) {
-      if (!build(data)) throw new Error("no first farm");
-      frame.request();                 // the next frame arms it, if it may
-    }).catch(function () { V = null; /* the <img> stays: the finished frame */ });
+  function setMode() {
+    still = mq.matches;
+    sec.classList.toggle("is-live", !still);
+    sec.classList.toggle("is-still", still);
+    dirty = true; p = -1; last = 0;
+    request();
   }
 
-  // fail is also the frame's fallback: if this job is ever dropped, the
-  // section goes back to the finished <img> rather than freezing mid-run
-  frame.add(function () { try { return read(false); } catch (e) { return undefined; } }, write, fail);
-  window.addEventListener("scroll", frame.request, { passive: true });
-  window.addEventListener("resize", function () { sizeDirty = true; lastKey = ""; frame.request(); });
+  try {
+    art.insertAdjacentElement("afterend", night);
+    night.insertAdjacentElement("afterend", lit);
+    lit.insertAdjacentElement("afterend", cv);
+    setMode();
+  } catch (err) { fail(); return; }
 
-  // the fireflies run only while a fair part of the drawing is on screen
-  // (not for the sliver left above the notes)
-  new IntersectionObserver(function (entries) {
-    var e = entries[entries.length - 1];
-    onScreen = e.isIntersecting && e.intersectionRatio >= 0.15;
-    wake();
-  }, { threshold: [0, 0.15] }).observe(stage);
-  document.addEventListener("visibilitychange", wake);
+  window.addEventListener("scroll", request, { passive: true });
+  window.addEventListener("resize", function () { dirty = true; request(); });
+  if (window.ResizeObserver) new ResizeObserver(function () { dirty = true; request(); }).observe(stage);
+  document.addEventListener("visibilitychange", request);
+  if (mq.addEventListener) mq.addEventListener("change", setMode);
+  else if (mq.addListener) mq.addListener(setMode);
 
-  // fetch the drawing when the section is a screen and a half away
-  var nearIO = new IntersectionObserver(function (entries) {
-    if (entries.some(function (e) { return e.isIntersecting; })) { nearIO.disconnect(); load(); }
-  }, { rootMargin: "150% 0px" });
-  nearIO.observe(sec);
+  // the pictures are lazy for the page's first load; fetch them properly
+  // once the section is within two screens
+  function eager() {
+    imgs.forEach(function (el) { el.loading = "eager"; });
+    lit.loading = "eager";
+  }
+  if ("IntersectionObserver" in window) {
+    var near = new IntersectionObserver(function (es) {
+      if (es.some(function (e) { return e.isIntersecting; })) { near.disconnect(); eager(); }
+    }, { rootMargin: "200% 0px" });
+    near.observe(sec);
+  } else eager();
 })();

@@ -6,11 +6,16 @@ Generated rather than hand-drawn because it has to hold a few hundred small
 farms in correct perspective, and every farm needs the same parts in the same
 order so home-vision.js can light them one by one. Same seed, same drawing,
 every time. Run it after any change here; it rewrites the SVG (the finished
-frame, an <img>) and the JSON (the same layers, for the canvas):
+frame) and the JSON (the same drawing as layers):
 
     in the prototype folder:   valley.svg, valley.json (next to this file)
-    as build/vision-valley.py: assets/img/home/vision-valley.svg and
-                               assets/data/vision-valley.json
+    as build/vision-valley.py: build/vision/valley.svg and build/vision/valley.json
+
+Since 29 Sep 2026 the homepage does not load either file. The section is
+built from picture layers (assets/img/home/vision/, see the README there),
+so the design team's hand-drawn landscape can replace them. Until it does,
+the layers are painted from this drawing by build/vision/render.html and
+packed by build/vision-layers.py.
 
 The picture is 1600 wide. The valley itself fills y 0..1000; the sky goes on
 up to y -800 so that a tall screen (a phone) can end further out, with the
@@ -1021,8 +1026,12 @@ js = json.dumps(data, separators=(",", ":"))
 
 here = Path(__file__).resolve().parent
 if here.name == "build":          # integrated: build/vision-valley.py
-    OUT_SVG = here.parent / "assets" / "img" / "home" / "vision-valley.svg"
-    OUT_JSON = here.parent / "assets" / "data" / "vision-valley.json"
+    # Source material only. The page no longer reads either file: build/vision/
+    # render.html paints the placeholder layers in assets/img/home/vision/
+    # from the JSON, and the SVG is the vector reference for the design team.
+    (here / "vision").mkdir(exist_ok=True)
+    OUT_SVG = here / "vision" / "valley.svg"
+    OUT_JSON = here / "vision" / "valley.json"
 else:                             # the prototype folder
     OUT_SVG, OUT_JSON = here / "valley.svg", here / "valley.json"
 OUT_SVG.write_text(svg + "\n")
