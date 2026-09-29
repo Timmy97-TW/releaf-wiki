@@ -1,177 +1,186 @@
 /* =============================================================================
-   ReLeaf homepage: 02 THE HOUR
+   ReLeaf homepage: 02 THE HOUR (simplified 29 Sep)
    -----------------------------------------------------------------------------
-   One spell of heat and drought on one farm, on one axis in days: from three
-   days before it (the forecast) to three weeks after (Farmer Chen's next
-   check). Three lanes, the weather, the crop and the farmer, and a hatched
-   band from day 0 to the next check where nothing protects the field.
+   One idea on one screen: the damage starts before anyone can see it, and
+   the forecast is the only warning that comes in time.
 
-   Every bar is placed from its start and end day, --a and --b, on a -3 to 21
-   scale:  left = (a + 3) / 24,  width = (b - a) / 24.
+   One line, to scale, from three days before the heat (the forecast) to
+   three weeks after it (the next check): -3 to 21 days, so a moment at day d
+   sits at --x = (d + 3) / 24 * 100. The green stretch is the warning; the
+   rust stretch is the damage, faint while nobody can see it and full by the
+   next check. From 760px the line runs across and the moments sit above it,
+   the unseen one below it; on phones the line stands on end and the long
+   empty wait before the next check is the point.
 
-   The chart is aria-hidden. The ordered list under it (.hr2-list) carries the
-   same content: it is the figure on phones (below 760px) and is read by
-   screen readers everywhere; from 760px it is visually hidden.
-
-   The resting state is the finished chart. home-problem.js piece 2 may arm a
-   one-shot entrance (.hr2-armed, then .hr2-go) in which each bar grows from
-   its start day in day order.
+   RESTING STATE IS THE FINISHED STATE. The scroll-driven draw at the end of
+   this file runs only where animation-timeline is supported and motion is
+   allowed; it only ever moves transform and opacity.
    ========================================================================== */
 
-.hr2 { background: var(--white); border-top: 1px solid var(--gray-200); }
-.hr2__head { max-width: 46rem; margin-bottom: var(--sp-6); }
-.hr2__head .pb-title { max-width: none; }
-.hr2__head .pb-lede { margin: 0; }
-.hr2-fig { margin: 0; }
-.hr2-nw { white-space: nowrap; }
+.hr3 {
+  background: var(--white);
+  padding: clamp(4rem, 10vh, 7rem) 0 clamp(4rem, 10vh, 7rem);
+}
+.hr3__inner { text-align: center; }
 
-/* ------------------------------------------------------------ the chart --- */
-
-.hr2-chart {
-  --days: 24;
-  position: relative;
-  display: grid;
-  grid-template-columns: 5.5rem minmax(0, 1fr);
-  grid-template-rows: auto repeat(3, 3.5rem);
-  row-gap: .5rem;
+.hr3__title {
+  margin: 0 auto;
+  max-width: 19ch;
+  font-family: var(--font-display);
+  font-size: clamp(2.25rem, 1.2rem + 3.2vw, 4rem);
+  font-weight: 700; line-height: 1.04; letter-spacing: -.035em;
+  color: var(--leaf-900);
+  text-wrap: balance;
 }
-.hr2-scale, .hr2-gapband, .hr2-track { grid-column: 2; position: relative; }
-
-/* the day scale */
-.hr2-scale { grid-row: 1; height: 1.9rem; border-bottom: 1px solid var(--gray-300); }
-.hr2-scale span {
-  position: absolute; bottom: .45rem;
-  left: calc((var(--d) + 3) / var(--days) * 100%);
-  transform: translateX(-50%);
-  font-size: .6875rem; font-weight: 700; letter-spacing: .08em; text-transform: uppercase;
-  color: var(--gray-500); white-space: nowrap;
-}
-.hr2-scale span::after {
-  content: ""; position: absolute; left: 50%; top: calc(100% + .45rem - 5px);
-  width: 1px; height: 9px; background: var(--gray-400);
-}
-.hr2-scale span:first-child { transform: none; }
-.hr2-scale span:first-child::after { left: 0; }
-.hr2-scale span:last-child { transform: translateX(-100%); }
-.hr2-scale span:last-child::after { left: 100%; }
-.hr2-scale span[style*="--d:0"] { color: var(--leaf-900); }
-
-/* the band where nothing protects the field: day 0 to the next check */
-.hr2-gapband {
-  grid-row: 2 / span 3;
-  pointer-events: none;
-}
-.hr2-gapband::before {
-  content: ""; position: absolute; top: -.25rem; bottom: -.25rem;
-  left: calc((var(--a) + 3) / var(--days) * 100%);
-  width: calc((var(--b) - var(--a)) / var(--days) * 100%);
-  background: repeating-linear-gradient(135deg, rgb(154 61 34 / .07) 0 6px, transparent 6px 12px);
-  border-left: 2px solid var(--vol-5);
-}
-.hr2-gapband span {
-  position: absolute; top: calc(100% + .5rem); left: calc(3 / var(--days) * 100%);
-  font-size: .75rem; color: var(--gray-600);
+.hr3__lede {
+  margin: var(--sp-4) auto 0;
+  max-width: 48ch;
+  font-size: clamp(1.0625rem, .95rem + .45vw, 1.375rem);
+  line-height: 1.45; color: var(--gray-500);
+  text-wrap: balance;
 }
 
-/* the lanes */
-.hr2-lane { display: contents; }
-.hr2-lane__k {
-  grid-column: 1; align-self: center; margin: 0;
-  font-size: .75rem; font-weight: 700; letter-spacing: .06em; text-transform: uppercase;
-  color: var(--gray-600);
-}
-.hr2-lane--w > * { grid-row: 2; }
-.hr2-lane--c > * { grid-row: 3; }
-.hr2-lane--f > * { grid-row: 4; }
+/* -------------------------------------------------------------- the line --- */
 
-.hr2-bar {
-  position: absolute; top: .3rem; bottom: .3rem;
-  left: calc((var(--a) + 3) / var(--days) * 100%);
-  width: calc((var(--b) - var(--a)) / var(--days) * 100% - 3px);
-  display: flex; flex-direction: column; justify-content: center;
-  padding: 0 .65rem; border-radius: 6px; overflow: hidden;
-  font-size: .75rem; line-height: 1.25;
-}
-.hr2-bar b { font-weight: 700; }
-/* the numbers that pair a mark on the chart with its line in the list */
-.hr2-n, .hr2-no {
-  display: inline-grid; place-items: center; flex: none;
-  width: 1.1rem; height: 1.1rem; margin-right: .4rem; border-radius: 50%;
-  background: var(--leaf-900); color: var(--white);
-  font-size: .6875rem; font-style: normal; font-weight: 700; line-height: 1; vertical-align: -.15rem;
-}
-.hr2-bar--heat .hr2-n, .hr2-bar--seen .hr2-n { background: var(--white); color: var(--vol-5); }
-.hr2-bar sup { font-size: .8em; font-weight: 700; }
-
-.hr2-bar--fore { background: var(--white); border: 1.5px dashed var(--leaf-700); color: var(--leaf-900); }
-.hr2-bar--heat { background: var(--vol-5); color: var(--white); }
-.hr2-bar--hidden { background: #f7e9e3; border: 1.5px dashed var(--vol-5); color: #7a2e17; }
-.hr2-bar--seen { background: #b5563a; color: var(--white); }
-.hr2-bar--wait { background: var(--gray-100); color: var(--gray-600); }
-
-/* the next check: a disc at day 21 with its label below the lane */
-.hr2-dot {
-  position: absolute; top: 50%;
-  left: calc((var(--a) + 3) / var(--days) * 100%);
-  width: 1.1rem; height: 1.1rem; margin: -.55rem 0 0 -1.1rem;
-  border-radius: 50%; background: var(--leaf-900); box-shadow: 0 0 0 3px var(--white);
-}
-.hr2-dot b {
-  position: absolute; right: 0; top: calc(100% + .55rem);
-  font-size: .75rem; line-height: 1.25; color: var(--leaf-900); white-space: nowrap;
+.hr3-fig {
+  --line: 6px;
+  margin: clamp(3rem, 7vh, 5rem) auto 0;
+  max-width: 64rem;
+  text-align: left;
 }
 
+.hr3-line { position: relative; border-radius: var(--line); background: var(--gray-100); }
+.hr3-warn, .hr3-harm { position: absolute; display: block; border-radius: inherit; }
 
-/* ------------------------------------------------------ list and caption --- */
-
-.hr2-list { list-style: none; margin: 0; padding: 0; }
-.hr2-when {
-  margin: 0; font-size: .75rem; font-weight: 700; letter-spacing: .08em; text-transform: uppercase;
-  color: var(--leaf-700);
+.hr3-moments { list-style: none; margin: 0; padding: 0; position: relative; }
+.hr3-m { position: absolute; display: flex; flex-direction: column; gap: .3rem; }
+.hr3-when {
+  font-size: .75rem; font-weight: 600; letter-spacing: .08em; text-transform: uppercase;
+  color: var(--gray-500); font-variant-numeric: tabular-nums;
 }
-.hr2-say { margin: .2rem 0 0; font-size: var(--text-sm); line-height: 1.55; color: var(--gray-700); }
-
-.hr2-cap { margin-top: var(--sp-5); max-width: 68ch; }
-.hr2-cap > p:first-child {
-  margin: 0; font-size: var(--text-base, 1rem); line-height: 1.6; color: var(--gray-700); text-wrap: pretty;
+.hr3-what {
+  font-size: clamp(1.0625rem, .95rem + .35vw, 1.3125rem);
+  font-weight: 600; line-height: 1.25; letter-spacing: -.012em; color: var(--black);
 }
+.hr3-m--fore .hr3-what { color: var(--leaf-700); }
+.hr3-m--start .hr3-what { color: var(--rust-700); }
 
-/* wide: the list explains the chart, five numbered notes under it */
+/* the mark on the line, drawn by each moment so it moves with it */
+.hr3-m::before {
+  content: ""; position: absolute;
+  width: 14px; height: 14px; border-radius: 50%;
+  background: var(--white); border: 2.5px solid var(--rust-700);
+  box-sizing: border-box;
+}
+.hr3-m--fore::before { border-color: var(--leaf-700); background: var(--leaf-700); }
+.hr3-m--check::before { border-color: var(--black); background: var(--black); }
+
+/* wide: the line across ------------------------------------------------------ */
 @media (min-width: 760px) {
-  .hr2-list {
-    margin-top: var(--sp-6); display: grid; grid-template-columns: repeat(5, minmax(0, 1fr));
-    gap: var(--sp-4); padding-top: var(--sp-4); border-top: 1px solid var(--gray-200);
+  .hr3-fig { display: grid; grid-template-rows: 5.25rem var(--line) 5.25rem; }
+  .hr3-line { grid-row: 2; grid-column: 1; }
+  .hr3-warn { inset: 0 auto 0 0; width: 12.5%; background: var(--leaf-500); border-radius: var(--line) 0 0 var(--line); }
+  .hr3-harm {
+    inset: 0 0 0 12.5%;
+    background: linear-gradient(90deg, rgb(154 61 34 / .14), rgb(154 61 34 / .5) 14%, var(--rust-700));
+    border-radius: 0 var(--line) var(--line) 0;
   }
-  .hr2-list li { display: grid; grid-template-columns: auto minmax(0, 1fr); column-gap: .15rem; align-content: start; }
-  .hr2-no { grid-row: 1; margin-top: .05rem; }
-  .hr2-when { grid-row: 1; grid-column: 2; }
-  .hr2-say { grid-column: 1 / -1; font-size: .8125rem; }
-}
-/* narrow: the list is the figure, a dated line down its left edge */
-@media (max-width: 759px) {
-  .hr2-chart { display: none; }
-  .hr2-list { display: grid; gap: var(--sp-4); border-left: 2px solid var(--gray-200); padding-left: var(--sp-4); }
-  .hr2-list li { position: relative; }
-  .hr2-list li::before {
-    content: ""; position: absolute; left: calc(-1 * var(--sp-4) - 6px); top: .2rem;
-    width: 10px; height: 10px; border-radius: 50%; background: var(--vol-5);
-  }
-  .hr2-list li::before { display: none; }
-  .hr2-no { position: absolute; left: calc(-1 * var(--sp-4) - .6rem); top: 0; margin: 0; box-shadow: 0 0 0 3px var(--white); }
-  .hr2-cap { margin-top: var(--sp-6); }
+  .hr3-moments { grid-row: 1 / 4; grid-column: 1; }
+  .hr3-m { left: calc(var(--x) * 1%); bottom: calc(50% + var(--line) / 2 + 1.1rem); max-width: 11rem; }
+  .hr3-m::before { left: -7px; bottom: calc(-1.1rem - var(--line) / 2 - 7px); }
+  /* the unseen damage sits under the line */
+  .hr3-m--start { bottom: auto; top: calc(50% + var(--line) / 2 + 1.1rem); }
+  .hr3-m--start::before { bottom: auto; top: calc(-1.1rem - var(--line) / 2 - 7px); }
+  /* the last moment hangs back from the end of the line */
+  .hr3-m--check { left: auto; right: 0; align-items: flex-end; text-align: right; }
+  .hr3-m--check::before { left: auto; right: -7px; }
 }
 
-/* -------------------------------------------------------------- entrance --- */
-/* armed by home-problem.js only while the figure is below the fold */
-.hr2-armed .hr2-bar, .hr2-armed .hr2-dot, .hr2-armed .hr2-gapband::before {
-  transform: scaleX(0); transform-origin: left center; opacity: 0;
+/* phones: the line on end ------------------------------------------------------ */
+@media (max-width: 759.98px) {
+  .hr3-fig { display: grid; grid-template-columns: 2.25rem minmax(0, 1fr); }
+  .hr3-line { grid-area: 1 / 1; justify-self: start; width: var(--line); margin: .45rem 0 .45rem .5rem; }
+  .hr3-warn { inset: 0 0 auto 0; height: 12.5%; background: var(--leaf-500); border-radius: var(--line) var(--line) 0 0; }
+  .hr3-harm {
+    inset: 12.5% 0 0 0;
+    background: linear-gradient(180deg, rgb(154 61 34 / .14), rgb(154 61 34 / .5) 14%, var(--rust-700));
+    border-radius: 0 0 var(--line) var(--line);
+  }
+  .hr3-moments { grid-area: 1 / 2; height: 30rem; }
+  .hr3-say { grid-area: 2 / 1 / 3 / 3; }
+  .hr3-m { left: 0; right: 0; top: calc(var(--x) * 1%); gap: .15rem; }
+  .hr3-m--check { top: auto; bottom: 0; }
+  .hr3-m::before { left: calc(-2.25rem + .5rem + var(--line) / 2 - 7px); top: .1rem; }
+  .hr3-m--check::before { top: auto; bottom: .35rem; }
+  .hr3-what { font-size: 1.0625rem; }
 }
-.hr2-go .hr2-bar, .hr2-go .hr2-dot, .hr2-go .hr2-gapband::before {
-  transform: none; opacity: 1;
-  transition: transform .6s cubic-bezier(.2, .7, .2, 1), opacity .3s ease;
-  transition-delay: calc((var(--a) + 3) * 55ms);
+
+/* ----------------------------------------------------------- the ending --- */
+
+.hr3-say {
+  margin: clamp(2.5rem, 6vh, 4rem) auto 0;
+  max-width: 26ch;
+  text-align: center;
+  font-size: clamp(1.375rem, 1.05rem + 1.1vw, 2.125rem);
+  font-weight: 600; line-height: 1.2; letter-spacing: -.02em;
+  color: var(--gray-500);
+  text-wrap: balance;
 }
-.hr2-go .hr2-gapband::before { transition-delay: 500ms; }
-@media (prefers-reduced-motion: reduce) {
-  .hr2-armed .hr2-bar, .hr2-armed .hr2-dot, .hr2-armed .hr2-gapband::before { transform: none; opacity: 1; }
+.hr3-say strong { font-weight: inherit; color: var(--leaf-900); }
+@media (max-width: 759.98px) { .hr3-say { margin-top: var(--sp-7); } }
+
+.hr3-need {
+  display: flex; flex-wrap: wrap; align-items: center; justify-content: center;
+  gap: var(--sp-3) var(--sp-4);
+  margin: var(--sp-6) auto 0;
 }
+.hr3-need__k {
+  margin: 0;
+  font-size: .75rem; font-weight: 600; letter-spacing: .08em; text-transform: uppercase; color: var(--gray-500);
+}
+.hr3-need__list { list-style: none; margin: 0; padding: 0; display: flex; flex-wrap: wrap; justify-content: center; gap: var(--sp-2); }
+
+.hr3-src { margin: var(--sp-6) 0 0; font-size: var(--text-xs); color: var(--gray-500); }
+.hr3-src a { color: inherit; text-underline-offset: .2em; }
+.hr3-src a:hover { color: var(--leaf-700); }
+
+/* ---------------------------------------- the draw, tied to the scroll --- */
+/* The figure is the timeline: the line grows from the forecast to the next
+   check as the figure rises into view, and each moment arrives as the line
+   reaches it. Scrolling back runs it back. */
+@supports (animation-timeline: view()) {
+  @media (prefers-reduced-motion: no-preference) {
+    .hr3-fig { view-timeline: --hr3 block; }
+    .hr3-warn, .hr3-harm, .hr3-m, .hr3-say {
+      animation-timeline: --hr3;
+      animation-fill-mode: both;
+      animation-timing-function: linear;
+      animation-duration: auto;
+    }
+    .hr3-warn { animation-name: hr3-grow; animation-range: entry 5% entry 35%; }
+    .hr3-harm { animation-name: hr3-grow; animation-range: entry 35% cover 30%; }
+    .hr3-m { animation-name: hr3-arrive; animation-timing-function: cubic-bezier(.2, .7, .2, 1); }
+    .hr3-m--fore  { animation-range: entry 5% entry 30%; }
+    .hr3-m--start { animation-range: entry 30% entry 55%; }
+    .hr3-m--seen  { animation-range: entry 45% entry 75%; }
+    .hr3-m--check { animation-range: cover 22% cover 30%; }
+    .hr3-say { animation-name: hr3-arrive; animation-range: cover 24% cover 34%; }
+
+    @media (min-width: 760px) {
+      .hr3-warn, .hr3-harm { transform-origin: left center; }
+    }
+    @media (max-width: 759.98px) {
+      .hr3-warn, .hr3-harm { transform-origin: center top; animation-name: hr3-grow-v; }
+      .hr3-warn { animation-range: entry 10% entry 30%; }
+      .hr3-harm { animation-range: entry 30% cover 55%; }
+      .hr3-m--fore  { animation-range: entry 10% entry 25%; }
+      .hr3-m--start { animation-range: entry 18% entry 34%; }
+      .hr3-m--seen  { animation-range: entry 26% entry 42%; }
+      .hr3-m--check { animation-range: cover 45% cover 58%; }
+      .hr3-say { animation-range: cover 52% cover 66%; }
+    }
+  }
+}
+@keyframes hr3-grow   { from { transform: scaleX(0); } to { transform: none; } }
+@keyframes hr3-grow-v { from { transform: scaleY(0); } to { transform: none; } }
+@keyframes hr3-arrive { from { opacity: 0; transform: translateY(.75rem); } to { opacity: 1; transform: none; } }
