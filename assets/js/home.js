@@ -540,18 +540,21 @@
 
        0.10 to 1.16  "An answer has to meet five demands." alone, then the
                      five chips arrive under it, one by one
-       1.16 to 1.40  the five, held
-       1.40 to 2.17  the heading fades; the white crossfades to ink; each
-                     chip glides straight onto the tag of its card round the
-                     reactor, taking the tag's look on the way
-       2.05 to 2.45  the reactor comes up from the middle of the five,
+       1.16 to 1.30  the five, held
+       1.30 to 1.55  the heading fades out, on white
+       1.58 to 1.88  the white turns to ink, quickly and on a steep curve so
+                     it hardly lingers in grey; the chips stay where they
+                     are (dark green on white, then the tag's look on ink)
+       1.90 to 2.45  each chip glides straight onto the tag of its card round
+                     the reactor
+       2.35 to 2.70  the reactor comes up from the middle of the five,
                      0.85 to 1 with its opacity; no overshoot
-       2.30 to 2.80  "Make it where it grows." and the lede settle, then the
+       2.55 to 3.00  "Make it where it grows." and the lede settle, then the
                      cards open round their tags
-       2.80 to 3.00  the finished band, held
+       3.00 to 3.10  the finished band, held
 
      The chips land exactly on the tags and are drawn like them (they share
-     the proportions, home-demands.css), so at 2.2 the chips hand over to
+     the proportions, home-demands.css), so at 2.47 the chips hand over to
      the real tags without a visible step.
 
      THE RESTING STATE IS THE FINISHED LAYOUT: the two sections stacked. No
@@ -604,7 +607,7 @@
     if (reduced || !window.matchMedia) return;
     // the runway in screens: the same number as .dx__runway's height in
     // home-demands.css
-    var RUN = 3;
+    var RUN = 3.1;
     var fits = window.matchMedia("(min-width: 980px) and (min-height: 640px)");
     var live = false, geo = null, navH = 68, parked = null, printing = false;
     var moved = [title, head, lede, model, sol, paper].concat(chips);
@@ -684,21 +687,23 @@
       if (!m || !geo) return;
       var s = m.s, g = geo;
 
-      // the heading fades as the five start to move
-      var tOut = inOut(span(s, 1.4, 1.7));
+      // the heading fades out while the page is still white
+      var tOut = inOut(span(s, 1.3, 1.55));
       put(title, "opacity", f3(1 - tOut));
-      put(title, "transform", tOut <= 0 ? "none" : "translateY(" + px(-24 * tOut) + ")");
-      // one quiet crossfade from the paper to the band's ink
-      put(paper, "opacity", f3(1 - inOut(span(s, 1.45, 1.9))));
-      put(dmd, "--dmd-m", f3(inOut(span(s, 1.6, 2.0))));
+      put(title, "transform", tOut <= 0 ? "none" : "translateY(" + px(-20 * tOut) + ")");
+      // then the paper gives way to the band's ink, fast and steep (a
+      // smoothstep of a smoothstep), so the grey in between barely shows;
+      // the chips change skin with it, where they stand
+      put(paper, "opacity", f3(1 - ease(ease(span(s, 1.58, 1.88)))));
+      put(dmd, "--dmd-m", f3(ease(span(s, 1.68, 1.9))));
       // the answer's band stays below the pin until the page turns, so the
       // chapters rail reads the demands until then
-      put(sol, "transform", s < 1.45 ? "translateY(100%)" : "none");
+      put(sol, "transform", s < 1.58 ? "translateY(100%)" : "none");
 
-      var handed = s >= 2.2;                          // the tags have taken over
+      var handed = s >= 2.47;                         // the tags have taken over
       chips.forEach(function (c, k) {
         var a = easeOut(span(s, 0.1 + 0.18 * k, 0.44 + 0.18 * k));
-        var f = inOut(span(s, 1.45 + 0.03 * k, 2.05 + 0.03 * k));
+        var f = inOut(span(s, 1.9 + 0.025 * k, 2.35 + 0.025 * k));
         var s0 = g.from[k], s1 = g.to[k];
         var sc = 1 + (s1.w / s0.w - 1) * f;
         var x = (s1.x - s0.x) * f, y = (s1.y - s0.y) * f + (1 - a) * 22;
@@ -708,22 +713,22 @@
       put(grid, "--dx-tag", handed ? "1" : "0");
 
       // the reactor comes up from the middle of the five
-      var r = easeOut(span(s, 2.05, 2.45));
+      var r = easeOut(span(s, 2.35, 2.7));
       put(model, "opacity", f3(r));
       put(model, "transform", r >= 1 ? "none" : "scale(" + f3(0.85 + 0.15 * r) + ")");
       // then its words settle and the cards open round their tags
-      var h = easeOut(span(s, 2.3, 2.6)), l = easeOut(span(s, 2.38, 2.68));
+      var h = easeOut(span(s, 2.55, 2.82)), l = easeOut(span(s, 2.62, 2.9));
       put(head, "opacity", f3(h));
       put(head, "transform", h >= 1 ? "none" : "translateY(" + px(16 * (1 - h)) + ")");
       put(lede, "opacity", f3(l));
       put(lede, "transform", l >= 1 ? "none" : "translateY(" + px(12 * (1 - l)) + ")");
-      var card = easeOut(span(s, 2.48, 2.8));
+      var card = easeOut(span(s, 2.7, 3.0));
       put(grid, "--dx-card", f3(card));
       dx.classList.toggle("is-early", card < 0.6);
 
       // the model's own loop is held until it is about to be seen, so the
       // hand-off has the frame to itself
-      park(s < 1.9);
+      park(s < 2.15);
     }
 
     function fail() { live = false; dx.classList.remove("is-live"); clear(); }
