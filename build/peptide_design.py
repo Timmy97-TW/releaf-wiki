@@ -38,13 +38,13 @@ OUT = os.path.join(ROOT, "peptide-design", "index.html")
 # cons   fraction of the 17 aligned Pep sequences carrying the modal residue
 RES = [
     # i  aa  sasa  hb sb  cls        p1 partner                    p2           cons   note
-    (1,  "G",   0, 0, 0, "none",    "none",                     "none",      0.353, "Disordered in 5GR8. Deleted in the 9–23 constructs."),
+    (1,  "G",   0, 0, 0, "none",    "none",                     "none",      0.353, "Disordered in 5GR8. Deleted in the 9-23 constructs."),
     (2,  "I",   0, 0, 0, "none",    "none",                     "none",      0.294, "Disordered in 5GR8."),
     (3,  "L",   0, 0, 0, "none",    "none",                     "none",      0.353, "Disordered in 5GR8."),
     (4,  "I",   0, 0, 0, "none",    "none",                     "none",      0.353, "The one residue separating BoPep4 from <i>B.&nbsp;rapa</i> Pep4, which carries Val here."),
     (5,  "G",   0, 0, 0, "none",    "none",                     "none",      0.294, "Disordered in 5GR8."),
     (6,  "S",   0, 0, 0, "none",    "none",                     "none",      0.294, "Last residue before the interface starts."),
-    (7,  "K",  70, 1, 1, "anchor",  "Glu199",                     "conserved", 0.647, "First rung of the basic belt. Lost at truncation 8–23."),
+    (7,  "K",  70, 1, 1, "anchor",  "Glu199",                     "conserved", 0.647, "First rung of the basic belt. Lost at truncation 8-23."),
     (8,  "K",  14, 0, 0, "none",    "none",                     "unmapped",  0.353, "Inside the bound stretch and still solvent-facing: nothing within 4.5&nbsp;&Aring; on PEPR1 in any model. This is the position K8Q was meant to exploit."),
     (9,  "R", 123, 3, 3, "anchor",  "Asp179",                     "conserved", 0.529, "The strongest single anchor in the peptide, and the residue the truncation ladder was built around."),
     (10, "P",   0, 0, 0, "none",    "none",                     "unmapped",  0.412, "Solvent-exposed proline."),
@@ -188,14 +188,14 @@ LEDGER = [
     ("holds", "The C-terminal Asn23 carboxylate is the master anchor",
      "2.40&nbsp;&Aring; to Arg487&nbsp;NH1 and 2.80&nbsp;&Aring; to NE in the crystal; the most buried residue of the peptide at 170&nbsp;&Aring;&sup2;; removing it costs AtPep1 more than four hundredfold.",
      "Crystallographic and measured, not modelled."),
-    ("holds", "Residues 1–6 make no receptor contact; 7–23 carries the interface",
+    ("holds", "Residues 1-6 make no receptor contact; 7-23 carries the interface",
      "Zero buried surface on both receptors in every model, and unresolved in the 2.59&nbsp;&Aring; crystal density.",
      "Three methods and one crystal agree."),
-    ("holds", "Truncation to about 9–23 is tolerated",
+    ("holds", "Truncation to about 9-23 is tolerated",
      "AlphaFold3 confidence, our docking, Pearce&nbsp;2008 and Cui&nbsp;2024 all agree the N-terminal third is dispensable.",
      "Four independent lines."),
     ("qualified", "The binding cliff sits at Arg9",
-     "Our docking places it at 9–23 and AlphaFold3 places it at 14–23, five residues apart. The docking component of that verdict is a length threshold (see&nbsp;§6).",
+     "Our docking places it at 9-23 and AlphaFold3 places it at 14-23, five residues apart. The docking component of that verdict is a length threshold (see&nbsp;§6).",
      "State it as a range, 9 to 14, with both methods named."),
     ("qualified", "PEPR2 conserves the anchors and degrades the mid-belt",
      "The PEPR2 ectodomain has no experimental structure. Every PEPR2 number rests on an AlphaFold model, and no per-residue confidence filter was applied before docking it.",
@@ -448,7 +448,7 @@ def ladder_block():
         frag = SEQ[s - 1:]
         kept = [p for p in ANCHOR_POS if p >= s]
         rows.append(
-            "<tr><td>%d&ndash;23</td><td class=\"mono\">%s</td><td>%d</td><td>%+d</td>"
+            "<tr><td>%d-23</td><td class=\"mono\">%s</td><td>%d</td><td>%+d</td>"
             "<td>%.1f</td><td>%s</td><td>%.1f</td><td>%s</td><td>%s</td><td>%s</td></tr>"
             % (s, frag, len(frag), net_charge(frag), sc1,
                ("%.2f" % ip1) if ip1 else ",", sc1 / b1 * 1000,
@@ -464,7 +464,7 @@ def ladder_block():
     sc1, b1, ip1, pae1, sc2, b2, ip2, pae2, verdict = LAD[9]
     read = (
         '  <div class="pd-ladder__read" id="lad-read" aria-live="polite">\n'
-        '    <p class="pd-ladder__frag"><b id="lr-name">BoPep4 9&ndash;23</b>'
+        '    <p class="pd-ladder__frag"><b id="lr-name">BoPep4 9-23</b>'
         '<span class="pd-tag is-anchor" id="lr-verdict">binder</span></p>\n'
         '    <p class="pd-seq" id="lr-seq">RPREPHSSGKPGGHN</p>\n'
         '    <ul class="pd-stats">\n'
@@ -525,7 +525,7 @@ def bench_chart():
     g.append('<line class="pd-axis" x1="%.1f" y1="%.1f" x2="%.1f" y2="%.1f" />' % (x0 - 14, y1 + 12, x1 + 14, y1 + 12))
     for s in (-144, -150, -156, -162, -168):
         g.append('<text class="pd-ax" x="%.1f" y="%.1f" text-anchor="middle">%d</text>' % (bx(s), y1 + 28, s))
-    g.append('<text class="pd-ax pd-ax--t" x="470" y="252" text-anchor="middle">HADDOCK score, pooled over both receptors , the model predicts stronger binding to the right</text>')
+    g.append('<text class="pd-ax pd-ax--t" x="470" y="252" text-anchor="middle">HADDOCK score, pooled over both receptors; the model predicts stronger binding to the right</text>')
     g.append('<text class="pd-ax" x="%.1f" y="30" text-anchor="start">less active</text>' % (x0 - 14))
     # fourteen of the sixteen sit on the same activity value, so their labels
     # collide. Stagger them in a fixed cycle instead of moving any point.
@@ -1006,7 +1006,7 @@ JS = r"""
       var d = LAD[s - 1];
       mark.setAttribute("x1", (X0 + (s - 1) * (X1 - X0) / 16).toFixed(1));
       mark.setAttribute("x2", (X0 + (s - 1) * (X1 - X0) / 16).toFixed(1));
-      $("#lr-name").innerHTML = "BoPep4 " + s + "–23";
+      $("#lr-name").innerHTML = "BoPep4 " + s + "-23";
       var v = $("#lr-verdict");
       v.textContent = d.verdict;
       v.className = "pd-tag is-" + (d.verdict === "binder" ? "anchor" : d.verdict === "weak" ? "partial" : "none");
@@ -1311,7 +1311,7 @@ BODY = """
           <p class="callout__label">What this page is for</p>
           <p>
             The <a href="../engineering/">Engineering page</a> tells this work as four
-            design&ndash;build&ndash;test&ndash;learn cycles, in the order they happened.
+            design-build-test-learn cycles, in the order they happened.
             This page is the technical record underneath them: the inputs, the residue-level
             map, the two structural methods, the controls they were put through, and the
             places where they failed. The all-atom trajectory work sits on its own page,
@@ -1356,8 +1356,8 @@ BODY = """
             <tbody>
               <tr>
                 <td>The binding mode</td>
-                <td>PDB&nbsp;5GR8, the PEPR1&ndash;AtPep1 co-crystal at 2.59&nbsp;&Aring;&nbsp;[1]</td>
-                <td>Supplies the pose, the receptor partners, and the fact that AtPep1 residues 1&ndash;6 are not resolved at all.</td>
+                <td>PDB&nbsp;5GR8, the PEPR1-AtPep1 co-crystal at 2.59&nbsp;&Aring;&nbsp;[1]</td>
+                <td>Supplies the pose, the receptor partners, and the fact that AtPep1 residues 1-6 are not resolved at all.</td>
               </tr>
               <tr>
                 <td>Which residues carry activity</td>
@@ -1366,7 +1366,7 @@ BODY = """
               </tr>
               <tr>
                 <td>That the two receptors are not interchangeable</td>
-                <td>Radioligand binding&nbsp;[3]: PEPR1 binds AtPep1&ndash;6; PEPR2 binds only AtPep1 and AtPep2</td>
+                <td>Radioligand binding&nbsp;[3]: PEPR1 binds AtPep1-6; PEPR2 binds only AtPep1 and AtPep2</td>
                 <td>Makes AtPep5 and AtPep6 the controls any method claiming to read PEPR2 recognition has to reject.</td>
               </tr>
             </tbody>
@@ -1388,7 +1388,7 @@ BODY = """
           Seventeen mature Pep sequences, seven from <i>Arabidopsis</i> and nine from
           <i>Brassica</i> species alongside BoPep4, aligned over twenty-four columns.
           The N-terminal third is close to unreadable as a family: at most six of
-          seventeen sequences agree on any residue in columns 1&ndash;6. The C-terminal
+          seventeen sequences agree on any residue in columns 1-6. The C-terminal
           third is the opposite. <b>Ser15, Ser16, Gly17 and Gly20 are the same residue in
           all seventeen.</b>
         </p>
@@ -1400,7 +1400,7 @@ BODY = """
           block sits exactly where the crystal puts the interface, which is the subject of
           the next section. The second is Asn23: it is the last residue in twelve of the
           seventeen, and the others end in His, Ser, Asp or Thr. So the family does not
-          conserve the asparagine side chain as strictly as it conserves Gly17 , and
+          conserve the asparagine side chain as strictly as it conserves Gly17, and
           Pearce measured the same thing directly, since replacing Asn23 with alanine is
           tolerated while <i>removing</i> it costs about 400-fold&nbsp;[2]. What is
           conserved is the free carboxylate at the end of the chain, not the side chain
@@ -1409,7 +1409,7 @@ BODY = """
       </section>
 
       <section class="sec" id="interface">
-        <h2>Residues 7&ndash;23 make the interface and 1&ndash;6 touch nothing</h2>
+        <h2>Residues 7-23 make the interface and 1-6 touch nothing</h2>
 
         <p>
           BoPep4 was docked onto the PEPR1 ectodomain taken from the 5GR8 crystal, in
@@ -1433,8 +1433,8 @@ BODY = """
         <p>
           The shape of that strip is the whole design brief. Nothing is buried until
           Lys7. From there the peptide runs a belt of basic residues along a row of
-          receptor carboxylates , Lys7 to Glu199, Arg9 to Asp179, Arg11 to Asp294,
-          Lys18 to Glu324 and Asp348, His22 to Glu439 , and finishes with Asn23
+          receptor carboxylates: Lys7 to Glu199, Arg9 to Asp179, Arg11 to Asp294,
+          Lys18 to Glu324 and Asp348, His22 to Glu439. It finishes with Asn23
           buried in a pocket at 170&nbsp;&Aring;&sup2;, more than any other residue, held
           by three receptor side chains at once.
         </p>
@@ -1500,13 +1500,13 @@ BODY = """
               The invariant core <code>Ser15, Ser16, Gly17, Gly20</code> and the C-terminal
               <code>Asn23</code>, plus the belt anchors <code>Lys7, Arg9, Arg11, Lys18,
               His22</code>. Every one of these is either invariant across the family, buried
-              at the interface, or measured as costly by Pearce , and most are all three.
+              at the interface, or measured as costly by Pearce, and most are all three.
             </p>
           </div>
           <div class="pd-rule pd-rule--free">
             <h4>Free to edit</h4>
             <p>
-              The N-terminus <code>1&ndash;6</code>, which buries nothing on either receptor
+              The N-terminus <code>1-6</code>, which buries nothing on either receptor
               and is invisible in the crystal, and the solvent-facing
               <code>Lys8, Pro10, Pro13, Pro19</code>. This is where truncations and any
               purification tag have to go.
@@ -1525,11 +1525,11 @@ BODY = """
         <h2>The truncation ladder has a cliff, and the two methods put it five residues apart</h2>
 
         <p>
-          If residues 1&ndash;6 do nothing at the receptor, how much further can the
+          If residues 1-6 do nothing at the receptor, how much further can the
           peptide be cut? Cutting is worth something: a shorter payload is cheaper to
           synthesise, and moving the mature N-terminus changes the charge the signal
-          peptidase sees. So the whole ladder was built rather than one guess ,
-          every N-terminal truncation from 1&ndash;23 down to 17&ndash;23, docked against
+          peptidase sees. So the whole ladder was built rather than one guess:
+          every N-terminal truncation from 1-23 down to 17-23, docked against
           both receptors and co-folded in AlphaFold3. Seventeen fragments, two receptors,
           thirty-four complexes.
         </p>
@@ -1538,8 +1538,8 @@ BODY = """
 
         <p>
           Read on the docking score, the curve is a ramp with no edge in it. Read on
-          AlphaFold3 confidence, it is flat from 1&ndash;23 all the way to 13&ndash;23 and
-          then falls off between 13&ndash;23 and 14&ndash;23, where interface confidence
+          AlphaFold3 confidence, it is flat from 1-23 all the way to 13-23 and
+          then falls off between 13-23 and 14-23, where interface confidence
           drops from 0.87 to 0.54 and the interface error jumps from 2.5 to
           8.9&nbsp;&Aring;. The two methods are answering different questions: one is
           asking how much interface there is, the other is asking whether it can place the
@@ -1559,7 +1559,7 @@ BODY = """
         <p>
           The verdict column in the source table was assigned by hard score cut-offs. Given
           that score runs at about &minus;7.4 per residue, the cut-off at &minus;160 is a
-          length threshold at fifteen residues, and fifteen residues is 9&ndash;23. The
+          length threshold at fifteen residues, and fifteen residues is 9-23. The
           cliff was reported at Arg9 because the threshold was set where Arg9 is.
         </p>
         <p>
@@ -1592,8 +1592,8 @@ BODY = """
           Everything above is a Question&nbsp;A claim about geometry. The project also
           wanted to rank designs, which is Question&nbsp;B, so it ran the test that decides
           whether it can. Pearce&nbsp;2008 measured half-maximal activity for an alanine
-          scan across the 9&ndash;23 scaffold&nbsp;[2]. Sixteen of those analogues sit on the
-          same 9&ndash;23 scaffold, so length and buried surface are essentially constant
+          scan across the 9-23 scaffold&nbsp;[2]. Sixteen of those analogues sit on the
+          same 9-23 scaffold, so length and buried surface are essentially constant
           and the substitution is the only large variable. Docking all sixteen against measured
           activity is as clean a test of a scoring function as this project could build.
         </p>
@@ -1636,9 +1636,9 @@ BODY = """
         <p>
           The audit started as a complaint. A team member pointed out that the docking had
           been run without an inspectable statement of its restraints and search space.
-          That objection is partly a category error , HADDOCK has no search box to
+          That objection is partly a category error: HADDOCK has no search box to
           report, because its search space <i>is</i> the list of residues declared active
-          at the interface&nbsp;[4] , and partly correct, because that list had never
+          at the interface&nbsp;[4]. It is partly correct, because that list had never
           been written down anywhere a reader could find it. Reconstructing it from the run
           trees turned up four problems, and the one that mattered was not the missing
           documentation.
@@ -1699,7 +1699,7 @@ BODY = """
           from Asp348 and 4.17&nbsp;&Aring; from Phe371, against 2.50 and 4.09&nbsp;&Aring;
           in the crystal, and in three of four constructs it approaches the aromatic ring
           more closely than a re-docked arginine does. A lysine amine over an aromatic ring
-          is a cation&ndash;&pi; contact. The gap the substitution existed to close was not
+          is a cation-&pi; contact. The gap the substitution existed to close was not
           visible in our own models, so it lost its last rationale and its cloning slot.
         </p>
       </section>
@@ -1747,12 +1747,12 @@ BODY = """
 
         <p>
           The co-receptor position comes from a ternary model built on SERK-family
-          templates&nbsp;[16] and AlphaFold3, because no PEPR1&ndash;BAK1 crystal exists.
+          templates&nbsp;[16] and AlphaFold3, because no PEPR1-BAK1 crystal exists.
           Co-receptor binding does not touch the N-terminal side by a single grid point,
           and it closes the C-terminal side almost completely: the escape path becomes
           longer than the six-residue tag that has to fit through it. An N-terminal tag
           goes into space the peptide's own disordered N-terminus already occupies. A
-          C-terminal tag goes into the receptor&ndash;co-receptor interface.
+          C-terminal tag goes into the receptor-co-receptor interface.
         </p>
 
         <figure class="fig fig--wide">
@@ -1780,7 +1780,7 @@ BODY = """
         </p>
         <p>
           The panel's own negative control shows how permissive that test was: the
-          documented non-binder 15&ndash;23 also reaches three of four clamp contacts,
+          documented non-binder 15-23 also reaches three of four clamp contacts,
           because it contains Asn23 and Lys18 and can therefore form them. A test generous
           enough to rescue a peptide known to be inactive could not rescue the tagged one.
         </p>
@@ -1828,20 +1828,20 @@ BODY = """
 
         <p>
           A sequence the receptor accepts is worth nothing if the chassis will not initiate
-          translation on its messenger RNA. The expression cassette is fixed , a
+          translation on its messenger RNA. The expression cassette is fixed: a
           green-light-inducible promoter, the MF001 ribosome binding site with its
           <code>AAGGAGG</code> core, the SamyQ secretion signal, the payload, the tag, the
-          terminator , so the only free variable is synonymous codon choice, and the
+          terminator. The only free variable is synonymous codon choice, and the
           objective is the unpaired probability of two regions computed from the ViennaRNA
           base-pair matrix at 37&nbsp;&deg;C: the fifteen bases from the start codon, and
-          the Shine&ndash;Dalgarno core. The reference is a gene that works in this chassis,
+          the Shine-Dalgarno core. The reference is a gene that works in this chassis,
           <i>ho1</i>, at 0.681.
         </p>
 
         <p>
           The first optimiser ranked roughly 50,000 synonymous draws per payload by the
           <i>sum</i> of those two scores, and the design it returned had start accessibility
-          at 0.911 and a Shine&ndash;Dalgarno core at 0.050, more occluded than the wild-type
+          at 0.911 and a Shine-Dalgarno core at 0.050, more occluded than the wild-type
           sequence it replaced. A sum lets the search buy a large gain in one term with a
           total loss in the other. Ranking moved to the bottleneck,
           <b>J&nbsp;=&nbsp;min(start&nbsp;+15, SD&nbsp;core)</b>, and the random draw was
@@ -1857,7 +1857,7 @@ BODY = """
           <figcaption>
             <b>Figure 5.</b> The initiation bottleneck by payload and stage. Optimising for
             codon usage alone gives an adaptation index of 0.87 to 0.89 and a bottleneck
-            near 0.054 , the Shine&ndash;Dalgarno core essentially fully occluded in
+            near 0.054, with the Shine-Dalgarno core essentially fully occluded in
             every case.
             <span class="prov">Generated from our own ViennaRNA output. Scaled only.</span>
           </figcaption>
@@ -1880,8 +1880,8 @@ BODY = """
         <h3>The signal peptide was screened and then left alone</h3>
         <p>
           A panel of <i>B.&nbsp;subtilis</i> Sec signal peptides was ranked on the
-          determinants known to matter , n-region charge, h-region hydrophobicity and
-          length, and the &minus;3/&minus;1 cleavage rule , from verified UniProt
+          determinants known to matter: n-region charge, h-region hydrophobicity and
+          length, and the &minus;3/&minus;1 cleavage rule, from verified UniProt
           sequences. SamyQ, the signal peptide already in our cassette, lands in the
           favourable zone with an n-region charge of +4, a hydrophobic core mean of 1.65
           and a clean A-X-A cleavage site; AprE is the best-matched alternative and AmyE
@@ -1947,7 +1947,7 @@ BODY = """
           falling monotonically with every added copy, from 127 to 32&nbsp;&Aring;&sup2; on
           PEPR1, and the number of copies actually touching the receptor saturating at three
           regardless of n. Repetition does not rescue a motif that does not bind alone. The
-          shallow truncations <b>&Delta;1&ndash;2 and &Delta;1&ndash;3</b> went because
+          shallow truncations <b>&Delta;1-2 and &Delta;1-3</b> went because
           their pre-registered predictions sat between two constructs we already had, which
           is close to no information for a cloning slot.
         </p>
@@ -1976,7 +1976,7 @@ BODY = """
               <tr><td class="num">E2</td><td>D-01 and D-04 are indistinguishable from each other.</td><td>If the tagged one is clearly worse, the N-terminal tag is not as inert as the flood fill says and the strategy needs re-examining.</td></tr>
               <tr><td class="num">E3</td><td>BoPep4 needs a higher dose than AtPep1 for the same response, because Gly21 cannot fill the co-receptor cavity AtPep1's Gln21 occupies.</td><td>Published AtPep1 assays work at 1 to 100&nbsp;nM; the BoPep4 series has to reach at least 1&nbsp;&micro;M or a null result means nothing.</td></tr>
               <tr><td class="num">E4</td><td>Activity is pH-sensitive, strong near pH&nbsp;6.0 and nearly abolished at pH&nbsp;4.0, because Arg487's protonation state governs the clamp.</td><td>Buffering the assay below pH&nbsp;5 suppresses every construct at once. This is a protocol trap, not a result.</td></tr>
-              <tr><td class="num">E5</td><td>The 15&ndash;23 fragment is inactive.</td><td>If it is active, the assay is reading something other than receptor signalling and every other number in it is suspect.</td></tr>
+              <tr><td class="num">E5</td><td>The 15-23 fragment is inactive.</td><td>If it is active, the assay is reading something other than receptor signalling and every other number in it is suspect.</td></tr>
             </tbody>
           </table>
         </div>
@@ -2035,7 +2035,7 @@ BODY = """
           The remaining computational item is a narrow, pre-registered re-run: the sixteen
           equal-length analogues against PEPR1 only, from unbound conformer ensembles, with
           crystal-derived restraints, full sampling, three seeds, and cluster-mean scoring.
-          The pass criterion is committed before the runs start , Spearman &rho;
+          The pass criterion is committed before the runs start: Spearman &rho;
           above +0.5 at p&nbsp;&lt;&nbsp;0.05, with at least two of G17A, G17P and S15A in
           the four worst-scoring analogues. Anything less means the protocol has no
           substitution-level resolution and every remaining score-difference claim comes
@@ -2055,7 +2055,7 @@ BODY = """
               <tr><td>Restraints</td><td>Ambiguous interaction restraints, <code>2.0&nbsp;2.0&nbsp;0.0</code> throughout, with cross-validation on (<code>noecv</code>, two partitions). Active and passive residue lists are on disk for every run and reproduced in the audit.</td></tr>
               <tr><td>Co-folding</td><td>AlphaFold3, 5 seeds per job, 44 jobs. Gates set before running: ipTM&nbsp;&ge;&nbsp;0.60, interface minimum PAE&nbsp;&le;&nbsp;5&nbsp;&Aring;, zero clashes.</td></tr>
               <tr><td>RNA folding</td><td>ViennaRNA&nbsp;2.7.2, partition function at 37&nbsp;&deg;C over a 236&nbsp;nt window.</td></tr>
-              <tr><td>Structures</td><td>PEPR1 from PDB&nbsp;5GR8 chain&nbsp;A, cleaned to polymer heavy atoms. PEPR2 an AlphaFold monomer trimmed to residues 24&ndash;710. Peptides threaded on 5GR8 chain&nbsp;J or taken from co-folded complexes; provenance recorded per residue.</td></tr>
+              <tr><td>Structures</td><td>PEPR1 from PDB&nbsp;5GR8 chain&nbsp;A, cleaned to polymer heavy atoms. PEPR2 an AlphaFold monomer trimmed to residues 24-710. Peptides threaded on 5GR8 chain&nbsp;J or taken from co-folded complexes; provenance recorded per residue.</td></tr>
               <tr><td>Structure handling</td><td>PyMOL&nbsp;2.x for splitting, interface detection and rendering; Biopython for superposition and RMSD.</td></tr>
             </tbody>
           </table>
@@ -2063,7 +2063,7 @@ BODY = """
 
         <p>
           Three numbering conventions coexist in the source data and cross-study comparisons
-          are only valid inside one of them: mature 1&ndash;23 as used by the truncation and
+          are only valid inside one of them: mature 1-23 as used by the truncation and
           Pearce panels, renumber-from-one as used by the co-folding truncation jobs, and
           construct-local numbering in the tandem study. Everything on this page is in
           mature numbering.
@@ -2082,23 +2082,23 @@ BODY = """
       <section class="refs" id="references">
         <h2 data-no-toc>References</h2>
         <ol>
-          <li>Tang, J., Han, Z., Sun, Y., Zhang, H., Gong, X. &amp; Chai, J. Structural basis for recognition of an endogenous peptide by the plant receptor kinase PEPR1. <i>Cell Research</i> <b>25</b>, 110&ndash;120 (2015). PDB&nbsp;5GR8.</li>
-          <li>Pearce, G., Yamaguchi, Y., Munske, G. &amp; Ryan, C. A. Structure&ndash;activity studies of AtPep1, a plant peptide signal involved in the innate immune response. <i>Peptides</i> <b>29</b>, 2083&ndash;2089 (2008).</li>
-          <li>Yamaguchi, Y., Huffaker, A., Bryan, A. C., Tax, F. E. &amp; Ryan, C. A. PEPR2 is a second receptor for the Pep1 and Pep2 peptides and contributes to defense responses in Arabidopsis. <i>Plant Cell</i> <b>22</b>, 508&ndash;522 (2010).</li>
-          <li>Dominguez, C., Boelens, R. &amp; Bonvin, A. M. J. J. HADDOCK: a protein&ndash;protein docking approach based on biochemical or biophysical information. <i>J. Am. Chem. Soc.</i> <b>125</b>, 1731&ndash;1737 (2003).</li>
+          <li>Tang, J., Han, Z., Sun, Y., Zhang, H., Gong, X. &amp; Chai, J. Structural basis for recognition of an endogenous peptide by the plant receptor kinase PEPR1. <i>Cell Research</i> <b>25</b>, 110-120 (2015). PDB&nbsp;5GR8.</li>
+          <li>Pearce, G., Yamaguchi, Y., Munske, G. &amp; Ryan, C. A. Structure-activity studies of AtPep1, a plant peptide signal involved in the innate immune response. <i>Peptides</i> <b>29</b>, 2083-2089 (2008).</li>
+          <li>Yamaguchi, Y., Huffaker, A., Bryan, A. C., Tax, F. E. &amp; Ryan, C. A. PEPR2 is a second receptor for the Pep1 and Pep2 peptides and contributes to defense responses in Arabidopsis. <i>Plant Cell</i> <b>22</b>, 508-522 (2010).</li>
+          <li>Dominguez, C., Boelens, R. &amp; Bonvin, A. M. J. J. HADDOCK: a protein-protein docking approach based on biochemical or biophysical information. <i>J. Am. Chem. Soc.</i> <b>125</b>, 1731-1737 (2003).</li>
           <li>Honorato, R. V. <i>et al.</i> The HADDOCK2.4 web server for integrative modeling of biomolecular complexes. <i>Nature Protocols</i> (2024).</li>
-          <li>Trellet, M., Melquiond, A. S. J. &amp; Bonvin, A. M. J. J. A unified conformational selection and induced fit approach to protein&ndash;peptide docking. <i>PLoS ONE</i> <b>8</b>, e58769 (2013).</li>
-          <li>Rodrigues, J. P. G. L. M. <i>et al.</i> Clustering biomolecular complexes by residue contacts similarity. <i>Proteins</i> <b>80</b>, 1810&ndash;1817 (2012).</li>
-          <li>Kastritis, P. L. &amp; Bonvin, A. M. J. J. Are scoring functions in protein&ndash;protein docking ready to predict interactomes? <i>J. Proteome Research</i> <b>9</b>, 2216&ndash;2225 (2010).</li>
-          <li>Vangone, A. &amp; Bonvin, A. M. J. J. Contacts-based prediction of binding affinity in protein&ndash;protein complexes. <i>eLife</i> <b>4</b>, e07454 (2015).</li>
-          <li>Abramson, J. <i>et al.</i> Accurate structure prediction of biomolecular interactions with AlphaFold&nbsp;3. <i>Nature</i> <b>630</b>, 493&ndash;500 (2024).</li>
-          <li>Buel, G. R. &amp; Walters, K. J. Can AlphaFold2 predict the impact of missense mutations on structure? <i>Nature Structural &amp; Molecular Biology</i> <b>29</b>, 1&ndash;2 (2022).</li>
-          <li>Ciemny, M. <i>et al.</i> Protein&ndash;peptide docking: opportunities and challenges. <i>Drug Discovery Today</i> <b>23</b>, 1530&ndash;1537 (2018).</li>
+          <li>Trellet, M., Melquiond, A. S. J. &amp; Bonvin, A. M. J. J. A unified conformational selection and induced fit approach to protein-peptide docking. <i>PLoS ONE</i> <b>8</b>, e58769 (2013).</li>
+          <li>Rodrigues, J. P. G. L. M. <i>et al.</i> Clustering biomolecular complexes by residue contacts similarity. <i>Proteins</i> <b>80</b>, 1810-1817 (2012).</li>
+          <li>Kastritis, P. L. &amp; Bonvin, A. M. J. J. Are scoring functions in protein-protein docking ready to predict interactomes? <i>J. Proteome Research</i> <b>9</b>, 2216-2225 (2010).</li>
+          <li>Vangone, A. &amp; Bonvin, A. M. J. J. Contacts-based prediction of binding affinity in protein-protein complexes. <i>eLife</i> <b>4</b>, e07454 (2015).</li>
+          <li>Abramson, J. <i>et al.</i> Accurate structure prediction of biomolecular interactions with AlphaFold&nbsp;3. <i>Nature</i> <b>630</b>, 493-500 (2024).</li>
+          <li>Buel, G. R. &amp; Walters, K. J. Can AlphaFold2 predict the impact of missense mutations on structure? <i>Nature Structural &amp; Molecular Biology</i> <b>29</b>, 1-2 (2022).</li>
+          <li>Ciemny, M. <i>et al.</i> Protein-peptide docking: opportunities and challenges. <i>Drug Discovery Today</i> <b>23</b>, 1530-1537 (2018).</li>
           <li>Castillo-Hair, S. M. <i>et al.</i> Optimizing 5&prime; mRNA structure for translation initiation. <i>Nature Communications</i> <b>10</b>, 3099 (2019).</li>
-          <li>Brockmeier, U. <i>et al.</i> Systematic screening of all signal peptides from <i>Bacillus subtilis</i>. <i>J. Molecular Biology</i> <b>362</b>, 393&ndash;402 (2006).</li>
+          <li>Brockmeier, U. <i>et al.</i> Systematic screening of all signal peptides from <i>Bacillus subtilis</i>. <i>J. Molecular Biology</i> <b>362</b>, 393-402 (2006).</li>
           <li>Cui, J. <i>et al.</i> Plant elicitor peptides and abiotic stress tolerance. <i>Antioxidants</i> <b>13</b>, 549 (2024).</li>
-          <li>Sun, Y. <i>et al.</i> Structural basis for flg22-induced activation of the Arabidopsis FLS2&ndash;BAK1 immune complex. <i>Science</i> <b>342</b>, 624&ndash;628 (2013). PDB&nbsp;4MN8.</li>
-          <li>Bonvin Lab. HADDOCK best practice guide , peptide docking. <a href="https://www.bonvinlab.org/software/bpg/peptides/">bonvinlab.org/software/bpg/peptides</a>.</li>
+          <li>Sun, Y. <i>et al.</i> Structural basis for flg22-induced activation of the Arabidopsis FLS2-BAK1 immune complex. <i>Science</i> <b>342</b>, 624-628 (2013). PDB&nbsp;4MN8.</li>
+          <li>Bonvin Lab. HADDOCK best practice guide, peptide docking. <a href="https://www.bonvinlab.org/software/bpg/peptides/">bonvinlab.org/software/bpg/peptides</a>.</li>
         </ol>
       </section>
 """
