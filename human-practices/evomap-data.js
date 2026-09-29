@@ -440,7 +440,7 @@ window.EVOMAP = (function () {
       suggestion: "Connect the experimental data to the model, identify the inputs and outputs, and refine every model through experimental validation.",
       summary: "His second visit, across the model, plants, protectant, hydroponics, circuit and reactor at once. He took apart the auto-filling reservoir we had drawn.",
       takeaways: [
-        "Modelling and wet lab need a real feedback loop, not a one-way handoff.",
+        "Experimental data should calibrate the model, and each model should be checked against experiments.",
         "The ReLeaf database can hold the experimental data for later optimisation.",
         "Visit Yes Health iFarm to understand hydroponic deployment."
       ],
@@ -544,7 +544,7 @@ window.EVOMAP = (function () {
       after: ["After hearing different advice from different booths, we realized that we should prioritize an O2 sensor and feedback loop in our design.", "For business plans, we should also research the GMO regulatory landscape in Taiwan and other countries, including the Philippines, Malaysia, and EU.", "Utilizing agricultural waste through methods such as hay infusion for the business plan."],
       before: ["On-site production avoids shelf life and transportation cost", "Farmers only need to buy the bioreactor machine and replace the B. subtilis powder or liquid once a year", "Protectant candidates include ACCD, LEA14, and BoPep4"],
       suggestion: "",
-      summary: "Stress tolerance depends on how protective molecules are regulated and used, as well as whether they are present. Oxygen came home as the main question.",
+      summary: "Stress tolerance depends on how protective molecules are regulated and used, as well as whether they are present. Oxygen was the main question we brought back.",
       takeaways: [
         "B. subtilis needs dissolved oxygen monitoring and active aeration; passive containment is not enough.",
         "An oxygen sensor with a feedback loop moves up the priority list.",
@@ -574,7 +574,7 @@ window.EVOMAP = (function () {
       takeaways: [
         "Traditional and natural farmers may doubt that a technological solution helps at all.",
         "Over-intervention can interfere with natural farming processes.",
-        "What she wanted was not a device. It was a way to exchange seed."
+        "She asked us for a way to exchange seed."
       ],
       photos: [{ src: "farm-tamsui-group.webp", alt: "The team with Ms. Chen at Happy Farm, Tamsui, 21 July 2026." }],
       links: [W("Farmer engagement and the LINE platform", "../human-practices/"), W("Software", "../software/")],
@@ -624,7 +624,7 @@ window.EVOMAP = (function () {
       suggestion: "Evaluate protein quantity, identity, solubility and function together. Improving secretion alone proves nothing.",
       summary: "Nine days later we went to NCHU in person, with the wet lab, the plant model and the dry lab each bringing one question.",
       takeaways: [
-        "Activity decides whether expression and secretion matter at all.",
+        "Judge protein quantity, identity, solubility and activity together, not secretion alone.",
         "Salinity and heat each need a stated rationale on agar, hydroponics and soil.",
         "For the dry lab: shorter or modified peptides that keep activity, guided by receptor interactions."
       ],
@@ -649,7 +649,7 @@ window.EVOMAP = (function () {
       suggestion: "What matters is how much protectant reaches the plant, when it is delivered, and how often.",
       summary: "A second NCHU consultation the same day. With the bacteria kept inside the reactor, delivery is the step that decides the plant response.",
       takeaways: [
-        "Producing protectant settles nothing; dose, timing and frequency at the plant do.",
+        "Making protectant is only the first step; how much reaches the plant, when, and how often decide the effect.",
         "Irrigation, spraying and seed coating are the delivery methods to compare.",
         "A better culture medium may ease the trade-off between growth and protein output."
       ],
@@ -726,7 +726,7 @@ window.EVOMAP = (function () {
       takeaways: [
         "Technical performance and usability are both design targets; we had treated only the first as one.",
         "A replaceable bacterial capsule and AIoT control would make the system practical on a farm.",
-        "The membrane leak at rest is an open problem, recorded here as open."
+        "The membrane leak at rest is still unsolved."
       ],
       links: [W("Hardware notebook", "../hardware/"), W("Safety and security", "../safety-and-security/")],
       source: "LOG. The log's Project Impact and Action fields for this visit are blank; the summary and feedback fields are not."
@@ -742,7 +742,7 @@ window.EVOMAP = (function () {
       ],
       dateNote: "The interview log's table dates the forum 4 September; the written narrative of the event dates it 5 September, and so does the booth write-up for the same day. We use 5 September.",
       name: "Public Forum and market day", zh: "", kind: "forum",
-      headline: "Three speakers, one boundary: balance growth and defence",
+      headline: "All three speakers came back to balancing growth and defence",
       role: "Experts, farmers and the public, more than 50 participants",
       where: "Taipei Water Garden Organic Farmers' Market, with Green Media",
       lanes: ["protect", "deploy"],
@@ -750,7 +750,7 @@ window.EVOMAP = (function () {
       keyLabel: "From CH Biotech at the forum",
       ai: ["before", "after"],
       suggestion: "Protect on the basis of whether the plant can keep growing under the stress it is in.",
-      summary: "Three speakers, then the farmers, with more than 50 people in the room. Natural farming, smart agriculture and plant metabolism reached the same limit: balance growth and defence.",
+      summary: "Three speakers, then the farmers, with more than 50 people in the room. The talks on natural farming, smart agriculture and plant metabolism all argued for a balance between growth and defence.",
       takeaways: [
         "Dr. Li: build an environment where plants develop their own resilience, and intervene second.",
         "Prof. Chen, now a speaker: apply protection by whether plants can keep growing under the stress.",
