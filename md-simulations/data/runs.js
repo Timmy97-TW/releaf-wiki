@@ -180,13 +180,13 @@ const MD_SET = {
    },
    "en": {
     "short": "AtPep1",
-    "name": "AtPep1 7–23 benchmark",
+    "name": "AtPep1 7-23 benchmark",
     "role": "Benchmark",
     "gist": "The peptide actually resolved in the 5GR8 crystal structure, run under settings identical to the other eight. It is the only system with an experimental structure to check against, so it sets the scale the rest are read on."
    },
    "zh": {
     "short": "AtPep1",
-    "name": "AtPep1 7–23 基準",
+    "name": "AtPep1 7-23 基準",
     "role": "基準",
     "gist": "5GR8 晶體結構中真正解出的胜肽，以與其餘八條軌跡完全相同的參數執行。全套之中只有它有實驗結構可以對照，因此它定下了其他頁面被閱讀時的尺度。"
    }
@@ -366,14 +366,14 @@ const MD_SET = {
     "zh": "通過"
    },
    "en": {
-    "short": "1–23 (WT)",
-    "name": "BoPep4 wild type 1–23",
+    "short": "1-23 (WT)",
+    "name": "BoPep4 wild type 1-23",
     "role": "Reference state",
     "gist": "The complete mature sequence with a free C-terminus. The other seven BoPep4 trajectories are all read against this one."
    },
    "zh": {
-    "short": "1–23（野生型）",
-    "name": "BoPep4 野生型 1–23",
+    "short": "1-23（野生型）",
+    "name": "BoPep4 野生型 1-23",
     "role": "參考狀態",
     "gist": "完整的成熟序列，C 端為自由羧基。其餘七條 BoPep4 軌跡都是對照這一條來讀的。"
    }
@@ -482,16 +482,16 @@ const MD_SET = {
     "zh": "通過"
    },
    "en": {
-    "short": "7–23",
-    "name": "BoPep4 7–23",
+    "short": "7-23",
+    "name": "BoPep4 7-23",
     "role": "Hypothesis falsified",
-    "gist": "Putting Lys7 and Lys8 back onto 9–23 restores the clamp. Not because a free-terminus artefact went away: Lys7 grips Asp129, a salt bridge that is not on Tang's list of eight. This is also the first construct that is like-for-like with the benchmark."
+    "gist": "Putting Lys7 and Lys8 back onto 9-23 restores the clamp. Not because a free-terminus artefact went away: Lys7 grips Asp129, a salt bridge that is not on Tang's list of eight. This is also the first construct that is like-for-like with the benchmark."
    },
    "zh": {
-    "short": "7–23",
-    "name": "BoPep4 7–23",
+    "short": "7-23",
+    "name": "BoPep4 7-23",
     "role": "假設被推翻",
-    "gist": "把 Lys7 與 Lys8 加回 9–23 之後，鉗合恢復。原因不是自由 N 端的假影消失，而是 Lys7 抓住了 Asp129，而這條鹽橋並不在 Tang 的八個熱點名單上。這也是第一個能與基準逐殘基對比的構築。"
+    "gist": "把 Lys7 與 Lys8 加回 9-23 之後，鉗合恢復。原因不是自由 N 端的假影消失，而是 Lys7 抓住了 Asp129，而這條鹽橋並不在 Tang 的八個熱點名單上。這也是第一個能與基準逐殘基對比的構築。"
    }
   },
   {
@@ -590,16 +590,16 @@ const MD_SET = {
     "zh": "通過"
    },
    "en": {
-    "short": "9–23",
-    "name": "BoPep4 9–23",
+    "short": "9-23",
+    "name": "BoPep4 9-23",
     "role": "The construct that was ordered",
-    "gist": "Deleting residues 1–8 loosens the anchor at the far end of the peptide. The clamp flickers open 94 times in 30 ns, none of the gaps longer than 0.68 ns."
+    "gist": "Deleting residues 1-8 loosens the anchor at the far end of the peptide. The clamp flickers open 94 times in 30 ns, none of the gaps longer than 0.68 ns."
    },
    "zh": {
-    "short": "9–23",
-    "name": "BoPep4 9–23",
+    "short": "9-23",
+    "name": "BoPep4 9-23",
     "role": "已下單的構築",
-    "gist": "刪掉殘基 1–8 之後，鬆掉的是胜肽另一端的錨。鉗合在 30 奈秒內斷開 94 次，沒有一次超過 0.68 奈秒。"
+    "gist": "刪掉殘基 1-8 之後，鬆掉的是胜肽另一端的錨。鉗合在 30 奈秒內斷開 94 次，沒有一次超過 0.68 奈秒。"
    }
   },
   {
@@ -674,14 +674,14 @@ const MD_SET = {
     "zh": "通過"
    },
    "en": {
-    "short": "15–23",
-    "name": "BoPep4 15–23",
+    "short": "15-23",
+    "name": "BoPep4 15-23",
     "role": "Control that did not fail",
     "gist": "Planned as a negative control that would fall off and supply a leaving time. It did not fall off, and it could not have: unbinding runs on microseconds to milliseconds, three to six orders of magnitude past 30 ns."
    },
    "zh": {
-    "short": "15–23",
-    "name": "BoPep4 15–23",
+    "short": "15-23",
+    "name": "BoPep4 15-23",
     "role": "沒有失敗的對照",
     "gist": "原本設計成會脫落、可以量出離開時間的陰性對照。它沒有脫落，而且本來就不可能：解離發生在微秒到毫秒尺度，比 30 奈秒長三到六個數量級。"
    }
@@ -978,16 +978,16 @@ const MD_SET = {
     "zh": "通過"
    },
    "en": {
-    "short": "1–23 pH 5.5",
-    "name": "BoPep4 1–23 at pH 5.5",
+    "short": "1-23 pH 5.5",
+    "name": "BoPep4 1-23 at pH 5.5",
     "role": "Positive result",
-    "gist": "Three histidines near the interface switched to their protonated form, with no other atom touched. A Glu12–His227 pair appears at once, and the AtPep1 benchmark already makes that same pair at neutral pH."
+    "gist": "Three histidines near the interface switched to their protonated form, with no other atom touched. A Glu12-His227 pair appears at once, and the AtPep1 benchmark already makes that same pair at neutral pH."
    },
    "zh": {
-    "short": "1–23 pH 5.5",
-    "name": "BoPep4 1–23，pH 5.5",
+    "short": "1-23 pH 5.5",
+    "name": "BoPep4 1-23，pH 5.5",
     "role": "正面結果",
-    "gist": "把介面附近的三個組胺酸換成質子化形式，其餘原子一個都沒動。Glu12–His227 這一對立刻出現，而 AtPep1 基準在中性 pH 下本來就有這一對。"
+    "gist": "把介面附近的三個組胺酸換成質子化形式，其餘原子一個都沒動。Glu12-His227 這一對立刻出現，而 AtPep1 基準在中性 pH 下本來就有這一對。"
    }
   },
   {
@@ -1086,14 +1086,14 @@ const MD_SET = {
     "zh": "未通過"
    },
    "en": {
-    "short": "9–23 pH 5.5",
-    "name": "BoPep4 9–23 at pH 5.5",
+    "short": "9-23 pH 5.5",
+    "name": "BoPep4 9-23 at pH 5.5",
     "role": "Failed the gate",
     "gist": "Truncation crossed with protonation. Every metric except the anchor improved and the anchor collapsed: the now-positive His22 folds back onto the peptide's own C-terminal carboxylate and displaces Arg487."
    },
    "zh": {
-    "short": "9–23 pH 5.5",
-    "name": "BoPep4 9–23，pH 5.5",
+    "short": "9-23 pH 5.5",
+    "name": "BoPep4 9-23，pH 5.5",
     "role": "未通過驗收",
     "gist": "截短與質子化交叉。除了錨以外每一項指標都變好，而錨垮了：帶正電的 His22 折回胜肽自己的 C 端羧基，把 Arg487 擠開。"
    }
