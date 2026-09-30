@@ -12,7 +12,7 @@ Run from the site root, after build/threat-map.py:
 Needs numpy, scipy and Pillow.
 
 FARMLAND: the union of the team's QGIS parcel layers (the parcels of Geospatial
-  Analysis, Figure 8), both size classes merged; only their alpha is used, so
+  Analysis, Figure 6), both size classes merged; only their alpha is used, so
   farm size plays no part. FARM is --leaf-700.
 OTHER LAND and COAST: as in build/threat-farms.py (--th-land, --th-coast).
 """

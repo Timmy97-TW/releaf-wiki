@@ -76,6 +76,7 @@
   var FIRST_LIGHT = 0.08;           // the neighbours wait this long
   var LAST_LIGHT = 0.70;            // every farm is lit by here
   var FADE = 0.04;                  // how long one farm takes to light
+  var HERO_ON = 0.045;              // 1 Oct: this farm's reactor comes on first, over this much scroll
   var LABEL_OUT = [0.02, 0.09];     // the focal reactor's label leaves as the pull-back starts
   var NIGHT = 0.64;                 // how dark the night tint is before first light
   var OPEN = 0.105, OPEN_TALL = 0.08;   // at the start the focal reactor is this share of the frame tall
@@ -243,7 +244,7 @@
       }
       for (i = 0; i < farms.length; i++) {
         f = farms[i];
-        f.a = still || f.hero ? 1 : clamp01((p - f.t) / FADE);
+        f.a = still ? 1 : f.hero ? clamp01(p / HERO_ON) : clamp01((p - f.t) / FADE);
         share += f.a;
       }
       share /= farms.length;
@@ -298,7 +299,7 @@
       R *= 1 + GROW * q;
       if (x + R < 0 || x - R > W || y + R < 0 || y - R > H) continue;
       // the focal farm's glow is the whole light of the opening frame
-      gtx.globalAlpha = f.hero ? 1 - 0.25 * c.e * (1 - q) : f.a * (GLOW_REST + (1 - GLOW_REST) * q);
+      gtx.globalAlpha = f.hero ? f.a * (1 - 0.25 * c.e * (1 - q)) : f.a * (GLOW_REST + (1 - GLOW_REST) * q);
       gtx.drawImage(sprite, x - R, y - R, 2 * R, 2 * R);
     }
     gtx.globalAlpha = 1;

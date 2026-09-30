@@ -4,8 +4,11 @@ Run from the site root:  python3 build/threat-map.py [out.webp]
 Needs numpy, scipy and Pillow. Output: 840 x 1267 RGBA, lossless WebP.
 
 The CLASSES come from the sub-page's own figure, and nowhere else.
-  Geospatial Analysis, Figure 7 (assets/img/geospatial/volatility-vs-yield.webp),
-  left panel: the climate volatility index in five classes, 0.38-0.49,
+  Geospatial Analysis, former Figure 7 (assets/img/geospatial/volatility-vs-yield.webp),
+  called Figure 7 below. The 28 September draft of the page dropped it and
+  c157ba4 deleted the file; to rerun this script, restore it first:
+    git show c157ba4^:assets/img/geospatial/volatility-vs-yield.webp > assets/img/geospatial/volatility-vs-yield.webp
+  Its left panel: the climate volatility index in five classes, 0.38-0.49,
   0.49-0.60, 0.60-0.71, 0.71-0.82 and 0.82-0.93, drawn in the five legend
   colours below. A pixel of that panel is taken as a class only when
     * it is within 28 (RGB distance) of one legend colour,
@@ -22,7 +25,7 @@ The COASTLINE comes from the team's QGIS layers, which are sharper than the
   figure: the union of assets/img/bigpicture/map/{base,smalldim,large,v1-v5,
   sb1-sb5}.webp. Only their alpha is used here, never their colours or their
   classes. The QGIS export clipped the north-east cape at x = 800; that strip
-  of coastline is taken from the sub-page's Figure 8
+  of coastline is taken from the sub-page's Figure 6 (was Figure 8)
   (assets/img/geospatial/farmland-volatility.webp), registered on five
   landmarks (residual under 3 px).
   Penghu and the islets west of the main island are left off: Figure 7 draws
@@ -58,7 +61,7 @@ land0 = np.maximum.reduce([alpha(n) for n in ["base", "smalldim", "large"]
 a = np.zeros((H, W), np.float32)
 a[:, :W0] = np.clip(land0, 0, 255)
 
-# north-east cape from Figure 8 (fig8 px -> map px, then inverted)
+# north-east cape from Figure 6, formerly 8 (fig8 px -> map px, then inverted)
 fig8_pts = np.array([(947.5, 370), (658, 1899), (922, 1555), (455, 1698), (948, 1830)])
 map_pts = np.array([(689, 16), (464, 1234), (677, 961), (305, 1075), (698, 1180)])
 A8 = np.c_[fig8_pts, np.ones(len(fig8_pts))]

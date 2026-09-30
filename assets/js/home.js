@@ -113,7 +113,12 @@
         hw: n("--r-hw") * w, hh: n("--r-hh") * h,
         reach: 1.5 * (n("--spot-size") || 0.096 * f.width)
       };
-      return isFinite(m.x + m.y + m.hw + m.hh + m.reach) && m.reach > 0 ? m : null;
+      if (!(isFinite(m.x + m.y + m.hw + m.hh + m.reach) && m.reach > 0)) return null;
+      // On the machine the light widens to hold all of it, so a reader sees
+      // the whole reactor and not a keyhole of it (home.css, --spot-grow).
+      frames.style.setProperty("--spot-grow",
+        Math.max(0, 1.05 * Math.max(m.hw, m.hh) - (n("--spot-size") || 0)) + "px");
+      return m;
     }
     window.addEventListener("resize", function () { box = null; });
 
@@ -134,8 +139,10 @@
     function draw() {
       queued = false;
       var n = near();
-      frames.style.setProperty("--spot-x", x + "px");
-      frames.style.setProperty("--spot-y", y + "px");
+      // and it settles on the machine's centre as it opens there
+      var k = box ? 0.85 * n : 0;
+      frames.style.setProperty("--spot-x", (x + (k ? (box.x - x) * k : 0)) + "px");
+      frames.style.setProperty("--spot-y", (y + (k ? (box.y - y) * k : 0)) + "px");
       frames.style.setProperty("--spot-near", n.toFixed(3));
       if (n >= 0.5) hero.classList.add("is-found");
     }
@@ -581,7 +588,7 @@
     var model = document.getElementById("rx");
     var grid = document.getElementById("partlist");
     // the card tags, in the chips' order: Protective (under the model), On
-    // demand and Automatic (left), Cell-free and Monitored (right)
+    // demand and Automatic (left), Biosafe and Monitored (right)
     var tags = [".rxs__wide", ".rxs__side--l > li:nth-child(1)", ".rxs__side--l > li:nth-child(2)",
                 ".rxs__side--r > li:nth-child(1)", ".rxs__side--r > li:nth-child(2)"].map(function (q) {
       var el = sol.querySelector(q);

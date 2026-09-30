@@ -9,13 +9,14 @@ canvas as threat-volatility.webp, so the marker positions in home-threat.css hol
 
 CLASSES: read back from assets/img/home/threat-volatility.webp, which
   build/threat-map.py paints in exactly the five --vol-* colours from the
-  sub-page's Figure 7 (Geospatial Analysis). Nothing about the classes changes.
+  sub-page's former Figure 7 (Geospatial Analysis; no longer on the page, see
+  build/threat-map.py). Nothing about the classes changes.
   Class 1 (0.38-0.49) does not occur on the main island, so no farmland is in it.
 FARMLAND: the union of the team's QGIS parcel layers
   assets/img/bigpicture/map/smalldim.webp and large.webp (all parcels, both
   size classes; only their alpha is used, so farm size plays no part). These
-  are the parcels of the sub-page's Figure 8 ("Every farmland parcel on the
-  main island", Ministry of Agriculture parcel map). The QGIS export stops at
+  are the parcels of the sub-page's Figure 6 ("Taiwan Parcel Farmlands x
+  Climate Volatility", Ministry of Agriculture parcel map). The QGIS export stops at
   x = 800, so the few parcels on the north-east cape beyond it are not drawn.
 OTHER LAND: LAND below, which is --gray-100 and must equal --th-land in
   home-threat.css. It is lighter than every class that holds farmland, so the

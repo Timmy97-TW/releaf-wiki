@@ -1,55 +1,31 @@
 /* =============================================================================
-   ReLeaf homepage: 01 THE THREAT
+   ReLeaf homepage: 01 THE THREAT. Rebuilt 1 Oct.
    -----------------------------------------------------------------------------
-   Breadth. The weather is changing across the island, and most of the farmers
-   we met had already lost crops to it. No farm sizes anywhere in this section.
+   The head across the top; under it the text column (the current view's
+   caption and places, the farmers' line, the demand it earns) beside the map.
+   Below 900px it is one column: head, map, text.
 
-   One reading order, three groups: the head (kicker, title, one lede), the
-   three places that pair with the map's markers, and one closing line (the
-   farmers). One weight of emphasis per group: the title, the place names, the
-   closing line. Everything else is body grey.
+   FIVE VIEWS: vol, farm, nights, age, all. Every view-bound element carries
+   data-v, and the checked radio shows the ones that match, through :has().
+   Without :has() only the volatility view shows and the switch hides. No
+   script anywhere in this section.
 
-   From 900px the text column sits beside the map, both top-aligned, and the
-   key sits in the open sea at the top left of the plate. Below 900px the text
-   column dissolves (display: contents) and the key goes under the plate: from
-   640px the head runs across and the map sits beside its places; below 640px
-   it is one column (head, map, places, closing).
+   ALL is a stack: the farmland (threat-stack-base.webp), then one
+   translucent rust layer per threat (threat-stack-vol/-nights/-age.webp),
+   multiplied, so farmland under two threats is visibly darker than under
+   one. When All is chosen the three land one after another; with reduced
+   motion they are simply there. The key's three swatches are the composited
+   colours: none #e4dfcf, one #a56851, two #773120 (build/threat-stack.py).
 
-   The map is ONE transparent raster (threat-farms.webp, 840 x 1267, made by
-   build/threat-farms.py): the farmland parcels of the sub-page's Figure 8,
-   each painted in its class of Figure 7's volatility index in exactly the
-   five --vol-* colours below, and all other land in --th-land inside a
-   --th-coast line. The key bar and the other-land swatch are those same
-   colours, so the key is the map's own legend. The markers sit on the raster
-   by percentage.
-   They were placed from longitude/latitude with a fit to four fixed points on
-   this raster (Fuguei Cape, Eluanbi, Green Island, Orchid Island; residual
-   about 2 px):
-
-       x% = (336.3 * lon - 40180) / 8.4      y% = (-358.3 * lat + 9080) / 12.67
-
-   1 the western plain, on the Yunlin coast   120.29 E 23.67 N
-   2 Alishan (the weather station)            120.81 E 23.51 N
-   3 Kaohsiung (the weather station)          120.32 E 22.57 N
-
-   Static. No script: the only behaviour is a hover highlight between a place
-   and its marker, and nothing is hidden without it.
-
-   Colour means farmland, and its hue is the volatility class. --th-land is
-   lighter than every class that holds farmland (class 1 has none on the main
-   island), so the steadiest farmland keeps 1.31:1 against it and differs in
-   hue. No farm sizes: the two parcel layers are merged.
-
-   Everything is prefixed .th- so it cannot collide with home.css. It relies
-   on the shared frame in home-problem.css: --screen-pad, --pb-screen,
-   .pb-screen, .pb-inner, .pb-index, .pb-title, .pb-lede, .pb-ref.
+   Pins are placed by inline left/top in % of the 840 x 1267 canvas, fitted
+   to the rasters (see build/threat_common.py).
    ========================================================================== */
 
 /* The one copy of the volatility ramp on the page: 01's map and key, and
    03's five day cells (home-distance.css), read it. The raster was painted in
    these hexes, so change them only with the images (build/threat-map.py,
    then build/threat-farms.py).
-   Class breaks as on Geospatial Analysis, Figures 7 and 8: */
+   Class breaks as on Geospatial Analysis, Figure 6 (formerly Figures 7 and 8): */
 :root {
   --vol-1: #eceadf;   /* 0.38 to 0.49 */
   --vol-2: #ddd8c2;   /* 0.49 to 0.60 */
@@ -66,55 +42,40 @@
 
 .th { background: var(--white); }
 
-.th__grid {
-  display: grid;
-  grid-template-columns: minmax(0, 1fr);
-}
+.th__grid { display: grid; grid-template-columns: minmax(0, 1fr); row-gap: var(--sp-6); }
+.th__head { max-width: 52rem; }
+.th__head .pb-title { max-width: 30ch; }
+.th__head .pb-lede { margin-bottom: 0; text-wrap: pretty; }
 @media (min-width: 900px) {
   .th__grid {
     grid-template-columns: minmax(0, 34rem) auto;
     justify-content: space-between;
     column-gap: clamp(2rem, 5vw, 5rem);
-    align-items: start;   /* the kicker and the key share the top line */
+    align-items: start;
   }
+  .th__head { grid-column: 1; grid-row: 1; }
+  .th__text { grid-column: 1; grid-row: 2; }
+  .th-map   { grid-column: 2; grid-row: 1 / span 2; }
 }
-/* keep the map clear of the fixed chapters rail (shown from 1180px, 64px
-   wide, 16px from the edge) when the page is not wide enough to leave it a
-   margin of its own */
 @media (min-width: 1180px) {
   .th__grid { padding-right: max(var(--sp-6), calc(5rem - (100vw - var(--max)) / 2)); }
 }
 @media (max-width: 899px) {
-  /* one column: head, map, places, closing */
-  .th__text  { display: contents; }
-  .th__head  { order: 1; }
-  .th-map    { order: 2; margin-top: var(--sp-6); }
-  .th-places { order: 3; }
-  .th-close  { order: 4; }
-}
-@media (min-width: 640px) and (max-width: 899px) {
-  /* tablet: the head across, then the map beside its places */
-  .th__grid  { grid-template-columns: auto minmax(0, 1fr); column-gap: var(--sp-6); }
-  .th__head  { grid-column: 1 / -1; }
-  .th-map    { grid-column: 1; grid-row: 2 / span 2; }
-  .th-places { grid-column: 2; grid-row: 2; align-self: end; }
-  .th-close  { grid-column: 2; grid-row: 3; align-self: start; }
+  .th-map { order: 2; }
+  .th__text { order: 3; }
 }
 
-.th__head .pb-lede { margin-bottom: 0; text-wrap: pretty; }
-/* the three groups (head, places, closing) sit further apart than the
-   places inside the list, so the grouping reads before the words do */
-@media (min-width: 900px) {
-  .th-places, .th-close { margin-top: var(--sp-7); }
+/* ------------------------------------------------ the view's words ------- */
+.th-view { display: none; }
+.th-view[data-v="vol"] { display: block; }
+.th-view__cap {
+  margin: 0 0 var(--sp-4);
+  font-size: clamp(1.125rem, 1rem + .45vw, 1.375rem);
+  font-weight: 700; line-height: 1.3; letter-spacing: -.012em;
+  color: var(--leaf-900);
 }
-.th-nw { white-space: nowrap; }   /* keeps a citation on its word's line */
-
-/* ------------------------------------------------ the three places ------- */
-
 .th-places {
-  list-style: none;
-  margin: var(--sp-6) 0 0; padding: 0;
-  max-width: 36rem;
+  list-style: none; margin: 0; padding: 0;
   display: grid; gap: var(--sp-4);
 }
 .th-place {
@@ -128,14 +89,8 @@
   font-size: var(--text-sm); font-weight: 650; line-height: 1.375rem;
   color: var(--leaf-900);
 }
-.th-place__say {
-  font-size: var(--text-sm); line-height: 1.5; color: var(--gray-600);
-  text-wrap: pretty;
-}
-
-/* the same disc as the map marker, so the list reads as the map's key */
-.th-no,
-.th-pin {
+.th-place__say { font-size: var(--text-sm); line-height: 1.5; color: var(--gray-600); text-wrap: pretty; }
+.th-no, .th-pin {
   display: grid; place-items: center;
   width: 1.375rem; height: 1.375rem; border-radius: 50%;
   background: var(--leaf-900); color: var(--white);
@@ -144,11 +99,8 @@
 }
 .th-no { grid-column: 1; grid-row: 1; }
 
-/* ------------------------------------------------------- the closing ----- */
-
 .th-close {
   margin: var(--sp-6) 0 0;
-  max-width: 36rem;
   font-size: clamp(1.0625rem, .95rem + .35vw, 1.25rem);
   font-weight: 650; line-height: 1.35; letter-spacing: -.01em;
   color: var(--leaf-900);
@@ -156,61 +108,89 @@
 }
 
 /* ------------------------------------------------------------- the map --- */
-
-.th-map {
-  position: relative;
-  margin: 0;
-  display: grid; justify-content: center;
-}
+.th-map { position: relative; margin: 0; display: grid; justify-items: center; row-gap: var(--sp-4); }
 .th-map__plate {
   position: relative;
-  height: min(calc(var(--pb-screen) - 2 * var(--screen-pad) - .5rem), 46rem);
+  height: min(calc(var(--pb-screen) - 2 * var(--screen-pad) - 3.5rem), 44rem);
   aspect-ratio: 840 / 1267;
 }
-.th-map__img { position: absolute; inset: 0; width: 100%; height: 100%; display: block; }
+.th-map__img, .th-map__stack, .th-map__stack img { position: absolute; inset: 0; width: 100%; height: 100%; display: block; }
+.th-map__stack img + img { mix-blend-mode: multiply; }
 
-/* THE THREE VIEWS. The radio group decides which raster shows; no script.
-   Volatility is the resting view and the only one a browser without :has()
-   shows. The hidden views are visibility:hidden as well as transparent, so a
-   screen reader reads only the alt text of the view on screen. */
-.th-map__img--farm, .th-map__img--both { opacity: 0; visibility: hidden; }
-.th-map__img { transition: opacity .35s ease, visibility 0s linear .35s; }
-.th:has(.th-views input[value="farm"]:checked) .th-map__img--vol,
-.th:has(.th-views input[value="both"]:checked) .th-map__img--vol { opacity: 0; visibility: hidden; }
-.th:has(.th-views input[value="farm"]:checked) .th-map__img--farm,
-.th:has(.th-views input[value="both"]:checked) .th-map__img--both { opacity: 1; visibility: visible; transition-delay: 0s; }
-@media (prefers-reduced-motion: reduce) { .th-map__img { transition: none; } }
+/* every view-bound picture and pin starts hidden but volatility's */
+:is(.th-map__img, .th-map__stack, .th-pin)[data-v] {
+  opacity: 0; visibility: hidden;
+  transition: opacity .35s ease, visibility 0s linear .35s;
+}
+:is(.th-map__img, .th-map__stack, .th-pin)[data-v="vol"] { opacity: 1; visibility: visible; }
+@supports selector(:has(*)) {
+  .th:has(.th-views input:not([value="vol"]):checked) :is(.th-map__img, .th-map__stack, .th-pin)[data-v="vol"] { opacity: 0; visibility: hidden; transition: opacity .35s ease, visibility 0s linear .35s; }
+  .th:has(.th-views input:not([value="vol"]):checked) .th-view[data-v="vol"] { display: none; }
+.th:has(.th-views input[value="vol"]:checked) :is(.th-map__img, .th-map__stack, .th-pin)[data-v="vol"] { opacity: 1; visibility: visible; transition-delay: 0s; }
+.th:has(.th-views input[value="vol"]:checked) .th-view[data-v="vol"] { display: block; }
+.th:has(.th-views input[value="vol"]:checked) .th-key [data-v]:not([data-v~="vol"]) { display: none; }
+.th:has(.th-views input[value="farm"]:checked) :is(.th-map__img, .th-map__stack, .th-pin)[data-v="farm"] { opacity: 1; visibility: visible; transition-delay: 0s; }
+.th:has(.th-views input[value="farm"]:checked) .th-view[data-v="farm"] { display: block; }
+.th:has(.th-views input[value="farm"]:checked) .th-key [data-v]:not([data-v~="farm"]) { display: none; }
+.th:has(.th-views input[value="nights"]:checked) :is(.th-map__img, .th-map__stack, .th-pin)[data-v="nights"] { opacity: 1; visibility: visible; transition-delay: 0s; }
+.th:has(.th-views input[value="nights"]:checked) .th-view[data-v="nights"] { display: block; }
+.th:has(.th-views input[value="nights"]:checked) .th-key [data-v]:not([data-v~="nights"]) { display: none; }
+.th:has(.th-views input[value="age"]:checked) :is(.th-map__img, .th-map__stack, .th-pin)[data-v="age"] { opacity: 1; visibility: visible; transition-delay: 0s; }
+.th:has(.th-views input[value="age"]:checked) .th-view[data-v="age"] { display: block; }
+.th:has(.th-views input[value="age"]:checked) .th-key [data-v]:not([data-v~="age"]) { display: none; }
+.th:has(.th-views input[value="all"]:checked) :is(.th-map__img, .th-map__stack, .th-pin)[data-v="all"] { opacity: 1; visibility: visible; transition-delay: 0s; }
+.th:has(.th-views input[value="all"]:checked) .th-view[data-v="all"] { display: block; }
+.th:has(.th-views input[value="all"]:checked) .th-key [data-v]:not([data-v~="all"]) { display: none; }
+}
+@supports not selector(:has(*)) {
+  .th-views, .th-key [data-v]:not([data-v~="vol"]) { display: none; }
+}
 
-/* the switch: a segmented control above the key */
+/* ALL: the three threats land one after another, then the pins */
+.th-stack__t { opacity: 0; transition: opacity .6s ease; }
+.th:has(.th-views input[value="all"]:checked) .th-stack__t {
+  opacity: 1; transition-delay: calc(.2s + var(--i) * .75s);
+}
+.th:has(.th-views input[value="all"]:checked) .th-pin[data-v="all"] { transition-delay: 2.5s; }
+@media (prefers-reduced-motion: reduce) {
+  :is(.th-map__img, .th-map__stack, .th-pin)[data-v], .th-stack__t { transition: none !important; }
+  .th-stack__t { opacity: 1; }
+}
+
+/* the switch: a segmented control over the map, its name beside it */
 .th-views {
-  display: inline-flex; margin: 0 0 var(--sp-3); padding: 3px; border: 0;
-  border-radius: 999px; background: var(--gray-100);
-  box-shadow: inset 0 0 0 1px var(--gray-200);
+  display: flex; flex-wrap: wrap; align-items: center; justify-content: center;
+  gap: .35rem .6rem;
+  margin: 0; padding: 0; border: 0;
+}
+.th-views__k {
+  float: left; margin-right: .25rem;
+  font-size: .6875rem; font-weight: 700; letter-spacing: .1em; text-transform: uppercase;
+  color: var(--gray-500);
 }
 .th-views label { position: relative; cursor: pointer; }
 .th-views input { position: absolute; inset: 0; margin: 0; opacity: 0; cursor: pointer; }
 .th-views span {
-  display: block; padding: .42rem .85rem; border-radius: 999px;
-  font-size: .78rem; font-weight: 600; line-height: 1.2; color: var(--gray-600);
-  transition: background-color .2s ease, color .2s ease;
+  display: block; padding: .5rem .95rem; border-radius: 999px;
+  font-size: .8125rem; font-weight: 600; line-height: 1.2;
+  color: var(--leaf-900); background: var(--white);
+  box-shadow: inset 0 0 0 1px var(--gray-300);
+  transition: background-color .2s ease, color .2s ease, box-shadow .2s ease;
 }
-.th-views label:hover span { color: var(--leaf-900); }
-.th-views input:checked + span { background: var(--white); color: var(--leaf-900); box-shadow: 0 1px 2px rgb(0 0 0 / .12); }
-.th-views input:focus-visible + span { outline: 2px solid var(--leaf-700); outline-offset: 1px; }
+.th-views label:hover span { box-shadow: inset 0 0 0 1px var(--leaf-700); }
+.th-views input:checked + span { background: var(--leaf-900); color: var(--white); box-shadow: none; }
+.th-views input[value="all"]:checked + span { background: #773120; }
+.th-views input:focus-visible + span { outline: 2px solid var(--leaf-700); outline-offset: 2px; }
 
-/* markers: numbered discs only; the list beside the map names them */
 .th-pin {
   position: absolute; transform: translate(-50%, -50%);
   box-shadow: 0 0 0 2px var(--white), 0 1px 3px rgb(0 0 0 / .22);
 }
-.th-pin[data-n="1"] { left: 32.74%; top: 47.36%; }  /* the western plain, Yunlin coast */
-.th-pin[data-n="2"] { left: 53.5%;  top: 51.86%; }  /* Alishan */
-.th-pin[data-n="3"] { left: 33.6%;  top: 78.5%;  }  /* Kaohsiung */
 
-/* key: one bar in the five classes of Figure 7, steadiest on the left */
+/* ------------------------------------------------------------- the key --- */
 .th-key {
   display: grid; gap: .3rem; align-content: start;
-  width: 11rem;
+  width: min(100%, 16rem);
   font-size: var(--text-xs); line-height: 1.4; color: var(--gray-600);
 }
 .th-key__grp {
@@ -219,7 +199,7 @@
   text-transform: uppercase; color: var(--gray-700);
 }
 .th-key__ramp {
-  display: grid; grid-template-columns: repeat(5, 1fr);
+  display: grid; grid-auto-flow: column; grid-auto-columns: 1fr;
   height: .625rem; border-radius: 2px; overflow: hidden;
   box-shadow: inset 0 0 0 1px rgb(0 0 0 / .06);
 }
@@ -228,98 +208,37 @@
 .th-key__ramp i:nth-child(3) { background: var(--vol-3); }
 .th-key__ramp i:nth-child(4) { background: var(--vol-4); }
 .th-key__ramp i:nth-child(5) { background: var(--vol-5); }
-.th-key__ends {
-  display: flex; justify-content: space-between;
-  font-variant-numeric: tabular-nums; color: var(--gray-600);
-}
-.th-key__sw {
-  display: flex; align-items: center; gap: .5rem;
-  margin-top: .2rem;
-}
+/* build/threat-nights.py and threat-age.py paint these exact hexes */
+.th-key__ramp--nights i:nth-child(1) { background: #ddd8c2; }
+.th-key__ramp--nights i:nth-child(2) { background: #cbbf98; }
+.th-key__ramp--nights i:nth-child(3) { background: #c2984e; }
+.th-key__ramp--nights i:nth-child(4) { background: #ae6a38; }
+.th-key__ramp--nights i:nth-child(5) { background: #9a3d22; }
+.th-key__ramp--age i:nth-child(1) { background: #ddd8c2; }
+.th-key__ramp--age i:nth-child(2) { background: #c2984e; }
+.th-key__ramp--age i:nth-child(3) { background: #9a3d22; }
+.th-key__ends { display: flex; justify-content: space-between; font-variant-numeric: tabular-nums; }
+.th-key__sw { display: flex; align-items: center; gap: .5rem; margin-top: .2rem; }
 .th-key__sw i {
   flex: none; width: 1.5rem; height: .625rem; border-radius: 2px;
   background: var(--th-land); box-shadow: inset 0 0 0 1px var(--th-coast);
 }
 .th-key__sw i.is-farm { background: var(--leaf-700); box-shadow: none; }
-
-/* each key line lists the views it belongs to in data-v; the others hide.
-   Without :has() only the volatility lines show, with the volatility view. */
-.th:has(.th-views input[value="vol"]:checked)  .th-key [data-v]:not([data-v~="vol"]),
-.th:has(.th-views input[value="farm"]:checked) .th-key [data-v]:not([data-v~="farm"]),
-.th:has(.th-views input[value="both"]:checked) .th-key [data-v]:not([data-v~="both"]) { display: none; }
-@supports not selector(:has(*)) {
-  .th-views, .th-key [data-v]:not([data-v~="vol"]) { display: none; }
-}
+.th-key__sw i.is-t0 { background: #e4dfcf; box-shadow: none; }
+.th-key__sw i.is-t1 { background: #a56851; box-shadow: none; }
+.th-key__sw i.is-t2 { background: #773120; box-shadow: none; }
 
 /* wide: the key sits in the open sea at the top left of the plate */
 @media (min-width: 900px) {
-  .th-map { grid-template-columns: auto; }
-  .th-views { position: absolute; top: 0; left: 0; z-index: 2; }
-  .th-key { position: absolute; top: 3.25rem; left: 0; width: min(12.5rem, 43%); }
+  .th-map { justify-items: stretch; }
+  .th-key { position: absolute; top: 4rem; left: 0; width: min(12.5rem, 40%); }
 }
 @media (max-width: 899px) {
-  .th-views { justify-self: center; }
-}
-/* narrow: the key sits under the plate, as wide as it */
-@media (max-width: 899px) {
-  .th-map { row-gap: var(--sp-4); justify-items: center; }
-  .th-map__plate, .th-key { width: min(40vw, 20rem); }
-  .th-map__plate { height: auto; }
+  .th-map__plate { width: min(60vw, 22rem); height: auto; }
 }
 @media (max-width: 639px) {
-  .th-map__plate, .th-key { width: min(80vw, 19rem); }
+  .th-map__plate { width: min(80vw, 19rem); }
 }
 
-/* -------------------------------------------- place <-> marker highlight --- */
-/* Pointing at a place fades the other places' discs and markers; pointing
-   at a marker does the same from the other side. Only the discs fade (they
-   are aria-hidden duplicates of the list's numbers), so every line of text
-   keeps its full contrast. Opacity only, nothing moves. */
-@media (hover: hover) {
-  .th-no, .th-pin { transition: opacity .2s ease; }
-  .th:has([data-n="1"]:hover) :is(.th-place:not([data-n="1"]) .th-no, .th-pin:not([data-n="1"])),
-  .th:has([data-n="2"]:hover) :is(.th-place:not([data-n="2"]) .th-no, .th-pin:not([data-n="2"])),
-  .th:has([data-n="3"]:hover) :is(.th-place:not([data-n="3"]) .th-no, .th-pin:not([data-n="3"])) { opacity: .25; }
-}
-@media (prefers-reduced-motion: reduce) {
-  .th-no, .th-pin { transition: none; }
-}
-
-/* ------------------------------------------------ places on the map ------ */
-/* From 900px the three places are short labels on the map, beside their
-   markers, and the list in the text column is kept for screen readers only;
-   below 900px the list is the key and the labels go. */
-.th-call { display: none; }
-@media (min-width: 900px) {
-  .th-places {
-    position: absolute; width: 1px; height: 1px; overflow: hidden;
-    clip: rect(0 0 0 0); clip-path: inset(50%); white-space: nowrap; margin: 0;
-  }
-  .th-call {
-    display: block; position: absolute; z-index: 1;
-    width: 10.5rem; padding: .4rem .55rem;
-    background: rgb(255 255 255 / .94); border-radius: 4px;
-    box-shadow: 0 1px 3px rgb(0 0 0 / .14), 0 0 0 1px var(--gray-200);
-    font-size: .6875rem; line-height: 1.35; color: var(--gray-600);
-  }
-  .th-call b { display: block; font-size: .75rem; color: var(--leaf-900); margin-bottom: .1rem; }
-  /* west of 1 and 3, out over the sea; east of 2, over the mountains */
-  .th-call[data-n="1"] { right: calc(100% - 32.74% + 1.1rem); top: 47.36%; transform: translateY(-50%); }
-  .th-call[data-n="2"] { left: calc(53.5% + 1.1rem); top: 51.86%; transform: translateY(-50%); }
-  .th-call[data-n="3"] { right: calc(100% - 33.6% + 1.1rem); top: 78.5%; transform: translateY(-50%); }
-  .th-close { margin-top: var(--sp-6); }
-}
-
-/* ------------------------------------------------ 29 Sep, homepage pass --- */
-/* No short rule after the section index (house rule: no decorative dashes
-   or rules); the numbered pill and the words carry it. */
+/* no short rule after the section index (house rule) */
 .th .pb-index::after { content: none; }
-/* Below 900px the text column dissolves into the grid (display: contents),
-   and the demand box had no order of its own, so it jumped to the top of
-   the section, above the title. It closes the section, after the farmers. */
-@media (max-width: 899px) {
-  .th .pb-need { order: 5; }
-}
-@media (min-width: 640px) and (max-width: 899px) {
-  .th .pb-need { grid-column: 1 / -1; }
-}

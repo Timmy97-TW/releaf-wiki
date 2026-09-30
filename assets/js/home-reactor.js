@@ -485,7 +485,7 @@ window.__homeRx = (function () {
   // lit strength is the whole intensity; glass already glows a little, so
   // its strength goes on top. Glass (the membrane shell, the harvest
   // bottle, the tubes, the frosted culture bottle) is made less clear while
-  // it is lit (GLASS_TR), or the Cell-free card lights little more than a
+  // it is lit (GLASS_TR), or the Biosafe card lights little more than a
   // cap, and it gets a gentler glow of its own (GLASS_LIT), because a bright
   // one tone-maps to white. With "unit" the glass keeps its clearness, so
   // the whole machine does not turn milky.
@@ -588,12 +588,14 @@ window.__homeRx = (function () {
   // When the light goes out the turn picks up again from wherever it
   // stopped, easing back to speed. A reader who has dragged the model keeps
   // the view they chose (the caller skips this).
-  var TAU = Math.PI * 2, SPIN = 0.055, spin = 1;
+  // 1 Oct: half the old idle speed (0.055) and a slower swing, on the
+  // students' note that the model spun too much
+  var TAU = Math.PI * 2, SPIN = 0.025, spin = 1;
   function turn(dt) {
     if (litIds.length) {
       var goal = HOME + Math.round((yaw - HOME) / TAU) * TAU;
       var step = (goal - yaw) * Math.min(1, dt * 3);
-      var cap = dt * 0.9;
+      var cap = dt * 0.45;
       yaw += Math.max(-cap, Math.min(cap, step));
       spin = 0;
     } else {
