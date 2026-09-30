@@ -15,6 +15,13 @@ Two sources, joined on (pipeline, week):
 The written record is the source of truth for what ran when. Felix's board
 only ever adds words and marks to a node the record already has.
 
+Since 30 September 2026 the file also carries what neither source has: the
+Digital Twin lane, the September nodes' kinds and weights (NODES), the two
+September handoffs (EXTRA_HANDOFFS), the plan to the wiki freeze as three
+pencilled-in weeks (PLAN), the September photographs' lanes (SEPT_PHOTOS),
+and the wet lab's own tracks for the Season timeline, read from
+build/drylab_notebook_wet.json.
+
 Run from the repository root:  python3 build/drylab_notebook.py
 Needs git and bs4.
 """
@@ -31,6 +38,7 @@ FELIX = '797994b'   # the page as Felix delivered it
 LATEST_BOARD = 'e75d5da'   # the same board, carried to 29 August
 
 D0 = datetime.date(2026, 3, 28)
+WET = 'build/drylab_notebook_wet.json'   # the wet lab's own tracks, for the timeline
 
 
 def week_of(iso):
@@ -48,6 +56,9 @@ PIPES = [
     dict(id='math', name='Math\nModelling', short='Math Modelling', abbr='Math model', g='model', c='#2f6fed', href='../model/'),
     dict(id='gis', name='GIS & Stress\nForecast', short='GIS & Stress Forecast', abbr='GIS', g='model', c='#0d94bf', href='../geospatial-analysis/'),
     dict(id='circuit', name='Genetic Circuit\nDesign', short='Genetic Circuit Design', abbr='Circuit', g='model', c='#5b4fd6', href=''),
+    # Added 30 September: the rig software, the operator interface and the
+    # twin's models, which the September pages treat as their own track.
+    dict(id='twin', name='Digital\nTwin', short='Digital Twin', abbr='Twin', g='model', c='#0e7c66', href='../software/'),
     dict(id='reactor', name='Bioreactor', short='Bioreactor', abbr='Bioreactor', g='hw', c='#e06a12', href='../hardware/bioreactor/'),
     dict(id='photo', name='OD600\nPhotometer', short='OD600 Photometer', abbr='Photometer', g='hw', c='#c4432f', href='../hardware/photometer/'),
     dict(id='lpa', name='Light Plate\nApparatus', short='Light Plate Apparatus', abbr='LPA', g='hw', c='#b58900', href='../hardware/diopal/'),
@@ -64,7 +75,7 @@ LANE_OF = {
     'Genetic Circuit Design': 'circuit', 'Bioreactor': 'reactor',
     'OD600 Photometer': 'photo', 'Light Plate Apparatus': 'lpa',
     'Chlorophyll Fluorometer': 'fluor', 'Protectant Design': 'protect',
-    'Codon Optimization': 'codon', 'Wet Lab Handoff': 'wet',
+    'Codon Optimization': 'codon', 'Digital Twin': 'twin', 'Wet Lab Handoff': 'wet',
 }
 
 # Deliverables are listed in the notebook in pipeline order, so each one
@@ -74,6 +85,38 @@ LANE_OF = {
 DELIV_LANE = {
     ('2026-04-18', 'Stress Scoring Definition'): 'math',
     ('2026-08-08', 'Hardware Wiki Page'): 'reactor',
+    # 30 September: the drafted deliverables from 29 August to 26 September.
+    ('2026-09-05', 'Field Dialogue Booth'): 'dataphys',
+    ('2026-09-05', 'Reactor at the Forum'): 'reactor',
+    ('2026-09-05', 'Long-Run Monitoring'): 'reactor',
+    ('2026-09-05', 'Operator Interface 0906'): 'twin',
+    ('2026-09-05', 'Rig Firmware v1'): 'twin',
+    ('2026-09-05', 'Project Poster, Second Version'): 'wiki',
+    ('2026-09-12', 'Solute Dispersion Model'): 'math',
+    ('2026-09-12', 'Protectant Uptake Curve'): 'math',
+    ('2026-09-12', 'Cartridge, Mounted Upright'): 'reactor',
+    ('2026-09-12', 'BoPEP4 Level 0 Screen'): 'protect',
+    ('2026-09-19', 'Light-Control Run 1'): 'lpa',
+    ('2026-09-19', 'Growth Prior'): 'twin',
+    ('2026-09-19', 'Operator Interface 0924'): 'twin',
+    ('2026-09-19', 'Rig Firmware v2'): 'twin',
+    ('2026-09-19', 'Salt Ladder, Per Seedling'): 'math',
+    ('2026-09-19', 'Dry Lab Progress Check'): 'wiki',
+    ('2026-09-19', 'Wet Lab Handoff: DiOPAL'): 'wet',
+    ('2026-09-26', 'Student Drafts, 25 to 28 September'): 'wiki',
+    ('2026-09-26', 'Floating Plate, Written Up'): 'hydro',
+    ('2026-09-26', 'Township Soil Map'): 'gis',
+    ('2026-09-26', 'Farm Calculator'): 'gis',
+    ('2026-09-26', 'Booth Survey Results'): 'dataphys',
+    ('2026-09-26', 'Digital Twin Page'): 'twin',
+    ('2026-09-26', 'Bioreactor Record'): 'reactor',
+    ('2026-09-26', 'Simplified Photometer'): 'photo',
+    ('2026-09-26', 'Protein Design Section'): 'protect',
+    ('2026-08-29', 'Whole-Rig Run, 2 to 4 September'): 'reactor',
+    ('2026-08-29', 'Second Review with Prof. Chang'): 'reactor',
+    ('2026-08-29', 'MD Batch 3'): 'protect',
+    ('2026-08-29', 'Rig Firmware v0.3'): 'twin',
+    ('2026-08-29', 'Wet Lab Handoff: The Whole Rig'): 'wet',
 }
 KW = {
     'dataphys': ['physicali', 'simulator', 'oobleck', 'thermochromic'],
@@ -89,6 +132,7 @@ KW = {
     'fluor': ['fluorometer', 'fv/fm', 'cost barrier', 'open-jip', 'core fluorometer'],
     'protect': ['protectant', 'accd', 'reporter', 'candidate', 'mutation', 'folding tool', 'bopep4', 'haddock', 'alanine', 'tandem', 'docking', 'order list v1', 'vendor', 'co-ip', 'collaboration', 'whiscy', 'md feasib', 'ordering strategy', 'tari', 'secretion efficiency', 'delivery question', 'acc deaminase'],
     'codon': ['codon', 'folding algorithm', 'tool decision'],
+    'twin': ['firmware', 'interface', 'growth prior', 'twin', 'repository'],
     'wet': ['wet lab handoff'],
 }
 
@@ -221,15 +265,156 @@ BRANCHES = [
 
 # What came back from each handoff, as a state; and, where the notebook
 # dates it, the week and pipeline the answer landed on.
+# ------------------------------------------------ added 30 September 2026
+# The September weeks were drafted from the wiki pages as they stood on 28
+# and 29 September (the team has not written them up), so their nodes carry
+# the orange drafting mark like the late-August ones. What follows is what
+# the record alone cannot say: the kind and weight of each September node,
+# the handoffs after Felix's six, and the plan to the wiki freeze.
+TODAY = '2026-09-30'
+FREEZE = '2026-10-21'
+LAST_PLAN_WEEK = '2026-10-17'   # the last weekend before the freeze
+
+# (lane, week Saturday) -> kind and weight, where a week is more than a
+# working week.
+NODES = {
+    ('reactor', '2026-08-29'): dict(k='milestone', h=3),
+    ('protect', '2026-08-29'): dict(k='work', h=2),
+    ('twin', '2026-08-29'): dict(k='start', h=2),
+    ('dataphys', '2026-09-05'): dict(k='milestone', h=3),
+    ('reactor', '2026-09-05'): dict(k='work', h=2),
+    ('twin', '2026-09-05'): dict(k='work', h=2),
+    ('math', '2026-09-12'): dict(k='work', h=2),
+    ('protect', '2026-09-12'): dict(k='milestone', h=3),
+    ('lpa', '2026-09-19'): dict(k='milestone', h=3),
+    ('twin', '2026-09-19'): dict(k='work', h=3),
+    ('math', '2026-09-19'): dict(k='work', h=2),
+    ('wiki', '2026-09-26'): dict(k='milestone', h=3),
+    ('twin', '2026-09-26'): dict(k='work', h=2),
+    ('gis', '2026-09-26'): dict(k='work', h=2),
+    ('protect', '2026-09-26'): dict(k='work', h=2),
+}
+
+# Handoffs after Felix's board, in his shape.
+EXTRA_HANDOFFS = [
+    dict(p='reactor', w=22, t='the whole rig, with cells in it',
+         d='The first time every subsystem ran at once on engineered cells: the reactor in its case, the photometer in line, pressure logged, in the 37 °C incubator.',
+         sent='The instrumented reactor with the constitutive Csn:ACCD strain in the loop.',
+         did=['Ran it from 2 to 4 September in the 37 °C incubator',
+              'Sampled lumen lysate, lumen medium and shell medium at nine time points to 44 h',
+              'Ran a Western blot on the samples'],
+         back='OD600 rose from 0.1738 to 2.4474 over 53 h 22 min and 6,387 logged samples, with transmembrane pressure flat at -0.0005 bar after 1,132 L. The team\'s own documents read the 44 h blot three ways (not detectable, low but present, a faint band near 42 kDa), so the run counts as proof that the rig works with cells in it until the blot is read once, properly.'),
+    dict(p='lpa', w=25, t='DiOPAL, for a light-control run',
+         d='The light plate apparatus went to the wet lab for its first culture run under defined light.',
+         sent='DiOPAL, six light conditions with four matched LEDs each.',
+         did=['Pipetted the cultures under a safelight on 19 September',
+              'Ran them on DiOPAL on a shaker in the incubator, lit green and red',
+              'Read OD600 on the plate reader'],
+         back='Growth came back: a logistic fit gives r = 0.299 per hour and K = 1.005 with 1.9 % error, the same growth rate in all six light arms. It was a growth readout: nothing measured the circuit\'s output, which is the next run.'),
+]
+# September photographs: lane, star, team, kind, and m = 1 for the frames
+# that go into the DRY LAB mosaic although another subteam took them.
+SEPT_PHOTOS = {
+    '200-t.webp': dict(p='dataphys', s=0, team='HP', k='photo', m=0),
+    '201-t.webp': dict(p='dataphys', s=0, team='HP', k='photo', m=0),
+    '202-t.webp': dict(p='dataphys', s=0, team='HP', k='photo', m=0),
+    '203-t.webp': dict(p='reactor', s=0, team='HP', k='photo', m=1),
+    '204-t.webp': dict(p=None, s=0, team='HP', k='photo', m=0),
+    '205-t.webp': dict(p='reactor', s=0, team='HP', k='photo', m=0),
+    '206-t.webp': dict(p='reactor', s=0, team='HP', k='photo', m=0),
+    '207-t.webp': dict(p='dataphys', s=1, team='HP', k='photo', m=1),
+    '208-t.webp': dict(p='reactor', s=0, team='HP', k='photo', m=1),
+    '209-t.webp': dict(p='reactor', s=1, team='HP', k='photo', m=1),
+    '210-t.webp': dict(p='reactor', s=0, team='HP', k='photo', m=1),
+    '211-t.webp': dict(p='dataphys', s=0, team='HP', k='photo', m=1),
+    '212-t.webp': dict(p='reactor', s=1, team='Wetlab', k='photo', m=1),
+    '213-t.webp': dict(p='math', s=0, team='Drylab', k='figure', m=0),
+    '214-t.webp': dict(p='math', s=0, team='Drylab', k='figure', m=0),
+    '215-t.webp': dict(p=None, s=0, team='Drylab', k='photo', m=1),
+    '216-t.webp': dict(p=None, s=1, team='Drylab', k='photo', m=1),
+    '217-t.webp': dict(p=None, s=0, team='Drylab', k='photo', m=0),
+    '218-t.webp': dict(p=None, s=0, team='Drylab', k='photo', m=1),
+    '219-t.webp': dict(p='lpa', s=1, team='Wetlab', k='photo', m=1, hf=7),
+    '220-t.webp': dict(p=None, s=0, team='Wetlab', k='photo', m=0, hf=7),
+    '221-t.webp': dict(p=None, s=0, team='Wetlab', k='photo', m=0),
+    '222-t.webp': dict(p='reactor', s=1, team='HP', k='photo', m=1),
+    '230-t.webp': dict(p='reactor', s=0, team='Drylab', k='photo', m=1, hf=6),
+    '231-t.webp': dict(p='reactor', s=0, team='Drylab', k='figure', m=0, hf=6),
+    '232-t.webp': dict(p='protect', s=0, team='Wetlab', k='figure', m=0),
+    '233-t.webp': dict(p='math', s=0, team='Drylab', k='figure', m=0),
+    '234-t.webp': dict(p='reactor', s=0, team='Drylab', k='photo', m=1),
+    '235-t.webp': dict(p='reactor', s=0, team='Wetlab', k='photo', m=0),
+    '236-t.webp': dict(p='wiki', s=0, team='General', k='photo', m=0),
+    '237-t.webp': dict(p='gis', s=0, team='Drylab', k='figure', m=0),
+    '238-t.webp': dict(p='gis', s=0, team='Drylab', k='figure', m=0),
+    '239-t.webp': dict(p='dataphys', s=0, team='Drylab', k='figure', m=0),
+    '240-t.webp': dict(p='protect', s=0, team='Drylab', k='figure', m=0),
+    '241-t.webp': dict(p='twin', s=0, team='Drylab', k='figure', m=0),
+    '243-t.webp': dict(p='hydro', s=0, team='Drylab', k='photo', m=1),
+    '244-t.webp': dict(p='hydro', s=0, team='Wetlab', k='figure', m=0),
+    '242-t.webp': dict(p='protect', s=0, team='Drylab', k='figure', m=0),
+}
+
+# What came back later, added to Felix's own account of a handoff.
+BACK_MORE = {
+    1: ('Later: the dry lab\'s printed floating plate (first printed 25 June) went into the wet lab\'s tip boxes '
+        'on 20 July and carried three runs with the CH Biotech peptide given before, with or after the stress: '
+        'salinity set 1 (100 mM NaCl on 28 July, harvested 4 August) and two heat runs at a measured 33 °C '
+        '(14 to 16 August) and 35 °C (19 to 21 August). Heat set 2 read 0.359, 0.289, 0.223 and 0.252 mg '
+        'chlorophyll per g fresh weight (control, before, with, after), three reads of one tube per box. Every arm '
+        'was one box, and in set 1 the per-gram and per-plant figures rank the boxes in opposite order, so the '
+        'runs show the plate works as a carrier and cannot rank the treatments. On 22 July one board sank when '
+        'medium got into it; buoyancy with a full set of plants is still unverified.'),
+    5: ('Later: on 18 September the three BoPEP4 Level 0 variants reordered on 16 August screened at 548 bp, '
+        'twenty of twenty-one colonies banded. No expression, purification or assay behind them yet.'),
+}
+
+# The plan to the freeze, pencilled in by week. The pages say what is left;
+# the week each item sits in is our proposal, so every one is drafted.
+PLAN = [
+    ('2026-10-03', 'twin', 'Mirror the software repository to iGEM\'s GitLab',
+     'The Judge Handbook only accepts software hosted on gitlab.igem.org for the Best Software award.'),
+    ('2026-10-03', 'reactor', 'Repeat the 22 °C growth test and check plasmid stability',
+     'Prof. Chang\'s first two asks from 4 September, before the reactor is shown again.'),
+    ('2026-10-03', 'math', 'Close the six open questions in the model\'s section 12',
+     'Publish the yield fit, record the nine unrecorded constants and the salt-ladder to index conversion, and settle the two disputed Hill constants.'),
+    ('2026-10-03', 'lpa', 'Measure photon flux and well-to-well uniformity',
+     'Lux readings do not give the dose the circuit sees; the next culture run needs flux per well.'),
+    ('2026-10-10', 'lpa', 'Green against dark on the Level 2 strain, reading the output',
+     'The run the Engineering page waits on: the first time the apparatus would test whether the switch switches.'),
+    ('2026-10-10', 'photo', 'Write up cycles 7 and 8 and upload the STEP files',
+     'The silicon dioxide calibration and the simplified optics, both built, neither written.'),
+    ('2026-10-10', 'gis', 'Take the routing map off OpenStreetMap and OSRM',
+     'Cache or replace both, so nothing on the wiki is fetched from a server outside iGEM.'),
+    ('2026-10-10', 'protect', 'Scope or drop the unspecified engineering-direction runs',
+     'The layout document lists them without saying what they are; the page asks for a decision before the freeze.'),
+    ('2026-10-10', 'hydro', 'Assembly section, drawings and print settings for the four STLs',
+     'So the plate can be printed by someone who has not seen it.'),
+    ('2026-10-17', 'reactor', 'Write the proof-of-concept run and the assembly guide',
+     'Section 4.2 links stress, sensor, green light, protectant and the hydroponics plate in one run.'),
+    ('2026-10-17', 'twin', 'Move the pressure ceiling and the command watchdog into the rig firmware',
+     'The page names this as the precondition for any automation above tier 0.'),
+    ('2026-10-17', 'math', 'Publish the stress index as the contingency',
+     'If the plant replicates do not arrive, the index goes up without a thin dose-response fit.'),
+    ('2026-10-17', 'wiki', 'Close the Engineering and Results fix lists; freeze on 21 October',
+     'Every page finished and every file moved onto iGEM\'s servers.'),
+]
+
 RETURNS = [
     dict(state='Came back failed, and changed the design', to='reactor', w=11,
          t='Growth in the lumen fails, so Prototype 2 adds oxygenation'),
-    dict(state='Still running at the end of the notebook'),
-    dict(state='Partly back'),
+    dict(state='Came back as three plant runs, one box per arm', to='hydro', w=26,
+         t='The printed plate\'s three runs are written up'),
+    dict(state='Partly back: four designs at sequenced Level 1'),
     dict(state='Data back'),
     dict(state='Validated, with an error bar', to='photo', w=21,
          t='The four-fold error is chased against the BioDrop'),
-    dict(state='Open until after the freeze'),
+    dict(state='Back as DNA, not yet expressed', to='protect', w=24,
+         t='Twenty of twenty-one BoPEP4 Level 0 clones carry the 548 bp band'),
+    dict(state='Data back, blot disputed', to='twin', w=23,
+         t='The run\'s record becomes what the twin is checked against'),
+    dict(state='Growth data back', to='twin', w=25,
+         t='The growth fit becomes the twin\'s prior'),
 ]
 
 
@@ -287,10 +472,29 @@ def main():
                         'release-pattern': None, 'germination': 'hydro', 'sampling': 'reactor'}
                 lane = next((v for k, v in lane.items() if k in name), None)
                 hf = 0 if 'sampling' in name else None
+            sm = SEPT_PHOTOS.get(name)
+            if sm:
+                lane, hf = sm.get('p'), sm.get('hf')
+                meta = sm
             photos.append({'w': w, 'p': lane, 'hf': hf, 'c': ph['c'], 'd': ph['d'], 't': ph['t'], 'l': ph['l'],
                            's': meta.get('s', 0), 'k': 'figure' if ph['fig'] else meta.get('k', 'photo'),
-                           'team': meta.get('team', 'Drylab')})
+                           'team': meta.get('team', 'Drylab'), 'm': meta.get('m', 0)})
 
+    # September: kinds and weights the record cannot give.
+    for (lane, date), o in NODES.items():
+        node = by_key.get((lane, week_of(date)))
+        if node:
+            node.update(o)
+    # The plan to the freeze: empty weeks, pencilled-in nodes.
+    while weeks[-1]['date'] < LAST_PLAN_WEEK:
+        weeks.append({'date': (D0 + datetime.timedelta(days=7 * len(weeks))).isoformat(), 'days': [], 'plan': True})
+    for date, lane, t, sm in PLAN:
+        entries.append({'p': lane, 'w': week_of(date), 'k': 'plan', 'h': 1, 'stage': 'Planned', 't': t, 's': sm,
+                        'ai': True, 'deliv': [], 'dates': []})
+
+    handoffs = handoffs + [dict(h) for h in EXTRA_HANDOFFS]
+    for j, more in BACK_MORE.items():
+        handoffs[j]['back'] += ' ' + more
     # The notebook's own words for each handoff sit beside Felix's.
     for j, hf in enumerate(handoffs):
         day = next(d for d in weeks[hf['w']]['days'] for x in d['deliv'] if x['lane'] == 'wet')
@@ -305,6 +509,8 @@ def main():
     data = {
         'pipes': PIPES, 'weeks': weeks, 'entries': entries, 'handoffs': handoffs,
         'links': BRANCHES, 'photos': photos, 'people': people,
+        'today': TODAY, 'freeze': FREEZE,
+        'wet': json.load(open(WET, encoding='utf-8'))['tracks'],
     }
     js = ('/* Generated by build/drylab_notebook.py from the written record in\n'
           '   index.html and Felix\'s board. Edit the record, then re-run. */\n'

@@ -1,8 +1,8 @@
 /* =============================================================================
    ReLeaf: Dry Lab Notebook
    -----------------------------------------------------------------------------
-   Felix Yu's board. Every pipeline is a lane, every week a row, newest at the
-   top. A mark on a lane is that pipeline's page for that week. Lines between
+   The mosaic, the season timeline and Felix Yu's board. On the board every
+   pipeline is a lane, every week a row, newest at the top. A mark on a lane is that pipeline's page for that week. Lines between
    lanes are where one pipeline grew out of another, or fed it. The rail on
    the right is the Wet Lab: what the dry lab sent across, and beside it how
    it came back; where the notebook dates the answer, a line runs back to the
@@ -30,11 +30,11 @@ const ICONS = {
   wet:'<path d="M6.2 2v4.1L2.7 12.2A1.1 1.1 0 0 0 3.7 14h8.6a1.1 1.1 0 0 0 1-1.8L9.8 6.1V2" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"/><path d="M5.2 2h5.6M4.6 9.6h6.8" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/>'
 };
 const GROUPS = [
-  {id:'comm',  name:'Communication',     icon:'comm'},
-  {id:'plant', name:'Plant Systems',     icon:'plant'},
-  {id:'model', name:'Modelling & Sim',   icon:'model'},
   {id:'hw',    name:'Hardware',          icon:'hw'},
-  {id:'bio',   name:'Computational Bio', icon:'bio'}
+  {id:'bio',   name:'Protein design',    icon:'bio'},
+  {id:'model', name:'Modelling',         icon:'model'},
+  {id:'plant', name:'Plant systems',     icon:'plant'},
+  {id:'comm',  name:'Communication',     icon:'comm'}
 ];
 const PIPES = NB.pipes;
 const WEEKS = NB.weeks.map(w => w.date);
@@ -44,20 +44,22 @@ const LINKS = NB.links;
 const PHOTOS = NB.photos;
 
 const KINDS = {
-  start:    {label:'Seed · a pipeline opens',   shape:'ring'},
-  work:     {label:'Leaf · a working week',     shape:'dot'},
-  milestone:{label:'Bloom · a milestone',       shape:'diamond'},
-  branch:   {label:'Tendril · the line forks',  shape:'tri'},
-  handoff:  {label:'Drop · handed onward',      shape:'chev'},
-  end:      {label:'Pod · the pipeline closes', shape:'square'}
+  start:    {label:'A pipeline opens',       shape:'ring'},
+  work:     {label:'A working week',         shape:'dot'},
+  milestone:{label:'A milestone',            shape:'diamond'},
+  branch:   {label:'The line splits',        shape:'tri'},
+  handoff:  {label:'Handed onward',          shape:'chev'},
+  end:      {label:'The pipeline closes',    shape:'square'},
+  plan:     {label:'Planned, not yet done',  shape:'plan'}
 };
 const NB_KINDS = {
-  start:    {label:'Circled · a pipeline opens',   shape:'ring'},
-  work:     {label:'Ticked · a working week',      shape:'dot'},
-  milestone:{label:'Starred · a milestone',        shape:'diamond'},
-  branch:   {label:'Forked · the line splits',     shape:'tri'},
-  handoff:  {label:'Arrowed out · handed onward',  shape:'chev'},
-  end:      {label:'Boxed · the pipeline closes',  shape:'square'}
+  start:    {label:'Circled: a pipeline opens',   shape:'ring'},
+  work:     {label:'Ticked: a working week',      shape:'dot'},
+  milestone:{label:'Starred: a milestone',        shape:'diamond'},
+  branch:   {label:'Forked: the line splits',     shape:'tri'},
+  handoff:  {label:'Arrowed out: handed onward',  shape:'chev'},
+  end:      {label:'Boxed: the pipeline closes',  shape:'square'},
+  plan:     {label:'Pencilled in: planned',       shape:'plan'}
 };
 
 /* ==================================================================
@@ -104,6 +106,10 @@ const P_BY_ID = Object.fromEntries(PIPES.map((p,i)=>[p.id,{...p,lane:i}]));
 const G_BY_ID = Object.fromEntries(GROUPS.map(g=>[g.id,g]));
 const E_BY_KEY = Object.fromEntries(ENTRIES.map((e,i)=>[e.p+'|'+e.w,i]));
 const NW = WEEKS.length, NL = PIPES.length;
+/* The last week that has happened. Weeks after it are the plan to the
+   freeze: they are on the board, pencilled in, but not in the record. */
+const LASTW = (()=>{let i=NW-1; while(i>0 && NB.weeks[i].plan) i--; return i;})();
+const isPlanW = w => w>LASTW;
 
 const cssnum = n => parseFloat(getComputedStyle(FX).getPropertyValue(n));
 let RAIL, LANE, ROW, GAP, WETW, HEAD;
@@ -170,29 +176,20 @@ function monthOf(iso){return MONTHS[new Date(iso+'T00:00:00').getMonth()]}
 const wk2 = w => 'W'+String(w+1).padStart(2,'0');
 function gicon(id,cls){return `<svg class="${cls||'gi'}" viewBox="0 0 16 16" aria-hidden="true">${ICONS[id]}</svg>`}
 
-/* The board speaks one language: a seed opens a pipeline, a leaf is an
-   ordinary working week, a bloom is a milestone, a pod closes a line. */
+/* The clean board uses plain marks: an open ring when a pipeline starts, a
+   dot for an ordinary week, a star for a milestone, a fork where it splits,
+   an arrow where work is handed on, a filled square when it closes, and a
+   dashed ring for a week that is planned but has not happened. */
 const SHAPES={
-  ring:   '<path class="glyphfill" d="M0 -6.4 C4.6 -3.6 5.4 2 0 6.4 C-5.4 2 -4.6 -3.6 0 -6.4 Z"/>'
-         +'<path class="glyphface" d="M0 -3.2 C1.6 -1.4 1.8 1.2 0 3.2" fill="none" stroke-width="1.1" stroke="currentColor" opacity=".55"/>',
-  dot:    '<path class="glyphfill" d="M0 -6 C5.6 -3 6.2 3.4 0 6.6 C-6.2 3.4 -5.6 -3 0 -6 Z" transform="rotate(-18)"/>'
-         +'<path d="M0 5.6 L0 -5.2" stroke="var(--node-face)" stroke-width="1" opacity=".6" transform="rotate(-18)"/>',
-  diamond:'<circle class="mstone-halo" cx="0" cy="0" r="12.5" fill="var(--c)" opacity=".14"/>'
-         +'<circle class="mstone-ring" cx="0" cy="0" r="9.6" fill="none" stroke="var(--c)" stroke-width="1.1" opacity=".5"/>'
-         +'<g><ellipse class="glyphfill" cx="0" cy="-5.6" rx="3.1" ry="4.6"/>'
-         +'<ellipse class="glyphfill" cx="5.3" cy="-1.7" rx="3.1" ry="4.6" transform="rotate(72 5.3 -1.7)"/>'
-         +'<ellipse class="glyphfill" cx="3.3" cy="4.5" rx="3.1" ry="4.6" transform="rotate(144 3.3 4.5)"/>'
-         +'<ellipse class="glyphfill" cx="-3.3" cy="4.5" rx="3.1" ry="4.6" transform="rotate(216 -3.3 4.5)"/>'
-         +'<ellipse class="glyphfill" cx="-5.3" cy="-1.7" rx="3.1" ry="4.6" transform="rotate(288 -5.3 -1.7)"/>'
-         +'<circle cx="0" cy="0" r="2.9" fill="var(--node-face)"/><circle cx="0" cy="0" r="1.5" fill="var(--c)"/></g>',
-  tri:    '<path d="M0 6.5 L0 0.5" stroke="var(--c)" stroke-width="2" fill="none" stroke-linecap="round"/>'
-         +'<path d="M0 0.5 C-1 -3 -3.6 -4.4 -6 -5.4" stroke="var(--c)" stroke-width="2" fill="none" stroke-linecap="round"/>'
-         +'<path d="M0 0.5 C1 -3 3.6 -4.4 6 -5.4" stroke="var(--c)" stroke-width="2" fill="none" stroke-linecap="round"/>'
-         +'<circle class="glyphfill" cx="-6.4" cy="-5.8" r="1.9"/><circle class="glyphfill" cx="6.4" cy="-5.8" r="1.9"/>',
-  chev:   '<path class="glyphfill" d="M0 -6.8 C3.9 -1.8 6 1 6 3.2 A6 6 0 0 1 -6 3.2 C-6 1 -3.9 -1.8 0 -6.8 Z"/>'
-         +'<circle cx="-1.9" cy="2.4" r="1.5" fill="var(--node-face)" opacity=".75"/>',
-  square: '<path class="glyphfill" d="M0 -6.6 C4 -4.4 4 4.4 0 6.6 C-4 4.4 -4 -4.4 0 -6.6 Z"/>'
-         +'<circle cx="0" cy="-2.6" r="1.15" fill="var(--node-face)"/><circle cx="0" cy="0.4" r="1.15" fill="var(--node-face)"/><circle cx="0" cy="3.4" r="1.15" fill="var(--node-face)"/>'
+  ring:   '<circle cx="0" cy="0" r="5.6" fill="var(--node-face)" stroke="var(--c)" stroke-width="2.4"/>',
+  dot:    '<circle class="glyphfill" cx="0" cy="0" r="5.4"/>',
+  diamond:'<circle class="mstone-halo" cx="0" cy="0" r="12" fill="var(--c)" opacity=".13"/>'
+         +'<path class="glyphfill" d="M0 -8 2.3 -2.7 8 -2.2 3.7 1.6 5 7.2 0 4.2 -5 7.2 -3.7 1.6 -8 -2.2 -2.3 -2.7Z"/>',
+  tri:    '<path d="M0 6.5V0.8M0 0.8 -5.2 -5.4M0 0.8 5.2 -5.4" stroke="var(--c)" stroke-width="2.2" fill="none" stroke-linecap="round"/>'
+         +'<circle class="glyphfill" cx="-5.6" cy="-5.8" r="2.1"/><circle class="glyphfill" cx="5.6" cy="-5.8" r="2.1"/>',
+  chev:   '<circle class="glyphfill" cx="0" cy="0" r="6.4"/><path d="M-2.4 -3.2 1.4 0 -2.4 3.2" fill="none" stroke="var(--node-face)" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>',
+  square: '<rect class="glyphfill" x="-5.4" y="-5.4" width="10.8" height="10.8" rx="1.5"/>',
+  plan:   '<circle cx="0" cy="0" r="5.8" fill="var(--node-face)" stroke="var(--c)" stroke-width="1.7" stroke-dasharray="2.6 2.4"/>'
 };
 /* The Notebook skin does not grow anything. It uses the marks you actually
    make in a notebook: you circle a thing when it starts, tick it off each week
@@ -212,7 +209,8 @@ const NB_SHAPES={
   chev:   '<path class="glyphstroke" d="M-6.6 0C-3.4 -0.6 0.6 -0.4 4.6 0.2" stroke-linecap="round"/>'
          +'<path class="glyphstroke" d="M1.2 -4L5.8 0.2 1.4 4.4" stroke-linecap="round" stroke-linejoin="round"/>',
   square: '<path class="glyphstroke" d="M-5.6 -5.4 5.5 -6 6.1 5.3 -5.1 5.9Z" stroke-linejoin="round"/>'
-         +'<path class="glyphstroke" style="stroke-width:1.4" d="M-3.9 -3.5 4.2 3.7M4 -3.7 -3.7 3.9" stroke-linecap="round"/>'
+         +'<path class="glyphstroke" style="stroke-width:1.4" d="M-3.9 -3.5 4.2 3.7M4 -3.7 -3.7 3.9" stroke-linecap="round"/>',
+  plan:   '<path class="glyphstroke" style="stroke-width:1.5" stroke-dasharray="2.4 2.6" d="M1.8 -6.4C-2.8 -7.6 -6.9 -4.2 -6.7 0.4 -6.5 4.7 -2.6 7.3 1.3 6.5 5.3 5.7 7.4 1.9 6.4 -1.8 5.7 -4.5 3.6 -6.1 0.6 -6.6" stroke-linecap="round"/>'
 };
 function isNotebook(){return FX.getAttribute('data-skin')==='notebook'}
 function curShapes(){return isNotebook()?NB_SHAPES:SHAPES}
@@ -247,6 +245,11 @@ function build(){
   PIPES.forEach((p,i)=>{h+=`<div class="beam" data-beam="${p.id}" style="left:${RAIL+i*LANE}px;--c:${p.cv}"><i></i></div>`});
   h+=`</div>`;
   h+=`<div class="wetband" style="left:${wetL()-GAP/2}px;width:${WETW+GAP/2}px;height:${H}px"></div>`;
+  const planH=(NW-1-LASTW)*ROW;
+  if(planH>0){
+    h+=`<div class="planband" style="left:${RAIL}px;width:${W-RAIL}px;height:${planH}px"></div>`;
+    h+=`<div class="nowline" style="top:${planH}px"><span>Now: week of ${fmt(WEEKS[LASTW])}</span></div>`;
+  }
 
   h+=`<div class="rowlines" style="top:0;width:${W-RAIL}px">`;
   WEEKS.forEach((wk,w)=>{
@@ -263,10 +266,11 @@ function build(){
   WEEKS.forEach((wk,w)=>{
     const y=((NW-1)-w)*ROW;
     const isM = w===NW-1 || monthOf(WEEKS[w])!==monthOf(WEEKS[w+1]);
-    h+=`<button type="button" class="railrow ${w===NW-1?'now':''}" data-wk="${w}" style="top:${y}px"
-      aria-label="Week ${w+1}, ${fmtLong(wk)}: read the whole week">
+    const pl=isPlanW(w);
+    h+=`<button type="button" class="railrow${pl?' is-plan':''}" data-wk="${w}" style="top:${y}px"
+      aria-label="Week ${w+1}, ${fmtLong(wk)}: ${pl?'what is planned':'read the whole week'}">
       <span class="wk">${wk2(w)}</span><span class="dt">${fmt(wk)}</span>
-      ${isM?`<span class="mo">${monthOf(wk)}</span>`:''}</button>`;
+      ${pl?'<span class="pl">Planned</span>':isM?`<span class="mo">${monthOf(wk)}</span>`:''}</button>`;
   });
   h+=`</div>`;
 
@@ -344,7 +348,7 @@ function inkOffsetAt(key,y1,y2,y){
   return inkWobble(key,i,steps)*(1-(f-i)) + inkWobble(key,i+1,steps)*(f-i);
 }
 function spineOffsetAt(pid,y){
-  const p=VINE[pid]; if(!p) return 0;
+  const p=VINE[pid]; if(!p || SPINE==='rule') return 0;
   if(SPINE==='vine'||SPINE==='stem') return vineOffsetAt(p,y);
   return inkOffsetAt(pid,p.y1,p.y2,y);
 }
@@ -355,11 +359,18 @@ function links(){
   const nb=isNotebook();
   /* lane spines */
   PIPES.forEach((p,i)=>{
-    const ws=ENTRIES.filter(e=>e.p===p.id).map(e=>e.w);
+    const ws=ENTRIES.filter(e=>e.p===p.id&&e.k!=='plan').map(e=>e.w);
+    const pw=ENTRIES.filter(e=>e.p===p.id&&e.k==='plan').map(e=>e.w);
     if(!ws.length) return;
     const y1=rowY(Math.min(...ws)), y2=rowY(Math.max(...ws)), x=laneX(i);
     VINE[p.id]=vineParams(p.id,y1,y2);
-    if(SPINE==='vine'||SPINE==='stem'){
+    /* the plan: a dashed line from the last week done to the last week planned */
+    if(pw.length){
+      s+=`<line x1="${x}" y1="${y2}" x2="${x}" y2="${rowY(Math.max(...pw))}" style="stroke:${p.cv}" stroke-width="2" stroke-dasharray="3 5" stroke-linecap="round" opacity=".45" data-spine="${p.id}"/>`;
+    }
+    if(SPINE==='rule'){
+      s+=`<line x1="${x}" y1="${y1}" x2="${x}" y2="${y2}" style="stroke:${p.cv}" stroke-width="2.4" stroke-linecap="round" opacity=".32" data-spine="${p.id}"/>`;
+    }else if(SPINE==='vine'||SPINE==='stem'){
       const busy=ENTRIES.filter(e=>e.p===p.id).map(e=>rowY(e.w));
       s+=`<path d="${vinePath(x,VINE[p.id])}" fill="none" style="stroke:${p.cv}" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round" opacity=".5" data-spine="${p.id}"/>`;
       s+=vineFoliage(x,VINE[p.id],p.cv,busy);
@@ -486,7 +497,7 @@ function joinsHTML(e){
 function cardHTML(e){
   const p=P_BY_ID[e.p], g=G_BY_ID[p.g], k=curKinds()[e.k];
   const lane = p.href ? `<a class="pipe" href="${p.href}">${gicon(g.icon)} ${esc(p.short)}</a>` : `<span class="pipe">${gicon(g.icon)} ${esc(p.short)}</span>`;
-  const days=e.dates.map(fmt).join(' and ');
+  const days=e.dates.length?e.dates.map(fmt).join(' and '):'week of '+fmt(WEEKS[e.w]);
   return `
   <div class="top">${lane}<span class="when">${wk2(e.w)} · ${days}</span></div>
   <span class="kind">${k.label}</span>
@@ -516,6 +527,15 @@ function wetCardHTML(hf,j){
 /* A week's page: the whole entry as the students wrote it. */
 function weekCardHTML(w){
   const wk=NB.weeks[w];
+  if(isPlanW(w)){
+    const pl=ENTRIES.filter(e=>e.w===w);
+    let h=`<div class="top"><span class="pipe" style="color:var(--ink-2)">Planned week</span><span class="when">${wk2(w)}</span></div>`;
+    h+=`<h3>${fmtLong(WEEKS[w])}</h3>`;
+    h+=pl.length?`<div class="csec"><h4>Pencilled in</h4><ul class="ai">${pl.map(e=>`<li><b>${esc(P_BY_ID[e.p].short)}</b>: ${e.t}</li>`).join('')}</ul></div>`
+                :`<p class="sum">Nothing pencilled in yet.</p>`;
+    h+=`<div class="foot"><span>Wiki freeze, 21 October</span><button type="button" class="close" data-close>Close</button></div>`;
+    return h;
+  }
   let h=`<div class="top"><span class="pipe" style="color:var(--ink-2)">The week</span><span class="when">${wk2(w)}</span></div>`;
   wk.days.forEach((d,i)=>{
     h+=`<h3${d.ai?' class="ai"':''}>${fmtLong(d.date)}</h3>`;
@@ -530,7 +550,7 @@ function weekCardHTML(w){
     void lanes;
   });
   h+=shotsHTML(PIX_BY_WEEK[w],'that week');
-  h+=`<p class="jump"><button type="button" data-record="e-${wk.days[0].date}">Open this week in the written record</button></p>`;
+  if(wk.days.length) h+=`<p class="jump"><button type="button" data-record="e-${wk.days[0].date}">Open this week in the written record</button></p>`;
   h+=`<div class="foot"><span>Week of ${fmtLong(WEEKS[w])}</span><button type="button" class="close" data-close>Close</button></div>`;
   return h;
 }
@@ -571,7 +591,7 @@ function position(el){
   card.style.setProperty('--ox', side==='right' ? '92%' : side==='centre' ? '50%' : '8%');
   card.dataset.tip = side;
   let y=r.top+r.height/2-ch/2;
-  const top=(parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--nav-h'))||64)+8;
+  const top=(parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--nav-h'))||64)+(parseFloat(FX.style.getPropertyValue('--tbh'))||0)+8;
   y=Math.max(top,Math.min(y,innerHeight-ch-10));
   card.style.left=x+'px'; card.style.top=y+'px';
 }
@@ -731,15 +751,36 @@ function drawTether(el,colour,replay){
 }
 
 /* ==================================================================
-   5. FILTER + SEARCH
+   5. FILTER + SEARCH. The pipeline tags and the search box act on all
+   three views: the board dims what does not match, the record hides
+   the weeks that do not match, the photo log shows only what matches.
    ================================================================== */
 const active=new Set(GROUPS.map(g=>g.id));
 let query='';
+const allOn=()=>active.size===GROUPS.length;
+/* The record's own pipeline names, mapped onto the lanes. */
+const NAME_TO_ID={'Data Physicalization':'dataphys','Wiki & Notebook':'wiki','Plant Growth Chamber':'chamber','Hydroponics':'hydro',
+  'Math Modeling':'math','GIS & Stress Forecast':'gis','Genetic Circuit Design':'circuit','Bioreactor':'reactor','OD600 Photometer':'photo',
+  'Light Plate Apparatus':'lpa','Chlorophyll Fluorometer':'fluor','Protectant Design':'protect','Codon Optimization':'codon',
+  'Digital Twin':'twin','Wet Lab Handoff':'wet'};
 function hay(e){
   return plain([e.t,e.s,e.stage,P_BY_ID[e.p].short,...e.deliv.map(d=>d.t+' '+d.items.join(' '))].join(' ')).toLowerCase();
 }
+const REC=[];
+function indexRecord(){
+  document.querySelectorAll('#record article.entry').forEach(a=>{
+    const g=new Set();
+    a.querySelectorAll('.pipes .pipe b').forEach(b=>{
+      const id=NAME_TO_ID[b.textContent.trim()];
+      if(id==='wet') g.add('wet'); else if(id&&P_BY_ID[id]) g.add(P_BY_ID[id].g);
+    });
+    REC.push({a,g,t:a.textContent.replace(/\s+/g,' ').toLowerCase()});
+  });
+}
+let shown={board:0,record:0,gallery:0};
 function applyFilter(){
   const q=query.trim().toLowerCase();
+  let nOn=0;
   grid.querySelectorAll('.node').forEach(n=>{
     const g=n.dataset.group;
     let ok = g==='wet' ? true : active.has(g);
@@ -750,101 +791,147 @@ function applyFilter(){
       }else ok=hay(ENTRIES[+n.dataset.i]).includes(q);
     }
     n.classList.toggle('dim',!ok);
+    if(ok&&g!=='wet') nOn++;
   });
-  grid.querySelectorAll('[data-spine]').forEach(s=>{
-    const p=P_BY_ID[s.dataset.spine];
-    s.style.opacity = active.has(p.g) ? (q?'.12':'') : '.06';
+  shown.board=nOn;
+  grid.querySelectorAll('[data-spine]').forEach(sp=>{
+    const p=P_BY_ID[sp.dataset.spine];
+    sp.style.opacity = active.has(p.g) ? (q?'.12':'') : '.06';
   });
   grid.querySelectorAll('.beam').forEach(b=>{ b.style.opacity = active.has(P_BY_ID[b.dataset.beam].g)?'1':'.15'; });
   grid.querySelectorAll('.head[data-lane]').forEach(hd=>{ hd.style.opacity = active.has(P_BY_ID[hd.dataset.lane].g)?'1':'.3'; });
+
+  /* the written record */
+  let nRec=0;
+  const months=new Map();
+  REC.forEach(r=>{
+    let ok = allOn() || [...r.g].some(g=>active.has(g));
+    if(ok&&q) ok=r.t.includes(q);
+    r.a.classList.toggle('is-miss',!ok);
+    if(ok) nRec++;
+    const m=r.a.closest('.nbmonth');
+    months.set(m,(months.get(m)||0)+(ok?1:0));
+  });
+  shown.record=nRec;
+  const filtering = q || !allOn();
+  months.forEach((n,m)=>{
+    m.classList.toggle('off',filtering&&!n);
+    const link=document.querySelector(`.mindex__list a[href="#${m.id}"]`);
+    if(link){ link.classList.toggle('is-empty',filtering&&!n); const sp=link.querySelector('span'); if(sp){ sp.dataset.all=sp.dataset.all||sp.textContent; sp.textContent=filtering?`${n} match${n===1?'':'es'}`:sp.dataset.all; } }
+    if(filtering&&n){ const f=m.querySelector('.nbmonth__fold'); if(f&&!f.open) f.open=true; }
+  });
+  const empty=document.getElementById('recempty');
+  if(empty) empty.classList.toggle('off',nRec>0);
+
   buildGallery();
+  status();
+}
+function status(){
+  const el=document.getElementById('tbstatus'); if(!el) return;
+  const q=query.trim(), filtering=q||!allOn();
+  const what = !allOn() ? GROUPS.filter(g=>active.has(g.id)).map(g=>g.name).join(', ') : '';
+  const scope = [what, q?`“${esc(q)}”`:''].filter(Boolean).join(' and ');
+  let t='';
+  if(view==='board'){
+    t = filtering
+      ? `<b>${shown.board}</b> of ${ENTRIES.length} marks match ${scope}. The rest are dimmed.`
+      : `Every pipeline is a column and every week a row, newest at the top. Hover a mark to read it, click to pin it, click a date for the whole week.`;
+  }else if(view==='record'){
+    const all=REC.length;
+    t = filtering ? `<b>${shown.record}</b> of ${all} weekly entries match ${scope}.` : `${all} weekly entries, as the dry lab wrote them. Open a month to read it.`;
+  }else{
+    t = filtering ? `<b>${shown.gallery}</b> photographs match ${scope}.` : `All ${PHOTOS.length} photographs, newest week first. Click one to open it full size.`;
+  }
+  el.innerHTML=t;
 }
 const chipsEl=document.getElementById('groupchips');
-chipsEl.innerHTML=GROUPS.map(g=>{
-  const c=PIPES.find(p=>p.g===g.id).ct;
-  return `<button type="button" class="chip" data-g="${g.id}" aria-pressed="true" style="color:${c}">${gicon(g.icon)}<span style="color:var(--ink-2)">${g.name}</span></button>`;
-}).join('');
+function renderChips(){
+  chipsEl.innerHTML=GROUPS.map(g=>{
+    const c=PIPES.find(p=>p.g===g.id).ct, on=active.has(g.id);
+    const tip = allOn() ? `Show only ${g.name}` : (on ? `Hide ${g.name}` : `Add ${g.name}`);
+    return `<button type="button" class="chip" data-g="${g.id}" aria-pressed="${on}" title="${tip}" style="--cc:${c}">${gicon(g.icon)}<span>${g.name}</span></button>`;
+  }).join('') + (allOn()?'':`<button type="button" class="chip chip--all" data-all>Show all</button>`);
+}
 chipsEl.addEventListener('click',e=>{
   const b=e.target.closest('.chip'); if(!b)return;
-  const id=b.dataset.g, on=b.getAttribute('aria-pressed')==='true';
-  if(on&&active.size===1)return;
-  on?active.delete(id):active.add(id);
-  b.setAttribute('aria-pressed',String(!on));
+  if(b.hasAttribute('data-all')){ GROUPS.forEach(g=>active.add(g.id)); }
+  else{
+    const id=b.dataset.g;
+    /* From "everything", a tag isolates its group; after that tags add and remove. */
+    if(allOn()){ active.clear(); active.add(id); }
+    else if(active.has(id)){ active.delete(id); if(!active.size) GROUPS.forEach(g=>active.add(g.id)); }
+    else active.add(id);
+  }
+  renderChips();
+  const again=chipsEl.querySelector(b.hasAttribute('data-all')?'.chip':`[data-g="${b.dataset.g}"]`);
+  if(again) again.focus();
   applyFilter();
 });
+renderChips();
 document.getElementById('q').addEventListener('input',e=>{query=e.target.value;applyFilter()});
 
 /* ==================================================================
-   6. LEGEND + STATS
+   6. LEGEND
    ================================================================== */
 function range(p){
-  const ws=ENTRIES.filter(e=>e.p===p.id).map(e=>e.w);
-  return `W${Math.min(...ws)+1} to ${Math.max(...ws)+1}`;
+  const ws=ENTRIES.filter(e=>e.p===p.id&&e.k!=='plan').map(e=>e.w);
+  return ws.length?`${fmt(WEEKS[Math.min(...ws)])} to ${fmt(WEEKS[Math.max(...ws)])}`:'';
 }
 function legendPipes(filter){
   return PIPES.filter(filter).map(p=>`<li><span class="sw" style="background:${p.cv}"></span>${p.href?`<a href="${p.href}">${esc(p.short)}</a>`:esc(p.short)}<span class="desc">${range(p)}</span></li>`).join('');
 }
 function buildLegend(){
   const SHP=curShapes(), KND=curKinds();
-  const glyph=v=>SHP[v.shape].replace(/class="glyphfill"/g,'fill="currentColor"').replace(/class="glyphface"/g,'fill="var(--panel)"').replace(/class="glyphstroke"/g,'fill="none" stroke="currentColor" stroke-width="2"');
+  const glyph=v=>SHP[v.shape].replace(/class="glyphfill"/g,'fill="currentColor"').replace(/class="glyphface"/g,'fill="var(--panel)"').replace(/class="glyphstroke"/g,'fill="none" stroke="currentColor" stroke-width="2"').replace(/var\(--c\)/g,'currentColor').replace(/var\(--node-face\)/g,'var(--panel)');
   const feeds=LINKS.filter(l=>l.kind==='feed').length, branches=LINKS.filter(l=>l.kind==='branch').length;
   const returns=HANDOFFS.filter(h=>h.ret.to).length;
   const sw=(d,extra)=>`<svg width="30" height="12" viewBox="0 0 30 12" aria-hidden="true"><path d="${d}" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" ${extra||''}/></svg>`;
   document.getElementById('legend').innerHTML=`
-  <div><h4>What happened</h4>
-    <ul>${Object.values(KND).map(v=>`<li><svg width="18" height="18" viewBox="-9 -9 18 18" style="color:var(--ink-2)"><g style="--c:var(--ink-2)">${glyph(v)}</g></svg>${v.label}</li>`).join('')}</ul></div>
-  <div><h4>How the parts connect</h4>
+  <div><h4>Marks</h4>
+    <ul>${Object.values(KND).map(v=>`<li><svg width="18" height="18" viewBox="-9 -9 18 18" style="color:var(--ink-2)">${glyph(v)}</svg>${v.label}</li>`).join('')}</ul></div>
+  <div><h4>Lines</h4>
     <ul>
-      <li style="color:var(--ink-2)">${sw('M2 11 C2 4, 28 8, 28 1')}<span>A pipeline grows out of another</span><span class="desc">${branches}</span></li>
-      <li style="color:var(--ink-2)" class="ai">${sw('M2 3 C10 12, 20 12, 27 5')}<span>One pipeline feeds another</span><span class="desc">${feeds}</span></li>
+      <li style="color:var(--ink-3)">${sw('M2 11 C2 4, 28 8, 28 1')}<span style="color:var(--ink-2)">A pipeline grows out of another</span><span class="desc">${branches}</span></li>
+      <li style="color:var(--ink-3)" class="ai">${sw('M2 3 C10 12, 20 12, 27 5')}<span>One pipeline feeds another</span><span class="desc">${feeds}</span></li>
       <li style="color:var(--wet)">${sw('M2 6 L28 6','stroke-dasharray="5 4"')}<span style="color:var(--ink-2)">Sent to the Wet Lab</span><span class="desc">${HANDOFFS.length}</span></li>
-      <li style="color:var(--wet)" class="ai">${sw('M28 6 L2 6','stroke-dasharray="1.5 4"')}<span style="color:var(--ink-2)">Came back and changed a pipeline</span><span class="desc">${returns}</span></li>
+      <li style="color:var(--wet)" class="ai">${sw('M28 6 L2 6','stroke-dasharray="1.5 4"')}<span>Came back and changed a pipeline</span><span class="desc">${returns}</span></li>
     </ul></div>
-  <div><h4>Communication and plants</h4><ul>${legendPipes(p=>p.g==='comm'||p.g==='plant')}</ul></div>
-  <div><h4>Modelling and computational bio</h4><ul>${legendPipes(p=>p.g==='model'||p.g==='bio')}</ul></div>
   <div><h4>Hardware</h4><ul>${legendPipes(p=>p.g==='hw')}</ul></div>
+  <div><h4>Protein design and modelling</h4><ul>${legendPipes(p=>p.g==='bio'||p.g==='model')}</ul></div>
+  <div><h4>Plants and communication</h4><ul>${legendPipes(p=>p.g==='plant'||p.g==='comm')}</ul></div>
   <div><h4>Reading the board</h4>
     <ul>
-      <li>Newest week sits at the top<span class="desc">↑ later</span></li>
-      <li>Bigger halo = a heavier week<span class="desc">1 to 3</span></li>
-      <li>Small camera = photographs attached<span class="desc">${PHOTOS.length}</span></li>
-      <li>Click a date to read the whole week<span class="desc">${NW}</span></li>
-      <li class="ai">Orange dot = drafted, the team has not written it up yet<span class="desc">${ENTRIES.filter(e=>e.ai).length}</span></li>
+      <li>Newest week at the top, planned weeks above the line<span class="desc">&uarr; later</span></li>
+      <li>A ring around a mark means a heavier week</li>
+      <li>A small camera means photographs are attached<span class="desc">${PHOTOS.length}</span></li>
+      <li class="ai">Orange dot: drafted from the wiki pages, not yet written up by the team<span class="desc">${ENTRIES.filter(e=>e.ai).length}</span></li>
     </ul></div>`;
 }
-document.getElementById('hintpix').textContent=`Marks with a camera have photographs. The photo log holds all ${PHOTOS.length}.`;
-(function stats(){
-  const closed=ENTRIES.filter(e=>e.k==='end').length;
-  const miles=ENTRIES.filter(e=>e.k==='milestone').length;
-  const people=new Set(); NB.weeks.forEach(w=>w.days.forEach(d=>{ if(!d.ai) d.who.forEach(n=>people.add(n)); }));
-  const branches=LINKS.filter(l=>l.kind==='branch').length;
-  document.getElementById('stats').innerHTML=[
-    [NW,'weeks'],[NL,'pipelines'],[ENTRIES.length,'notebook pages'],[PHOTOS.length,'photographs'],
-    [miles,'milestones'],[branches,'branch points'],[HANDOFFS.length,'wet lab handoffs'],[closed,'closed on purpose'],[people.size,'contributors']
-  ].map(([n,l])=>`<div class="stat"><b>${n}</b><span>${l}</span></div>`).join('');
-})();
 
 /* ==================================================================
    7. PHOTO LOG
    ================================================================== */
 const gallery=document.getElementById('gallery');
+function photoMatches(ph,q){
+  if(ph.p && P_BY_ID[ph.p] && !active.has(P_BY_ID[ph.p].g)) return false;
+  if(!ph.p && !allOn()) return false;
+  if(q) return (ph.c+' '+(ph.p?P_BY_ID[ph.p].short:'team')).toLowerCase().includes(q);
+  return true;
+}
 function buildGallery(){
-  if(view!=='gallery')return;
   const q=query.trim().toLowerCase();
+  shown.gallery=PHOTOS.filter(ph=>photoMatches(ph,q)).length;
+  if(view!=='gallery')return;
   let h='';
   for(let w=NW-1;w>=0;w--){
-    const list=(PIX_BY_WEEK[w]||[]).filter(ph=>{
-      if(ph.p && !active.has(P_BY_ID[ph.p].g)) return false;
-      if(q) return (ph.c+' '+(ph.p?P_BY_ID[ph.p].short:'team')).toLowerCase().includes(q);
-      return true;
-    });
+    const list=(PIX_BY_WEEK[w]||[]).filter(ph=>photoMatches(ph,q));
     if(!list.length)continue;
-    h+=`<section class="galweek"><h2>Week ${w+1} · <b>${fmtLong(WEEKS[w])} 2026</b> · ${list.length} frame${list.length>1?'s':''}</h2><div class="galgrid" data-all="${list.map(p=>p.i).join(',')}">`;
+    h+=`<section class="galweek"><h2>Week of ${fmtLong(WEEKS[w])}<span>${wk2(w)}, ${list.length} photograph${list.length>1?'s':''}</span></h2><div class="galgrid" data-all="${list.map(p=>p.i).join(',')}">`;
     list.forEach(ph=>{
       const p=ph.p?P_BY_ID[ph.p]:null;
-      const who = p ? p.short : (ph.hf!==null&&ph.hf!==undefined ? 'Wet Lab' : (ph.team==='Wetlab' ? 'Wet Lab' : 'Team'));
+      const who = p ? p.short : (ph.hf!==null&&ph.hf!==undefined ? 'Wet Lab' : (ph.team==='Wetlab' ? 'Wet Lab' : ph.team==='HP' ? 'Human Practices' : 'Team'));
       const ct  = p ? p.ct : (who==='Wet Lab' ? 'var(--wet)' : 'var(--ink-3)');
-      h+=`<figure class="galitem" style="--ct:${ct};--tilt:${tilt(ph.i+3).toFixed(2)}deg">
+      h+=`<figure class="galitem" style="--ct:${ct}">
         <button type="button" class="shot-btn${ph.k==='figure'?' fig':''}" data-pix="${ph.i}" aria-label="Enlarge: ${attr(ph.c)}">
           <img src="${ph.t}" alt="${attr(ph.c)}" loading="lazy">${ph.s?STARSVG:''}</button>
         <figcaption class="meta"><span class="cap ai">${esc(ph.c)}</span>
@@ -852,32 +939,8 @@ function buildGallery(){
     });
     h+=`</div></section>`;
   }
-  gallery.innerHTML=h||`<div class="nothing"><img src="${MASCOT}" alt=""><p>No photographs match that filter.</p></div>`;
+  gallery.innerHTML=h||`<div class="nothing"><img src="${MASCOT}" alt=""><p>No photographs match. Try another word, or show all pipelines.</p></div>`;
 }
-
-/* Contact strip: one representative frame per week, oldest to newest. */
-(function(){
-  const row=document.getElementById('striprow');
-  let h='';
-  for(let w=0;w<NW;w++){
-    const pick=weekPick(w), n=(PIX_BY_WEEK[w]||[]).length;
-    if(!pick){
-      h+=`<div class="frame nopix" title="Week ${w+1}: nothing photographed"><span class="shot"><img class="mascot-sm" src="${MASCOT}" alt=""></span><span class="n">${wk2(w)}</span></div>`;
-    }else{
-      h+=`<button type="button" class="frame" data-week="${w}" title="${attr(pick.c)}" style="--tilt:${tilt(w+7).toFixed(2)}deg"
-        aria-label="Week ${w+1}, ${fmtLong(WEEKS[w])}: ${n} photograph${n>1?'s':''}">
-        <span class="shot"><img src="${pick.t}" alt="" loading="lazy">${n>1?`<span class="cnt">${n}</span>`:''}</span>
-        <span class="n">${wk2(w)}</span></button>`;
-    }
-  }
-  row.innerHTML=h;
-  const withPix=Object.keys(PIX_BY_WEEK).length;
-  document.getElementById('stripnote').textContent=`${PHOTOS.length} photographs, ${withPix} of ${NW} weeks. Pick one up to read that week.`;
-  row.addEventListener('click',e=>{
-    const f=e.target.closest('.frame[data-week]'); if(!f)return;
-    goTo(grid.querySelector(`.railrow[data-wk="${f.dataset.week}"]`));
-  });
-})();
 
 /* ==================================================================
    8. LIGHTBOX
@@ -1001,15 +1064,11 @@ record.addEventListener('click',e=>{
       b.textContent=open?'Show fewer':'+'+row.querySelectorAll('.is-extra').length+' more';
     });
   });
-  /* Each written entry can be found on the board, and each week on the board
-     can be found in the writing. */
-  /* The record's pipeline dots take the same pens as the board. */
-  const NAME_TO_ID={'Data Physicalization':'dataphys','Wiki & Notebook':'wiki','Plant Growth Chamber':'chamber','Hydroponics':'hydro',
-    'Math Modeling':'math','GIS & Stress Forecast':'gis','Genetic Circuit Design':'circuit','Bioreactor':'reactor','OD600 Photometer':'photo',
-    'Light Plate Apparatus':'lpa','Chlorophyll Fluorometer':'fluor','Protectant Design':'protect','Codon Optimization':'codon','Wet Lab Handoff':'wet'};
+  /* The record's pipeline dots take the same pens as the board, and each
+     written week can be found on the board. */
   record.querySelectorAll('.pipe').forEach(li=>{
-    const id=NAME_TO_ID[(li.querySelector('b')||{}).textContent];
-    if(id) li.style.setProperty('--c', id==='wet'?'var(--wet)':`var(--p-${id})`);
+    const id=NAME_TO_ID[((li.querySelector('b')||{}).textContent||'').trim()];
+    if(id&&(id==='wet'||P_BY_ID[id])) li.style.setProperty('--c', id==='wet'?'var(--wet)':`var(--p-${id})`);
   });
   record.querySelectorAll('article.entry').forEach(a=>{
     const w=Math.floor((new Date(a.id.slice(2)+'T00:00:00')-new Date(WEEKS[0]+'T00:00:00'))/(7*864e5));
@@ -1027,7 +1086,7 @@ record.addEventListener('click',e=>{
    10. VIEWS: the board, the written record, the photo log
    ================================================================== */
 let view='record';
-const viewBtns=[...document.querySelectorAll('.views [data-view]')];
+const viewBtns=[...document.querySelectorAll('#controls [data-view]')];
 function setView(v){
   view=v;
   viewBtns.forEach(b=>b.setAttribute('aria-pressed',String(b.dataset.view===v)));
@@ -1035,42 +1094,395 @@ function setView(v){
   ['boardframe','hint','legend'].forEach(id=>document.getElementById(id).classList.toggle('off',!board));
   gallery.classList.toggle('off',v!=='gallery');
   record.classList.toggle('off',v!=='record');
-  /* Groups and search act on the board and the photo log, not the record. */
-  document.querySelectorAll('#groupchips, #q, .controls .ctl-label').forEach(x=>x.classList.toggle('off',v==='record'));
   unpin(true);
-  if(board) build(), applyFilter();
-  buildGallery();
+  if(board) build();
+  applyFilter();
 }
-viewBtns.forEach(b=>b.addEventListener('click',()=>{ setView(b.dataset.view); setHash(b.dataset.view==='board'?'':b.dataset.view==='record'?'record':'photos'); }));
+viewBtns.forEach(b=>b.addEventListener('click',()=>{
+  setView(b.dataset.view);
+  setHash(b.dataset.view==='board'?'':b.dataset.view==='record'?'record':'photos');
+}));
 
 /* ==================================================================
-   11. SKINS: two of Felix's papers
+   11. STYLES: Clean (the default) and Felix's Notebook paper
    ================================================================== */
 const SKINS=[
-  {id:'notebook', name:'Notebook', note:'ruled paper, one pen per pipeline', s1:'#e9dfc8', s2:'#1b2636'},
-  {id:'cultivar', name:'Cultivar', note:'white, plant green, a water-blue wet lab', s1:'#eef7ea', s2:'#2f8f4e'}
+  {id:'clean',    name:'Clean',    note:'white, one typeface', s1:'#ffffff'},
+  {id:'notebook', name:'Notebook', note:'Felix Yu’s ruled paper, one pen per pipeline', s1:'#ece4cf'}
 ];
 const skinsEl=document.getElementById('skins');
-skinsEl.innerHTML=SKINS.map(k=>`<button type="button" class="skin" data-skin="${k.id}" aria-pressed="false" style="--s1:${k.s1};--s2:${k.s2}" title="${k.name}: ${k.note}"><span>${k.name}</span></button>`).join('');
+skinsEl.innerHTML=SKINS.map(k=>`<button type="button" class="seg__btn" data-skin="${k.id}" aria-pressed="false" title="${k.name}: ${k.note}" style="--s1:${k.s1}"><span class="seg__sw"></span>${k.name}</button>`).join('');
 function setSkin(id,remember){
   FX.setAttribute('data-skin',id);
-  skinsEl.querySelectorAll('.skin').forEach(b=>b.setAttribute('aria-pressed',String(b.dataset.skin===id)));
-  if(remember){ try{ localStorage.setItem('drylab-skin',id); }catch(e){} }
+  skinsEl.querySelectorAll('[data-skin]').forEach(b=>b.setAttribute('aria-pressed',String(b.dataset.skin===id)));
+  if(remember){ try{ localStorage.setItem('drylab-style',id); }catch(e){} }
   if(view==='board'){ build(); applyFilter(); }
   buildLegend();
+  drawTimeline();
 }
-skinsEl.addEventListener('click',e=>{ const b=e.target.closest('.skin'); if(b) setSkin(b.dataset.skin,true); });
+skinsEl.addEventListener('click',e=>{ const b=e.target.closest('[data-skin]'); if(b) setSkin(b.dataset.skin,true); });
 
 /* ==================================================================
-   12. GO
+   12. THE MOSAIC: DRY LAB, spelled in the dry lab's own photographs.
+   Tiles fly in the first time the words are on screen; a hovered
+   photo lifts off the sheet and names itself; a click opens it; the
+   shuffle button deals a fresh set; now and then one tile turns over.
    ================================================================== */
-document.getElementById('controls').hidden=false;
-document.getElementById('strip').hidden=false;
-let startSkin='notebook';
-try{ const s=localStorage.getItem('drylab-skin'); if(SKINS.some(k=>k.id===s)) startSkin=s; }catch(e){}
+const reduce=()=>matchMedia('(prefers-reduced-motion: reduce)').matches;
+(function(){
+  const box=document.getElementById('mosaic'), sheet=document.getElementById('mosaicgrid'), cap=document.getElementById('mosaiccap');
+  if(!box||!sheet) return;
+  const FONT={D:['XX.','X.X','X.X','X.X','XX.'],R:['XX.','X.X','XX.','X.X','X.X'],Y:['X.X','X.X','.X.','.X.','.X.'],
+              L:['X..','X..','X..','X..','XXX'],A:['.X.','X.X','XXX','X.X','X.X'],B:['XX.','X.X','XX.','X.X','XX.']};
+  const WORD='DRY LAB';
+  const POOL=PHOTOS.filter(p=>p.team==='Drylab'&&p.k==='photo');
+  if(matchMedia('(hover:none)').matches) cap.textContent='Tap a photograph to open it.';
+  const DEFAULT_CAP=cap.innerHTML;
+  const LEAF='<svg viewBox="0 0 16 16" aria-hidden="true"><path d="M8 14V7M8 7C8 4.5 6 2.5 3 2.5c0 3 1.8 4.5 5 4.5ZM8 8.6c0-2.2 1.8-4 4.5-4 0 2.7-1.6 4-4.5 4Z" fill="none" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"/></svg>';
+  let cells=[], dealt=[], tiles=[], mode='', cols=27, rows=7, hovering=false, visible=false;
+
+  /* One line on a wide screen; DRY over LAB on a phone, so the squares
+     stay big enough to see what is in them. */
+  function layout(){
+    const m = matchMedia('(max-width:640px)').matches ? 'stack' : 'line';
+    if(m===mode) return false;
+    mode=m;
+    cells=[];
+    const lines = m==='stack' ? ['DRY','LAB'] : [WORD];
+    lines.forEach((word,li)=>{
+      let col=1;
+      for(const ch of word){
+        if(ch===' '){ col+=2; continue; }
+        FONT[ch].forEach((row,r)=>[...row].forEach((x,c)=>{ if(x==='X') cells.push({r:1+li*6+r,c:col+c}); }));
+        col+=4;
+      }
+    });
+    cols = m==='stack' ? 13 : 27;
+    rows = m==='stack' ? 13 : 7;
+    box.style.setProperty('--cols',cols);
+    box.style.setProperty('--rows',rows);
+    return true;
+  }
+  function shuffled(list){ const a=list.slice(); for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]];} return a; }
+  function deal(){
+    /* Starred frames first, the rest at random, never the same photo twice. */
+    const st=shuffled(POOL.filter(p=>p.s)), rest=shuffled(POOL.filter(p=>!p.s));
+    const pick=dealt.length ? shuffled(POOL) : st.concat(rest);
+    return pick.slice(0,cells.length);
+  }
+  function render(){
+    const taken=new Set(cells.map(c=>c.r+'|'+c.c));
+    let h='';
+    /* a few leaves on the empty squares, the way the team doodles on paper */
+    for(let r=0;r<rows;r++) for(let c=0;c<cols;c++){
+      if(taken.has(r+'|'+c)) continue;
+      if(jitter('leaf',r*31+c)<.045) h+=`<span class="mosaic__leaf" style="--r:${r+1};--c:${c+1}">${LEAF}</span>`;
+    }
+    dealt=deal();
+    h+=cells.map((cl,i)=>{
+      const ph=dealt[i];
+      const fx=((jitter('fx',i)-.5)*260).toFixed(0)+'px', fy=((jitter('fy',i)-.5)*160).toFixed(0)+'px', fr=((jitter('fr',i)-.5)*50).toFixed(0)+'deg';
+      const d=Math.round(cl.c*28+jitter('d',i)*160);
+      return `<button type="button" class="tile" data-t="${i}" style="--r:${cl.r+1};--c:${cl.c+1};--fx:${fx};--fy:${fy};--fr:${fr};--d:${d}ms" aria-label="${attr(ph.c)}, ${attr(ph.d)}"><img src="${ph.t}" alt="" decoding="async"></button>`;
+    }).join('');
+    sheet.innerHTML=h;
+    tiles=[...sheet.querySelectorAll('.tile')];
+    if(visible||reduce()) requestAnimationFrame(()=>requestAnimationFrame(()=>box.classList.add('is-in')));
+  }
+  function describe(ph){
+    const p=ph.p?P_BY_ID[ph.p]:null;
+    return `<b>${esc(ph.d)}</b>${p?` &middot; <span class="pc" style="color:${p.ct}">${esc(p.short)}</span>`:''} &middot; <span class="ai">${esc(ph.c)}</span>`;
+  }
+  sheet.addEventListener('mouseover',e=>{ const t=e.target.closest('.tile'); if(t){ hovering=true; cap.innerHTML=describe(dealt[+t.dataset.t]); } });
+  sheet.addEventListener('focusin',e=>{ const t=e.target.closest('.tile'); if(t) cap.innerHTML=describe(dealt[+t.dataset.t]); });
+  sheet.addEventListener('mouseleave',()=>{ hovering=false; cap.innerHTML=DEFAULT_CAP; });
+  sheet.addEventListener('click',e=>{
+    const t=e.target.closest('.tile'); if(!t) return;
+    e.stopPropagation();
+    openLB(dealt,+t.dataset.t,t);
+  });
+  function turn(i,ph,delay){
+    const t=tiles[i]; if(!t) return;
+    setTimeout(()=>{
+      if(reduce()){ dealt[i]=ph; t.querySelector('img').src=ph.t; t.setAttribute('aria-label',`${plain(ph.c)}, ${ph.d}`); return; }
+      t.classList.remove('flip'); void t.offsetWidth; t.classList.add('flip');
+      setTimeout(()=>{ dealt[i]=ph; t.querySelector('img').src=ph.t; t.setAttribute('aria-label',`${plain(ph.c)}, ${ph.d}`); },250);
+      setTimeout(()=>t.classList.remove('flip'),560);
+    },delay);
+  }
+  document.getElementById('shuffle').addEventListener('click',()=>{
+    const next=shuffled(POOL).slice(0,cells.length);
+    cells.forEach((cl,i)=>turn(i,next[i],Math.round(cl.c*22+jitter('s'+Date.now(),i)*120)));
+    cap.innerHTML=DEFAULT_CAP;
+  });
+  /* Now and then, while the words are on screen and nobody is looking at
+     one photo in particular, a single tile turns over to another frame. */
+  setInterval(()=>{
+    if(!visible||hovering||reduce()||document.hidden||!tiles.length) return;
+    const used=new Set(dealt.map(p=>p.i));
+    const spare=POOL.filter(p=>!used.has(p.i)); if(!spare.length) return;
+    turn(Math.floor(Math.random()*tiles.length),spare[Math.floor(Math.random()*spare.length)],0);
+  },3400);
+  if('IntersectionObserver' in window){
+    new IntersectionObserver(es=>es.forEach(en=>{
+      visible=en.isIntersecting;
+      if(visible) requestAnimationFrame(()=>box.classList.add('is-in'));
+    }),{threshold:.25}).observe(box);
+  }else{ visible=true; }
+  layout(); box.hidden=false; render();
+  addEventListener('resize',()=>{ if(layout()){ box.classList.remove('is-in'); render(); } });
+})();
+
+/* ==================================================================
+   13. WHERE THE NOTEBOOK IS: the season as one line, the latest week,
+   and what is pencilled in before the freeze.
+   ================================================================== */
+const D0=new Date(WEEKS[0]+'T00:00:00');
+const TODAY=NB.today||WEEKS[LASTW];
+const FREEZE=NB.freeze||'2026-10-21';
+const dayOf=iso=>Math.round((new Date(iso+'T00:00:00')-D0)/864e5);
+(function(){
+  const track=document.getElementById('nowtrack'); if(!track) return;
+  const end=dayOf(FREEZE), now=Math.min(dayOf(TODAY),end), pc=d=>(d/end*100).toFixed(2)+'%';
+  track.innerHTML=`<span class="now__line"></span><span class="now__done" style="width:${pc(now)}"></span>
+    <span class="now__plan" style="left:${pc(now)};width:calc(${pc(end)} - ${pc(now)})"></span>
+    <span class="now__mk is-start" style="left:0"><span>${fmt(WEEKS[0])}</span><i></i></span>
+    <span class="now__mk is-today" style="left:${pc(now)}"><span>Today, ${fmt(TODAY)}</span><i></i></span>
+    <span class="now__mk is-end" style="left:100%"><span>Wiki freeze, ${fmt(FREEZE)}</span><i></i></span>`;
+  const item=(e,cls)=>{
+    const p=P_BY_ID[e.p];
+    return `<li class="${cls||''}${e.ai?' ai':''}" style="--c:${p.cv}"><button type="button" data-goto="${e.p}|${e.w}"><b style="color:${p.ct}">${esc(p.short)}</b>: ${e.t}${cls?` <span class="w">by ${fmt(WEEKS[e.w])}</span>`:''}</button></li>`;
+  };
+  const rank={milestone:0,end:1,start:2,branch:3,handoff:4,work:5};
+  const last=ENTRIES.filter(e=>e.w===LASTW).sort((a,b)=>(rank[a.k]-rank[b.k])||(b.h-a.h)).slice(0,4);
+  document.getElementById('nowlast').innerHTML=last.map(e=>item(e)).join('')||'<li>Nothing recorded yet.</li>';
+  /* one item from each week left, then a second from the nearest week */
+  const pl=ENTRIES.filter(e=>e.k==='plan'), wks=[...new Set(pl.map(e=>e.w))].sort((a,b)=>a-b);
+  const firsts=wks.map(w=>pl.find(e=>e.w===w));
+  const plan=firsts.concat(pl.filter(e=>!firsts.includes(e))).slice(0,4).sort((a,b)=>a.w-b.w);
+  document.getElementById('nowplan').innerHTML=plan.map(e=>item(e,'is-plan')).join('')||'<li>Nothing pencilled in yet.</li>';
+  document.getElementById('now').addEventListener('click',e=>{
+    const b=e.target.closest('[data-goto]'); if(!b) return;
+    const [p,w]=b.dataset.goto.split('|');
+    goTo(grid.querySelector(`.node[data-i="${E_BY_KEY[p+'|'+w]}"]`));
+  });
+})();
+
+/* ==================================================================
+   14. SEASON TIMELINE. The dry lab's pipelines against the weeks, on
+   one screen, with the wet lab's own work underneath and every
+   crossing between them drawn in.
+   ================================================================== */
+const tlBox=document.getElementById('tl'), tlScroll=document.getElementById('tlscroll'), tlTip=document.getElementById('tltip');
+const WET=NB.wet||[];
+const wOf=iso=>Math.floor(dayOf(iso)/7);
+function drawTimeline(){
+  if(!tlScroll) return;
+  document.getElementById('season').hidden=false;
+  const W=Math.max(980,tlScroll.clientWidth);
+  /* Narrower than the chart: it scrolls, and a column of short names stays pinned on the left. */
+  const pinned=W>tlScroll.clientWidth+1;
+  const LBL=pinned?112:Math.min(196,Math.max(150,W*.14)), PADR=18, AX=62;
+  let lab='';
+  const cw=(W-LBL-PADR)/NW, x=w=>LBL+w*cw;
+  const RH=21, GH=19, CH=12, WRH=15, WCH=8;
+  const rows=[]; let y=AX+6;
+  GROUPS.forEach(g=>{
+    const ps=PIPES.filter(p=>p.g===g.id&&ENTRIES.some(e=>e.p===p.id));
+    if(!ps.length) return;
+    rows.push({grp:g,y}); y+=GH;
+    ps.forEach(p=>{ rows.push({p,y}); y+=RH; });
+    y+=4;
+  });
+  const dryBottom=y;
+  const wetTop=y+22; y=wetTop;
+  const wetRows=[]; y+=GH;
+  WET.forEach(t=>{ wetRows.push({t,y}); y+=WRH; });
+  const H=y+8;
+  const rowOf=Object.fromEntries(rows.filter(r=>r.p).map(r=>[r.p.id,r]));
+  const nowX=LBL+dayOf(TODAY)/7*cw, frzX=LBL+dayOf(FREEZE)/7*cw;
+  let s='';
+  /* plan region and month bands */
+  s+=`<rect x="${nowX}" y="${AX-4}" width="${W-PADR-nowX}" height="${H-AX+4}" fill="url(#tlhatch)"/>`;
+  /* months: a rule at the first of each month, the name where there is
+     room for it (the chart opens on 28 March, so March gets no name) */
+  for(let m=2;m<=9;m++){
+    const mx=Math.max(x(0),LBL+dayOf(`2026-${String(m+1).padStart(2,'0')}-01`)/7*cw);
+    const nx=LBL+dayOf(`2026-${String(m+2).padStart(2,'0')}-01`)/7*cw;
+    if(mx>x(0)) s+=`<line x1="${mx}" x2="${mx}" y1="${AX-20}" y2="${H}" stroke="var(--rule)" stroke-width="1"/>`;
+    if(Math.min(nx,W-PADR)-mx>44) s+=`<text class="t-mon" x="${mx+5}" y="${AX-24}">${MONTHS_LONG[m]}</text>`;
+  }
+  WEEKS.forEach((wk,w)=>{
+    if(w%2===0) s+=`<text class="t-wk" x="${x(w)+cw/2}" y="${AX-7}" text-anchor="middle">${new Date(wk+'T00:00:00').getDate()}</text>`;
+  });
+  s+=`<line x1="${LBL}" x2="${W-PADR}" y1="${AX}" y2="${AX}" stroke="var(--rule)"/>`;
+  /* dry rows */
+  const kindName=k=>curKinds()[k]?curKinds()[k].label:k;
+  rows.forEach(r=>{
+    if(r.grp){ lab+=`<text class="t-grp" x="0" y="${r.y+GH-5}">${esc(r.grp.name)}</text>`; return; }
+    const p=r.p, cy=r.y+RH/2;
+    s+=`<g class="row" data-p="${p.id}"><rect class="row-bg" x="0" y="${r.y}" width="${W-PADR}" height="${RH}"/>`;
+    const nm=esc(pinned||p.short.length>24?p.abbr:p.short);
+    lab+=p.href?`<a href="${p.href}"><text class="t-lab is-link" x="10" y="${cy+4.2}">${nm}</text></a>`:`<text class="t-lab" x="10" y="${cy+4.2}">${nm}</text>`;
+    lab+=`<circle cx="3" cy="${cy}" r="3" style="fill:${p.cv}"/>`;
+    s+=`<line x1="${LBL}" x2="${W-PADR}" y1="${cy}" y2="${cy}" stroke="var(--rule-2)"/>`;
+    ENTRIES.forEach((e,i)=>{
+      if(e.p!==p.id) return;
+      const cx=x(e.w)+1, cwid=cw-2, top=cy-CH/2;
+      if(e.k==='plan'){
+        s+=`<rect class="cell" data-i="${i}" data-p="${p.id}" x="${cx+.75}" y="${top+.75}" width="${cwid-1.5}" height="${CH-1.5}" rx="3" fill="var(--panel)" style="stroke:${p.cv}" stroke-width="1.5" stroke-dasharray="3 2.5"/>`;
+        return;
+      }
+      const op=[0,.34,.6,.9][e.h]||.34;
+      s+=`<rect class="cell" data-i="${i}" data-p="${p.id}" x="${cx}" y="${top}" width="${cwid}" height="${CH}" rx="3" style="fill:${p.cv}" fill-opacity="${op}"/>`;
+      if(e.k==='milestone') s+=`<path pointer-events="none" transform="translate(${cx+cwid/2} ${cy}) scale(.62)" d="M0 -8 2.3 -2.7 8 -2.2 3.7 1.6 5 7.2 0 4.2 -5 7.2 -3.7 1.6 -8 -2.2 -2.3 -2.7Z" fill="#fff"/>`;
+      else if(e.k==='end') s+=`<rect pointer-events="none" x="${cx+cwid/2-3}" y="${cy-3}" width="6" height="6" fill="#fff"/>`;
+      else if(e.k==='start') s+=`<circle pointer-events="none" cx="${cx+cwid/2}" cy="${cy}" r="2.6" fill="none" stroke="#fff" stroke-width="1.5"/>`;
+    });
+    s+=`</g>`;
+  });
+  /* links between dry pipelines */
+  LINKS.forEach(b=>{
+    const r1=rowOf[b.frm], r2=rowOf[b.to]; if(!r1||!r2) return;
+    const x1=x(b.fw)+cw/2, x2=x(b.tw)+cw/2, y1=r1.y+RH/2, y2=r2.y+RH/2;
+    const dx=Math.max(14,Math.abs(y2-y1)*.25);
+    s+=`<path class="x-line" data-p="${b.frm} ${b.to}" d="M${x1} ${y1} C${x1-dx} ${(y1+y2)/2}, ${x2-dx} ${(y1+y2)/2}, ${x2} ${y2}" stroke="var(--ink-4)" stroke-width="1.3" opacity=".55"/>`;
+  });
+  /* the wet lab */
+  s+=`<line x1="0" x2="${W-PADR}" y1="${wetTop-10}" y2="${wetTop-10}" stroke="var(--rule)"/>`;
+  lab+=`<text class="t-grp t-wet" x="0" y="${wetTop+GH-5}">Wet Lab</text>`;
+  wetRows.forEach(({t,y:ry})=>{
+    const cy=ry+WRH/2;
+    s+=`<g class="row" data-p="wet"><rect class="row-bg" x="0" y="${ry}" width="${W-PADR}" height="${WRH}"/>`;
+    lab+=`<text class="t-lab" x="10" y="${cy+4}" style="font-size:11.5px;fill:var(--ink-3)">${esc(pinned&&t.name.length>14?t.name.split(' ')[0]:t.name)}</text>`;
+    s+=`<line x1="${LBL}" x2="${W-PADR}" y1="${cy}" y2="${cy}" stroke="var(--rule-2)"/>`;
+    (t.spans||[]).forEach(([a,b,kind])=>{
+      const w1=Math.max(0,wOf(a)), w2=Math.min(NW-1,wOf(b));
+      for(let w=w1;w<=w2;w++){
+        const cx=x(w)+1, cwid=cw-2;
+        if(kind==='plan') s+=`<rect class="cell" data-wet="${esc(t.id)}" data-w="${w}" data-kind="plan" x="${cx+.5}" y="${cy-WCH/2+.5}" width="${cwid-1}" height="${WCH-1}" rx="2" fill="var(--panel)" stroke="var(--wet)" stroke-width="1" stroke-dasharray="2.5 2"/>`;
+        else s+=`<rect class="cell" data-wet="${esc(t.id)}" data-w="${w}" data-kind="${kind}" x="${cx}" y="${cy-WCH/2}" width="${cwid}" height="${WCH}" rx="2" fill="var(--wet)" fill-opacity="${kind==='light'?.22:.55}"/>`;
+      }
+    });
+    s+=`</g>`;
+  });
+  /* crossings: down to the wet lab, and back where the answer changed a pipeline */
+  HANDOFFS.forEach((hf,j)=>{
+    const r=rowOf[hf.p]; if(!r) return;
+    const hx=x(hf.w)+cw/2, y1=r.y+RH/2+CH/2+1, y2=wetTop-4;
+    const p=P_BY_ID[hf.p];
+    s+=`<path class="x-line" data-p="${hf.p} wet" d="M${hx} ${y1} V${y2-6}" style="stroke:${p.cv}" stroke-width="1.6" stroke-dasharray="4 3"/>`;
+    s+=`<path class="x-line" data-p="${hf.p} wet" d="M${hx-4} ${y2-8} L${hx} ${y2-2} L${hx+4} ${y2-8}" fill="none" style="stroke:${p.cv}" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/>`;
+    s+=`<circle class="x-dot" data-hf="${j}" data-p="${hf.p} wet" cx="${hx}" cy="${wetTop+4}" r="5.5" fill="var(--wet)" stroke="var(--panel)" stroke-width="2"/>`;
+    const rt=hf.ret;
+    if(rt&&rt.to&&rowOf[rt.to]){
+      const rx=x(rt.w)+cw/2+(rt.w===hf.w?6:0), ry=rowOf[rt.to].y+RH/2+CH/2+2;
+      /* along the wet lab's edge to the week it came back, then up */
+      const by=wetTop+4, r6=Math.min(6,Math.abs(rx-hx)/2);
+      s+=`<path class="x-line" data-p="${rt.to} wet" d="M${hx+5.5} ${by} H${rx-r6} Q${rx} ${by} ${rx} ${by-r6} V${ry+6}" stroke="var(--wet)" stroke-width="1.7" stroke-dasharray="1.5 3.5" stroke-linecap="round"/>`;
+      s+=`<path class="x-line" data-p="${rt.to} wet" d="M${rx-4} ${ry+7} L${rx} ${ry+1} L${rx+4} ${ry+7}" fill="none" stroke="var(--wet)" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/>`;
+    }
+  });
+  /* today and the freeze */
+  s+=`<line x1="${nowX}" x2="${nowX}" y1="${AX-4}" y2="${H}" stroke="var(--accent)" stroke-width="2"/>`;
+  s+=`<text class="t-flag" x="${nowX-6}" y="12" text-anchor="end" style="fill:var(--accent-ink)">Today, ${fmt(TODAY)}</text>`;
+  s+=`<line x1="${nowX}" x2="${nowX}" y1="2" y2="${AX-4}" stroke="var(--accent)" stroke-width="2"/>`;
+  s+=`<line x1="${frzX}" x2="${frzX}" y1="${AX-4}" y2="${H}" stroke="var(--red)" stroke-width="2" stroke-dasharray="5 3"/>`;
+  s+=`<line x1="${frzX}" x2="${frzX}" y1="2" y2="${AX-4}" stroke="var(--red)" stroke-width="2" stroke-dasharray="5 3"/>`;
+  const close=frzX-nowX<130;
+  s+=`<text class="t-flag" x="${frzX+6}" y="${close?28:12}" text-anchor="${frzX+110>W?'end':'start'}" dx="${frzX+110>W?-12:0}" style="fill:var(--red-ink)">Freeze, ${fmt(FREEZE)}</text>`;
+  tlScroll.innerHTML=`<svg width="${W}" height="${H}" viewBox="0 0 ${W} ${H}" role="img" aria-label="Season timeline: ${PIPES.length} dry lab pipelines by week from ${fmtLong(WEEKS[0])} to ${fmtLong(WEEKS[NW-1])}, with ${HANDOFFS.length} crossings to the wet lab.">
+    <defs><pattern id="tlhatch" width="8" height="8" patternUnits="userSpaceOnUse" patternTransform="rotate(45)"><rect width="8" height="8" fill="var(--accent)" fill-opacity=".025"/><line x1="0" y1="0" x2="0" y2="8" stroke="var(--accent)" stroke-opacity=".07" stroke-width="2"/></pattern></defs>${s}${pinned?'':lab}</svg>`;
+  let pin=tlBox.querySelector('.tl__labels');
+  if(pinned){
+    if(!pin){ pin=document.createElement('div'); pin.className='tl__labels'; tlBox.appendChild(pin); }
+    pin.innerHTML=`<svg width="${LBL}" height="${H}" viewBox="0 0 ${LBL} ${H}" aria-hidden="true">${lab}</svg>`;
+  }else if(pin) pin.remove();
+  if(tlScroll.scrollWidth>tlScroll.clientWidth) tlScroll.scrollLeft=tlScroll.scrollWidth;
+
+  const key=document.getElementById('tlkey');
+  key.innerHTML=`
+    <span><svg width="46" height="12" aria-hidden="true"><rect x="0" y="0" width="14" height="12" rx="3" fill="var(--ink-3)" fill-opacity=".34"/><rect x="16" y="0" width="14" height="12" rx="3" fill="var(--ink-3)" fill-opacity=".6"/><rect x="32" y="0" width="14" height="12" rx="3" fill="var(--ink-3)" fill-opacity=".9"/></svg>A lighter to a heavier week</span>
+    <span><svg width="14" height="12" aria-hidden="true"><rect width="14" height="12" rx="3" fill="var(--ink-3)" fill-opacity=".9"/><path transform="translate(7 6) scale(.55)" d="M0 -8 2.3 -2.7 8 -2.2 3.7 1.6 5 7.2 0 4.2 -5 7.2 -3.7 1.6 -8 -2.2 -2.3 -2.7Z" fill="#fff"/></svg>Milestone</span>
+    <span><svg width="14" height="12" aria-hidden="true"><rect x=".75" y=".75" width="12.5" height="10.5" rx="3" fill="none" stroke="var(--ink-3)" stroke-width="1.5" stroke-dasharray="3 2.5"/></svg>Planned</span>
+    <span><svg width="22" height="12" aria-hidden="true"><path d="M2 6H20" stroke="var(--ink-3)" stroke-width="1.6" stroke-dasharray="4 3"/></svg>Sent to the wet lab</span>
+    <span><svg width="22" height="12" aria-hidden="true"><path d="M2 6H20" stroke="var(--wet)" stroke-width="1.8" stroke-dasharray="1.5 3.5" stroke-linecap="round"/></svg>Came back and changed a pipeline</span>
+    <span><svg width="10" height="12" aria-hidden="true"><path d="M5 0V12" stroke="var(--red)" stroke-width="2" stroke-dasharray="4 2"/></svg>Wiki freeze</span>`;
+}
+(function(){
+  if(!tlBox) return;
+  const tip=(html,el,tc)=>{
+    const b=tlBox.getBoundingClientRect(), r=el.getBoundingClientRect();
+    tlTip.innerHTML=html; tlTip.style.setProperty('--tc',tc||'#fff');
+    let left=r.left-b.left+r.width/2;
+    const half=Math.min(150,tlTip.offsetWidth/2);
+    left=Math.max(half+4,Math.min(left,b.width-half-4));
+    tlTip.style.left=left+'px'; tlTip.style.top=(r.top-b.top)+'px';
+    tlTip.classList.add('on');
+  };
+  const focusOn=ps=>{
+    const svg=tlScroll.querySelector('svg'); if(!svg) return;
+    tlBox.classList.toggle('is-focus',!!ps);
+    svg.querySelectorAll('.is-hot').forEach(x=>x.classList.remove('is-hot'));
+    if(!ps) return;
+    svg.querySelectorAll('[data-p]').forEach(x=>{ if(x.dataset.p.split(' ').some(p=>ps.includes(p))) x.classList.add('is-hot'); });
+    svg.querySelectorAll('.cell[data-wet]').forEach(x=>{ if(ps.includes('wet')) x.classList.add('is-hot'); });
+  };
+  tlScroll.addEventListener('mouseover',e=>{
+    const c=e.target.closest('.cell,.x-dot'), row=e.target.closest('g.row');
+    if(row) focusOn([row.dataset.p]);
+    if(!c){ tlTip.classList.remove('on'); return; }
+    if(c.dataset.i!==undefined){
+      const en=ENTRIES[+c.dataset.i], p=P_BY_ID[en.p];
+      tip(`<b>${esc(p.short)}, week of ${fmt(WEEKS[en.w])}</b>${en.t}<small>${kindName(en.k)}${en.k==='plan'?'':'. Click to open it on the board.'}</small>`,c,p.ct);
+    }else if(c.dataset.hf!==undefined){
+      const hf=HANDOFFS[+c.dataset.hf];
+      tip(`<b>Sent to the wet lab, ${fmt(hf.date)}</b>${esc(hf.t.charAt(0).toUpperCase()+hf.t.slice(1))}<small>${esc(hf.ret.state)}. Click to read it.</small>`,c,'#9fd3f0');
+    }else{
+      const t=WET.find(t=>t.id===c.dataset.wet), w=+c.dataset.w;
+      const ev=(t.events||[]).filter(ev=>wOf(ev.date)===w).map(ev=>`${fmt(ev.date)}: ${esc(ev.t)}`).join('<br>');
+      tip(`<b>Wet lab: ${esc(t.name)}</b>${ev||`Week of ${fmt(WEEKS[w])}`}<small>${c.dataset.kind==='plan'?'Planned':c.dataset.kind==='light'?'Lighter activity':'Main period'}</small>`,c,'#9fd3f0');
+    }
+  });
+  tlScroll.addEventListener('mouseleave',()=>{ tlTip.classList.remove('on'); focusOn(null); });
+  tlScroll.addEventListener('scroll',()=>tlTip.classList.remove('on'),{passive:true});
+  tlScroll.addEventListener('click',e=>{
+    const c=e.target.closest('.cell[data-i],.x-dot'); if(!c) return;
+    tlTip.classList.remove('on');
+    if(c.dataset.hf!==undefined) return goTo(grid.querySelector(`.node[data-hf="${c.dataset.hf}"]`));
+    const en=ENTRIES[+c.dataset.i];
+    goTo(grid.querySelector(`.node[data-i="${c.dataset.i}"]`)||grid.querySelector(`.railrow[data-wk="${en.w}"]`));
+  });
+})();
+function kindName(k){ return (curKinds()[k]||{label:k}).label; }
+
+/* ==================================================================
+   15. GO
+   ================================================================== */
+const controls=document.getElementById('controls');
+controls.hidden=false;
+let startSkin='clean';
+try{ const st=localStorage.getItem('drylab-style'); if(SKINS.some(k=>k.id===st)) startSkin=st; }catch(e){}
 FX.setAttribute('data-skin',startSkin);
-skinsEl.querySelectorAll('.skin').forEach(b=>b.setAttribute('aria-pressed',String(b.dataset.skin===startSkin)));
+skinsEl.querySelectorAll('[data-skin]').forEach(b=>b.setAttribute('aria-pressed',String(b.dataset.skin===startSkin)));
 buildLegend();
+indexRecord();
+drawTimeline();
+
+/* The toolbar stays under the site nav while the views scroll past; the
+   record's month index then sits under the toolbar. */
+(function(){
+  const wide=matchMedia('(min-width:1000px)');
+  const sync=()=>{
+    const navh=parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--nav-h'))||68;
+    const stuck=wide.matches && controls.getBoundingClientRect().top<=navh+1;
+    controls.classList.toggle('is-stuck',stuck);
+    FX.style.setProperty('--tbh', wide.matches ? controls.offsetHeight+'px' : '0px');
+  };
+  addEventListener('scroll',sync,{passive:true});
+  addEventListener('resize',sync);
+  sync();
+})();
 
 const hash=decodeURIComponent(location.hash.slice(1));
 const onRecord = hash==='record' || (hash && document.getElementById(hash) && document.getElementById(hash).closest('#record'));
@@ -1084,6 +1496,10 @@ else {
   const n=hash&&nodeFor(hash);
   if(n) goTo(n);
 }
-let rt;
-addEventListener('resize',()=>{ clearTimeout(rt); rt=setTimeout(()=>{ if(view==='board'){ build(); applyFilter(); } refollow(); },180); });
+let rt, lastW=innerWidth;
+addEventListener('resize',()=>{ clearTimeout(rt); rt=setTimeout(()=>{
+  if(view==='board'){ build(); applyFilter(); }
+  if(innerWidth!==lastW){ lastW=innerWidth; drawTimeline(); }
+  refollow();
+},180); });
 })();
