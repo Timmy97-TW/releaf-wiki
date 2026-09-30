@@ -114,10 +114,12 @@
         reach: 1.5 * (n("--spot-size") || 0.096 * f.width)
       };
       if (!(isFinite(m.x + m.y + m.hw + m.hh + m.reach) && m.reach > 0)) return null;
-      // On the machine the light widens to hold all of it, so a reader sees
-      // the whole reactor and not a keyhole of it (home.css, --spot-grow).
-      frames.style.setProperty("--spot-grow",
-        Math.max(0, 1.05 * Math.max(m.hw, m.hh) - (n("--spot-size") || 0)) + "px");
+      // 30 Sep, round 3 (owner): the machine is found in ONE circle, centred
+      // on the hero, 30% of its width across (--hole-d, home-hero.css).
+      // Anywhere else the farm stays whole.
+      m.x = f.width / 2; m.y = f.height / 2;
+      m.hw = m.hh = (n("--hole-d") || 0.3) * f.width / 2;
+      m.reach = 0.04 * f.width;
       return m;
     }
     window.addEventListener("resize", function () { box = null; });
@@ -126,9 +128,9 @@
       if (!art) return 1;
       if (!box) box = measure();
       if (!box) return 1;
-      var dx = Math.max(0, Math.abs(x - box.x) - box.hw);
-      var dy = Math.max(0, Math.abs(y - box.y) - box.hh);
-      var t = Math.min(1, Math.sqrt(dx * dx + dy * dy) / box.reach);
+      // distance outside the circle, eased to 0 over box.reach
+      var d = Math.max(0, Math.sqrt((x - box.x) * (x - box.x) + (y - box.y) * (y - box.y)) - box.hw);
+      var t = Math.min(1, d / box.reach);
       return 1 - t * t * (3 - 2 * t);
     }
 
@@ -139,10 +141,8 @@
     function draw() {
       queued = false;
       var n = near();
-      // and it settles on the machine's centre as it opens there
-      var k = box ? 0.85 * n : 0;
-      frames.style.setProperty("--spot-x", (x + (k ? (box.x - x) * k : 0)) + "px");
-      frames.style.setProperty("--spot-y", (y + (k ? (box.y - y) * k : 0)) + "px");
+      frames.style.setProperty("--spot-x", x + "px");
+      frames.style.setProperty("--spot-y", y + "px");
       frames.style.setProperty("--spot-near", n.toFixed(3));
       if (n >= 0.5) hero.classList.add("is-found");
     }
