@@ -118,27 +118,27 @@
 .th-map__stack img + img { mix-blend-mode: multiply; }
 
 /* every view-bound picture and pin starts hidden but volatility's */
-:is(.th-map__img, .th-map__stack, .th-pin)[data-v] {
+:is(.th-map__img, .th-map__stack, .th-lab)[data-v] {
   opacity: 0; visibility: hidden;
   transition: opacity .35s ease, visibility 0s linear .35s;
 }
-:is(.th-map__img, .th-map__stack, .th-pin)[data-v="vol"] { opacity: 1; visibility: visible; }
+:is(.th-map__img, .th-map__stack, .th-lab)[data-v="vol"] { opacity: 1; visibility: visible; }
 @supports selector(:has(*)) {
-  .th:has(.th-views input:not([value="vol"]):checked) :is(.th-map__img, .th-map__stack, .th-pin)[data-v="vol"] { opacity: 0; visibility: hidden; transition: opacity .35s ease, visibility 0s linear .35s; }
+  .th:has(.th-views input:not([value="vol"]):checked) :is(.th-map__img, .th-map__stack, .th-lab)[data-v="vol"] { opacity: 0; visibility: hidden; transition: opacity .35s ease, visibility 0s linear .35s; }
   .th:has(.th-views input:not([value="vol"]):checked) .th-view[data-v="vol"] { display: none; }
-.th:has(.th-views input[value="vol"]:checked) :is(.th-map__img, .th-map__stack, .th-pin)[data-v="vol"] { opacity: 1; visibility: visible; transition-delay: 0s; }
+.th:has(.th-views input[value="vol"]:checked) :is(.th-map__img, .th-map__stack, .th-lab)[data-v="vol"] { opacity: 1; visibility: visible; transition-delay: 0s; }
 .th:has(.th-views input[value="vol"]:checked) .th-view[data-v="vol"] { display: block; }
 .th:has(.th-views input[value="vol"]:checked) .th-key [data-v]:not([data-v~="vol"]) { display: none; }
-.th:has(.th-views input[value="farm"]:checked) :is(.th-map__img, .th-map__stack, .th-pin)[data-v="farm"] { opacity: 1; visibility: visible; transition-delay: 0s; }
+.th:has(.th-views input[value="farm"]:checked) :is(.th-map__img, .th-map__stack, .th-lab)[data-v="farm"] { opacity: 1; visibility: visible; transition-delay: 0s; }
 .th:has(.th-views input[value="farm"]:checked) .th-view[data-v="farm"] { display: block; }
 .th:has(.th-views input[value="farm"]:checked) .th-key [data-v]:not([data-v~="farm"]) { display: none; }
-.th:has(.th-views input[value="nights"]:checked) :is(.th-map__img, .th-map__stack, .th-pin)[data-v="nights"] { opacity: 1; visibility: visible; transition-delay: 0s; }
+.th:has(.th-views input[value="nights"]:checked) :is(.th-map__img, .th-map__stack, .th-lab)[data-v="nights"] { opacity: 1; visibility: visible; transition-delay: 0s; }
 .th:has(.th-views input[value="nights"]:checked) .th-view[data-v="nights"] { display: block; }
 .th:has(.th-views input[value="nights"]:checked) .th-key [data-v]:not([data-v~="nights"]) { display: none; }
-.th:has(.th-views input[value="age"]:checked) :is(.th-map__img, .th-map__stack, .th-pin)[data-v="age"] { opacity: 1; visibility: visible; transition-delay: 0s; }
+.th:has(.th-views input[value="age"]:checked) :is(.th-map__img, .th-map__stack, .th-lab)[data-v="age"] { opacity: 1; visibility: visible; transition-delay: 0s; }
 .th:has(.th-views input[value="age"]:checked) .th-view[data-v="age"] { display: block; }
 .th:has(.th-views input[value="age"]:checked) .th-key [data-v]:not([data-v~="age"]) { display: none; }
-.th:has(.th-views input[value="all"]:checked) :is(.th-map__img, .th-map__stack, .th-pin)[data-v="all"] { opacity: 1; visibility: visible; transition-delay: 0s; }
+.th:has(.th-views input[value="all"]:checked) :is(.th-map__img, .th-map__stack, .th-lab)[data-v="all"] { opacity: 1; visibility: visible; transition-delay: 0s; }
 .th:has(.th-views input[value="all"]:checked) .th-view[data-v="all"] { display: block; }
 .th:has(.th-views input[value="all"]:checked) .th-key [data-v]:not([data-v~="all"]) { display: none; }
 }
@@ -151,9 +151,8 @@
 .th:has(.th-views input[value="all"]:checked) .th-stack__t {
   opacity: 1; transition-delay: calc(.2s + var(--i) * .75s);
 }
-.th:has(.th-views input[value="all"]:checked) .th-pin[data-v="all"] { transition-delay: 2.5s; }
 @media (prefers-reduced-motion: reduce) {
-  :is(.th-map__img, .th-map__stack, .th-pin)[data-v], .th-stack__t { transition: none !important; }
+  :is(.th-map__img, .th-map__stack, .th-lab)[data-v], .th-stack__t { transition: none !important; }
   .th-stack__t { opacity: 1; }
 }
 
@@ -242,3 +241,42 @@
 
 /* no short rule after the section index (house rule) */
 .th .pb-index::after { content: none; }
+
+/* ------------------------------------------------ round 2, 1 Oct -------- */
+/* The places are small labels beside their districts on the map: a dot on
+   the district and the name (and a few words) beside it, over the sea where
+   it can be (--l: text to the left of the dot). The text column keeps only
+   the view's caption. */
+.th-view__cap {
+  font-size: clamp(1.25rem, 1.05rem + .7vw, 1.75rem);
+  line-height: 1.2; letter-spacing: -.018em; max-width: 18ch;
+  text-wrap: balance;
+}
+.th-view[data-v="all"] .th-view__cap { color: #5a1a0e; max-width: 16ch; }
+.th-lab {
+  position: absolute; z-index: 1;
+  display: flex; flex-direction: column; gap: .05rem;
+  width: max-content; max-width: 11rem;
+  font-size: .6875rem; line-height: 1.25; color: var(--gray-600);
+  text-shadow: 0 0 3px #fff, 0 0 3px #fff, 0 0 6px #fff;
+  pointer-events: none;
+}
+.th-lab b { font-size: .75rem; font-weight: 700; color: var(--leaf-900); }
+.th-lab::before {
+  content: ""; position: absolute; top: .3rem;
+  width: .5rem; height: .5rem; border-radius: 50%;
+  background: var(--leaf-900); box-shadow: 0 0 0 2px #fff;
+}
+.th-lab--r { transform: translate(-.25rem, -.45rem); padding-left: .85rem; }
+.th-lab--r::before { left: 0; }
+.th-lab--l { transform: translate(calc(-100% + .25rem), -.45rem); padding-right: .85rem; text-align: right; align-items: flex-end; }
+.th-lab--l::before { right: 0; }
+.th-close { max-width: 22rem; }
+/* All: the key is the composited ramp, least to most stacked (the 5th to
+   95th percentile of farmland, build/threat-stack.py) */
+.th-key__ramp--all i:nth-child(1) { background: #be9986; }
+.th-key__ramp--all i:nth-child(2) { background: #9b6351; }
+.th-key__ramp--all i:nth-child(3) { background: #883f29; }
+.th-key__ramp--all i:nth-child(4) { background: #712a18; }
+.th-key__ramp--all i:nth-child(5) { background: #480d06; }
+.th-views input[value="all"]:checked + span { background: #480d06; }
