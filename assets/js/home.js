@@ -99,8 +99,14 @@
     }
     hero.classList.add("has-spot");
 
-    /* The machine's box and the light's reach, in the hero's pixels. Read
-       once, and again after a resize (the phone file has its own numbers). */
+    /* 30 Sep, round 4 (owner). The farm stays whole until the pointer lands
+       in ONE small circle at the centre of the hero, --hole-d of its width
+       across (home-hero.css). Then the light opens out from there over the
+       WHOLE machine (.is-open; --spot-r grows to --spot-full on its
+       transition, so the machine zooms out of the field), and stays open
+       while the pointer is over the machine. Leaving the machine, or the
+       hero, closes it. The machine's box comes from the same custom
+       properties home.css draws it with; read once, and after a resize. */
     var box = null;
     function measure() {
       var cs = getComputedStyle(frames);
@@ -111,40 +117,27 @@
         x: b.left - f.left + n("--r-ox") * (b.width - w) + n("--r-cx") * w,
         y: b.top - f.top + n("--r-oy") * (b.height - h) + n("--r-cy") * h,
         hw: n("--r-hw") * w, hh: n("--r-hh") * h,
-        reach: 1.5 * (n("--spot-size") || 0.096 * f.width)
+        cx: f.width / 2, cy: f.height / 2, cr: (n("--hole-d") || 0.3) * f.width / 2
       };
-      if (!(isFinite(m.x + m.y + m.hw + m.hh + m.reach) && m.reach > 0)) return null;
-      // 30 Sep, round 3 (owner): the machine is found in ONE circle, centred
-      // on the hero, 30% of its width across (--hole-d, home-hero.css).
-      // Anywhere else the farm stays whole.
-      m.x = f.width / 2; m.y = f.height / 2;
-      m.hw = m.hh = (n("--hole-d") || 0.3) * f.width / 2;
-      m.reach = 0.04 * f.width;
+      if (!isFinite(m.x + m.y + m.hw + m.hh + m.cr) || m.hw <= 0) return null;
+      frames.style.setProperty("--spot-x", m.x + "px");
+      frames.style.setProperty("--spot-y", m.y + "px");
+      frames.style.setProperty("--spot-full", (1.08 * Math.max(m.hw, m.hh)) + "px");
       return m;
     }
     window.addEventListener("resize", function () { box = null; });
 
-    function near() {
-      if (!art) return 1;
-      if (!box) box = measure();
-      if (!box) return 1;
-      // distance outside the circle, eased to 0 over box.reach
-      var d = Math.max(0, Math.sqrt((x - box.x) * (x - box.x) + (y - box.y) * (y - box.y)) - box.hw);
-      var t = Math.min(1, d / box.reach);
-      return 1 - t * t * (3 - 2 * t);
-    }
-
-    var x = 0, y = 0, queued = false;
-    // The cue goes for good once the light has actually opened on the
-    // machine (half way or more), not at the first move anywhere in the
-    // photograph: a reader who crosses Chen's face has not found anything.
+    var x = 0, y = 0, queued = false, open = false;
     function draw() {
       queued = false;
-      var n = near();
-      frames.style.setProperty("--spot-x", x + "px");
-      frames.style.setProperty("--spot-y", y + "px");
-      frames.style.setProperty("--spot-near", n.toFixed(3));
-      if (n >= 0.5) hero.classList.add("is-found");
+      if (!box) box = measure();
+      if (!box) return;
+      var dcx = x - box.cx, dcy = y - box.cy;
+      var ex = (x - box.x) / (box.hw * 1.1), ey = (y - box.y) / (box.hh * 1.1);
+      if (!open && dcx * dcx + dcy * dcy <= box.cr * box.cr) open = true;
+      else if (open && ex * ex + ey * ey > 1) open = false;
+      frames.classList.toggle("is-open", open);
+      if (open) hero.classList.add("is-found");
     }
     function aim(e) {
       var r = frames.getBoundingClientRect();
@@ -161,7 +154,10 @@
       if (e.pointerType === "mouse" || e.pointerType === "pen") light(e);
     });
     hero.addEventListener("pointerleave", function (e) {
-      if (e.pointerType === "mouse" || e.pointerType === "pen") frames.classList.remove("is-lit");
+      if (e.pointerType === "mouse" || e.pointerType === "pen") {
+        open = false;
+        frames.classList.remove("is-lit", "is-open");
+      }
     });
     // A finger lights the field only with a tap. pointerdown comes before
     // the browser knows whether the touch is a scroll, so the light waits for
