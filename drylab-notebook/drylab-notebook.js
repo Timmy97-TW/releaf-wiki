@@ -270,7 +270,7 @@ function build(){
     h+=`<button type="button" class="railrow${pl?' is-plan':''}" data-wk="${w}" style="top:${y}px"
       aria-label="Week ${w+1}, ${fmtLong(wk)}: ${pl?'what is planned':'read the whole week'}">
       <span class="wk">${wk2(w)}</span><span class="dt">${fmt(wk)}</span>
-      ${pl?'<span class="pl">Planned</span>':isM?`<span class="mo">${monthOf(wk)}</span>`:''}</button>`;
+      ${pl?'<span class="pl">Planned</span>':isM?`<span class="mo">${monthOf(wk)}</span>`:''}${(NB.events||[]).filter(ev=>ev.w===w).map(ev=>`<span class="ev" title="${attr(fmt(ev.date)+': '+ev.t)}" aria-hidden="true"></span>`).join('')}</button>`;
   });
   h+=`</div>`;
 
@@ -475,7 +475,7 @@ function shotsHTML(list,scope){
     `<button type="button" class="shot-btn${ph.k==='figure'?' fig':''}" data-pix="${ph.i}" title="${attr(ph.c)}"
       aria-label="Photograph, ${attr(ph.d)}: ${attr(ph.c)}">
       <img src="${ph.t}" alt="${attr(ph.c)}" loading="lazy">${ph.s?STARSVG:''}</button>`).join('')}</div>
-  <p class="shotcap">${list.length} photograph${list.length>1?'s':''} ${scope||'this week'}${more?`. Open any to see all ${list.length}`:'. Open to enlarge'}</p>`;
+${more?`<p class="shotcap">${list.length} photographs</p>`:''}`;
 }
 function delivHTML(list){
   if(!list||!list.length) return '';
@@ -539,6 +539,7 @@ function weekCardHTML(w){
   let h=`<div class="top"><span class="pipe" style="color:var(--ink-2)">The week</span><span class="when">${wk2(w)}</span></div>`;
   wk.days.forEach((d,i)=>{
     h+=`<h3${d.ai?' class="ai"':''}>${fmtLong(d.date)}</h3>`;
+    if(d.event){ h+=`<p class="sum"><b>Event:</b> ${esc(d.event)}</p><p class="jump"><button type="button" data-record="e-${d.date}">Read it in the written record</button></p>`; return; }
     if(d.note) h+=`<p class="sum ai">${d.note}</p>`;
     const lanes=[...new Set(d.deliv.map(x=>x.lane))];
     const onBoard=ENTRIES.filter(e=>e.w===w && e.dates.includes(d.date));
@@ -832,15 +833,10 @@ function status(){
   const what = !allOn() ? GROUPS.filter(g=>active.has(g.id)).map(g=>g.name).join(', ') : '';
   const scope = [what, q?`“${esc(q)}”`:''].filter(Boolean).join(' and ');
   let t='';
-  if(view==='board'){
-    t = filtering
-      ? `<b>${shown.board}</b> of ${ENTRIES.length} marks match ${scope}. The rest are dimmed.`
-      : `Every pipeline is a column and every week a row, newest at the top. Hover a mark to read it, click to pin it, click a date for the whole week.`;
-  }else if(view==='record'){
-    const all=REC.length;
-    t = filtering ? `<b>${shown.record}</b> of ${all} weekly entries match ${scope}.` : `${all} weekly entries, as the dry lab wrote them. Open a month to read it.`;
-  }else{
-    t = filtering ? `<b>${shown.gallery}</b> photographs match ${scope}.` : `All ${PHOTOS.length} photographs, newest week first. Click one to open it full size.`;
+  if(filtering){
+    if(view==='board') t=`<b>${shown.board}</b> of ${ENTRIES.length} marks match ${scope}.`;
+    else if(view==='record') t=`<b>${shown.record}</b> of ${REC.length} entries match ${scope}.`;
+    else t=`<b>${shown.gallery}</b> of ${PHOTOS.length} photographs match ${scope}.`;
   }
   el.innerHTML=t;
 }
@@ -888,7 +884,8 @@ function buildLegend(){
   const sw=(d,extra)=>`<svg width="30" height="12" viewBox="0 0 30 12" aria-hidden="true"><path d="${d}" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" ${extra||''}/></svg>`;
   document.getElementById('legend').innerHTML=`
   <div><h4>Marks</h4>
-    <ul>${Object.values(KND).map(v=>`<li><svg width="18" height="18" viewBox="-9 -9 18 18" style="color:var(--ink-2)">${glyph(v)}</svg>${v.label}</li>`).join('')}</ul></div>
+    <ul>${Object.values(KND).map(v=>`<li><svg width="18" height="18" viewBox="-9 -9 18 18" style="color:var(--ink-2)">${glyph(v)}</svg>${v.label}</li>`).join('')}
+      <li class="ai"><svg width="18" height="18" viewBox="-9 -9 18 18" aria-hidden="true"><circle r="3.2" fill="var(--ai-ink,#c2410c)"/></svg>Drafted, not yet written up by the team</li></ul></div>
   <div><h4>Lines</h4>
     <ul>
       <li style="color:var(--ink-3)">${sw('M2 11 C2 4, 28 8, 28 1')}<span style="color:var(--ink-2)">A pipeline grows out of another</span><span class="desc">${branches}</span></li>
@@ -899,13 +896,7 @@ function buildLegend(){
   <div><h4>Hardware</h4><ul>${legendPipes(p=>p.g==='hw')}</ul></div>
   <div><h4>Protein design and modelling</h4><ul>${legendPipes(p=>p.g==='bio'||p.g==='model')}</ul></div>
   <div><h4>Plants and communication</h4><ul>${legendPipes(p=>p.g==='plant'||p.g==='comm')}</ul></div>
-  <div><h4>Reading the board</h4>
-    <ul>
-      <li>Newest week at the top, planned weeks above the line<span class="desc">&uarr; later</span></li>
-      <li>A ring around a mark means a heavier week</li>
-      <li>A small camera means photographs are attached<span class="desc">${PHOTOS.length}</span></li>
-      <li class="ai">Orange dot: drafted from the wiki pages, not yet written up by the team<span class="desc">${ENTRIES.filter(e=>e.ai).length}</span></li>
-    </ul></div>`;
+`;
 }
 
 /* ==================================================================
@@ -1091,7 +1082,7 @@ function setView(v){
   view=v;
   viewBtns.forEach(b=>b.setAttribute('aria-pressed',String(b.dataset.view===v)));
   const board=v==='board';
-  ['boardframe','hint','legend'].forEach(id=>document.getElementById(id).classList.toggle('off',!board));
+  ['boardframe','legend'].forEach(id=>document.getElementById(id).classList.toggle('off',!board));
   gallery.classList.toggle('off',v!=='gallery');
   record.classList.toggle('off',v!=='record');
   unpin(true);
@@ -1099,8 +1090,11 @@ function setView(v){
   applyFilter();
 }
 viewBtns.forEach(b=>b.addEventListener('click',()=>{
+  const deep=document.getElementById('controls').getBoundingClientRect().top<=(parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--nav-h'))||68)+1;
   setView(b.dataset.view);
-  setHash(b.dataset.view==='board'?'':b.dataset.view==='record'?'record':'photos');
+  /* switched from deep inside another view: start the new one at its top */
+  if(deep) document.getElementById({board:'boardframe',record:'record',gallery:'gallery'}[b.dataset.view]).scrollIntoView({block:'start'});
+  setHash(b.dataset.view==='board'?'board':b.dataset.view==='record'?'':'photos');
 }));
 
 /* ==================================================================
@@ -1136,28 +1130,34 @@ const reduce=()=>matchMedia('(prefers-reduced-motion: reduce)').matches;
               L:['X..','X..','X..','X..','XXX'],A:['.X.','X.X','XXX','X.X','X.X'],B:['XX.','X.X','XX.','X.X','XX.']};
   const WORD='DRY LAB';
   const POOL=PHOTOS.filter(p=>p.team==='Drylab'&&p.k==='photo');
-  if(matchMedia('(hover:none)').matches) cap.textContent='Tap a photograph to open it.';
-  const DEFAULT_CAP=cap.innerHTML;
+  const DEFAULT_CAP='';
   const LEAF='<svg viewBox="0 0 16 16" aria-hidden="true"><path d="M8 14V7M8 7C8 4.5 6 2.5 3 2.5c0 3 1.8 4.5 5 4.5ZM8 8.6c0-2.2 1.8-4 4.5-4 0 2.7-1.6 4-4.5 4Z" fill="none" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"/></svg>';
   let cells=[], dealt=[], tiles=[], mode='', cols=27, rows=7, hovering=false, visible=false;
 
   /* One line on a wide screen; DRY over LAB on a phone, so the squares
-     stay big enough to see what is in them. */
+     stay big enough to see. The squared paper runs the full width of the
+     page, and the words sit in the middle of it. */
   function layout(){
     const m = matchMedia('(max-width:640px)').matches ? 'stack' : 'line';
-    if(m===mode) return false;
-    mode=m;
+    const w = sheet.parentNode.clientWidth || innerWidth;
+    const cell = Math.max(36, Math.min(48, innerHeight*.054));
+    const wordCols = m==='stack' ? 11 : 25;
+    const c = m==='stack' ? 13 : Math.max(27, Math.floor(w/cell));
+    const key = m+c;
+    if(key===mode) return false;
+    mode=key;
     cells=[];
     const lines = m==='stack' ? ['DRY','LAB'] : [WORD];
+    const left = Math.floor((c-wordCols)/2);
     lines.forEach((word,li)=>{
-      let col=1;
+      let col=left;
       for(const ch of word){
         if(ch===' '){ col+=2; continue; }
-        FONT[ch].forEach((row,r)=>[...row].forEach((x,c)=>{ if(x==='X') cells.push({r:1+li*6+r,c:col+c}); }));
+        FONT[ch].forEach((row,r)=>[...row].forEach((x,cc)=>{ if(x==='X') cells.push({r:1+li*6+r,c:col+cc}); }));
         col+=4;
       }
     });
-    cols = m==='stack' ? 13 : 27;
+    cols = c;
     rows = m==='stack' ? 13 : 7;
     box.style.setProperty('--cols',cols);
     box.style.setProperty('--rows',rows);
@@ -1254,12 +1254,12 @@ const dayOf=iso=>Math.round((new Date(iso+'T00:00:00')-D0)/864e5);
     return `<li class="${cls||''}${e.ai?' ai':''}" style="--c:${p.cv}"><button type="button" data-goto="${e.p}|${e.w}"><b style="color:${p.ct}">${esc(p.short)}</b>: ${e.t}${cls?` <span class="w">by ${fmt(WEEKS[e.w])}</span>`:''}</button></li>`;
   };
   const rank={milestone:0,end:1,start:2,branch:3,handoff:4,work:5};
-  const last=ENTRIES.filter(e=>e.w===LASTW).sort((a,b)=>(rank[a.k]-rank[b.k])||(b.h-a.h)).slice(0,4);
+  const last=ENTRIES.filter(e=>e.w===LASTW).sort((a,b)=>(rank[a.k]-rank[b.k])||(b.h-a.h)).slice(0,3);
   document.getElementById('nowlast').innerHTML=last.map(e=>item(e)).join('')||'<li>Nothing recorded yet.</li>';
   /* one item from each week left, then a second from the nearest week */
   const pl=ENTRIES.filter(e=>e.k==='plan'), wks=[...new Set(pl.map(e=>e.w))].sort((a,b)=>a-b);
   const firsts=wks.map(w=>pl.find(e=>e.w===w));
-  const plan=firsts.concat(pl.filter(e=>!firsts.includes(e))).slice(0,4).sort((a,b)=>a.w-b.w);
+  const plan=firsts.concat(pl.filter(e=>!firsts.includes(e))).slice(0,3).sort((a,b)=>a.w-b.w);
   document.getElementById('nowplan').innerHTML=plan.map(e=>item(e,'is-plan')).join('')||'<li>Nothing pencilled in yet.</li>';
   document.getElementById('now').addEventListener('click',e=>{
     const b=e.target.closest('[data-goto]'); if(!b) return;
@@ -1285,7 +1285,9 @@ function drawTimeline(){
   const LBL=pinned?112:Math.min(196,Math.max(150,W*.14)), PADR=18, AX=62;
   let lab='';
   const cw=(W-LBL-PADR)/NW, x=w=>LBL+w*cw;
-  const RH=21, GH=19, CH=12, WRH=15, WCH=8;
+  /* a laptop screen: the whole timeline, key included, still fits under the nav */
+  const short=innerHeight<860;
+  const RH=short?19:21, GH=short?17:19, CH=short?11:12, WRH=short?13:15, WCH=8;
   const rows=[]; let y=AX+6;
   GROUPS.forEach(g=>{
     const ps=PIPES.filter(p=>p.g===g.id&&ENTRIES.some(e=>e.p===p.id));
@@ -1323,7 +1325,7 @@ function drawTimeline(){
     const p=r.p, cy=r.y+RH/2;
     s+=`<g class="row" data-p="${p.id}"><rect class="row-bg" x="0" y="${r.y}" width="${W-PADR}" height="${RH}"/>`;
     const nm=esc(pinned||p.short.length>24?p.abbr:p.short);
-    lab+=p.href?`<a href="${p.href}"><text class="t-lab is-link" x="10" y="${cy+4.2}">${nm}</text></a>`:`<text class="t-lab" x="10" y="${cy+4.2}">${nm}</text>`;
+    lab+=`<text class="t-lab" x="10" y="${cy+4.2}">${nm}</text>`;
     lab+=`<circle cx="3" cy="${cy}" r="3" style="fill:${p.cv}"/>`;
     s+=`<line x1="${LBL}" x2="${W-PADR}" y1="${cy}" y2="${cy}" stroke="var(--rule-2)"/>`;
     ENTRIES.forEach((e,i)=>{
@@ -1389,6 +1391,12 @@ function drawTimeline(){
   s+=`<line x1="${nowX}" x2="${nowX}" y1="2" y2="${AX-4}" stroke="var(--accent)" stroke-width="2"/>`;
   s+=`<line x1="${frzX}" x2="${frzX}" y1="${AX-4}" y2="${H}" stroke="var(--red)" stroke-width="2" stroke-dasharray="5 3"/>`;
   s+=`<line x1="${frzX}" x2="${frzX}" y1="2" y2="${AX-4}" stroke="var(--red)" stroke-width="2" stroke-dasharray="5 3"/>`;
+  /* events (a symposium, a forum): a diamond on the axis */
+  (NB.events||[]).forEach((ev,k)=>{
+    const ex=LBL+dayOf(ev.date)/7*cw;
+    s+=`<line x1="${ex}" x2="${ex}" y1="${AX}" y2="${dryBottom}" stroke="var(--ink-3)" stroke-width="1" stroke-dasharray="1 3" opacity=".7" pointer-events="none"/>`;
+    s+=`<path class="x-ev" data-ev="${k}" transform="translate(${ex} ${AX})" d="M0 -6 6 0 0 6 -6 0Z" fill="var(--ink)" stroke="var(--panel)" stroke-width="1.5"/>`;
+  });
   const close=frzX-nowX<130;
   s+=`<text class="t-flag" x="${frzX+6}" y="${close?28:12}" text-anchor="${frzX+110>W?'end':'start'}" dx="${frzX+110>W?-12:0}" style="fill:var(--red-ink)">Freeze, ${fmt(FREEZE)}</text>`;
   tlScroll.innerHTML=`<svg width="${W}" height="${H}" viewBox="0 0 ${W} ${H}" role="img" aria-label="Season timeline: ${PIPES.length} dry lab pipelines by week from ${fmtLong(WEEKS[0])} to ${fmtLong(WEEKS[NW-1])}, with ${HANDOFFS.length} crossings to the wet lab.">
@@ -1407,6 +1415,7 @@ function drawTimeline(){
     <span><svg width="14" height="12" aria-hidden="true"><rect x=".75" y=".75" width="12.5" height="10.5" rx="3" fill="none" stroke="var(--ink-3)" stroke-width="1.5" stroke-dasharray="3 2.5"/></svg>Planned</span>
     <span><svg width="22" height="12" aria-hidden="true"><path d="M2 6H20" stroke="var(--ink-3)" stroke-width="1.6" stroke-dasharray="4 3"/></svg>Sent to the wet lab</span>
     <span><svg width="22" height="12" aria-hidden="true"><path d="M2 6H20" stroke="var(--wet)" stroke-width="1.8" stroke-dasharray="1.5 3.5" stroke-linecap="round"/></svg>Came back and changed a pipeline</span>
+    <span><svg width="12" height="12" aria-hidden="true"><path d="M6 1 11 6 6 11 1 6Z" fill="var(--ink)"/></svg>Event</span>
     <span><svg width="10" height="12" aria-hidden="true"><path d="M5 0V12" stroke="var(--red)" stroke-width="2" stroke-dasharray="4 2"/></svg>Wiki freeze</span>`;
 }
 (function(){
@@ -1429,15 +1438,17 @@ function drawTimeline(){
     svg.querySelectorAll('.cell[data-wet]').forEach(x=>{ if(ps.includes('wet')) x.classList.add('is-hot'); });
   };
   tlScroll.addEventListener('mouseover',e=>{
+    const ev=e.target.closest('.x-ev');
+    if(ev){ const E=NB.events[+ev.dataset.ev]; tip(`<b>Event, ${fmtLong(E.date)}</b>${esc(E.t)}`,ev,'#fff'); return; }
     const c=e.target.closest('.cell,.x-dot'), row=e.target.closest('g.row');
     if(row) focusOn([row.dataset.p]);
     if(!c){ tlTip.classList.remove('on'); return; }
     if(c.dataset.i!==undefined){
       const en=ENTRIES[+c.dataset.i], p=P_BY_ID[en.p];
-      tip(`<b>${esc(p.short)}, week of ${fmt(WEEKS[en.w])}</b>${en.t}<small>${kindName(en.k)}${en.k==='plan'?'':'. Click to open it on the board.'}</small>`,c,p.ct);
+      tip(`<b>${esc(p.short)}, week of ${fmt(WEEKS[en.w])}</b>${en.t}<small>${kindName(en.k)}</small>`,c,p.ct);
     }else if(c.dataset.hf!==undefined){
       const hf=HANDOFFS[+c.dataset.hf];
-      tip(`<b>Sent to the wet lab, ${fmt(hf.date)}</b>${esc(hf.t.charAt(0).toUpperCase()+hf.t.slice(1))}<small>${esc(hf.ret.state)}. Click to read it.</small>`,c,'#9fd3f0');
+      tip(`<b>Sent to the wet lab, ${fmt(hf.date)}</b>${esc(hf.t.charAt(0).toUpperCase()+hf.t.slice(1))}<small>${esc(hf.ret.state)}</small>`,c,'#9fd3f0');
     }else{
       const t=WET.find(t=>t.id===c.dataset.wet), w=+c.dataset.w;
       const ev=(t.events||[]).filter(ev=>wOf(ev.date)===w).map(ev=>`${fmt(ev.date)}: ${esc(ev.t)}`).join('<br>');
@@ -1447,6 +1458,8 @@ function drawTimeline(){
   tlScroll.addEventListener('mouseleave',()=>{ tlTip.classList.remove('on'); focusOn(null); });
   tlScroll.addEventListener('scroll',()=>tlTip.classList.remove('on'),{passive:true});
   tlScroll.addEventListener('click',e=>{
+    const ev=e.target.closest('.x-ev');
+    if(ev){ tlTip.classList.remove('on'); setView('record'); return revealRecord(NB.events[+ev.dataset.ev].id); }
     const c=e.target.closest('.cell[data-i],.x-dot'); if(!c) return;
     tlTip.classList.remove('on');
     if(c.dataset.hf!==undefined) return goTo(grid.querySelector(`.node[data-hf="${c.dataset.hf}"]`));
@@ -1484,18 +1497,16 @@ drawTimeline();
   sync();
 })();
 
+/* The written record opens first. #photos and #board open those views;
+   a mark's own address (#lpa-w26, #w12, #wet-3) opens it on the board. */
 const hash=decodeURIComponent(location.hash.slice(1));
-const onRecord = hash==='record' || (hash && document.getElementById(hash) && document.getElementById(hash).closest('#record'));
-/* A phone gets the written record first; the board is one tap away. */
-const small = matchMedia('(max-width:700px)').matches;
+const n=hash&&nodeFor(hash);
 if(hash==='photos') setView('gallery');
-else if(onRecord || (small && !hash)) { setView('record'); if(hash&&hash!=='record') revealRecord(hash); }
-else {
+else if(hash==='board'||n){
   setView('board');
   document.getElementById('board').scrollTop=0;
-  const n=hash&&nodeFor(hash);
   if(n) goTo(n);
-}
+}else{ setView('record'); if(hash&&hash!=='record') revealRecord(hash); }
 let rt, lastW=innerWidth;
 addEventListener('resize',()=>{ clearTimeout(rt); rt=setTimeout(()=>{
   if(view==='board'){ build(); applyFilter(); }

@@ -177,12 +177,11 @@
 .fx .eyebrow .sep{color:var(--ink-4);opacity:.5}
 
 /* A sheet of squared paper; the letters are the squares that got a photo. */
-.fx .mosaic{--cell:48px;--cols:27;--rows:7}
-@media (max-width:640px){.fx .mosaic{--cell:30px}}
+.fx .mosaic{--cols:27;--rows:7}
 .fx .mosaic__grid{
   position:relative;display:grid;
   grid-template-columns:repeat(var(--cols),minmax(0,1fr));grid-template-rows:repeat(var(--rows),auto);
-  width:min(100%,calc(var(--cols) * var(--cell)));margin:0 auto;
+  width:100%;margin:0;
   background-color:#fbfcfa;
   background-image:
     linear-gradient(90deg,var(--rule-2) 1px,transparent 1px),
@@ -213,7 +212,7 @@
 @keyframes tile-flip{0%{transform:none}50%{transform:rotateY(90deg) scale(.92)}100%{transform:none}}
 .fx .mosaic__bar{
   display:flex;align-items:center;justify-content:space-between;gap:var(--space-sm);
-  width:min(100%,calc(var(--cols) * var(--cell)));margin:10px auto 0;min-height:34px;
+  margin:10px 0 0;min-height:34px;
 }
 .fx .mosaic__cap{margin:0;font-size:14px;color:var(--ink-3);min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .fx .mosaic__cap b{color:var(--ink);font-weight:600}
@@ -231,7 +230,7 @@
   display:grid;gap:var(--space-xl) var(--space-3xl);grid-template-columns:minmax(0,1fr);
   margin-top:var(--space-2xl);align-items:start;
 }
-@media (min-width:980px){.fx .intro{grid-template-columns:minmax(0,1.35fr) minmax(0,1fr)}}
+@media (min-width:980px){.fx .intro{grid-template-columns:minmax(0,1fr) minmax(0,1.05fr)}}
 .fx h1{
   margin:0;font-family:var(--sans);font-weight:700;font-size:clamp(36px,4.2vw,56px);
   line-height:1.04;letter-spacing:-.025em;color:var(--ink);
@@ -289,8 +288,7 @@
 .fx .tl__labels svg{display:block}
 .fx .tl__scroll{overflow-x:auto;overflow-y:hidden;scrollbar-width:thin;-webkit-overflow-scrolling:touch}
 .fx .tl svg{display:block;font-family:var(--sans);overflow:visible}
-.fx .tl .t-lab{font-size:12.5px;fill:var(--ink-2);cursor:pointer}
-.fx .tl .t-lab.is-link:hover{text-decoration:underline}
+.fx .tl .t-lab{font-size:12.5px;fill:var(--ink-2)}
 .fx .tl .t-grp{font-size:10.5px;font-weight:650;letter-spacing:.08em;fill:var(--ink-4);text-transform:uppercase}
 .fx .tl .t-wet{fill:var(--wet)}
 .fx .tl .t-mon{font-size:12px;font-weight:600;fill:var(--ink-3)}
@@ -302,7 +300,7 @@
 .fx .tl g.row:hover .row-bg,.fx .tl g.row.is-hot .row-bg{fill:var(--feint)}
 .fx .tl .x-line{fill:none;transition:opacity var(--dur-fast) ease}
 .fx .tl.is-focus .cell:not(.is-hot),.fx .tl.is-focus .x-line:not(.is-hot),.fx .tl.is-focus .x-dot:not(.is-hot){opacity:.18}
-.fx .tl .x-dot{cursor:pointer}
+.fx .tl .x-dot,.fx .tl .x-ev{cursor:pointer}
 .fx .tl__tip{
   position:absolute;z-index:30;left:0;top:0;pointer-events:none;opacity:0;
   width:max-content;max-width:300px;padding:9px 12px 10px;border-radius:8px;
@@ -329,7 +327,11 @@
 }
 @media (min-width:1000px){
   .fx .toolbar{position:sticky;top:var(--nav-h,68px)}
-  .fx .toolbar.is-stuck{box-shadow:0 10px 18px -16px rgba(0,0,0,.35)}
+  .fx .toolbar.is-stuck{box-shadow:0 10px 18px -16px rgba(0,0,0,.35);padding:8px 0}
+  /* Once it sticks, the bar keeps only the controls, so it costs the page one slim row. */
+  .fx .toolbar.is-stuck .tb-label,.fx .toolbar.is-stuck .tb-style{display:none}
+  .fx .toolbar.is-stuck .tb-row--sub{margin-top:6px}
+  .fx .toolbar.is-stuck .tb-row--sub:has(.tb-status:empty){display:none}
 }
 .fx .tb-row{display:flex;flex-wrap:wrap;align-items:flex-end;gap:12px 24px}
 .fx .tb-row--sub{align-items:center;justify-content:space-between;gap:8px 24px;margin-top:10px}
@@ -443,6 +445,7 @@ a.head:hover .nm,a.head:hover .nmv{color:var(--ink);text-decoration:underline;te
 .fx .railrow .wk{font-size:10.5px;font-weight:600;letter-spacing:.05em;color:var(--ink-4);display:block;font-variant-numeric:tabular-nums}
 .fx .railrow .dt{font-size:15px;font-weight:650;color:var(--ink);letter-spacing:-.01em;display:block;line-height:1.3;white-space:nowrap;font-variant-numeric:tabular-nums}
 .fx .railrow .mo{font-size:11px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;color:var(--accent-ink);display:block}
+.fx .railrow .ev{position:absolute;right:9px;top:13px;width:9px;height:9px;background:var(--ink);transform:rotate(45deg)}
 .fx .railrow.is-plan .dt{color:var(--ink-3);font-weight:500}
 .fx .railrow.is-plan .mo{color:var(--ink-4)}
 .fx .railrow .pl{display:block;font-size:10.5px;font-weight:600;letter-spacing:.05em;text-transform:uppercase;color:var(--ink-4)}
@@ -682,6 +685,7 @@ a.pipe:hover{text-decoration:underline !important}
    and it is what prints.
    ============================================================ */
 .fx .record{margin-top:var(--space-2xl)}
+.fx :is(.record,.gallery){scroll-margin-top:calc(var(--nav-h,68px) + var(--tbh,0px) + 12px)}
 .fx .record-head{display:grid;gap:6px;margin-bottom:var(--space-md)}
 .fx .nbtop{display:grid;gap:var(--space-sm);grid-template-columns:minmax(0,1fr)}
 @media (min-width:820px){.fx .nbtop{grid-template-columns:minmax(0,3fr) minmax(0,2fr)}}
@@ -754,6 +758,32 @@ a.pipe:hover{text-decoration:underline !important}
 .fx .entry__body{min-width:0;max-width:58rem}
 .fx .entry__body > * + *{margin-top:12px}
 .fx .entry__note{margin:0;font-size:14px}
+.fx .entry__event{margin:0;font-size:15px;font-weight:600;color:var(--ink)}
+.fx .entry__event .lbl{display:inline-block;margin-right:.5rem;padding:2px 8px;border-radius:4px;background:var(--ink);color:#fff;letter-spacing:.06em}
+.fx[data-skin="notebook"] .entry__event .lbl{border-radius:0}
+/* A learning loop: four steps set round a square, each arrow pointing to
+   the next, the last one back up to the first. */
+.fx .loop{list-style:none;margin:10px 0 0;padding:0;display:grid;gap:30px 34px;grid-template-columns:repeat(2,minmax(0,1fr))}
+.fx .loop__step{position:relative;padding:13px 16px 14px;border:1px solid var(--rule);border-top:3px solid var(--accent);border-radius:8px;background:var(--panel)}
+.fx .loop__step:nth-child(3){grid-column:2;grid-row:2}
+.fx .loop__step:nth-child(4){grid-column:1;grid-row:2}
+.fx .loop__step::after{content:"";position:absolute;width:11px;height:11px;border-top:2px solid var(--ink-4);border-right:2px solid var(--ink-4)}
+.fx .loop__step:nth-child(1)::after{right:-23px;top:50%;transform:translateY(-50%) rotate(45deg)}
+.fx .loop__step:nth-child(2)::after{left:50%;bottom:-21px;transform:translateX(-50%) rotate(135deg)}
+.fx .loop__step:nth-child(3)::after{left:-23px;top:50%;transform:translateY(-50%) rotate(225deg)}
+.fx .loop__step:nth-child(4)::after{left:50%;top:-21px;transform:translateX(-50%) rotate(-45deg)}
+.fx .loop__k{display:block;font-size:11.5px;font-weight:650;letter-spacing:.07em;text-transform:uppercase;color:var(--accent-ink)}
+.fx .loop__step p{margin:6px 0 0;font-size:14.5px;line-height:1.5}
+.fx .loop__next{margin:12px 0 0;font-size:14px}
+.fx[data-skin="notebook"] .loop__step{border-radius:0}
+.fx[data-skin="notebook"] .loop__k{font-family:var(--label);font-weight:400}
+@media (max-width:700px){
+  .fx .loop{grid-template-columns:minmax(0,1fr);gap:24px}
+  .fx .loop__step:nth-child(n){grid-column:auto;grid-row:auto}
+  .fx .loop__step:nth-child(n)::after{left:22px;right:auto;top:auto;bottom:-18px;transform:rotate(135deg)}
+  .fx .loop__step:last-child::after{display:none}
+}
+}
 .fx .pipes{display:flex;flex-wrap:wrap;gap:6px;margin:0;padding:0;list-style:none}
 .fx .pipe{
   display:inline-flex;align-items:baseline;flex-wrap:wrap;gap:0 .4rem;max-width:100%;
