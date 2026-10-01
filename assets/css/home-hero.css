@@ -1,18 +1,23 @@
-/* HOMEPAGE 1, the first visual: sizes and timing on top of home.css's .hero
-   rules. Rebuilt 1 Oct from Jacquelyn's notes.
+/* HOMEPAGE 1, the first visual: sizes on top of home.css's .hero rules.
 
    THE LOCKUP. The slogan large and heavy; the project's full title under it
-   in plain title case, a size step down at a lighter weight. Set lower in
-   the frame than before, with room above it.
+   in plain title case, a size step down at a lighter weight (1 Oct,
+   Jacquelyn: no capitals, and the title larger and a little lower).
 
    FARMER CHEN. Bottom right, no rule and no box: her words, then her name,
    then where and when, each on its own line.
 
-   THE TWO STATES. home.js (piece 0) toggles .is-machine on .hero on a slow
-   clock while the hero is on screen. The farm sinks to a faint ground, her
-   words give way to the machine's name, and the reactor comes up, a little
-   smaller than the space between the title and the foot so it never sits
-   on either. Opacity and transform only. */
+   THE MACHINE AND THE LIGHT. The reactor's box sits between the lockup and
+   the foot, a little smaller than in Neo's first build (Jacquelyn: it should
+   not compete with the title and the quote). home.js reads every number it
+   needs from the custom properties below, so the drawing, the light and the
+   arithmetic cannot drift apart:
+     --r-ar          the render's aspect ratio
+     --r-cx, --r-cy  the machine's centre in the render, as fractions
+     --r-hw, --r-hh  the machine's half width and half height, as fractions
+                     (measured on the cut-out's alpha, 1 Oct)
+     --lamp          the light's radius while it follows the pointer
+   A new render means new --r-* numbers and nothing else. */
 
 .hero__head { max-width: 100%; }
 
@@ -58,46 +63,22 @@
 }
 .hero__note footer b { color: var(--white); font-weight: 700; }
 .hero__note footer span { color: rgb(255 255 255 / .72); }
-
-.hero__label {
-  margin: 0; text-align: right;
-  font-size: .8125rem; font-weight: 600; letter-spacing: .01em;
-  color: rgb(255 255 255 / .78);
-  opacity: 0;
-}
-
 @media (max-width: 800px) {
   .hero__note { max-width: 22rem; }
 }
 
-/* -------------------------------------------------------------- the machine */
-/* The reactor's box sits between the lockup and the foot: --r-top down from
-   the top, --r-bot up from the bottom, and the render contained in it. */
-.hero__frames { --r-top: 33cqh; --r-bot: 11cqh; }
-.hero__frame--reactor { top: var(--r-top); bottom: var(--r-bot); left: 16cqw; right: 16cqw; }
+/* -------------------------------------------------- the machine, the light */
+/* registered so that home.js reads --lamp in pixels, whatever it is set in */
+@property --lamp { syntax: "<length>"; inherits: true; initial-value: 180px; }
+.hero__frames {
+  --r-ar: 1.6; --r-cx: .5; --r-cy: .477; --r-hw: .456; --r-hh: .456;
+  --lamp: clamp(150px, 17vw, 270px);
+}
+.hero__frame--reactor { top: 27cqh; bottom: 7cqh; left: 12cqw; right: 12cqw; }
+
+/* a phone held upright: the machine across the width, between the lockup
+   and the quote, and a light big enough for a fingertip */
 @media (max-aspect-ratio: 2/3) {
-  .hero__frames { --r-top: 30cqh; --r-bot: 10cqh; }
-  .hero__frame--reactor { left: 0; right: 0; }
-}
-
-/* --------------------------------------------------------------- the clock */
-.hero__frame--farm,
-.hero__frame--reactor,
-.hero__note,
-.hero__label {
-  transition: opacity 1.8s cubic-bezier(.4, 0, .2, 1), transform 2.4s cubic-bezier(.2, .7, .2, 1);
-}
-.hero__frame--reactor { transform: scale(.94); }
-
-.hero.is-machine .hero__frame--farm { opacity: .16; }
-.hero.is-machine .hero__frame--reactor { opacity: 1; transform: none; }
-.hero.is-machine .hero__note { opacity: 0; transition-duration: .9s; }
-.hero.is-machine .hero__label { opacity: 1; transition-delay: .6s; }
-
-@media (prefers-reduced-motion: reduce) {
-  .hero__frame--farm, .hero__frame--reactor, .hero__note, .hero__label { transition: none; }
-}
-@media print {
-  .hero.is-machine .hero__frame--farm, .hero.is-machine .hero__note { opacity: 1; }
-  .hero.is-machine .hero__frame--reactor, .hero.is-machine .hero__label { opacity: 0; }
+  .hero__frames { --lamp: clamp(110px, 32vw, 170px); }
+  .hero__frame--reactor { top: 30cqh; bottom: 30cqh; left: 0; right: 0; }
 }

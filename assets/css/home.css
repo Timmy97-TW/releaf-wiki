@@ -133,20 +133,35 @@ h2.band__title {
 @media print { .rise.is-armed { opacity: 1 !important; transform: none !important; transition: none !important; } }
 
 /* ============================================================= 1  HERO ==== */
-/* Two states of one screen, crossfaded by home.js (piece 0), no pointer
-   needed (1 Oct, Jacquelyn: hover is not how people meet a page now).
+/* Farmer Chen's field, full screen, and a light that finds the bench
+   reactor standing among the people in it (Neo's design, 29 Sep; Marburg
+   2024 did the two-layer hero first).
 
-     · THE FARM. The team walking Farmer Chen's field in Tamsui, full screen,
-       with her words bottom right.
-     · THE MACHINE. The farm sinks to a faint ground and the bench reactor
-       comes up in the middle, smaller than the screen, under the title.
+   THE LAYERS, bottom to top:
+     · .hero__frame--farm  the photograph and its wash, always whole.
+     · .hero__lens         the light. One element with a fixed soft round
+                           mask. Inside it, .hero__lens-in is the size of the
+                           hero and holds a faint ink veil (.hero__dim) and
+                           the reactor render; home.js moves and scales the
+                           lens and moves its contents the opposite way, so
+                           the reactor stays fixed on the page and the light
+                           slides over it.
+     · .hero__label        the machine's name, shown while the light rests
+                           on it.
+     · .hero__inner        the title and Farmer Chen's words.
 
-   The title stays through both: the farm and the machine are the two halves
-   of the claim. home-hero.css holds the sizes and the timing.
+   WHY A LENS AND NOT A MASK ON THE PHOTO. Neo's first build moved a mask
+   gradient over the photograph by custom properties, and the browser
+   repainted a full-screen mask for every pointer move; that is the stutter
+   it had. Here the mask never changes: it is rasterised once and only the
+   compositor moves it. home.js writes transform and opacity, nothing else.
 
-   THE RESTING STATE IS THE FARM. Without script, with reduced motion, or
-   while printing, the farm is whole and the reactor is read out by its alt
-   text only. */
+   THE RESTING STATE IS THE FARM. The lens is transparent until home.js
+   lights it, so without script the farm is whole and the reactor is read
+   out by its alt text. The reactor is a cut-out with its own alpha
+   (build/hero-bench-cut.py), so through the light it stands in the field
+   among the people, with no backdrop of its own. home-hero.css holds the
+   sizes. */
 
 .hero {
   position: relative; isolation: isolate;
@@ -155,7 +170,7 @@ h2.band__title {
   min-height: calc(100svh - var(--nav-h, 68px));
   display: grid;
 }
-.hero__frames { position: absolute; inset: 0; container-type: size; }
+.hero__frames { position: absolute; inset: 0; container-type: size; overflow: hidden; }
 .hero__frame { position: absolute; inset: 0; overflow: hidden; }
 .hero__frame img { width: 100%; height: 100%; object-fit: cover; }
 
@@ -163,7 +178,7 @@ h2.band__title {
 .hero__frame--farm img { object-position: 50% 42%; }
 
 /* The wash: a corner shadow for the title, a foot shadow for the quote, an
-   edge vignette on the right. It belongs to the farm frame and fades with it. */
+   edge vignette on the right. Light, so the field keeps its daylight. */
 .hero__frame--farm::after {
   content: ""; position: absolute; inset: 0; z-index: 2;
   background:
@@ -174,14 +189,58 @@ h2.band__title {
     linear-gradient(90deg, rgb(7 11 9 / .16) 0%, rgb(7 11 9 / .02) 52%, rgb(7 11 9 / .18) 74%, rgb(7 11 9 / .62) 100%);
 }
 
+/* THE LIGHT. Its box is the light at its widest (home.js sets --lens-w and
+   --lens-h from the machine's size); smaller lights are the same box scaled
+   down, so the mask is only ever shrunk, never stretched past its raster.
+   The light is fully open to 52% of its radius, so what it finds reads
+   clearly, then falls off as a smootherstep (6t^5 - 15t^4 + 10t^3) laid
+   down as ten stops, so it leaves the core and reaches nothing with no
+   slope and no ring. */
+.hero__lens {
+  --lens-edge: radial-gradient(closest-side,
+    #000 52%, rgb(0 0 0 / .991) 56.8%, rgb(0 0 0 / .942) 61.6%, rgb(0 0 0 / .837) 66.4%,
+    rgb(0 0 0 / .683) 71.2%, rgb(0 0 0 / .5) 76%, rgb(0 0 0 / .317) 80.8%,
+    rgb(0 0 0 / .163) 85.6%, rgb(0 0 0 / .058) 90.4%, rgb(0 0 0 / .009) 95.2%, transparent 100%);
+  position: absolute; left: 0; top: 0; z-index: 2;
+  width: var(--lens-w, 100cqw); height: var(--lens-h, 100cqh);
+  transform-origin: 0 0;
+  pointer-events: none;
+  opacity: 0;
+  -webkit-mask-image: var(--lens-edge);
+          mask-image: var(--lens-edge);
+}
+.hero.has-lens .hero__lens { will-change: transform, opacity; }
+.hero__lens-in {
+  position: absolute; left: 0; top: 0;
+  width: 100cqw; height: 100cqh;
+  transform-origin: 0 0;
+}
+.hero.has-lens .hero__lens-in { will-change: transform; }
+/* away from the machine the light only dims the field a little */
+.hero__dim { position: absolute; inset: 0; background: var(--ink); opacity: .22; }
+/* and close to it, a soft shade right behind the machine, so its lit lines
+   and glass read against the busy field (placed and faded by home.js) */
+.hero__halo {
+  position: absolute; left: 0; top: 0; width: 0; height: 0;
+  background: radial-gradient(closest-side, rgb(7 11 9 / .55), rgb(7 11 9 / .42) 45%, rgb(7 11 9 / .16) 75%, transparent);
+  opacity: 0;
+}
+
 /* The machine. hero-bench-*.jpg is a render of the bench reactor on the
-   hero's own ink, so it is contained, never cropped, and its edges are
-   feathered into whatever is left of the farm behind it. */
-.hero__frame--reactor { z-index: 2; opacity: 0; }
-.hero__frame--reactor img {
-  object-fit: contain; object-position: 50% 50%;
-  -webkit-mask-image: radial-gradient(50% 50% at 50% 50%, #000 62%, transparent 100%);
-          mask-image: radial-gradient(50% 50% at 50% 50%, #000 62%, transparent 100%);
+   hero's own ink, contained in its box, never cropped. home.js gives it a
+   soft elliptical mask round the machine (the zone), so only the machine
+   and a little ink around it ever show through the light; its opacity is
+   how near the light is to the machine. */
+.hero__frame--reactor { opacity: 0; }
+.hero__frame--reactor img { object-fit: contain; object-position: 50% 50%; }
+
+/* the machine's name, under it, while the light rests there */
+.hero__label {
+  position: absolute; left: 0; top: 0; z-index: 2;
+  margin: 0;
+  font-size: .8125rem; font-weight: 600; letter-spacing: .01em; white-space: nowrap;
+  color: rgb(255 255 255 / .82);
+  opacity: 0; pointer-events: none;
 }
 
 /* One column: the title top left, the foot bottom right, a spring between. */
@@ -203,11 +262,7 @@ h2.band__title {
   text-wrap: balance;
 }
 
-.hero__foot {
-  grid-row: 3; align-self: end;
-  display: grid; justify-items: end; align-items: end;
-}
-.hero__foot > * { grid-area: 1 / 1; }
+.hero__foot { grid-row: 3; align-self: end; display: flex; justify-content: flex-end; }
 .hero__note { margin: 0; }
 .hero__note p { margin: 0; font-style: italic; text-wrap: pretty; }
 .hero__note p::before { content: "\201C"; }
@@ -224,6 +279,9 @@ h2.band__title {
 /* a phone held upright gets the portrait files (index.html) */
 @media (max-aspect-ratio: 2/3) {
   .hero__frame--farm img { object-position: 50% 50%; }
+}
+@media print {
+  .hero__lens, .hero__label { display: none; }
 }
 
 /* ========================================================= 1b  CHAPTERS === */

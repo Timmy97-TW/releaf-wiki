@@ -5,7 +5,7 @@
    if it is missing, so removing a section from index.html never breaks the
    rest of the file.
 
-     0  two states  the hero crossfades from the farm to the reactor and back
+     0  light       a soft light over the farm finds the reactor under it
      1  reveal      one-shot fade-and-rise for .rise
      2  reactor     wakes the WebGL reactor before it is needed
      3  parts       point at a demand card, its parts light in the WebGL reactor
@@ -75,44 +75,317 @@
     };
   })());
 
-  /* ════════════════════════════════════════════════════════ 0  TWO STATES ══ */
-  /* The hero holds the farm, then the machine, on a slow clock: FARM_MS on
-     the farm (long enough to read Farmer Chen's words), MACHINE_MS on the
-     reactor, then back. home-hero.css does the crossfade; this only toggles
-     .is-machine. The clock runs only while the hero is on screen and the tab
-     is visible, and restarts on the farm when the reader comes back. With
-     reduced motion, or without script, the hero is the farm and stays so. */
+  /* ═════════════════════════════════════════════════════════════ 0  LIGHT ══ */
+  /* Neo's see-through hero, made smooth. home.css explains the layers; this
+     drives the one element that moves, the lens, and only ever writes
+     transform and opacity.
 
-  (function twoStates() {
-    var hero = document.querySelector(".hero");
-    if (!hero || reduced || !document.getElementById("hero-spot")) return;
-    var FARM_MS = 7000, MACHINE_MS = 5500;
-    var timer = 0, inView = true, machine = false;
+     THREE STATES, and springs between them, so nothing ever jumps:
+       off    the lens shrinks away where it is
+       lamp   a soft light of radius --lamp follows the pointer, a little
+              behind it; the reactor shows through it in proportion to how
+              near the light is to the machine (near(), as in Neo's build)
+       bloom  the light has rested on the machine for DWELL ms: it glides to
+              the machine's centre and opens round all of it, the field
+              dims a little more, the machine's name comes up under it and
+              Farmer Chen's words step back. Leaving the machine (with some
+              slack, so the edge does not flicker) goes back to lamp.
+     Every spring is critically damped and integrated exactly, so the motion
+     is the same at 60 Hz and 120 Hz and a slow frame never overshoots.
 
-    function set(on) { machine = on; hero.classList.toggle("is-machine", on); }
-    function stop() { window.clearTimeout(timer); timer = 0; }
-    function tick() {
-      set(!machine);
-      timer = window.setTimeout(tick, machine ? MACHINE_MS : FARM_MS);
+     ONE PASS ON ITS OWN. Once per visit, when the hero is on screen at load
+     and both pictures are in, the farm has the screen to itself for
+     FARM_FIRST ms; then the light comes up in the field, travels to the
+     machine, rests there and goes out. Any pointer movement or tap takes
+     over from it at once, from wherever it is.
+
+     A mouse lights the field by moving over it and puts it out by leaving;
+     a finger lights it with a tap (a scroll ends in pointercancel and
+     lights nothing) and leaves it there. With reduced motion nothing moves
+     on its own and the light follows the pointer without easing. The loop
+     runs only while something is moving. */
+
+  (function light() {
+    var frames = document.getElementById("hero-spot");
+    var hero = frames && frames.closest(".hero");
+    var lens = document.getElementById("hero-lens");
+    if (!hero || !lens) return;
+    var inner = lens.querySelector(".hero__lens-in");
+    var dim = lens.querySelector(".hero__dim");
+    var halo = lens.querySelector(".hero__halo");
+    var rxf = lens.querySelector(".hero__frame--reactor");
+    var label = frames.querySelector(".hero__label");
+    var note = hero.querySelector(".hero__note");
+    var supports = window.CSS && CSS.supports &&
+      (CSS.supports("mask-image", "radial-gradient(#000, transparent)") ||
+       CSS.supports("-webkit-mask-image", "radial-gradient(#000, transparent)"));
+    if (!inner || !dim || !halo || !rxf || !supports) return;
+    hero.classList.add("has-lens");
+
+    var DWELL = 420, FARM_FIRST = 2200;
+    var BLOOM = 2.2;        // the open light's radii, in machine half-sizes
+    var DIM_LAMP = .22, DIM_BLOOM = .36;
+
+    /* ---- the springs ---- */
+    function Spring(w, eps) { this.x = 0; this.v = 0; this.t = 0; this.w = w; this.eps = eps; }
+    Spring.prototype.step = function (dt) {
+      if (reduced) { this.x = this.t; this.v = 0; return; }
+      var y = this.x - this.t, w = this.w, a = this.v + w * y, e = Math.exp(-w * dt);
+      this.x = this.t + (y + a * dt) * e;
+      this.v = (this.v - w * a * dt) * e;
+    };
+    Spring.prototype.still = function () {
+      return Math.abs(this.x - this.t) < this.eps && Math.abs(this.v) < this.eps * 4;
+    };
+    Spring.prototype.jump = function (v) { this.x = this.t = v; this.v = 0; };
+    var X = new Spring(12, .1), Y = new Spring(12, .1);
+    var RX = new Spring(7.5, .1), RY = new Spring(7.5, .1);
+    var NEAR = new Spring(9, .002), DIM = new Spring(6, .002), NAME = new Spring(6, .002);
+    var all = [X, Y, RX, RY, NEAR, DIM, NAME];
+
+    /* ---- the geometry, read from home-hero.css; again after a resize ---- */
+    var G = null;
+    function measure() {
+      var cs = getComputedStyle(frames);
+      var n = function (k) { return parseFloat(cs.getPropertyValue(k)); };
+      var W = frames.clientWidth, H = frames.clientHeight;
+      var bx = rxf.offsetLeft, by = rxf.offsetTop, bw = rxf.offsetWidth, bh = rxf.offsetHeight;
+      var ar = n("--r-ar"), w = Math.min(bw, ar * bh), h = Math.min(bh, bw / ar);
+      var x0 = bx + (bw - w) / 2, y0 = by + (bh - h) / 2;
+      var lamp = n("--lamp");
+      if (!(lamp > 0)) lamp = H > 1.5 * W ? Math.min(170, Math.max(110, .32 * W)) : Math.min(240, Math.max(140, .15 * W));
+      var g = {
+        W: W, H: H, lamp: lamp,
+        mx: x0 + n("--r-cx") * w, my: y0 + n("--r-cy") * h,
+        hw: n("--r-hw") * w, hh: n("--r-hh") * h
+      };
+      if (!(g.W > 0 && g.H > 0 && g.hw > 0 && g.hh > 0 && isFinite(g.mx + g.my))) return null;
+      g.bx = BLOOM * g.hw; g.by = BLOOM * g.hh;
+      g.reach = 1.1 * lamp;
+
+      // the lens box is the light at its widest; every other light is it
+      // scaled down
+      lens.style.width = (2 * g.bx).toFixed(1) + "px";
+      lens.style.height = (2 * g.by).toFixed(1) + "px";
+
+      halo.style.left = (g.mx - 1.25 * g.hw).toFixed(1) + "px";
+      halo.style.top = (g.my - 1.3 * g.hh).toFixed(1) + "px";
+      halo.style.width = (2.5 * g.hw).toFixed(1) + "px";
+      halo.style.height = (2.6 * g.hh).toFixed(1) + "px";
+
+      if (label) {
+        label.style.left = g.mx.toFixed(1) + "px";
+        label.style.top = (g.my + g.hh + Math.max(8, .02 * g.H)).toFixed(1) + "px";
+      }
+      return g;
     }
-    function start() {
-      stop();
-      if (!inView || document.hidden) return;
-      timer = window.setTimeout(tick, machine ? MACHINE_MS : FARM_MS);
+
+    /* ---- where the light should be ---- */
+    var mode = "off", px = 0, py = 0, cx = -1, cy = -1, mouse = false;
+    var dwellFrom = 0, tour = null;
+
+    // 1 on the machine, falling smoothly to 0 a little more than a light away
+    function near(x, y) {
+      var dx = Math.max(0, Math.abs(x - G.mx) - G.hw), dy = Math.max(0, Math.abs(y - G.my) - G.hh);
+      var t = Math.min(1, Math.sqrt(dx * dx + dy * dy) / G.reach);
+      return 1 - t * t * (3 - 2 * t);
+    }
+    function onMachine(x, y, k) {
+      return Math.abs(x - G.mx) <= k * G.hw && Math.abs(y - G.my) <= k * G.hh;
+    }
+    function aim(now) {
+      if (tour) runTour(now);
+      if (mode === "lamp" && !tour) {
+        if (onMachine(px, py, .8)) {
+          if (!dwellFrom) dwellFrom = now;
+          else if (now - dwellFrom >= DWELL) mode = "bloom";
+        } else dwellFrom = 0;
+      } else if (mode === "bloom" && !tour && !onMachine(px, py, 1.25)) {
+        mode = "lamp"; dwellFrom = 0;
+      }
+      var open = mode === "bloom";
+      X.w = Y.w = open ? 6.5 : 12;
+      RX.w = RY.w = open ? 5.5 : 7.5;
+      if (mode === "off") {
+        RX.t = RY.t = 0; NEAR.t = 0; DIM.t = DIM_LAMP; NAME.t = 0;
+      } else if (open) {
+        X.t = G.mx; Y.t = G.my; RX.t = G.bx; RY.t = G.by;
+        NEAR.t = 1; DIM.t = DIM_BLOOM; NAME.t = 1;
+      } else {
+        X.t = px; Y.t = py; RX.t = RY.t = G.lamp;
+        NEAR.t = near(px, py); DIM.t = DIM_LAMP; NAME.t = 0;
+      }
     }
 
+    /* ---- the one pass on its own ---- */
+    function startTour() {
+      if (!G || mode !== "off" || reduced) return;
+      var portrait = G.H > 1.3 * G.W;
+      var p0 = portrait ? { x: .16 * G.W, y: .46 * G.H } : { x: .2 * G.W, y: .72 * G.H };
+      var c = portrait ? { x: .22 * G.W, y: .66 * G.H } : { x: .3 * G.W, y: .86 * G.H };
+      tour = { t0: performance.now(), p0: p0, c: c };
+      X.jump(p0.x); Y.jump(p0.y); RX.jump(0); RY.jump(0);
+      px = p0.x; py = p0.y; mode = "lamp";
+      kick();
+    }
+    function runTour(now) {
+      var t = (now - tour.t0) / 1000;
+      if (t < 2.1) {
+        // in from the field along a low curve, easing in and out
+        var u = Math.min(1, Math.max(0, (t - .35) / 1.6));
+        u = u < .5 ? 4 * u * u * u : 1 - Math.pow(-2 * u + 2, 3) / 2;
+        var a = 1 - u;
+        px = a * a * tour.p0.x + 2 * a * u * tour.c.x + u * u * G.mx;
+        py = a * a * tour.p0.y + 2 * a * u * tour.c.y + u * u * G.my;
+        mode = "lamp";
+      } else if (t < 4.3) mode = "bloom";
+      else { mode = "off"; tour = null; }
+    }
+    function endTour() { if (tour) { tour = null; dwellFrom = 0; } }
+
+    /* ---- drawing ---- */
+    var f2 = function (v) { return (Math.round(v * 100) / 100).toString(); };
+    var f4 = function (v) { return (Math.round(v * 10000) / 10000).toString(); };
+    var shown = null;
+    function write() {
+      var rx = RX.x, ry = RY.x;
+      var a = Math.min(1, Math.max(0, Math.min(rx, ry) / (.35 * G.lamp)));
+      if (a <= 0.001) {
+        if (shown !== false) { lens.style.opacity = "0"; shown = false; }
+      } else {
+        var sx = rx / G.bx, sy = ry / G.by;
+        var tx = X.x - rx, ty = Y.x - ry;
+        lens.style.transform = "translate3d(" + f2(tx) + "px," + f2(ty) + "px,0) scale(" + f4(sx) + "," + f4(sy) + ")";
+        inner.style.transform = "scale(" + f4(1 / sx) + "," + f4(1 / sy) + ") translate3d(" + f2(-tx) + "px," + f2(-ty) + "px,0)";
+        lens.style.opacity = f4(a);
+        shown = true;
+      }
+      rxf.style.opacity = f4(NEAR.x);
+      halo.style.opacity = f4(NEAR.x);
+      dim.style.opacity = f4(DIM.x);
+      if (label) {
+        label.style.opacity = f4(NAME.x);
+        label.style.transform = "translate3d(-50%," + f2((1 - NAME.x) * 8) + "px,0)";
+      }
+      if (note) note.style.opacity = f4(1 - .68 * NAME.x);
+    }
+
+    var running = false, last = 0;
+    function tick(now) {
+      var dt = last ? Math.min(.05, (now - last) / 1000) : 1 / 60;
+      last = now;
+      if (!G) G = measure();
+      if (!G) { running = false; return; }
+      aim(now);
+      for (var i = 0; i < all.length; i++) all[i].step(dt);
+      write();
+      var still = all.every(function (s) { return s.still(); });
+      if (!still || tour || (mode === "lamp" && dwellFrom)) requestAnimationFrame(tick);
+      else { running = false; last = 0; }
+    }
+    function kick() {
+      if (running) return;
+      running = true; last = 0;
+      requestAnimationFrame(tick);
+    }
+
+    /* ---- the pointer ---- */
+    function at(clientX, clientY) {
+      var r = frames.getBoundingClientRect();
+      cx = clientX; cy = clientY;
+      px = clientX - r.left; py = clientY - r.top;
+    }
+    hero.addEventListener("pointermove", function (e) {
+      if (e.pointerType !== "mouse" && e.pointerType !== "pen") return;
+      endTour();
+      if (!G) G = measure();
+      if (!G) return;
+      at(e.clientX, e.clientY);
+      if (mode === "off" && !mouse) { X.jump(px); Y.jump(py); }
+      mouse = true;
+      if (mode === "off") mode = "lamp";
+      kick();
+    });
+    hero.addEventListener("pointerleave", function (e) {
+      if (e.pointerType !== "mouse" && e.pointerType !== "pen") return;
+      mouse = false; mode = "off"; dwellFrom = 0;
+      kick();
+    });
+    // the page scrolls under a still mouse: the light stays under it
+    window.addEventListener("scroll", function () {
+      if (!mouse || mode === "off") return;
+      var r = frames.getBoundingClientRect();
+      if (cy < r.top || cy > r.bottom) { mouse = false; mode = "off"; }
+      else { px = cx - r.left; py = cy - r.top; }
+      kick();
+    }, { passive: true });
+
+    var tap = null;
+    hero.addEventListener("pointerdown", function (e) {
+      if (e.pointerType === "touch") tap = { id: e.pointerId, x: e.clientX, y: e.clientY };
+    });
+    hero.addEventListener("pointercancel", function (e) {
+      if (tap && tap.id === e.pointerId) tap = null;
+    });
+    hero.addEventListener("pointerup", function (e) {
+      if (e.pointerType !== "touch" || !tap || tap.id !== e.pointerId) return;
+      var moved = Math.abs(e.clientX - tap.x) + Math.abs(e.clientY - tap.y);
+      tap = null;
+      if (moved >= 10) return;
+      endTour();
+      if (!G) G = measure();
+      if (!G) return;
+      at(e.clientX, e.clientY);
+      if (mode === "off") { X.jump(px); Y.jump(py); }
+      mode = onMachine(px, py, 1) ? "bloom" : "lamp";
+      dwellFrom = 0;
+      kick();
+    });
+
+    /* ---- size, visibility, the first pass ---- */
+    var sized = 0;
+    window.addEventListener("resize", function () {
+      window.clearTimeout(sized);
+      sized = window.setTimeout(function () { G = measure(); if (G) kick(); }, 100);
+    });
     if ("IntersectionObserver" in window) {
       new IntersectionObserver(function (entries) {
-        inView = entries[0].isIntersecting;
-        if (inView) start();
-        else { stop(); set(false); }
-      }, { threshold: 0.35 }).observe(hero);
+        if (entries[0].intersectionRatio < .15 && mode !== "off") {
+          endTour(); mouse = false; mode = "off"; kick();
+        }
+      }, { threshold: [0, .15] }).observe(hero);
     }
-    document.addEventListener("visibilitychange", function () {
-      if (document.hidden) stop(); else start();
-    });
-    window.addEventListener("beforeprint", function () { stop(); set(false); });
-    start();
+    window.addEventListener("beforeprint", function () { endTour(); mode = "off"; all.forEach(function (s) { s.jump(0); }); });
+
+    var seen = false;
+    try { seen = sessionStorage.getItem("releaf-hero-pass") === "1"; } catch (e) { /* storage blocked: play it */ }
+    if (!reduced && !seen) {
+      var imgs = [frames.querySelector(".hero__frame--farm img"), rxf.querySelector("img")];
+      Promise.all(imgs.map(function (img) {
+        if (!img) return Promise.resolve();
+        if (img.complete && img.naturalWidth) return Promise.resolve();
+        return new Promise(function (ok) { img.addEventListener("load", ok, { once: true }); img.addEventListener("error", ok, { once: true }); });
+      })).then(function wait() {
+        // a page opened in a background tab gets its pass when it is shown
+        if (document.hidden) {
+          document.addEventListener("visibilitychange", function shown() {
+            if (document.hidden) return;
+            document.removeEventListener("visibilitychange", shown);
+            wait();
+          });
+          return;
+        }
+        window.setTimeout(function () {
+          var r = hero.getBoundingClientRect();
+          if (mouse || mode !== "off" || r.top < -.3 * r.height || r.top > .5 * window.innerHeight) return;
+          if (document.hidden) { wait(); return; }
+          G = measure();
+          if (!G) return;
+          try { sessionStorage.setItem("releaf-hero-pass", "1"); } catch (e) { /* fine */ }
+          startTour();
+        }, FARM_FIRST);
+      });
+    }
   })();
 
   /* ══════════════════════════════════════════════════════════ 1  REVEAL ══ */
