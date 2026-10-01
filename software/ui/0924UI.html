@@ -1,0 +1,1522 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>ReLeaf BR-01 Twin</title>
+<!--
+  ReLeaf BR-01 · operator interface and digital twin · build 2026-09-24
+  Scope = the 21 October 2026 deliverable:
+    measured  OD600 (lumen, inline), pH (lumen), loop flow (FT-01),
+              PT-01 lumen in, PT-03 lumen out, PT-04 shell in, PT-05 shell out
+    actuated  lumen pinch valve (XV-01), green light (L-01)
+    manual    loop flow (pump set by hand)
+    online    weather forecast (Open-Meteo), falls back to a stored snapshot
+  Design basis
+    ISA-101 HMI: grey field, colour only for state; every number carries its
+      unit, its limits and where it came from.
+    Digital-twin structure: Tao 5-dimension model / ISO 23247 (physical,
+      virtual, data, connection, services), as used by Satwekar et al. 2026.
+    Twin vs shadow: automated two-way data flow (Gargalo et al. 2021;
+      Portela et al. 2021). The model is "the heart" (Portela), so the growth
+      model is live, re-fitted on every new point (Cabaneros Lopez et al. 2020)
+      and scored against its own forecasts (NRMSE < 15 %, Sinner et al. 2021).
+  One file, no external fonts or libraries. The only network call is the
+  weather request, and the page works without it.
+  Growth prior: 04_Results/lpa_growth_fit_20260919.json, embedded below by
+  03_Scripts/embed_fit_into_ui.py. Re-run both scripts after a new LPA run.
+-->
+<style>
+/* Hallmark · redesign · app scope (operator HMI, not a page) · tone: utilitarian-technical
+ * theme: custom (vibe: "instrument panel, night-navy ink, leaf-lime signal")
+ *   paper oklch(95.5% 0.006 250) · ink oklch(24% 0.065 262) navy from the team logo
+ *   signal oklch(76% 0.17 128) lime from the team logo, used ONLY for the green light
+ *   display: DIN Alternate / Bahnschrift (instrument numerals) · body: Avenir Next / Segoe UI
+ * rules: ISA-101, colour only for state; hairlines, not shadows; no nested boxes
+ * pre-emit critique: P4 H4 E4 S5 R5 V4
+ */
+:root{
+  --color-paper:    oklch(95.5% 0.006 250);
+  --color-panel:    oklch(99% 0.003 250);
+  --color-panel-2:  oklch(92.5% 0.008 250);
+  --color-rule:     oklch(84% 0.012 255);
+  --color-rule-2:   oklch(90% 0.009 255);
+  --color-ink:      oklch(24% 0.065 262);
+  --color-ink-2:    oklch(44% 0.035 258);
+  --color-ink-3:    oklch(60% 0.02 255);
+  --color-ink-inv:  oklch(98% 0.005 250);
+  --color-signal:   oklch(76% 0.17 128);
+  --color-signal-ink: oklch(42% 0.11 130);
+  --color-signal-bg: oklch(95% 0.05 125);
+  --color-data:     oklch(46% 0.11 250);
+  --color-data-2:   oklch(64% 0.08 245);
+  --color-model:    oklch(47% 0.12 300);
+  --color-model-bg: oklch(95% 0.02 300);
+  --color-warn:     oklch(58% 0.13 70);
+  --color-warn-bg:  oklch(95% 0.05 85);
+  --color-alarm:    oklch(52% 0.19 27);
+  --color-alarm-bg: oklch(94% 0.04 25);
+  --color-heat:     oklch(62% 0.16 45);
+  --color-pipe:     oklch(72% 0.015 250);
+  --color-focus:    oklch(55% 0.15 250);
+  --font-display: "DIN Alternate","DIN Condensed","Bahnschrift","Roboto Condensed","Arial Narrow",sans-serif;
+  --font-body: "Avenir Next","Segoe UI","Noto Sans TC","PingFang TC",system-ui,sans-serif;
+  --font-num: "DIN Alternate","Bahnschrift","Roboto Mono",ui-monospace,monospace;
+  --font-mono: ui-monospace,"SF Mono",Menlo,Consolas,monospace;
+  --space-3xs:2px; --space-2xs:4px; --space-xs:8px; --space-sm:12px; --space-md:16px; --space-lg:24px; --space-xl:32px;
+  --text-xs:11px; --text-sm:12.5px; --text-md:14px; --text-lg:17px; --text-xl:22px; --text-2xl:30px;
+  --radius:4px; --radius-pill:999px;
+  --ease-out:cubic-bezier(0.16,1,0.3,1); --dur-short:160ms;
+}
+*{box-sizing:border-box}
+html,body{margin:0;min-height:100%;overflow-x:clip}
+body{background:var(--color-paper);color:var(--color-ink);font:var(--text-md)/1.5 var(--font-body);-webkit-font-smoothing:antialiased}
+button{font:inherit;color:inherit;cursor:pointer;border:0;background:none}
+input,select{font:inherit;color:inherit}
+:focus-visible{outline:2px solid var(--color-focus);outline-offset:2px}
+.mono{font-family:var(--font-mono)}
+.num{font-family:var(--font-num);font-variant-numeric:tabular-nums}
+h1,h2,h3{margin:0;font-style:normal}
+h2{font:700 var(--text-md)/1.3 var(--font-display);letter-spacing:.02em}
+p{margin:0}
+a{color:var(--color-data)}
+code{font-family:var(--font-mono);font-size:var(--text-xs);background:var(--color-panel-2);padding:1px 5px;border-radius:var(--radius)}
+
+/* ---------- frame ---------- */
+.app{display:grid;grid-template-rows:auto auto 1fr;min-height:100vh}
+.top{display:flex;align-items:center;gap:var(--space-md);padding:var(--space-xs) var(--space-md);background:var(--color-ink);color:var(--color-ink-inv);flex-wrap:wrap}
+.brand{display:flex;align-items:center;gap:var(--space-sm);min-width:0}
+.brand img{width:42px;height:42px;border-radius:50%;flex:none;display:block}
+.brand b{display:block;font:700 var(--text-lg)/1.1 var(--font-display);letter-spacing:.03em;white-space:nowrap}
+.brand small{display:block;font-size:var(--text-xs);opacity:.7;white-space:nowrap}
+.tfield{display:flex;flex-direction:column;padding:0 var(--space-sm);border-left:1px solid oklch(40% 0.05 262)}
+.tfield .k{font-size:10px;opacity:.65;letter-spacing:.08em;text-transform:uppercase}
+.tfield .v{font:600 var(--text-lg)/1.1 var(--font-num);font-variant-numeric:tabular-nums}
+.status{flex:1 1 260px;display:flex;align-items:center;gap:var(--space-xs);padding:var(--space-2xs) var(--space-sm);border-radius:var(--radius);background:oklch(32% 0.06 262);min-width:0}
+.status .dot{width:9px;height:9px;border-radius:50%;background:var(--color-signal);flex:none}
+.status b{font-size:var(--text-sm)}
+.status span{font-size:var(--text-sm);opacity:.75;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.status.warn{background:var(--color-warn-bg);color:var(--color-ink)} .status.warn .dot{background:var(--color-warn)}
+.status.alarm{background:var(--color-alarm);color:var(--color-ink-inv)} .status.alarm .dot{background:var(--color-ink-inv);animation:blink 1s steps(2) infinite}
+@keyframes blink{50%{opacity:.2}}
+.tactions{display:flex;gap:var(--space-xs);align-items:center}
+.chip{display:inline-flex;align-items:center;gap:6px;height:30px;padding:0 var(--space-sm);border-radius:var(--radius);border:1px solid oklch(45% 0.05 262);font-size:var(--text-sm);white-space:nowrap;color:var(--color-ink-inv)}
+.chip i{width:8px;height:8px;border-radius:50%;background:var(--color-ink-3)}
+.chip.live i{background:var(--color-signal)} .chip.demo i{background:var(--color-warn)}
+.top .seg{border-color:oklch(45% 0.05 262);background:transparent}
+.top .seg button{color:var(--color-ink-inv);border-color:oklch(45% 0.05 262)}
+.top .seg button.on{background:var(--color-ink-inv);color:var(--color-ink)}
+.seg{display:inline-flex;border:1px solid var(--color-rule);border-radius:var(--radius);overflow:hidden;background:var(--color-panel)}
+.seg button{padding:4px 10px;font-size:var(--text-sm);border-left:1px solid var(--color-rule);white-space:nowrap}
+.seg button:first-child{border-left:0}
+.seg button.on{background:var(--color-ink);color:var(--color-ink-inv)}
+.btn-stop{height:30px;padding:0 var(--space-sm);border-radius:var(--radius);background:var(--color-alarm);color:var(--color-ink-inv);font:700 var(--text-sm) var(--font-display);letter-spacing:.06em;white-space:nowrap}
+
+.nav{display:flex;gap:0;padding:0 var(--space-md);background:var(--color-panel);border-bottom:1px solid var(--color-rule);overflow-x:auto}
+.nav button{padding:11px 14px 9px;font:600 var(--text-md) var(--font-display);letter-spacing:.02em;color:var(--color-ink-2);border-bottom:3px solid transparent;white-space:nowrap}
+.nav button:hover{color:var(--color-ink)}
+.nav button.on{color:var(--color-ink);border-bottom-color:var(--color-ink)}
+.nav .badge[hidden]{display:none}
+.nav .badge{display:inline-block;min-width:18px;padding:0 5px;margin-left:6px;border-radius:var(--radius);background:var(--color-alarm);color:var(--color-ink-inv);font:600 11px/18px var(--font-body);text-align:center}
+
+main{padding:var(--space-md) var(--space-md) var(--space-xl);max-width:1400px;width:100%;margin:0 auto}
+.view[hidden]{display:none}
+.grid{display:grid;gap:var(--space-sm)}
+.g2{grid-template-columns:repeat(auto-fit,minmax(min(340px,100%),1fr))}
+.g-main{grid-template-columns:minmax(0,1.7fr) minmax(0,1fr)}
+@media (max-width:960px){.g-main{grid-template-columns:minmax(0,1fr)}}
+.stack{display:grid;gap:var(--space-sm)}
+
+/* panels: one hairline, no shadow, no nesting */
+.card{background:var(--color-panel);border:1px solid var(--color-rule);border-radius:var(--radius);min-width:0}
+.card-hd{display:flex;align-items:baseline;justify-content:space-between;gap:var(--space-sm);padding:var(--space-sm) var(--space-md) 0;flex-wrap:wrap}
+.card-hd .hint{font-size:var(--text-sm);color:var(--color-ink-3)}
+.card-bd{padding:var(--space-xs) var(--space-md) var(--space-md)}
+.card-bd.flush{padding:var(--space-2xs) 0}
+.lead{font-size:var(--text-md);color:var(--color-ink-2);max-width:72ch}
+.small{font-size:var(--text-sm);color:var(--color-ink-2)}
+.muted{color:var(--color-ink-3)}
+hr.sep{border:0;border-top:1px solid var(--color-rule-2);margin:var(--space-sm) 0}
+
+/* ---------- state labels: text, not candy ---------- */
+.pat{display:inline-block;font:600 9.5px/1.4 var(--font-mono);letter-spacing:.06em;text-transform:uppercase;padding:0 4px;border:1px solid var(--color-rule);border-radius:2px;color:var(--color-ink-2);white-space:nowrap;vertical-align:1px}
+.pat-soft{border-style:dashed;color:var(--color-model);border-color:var(--color-model)}
+.pat-demo{color:var(--color-warn);border-color:var(--color-warn)}
+.st{display:inline-flex;align-items:center;gap:5px;font:600 var(--text-xs)/1.5 var(--font-body);white-space:nowrap;color:var(--color-ink-2)}
+.st::before{content:"";width:7px;height:7px;border-radius:50%;background:currentColor}
+.st-ok{color:var(--color-signal-ink)} .st-warn{color:var(--color-warn)} .st-bad{color:var(--color-alarm)}
+.st-info{color:var(--color-data)} .st-off{color:var(--color-ink-3)}
+
+/* ---------- the answer ---------- */
+.decide{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:var(--space-md);align-items:end;padding:var(--space-md) var(--space-md) var(--space-md);background:var(--color-panel);border:1px solid var(--color-rule);border-top:4px solid var(--color-ink-3);border-radius:var(--radius)}
+.decide .ico{display:none}
+.decide.go{border-top-color:var(--color-signal)}
+.decide.sched{border-top-color:var(--color-data)}
+.decide.hold{border-top-color:var(--color-warn)}
+.decide h1{font:700 var(--text-2xl)/1.15 var(--font-display);letter-spacing:.01em;margin:2px 0 6px;overflow-wrap:anywhere}
+.decide .why{font-size:var(--text-md);color:var(--color-ink-2);max-width:80ch}
+.decide .acts{display:flex;gap:var(--space-xs);flex-wrap:wrap;justify-content:flex-end}
+@media (max-width:700px){.decide{grid-template-columns:minmax(0,1fr)}.decide .acts{justify-content:flex-start}.decide h1{font-size:var(--text-xl)}}
+
+.btn{height:34px;padding:0 var(--space-md);border-radius:var(--radius);border:1px solid var(--color-rule);background:var(--color-panel);font-size:var(--text-sm);font-weight:600;white-space:nowrap;transition:background-color var(--dur-short) var(--ease-out)}
+.btn:hover{background:var(--color-panel-2)}
+.btn:active{transform:translateY(1px)}
+.btn.pri{background:var(--color-ink);border-color:var(--color-ink);color:var(--color-ink-inv)}
+.btn.pri:hover{background:oklch(32% 0.07 262)}
+.btn.go{background:var(--color-signal);border-color:var(--color-signal);color:var(--color-ink)}
+.btn.go:hover{background:oklch(72% 0.17 128)}
+.btn:disabled{opacity:.45;cursor:not-allowed}
+
+/* ---------- readings ---------- */
+.tiles{display:grid;gap:0;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));background:var(--color-panel);border:1px solid var(--color-rule);border-radius:var(--radius);overflow:hidden}
+.tile{padding:var(--space-sm) var(--space-md);display:grid;gap:2px;min-width:0;text-align:left;border-right:1px solid var(--color-rule-2);border-bottom:1px solid var(--color-rule-2);margin:0 -1px -1px 0}
+.tile .hd{display:flex;justify-content:space-between;align-items:center;gap:6px}
+.tile .tag{font:600 10px var(--font-mono);color:var(--color-ink-3)}
+.tile .nm{font-size:var(--text-sm);color:var(--color-ink-2);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.tile .val{font:700 30px/1.05 var(--font-num);font-variant-numeric:tabular-nums;letter-spacing:.01em}
+.tile .val small{font:500 var(--text-sm) var(--font-body);color:var(--color-ink-3);margin-left:4px}
+.tile svg.spark{width:100%;height:26px;display:block}
+.tile .lim{font-size:10.5px;color:var(--color-ink-3)}
+.tile.warn{background:var(--color-warn-bg)} .tile.warn .val{color:var(--color-warn)}
+.tile.alarm{background:var(--color-alarm-bg)} .tile.alarm .val{color:var(--color-alarm)}
+.tile.stale .val{color:var(--color-ink-3)}
+.tile.soft .tag::after{content:" · calc";color:var(--color-model)}
+
+/* ---------- switches ---------- */
+.act{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:4px var(--space-sm);align-items:center;padding:var(--space-sm) var(--space-md);border-top:1px solid var(--color-rule-2)}
+.act:first-child{border-top:0}
+.act .nm{font:700 var(--text-lg) var(--font-display)}
+.act .sub{font-size:var(--text-sm);color:var(--color-ink-2);grid-column:1/-1}
+.sw{position:relative;width:54px;height:28px;border-radius:var(--radius);background:var(--color-panel-2);border:1px solid var(--color-rule);transition:background-color var(--dur-short) var(--ease-out)}
+.sw::after{content:"";position:absolute;top:3px;left:3px;width:20px;height:20px;border-radius:2px;background:var(--color-ink-3);transition:transform var(--dur-short) var(--ease-out),background-color var(--dur-short) var(--ease-out)}
+.sw.on{background:var(--color-signal);border-color:var(--color-signal)} .sw.on::after{transform:translateX(26px);background:var(--color-ink)}
+.sw.valve.on{background:var(--color-data);border-color:var(--color-data)} .sw.valve.on::after{background:var(--color-ink-inv)}
+.sw:disabled{opacity:.5;cursor:not-allowed}
+
+/* ---------- key/value, tables ---------- */
+.kv{display:flex;justify-content:space-between;gap:var(--space-sm);padding:6px 0;border-top:1px solid var(--color-rule-2);font-size:var(--text-md)}
+.kv:first-child{border-top:0}
+.kv .k{color:var(--color-ink-2)}
+.kv .v{font-family:var(--font-num);font-variant-numeric:tabular-nums;text-align:right}
+.tbl{width:100%;border-collapse:collapse;font-size:var(--text-sm)}
+.tbl th{text-align:left;font:600 var(--text-xs) var(--font-body);color:var(--color-ink-3);letter-spacing:.04em;padding:6px var(--space-md);border-bottom:1px solid var(--color-rule);white-space:nowrap}
+.tbl td{padding:7px var(--space-md);border-bottom:1px solid var(--color-rule-2);vertical-align:top}
+.tbl td.n{font-family:var(--font-num);font-variant-numeric:tabular-nums;text-align:right;white-space:nowrap}
+.tbl tr:last-child td{border-bottom:0}
+.tbl-wrap{overflow-x:auto}
+
+/* ---------- figures: a row of numbers split by hairlines, not boxes ---------- */
+.metrics{display:grid;gap:var(--space-sm) var(--space-lg);grid-template-columns:repeat(auto-fit,minmax(120px,1fr))}
+.metric{padding:var(--space-2xs) 0 0;border-top:1px solid var(--color-rule-2)}
+.metric .k{font-size:var(--text-xs);color:var(--color-ink-3)}
+.metric .v{font:700 var(--text-xl)/1.2 var(--font-num);font-variant-numeric:tabular-nums}
+.metric .v small{font:500 var(--text-xs) var(--font-body);color:var(--color-ink-3)}
+.metric .s{font-size:var(--text-xs);color:var(--color-ink-2)}
+
+/* ---------- charts ---------- */
+svg.chart{width:100%;height:auto;display:block;font-family:var(--font-body)}
+svg.chart .ax{stroke:var(--color-rule);stroke-width:1}
+svg.chart .grid{stroke:var(--color-rule-2);stroke-width:1}
+svg.chart text{fill:var(--color-ink-3);font-size:11px;font-family:var(--font-num)}
+svg.chart .lbl{fill:var(--color-ink-2);font:11.5px var(--font-body)}
+.legend{display:flex;gap:var(--space-md);flex-wrap:wrap;font-size:var(--text-sm);color:var(--color-ink-2);padding:var(--space-2xs) 0}
+.legend i{display:inline-block;width:14px;height:3px;vertical-align:3px;margin-right:6px}
+.legend i.dot{width:8px;height:8px;border-radius:50%;vertical-align:0}
+.legend i.band{height:9px;vertical-align:-1px;opacity:.4}
+
+/* ---------- twin status ---------- */
+.verdict{font-size:var(--text-md);color:var(--color-ink);padding-top:var(--space-sm);border-top:1px solid var(--color-rule-2)}
+.tests{display:grid;gap:0;grid-template-columns:repeat(auto-fit,minmax(190px,1fr))}
+.test{display:grid;gap:3px;padding:var(--space-2xs) var(--space-md) var(--space-sm) var(--space-md);border-left:1px solid var(--color-rule-2)}
+.test:first-child{border-left:0;padding-left:0}
+.test .h{display:flex;justify-content:space-between;align-items:center;gap:var(--space-xs);font:700 var(--text-md) var(--font-display)}
+.test .e{font-size:var(--text-sm);color:var(--color-ink-2)}
+.note{font-size:var(--text-sm);color:var(--color-ink-2);background:var(--color-panel-2);border-radius:var(--radius);padding:var(--space-xs) var(--space-sm)}
+.note.warn{background:var(--color-warn-bg)}
+.field{display:grid;gap:3px;font-size:var(--text-sm);color:var(--color-ink-2)}
+.field input,.field select{height:34px;padding:0 var(--space-xs);border:1px solid var(--color-rule);border-radius:var(--radius);background:var(--color-panel);font:var(--text-md) var(--font-num);color:var(--color-ink)}
+.fields{display:grid;gap:var(--space-sm);grid-template-columns:repeat(auto-fit,minmax(150px,1fr))}
+.log{max-height:280px;overflow:auto;font-size:var(--text-sm)}
+.log .row{display:grid;grid-template-columns:52px 104px minmax(0,1fr);gap:var(--space-xs);padding:6px var(--space-md);border-top:1px solid var(--color-rule-2)}
+.log .row:first-child{border-top:0}
+.log .t{font-family:var(--font-num);color:var(--color-ink-3)}
+.empty{padding:var(--space-md);color:var(--color-ink-3);font-size:var(--text-sm)}
+.alarm-row{display:grid;grid-template-columns:auto minmax(0,1fr) auto;gap:var(--space-sm);align-items:center;padding:var(--space-xs) var(--space-md);border-top:1px solid var(--color-rule-2)}
+.alarm-row:first-child{border-top:0}
+.pri-1{color:var(--color-alarm);font:700 var(--text-md) var(--font-display)} .pri-2{color:var(--color-warn);font:700 var(--text-md) var(--font-display)}
+details.card>summary{list-style:none}
+details.card>summary::-webkit-details-marker{display:none}
+details.card>summary h2::before{content:"+ ";color:var(--color-ink-3)}
+details.card[open]>summary h2::before{content:"− "}
+
+/* ---------- system map ---------- */
+.map-ctl{display:flex;align-items:center;gap:var(--space-xs);flex-wrap:wrap}
+.map-box{height:calc(100vh - 280px);min-height:300px;padding:0 var(--space-xs)}
+.map-box svg{width:100%;height:100%;display:block}
+.m-pipe{fill:none;stroke:var(--color-pipe);stroke-width:6;stroke-linecap:round;stroke-linejoin:round}
+.m-flow{fill:none;stroke:transparent;stroke-width:6;stroke-linecap:round;stroke-linejoin:round}
+.m-flow.on{stroke:var(--color-data);stroke-dasharray:12 9;animation:mflow .9s linear infinite}
+@keyframes mflow{to{stroke-dashoffset:-21}}
+@media (prefers-reduced-motion:reduce){.m-flow.on{animation:none;stroke-dasharray:none}.status.alarm .dot{animation:none}}
+.m-eq{fill:var(--color-panel);stroke:var(--color-ink-2);stroke-width:1.6}
+.m-fibre{stroke:var(--color-ink-3);stroke-width:1.1}
+.m-arrow{fill:none;stroke:var(--color-model);stroke-width:1.8;stroke-linecap:round}
+.m-liquid{fill:var(--color-panel-2)}
+.m-glow{fill:none;stroke:transparent;stroke-width:0}
+.m-glow.on{fill:var(--color-signal-bg);stroke:var(--color-signal);stroke-width:1.5}
+.m-led{fill:var(--color-rule)}.m-led.on{fill:var(--color-signal)}
+.m-pumpsym{fill:none;stroke:var(--color-ink-2);stroke-width:1.6;stroke-linejoin:round}
+.m-valve{stroke:var(--color-ink);stroke-width:1.6}.m-valve.open{fill:var(--color-panel)}.m-valve.shut{fill:var(--color-ink)}
+.m-hot{cursor:pointer;outline:none}
+.m-hot:hover .m-eq,.m-hot:focus .m-eq,.m-hot:hover .m-valve,.m-hot:focus .m-valve{stroke:var(--color-focus);stroke-dasharray:4 3;stroke-width:2.2}
+.m-bub{fill:var(--color-panel);stroke:var(--color-ink-2);stroke-width:1.4}
+.m-lead{stroke:var(--color-ink-3);stroke-width:1.2}
+.m-warn .m-bub{fill:var(--color-warn-bg);stroke:var(--color-warn)}.m-bad .m-bub{fill:var(--color-alarm-bg);stroke:var(--color-alarm)}
+#map-svg text{font-family:var(--font-body)}
+.m-tag{font:600 10px var(--font-mono);fill:var(--color-ink)}
+.m-val{font:700 15px var(--font-num);fill:var(--color-ink)}
+.m-sub{font-size:11px;fill:var(--color-ink-2)}
+.m-name{font:700 13px var(--font-display);fill:var(--color-ink);letter-spacing:.02em}
+.m-ctl{font-size:12px;font-weight:600;fill:var(--color-data)}
+
+@media (max-width:640px){
+  .top{padding:var(--space-xs) var(--space-sm)}.tfield{display:none}
+  main{padding:var(--space-sm) var(--space-sm) var(--space-lg)}
+  .tile .val{font-size:26px}
+  .map-box{height:auto;min-height:0}
+  .test{border-left:0;padding-left:0}
+}
+@media (prefers-reduced-motion:reduce){*{transition:none!important}}
+</style>
+</head>
+<body>
+<div class="app">
+<header class="top">
+  <div class="brand">
+    <img src="data:image/png;base64,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" alt="GEMs Taiwan ReLeaf" width="42" height="42">
+    <div><b>ReLeaf BR-01</b><small data-t="brand.sub">GEMs Taiwan · hollow-fibre bioreactor</small></div>
+  </div>
+  <div class="tfield"><span class="k" data-t="top.run">Run time</span><span class="v" id="t-run">0h 00m</span></div>
+  <div class="tfield"><span class="k" data-t="top.clock">Clock</span><span class="v" id="t-clock">--:--</span></div>
+  <div class="status" id="status"><span class="dot"></span><div style="min-width:0"><b id="st-h">—</b> <span id="st-s"></span></div></div>
+  <div class="tactions">
+    <div class="seg" role="group" aria-label="Language"><button data-lang="en" class="on">EN</button><button data-lang="zh">繁中</button></div>
+    <button class="chip demo" id="link-btn"><i></i><span id="link-txt">Demo data</span></button>
+    <button class="btn-stop" id="stop" data-t="top.stop">SAFE STATE</button>
+  </div>
+</header>
+<nav class="nav" id="nav">
+  <button data-view="today" class="on"><span data-t="nav.today">Today</span><span class="badge" id="nav-badge" hidden>0</span></button>
+  <button data-view="map" data-t="nav.map">System map</button>
+  <button data-view="twin" data-t="nav.twin">Growth twin</button>
+  <button data-view="weather" data-t="nav.weather">Weather</button>
+  <button data-view="data" data-t="nav.data">Data</button>
+  <button data-view="setup" data-t="nav.setup">Setup</button>
+</nav>
+<main>
+  <section class="view" id="v-today"></section>
+  <section class="view" id="v-map" hidden></section>
+  <section class="view" id="v-twin" hidden></section>
+  <section class="view" id="v-weather" hidden></section>
+  <section class="view" id="v-data" hidden></section>
+  <section class="view" id="v-setup" hidden></section>
+</main>
+</div>
+<script>
+(function(){
+"use strict";
+
+/* ================================================================
+   0. LANGUAGE, STORAGE, SMALL HELPERS
+   ================================================================ */
+function lsGet(k){ try{ return localStorage.getItem(k); }catch(e){ return null; } }
+function lsSet(k,v){ try{ localStorage.setItem(k,v); }catch(e){} }
+var LANG = lsGet("releaf.lang")==="zh" ? "zh" : "en";
+function L(en,zh){ return LANG==="zh" ? zh : en; }
+function N(pair){ return pair ? (LANG==="zh" ? pair[1] : pair[0]) : ""; }
+var DICT = {
+  "brand.sub":["GEMs Taiwan · hollow-fibre bioreactor","GEMs Taiwan · 中空纖維生物反應器"],
+  "top.run":["Run time","運行時間"], "top.clock":["Clock","時鐘"], "top.stop":["SAFE STATE","安全狀態"],
+  "nav.today":["Today","今天"], "nav.twin":["Growth twin","生長孿生"],
+  "nav.weather":["Weather","天氣"], "nav.map":["System map","系統圖"], "nav.data":["Data","數據"], "nav.setup":["Setup","設定"]
+};
+function applyStatic(){
+  document.documentElement.lang = LANG==="zh" ? "zh-Hant" : "en";
+  [].forEach.call(document.querySelectorAll("[data-t]"), function(n){ var d=DICT[n.dataset.t]; if(d) n.textContent=d[LANG==="zh"?1:0]; });
+  [].forEach.call(document.querySelectorAll("[data-lang]"), function(b){ b.classList.toggle("on", b.dataset.lang===LANG); });
+}
+function $(s,r){ return (r||document).querySelector(s); }
+function esc(s){ return String(s).replace(/[&<>"]/g,function(c){return {"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c];}); }
+function fmt(v,d){ return (v==null||!isFinite(v)) ? "—" : Number(v).toFixed(d==null?2:d); }
+function clamp(v,a,b){ return v<a?a:(v>b?b:v); }
+function pad(n){ return (n<10?"0":"")+n; }
+function hm(ms){ var d=new Date(ms); return pad(d.getHours())+":"+pad(d.getMinutes()); }
+function dayHm(ms){
+  var d=new Date(ms), now=new Date(nowT());
+  var same = d.toDateString()===now.toDateString();
+  var tmr = new Date(now.getTime()+864e5).toDateString()===d.toDateString();
+  return (same ? L("today ","今天 ") : tmr ? L("tomorrow ","明天 ") : (d.getMonth()+1)+"/"+d.getDate()+" ")+hm(ms);
+}
+function durH(h){ if(h==null||!isFinite(h)) return "—"; var H=Math.floor(h), M=Math.round((h-H)*60); if(M===60){H++;M=0;} return H+"h "+pad(M)+"m"; }
+function iso(ms){ return new Date(ms).toISOString(); }
+function median(a){ if(!a.length) return null; var s=a.slice().sort(function(x,y){return x-y;}), m=s.length>>1; return s.length%2 ? s[m] : (s[m-1]+s[m])/2; }
+function randn(){ var u=0,v=0; while(!u)u=Math.random(); while(!v)v=Math.random(); return Math.sqrt(-2*Math.log(u))*Math.cos(2*Math.PI*v); }
+function pct(a,p){ var s=a.slice().sort(function(x,y){return x-y;}); var i=(s.length-1)*p, lo=Math.floor(i), hi=Math.ceil(i); return s[lo]+(s[hi]-s[lo])*(i-lo); }
+
+/* ================================================================
+   1. THE PLANT AS OF 21 OCTOBER
+   Seven measured channels, two soft (computed) ones, two actuators.
+   PAT class after the FDA PAT guidance: IN-LINE = sensor in the stream;
+   SOFT = no instrument, a model produces the number.
+   ================================================================ */
+var PSI_BAR = 0.0689476;
+var CH = {
+  od:  {tag:"AT-01", n:["Cell density","細胞密度"], unit:"OD600", dec:3, min:0, max:2, pat:"in",
+        src:["Inline photometer on the lumen loop","內腔迴路管線內光度計"]},
+  ph:  {tag:"AT-02", n:["pH, lumen","pH（內腔）"], unit:"pH", dec:2, min:5.5, max:8.5, lo:6.4, hi:7.6, wlo:6.6, whi:7.4, pat:"in",
+        src:["pH probe in the lumen loop","內腔迴路 pH 探針"]},
+  flow:{tag:"FT-01", n:["Loop flow","迴路流量"], unit:"mL/min", dec:0, min:0, max:460, lo:80, whi:430, pat:"in",
+        src:["Flow meter; pump speed is set by hand","流量計；幫浦轉速手動設定"]},
+  tmp: {tag:"PDT-01", n:["Trans-membrane pressure","跨膜壓差"], unit:"bar", dec:3, min:-0.1, max:0.7, hi:0.5, whi:0.4, pat:"soft",
+        src:["Computed: mean(PT-01, PT-03) − mean(PT-04, PT-05)","計算值：平均(PT-01, PT-03) − 平均(PT-04, PT-05)"]},
+  pt1: {tag:"PT-01", n:["Lumen in","內腔進口"],  unit:"psi", dec:2, min:0, max:10, whi:8, pat:"in", src:["Pressure transducer","壓力傳感器"]},
+  pt3: {tag:"PT-03", n:["Lumen out","內腔出口"], unit:"psi", dec:2, min:0, max:10, whi:8, pat:"in", src:["Pressure transducer","壓力傳感器"]},
+  pt4: {tag:"PT-04", n:["Shell out (top)","殼側出口（上）"],  unit:"psi", dec:2, min:0, max:10, pat:"in", src:["Pressure transducer","壓力傳感器"]},
+  pt5: {tag:"PT-05", n:["Shell in (bottom)","殼側進口（下）"], unit:"psi", dec:2, min:0, max:10, pat:"in", src:["Pressure transducer","壓力傳感器"]},
+  foul:{tag:"FI-01", n:["Fouling ratio","堵塞比"], unit:"×", dec:2, min:0.5, max:3, hi:2.0, whi:1.5, pat:"soft",
+        src:["Computed: (TMP / flow) ÷ clean baseline","計算值：(TMP／流量) ÷ 乾淨基準"]}
+};
+var MEASURED = ["od","ph","flow","pt1","pt3","pt4","pt5"];
+var TILES = ["od","ph","flow","tmp","foul","pt1","pt3","pt4","pt5"];
+
+/* ================================================================
+   2. SETTINGS (persisted) AND RUNTIME STATE
+   ================================================================ */
+var DEF = {odScale:1.0, odMin:0.5, thr:0.34, allowH:12, lat:25.03, lon:121.57, place:"Taipei",
+           lightMode:"SUGGEST", sigmaY:0.015, transferSd:0.25, speed:120, flowSet:263};
+var CFG = (function(){ var o={}; try{ o=JSON.parse(lsGet("releaf.cfg")||"{}")||{}; }catch(e){} var c={};
+  Object.keys(DEF).forEach(function(k){ c[k] = (o[k]!==undefined) ? o[k] : DEF[k]; }); return c; })();
+function saveCfg(){ lsSet("releaf.cfg", JSON.stringify(CFG)); }
+
+var S = {
+  mode:"demo",                    /* demo | live */
+  runStart: Date.now(), simH:0,   /* demo: virtual process hours */
+  pv:{}, pvT:{},                  /* value and wall time of last update */
+  hist:{}, lastHistH:-1,
+  act:{valve:"OPEN", light:"OFF"},
+  alarms:[], acked:{}, audit:[], log:[], nextLogH:0,
+  link:{on:false, lastIn:null, lastOut:null, inN:0, outN:0, lastLine:"", lastOutLine:"", lastEv:""},
+  /* what the BOARD reports back, as opposed to what we commanded */
+  board:{valve:null, light:null, lock:"NONE", upS:null},
+  foulBase:null, foulBaseN:[], view:"today",
+  bubbles:0, lastAutoH:-99
+};
+TILES.forEach(function(k){ S.hist[k]=[]; S.pv[k]=null; });
+
+function hNow(){ return S.mode==="live" ? (Date.now()-S.runStart)/3.6e6 : S.simH; }
+/* Virtual clock. In demo the process runs faster than the wall, and the
+   weather forecast is read at the process's own time, so the decision and
+   the culture live on one clock. */
+function nowT(){ return S.runStart + hNow()*3.6e6; }
+
+function audit(who, what, why){
+  S.audit.unshift({t:nowT(), h:hNow(), who:who, what:what, why:why, mode:S.mode});
+  if(S.audit.length>500) S.audit.pop();
+}
+
+/* ================================================================
+   3. DEMO PLANT
+   Stands in for the rig when no board is connected. Its growth uses
+   parameters deliberately OFF the LPA prior (slower r, higher K), so the
+   twin has something to discover. Every screen says DEMO while it runs.
+   ================================================================ */
+var DEMO = { X0:0.03, r:0.26, K:1.30, foul:1.0, bubbleUntil:-1 };
+function logistic(t,X0,r,K){ return K/(1+((K-X0)/X0)*Math.exp(-r*t)); }
+function dpNet(q){ q=Math.max(0,q); return 2.427e-4*q + 4.604e-7*q*q; }   /* bar, clean module, 22 °C */
+function demoStep(dtH){
+  S.simH += dtH;
+  var h=S.simH, od=logistic(h,DEMO.X0,DEMO.r,DEMO.K);
+  var open = S.act.valve==="OPEN";
+  var q = Math.max(0, (open ? CFG.flowSet : CFG.flowSet*0.12) + randn()*2);
+  if(q>20) DEMO.foul += dtH*0.0035*(1+od)*(open?1:2.5);
+  var tmp = open ? (0.02 + dpNet(q)*1.2*DEMO.foul) : (0.16*DEMO.foul);
+  var shell = 0.40, dL = open ? dpNet(q)/PSI_BAR : 0.02;
+  var lumen = shell + tmp/PSI_BAR;
+  var odm = od + randn()*0.006;
+  if(Math.random()<0.004) DEMO.bubbleUntil = h + 0.03;          /* a bubble passes the cell */
+  if(h < DEMO.bubbleUntil) odm *= 1.35;
+  var raw = {
+    od: odm, ph: 7.05 - 0.42*od/DEMO.K + randn()*0.01, flow:q,
+    pt1: lumen + dL/2 + randn()*0.015, pt3: lumen - dL/2 + randn()*0.015,
+    pt4: shell - 0.05 + randn()*0.01, pt5: shell + 0.05 + randn()*0.01
+  };
+  MEASURED.forEach(function(k){ acceptValue(k, raw[k]); });
+}
+
+/* ================================================================
+   4. MEASUREMENTS IN: one entry point for demo and board alike
+   ================================================================ */
+var CAL = (function(){ var o={}; try{ o=JSON.parse(lsGet("releaf.cal")||"{}")||{}; }catch(e){}
+  return {odBlank:o.odBlank||0, phWhen:o.phWhen||null, odWhen:o.odWhen||null,
+          odCounts:o.odCounts||0, phSlope:o.phSlope||-5.70, phOffset:o.phOffset||21.34}; })();
+var LAST_OD_COUNTS = null;   /* raw detector counts from the last PV line */
+function saveCal(){ lsSet("releaf.cal", JSON.stringify(CAL)); }
+var LAST_RAW_OD = null;
+function acceptValue(k, v){
+  if(!isFinite(v)) return;
+  if(k==="od"){ LAST_RAW_OD = v; v = v - CAL.odBlank; }
+  S.pv[k]=v; S.pvT[k]=Date.now();
+  if(k==="od") GT.addSample(hNow(), v);
+}
+function derive(){
+  var p=S.pv;
+  if([p.pt1,p.pt3,p.pt4,p.pt5].every(isFinite))
+    p.tmp = ((p.pt1+p.pt3)/2 - (p.pt4+p.pt5)/2) * PSI_BAR;
+  /* Fouling soft sensor: resistance proxy TMP/Q while the valve is open and
+     flow is real, normalised to the first 30 min of the run. ASSUMED law:
+     treats the membrane as a fixed resistance in series with a cake. */
+  if(S.act.valve==="OPEN" && isFinite(p.tmp) && p.flow>50){
+    var idx = p.tmp/p.flow;
+    if(S.foulBase==null){
+      S.foulBaseN.push(idx);
+      if(hNow()>0.5 && S.foulBaseN.length>=5) S.foulBase = median(S.foulBaseN);
+    }
+    if(S.foulBase) p.foul = idx/S.foulBase;
+  }
+  TILES.forEach(function(k){ if(k==="tmp"||k==="foul") S.pvT[k]=S.pvT.pt1; });
+}
+function fresh(k){
+  if(S.mode==="demo") return S.pv[k]!=null;
+  return S.pvT[k] && (Date.now()-S.pvT[k] < 5000);
+}
+function recordHist(){
+  var h=hNow();
+  if(h - S.lastHistH < 1/60) return;          /* one point per process minute */
+  S.lastHistH = h;
+  TILES.forEach(function(k){
+    var v=S.pv[k]; if(v==null||!isFinite(v)) return;
+    var a=S.hist[k]; a.push([h,v]);
+    if(a.length>12000){ S.hist[k]=a.filter(function(_,i){return i%2===0;}); }
+  });
+}
+
+/* ================================================================
+   5. GROWTH TWIN
+   Logistic X(t) = K / (1 + ((K−X0)/X0)·e^(−r t)), t = hours since start.
+   Prior from the 19 Sep LPA run, widened for the vessel transfer.
+   Every 0.1 h the OD samples in that bin are reduced to their median
+   (a passing bubble cannot move a median), the point is scored against
+   the forecast made 2 h earlier, and the parameters are re-fitted by MAP:
+   least squares on the data plus a penalty for leaving the prior.
+   Cabaneros Lopez et al. 2020 re-estimate every 15 min the same way;
+   Sinner et al. 2021 set NRMSE < 15 % as the acceptance line.
+   ================================================================ */
+var LPA = {"meta":{"source":"02_Data/20260919_OptoLPA_ACCD_Run1_ODresults.xlsx","generated_by":"03_Scripts/fit_lpa_growth_20260919.py","strain":"ACCD (B. subtilis, CcaSR optogenetic)","vessel":"LPA plate, 150 uL/well, plate-reader OD600","units":"OD600 background-subtracted, plate-reader scale (NOT the inline photometer scale)","z_cut":3.5,"sigma_y":0.014772883782054703},"points":[{"arm":"R1","rep":1,"t":2.0,"raw":0.108,"bg":0.061,"od":0.047,"z":0.0,"flag":false},{"arm":"R2","rep":1,"t":2.0,"raw":0.108,"bg":0.061,"od":0.047,"z":0.0,"flag":false},{"arm":"R3","rep":1,"t":2.0,"raw":0.103,"bg":0.061,"od":0.042,"z":-0.3373,"flag":false},{"arm":"G1","rep":1,"t":2.0,"raw":0.118,"bg":0.061,"od":0.057,"z":0.6745,"flag":false},{"arm":"G1","rep":2,"t":2.0,"raw":0.089,"bg":0.061,"od":0.028,"z":-1.2816,"flag":false},{"arm":"G1","rep":3,"t":2.0,"raw":0.111,"bg":0.061,"od":0.05,"z":0.2024,"flag":false},{"arm":"G2","rep":1,"t":2.0,"raw":0.109,"bg":0.061,"od":0.048,"z":0.0675,"flag":false},{"arm":"G2","rep":2,"t":2.0,"raw":0.115,"bg":0.061,"od":0.054,"z":0.4722,"flag":false},{"arm":"G2","rep":3,"t":2.0,"raw":0.109,"bg":0.061,"od":0.048,"z":0.0675,"flag":false},{"arm":"G3","rep":1,"t":2.0,"raw":0.106,"bg":0.061,"od":0.045,"z":-0.1349,"flag":false},{"arm":"G3","rep":2,"t":2.0,"raw":0.108,"bg":0.061,"od":0.047,"z":0.0,"flag":false},{"arm":"G3","rep":3,"t":2.0,"raw":0.103,"bg":0.061,"od":0.042,"z":-0.3373,"flag":false},{"arm":"R1","rep":1,"t":4.0,"raw":0.12,"bg":0.059,"od":0.061,"z":-0.0337,"flag":false},{"arm":"R2","rep":1,"t":4.0,"raw":0.114,"bg":0.059,"od":0.055,"z":-0.4384,"flag":false},{"arm":"R3","rep":1,"t":4.0,"raw":0.115,"bg":0.059,"od":0.056,"z":-0.371,"flag":false},{"arm":"G1","rep":1,"t":4.0,"raw":0.121,"bg":0.059,"od":0.062,"z":0.0337,"flag":false},{"arm":"G1","rep":2,"t":4.0,"raw":0.119,"bg":0.059,"od":0.06,"z":-0.1012,"flag":false},{"arm":"G1","rep":3,"t":4.0,"raw":0.12,"bg":0.059,"od":0.061,"z":-0.0337,"flag":false},{"arm":"G2","rep":1,"t":4.0,"raw":0.123,"bg":0.059,"od":0.064,"z":0.1686,"flag":false},{"arm":"G2","rep":2,"t":4.0,"raw":0.149,"bg":0.059,"od":0.09,"z":1.9223,"flag":false},{"arm":"G2","rep":3,"t":4.0,"raw":0.126,"bg":0.059,"od":0.067,"z":0.371,"flag":false},{"arm":"G3","rep":1,"t":4.0,"raw":0.122,"bg":0.059,"od":0.063,"z":0.1012,"flag":false},{"arm":"G3","rep":2,"t":4.0,"raw":0.123,"bg":0.059,"od":0.064,"z":0.1686,"flag":false},{"arm":"G3","rep":3,"t":4.0,"raw":0.119,"bg":0.059,"od":0.06,"z":-0.1012,"flag":false},{"arm":"R1","rep":1,"t":6.0,"raw":0.201,"bg":0.059,"od":0.142,"z":-0.1749,"flag":false},{"arm":"R2","rep":1,"t":6.0,"raw":0.194,"bg":0.059,"od":0.135,"z":-0.5246,"flag":false},{"arm":"R3","rep":1,"t":6.0,"raw":0.188,"bg":0.059,"od":0.129,"z":-0.8244,"flag":false},{"arm":"G1","rep":1,"t":6.0,"raw":0.295,"bg":0.059,"od":0.236,"z":4.5216,"flag":true},{"arm":"G1","rep":2,"t":6.0,"raw":0.188,"bg":0.059,"od":0.129,"z":-0.8244,"flag":false},{"arm":"G1","rep":3,"t":6.0,"raw":0.209,"bg":0.059,"od":0.15,"z":0.2248,"flag":false},{"arm":"G2","rep":1,"t":6.0,"raw":0.285,"bg":0.059,"od":0.226,"z":4.022,"flag":true},{"arm":"G2","rep":2,"t":6.0,"raw":0.195,"bg":0.059,"od":0.136,"z":-0.4746,"flag":false},{"arm":"G2","rep":3,"t":6.0,"raw":0.208,"bg":0.059,"od":0.149,"z":0.1749,"flag":false},{"arm":"G3","rep":1,"t":6.0,"raw":0.412,"bg":0.059,"od":0.353,"z":10.3673,"flag":true},{"arm":"G3","rep":2,"t":6.0,"raw":0.383,"bg":0.059,"od":0.324,"z":8.9184,"flag":true},{"arm":"G3","rep":3,"t":6.0,"raw":0.195,"bg":0.059,"od":0.136,"z":-0.4746,"flag":false},{"arm":"R1","rep":1,"t":8.0,"raw":0.256,"bg":0.059,"od":0.197,"z":-0.3597,"flag":false},{"arm":"R2","rep":1,"t":8.0,"raw":0.244,"bg":0.059,"od":0.185,"z":-0.8993,"flag":false},{"arm":"R3","rep":1,"t":8.0,"raw":0.251,"bg":0.059,"od":0.192,"z":-0.5846,"flag":false},{"arm":"G1","rep":1,"t":8.0,"raw":0.269,"bg":0.059,"od":0.21,"z":0.2248,"flag":false},{"arm":"G1","rep":2,"t":8.0,"raw":0.28,"bg":0.059,"od":0.221,"z":0.7195,"flag":false},{"arm":"G1","rep":3,"t":8.0,"raw":0.269,"bg":0.059,"od":0.21,"z":0.2248,"flag":false},{"arm":"G2","rep":1,"t":8.0,"raw":0.29,"bg":0.059,"od":0.231,"z":1.1691,"flag":false},{"arm":"G2","rep":2,"t":8.0,"raw":0.284,"bg":0.059,"od":0.225,"z":0.8993,"flag":false},{"arm":"G2","rep":3,"t":8.0,"raw":0.259,"bg":0.059,"od":0.2,"z":-0.2248,"flag":false},{"arm":"G3","rep":1,"t":8.0,"raw":0.293,"bg":0.059,"od":0.234,"z":1.304,"flag":false},{"arm":"G3","rep":2,"t":8.0,"raw":0.237,"bg":0.059,"od":0.178,"z":-1.2141,"flag":false},{"arm":"G3","rep":3,"t":8.0,"raw":0.25,"bg":0.059,"od":0.191,"z":-0.6295,"flag":false},{"arm":"R1","rep":1,"t":24.0,"raw":1.026,"bg":0.059,"od":0.967,"z":-0.0703,"flag":false},{"arm":"R2","rep":1,"t":24.0,"raw":0.969,"bg":0.059,"od":0.91,"z":-1.6722,"flag":false},{"arm":"R3","rep":1,"t":24.0,"raw":1.026,"bg":0.059,"od":0.967,"z":-0.0703,"flag":false},{"arm":"G1","rep":1,"t":24.0,"raw":1.0,"bg":0.059,"od":0.941,"z":-0.801,"flag":false},{"arm":"G1","rep":2,"t":24.0,"raw":1.02,"bg":0.059,"od":0.961,"z":-0.2389,"flag":false},{"arm":"G1","rep":3,"t":24.0,"raw":1.031,"bg":0.059,"od":0.972,"z":0.0703,"flag":false},{"arm":"G2","rep":1,"t":24.0,"raw":1.059,"bg":0.059,"od":1.0,"z":0.8572,"flag":false},{"arm":"G2","rep":2,"t":24.0,"raw":1.008,"bg":0.059,"od":0.949,"z":-0.5761,"flag":false},{"arm":"G2","rep":3,"t":24.0,"raw":1.036,"bg":0.059,"od":0.977,"z":0.2108,"flag":false},{"arm":"G3","rep":1,"t":24.0,"raw":1.056,"bg":0.059,"od":0.997,"z":0.7729,"flag":false},{"arm":"G3","rep":2,"t":24.0,"raw":1.083,"bg":0.059,"od":1.024,"z":1.5317,"flag":false},{"arm":"G3","rep":3,"t":24.0,"raw":1.081,"bg":0.059,"od":1.022,"z":1.4755,"flag":false}],"curve":{"t":[0.0,0.25,0.5,0.75,1.0,1.25,1.5,1.75,2.0,2.25,2.5,2.75,3.0,3.25,3.5,3.75,4.0,4.25,4.5,4.75,5.0,5.25,5.5,5.75,6.0,6.25,6.5,6.75,7.0,7.25,7.5,7.75,8.0,8.25,8.5,8.75,9.0,9.25,9.5,9.75,10.0,10.25,10.5,10.75,11.0,11.25,11.5,11.75,12.0,12.25,12.5,12.75,13.0,13.25,13.5,13.75,14.0,14.25,14.5,14.75,15.0,15.25,15.5,15.75,16.0,16.25,16.5,16.75,17.0,17.25,17.5,17.75,18.0,18.25,18.5,18.75,19.0,19.25,19.5,19.75,20.0,20.25,20.5,20.75,21.0,21.25,21.5,21.75,22.0,22.25,22.5,22.75,23.0,23.25,23.5,23.75,24.0,24.25,24.5,24.75,25.0,25.25,25.5,25.75,26.0],"fit":[0.0235,0.0253,0.0272,0.0293,0.0315,0.0338,0.0363,0.0391,0.042,0.0451,0.0484,0.0519,0.0558,0.0598,0.0642,0.0688,0.0737,0.079,0.0846,0.0906,0.0969,0.1037,0.1108,0.1184,0.1264,0.1349,0.1439,0.1533,0.1633,0.1737,0.1847,0.1962,0.2083,0.2209,0.234,0.2477,0.2619,0.2766,0.2918,0.3075,0.3237,0.3403,0.3573,0.3747,0.3924,0.4104,0.4286,0.4471,0.4657,0.4844,0.5031,0.5219,0.5406,0.5592,0.5776,0.5959,0.6139,0.6315,0.6489,0.6659,0.6825,0.6986,0.7143,0.7295,0.7441,0.7583,0.772,0.7851,0.7976,0.8097,0.8212,0.8321,0.8426,0.8525,0.8619,0.8708,0.8793,0.8873,0.8948,0.902,0.9087,0.915,0.921,0.9265,0.9318,0.9367,0.9413,0.9457,0.9497,0.9535,0.957,0.9604,0.9634,0.9663,0.969,0.9716,0.9739,0.9761,0.9781,0.98,0.9818,0.9835,0.985,0.9864,0.9877],"lo":[0.0196,0.0213,0.023,0.0249,0.027,0.0292,0.0316,0.0342,0.0369,0.04,0.0432,0.0467,0.0504,0.0545,0.0588,0.0634,0.0682,0.0734,0.079,0.0851,0.0917,0.0984,0.1054,0.113,0.1211,0.1294,0.1381,0.1476,0.1575,0.1673,0.1778,0.1886,0.2004,0.2123,0.2238,0.2364,0.2497,0.2629,0.2767,0.2909,0.3054,0.3206,0.336,0.3519,0.3679,0.3844,0.4008,0.4179,0.4349,0.4523,0.4698,0.4873,0.5053,0.5232,0.5405,0.5577,0.5748,0.5918,0.6086,0.6251,0.6413,0.6575,0.6733,0.6888,0.7039,0.7187,0.733,0.7471,0.7607,0.7739,0.7861,0.798,0.8097,0.8209,0.8317,0.8419,0.8517,0.8611,0.87,0.8784,0.8863,0.8937,0.9009,0.9081,0.9147,0.9205,0.926,0.9309,0.9355,0.9404,0.944,0.9485,0.952,0.955,0.958,0.9603,0.9626,0.9647,0.9667,0.9684,0.9698,0.9711,0.9727,0.9741,0.9751],"hi":[0.0285,0.0304,0.0325,0.0347,0.037,0.0395,0.0421,0.0449,0.048,0.0512,0.0546,0.0583,0.0622,0.0663,0.0707,0.0754,0.0803,0.0856,0.0912,0.0973,0.1034,0.1105,0.1177,0.1253,0.1333,0.1421,0.1512,0.1609,0.1714,0.1821,0.1935,0.2062,0.2191,0.233,0.2475,0.2619,0.2781,0.2944,0.3114,0.329,0.3472,0.3656,0.3845,0.4038,0.4234,0.4432,0.4631,0.4831,0.5032,0.5233,0.5434,0.5632,0.5831,0.6026,0.6211,0.6395,0.6578,0.6757,0.6932,0.7101,0.7264,0.7421,0.7572,0.7716,0.7854,0.7984,0.8107,0.8224,0.8335,0.8441,0.8542,0.8641,0.8727,0.8811,0.8891,0.8965,0.9035,0.9103,0.9166,0.9225,0.9278,0.9322,0.9368,0.9414,0.9456,0.9494,0.9531,0.9563,0.9596,0.9628,0.9658,0.9688,0.9716,0.9744,0.977,0.9795,0.982,0.9842,0.9864,0.9883,0.9901,0.992,0.9937,0.9955,0.9971]},"prior":{"names":["X0","r","K"],"mu_log":[-3.7494223008126455,-1.208499752576937,0.005224974324649492],"sd_log":[0.11607505729218695,0.056707997215577594,0.032802928886723905],"median":{"X0":0.023531335963797688,"r":0.29864498488041824,"K":1.005238648308027},"cv_approx":{"X0":0.11607505729218695,"r":0.056707997215577594,"K":0.032802928886723905}},"pooled":{"params":{"X0":0.023531335963797688,"r":0.29864498488041824,"K":1.005238648308027},"se":{"X0":0.002731401170159516,"r":0.01693555897104497,"K":0.011325807027866223},"n":56,"rmse":0.01910157512640559,"nrmse":0.019178288279523684,"r2":0.9971720507363143,"td_min":139.25842702581957,"t_inflection_h":12.49296128193742},"per_arm":{"R1":{"label":"weak red","params":{"X0":0.02585130735584551,"r":0.28180963555360933,"K":1.009463426826363},"se":{"X0":0.008002661439023041,"r":0.046412035917664886,"K":0.04022292668294179},"n":5,"nrmse":0.010959900928899978},"R2":{"label":"medium red","params":{"X0":0.024739100085518467,"r":0.2793515745075102,"K":0.9517501929380229},"se":{"X0":0.008704688671347383,"r":0.05287893527936216,"K":0.044856200150656465},"n":5,"nrmse":0.012583803104874976},"R3":{"label":"high red","params":{"X0":0.021581125992254382,"r":0.2998423909822195,"K":0.9998230586292284},"se":{"X0":0.005678356543549006,"r":0.038668286264252345,"K":0.02645139694229635},"n":5,"nrmse":0.008385724062741533},"G1":{"label":"weak green","params":{"X0":0.02143952207870699,"r":0.3169007118095103,"K":0.979283471557082},"se":{"X0":0.0035174990145864383,"r":0.023658458709871256,"K":0.012161984065867043},"n":14,"nrmse":0.012683221757905379},"G2":{"label":"medium green","params":{"X0":0.026468030802414742,"r":0.2920025585013496,"K":1.0080454204300855},"se":{"X0":0.0044541805955874035,"r":0.02482874595213457,"K":0.01758833525613265},"n":14,"nrmse":0.01439814025498282},"G3":{"label":"high green","params":{"X0":0.022305063214030425,"r":0.2994895053682635,"K":1.0496391192651477},"se":{"X0":0.00463507140370073,"r":0.029662087454388787,"K":0.021291868828860677},"n":13,"nrmse":0.014593279174705421}},"light_test":{"F_all_arms":3.412391316644641,"df":[15,38],"p_all_arms":0.0011073844933673811,"F_colour":3.406545186124392,"df_colour":[3,50],"p_colour":0.024535821201739902},"loo":[{"arm":"R1","n_early":4,"obs24":0.9670000000000001,"map24":0.9717328002791237,"map_lo":0.9183209149761914,"map_hi":1.0249095510050854,"free24":0.3061189596447583,"err_map_pct":0.4894312594750356,"err_free_pct":-68.3434374721036,"inside":true},{"arm":"R2","n_early":4,"obs24":0.9099999999999999,"map24":0.9725806801791844,"map_lo":0.9346698736686752,"map_hi":1.020238801213888,"free24":0.29603176115346846,"err_map_pct":6.876997821888407,"err_free_pct":-67.4690372358826,"inside":false},{"arm":"R3","n_early":4,"obs24":0.9670000000000001,"map24":0.9688657993288403,"map_lo":0.9073492544927076,"map_hi":1.017656758832392,"free24":0.3549604650325982,"err_map_pct":0.19294719015927964,"err_free_pct":-63.29260961400226,"inside":true},{"arm":"G1","n_early":11,"obs24":0.9580000000000001,"map24":0.9855526338810785,"map_lo":0.9352561567938379,"map_hi":1.0411633305266905,"free24":0.5023299189398351,"err_map_pct":2.876057816396495,"err_free_pct":-47.56472662423433,"inside":true},{"arm":"G2","n_early":11,"obs24":0.9753333333333334,"map24":0.976777065306465,"map_lo":0.9249656706488392,"map_hi":1.0263858708158988,"free24":0.695042728546084,"err_map_pct":0.14802446751178752,"err_free_pct":-28.737929404024207,"inside":true},{"arm":"G3","n_early":10,"obs24":1.0143333333333333,"map24":0.9576494075977293,"map_lo":0.9208217402432417,"map_hi":0.9996737010864833,"free24":0.665600259669069,"err_map_pct":-5.588293697233388,"err_free_pct":-34.38051991432116,"inside":false}],"narrowing":[{"data_to_h":2,"n":12,"od24":0.9785894662383747,"lo":0.8729975794944054,"hi":1.0877199298132405},{"data_to_h":4,"n":24,"od24":0.9474784562638702,"lo":0.8370017417229945,"hi":1.0572882054502775},{"data_to_h":6,"n":32,"od24":0.9906791546567895,"lo":0.8954892207909393,"hi":1.098436614068888},{"data_to_h":8,"n":44,"od24":0.9709543436302763,"lo":0.8782679840690324,"hi":1.0729190638823476},{"data_to_h":24,"n":56,"od24":0.9739019091172837,"lo":0.966828333675056,"hi":0.9801611908329273}],"best":"logistic","sensitivity_outliers_kept":{"params":{"X0":0.03228708856955285,"r":0.268324104985811,"K":1.0213774309550125},"nrmse":0.04524809549649752}};
+var GT = {
+  BIN_H:0.1, HORIZON_H:2,
+  bin:[], binStart:null, pts:[], fc:[], checks:[], q:null, cov:null, fits:0,
+  prior:function(){
+    var P = LPA ? LPA.prior : {mu_log:[Math.log(0.0235),Math.log(0.299),Math.log(1.005)], sd_log:[0.12,0.06,0.03]};
+    var x0 = this.pts.length ? Math.max(this.pts[0][1],0.005) : Math.exp(P.mu_log[0]);
+    return {
+      mu:[Math.log(x0), P.mu_log[1], P.mu_log[2]+Math.log(CFG.odScale)],
+      sd:[0.5, Math.sqrt(P.sd_log[1]*P.sd_log[1] + CFG.transferSd*CFG.transferSd), 0.5]
+    };
+  },
+  reset:function(){ this.bin=[]; this.binStart=null; this.pts=[]; this.fc=[]; this.checks=[]; this.q=null; this.cov=null; this.fits=0; },
+  addSample:function(h,v){
+    if(this.binStart==null) this.binStart=h;
+    if(h - this.binStart >= this.BIN_H){
+      var m = median(this.bin);
+      /* count samples a median rejected as bubbles: >25 % above the median */
+      this.bin.forEach(function(x){ if(m>0.02 && x>m*1.25) S.bubbles++; });
+      if(m!=null) this.closeBin(this.binStart + this.BIN_H/2, m);
+      this.bin=[]; this.binStart=h;
+    }
+    this.bin.push(v);
+  },
+  closeBin:function(h,y){
+    /* score every earlier forecast whose target time has arrived */
+    var still=[], self=this;
+    this.fc.forEach(function(f){
+      if(h >= f.target) self.checks.push({h:h, made:f.made, y:y, mu:f.mu, lo:f.lo, hi:f.hi});
+      else still.push(f);
+    });
+    this.fc=still;
+    if(this.checks.length>400) this.checks.shift();
+    this.pts.push([h,y]);
+    this.fit();
+    if(this.q){
+      var b=this.band([h+this.HORIZON_H], true, 160);
+      this.fc.push({made:h, target:h+this.HORIZON_H, mu:b.mu[0], lo:b.lo[0], hi:b.hi[0]});
+    }
+  },
+  f:function(t,q){ return logistic(t,Math.exp(q[0]),Math.exp(q[1]),Math.exp(q[2])); },
+  resid:function(q,pr){
+    var r=[], sy=CFG.sigmaY, self=this;
+    this.pts.forEach(function(p){ r.push((self.f(p[0],q)-p[1])/sy); });
+    for(var i=0;i<3;i++) r.push((q[i]-pr.mu[i])/pr.sd[i]);
+    return r;
+  },
+  fit:function(){
+    if(this.pts.length<2) return;
+    var pr=this.prior(), q=(this.q||pr.mu).slice(), lam=1e-2, self=this;
+    function jac(q){
+      var f0=self.resid(q,pr), J=[];
+      for(var i=0;i<3;i++){ var qq=q.slice(); qq[i]+=1e-6; var f1=self.resid(qq,pr);
+        J.push(f1.map(function(v,j){ return (v-f0[j])/1e-6; })); }
+      return {f:f0, J:J};   /* J[i][j] = d r_j / d q_i */
+    }
+    function sse(f){ var s=0; for(var i=0;i<f.length;i++) s+=f[i]*f[i]; return s; }
+    var cur=jac(q), cost=sse(cur.f);
+    for(var it=0; it<60; it++){
+      var A=[[0,0,0],[0,0,0],[0,0,0]], g=[0,0,0];
+      for(var a=0;a<3;a++){ for(var b=0;b<3;b++){ var s=0; for(var j=0;j<cur.f.length;j++) s+=cur.J[a][j]*cur.J[b][j]; A[a][b]=s; }
+        var gs=0; for(var j2=0;j2<cur.f.length;j2++) gs+=cur.J[a][j2]*cur.f[j2]; g[a]=-gs; }
+      var M=A.map(function(row,i){ return row.map(function(v,j){ return v + (i===j ? lam*(A[i][i]+1e-9) : 0); }); });
+      var d=solve3(M,g); if(!d) break;
+      var qn=[q[0]+d[0], q[1]+d[1], q[2]+d[2]];
+      var fn=self.resid(qn,pr), cn=sse(fn);
+      if(isFinite(cn) && cn<cost){
+        var done = (cost-cn) < 1e-10*cost;
+        q=qn; cost=cn; lam/=3; cur=jac(q);
+        if(done) break;
+      } else { lam*=4; if(lam>1e8) break; }
+    }
+    var H=[[0,0,0],[0,0,0],[0,0,0]];
+    for(var a2=0;a2<3;a2++) for(var b2=0;b2<3;b2++){ var s2=0; for(var j3=0;j3<cur.f.length;j3++) s2+=cur.J[a2][j3]*cur.J[b2][j3]; H[a2][b2]=s2; }
+    this.q=q; this.cov=inv3(H); this.fits++;
+  },
+  draws:function(n){
+    var C=chol3(this.cov), out=[];
+    for(var i=0;i<n;i++){
+      var z=[randn(),randn(),randn()];
+      out.push([0,1,2].map(function(r){ return this.q[r] + (C? (C[r][0]*z[0]+C[r][1]*z[1]+C[r][2]*z[2]) : 0); }, this));
+    }
+    return out;
+  },
+  /* 5–95 % band at times ts. withNoise adds measurement scatter, which is
+     what makes it a prediction band rather than a band on the curve. */
+  band:function(ts, withNoise, n){
+    var D=this.draws(n||200), self=this, mu=[], lo=[], hi=[];
+    ts.forEach(function(t){
+      var ys=D.map(function(q){ return self.f(t,q) + (withNoise ? randn()*CFG.sigmaY : 0); });
+      mu.push(self.f(t,self.q)); lo.push(pct(ys,0.05)); hi.push(pct(ys,0.95));
+    });
+    return {mu:mu, lo:lo, hi:hi};
+  },
+  params:function(q){ q=q||this.q; return q ? {X0:Math.exp(q[0]), r:Math.exp(q[1]), K:Math.exp(q[2])} : null; },
+  se:function(i){ return this.cov ? Math.sqrt(Math.max(this.cov[i][i],0)) : null; },
+  skill:function(){
+    var c=this.checks.slice(-30); if(c.length<5) return null;
+    var ys=this.pts.map(function(p){return p[1];});
+    var range=Math.max.apply(null,ys)-Math.min.apply(null,ys);
+    var se=0, inb=0;
+    c.forEach(function(k){ se+=(k.mu-k.y)*(k.mu-k.y); if(k.y>=k.lo && k.y<=k.hi) inb++; });
+    var rmse=Math.sqrt(se/c.length);
+    return {n:c.length, rmse:rmse, nrmse: range>0.05 ? rmse/range : null, inBand:inb/c.length};
+  },
+  /* hours from now until OD reaches y, with a band */
+  timeTo:function(y){
+    if(!this.q) return null;
+    var h0=hNow(), self=this;
+    function tOf(q){ var p=self.params(q); if(y>=p.K*0.995) return Infinity; if(y<=p.X0) return 0;
+      return Math.log(((p.K-p.X0)/p.X0)*(y/(p.K-y)))/p.r; }
+    var t=tOf(this.q);
+    var ts=this.draws(200).map(tOf).filter(isFinite);
+    return {h:Math.max(0,t-h0), lo:ts.length>20?Math.max(0,pct(ts,0.05)-h0):null, hi:ts.length>20?Math.max(0,pct(ts,0.95)-h0):null};
+  },
+  zScores:function(){
+    if(!this.q) return null; var pr=this.prior(), q=this.q;
+    return [0,1,2].map(function(i){ return (q[i]-pr.mu[i])/pr.sd[i]; });
+  }
+};
+function solve3(A,b){
+  var M=A.map(function(r,i){ return r.concat([b[i]]); });
+  for(var c=0;c<3;c++){
+    var p=c; for(var r=c+1;r<3;r++) if(Math.abs(M[r][c])>Math.abs(M[p][c])) p=r;
+    if(Math.abs(M[p][c])<1e-300) return null;
+    var t=M[c]; M[c]=M[p]; M[p]=t;
+    for(var r2=0;r2<3;r2++){ if(r2===c) continue; var f=M[r2][c]/M[c][c]; for(var k=c;k<4;k++) M[r2][k]-=f*M[c][k]; }
+  }
+  return [M[0][3]/M[0][0], M[1][3]/M[1][1], M[2][3]/M[2][2]];
+}
+function inv3(A){
+  var cols=[[1,0,0],[0,1,0],[0,0,1]].map(function(e){ return solve3(A,e); });
+  if(cols.some(function(c){return !c;})) return null;
+  return [0,1,2].map(function(i){ return [cols[0][i],cols[1][i],cols[2][i]]; });
+}
+function chol3(A){
+  if(!A) return null; var Lm=[[0,0,0],[0,0,0],[0,0,0]];
+  for(var i=0;i<3;i++) for(var j=0;j<=i;j++){
+    var s=A[i][j]; for(var k=0;k<j;k++) s-=Lm[i][k]*Lm[j][k];
+    if(i===j){ if(s<=0) s=1e-12; Lm[i][i]=Math.sqrt(s); } else Lm[i][j]=s/Lm[j][j];
+  }
+  return Lm;
+}
+
+/* ================================================================
+   6. WEATHER → DEMAND
+   Open-Meteo hourly forecast, 3 days. If the request fails the page
+   falls back to the stored 6 Sep Taipei snapshot, held flat, and says so.
+   Risk drivers are the 0906 heuristics, unchanged (NOT VALIDATED):
+     heat  = (apparent T − 25) / 10        broccoli heat stress from 25 °C
+     vpd   = VPD / 2 kPa
+     dry   = −(Σ rain − Σ ET0) / 20 mm     water deficit from now
+     salt  = −(Σ rain − Σ ET0) / 25 mm     deficit concentrates salts
+   ================================================================ */
+var WX = {src:"none", fetched:null, err:null, hours:[], busy:false};
+var WX_SNAPSHOT = {stamp:"2026-09-06 15:20 CST", T:24, RH:96, AT:27, P:26/24, PP:60, W:6, G:19, ET0:3.0/24, VPD:0.12};
+function wxUrl(){
+  return "https://api.open-meteo.com/v1/forecast?latitude="+CFG.lat+"&longitude="+CFG.lon+
+    "&hourly=temperature_2m,relative_humidity_2m,apparent_temperature,precipitation,precipitation_probability,"+
+    "wind_speed_10m,wind_gusts_10m,et0_fao_evapotranspiration,vapour_pressure_deficit&forecast_days=3&past_days=1&timezone=auto";
+}
+function wxFetch(){
+  if(WX.busy) return; WX.busy=true;
+  var ctl = ("AbortController" in window) ? new AbortController() : null;
+  var to = setTimeout(function(){ if(ctl) ctl.abort(); }, 10000);
+  fetch(wxUrl(), ctl?{signal:ctl.signal}:{}).then(function(r){ if(!r.ok) throw new Error("HTTP "+r.status); return r.json(); })
+  .then(function(j){
+    var H=j.hourly, off=(j.utc_offset_seconds||0)*1000;
+    WX.hours = H.time.map(function(t,i){
+      return {t: Date.parse(t+":00Z") - off, T:H.temperature_2m[i], RH:H.relative_humidity_2m[i], AT:H.apparent_temperature[i],
+              P:H.precipitation[i]||0, PP:H.precipitation_probability[i], W:H.wind_speed_10m[i], G:H.wind_gusts_10m[i],
+              ET0:H.et0_fao_evapotranspiration[i]||0, VPD:H.vapour_pressure_deficit[i]||0};
+    });
+    WX.src="live"; WX.fetched=Date.now(); WX.err=null;
+  }).catch(function(e){
+    WX.err = String(e && e.message || e);
+    if(WX.src!=="live") wxSnapshot();
+  }).then(function(){ clearTimeout(to); WX.busy=false; renderAll(); });
+}
+function wxSnapshot(){
+  var t0=Date.now()-24*3.6e6; t0-=t0%3.6e6;
+  WX.hours=[]; for(var i=0;i<96;i++) WX.hours.push(Object.assign({t:t0+i*3.6e6}, WX_SNAPSHOT));
+  WX.src="snapshot"; WX.fetched=Date.now();
+}
+function riskAt(h){
+  var heat=clamp((h.AT-25)/10,0,1), vpd=clamp(h.VPD/2.0,0,1),
+      dry=clamp(-h.bal/20,0,1), salt=clamp(-h.bal/25,0,1);
+  var drivers={heat:heat,vpd:vpd,dry:dry,salt:salt}, top="heat";
+  Object.keys(drivers).forEach(function(k){ if(drivers[k]>drivers[top]) top=k; });
+  return {v:Math.max(heat,vpd,dry,salt), d:drivers, top:top};
+}
+var DRV = {heat:["heat","高溫"], vpd:["dry air (VPD)","空氣乾燥（VPD）"], dry:["water deficit","缺水"], salt:["salt build-up","鹽分累積"]};
+/* hourly risk from the virtual now forward, water balance accumulated from now */
+function wxAhead(){
+  var t=nowT(), bal=0, out=[];
+  WX.hours.forEach(function(h){
+    if(h.t < t-3.6e6) return;
+    bal += (h.P - h.ET0);
+    var x=Object.assign({}, h, {bal:bal}); x.risk=riskAt(x); out.push(x);
+  });
+  return out;
+}
+function wxCurrent(){ var t=nowT(), best=null; WX.hours.forEach(function(h){ if(!best || Math.abs(h.t-t)<Math.abs(best.t-t)) best=h; }); return best; }
+function wxStale(){
+  if(WX.src!=="live") return true;
+  if(S.mode==="live" && Date.now()-WX.fetched > 3*3.6e6) return true;
+  var ah=wxAhead(); return ah.length < 6;
+}
+
+/* ================================================================
+   7. LEAD TIME AND THE LIGHT DECISION
+   The rule is short on purpose, so it can be audited by reading it.
+     demand   first forecast hour with risk ≥ threshold, within 72 h
+     L        CcaS half-on (1.75 h, Castillo-Hair 2019) + assumed remainder
+     switch   at (demand − L), if the culture is at or above OD_min
+     trust    no P1 alarm, data fresh, forecast live; the model must pass
+              its own acceptance test before AUTO may act on it
+   ================================================================ */
+var LEAD = [
+  {k:["CcaS half-on","CcaS 半開"], h:1.75, tag:"lit", note:["t½ on 105 min, Castillo-Hair 2019 (E. coli, 526 nm)","t½ 105 分鐘，Castillo-Hair 2019（大腸桿菌，526 nm）"]},
+  {k:["Expression + secretion","表現與分泌"], h:null, tag:"verify", note:["not measured","尚未量測"]},
+  {k:["Harvest volume","收集所需體積"], h:null, tag:"verify", note:["depends on dose and permeate rate","取決於劑量與濾液速率"]},
+  {k:["Apply to plants","施用到植物"], h:null, tag:"verify", note:["protocol not fixed","流程未定"]}
+];
+function leadH(){ return 1.75 + CFG.allowH; }
+function trust(){
+  var r=[];
+  if(S.alarms.some(function(a){return a.pri===1;})) r.push(L("a priority-1 alarm is active","有第一級警報"));
+  if(S.mode==="live" && !liveIn()) r.push(L("no fresh data from the board","板子沒有新數據"));
+  if(!fresh("od")) r.push(L("no OD reading","沒有 OD 讀值"));
+  if(wxStale()) r.push(WX.src==="snapshot" ? L("weather is a stored snapshot, not a forecast","天氣是舊快照，不是預報") : L("weather forecast is stale","天氣預報過期"));
+  var sk=GT.skill(), model = sk && sk.nrmse!=null && sk.nrmse<0.15 && sk.inBand>=0.6;
+  return {ok:r.length===0, reasons:r, model:!!model, skill:sk};
+}
+function decide(){
+  var tr=trust(), ah=wxAhead(), t=nowT(), Lh=leadH();
+  var od = GT.pts.length ? GT.pts[GT.pts.length-1][1] : S.pv.od;
+  var need=null, peak=null;
+  ah.forEach(function(h){
+    if(h.t>t+72*3.6e6) return;
+    if(!peak || h.risk.v>peak.risk.v) peak=h;
+    if(!need && h.risk.v>=CFG.thr) need=h;
+  });
+  var D={tr:tr, need:need, peak:peak, L:Lh, od:od, light:S.act.light};
+  if(!ah.length){ D.act="HOLD"; D.cls="hold";
+    D.h=L("No forecast. The light decision is on hold","沒有預報，暫停決策");
+    D.why=L("The twin cannot see demand without a weather forecast. Light stays as it is.","沒有天氣預報就看不到需求，燈光維持現狀。"); return D; }
+  if(!need){
+    D.act = S.act.light==="GREEN" ? "OFF" : "WAIT"; D.cls = S.act.light==="GREEN" ? "sched" : "";
+    D.h = S.act.light==="GREEN" ? L("No crop stress ahead. The green light can go off","72 小時內沒有需求，綠光可以關閉")
+                                : L("Keep the green light off","綠光保持關閉");
+    D.why = L("Highest crop-stress risk in the next 72 h is ","未來 72 小時最高作物逆境風險為 ")+Math.round((peak?peak.risk.v:0)*100)+"%"+
+            (peak?L(" ("+N(DRV[peak.risk.top])+", "+dayHm(peak.t)+")", "（"+N(DRV[peak.risk.top])+"，"+dayHm(peak.t)+"）"):"")+
+            L(", below the "+Math.round(CFG.thr*100)+"% demand threshold.","，低於 "+Math.round(CFG.thr*100)+"% 的需求門檻。");
+    return D;
+  }
+  var tOn = need.t - Lh*3.6e6; D.tOn=tOn;
+  var needTxt = L("Crop stress "+Math.round(need.risk.v*100)+"% ("+N(DRV[need.risk.top])+") expected "+dayHm(need.t),
+                  "預計 "+dayHm(need.t)+" 作物逆境 "+Math.round(need.risk.v*100)+"%（"+N(DRV[need.risk.top])+"）");
+  var ready = od!=null && od>=CFG.odMin;
+  var tt = !ready ? GT.timeTo(CFG.odMin) : null;
+  D.readyAt = tt ? t + tt.h*3.6e6 : null;
+  if(S.act.light==="GREEN"){ D.act="KEEP"; D.cls="go";
+    D.h=L("Green light is on, as needed","綠光已開，符合需求"); D.why=needTxt+"."; return D; }
+  if(t>=tOn){
+    if(ready){ D.act="GO"; D.cls="go"; D.h=L("Switch the green light on now","現在開啟綠光");
+      D.why=needTxt+L(". Lead time "+fmt(Lh,1)+" h has started; culture at OD "+fmt(od,2)+" ≥ "+fmt(CFG.odMin,2)+".",
+                     "。"+fmt(Lh,1)+" 小時的前置時間已開始；菌體 OD "+fmt(od,2)+" ≥ "+fmt(CFG.odMin,2)+"。"); }
+    else { D.act="WAIT"; D.cls="hold"; D.h=L("Demand is due but the culture is not ready","需求將至，但菌體尚未就緒");
+      D.why=needTxt+L(". OD "+fmt(od,2)+" < "+fmt(CFG.odMin,2)+"; "+(!tt?"the growth model needs more data before it can say when it will be":isFinite(tt.h)?"the growth model expects it at "+dayHm(D.readyAt):"the growth model says it will not reach it at the current plateau")+".",
+                     "。OD "+fmt(od,2)+" < "+fmt(CFG.odMin,2)+"；"+(!tt?"生長模型需要更多數據才能預估":isFinite(tt.h)?"生長模型預估於 "+dayHm(D.readyAt)+" 達到":"生長模型判斷在目前平台期不會達到")+"。"); }
+  } else {
+    D.act="SCHED"; D.cls="sched"; D.h=L("Switch green on at "+dayHm(tOn),"於 "+dayHm(tOn)+" 開啟綠光");
+    D.why=needTxt+L(", minus lead time "+fmt(Lh,1)+" h.","，減去 "+fmt(Lh,1)+" 小時前置時間。")+
+      (!ready && D.readyAt ? (D.readyAt>tOn ? L(" Warning: culture predicted to reach OD "+fmt(CFG.odMin,2)+" only at "+dayHm(D.readyAt)+", too late."," 注意：菌體預估 "+dayHm(D.readyAt)+" 才達 OD "+fmt(CFG.odMin,2)+"，會來不及。")
+                                           : L(" Culture predicted ready at "+dayHm(D.readyAt)+"."," 菌體預估於 "+dayHm(D.readyAt)+" 就緒。")) : "");
+  }
+  return D;
+}
+var LAST_D=null;
+function autoAct(D){
+  if(CFG.lightMode!=="AUTO") return;
+  if(!D.tr.ok || !D.tr.model) return;                     /* AUTO acts only on a model that passed */
+  if(hNow()-S.lastAutoH < 0.5) return;                    /* anti-chatter: one move per 30 min */
+  if(D.act==="GO" && S.act.light!=="GREEN"){ setLight("GREEN","twin-auto",D.h+" — "+D.why); S.lastAutoH=hNow(); }
+  else if(D.act==="OFF" && S.act.light==="GREEN"){ setLight("OFF","twin-auto",D.h+" — "+D.why); S.lastAutoH=hNow(); }
+}
+
+/* ================================================================
+   8. ACTUATORS, INTERLOCKS, SAFE STATE
+   The MCU owns the real interlocks; the page mirrors them so the operator
+   sees the same rule the board applies.
+   ================================================================ */
+function setLight(v, who, why){ if(S.act.light===v) return; S.act.light=v; audit(who,"L-01 → "+v,why); sendToBoard(); renderAll(); }
+function setValve(v, who, why){ if(S.act.valve===v) return; S.act.valve=v; audit(who,"XV-01 → "+v,why); sendToBoard(); renderAll(); }
+function interlocks(){
+  if(S.act.valve==="CLOSED" && S.pv.tmp>CH.tmp.hi)
+    setValve("OPEN","interlock",L("IL-1: TMP "+fmt(S.pv.tmp,3)+" bar > "+CH.tmp.hi+" bar with the lumen valve shut","IL-1：內腔閥關閉時 TMP "+fmt(S.pv.tmp,3)+" bar > "+CH.tmp.hi+" bar"));
+}
+function safeState(){
+  CFG.lightMode="MANUAL"; saveCfg();
+  S.act.valve="OPEN"; S.act.light="OFF";
+  audit("operator","SAFE STATE",L("Valve open, light off, light mode set to Manual","閥開啟、燈關閉、燈光模式改為手動"));
+  sendToBoard(); renderAll();
+}
+
+/* ================================================================
+   9. BOARD LINK · Web Serial, 115200 baud, one line per message
+     in  : PV OD=0.412 PH=7.02 FLOW=263 PT1=2.69 PT3=1.31 PT4=0.45 PT5=0.35
+     out : SET XV01=OPEN LIGHT=GREEN        (every 2 s, heartbeat)
+   The firmware's 5 s link timeout puts the rig in its safe state if the
+   page stops talking. Fields the page does not recognise are ignored.
+   ================================================================ */
+var port=null, writer=null, reader=null, readAbort=false;
+function liveIn(){ return S.link.on && S.link.lastIn && (Date.now()-S.link.lastIn<5000); }
+function startRun(mode){
+  S.mode=mode; S.runStart=Date.now(); S.simH=0; S.lastHistH=-1; S.nextLogH=0;
+  TILES.forEach(function(k){ S.hist[k]=[]; S.pv[k]=null; S.pvT[k]=null; });
+  S.foulBase=null; S.foulBaseN=[]; S.bubbles=0; S.log=[]; S.lastAutoH=-99;
+  DEMO.foul=1.0; GT.reset(); S.board={valve:null, light:null, lock:"NONE", upS:null}; LAST_OD_COUNTS=null;
+  audit("operator", L("Run started","開始運行"), mode==="live"?L("Live board","實機連線"):L("Demo plant","示範模型"));
+}
+async function toggleLink(){
+  if(S.link.on){
+    readAbort=true;
+    try{ if(reader) await reader.cancel(); }catch(e){}
+    try{ if(writer){ writer.releaseLock(); } if(port) await port.close(); }catch(e){}
+    port=writer=reader=null; S.link.on=false;
+    audit("operator",L("Board disconnected","中斷板子連線"),"");
+    startRun("demo"); renderAll(); return;
+  }
+  if(!("serial" in navigator)){ alert(L("This browser has no Web Serial. Use Chrome or Edge.","此瀏覽器不支援 Web Serial，請用 Chrome 或 Edge。")); return; }
+  try{
+    port = await navigator.serial.requestPort();
+    await port.open({baudRate:115200});
+    writer = port.writable.getWriter();
+    readAbort=false; S.link.on=true;
+    startRun("live"); readLoop(); sendCal(); sendToBoard();
+    audit("operator",L("Board connected","連上板子"),"");
+  }catch(err){ if(err && err.name==="NotFoundError") return; alert(L("Could not open the port: ","無法開啟連接埠：")+err); }
+  renderAll();
+}
+function sendToBoard(){
+  if(!S.link.on || !writer) return;
+  var line="SET XV01="+S.act.valve+" LIGHT="+S.act.light+"\n";
+  S.link.lastOut=Date.now(); S.link.outN++; S.link.lastOutLine=line.trim();
+  writer.write(new TextEncoder().encode(line)).catch(function(){ S.link.on=false; audit("system",L("Write failed, link dropped","寫入失敗，連線中斷"),""); });
+}
+/* The operator calibrates on the page; the board turns counts into OD and pH.
+   The page holds the numbers and pushes them down on connect and on every
+   recalibration, so a freshly reflashed board is never silently stale. */
+function sendCal(){
+  if(!S.link.on || !writer) return;
+  var line="CAL ODBLANK="+(CAL.odCounts||0).toFixed(1)+" PHSLOPE="+CAL.phSlope.toFixed(3)+" PHOFF="+CAL.phOffset.toFixed(3)+"\n";
+  writer.write(new TextEncoder().encode(line)).catch(function(){});
+  S.link.lastOut=Date.now(); S.link.outN++;
+}
+async function readLoop(){
+  var dec=new TextDecoder(), buf="";
+  try{
+    reader=port.readable.getReader();
+    while(!readAbort){
+      var r=await reader.read(); if(r.done) break;
+      buf+=dec.decode(r.value,{stream:true});
+      var i; while((i=buf.indexOf("\n"))>=0){ acceptLine(buf.slice(0,i).replace(/\r$/,"").trim()); buf=buf.slice(i+1); }
+      if(buf.length>4096) buf="";
+    }
+  }catch(e){ if(!readAbort){ S.link.on=false; audit("system",L("Serial read failed","序列讀取失敗"),String(e)); } }
+  try{ if(reader) reader.releaseLock(); }catch(e){}
+}
+var PV_KEYS={OD:"od",PH:"ph",FLOW:"flow",Q:"flow",PT1:"pt1",PT3:"pt3",PT4:"pt4",PT5:"pt5"};
+/* The board sends three kinds of line. PV carries readings; a channel whose
+   sensor is dead is simply absent, so a missing key clears that reading rather
+   than freezing the last one on screen. ST says what the board is ACTUALLY
+   doing, which differs from what we asked whenever an interlock holds it.
+   EV is free text for the log. */
+function acceptLine(line){
+  if(line.indexOf("PV")===0) return acceptPV(line);
+  if(line.indexOf("ST")===0) return acceptST(line);
+  if(line.indexOf("EV")===0){
+    var t=line.slice(2).trim();
+    if(t && t!==S.link.lastEv){ S.link.lastEv=t; audit("board",L("Board event","板子事件"),t); }
+    S.link.lastIn=Date.now(); S.link.inN++; S.link.lastLine=line;
+  }
+}
+function acceptPV(line){
+  var got=0, seen={};
+  line.slice(2).trim().split(/\s+/).forEach(function(tok){
+    var e=tok.indexOf("="); if(e<1) return;
+    var key=tok.slice(0,e), v=parseFloat(tok.slice(e+1));
+    if(!isFinite(v)) return;
+    if(key==="ODC"){ LAST_OD_COUNTS=v; got++; return; }   /* raw counts, for zeroing */
+    var k=PV_KEYS[key];
+    if(k){ acceptValue(k,v); seen[k]=1; got++; }
+  });
+  /* a channel the board stopped sending is unknown, not unchanged */
+  if(got) MEASURED.forEach(function(k){ if(!seen[k]){ S.pv[k]=null; S.pvT[k]=null; } });
+  if(got){ S.link.lastIn=Date.now(); S.link.inN++; S.link.lastLine=line; }
+}
+function acceptST(line){
+  var st={};
+  line.slice(2).trim().split(/\s+/).forEach(function(tok){
+    var e=tok.indexOf("="); if(e>0) st[tok.slice(0,e)]=tok.slice(e+1);
+  });
+  if(st.XV01) S.board.valve=st.XV01;
+  if(st.LIGHT) S.board.light=st.LIGHT;
+  if(st.LOCK!==undefined){
+    if(st.LOCK!==S.board.lock && st.LOCK!=="NONE")
+      audit("interlock", st.LOCK==="TMP"?L("IL-1 membrane pressure","IL-1 膜壓")
+                        :st.LOCK==="LINK"?L("IL-2 link lost","IL-2 連線中斷"):st.LOCK,
+            L("the board overrode the commanded state","板子覆蓋了指令狀態"));
+    S.board.lock=st.LOCK;
+  }
+  if(st.UP!==undefined) S.board.upS=+st.UP;
+  S.link.lastIn=Date.now(); S.link.inN++; S.link.lastLine=line;
+}
+
+/* ================================================================
+   10. ALARMS
+   ================================================================ */
+function evalAlarms(){
+  var p=S.pv, A=[], open=S.act.valve==="OPEN";
+  function add(id,pri,en,zh){ A.push({id:id,pri:pri,t:L(en,zh)}); }
+  if(S.mode==="live" && S.link.on && !liveIn()) add("stale",1,"No data from the board for over 5 s","板子超過 5 秒沒有數據");
+  if(p.tmp>CH.tmp.hi) add("tmp_hi",1,"TMP above "+CH.tmp.hi+" bar: membrane at risk","TMP 高於 "+CH.tmp.hi+" bar：薄膜有風險");
+  else if(p.tmp>CH.tmp.whi) add("tmp_w",2,"TMP above "+CH.tmp.whi+" bar","TMP 高於 "+CH.tmp.whi+" bar");
+  if(p.tmp<-0.02 && p.flow>50) add("tmp_neg",2,"Negative TMP: back-flow or a pressure offset","TMP 為負：逆流或壓力零點偏移");
+  if(p.ph!=null){ if(p.ph<CH.ph.lo||p.ph>CH.ph.hi) add("ph",1,"pH "+fmt(p.ph,2)+" outside "+CH.ph.lo+"–"+CH.ph.hi,"pH "+fmt(p.ph,2)+" 超出 "+CH.ph.lo+"–"+CH.ph.hi);
+    else if(p.ph<CH.ph.wlo||p.ph>CH.ph.whi) add("ph_w",2,"pH "+fmt(p.ph,2)+" drifting","pH "+fmt(p.ph,2)+" 偏移中"); }
+  if(open && p.flow!=null && p.flow<CH.flow.lo) add("flow_lo",2,"Loop flow under "+CH.flow.lo+" mL/min with the valve open. Pump stopped or line blocked?","閥開啟時流量低於 "+CH.flow.lo+" mL/min。幫浦停了或管路堵塞？");
+  if(p.flow>50 && open && p.pt1<p.pt3-0.05) add("pt_order",2,"PT-01 reads below PT-03 while flowing: swapped or offset sensor","流動時 PT-01 低於 PT-03：感測器接反或偏移");
+  if(p.foul>CH.foul.hi) add("foul",1,"Fouling ratio "+fmt(p.foul,2)+"×. Clean the membrane","堵塞比 "+fmt(p.foul,2)+"×，請清洗薄膜");
+  else if(p.foul>CH.foul.whi) add("foul_w",2,"Fouling ratio "+fmt(p.foul,2)+"×","堵塞比 "+fmt(p.foul,2)+"×");
+  var sk=GT.skill(); if(sk && sk.nrmse!=null && sk.nrmse>0.15) add("model",2,"Growth model 2 h forecast NRMSE "+fmt(sk.nrmse*100,0)+"% > 15 %","生長模型 2 小時預測 NRMSE "+fmt(sk.nrmse*100,0)+"% > 15%");
+  if(S.mode==="live" && S.board.lock && S.board.lock!=="NONE" && S.board.lock!=="LINK")
+    add("lock",1,"Interlock "+S.board.lock+" is holding the rig. The board overrode the command","連鎖 "+S.board.lock+" 作用中，板子已覆蓋指令");
+  if(WX.src==="snapshot") add("wx",2,"Weather offline. Using the stored 6 Sep snapshot","天氣離線，使用 9/6 的舊快照");
+  var prev={}; S.alarms.forEach(function(a){ prev[a.id]=a.since; });
+  A.forEach(function(a){ a.since = prev[a.id] || nowT(); if(!prev[a.id]) audit("alarm","P"+a.pri+" "+a.id,a.t); });
+  Object.keys(S.acked).forEach(function(id){ if(!A.some(function(a){return a.id===id;})) delete S.acked[id]; });
+  S.alarms=A.sort(function(a,b){return a.pri-b.pri;});
+}
+
+/* ================================================================
+   11. RECORDING
+   One row per 5 process-minutes. Every column names its unit, and the
+   metadata file carries calibration, model version and the prior, so a
+   reader can reconstruct what the twin knew when it acted (ALCOA+).
+   ================================================================ */
+var LOG_DT_H=1/12;
+var COLS=["time_iso","run_h","od600","ph","flow_ml_min","pt01_psi","pt03_psi","pt04_psi","pt05_psi","tmp_bar","fouling_ratio",
+          "valve_xv01","light_l01","light_mode","source","model_od_fit","model_r_per_h","model_K","model_nrmse_2h","decision"];
+function logRow(){
+  var h=hNow(); if(h<S.nextLogH) return; S.nextLogH=h+LOG_DT_H;
+  var p=S.pv, P=GT.params(), sk=GT.skill(), D=LAST_D;
+  S.log.push([iso(nowT()), h.toFixed(4), fmt(p.od,4), fmt(p.ph,3), fmt(p.flow,1), fmt(p.pt1,3), fmt(p.pt3,3), fmt(p.pt4,3), fmt(p.pt5,3),
+    fmt(p.tmp,4), fmt(p.foul,3), S.act.valve, S.act.light, CFG.lightMode, S.mode,
+    P?fmt(GT.f(h,GT.q),4):"", P?fmt(P.r,4):"", P?fmt(P.K,4):"", sk&&sk.nrmse!=null?fmt(sk.nrmse,4):"", D?D.act:""]);
+  if(S.log.length>50000) S.log.shift();
+}
+function csv(rows){ return rows.map(function(r){ return r.map(function(v){ v=String(v==null?"":v); return /[",\n]/.test(v)?'"'+v.replace(/"/g,'""')+'"':v; }).join(","); }).join("\n"); }
+function save(name, text, mime){
+  var b=new Blob([text],{type:mime||"text/csv"}), a=document.createElement("a");
+  a.href=URL.createObjectURL(b); a.download=name; document.body.appendChild(a); a.click();
+  setTimeout(function(){ URL.revokeObjectURL(a.href); a.remove(); }, 500);
+}
+function stamp(){ var d=new Date(S.runStart); return d.getFullYear()+pad(d.getMonth()+1)+pad(d.getDate())+"_"+pad(d.getHours())+pad(d.getMinutes()); }
+function exportLog(){ save("BR01_"+stamp()+"_"+S.mode+"_process.csv", csv([COLS].concat(S.log))); }
+function exportAudit(){ save("BR01_"+stamp()+"_"+S.mode+"_audit.csv", csv([["time_iso","run_h","who","what","why","source"]].concat(S.audit.slice().reverse().map(function(a){ return [iso(a.t),a.h.toFixed(4),a.who,a.what,a.why,a.mode]; })))); }
+function exportMeta(){
+  save("BR01_"+stamp()+"_"+S.mode+"_meta.json", JSON.stringify({
+    rig:"ReLeaf BR-01 hollow-fibre bioreactor", ui_build:"0924UI 2026-09-24", source:S.mode,
+    run_start:iso(S.runStart), exported:iso(Date.now()),
+    channels:Object.keys(CH).map(function(k){ return {key:k, tag:CH[k].tag, name:CH[k].n[0], unit:CH[k].unit, pat_class:CH[k].pat, source:CH[k].src[0]}; }),
+    calibration:{od_blank:CAL.odBlank, od_blank_when:CAL.odWhen, ph_calibrated:CAL.phWhen, od_plate_to_inline_scale:CFG.odScale},
+    growth_model:{form:"logistic X(t)=K/(1+((K-X0)/X0)exp(-r t))", fit:"MAP, log-normal prior, re-fitted every "+GT.BIN_H+" h on bin medians",
+      prior_source:LPA?LPA.meta.source:"built-in", prior:GT.prior(), posterior:GT.params(), sigma_y:CFG.sigmaY, skill_2h:GT.skill()},
+    decision:{threshold:CFG.thr, od_min:CFG.odMin, lead_time_h:leadH(), light_mode:CFG.lightMode},
+    weather:{source:WX.src, provider:"Open-Meteo", lat:CFG.lat, lon:CFG.lon, fetched:WX.fetched?iso(WX.fetched):null}
+  }, null, 1), "application/json");
+}
+
+/* ================================================================
+   12. PLOTTING · a minimal SVG line plot
+   ================================================================ */
+/* chart colours come from the CSS tokens, so the palette lives in one place */
+function tok(n){ return getComputedStyle(document.documentElement).getPropertyValue(n).trim(); }
+var C = {od:tok("--color-data"), fit:tok("--color-model"), prior:tok("--color-ink-3"), risk:tok("--color-alarm"), green:tok("--color-signal-ink"),
+         ink:tok("--color-ink"), paper:tok("--color-panel"), heat:tok("--color-heat"), vpd:tok("--color-warn"), dry:tok("--color-data-2"), salt:tok("--color-model"),
+         data2:tok("--color-data-2"), warn:tok("--color-warn"), pipe:tok("--color-pipe"), signal:tok("--color-signal")};
+function niceTicks(a,b,n){
+  var raw=(b-a)/n, mag=Math.pow(10,Math.floor(Math.log10(raw||1))), st=mag;
+  [1,2,5,10].some(function(m){ st=m*mag; return raw<=st; });
+  var t=[]; for(var v=Math.ceil(a/st)*st; v<=b+st*1e-6; v+=st) t.push(+v.toFixed(6)); return t;
+}
+function plot(o){
+  var W=o.w||720, H=o.h||240, l=44, r=12, tp=10, bt=26;
+  var sx=function(v){ return l+(v-o.x0)/((o.x1-o.x0)||1)*(W-l-r); };
+  var sy=function(v){ v=clamp(v,o.y0,o.y1); return H-bt-(v-o.y0)/((o.y1-o.y0)||1)*(H-tp-bt); };
+  var out=['<svg class="chart" viewBox="0 0 '+W+' '+H+'" role="img" aria-label="'+esc(o.title||"")+'">'];
+  niceTicks(o.y0,o.y1,4).forEach(function(v){
+    out.push('<line class="grid" x1="'+l+'" x2="'+(W-r)+'" y1="'+sy(v)+'" y2="'+sy(v)+'"/>');
+    out.push('<text x="'+(l-5)+'" y="'+(sy(v)+4)+'" text-anchor="end">'+(o.yfmt?o.yfmt(v):v)+'</text>');
+  });
+  niceTicks(o.x0,o.x1,6).forEach(function(v){
+    out.push('<text x="'+sx(v)+'" y="'+(H-8)+'" text-anchor="middle">'+(o.xfmt?o.xfmt(v):v)+'</text>');
+  });
+  out.push('<line class="ax" x1="'+l+'" x2="'+(W-r)+'" y1="'+(H-bt)+'" y2="'+(H-bt)+'"/>');
+  (o.areas||[]).forEach(function(a){
+    if(a.x.length<2) return;
+    var up=a.x.map(function(x,i){ return sx(x).toFixed(1)+","+sy(a.hi[i]).toFixed(1); });
+    var dn=a.x.map(function(x,i){ return sx(x).toFixed(1)+","+sy(a.lo[i]).toFixed(1); }).reverse();
+    out.push('<polygon points="'+up.concat(dn).join(" ")+'" fill="'+a.c+'" opacity="'+(a.op||0.18)+'"/>');
+  });
+  (o.rules||[]).forEach(function(q){
+    var v=q.x!=null, x=v?sx(q.x):null, y=v?null:sy(q.y);
+    if(v && (q.x<o.x0||q.x>o.x1)) return;
+    out.push(v ? '<line x1="'+x+'" x2="'+x+'" y1="'+tp+'" y2="'+(H-bt)+'" stroke="'+q.c+'" stroke-dasharray="3 3"/>'
+               : '<line x1="'+l+'" x2="'+(W-r)+'" y1="'+y+'" y2="'+y+'" stroke="'+q.c+'" stroke-dasharray="5 4"/>');
+    if(q.t) out.push('<text class="lbl" style="fill:'+q.c+'" x="'+(v?x+4:W-r-4)+'" y="'+(v?tp+11:y-4)+'"'+(v?'':' text-anchor="end"')+'>'+esc(q.t)+'</text>');
+  });
+  (o.lines||[]).forEach(function(s){
+    var p=s.p.filter(function(q){ return q[0]>=o.x0 && q[0]<=o.x1 && isFinite(q[1]); });
+    if(p.length<2) return;
+    out.push('<polyline fill="none" stroke="'+s.c+'" stroke-width="'+(s.w||2)+'"'+(s.dash?' stroke-dasharray="'+s.dash+'"':'')+(s.op?' opacity="'+s.op+'"':'')+
+      ' points="'+p.map(function(q){ return sx(q[0]).toFixed(1)+","+sy(q[1]).toFixed(1); }).join(" ")+'"/>');
+  });
+  (o.points||[]).forEach(function(s){
+    s.p.forEach(function(q){ if(q[0]<o.x0||q[0]>o.x1) return;
+      out.push('<circle cx="'+sx(q[0]).toFixed(1)+'" cy="'+sy(q[1]).toFixed(1)+'" r="'+(s.r||2.5)+'" fill="'+(s.open?C.paper:s.c)+'" stroke="'+s.c+'" stroke-width="1.2"/>'); });
+  });
+  if(o.ylab) out.push('<text class="lbl" x="'+(l+4)+'" y="'+(tp+11)+'">'+esc(o.ylab)+'</text>');
+  out.push('</svg>');
+  return out.join("");
+}
+function key(items){
+  return '<div class="legend">'+items.map(function(i){
+    return '<span><i class="'+(i.k||"")+'" style="background:'+i.c+'"></i>'+esc(i.t)+'</span>'; }).join("")+'</div>';
+}
+function sparkline(a,c){
+  a=a.slice(-100); if(a.length<2) return '<svg class="spark" viewBox="0 0 100 28"></svg>';
+  var ys=a.map(function(p){return p[1];}), lo=Math.min.apply(null,ys), hi=Math.max.apply(null,ys);
+  if(hi-lo<1e-6){ hi+=0.5; lo-=0.5; }
+  var x0=a[0][0], x1=a[a.length-1][0];
+  return '<svg class="spark" viewBox="0 0 100 28" preserveAspectRatio="none"><polyline fill="none" stroke="'+c+'" stroke-width="1.4" vector-effect="non-scaling-stroke" points="'+
+    a.map(function(p){ return ((p[0]-x0)/((x1-x0)||1)*100).toFixed(1)+","+(26-(p[1]-lo)/(hi-lo)*24).toFixed(1); }).join(" ")+'"/></svg>';
+}
+function box(k,v,s){ return '<div class="metric"><div class="k">'+k+'</div><div class="v">'+v+'</div><div class="s">'+(s||"&nbsp;")+'</div></div>'; }
+function row(k,v){ return '<div class="kv"><span class="k">'+k+'</span><span class="v">'+v+'</span></div>'; }
+function badge(s,t){ return '<span class="st st-'+s+'">'+esc(t)+'</span>'; }
+function input(key,label,val,step){ return '<label class="field">'+esc(label)+'<input data-cfg="'+key+'" type="number" step="'+(step||"any")+'" value="'+esc(val)+'"></label>'; }
+
+/* ================================================================
+   13. TODAY · the farmer's screen
+   One answer at the top, four readings in plain words, two switches.
+   Engineering detail is one tap away, never in the way.
+   ================================================================ */
+function level(k){
+  var c=CH[k], v=S.pv[k];
+  if(v==null || !isFinite(v) || (S.mode==="live" && !fresh(k))) return "off";
+  if((c.hi!=null && v>c.hi) || (k==="ph" && v<c.lo)) return "bad";
+  if((c.whi!=null && v>c.whi) || (c.wlo!=null && v<c.wlo) || (k==="flow" && v<c.lo && S.act.valve==="OPEN")) return "warn";
+  return "ok";
+}
+var WORD = {ok:["Good","良好"], warn:["Check","注意"], bad:["Problem","異常"], off:["No reading","無讀值"]};
+function bigReading(k, title, plain){
+  var c=CH[k], lv=level(k), cls={ok:"",warn:"warn",bad:"alarm",off:"stale"}[lv];
+  return '<div class="tile '+cls+'"><div class="hd"><span class="nm" style="font-weight:600;color:var(--ink)">'+esc(title)+'</span>'+
+    badge({ok:"ok",warn:"warn",bad:"bad",off:"off"}[lv], N(WORD[lv]))+'</div>'+
+    '<div class="val">'+fmt(S.pv[k],c.dec)+'<small>'+c.unit+'</small></div>'+sparkline(S.hist[k],C.od)+
+    '<div class="small">'+esc(plain)+'</div></div>';
+}
+function answerCard(D){
+  var want = D.act==="GO" ? "GREEN" : D.act==="OFF" ? "OFF" : null, btn="";
+  if(want){
+    var auto = CFG.lightMode==="AUTO" && D.tr.ok && D.tr.model;
+    btn = auto ? badge("info", L("The system will do this","系統會自動執行"))
+               : '<button class="btn '+(want==="GREEN"?"go":"pri")+'" data-apply="'+want+'">'+(want==="GREEN"?L("Turn green light on","開啟綠光"):L("Turn light off","關閉燈光"))+'</button>';
+  }
+  return '<div class="decide '+(D.cls||"")+'">'+
+    '<div><div class="small muted">'+L("What to do with the green light","綠光該怎麼做")+(S.mode==="demo"?' · <span class="pat pat-demo">'+L("demo","示範")+'</span>':'')+'</div>'+
+    '<h1>'+esc(D.h)+'</h1><div class="why">'+esc(D.why)+'</div></div><div class="acts">'+btn+'</div></div>';
+}
+function renderToday(){
+  var D=LAST_D||decide(), p=S.pv;
+  var tt = (p.od!=null && p.od<CFG.odMin) ? GT.timeTo(CFG.odMin) : null;
+  var cellsTxt = p.od==null ? L("Waiting for the sensor","等待感測器")
+    : p.od>=CFG.odMin ? L("Enough cells to start production","菌量足夠，可以開始生產")
+    : (tt && isFinite(tt.h) ? L("Ready in about "+durH(tt.h),"約 "+durH(tt.h)+" 後就緒") : L("Still growing","仍在生長"));
+  var memTxt = p.foul==null ? L("Learning the clean level (first 30 min)","正在建立乾淨基準（前 30 分鐘）")
+    : p.foul>CH.foul.hi ? L("Filter is clogging. Clean it","濾膜堵塞，請清洗")
+    : p.foul>CH.foul.whi ? L("Filter is getting dirty","濾膜漸髒") : L("Filter is clean","濾膜乾淨");
+  var h = answerCard(D);
+  h += '<div class="tiles" style="margin-top:12px;grid-template-columns:repeat(auto-fit,minmax(220px,1fr))">'+
+    bigReading("od", L("Cells","菌量"), cellsTxt)+
+    bigReading("ph", L("Acidity (pH)","酸鹼（pH）"), L("Should stay 6.6–7.4","應維持 6.6–7.4"))+
+    bigReading("flow", L("Flow","流量"), L("Set by hand at the pump","於幫浦手動設定"))+
+    bigReading("foul", L("Filter","濾膜"), memTxt)+'</div>';
+  h += '<div class="grid g2" style="margin-top:12px">';
+  h += '<div class="card"><div class="card-hd"><h2>'+L("Switches","開關")+'</h2></div><div class="card-bd flush">'+
+    '<div class="act"><div class="nm">'+L("Green light","綠光")+'</div><button class="sw '+(S.act.light==="GREEN"?"on":"")+'" data-light aria-label="green light"></button>'+
+    '<div class="sub" style="display:flex;justify-content:space-between;gap:8px;flex-wrap:wrap;align-items:center"><span>'+(S.act.light==="GREEN"?L("On: the cells are making protectant","開：菌正在生產保護劑"):L("Off","關"))+'</span>'+lightModeSeg()+'</div></div>'+
+    '<div class="act"><div class="nm">'+L("Filter valve","濾膜閥")+'</div><button class="sw valve '+(S.act.valve==="OPEN"?"on":"")+'" data-valve aria-label="valve"></button>'+
+    '<div class="sub">'+(S.act.valve==="OPEN"?L("Open: liquid circulates normally","開：液體正常循環"):L("Closed: pushes liquid through the filter to collect product. Opens by itself if pressure gets too high.","關：把液體壓過濾膜收集產物。壓力過高時會自動打開。"))+'</div></div></div></div>';
+  h += '<div class="card"><div class="card-hd"><h2>'+L("Warnings","警告")+'</h2></div><div class="card-bd flush">'+
+    (S.alarms.length ? S.alarms.map(function(a){ return '<div class="alarm-row"><span class="pri-'+Math.min(a.pri,2)+'">'+(a.pri===1?"!!":"!")+'</span><span>'+esc(a.t)+'</span>'+
+      (S.acked[a.id]?badge("off",L("seen","已讀")):'<button class="btn" data-ack="'+a.id+'" style="height:28px;font-size:12px">'+L("OK","知道了")+'</button>')+'</div>'; }).join("")
+      : '<div class="empty">'+L("Nothing to worry about.","一切正常。")+'</div>')+'</div></div></div>';
+  h += '<details class="card" style="margin-top:12px"><summary class="card-hd" style="cursor:pointer;padding-bottom:10px"><h2>'+L("Engineering detail","工程細節")+'</h2><span class="hint">'+L("all nine channels with tags and sources","九個通道，含標籤與來源")+'</span></summary>'+
+    '<div class="card-bd"><div class="tiles">'+TILES.map(function(k){ var c=CH[k];
+      return '<div class="tile'+(c.pat==="soft"?" soft":"")+'"><div class="hd"><span class="tag">'+c.tag+'</span><span class="pat pat-'+(S.mode==="demo"?"demo":c.pat)+'">'+(S.mode==="demo"?"demo":(c.pat==="in"?L("in-line","線上"):L("computed","計算")))+'</span></div>'+
+        '<div class="nm">'+esc(N(c.n))+'</div><div class="val" style="font-size:19px">'+fmt(S.pv[k],c.dec)+'<small>'+c.unit+'</small></div><div class="lim">'+esc(N(c.src))+'</div></div>'; }).join("")+'</div></div></details>';
+  $("#v-today").innerHTML=h;
+}
+function lightModeSeg(){
+  var M=[["MANUAL",L("Manual","手動")],["SUGGEST",L("Suggest","建議")],["AUTO",L("Auto","自動")]];
+  return '<div class="seg" role="group" aria-label="light mode">'+M.map(function(m){ return '<button data-lmode="'+m[0]+'" class="'+(CFG.lightMode===m[0]?"on":"")+'">'+m[1]+'</button>'; }).join("")+'</div>';
+}
+
+/* ================================================================
+   14. GROWTH TWIN · what a bioprocess engineer checks first
+     1 is the link two-way, and live?        (twin vs shadow)
+     2 is a process model running alongside? (the virtual asset)
+     3 does it forecast, with uncertainty?
+     4 is it scored on data it has not seen?
+     5 where did its parameters come from?
+   ================================================================ */
+function twinStatus(){
+  var live=S.mode==="live" && liveIn(), sk=GT.skill(), ok=sk && sk.nrmse!=null && sk.nrmse<0.15 && sk.inBand>=0.6;
+  var items=[
+    [L("Data in","數據輸入"), live?badge("ok",L("live","即時")):badge(S.mode==="demo"?"off":"bad",S.mode==="demo"?L("demo","示範"):L("stopped","中斷")),
+      live?S.link.inN+L(" readings"," 筆讀值"):L("simulated plant","模擬製程")],
+    [L("Action out","動作輸出"), CFG.lightMode==="AUTO"?badge("ok",L("automatic","自動")):badge("warn",CFG.lightMode==="SUGGEST"?L("person confirms","人工確認"):L("manual","手動")),
+      L("green light, filter valve","綠光、濾膜閥")],
+    [L("Process model","製程模型"), GT.q?badge("ok",L("running","運行中")):badge("off",L("waiting","等待中")),
+      GT.fits+L(" re-fits · every 6 min"," 次重擬 · 每 6 分鐘")],
+    [L("Forecast accuracy","預測準確度"), sk&&sk.nrmse!=null?(ok?badge("ok",L("passes","通過")):badge("bad",L("fails","未通過"))):badge("off",L("too early","太早")),
+      sk&&sk.nrmse!=null?"NRMSE "+fmt(sk.nrmse*100,1)+"% · "+Math.round(sk.inBand*100)+L("% in band","% 在區間內"):L("first score after 2 h","2 小時後開始評分")]
+  ];
+  var verdict = S.mode==="demo" ? L("Demo: the plant is simulated, so nothing here is evidence. Connect the board to run the twin on the real reactor.","示範：製程為模擬，此處不構成證據。連上板子才是在真實反應器上運行孿生。")
+    : (live && CFG.lightMode==="AUTO" && ok) ? L("Digital twin: data flow both ways automatically, and the model that drives the action passes its accuracy test on this run.","數位孿生：數據雙向自動流動，驅動動作的模型在本次運行通過準確度測試。")
+    : live ? L("Digital shadow with decision support: data and model are live, but a person still confirms the action (or the model has not yet passed).","具決策支援的數位影子：數據與模型即時運行，但動作仍由人確認（或模型尚未通過）。")
+    : L("Link down: no data from the reactor.","連線中斷：沒有反應器數據。");
+  return '<div class="card"><div class="card-bd"><div class="tests">'+items.map(function(i){
+      return '<div class="test"><div class="h"><span>'+i[0]+'</span>'+i[1]+'</div><div class="e">'+esc(i[2])+'</div></div>'; }).join("")+'</div>'+
+    '<div class="verdict" style="margin-top:10px">'+esc(verdict)+'</div></div></div>';
+}
+function growthPlot(){
+  var h=hNow(), P=GT.params(), pr=GT.prior(), xs=[], band=null;
+  var x1=Math.max(24, Math.ceil((h+24)/6)*6);
+  for(var i=0;i<=70;i++) xs.push(x1*i/70);
+  if(P) band=GT.band(xs,true,200);
+  var ys=GT.pts.map(function(p){return p[1];});
+  var y1=Math.max(0.3, ys.length?Math.max.apply(null,ys)*1.15:0, P?Math.min(P.K*1.15,3):0, Math.exp(pr.mu[2])*1.1);
+  return plot({w:820,h:290,x0:0,x1:x1,y0:0,y1:y1,title:"OD600",ylab:"OD600",xfmt:function(v){return v+"h";},yfmt:function(v){return v.toFixed(1);},
+    areas: band?[{x:xs,lo:band.lo,hi:band.hi,c:C.fit}]:[],
+    lines:[{p:xs.map(function(t){return [t,GT.f(t,pr.mu)];}),c:C.prior,w:1.4,dash:"5 4"},
+           {p:S.hist.od||[],c:C.od,w:1,op:0.3},
+           band?{p:xs.map(function(t,i){return [t,band.mu[i]];}),c:C.fit,w:2.2}:{p:[],c:C.fit}],
+    points:[{p:GT.pts,c:C.od,r:2.4}],
+    rules:[{x:h,c:C.ink,t:L("now","現在")},{y:CFG.odMin,c:C.green,t:"OD_min "+CFG.odMin}]})+
+    key([{c:C.od,k:"dot",t:L("measured (6-min median)","實測（6 分鐘中位數）")},{c:C.fit,t:L("twin model","孿生模型")},{c:C.fit,k:"band",t:L("90 % forecast range","90% 預測範圍")},{c:C.prior,t:L("expected from LPA calibration","LPA 校正預期")}]);
+}
+function renderTwin(){
+  var P=GT.params(), pr=GT.prior(), z=GT.zScores(), tt=GT.timeTo(CFG.odMin), in12=P?GT.band([hNow()+12],true,200):null;
+  var h=twinStatus();
+  h+='<div class="grid g-main" style="margin-top:12px"><div class="card"><div class="card-hd"><h2>'+L("Cell growth: measured vs twin","菌體生長：實測與孿生")+'</h2><span class="hint">'+GT.pts.length+L(" points"," 點")+'</span></div><div class="card-bd">'+growthPlot()+'</div></div>';
+  h+='<div class="card"><div class="card-hd"><h2>'+L("Forecast","預測")+'</h2></div><div class="card-bd"><div class="metrics">'+
+    box(L("OD in 12 h","12 小時後 OD"), in12?fmt(in12.mu[0],2):"—", in12?fmt(in12.lo[0],2)+" – "+fmt(in12.hi[0],2):"")+
+    box(L("Reaches OD_min","達到 OD_min"), S.pv.od>=CFG.odMin?L("now","已達"):(tt&&isFinite(tt.h)?durH(tt.h):"—"), S.pv.od<CFG.odMin&&tt&&tt.lo!=null&&isFinite(tt.hi)?durH(tt.lo)+" – "+durH(tt.hi):"")+
+    box(L("Growth rate","生長速率"), P?fmt(P.r,3):"—", "h⁻¹ · "+L("expected ","預期 ")+fmt(Math.exp(pr.mu[1]),3))+
+    box(L("Final density","最終密度"), P?fmt(P.K,2):"—", "OD600 (K)")+'</div>'+
+    '<p class="small" style="margin-top:10px">'+(z&&Math.abs(z[1])>2?L("This culture grows differently from the calibration run. Check temperature, medium and inoculum.","本次培養的生長與校正實驗不同，請檢查溫度、培養基與接種量。"):L("Growth is within what the calibration run predicts.","生長在校正實驗預期範圍內。"))+'</p></div></div></div>';
+  var names=[["X0",L("start density","起始密度")],["r",L("growth rate, h⁻¹","生長速率 h⁻¹")],["K",L("final density","最終密度")]];
+  h+='<div class="grid g2" style="margin-top:12px"><div class="card"><div class="card-hd"><h2>'+L("Model parameters","模型參數")+'</h2><span class="hint">'+L("prior from calibration → updated by this run","校正先驗 → 本次運行更新")+'</span></div><div class="tbl-wrap"><table class="tbl"><tr><th></th><th>'+L("Prior","先驗")+'</th><th>'+L("Now","目前")+'</th><th>'+L("Shift","偏移")+'</th></tr>'+
+    names.map(function(n,i){ var zz=z?z[i]:null; return '<tr><td><b>'+n[0]+'</b> <span class="muted">'+n[1]+'</span></td><td class="n">'+fmt(Math.exp(pr.mu[i]),3)+'</td><td class="n">'+(P?fmt(P[n[0]],3):"—")+'</td><td class="n">'+(zz==null?"—":(zz>0?"+":"")+fmt(zz,1)+"σ "+(Math.abs(zz)>2?badge("warn","!"):""))+'</td></tr>'; }).join("")+
+    '</table></div><div class="card-bd"><p class="small">'+L("Model: logistic growth, X(t) = K / (1 + ((K−X0)/X0)·e^(−rt)). Every 6 min the OD samples are reduced to a median (bubbles rejected: ","模型：邏輯斯生長 X(t) = K / (1 + ((K−X0)/X0)·e^(−rt))。每 6 分鐘取 OD 中位數（已濾除氣泡：")+S.bubbles+
+    L("), the point is scored against the forecast made 2 h earlier, then the three parameters are re-fitted by MAP: least squares plus a pull toward the calibration prior. Acceptance: 2 h forecast NRMSE < 15 % (Sinner et al. 2021).",
+      "），該點先與 2 小時前的預測比對，再以 MAP 重擬三個參數：最小平方加上朝校正先驗的拉力。驗收標準：2 小時預測 NRMSE < 15%（Sinner 等 2021）。")+'</p></div></div>';
+  h+=evidenceCard()+'</div>';
+  h+=registerCard();
+  $("#v-twin").innerHTML=h;
+}
+function evidenceCard(){
+  if(!LPA) return '<div class="card"><div class="card-bd">'+L("Calibration data not embedded.","未嵌入校正數據。")+'</div></div>';
+  var P=LPA.pooled, cv=LPA.curve, loo=LPA.loo;
+  var maxErr=Math.max.apply(null,loo.map(function(r){return Math.abs(r.err_map_pct);}));
+  var fr=loo.map(function(r){return Math.abs(r.err_free_pct);});
+  var good=LPA.points.filter(function(p){return !p.flag;}), bad=LPA.points.filter(function(p){return p.flag;});
+  var ch=plot({w:520,h:190,x0:0,x1:25,y0:0,y1:1.15,title:"LPA",xfmt:function(v){return v+"h";},yfmt:function(v){return v.toFixed(1);},
+    areas:[{x:cv.t,lo:cv.lo,hi:cv.hi,c:C.fit,op:.2}], lines:[{p:cv.t.map(function(t,i){return [t,cv.fit[i]];}),c:C.fit}],
+    points:[{p:good.filter(function(p){return p.arm[0]==="G";}).map(function(p){return [p.t,p.od];}),c:C.green,r:3},
+            {p:good.filter(function(p){return p.arm[0]==="R";}).map(function(p){return [p.t,p.od];}),c:C.risk,r:3},
+            {p:bad.map(function(p){return [p.t,p.od];}),c:C.ink,r:3.5,open:true}]});
+  return '<div class="card"><div class="card-hd"><h2>'+L("Where the prior comes from","先驗來源")+'</h2><span class="hint">ACCD · LPA · 2026-09-19</span></div><div class="card-bd">'+ch+
+    key([{c:C.green,k:"dot",t:L("green-light wells","綠光孔")},{c:C.risk,k:"dot",t:L("red-light wells","紅光孔")},{c:C.paper+";border:1.5px solid "+C.ink,k:"dot",t:L("excluded (6 h outliers)","排除（6 h 離群）")}])+
+    '<ul class="small" style="margin:6px 0 0;padding-left:18px;display:grid;gap:3px">'+
+    '<li>'+L("Fit: r = "+fmt(P.params.r,3)+" h⁻¹ (doubling "+fmt(P.td_min,0)+" min), K = "+fmt(P.params.K,2)+", NRMSE "+fmt(P.nrmse*100,1)+" %.","擬合：r = "+fmt(P.params.r,3)+" h⁻¹（倍增 "+fmt(P.td_min,0)+" 分鐘），K = "+fmt(P.params.K,2)+"，NRMSE "+fmt(P.nrmse*100,1)+"%。")+'</li>'+
+    '<li>'+L("Green light does not slow growth: r is the same in all six light arms.","綠光不會拖慢生長：六組光照的 r 相同。")+'</li>'+
+    '<li>'+L("Held-out test: each arm’s 24 h OD forecast from its 2–8 h data is within "+fmt(maxErr,0)+" % using the prior, vs "+fmt(Math.min.apply(null,fr),0)+"–"+fmt(Math.max.apply(null,fr),0)+" % off without it.","保留測試：用 2–8 小時數據預測 24 小時 OD，有先驗誤差在 "+fmt(maxErr,0)+"% 內，無先驗差 "+fmt(Math.min.apply(null,fr),0)+"–"+fmt(Math.max.apply(null,fr),0)+"%。")+'</li>'+
+    '<li>'+L("Gap: no samples 8–24 h, where the fastest growth happens. Plate-reader OD ≠ inline OD, so only r transfers directly.","缺口：8–24 小時沒取樣，正是生長最快的時段。孔盤 OD ≠ 管線 OD，只有 r 可直接移轉。")+'</li></ul></div></div>';
+}
+function registerCard(){
+  var M=[
+    [L("Cell growth (logistic)","菌體生長（邏輯斯）"),L("calibrated on LPA; held-out tested; scored live","LPA 校正；保留測試；即時評分"),"warn",L("partly validated","部分驗證")],
+    [L("Trans-membrane pressure","跨膜壓差"),L("direct from 4 pressure sensors","由 4 支壓力感測器直接計算"),"ok",L("measured","量測值")],
+    [L("Filter fouling","濾膜堵塞"),L("assumed resistance law; no fouling data yet","假設阻力模型；尚無堵塞數據"),"bad",L("not validated","未驗證")],
+    [L("Crop stress from weather","天氣推估作物逆境"),L("our thresholds; FAO-56 ET₀ from Open-Meteo","自訂門檻；Open-Meteo 的 FAO-56 ET₀"),"bad",L("not validated","未驗證")],
+    [L("Lead time to protectant","保護劑前置時間"),L("1.75 h from literature (E. coli) + "+CFG.allowH+" h assumed","文獻 1.75 h（大腸桿菌）+ 假設 "+CFG.allowH+" h"),"bad",L("not measured","未量測")]
+  ];
+  return '<div class="card" style="margin-top:12px"><div class="card-hd"><h2>'+L("Model register","模型清冊")+'</h2><span class="hint">'+L("every model, and how far to trust it","每個模型與可信程度")+'</span></div><div class="tbl-wrap"><table class="tbl"><tr><th>'+L("Model","模型")+'</th><th>'+L("Basis","依據")+'</th><th>'+L("Status","狀態")+'</th></tr>'+
+    M.map(function(m){ return '<tr><td><b>'+esc(m[0])+'</b></td><td>'+esc(m[1])+'</td><td>'+badge(m[2],m[3])+'</td></tr>'; }).join("")+'</table></div></div>';
+}
+
+/* ================================================================
+   15. WEATHER · when will the crop need protectant?
+   ================================================================ */
+function renderWeather(){
+  var ah=wxAhead(), cur=wxCurrent(), D=LAST_D||decide(), t0=nowT();
+  var src = WX.src==="live" ? badge("ok",L("live forecast · Open-Meteo · ","即時預報 · Open-Meteo · ")+hm(WX.fetched))
+          : WX.src==="snapshot" ? badge("warn",L("offline · old snapshot ","離線 · 舊快照 ")+WX_SNAPSHOT.stamp) : badge("off",L("loading","載入中"));
+  var h='<div class="card"><div class="card-hd"><h2>'+L("Field weather","田間天氣")+' · '+esc(CFG.place)+'</h2><span class="hint">'+src+'</span></div><div class="card-bd">';
+  if(cur){
+    var d24=ah.filter(function(x){ return x.t<t0+24*3.6e6; });
+    var rain=d24.reduce(function(s,x){return s+x.P;},0), et=d24.reduce(function(s,x){return s+x.ET0;},0);
+    h+='<div class="metrics">'+box(L("Temperature","氣溫"),fmt(cur.T,0)+"°C",L("feels ","體感 ")+fmt(cur.AT,0)+"°C")+
+      box(L("Humidity","濕度"),fmt(cur.RH,0)+"%","VPD "+fmt(cur.VPD,2)+" kPa")+
+      box(L("Rain next 24 h","未來 24 小時雨量"),fmt(rain,1)+" mm",L("chance ","機率 ")+fmt(cur.PP,0)+"%")+
+      box(L("Water used by crop, 24 h","作物 24 小時耗水"),fmt(et,1)+" mm","ET₀, FAO-56")+
+      box(L("Wind","風"),fmt(cur.W,0)+" km/h",L("gusts ","陣風 ")+fmt(cur.G,0))+'</div>';
+  }
+  h+='</div></div>';
+  var pts=ah.map(function(x){ return [(x.t-t0)/3.6e6, x.risk.v]; });
+  var drv=function(k){ return ah.map(function(x){ return [(x.t-t0)/3.6e6, x.risk.d[k]]; }); };
+  var rules=[{y:CFG.thr,c:C.risk,t:L("needs protectant","需要保護劑")}];
+  if(D.need) rules.push({x:(D.need.t-t0)/3.6e6,c:C.risk,t:L("stress","逆境")});
+  if(D.tOn) rules.push({x:Math.max(0,(D.tOn-t0)/3.6e6),c:C.green,t:L("light on","開燈")});
+  h+='<div class="card" style="margin-top:12px"><div class="card-hd"><h2>'+L("Crop stress risk, next 3 days","未來 3 天作物逆境風險")+'</h2><span class="hint">'+L("0 = none · 1 = severe","0 = 無 · 1 = 嚴重")+'</span></div><div class="card-bd">'+
+    (pts.length ? plot({w:820,h:240,x0:0,x1:72,y0:0,y1:1,title:"risk",xfmt:function(v){return "+"+v+"h";},yfmt:function(v){return Math.round(v*100)+"%";},
+      lines:[{p:drv("heat"),c:C.heat,w:1.2,op:.7},{p:drv("vpd"),c:C.vpd,w:1.2,op:.7},{p:drv("dry"),c:C.dry,w:1.2,op:.7},{p:drv("salt"),c:C.salt,w:1.2,op:.7},{p:pts,c:C.risk,w:2.6}],
+      rules:rules}) + key([{c:C.risk,t:L("overall risk","整體風險")},{c:C.heat,t:N(DRV.heat)},{c:C.vpd,t:N(DRV.vpd)},{c:C.dry,t:N(DRV.dry)},{c:C.salt,t:N(DRV.salt)}])
+     : '<div class="empty">'+L("No forecast available.","沒有預報。")+'</div>')+
+    '<p class="small" style="margin-top:6px">'+esc(D.h)+'. '+esc(D.why)+'</p>'+
+    '<p class="small muted" style="margin-top:6px">'+L("Risk = the worst of four signals: heat (feels-like above 25 °C, broccoli), dry air (VPD / 2 kPa), water deficit (rain − ET₀ from now, 20 mm = full) and salt build-up (25 mm). These thresholds are our judgement and have not been field-tested.",
+      "風險取四項中最高者：高溫（體感溫度超過 25°C，以青花菜為例）、空氣乾燥（VPD / 2 kPa）、缺水（從現在起雨量 − ET₀，20 mm 為滿）、鹽分累積（25 mm）。門檻為自訂，尚未經田間測試。")+'</p></div></div>';
+  h+='<div class="card" style="margin-top:12px"><div class="card-hd"><h2>'+L("Field location","田地位置")+'</h2><button class="btn" data-wx style="height:28px;font-size:12px">'+L("Refresh forecast","更新預報")+'</button></div><div class="card-bd"><div class="fields">'+
+    '<label class="field">'+L("Place name","地名")+'<input data-cfg="place" type="text" value="'+esc(CFG.place)+'"></label>'+
+    input("lat",L("Latitude","緯度"),CFG.lat,0.01)+input("lon",L("Longitude","經度"),CFG.lon,0.01)+input("thr",L("Risk that needs protectant (0–1)","需要保護劑的風險（0–1）"),CFG.thr,0.01)+'</div></div></div>';
+  $("#v-weather").innerHTML=h;
+}
+
+/* ================================================================
+   16. SYSTEM · connection, records, settings, safety
+   ================================================================ */
+function ago(ms){ if(!ms) return L("never","從未"); var s=Math.round((Date.now()-ms)/1000); return s<90?s+" s":Math.round(s/60)+" min"; }
+function renderData(){
+  var W=S.dataWin||12, h0=hNow(), x0=W==="all"?0:Math.max(0,h0-W), x1=Math.max(h0,x0+0.2);
+  var who={operator:L("operator","操作者"),"twin-auto":L("twin (auto)","孿生（自動）"),interlock:L("safety rule","安全規則"),alarm:L("warning","警告"),system:L("system","系統"),board:L("board","板子")};
+  var first=S.log.length?S.log[0][0]:null;
+  var h='<div class="card"><div class="card-hd"><h2>'+L("Recording","記錄")+'</h2><span class="hint">'+(S.mode==="demo"?badge("warn",L("demo run, not real data","示範運行，非真實數據")):badge("ok",L("live run","實機運行")))+'</span></div><div class="card-bd">'+
+    '<div class="metrics">'+box(L("Rows saved","已存列數"),S.log.length,L("one every 5 min","每 5 分鐘一列"))+box(L("Recording since","開始記錄"),first?dayHm(Date.parse(first)):"—",S.mode==="demo"?L("virtual clock","虛擬時鐘"):"")+
+    box(L("Actions logged","動作紀錄"),S.audit.length,L("who, what, why","誰、什麼、為什麼"))+box(L("Run length","運行長度"),durH(h0),"")+'</div>'+
+    '<div style="display:flex;gap:6px;flex-wrap:wrap;margin-top:10px">'+
+    '<button class="btn pri" data-exp="log">'+L("Download process data (CSV)","下載製程數據（CSV）")+'</button>'+
+    '<button class="btn" data-exp="audit">'+L("Download action log (CSV)","下載動作紀錄（CSV）")+'</button>'+
+    '<button class="btn" data-exp="meta">'+L("Download run info (JSON)","下載運行資訊（JSON）")+'</button></div>'+
+    '<p class="small" style="margin-top:8px">'+L("Units are in every column header. The run-info file holds the calibration, the model prior and the settings in force, so anyone can reconstruct what the twin knew when it acted. Data stay in this browser until downloaded: download before closing the page.","每欄標頭都有單位。運行資訊檔保存校正、模型先驗與當時設定，任何人都能重建孿生行動時掌握的資訊。數據在下載前只存在此瀏覽器：關閉頁面前請先下載。")+'</p></div></div>';
+  /* trends: one small chart per quantity, shared time axis */
+  function one(title, keys, unit, span){
+    var arrs=keys.map(function(k){ return (S.hist[k]||[]).filter(function(p){ return p[0]>=x0; }); }), v=[];
+    arrs.forEach(function(a){ a.forEach(function(p){ v.push(p[1]); }); });
+    var lo=v.length?Math.min.apply(null,v):0, hi=v.length?Math.max.apply(null,v):1, sp=Math.max(hi-lo,span);
+    var col=[C.od,C.data2,C.warn,C.heat];
+    return '<div class="card"><div class="card-hd"><h2>'+esc(title)+'</h2><div class="legend">'+keys.map(function(k,i){ return '<span><i style="background:'+col[i]+'"></i>'+CH[k].tag+' <b class="num">'+fmt(S.pv[k],CH[k].dec)+'</b></span>'; }).join("")+'</div></div><div class="card-bd">'+
+      plot({w:900,h:150,x0:x0,x1:x1,y0:lo-sp*0.1,y1:hi+sp*0.1,title:title,ylab:unit,xfmt:function(t){return (+t.toFixed(1))+"h";},yfmt:function(t){return +t.toFixed(3);},
+        lines:arrs.map(function(a,i){ return {p:a,c:col[i],w:1.6}; })})+'</div></div>';
+  }
+  var wins=[[2,"2 h"],[12,"12 h"],[48,"48 h"],["all",L("all","全部")]];
+  h+='<div style="display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap;margin:14px 0 10px"><h2>'+L("Trends","趨勢")+'</h2><div class="seg">'+
+    wins.map(function(w){ return '<button data-dwin="'+w[0]+'" class="'+(String(W)===String(w[0])?"on":"")+'">'+w[1]+'</button>'; }).join("")+'</div></div><div class="stack">'+
+    one(L("Cell density","細胞密度"),["od"],"OD600",0.05)+one("pH",["ph"],"pH",0.1)+one(L("Loop flow","迴路流量"),["flow"],"mL/min",20)+
+    one(L("Pressures","壓力"),["pt1","pt3","pt4","pt5"],"psi",0.2)+one(L("Trans-membrane pressure","跨膜壓差"),["tmp"],"bar",0.02)+one(L("Fouling ratio","堵塞比"),["foul"],"×",0.1)+'</div>';
+  h+='<div class="card" style="margin-top:12px"><div class="card-hd"><h2>'+L("Action log","動作紀錄")+'</h2><span class="hint">'+L("newest first","最新在上")+'</span></div><div class="log" style="max-height:340px">'+
+    (S.audit.length?S.audit.slice(0,200).map(function(a){ return '<div class="row"><span class="t">'+hm(a.t)+'</span><span>'+esc(who[a.who]||a.who)+'</span><span><b>'+esc(a.what)+'</b>'+(a.why?' — '+esc(a.why):'')+'</span></div>'; }).join(""):'<div class="empty">—</div>')+'</div></div>';
+  $("#v-data").innerHTML=h;
+}
+function renderSetup(){
+  var k=S.link;
+  var h='<div class="grid g2">';
+  h+='<div class="card"><div class="card-hd"><h2>'+L("Reactor connection","反應器連線")+'</h2><button class="btn '+(k.on?"":"pri")+'" data-link style="height:28px;font-size:12px">'+(k.on?L("Disconnect","中斷"):L("Connect board","連接板子"))+'</button></div><div class="card-bd">'+
+    row(L("Source","來源"), S.mode==="live"?badge("ok",L("live board","實機")):badge("warn",L("demo plant","示範製程")))+
+    row(L("Readings in","收到讀值"), k.inN+" · "+L("last ","最近 ")+ago(k.lastIn))+
+    row(L("Commands out","送出指令"), k.outN+" · "+L("last ","最近 ")+ago(k.lastOut))+
+    row(L("Board reports","板子回報"), S.board.valve?(L("valve ","閥 ")+S.board.valve+" · "+L("light ","燈 ")+S.board.light+(S.board.lock&&S.board.lock!=="NONE"?' · '+badge("bad",L("interlock ","連鎖 ")+S.board.lock):'')):"—")+
+    row(L("Board uptime","板子運行時間"), S.board.upS!=null?durH(S.board.upS/3600):"—")+
+    row(L("Last line in","最近輸入"), '<code>'+esc(k.lastLine||"—")+'</code>')+
+    '<p class="small" style="margin-top:8px">'+L("USB serial, 115 200 baud (Chrome or Edge). Board sends ","USB 序列，115 200 baud（Chrome 或 Edge）。板子送出 ")+'<code>PV OD= PH= FLOW= PT1= PT3= PT4= PT5=</code>'+L(" every second; the page sends "," 每秒一次；網頁送出 ")+'<code>SET XV01=OPEN LIGHT=GREEN</code>'+L(" every 2 s."," 每 2 秒一次。")+'</p></div></div>';
+  h+='<div class="card"><div class="card-hd"><h2>'+L("Safety rules","安全規則")+'</h2><span class="hint">'+L("always on","永遠啟用")+'</span></div><div class="tbl-wrap"><table class="tbl">'+
+    '<tr><td><b>IL-1</b></td><td>'+L("Filter valve opens by itself if membrane pressure passes 0.5 bar while it is shut.","濾膜閥關閉時膜壓超過 0.5 bar，會自動打開。")+'</td></tr>'+
+    '<tr><td><b>IL-2</b></td><td>'+L("If the page stops talking for 5 s, the board opens the valve and turns the light off.","網頁 5 秒沒回應，板子自行開閥並關燈。")+'</td></tr>'+
+    '<tr><td><b>'+L("SAFE STATE","安全狀態")+'</b></td><td>'+L("Top-bar button: valve open, light off, light mode Manual. No confirmation.","頂列按鈕：開閥、關燈、改手動，不需確認。")+'</td></tr>'+
+    '<tr><td><b>Auto</b></td><td>'+L("Moves the light only with no P1 warning, fresh data, a live forecast and a growth model that passes its accuracy test; at most once per 30 min.","只有在無 P1 警告、數據新鮮、預報即時、生長模型通過準確度測試時才動燈；每 30 分鐘最多一次。")+'</td></tr></table></div></div></div>';
+  h+='<div class="grid g2" style="margin-top:12px"><div class="card"><div class="card-hd"><h2>'+L("Calibration","校正")+'</h2></div><div class="card-bd">'+
+    row(L("OD blank","OD 空白"), (CAL.odCounts?fmt(CAL.odCounts,0)+L(" counts"," 計數"):fmt(CAL.odBlank,4))+" · "+(CAL.odWhen?new Date(CAL.odWhen).toLocaleString():L("never","從未")))+
+    row(L("pH probe","pH 探針"), CAL.phWhen?new Date(CAL.phWhen).toLocaleString():L("never","從未"))+
+    row(L("Filter clean level","濾膜乾淨基準"), S.foulBase?S.foulBase.toExponential(2)+" bar/(mL/min)":L("learning","建立中"))+
+    '<div style="display:flex;gap:6px;flex-wrap:wrap;margin-top:8px"><button class="btn" data-cal="od">'+L("Zero OD (clean medium in line)","OD 歸零（管內為乾淨培養基）")+'</button><button class="btn" data-cal="ph">'+L("pH calibrated today","pH 今天已校正")+'</button><button class="btn" data-cal="foul">'+L("Filter just cleaned","濾膜剛清洗")+'</button></div></div></div>';
+  h+='<div class="card"><div class="card-hd"><h2>'+L("Twin settings","孿生設定")+'</h2><button class="btn" data-refit style="height:28px;font-size:12px">'+L("Restart growth model","重啟生長模型")+'</button></div><div class="card-bd"><div class="fields">'+
+    input("odMin",L("OD to start production","開始生產的 OD"),CFG.odMin,0.05)+input("allowH",L("Lead time after CcaS on (h)","CcaS 開啟後前置時間（h）"),CFG.allowH,1)+
+    input("odScale",L("Plate → inline OD factor","孔盤 → 管線 OD 係數"),CFG.odScale,0.05)+input("sigmaY",L("OD noise","OD 雜訊"),CFG.sigmaY,0.001)+input("transferSd",L("Prior widening for reactor","反應器先驗放寬"),CFG.transferSd,0.05)+'</div>'+
+    '<p class="small" style="margin-top:8px">'+L("Team decision still open: the 0906 interface waited for OD ≥ 1.0 in the reactor; the LPA protocol induces at OD 0.08–0.15. Field location and the risk threshold are on the Weather tab.","團隊仍待決定：0906 介面在反應器等 OD ≥ 1.0；LPA 流程在 OD 0.08–0.15 誘導。田地位置與風險門檻在天氣分頁。")+'</p></div></div></div>';
+  if(S.mode==="demo") h+='<div class="card" style="margin-top:12px"><div class="card-hd"><h2>'+L("Demo plant","示範製程")+'</h2><span class="hint">'+L("only while no board is connected","僅在未連接板子時")+'</span></div><div class="card-bd"><div class="fields">'+
+    '<label class="field">'+L("Speed","速度")+'<select data-cfg="speed">'+[[1,"1×"],[60,"1 min/s"],[120,"2 min/s"],[600,"10 min/s"],[1800,"30 min/s"]].map(function(o){ return '<option value="'+o[0]+'"'+(+CFG.speed===o[0]?" selected":"")+'>'+o[1]+'</option>'; }).join("")+'</select></label>'+
+    input("flowSet",L("Hand-set flow (mL/min)","手動流量（mL/min）"),CFG.flowSet,10)+'</div><div style="margin-top:8px"><button class="btn" data-restart>'+L("Restart demo run","重新開始示範")+'</button></div></div></div>';
+  $("#v-setup").innerHTML=h;
+}
+
+/* ================================================================
+   16b. SYSTEM MAP · the whole rig on one screen
+   Drawn once, then only values, colours and flow animation change, so
+   the moving liquid does not restart every second. The SVG scales to the
+   window (preserveAspectRatio meet): nothing to drag or scroll.
+   Topology as in 0906UI: lumen loop BR-01 → top rail → module lumen →
+   bottom rail → P-01 → BR-01; shell loop module top → PT-04 → TK-02 →
+   P-02 → PT-05 → module bottom.
+   ================================================================ */
+var MAP = {lang:null};
+function inst(id, x, y, tag, lx, ly, side){
+  /* ISA bubble on a leader, with the live value beside it */
+  /* side: "r" / "l" puts the reading beside the bubble, default below it */
+  var b = !side, tx = b ? x : (side==="l" ? x-30 : x+30), anchor = b ? "middle" : (side==="l" ? "end" : "start");
+  var vy = b ? y+40 : y-3, ny = b ? y+54 : y+12;
+  return '<g class="m-inst" id="mi-'+id+'"><line class="m-lead" x1="'+x+'" y1="'+y+'" x2="'+lx+'" y2="'+ly+'"/>'+
+    '<circle cx="'+x+'" cy="'+y+'" r="22" class="m-bub"/><text x="'+x+'" y="'+(y+4)+'" text-anchor="middle" class="m-tag">'+tag+'</text>'+
+    '<text x="'+tx+'" y="'+vy+'" text-anchor="'+anchor+'" class="m-val" id="mv-'+id+'">—</text>'+
+    '<text x="'+tx+'" y="'+ny+'" text-anchor="'+anchor+'" class="m-sub">'+esc(N(CH[id].n))+'</text></g>';
+}
+function buildMap(){
+  var P={feed:"M830 250 L830 70 L470 70 L470 130", ret1:"M470 390 L470 500", ret2:"M470 500 L470 520 L830 520 L830 430",
+         shTop:"M440 165 L250 165 L250 225", shBot:"M250 335 L250 450 L400 450 L400 355 L440 355"};
+  var s='<svg id="map-svg" viewBox="0 0 1000 585" preserveAspectRatio="xMidYMid meet" role="img" aria-label="'+esc(L("Bioreactor system map","生物反應器系統圖"))+'">';
+  Object.keys(P).forEach(function(k){ s+='<path class="m-pipe" d="'+P[k]+'"/><path class="m-flow" id="mp-'+k+'" d="'+P[k]+'"/>'; });
+  /* hollow-fibre module */
+  s+='<g><rect x="440" y="130" width="60" height="260" rx="10" class="m-eq"/>'+
+     [452,461,470,479,488].map(function(x){ return '<line x1="'+x+'" y1="146" x2="'+x+'" y2="374" class="m-fibre"/>'; }).join("")+
+     '<g id="m-perm" opacity="0">'+[190,250,310].map(function(y){ return '<path d="M462 '+y+' l-14 0 m5 -5 l-5 5 l5 5" class="m-arrow"/>'; }).join("")+'</g>'+
+     '<text x="512" y="250" class="m-name">'+L("Hollow-fibre module","中空纖維模組")+'</text><text x="512" y="265" class="m-sub">HFM-01 · 11 '+L("fibres","根纖維")+' · 0.02 m²</text>'+
+     '<text x="512" y="282" class="m-sub" id="mv-tmp">TMP —</text></g>';
+  /* bioreactor / reservoir with the green light around it */
+  s+='<g class="m-hot" data-map="light" tabindex="0" role="button" aria-label="'+esc(L("Green light","綠光"))+'">'+
+     '<rect x="738" y="240" width="184" height="210" rx="16" class="m-glow" id="m-glow"/>'+
+     '<path d="M760 250 h140 v160 q0 20 -20 20 h-100 q-20 0 -20 -20 Z" class="m-eq"/><ellipse cx="830" cy="250" rx="70" ry="8" class="m-eq"/>'+
+     '<path d="M762 320 h136 v90 q0 18 -18 18 h-100 q-18 0 -18 -18 Z" class="m-liquid" id="m-liquid"/>'+
+     '<rect x="744" y="262" width="8" height="160" rx="4" class="m-led" id="m-led1"/><rect x="908" y="262" width="8" height="160" rx="4" class="m-led" id="m-led2"/>'+
+     '<text x="845" y="462" class="m-name">'+L("Reservoir BR-01","儲液瓶 BR-01")+'</text>'+
+     '<text x="845" y="478" class="m-ctl" id="mv-light">L-01</text></g>';
+  /* shell reservoir */
+  s+='<g><rect x="195" y="225" width="110" height="110" rx="10" class="m-eq"/><rect x="197" y="275" width="106" height="58" rx="8" class="m-liquid" style="opacity:.45"/>'+
+     '<text x="180" y="268" text-anchor="end" class="m-name">TK-02</text><text x="180" y="285" text-anchor="end" class="m-sub">'+L("Shell reservoir","殼側儲液瓶")+'</text>'+
+     '<text x="180" y="299" text-anchor="end" class="m-sub">'+L("(permeate)","（濾液）")+'</text></g>';
+  /* pumps, set by hand */
+  function pump(x,y,tag,name){ return '<g><circle cx="'+x+'" cy="'+y+'" r="20" class="m-eq"/><path d="M'+(x-9)+' '+(y+10)+' L'+x+' '+(y-12)+' L'+(x+9)+' '+(y+10)+'" class="m-pumpsym"/>'+
+    '<text x="'+x+'" y="'+(y+38)+'" text-anchor="middle" class="m-name">'+tag+'</text><text x="'+x+'" y="'+(y+52)+'" text-anchor="middle" class="m-sub">'+name+' · '+L("hand-set","手動")+'</text></g>'; }
+  s+=pump(720,520,"P-01",L("Loop pump","迴路幫浦"))+pump(275,450,"P-02",L("Shell pump","殼側幫浦"));
+  /* pinch valve, the one automated valve */
+  s+='<g class="m-hot" data-map="valve" tabindex="0" role="button" aria-label="'+esc(L("Filter valve","濾膜閥"))+'">'+
+     '<rect x="420" y="470" width="100" height="60" fill="transparent"/>'+
+     '<path d="M452 488 L488 512 L488 488 L452 512 Z" class="m-valve" id="m-valve"/>'+
+     '<text x="500" y="486" class="m-name">XV-01 '+L("pinch valve","夾管閥")+'</text><text x="500" y="502" class="m-ctl" id="mv-valve">—</text></g>';
+  /* instruments */
+  s+=inst("flow",790,115,"FT-01",790,70)+inst("ph",680,115,"AT-02",680,70)+inst("pt1",570,115,"PT-01",570,70)+
+     inst("pt3",400,420,"PT-03",470,420,"l")+inst("od",640,460,"AT-01",640,520,"r")+
+     inst("pt4",340,115,"PT-04",340,165,"r")+inst("pt5",372,500,"PT-05",372,450);
+  s+='</svg>';
+  return s;
+}
+function renderMap(){
+  var host=$("#v-map");
+  if(MAP.lang!==LANG || !$("#map-svg")){
+    MAP.lang=LANG;
+    host.innerHTML='<div class="card"><div class="card-hd" style="padding-bottom:8px"><h2>'+L("System map","系統圖")+'</h2>'+
+      '<div class="map-ctl"><span class="small">'+L("Green light","綠光")+'</span><button class="sw" id="mc-light" data-light aria-label="green light"></button><span id="mc-mode"></span>'+
+      '<span class="small" style="margin-left:10px">'+L("Filter valve","濾膜閥")+'</span><button class="sw valve" id="mc-valve" data-valve aria-label="valve"></button></div></div>'+
+      '<div class="map-box">'+buildMap()+'</div>'+
+      '<div class="legend" style="padding:4px 16px 12px"><span><i style="background:'+C.pipe+'"></i>'+L("line, idle","管路，靜止")+'</span><span><i style="background:'+C.od+'"></i>'+L("liquid moving","液體流動")+'</span>'+
+      '<span><i style="background:'+C.signal+'"></i>'+L("green light on","綠光開啟")+'</span><span><i style="background:transparent;border:1.5px dashed '+C.od+';height:9px"></i>'+L("tap to switch","點擊切換")+'</span>'+
+      '<span class="muted">'+L("Pumps are set by hand; the page switches only the valve and the light.","幫浦手動設定；網頁只控制閥與燈。")+'</span></div></div>';
+  }
+  var p=S.pv, open=S.act.valve==="OPEN", green=S.act.light==="GREEN", moving=p.flow>20;
+  ["od","ph","flow","pt1","pt3","pt4","pt5"].forEach(function(k){
+    var n=$("#mv-"+k); if(n) n.textContent=fmt(p[k],CH[k].dec)+" "+CH[k].unit;
+    var g=$("#mi-"+k); if(g) g.setAttribute("class","m-inst "+({warn:"m-warn",bad:"m-bad"}[level(k)]||""));
+  });
+  $("#mv-tmp").textContent="TMP "+fmt(p.tmp,3)+" bar · "+L("fouling ","堵塞 ")+fmt(p.foul,2)+"×";
+  function flow(id,on){ var e=$("#mp-"+id); if(e) e.setAttribute("class","m-flow"+(on?" on":"")); }
+  flow("feed",moving); flow("ret1",moving&&open); flow("ret2",moving&&open); flow("shTop",moving); flow("shBot",moving);
+  $("#m-perm").setAttribute("opacity", moving && (p.tmp>0.03 || !open) ? "1" : "0");
+  $("#m-valve").setAttribute("class","m-valve"+(open?" open":" shut"));
+  $("#mv-valve").textContent = open ? L("open · tap to shut","開 · 點擊關閉") : L("shut · tap to open","關 · 點擊開啟");
+  $("#m-glow").setAttribute("class","m-glow"+(green?" on":""));
+  $("#m-led1").setAttribute("class","m-led"+(green?" on":"")); $("#m-led2").setAttribute("class","m-led"+(green?" on":""));
+  /* broth tints toward the culture colour as OD rises */
+  var od=clamp(p.od||0,0,1.5); $("#m-liquid").style.fill = "color-mix(in oklch, var(--color-panel-2), var(--color-signal-ink) "+Math.round(od/1.5*45)+"%)";
+  $("#mv-light").textContent = "L-01 · "+(green?L("green ON · tap to switch off","綠光開 · 點擊關閉"):L("off · tap to switch on","關 · 點擊開啟"));
+  $("#mc-light").className="sw"+(green?" on":""); $("#mc-valve").className="sw valve"+(open?" on":"");
+  var mm={MANUAL:L("manual","手動"),SUGGEST:L("suggest","建議"),AUTO:L("auto","自動")}[CFG.lightMode];
+  $("#mc-mode").innerHTML='<span class="st '+(CFG.lightMode==="AUTO"?"st-info":"st-off")+'">'+mm+'</span>';
+}
+
+/* ================================================================
+   17. TOP BAR, RENDER, MAIN LOOP, EVENTS
+   ================================================================ */
+function renderTop(){
+  $("#t-run").textContent=durH(hNow());
+  $("#t-clock").textContent=hm(nowT())+(S.mode==="demo"?"*":"");
+  var st=$("#status"), un=S.alarms.filter(function(a){return !S.acked[a.id];}), w=S.alarms[0];
+  st.className="status"+(w?(w.pri===1?" alarm":" warn"):"");
+  $("#st-h").textContent = w ? (w.pri===1?L("Needs attention","需要處理"):L("Check","注意")) : L("All normal","一切正常");
+  $("#st-s").textContent = w ? w.t : (S.mode==="demo"?L("Demo data. No reactor connected","示範數據，未連接反應器"):L("All readings inside their limits","讀值皆在範圍內"));
+  var b=$("#link-btn"); b.className="chip "+(S.mode==="live"&&liveIn()?"live":"demo");
+  $("#link-txt").textContent = S.mode==="live" ? (liveIn()?L("Reactor live","反應器即時"):L("No data","無數據")) : L("Demo data","示範數據");
+  var nb=$("#nav-badge"); nb.hidden=!un.length; nb.textContent=un.length;
+}
+var RENDER={today:renderToday, map:renderMap, twin:renderTwin, weather:renderWeather, data:renderData, setup:renderSetup};
+function renderAll(){
+  renderTop();
+  var v=$("#v-"+S.view), a=document.activeElement;
+  if(v && a && v.contains(a) && /INPUT|SELECT/.test(a.tagName)) return;   /* don't wipe a field being typed in */
+  RENDER[S.view]();
+}
+function showView(v){
+  S.view=v;
+  [].forEach.call(document.querySelectorAll("#nav [data-view]"), function(b){ b.classList.toggle("on", b.dataset.view===v); });
+  Object.keys(RENDER).forEach(function(k){ $("#v-"+k).hidden = k!==v; });
+  renderAll(); window.scrollTo(0,0);
+}
+var lastBeat=0, lastWx=0;
+function tick(){
+  if(S.mode==="demo"){
+    var dtH=CFG.speed/3600, n=Math.max(1,Math.min(60,Math.round(CFG.speed/60)));
+    for(var i=0;i<n;i++) demoStep(dtH/n);
+  }
+  derive(); interlocks(); recordHist(); evalAlarms();
+  LAST_D=decide(); autoAct(LAST_D); logRow();
+  if(S.link.on && Date.now()-lastBeat>2000){ lastBeat=Date.now(); sendToBoard(); }
+  if(Date.now()-lastWx>30*60*1000){ lastWx=Date.now(); wxFetch(); }
+  renderAll();
+}
+
+document.addEventListener("click", function(e){
+  var t=e.target.closest("button,[data-go],[data-map]"); if(!t) return;
+  var d=t.dataset;
+  if(d.map==="light") setLight(S.act.light==="GREEN"?"OFF":"GREEN","operator",L("switched on the system map","於系統圖切換"));
+  else if(d.map==="valve") setValve(S.act.valve==="OPEN"?"CLOSED":"OPEN","operator",L("switched on the system map","於系統圖切換"));
+  else if(d.view) showView(d.view);
+  else if(d.go) showView(d.go==="trends"?"twin":d.go);
+  else if(d.lang){ LANG=d.lang; lsSet("releaf.lang",LANG); applyStatic(); renderAll(); }
+  else if(d.lmode){ CFG.lightMode=d.lmode; saveCfg(); audit("operator",L("Light mode → ","燈光模式 → ")+d.lmode,""); renderAll(); }
+  else if(t.hasAttribute("data-light")) setLight(S.act.light==="GREEN"?"OFF":"GREEN","operator",L("switched by hand","手動切換"));
+  else if(t.hasAttribute("data-valve")) setValve(S.act.valve==="OPEN"?"CLOSED":"OPEN","operator",L("switched by hand","手動切換"));
+  else if(d.apply) setLight(d.apply,"operator",L("accepted the twin’s suggestion: ","採納孿生建議：")+(LAST_D?LAST_D.h:""));
+  else if(d.ack){ S.acked[d.ack]=true; renderAll(); }
+  else if(d.exp){ ({log:exportLog,audit:exportAudit,meta:exportMeta})[d.exp](); }
+  else if(d.cal==="od"){
+    /* With a board attached the conversion from counts to OD happens there, so
+       zeroing means capturing the blank counts and pushing them down. In demo
+       there are no counts, so the page holds the offset instead. */
+    if(S.mode==="live" && LAST_OD_COUNTS!=null){
+      CAL.odCounts=LAST_OD_COUNTS; CAL.odBlank=0; CAL.odWhen=Date.now(); saveCal(); sendCal();
+      audit("operator",L("OD zeroed on the board","於板子將 OD 歸零"),"blank counts "+fmt(CAL.odCounts,1));
+    } else if(LAST_RAW_OD!=null){
+      CAL.odBlank=LAST_RAW_OD; CAL.odWhen=Date.now(); saveCal();
+      audit("operator",L("OD zeroed","OD 歸零"),"blank "+fmt(CAL.odBlank,4));
+    }
+    renderAll(); }
+  else if(d.cal==="ph"){ CAL.phWhen=Date.now(); saveCal(); sendCal(); audit("operator",L("pH calibration recorded","記錄 pH 校正"),""); renderAll(); }
+  else if(d.cal==="foul"){ S.foulBase=null; S.foulBaseN=[]; DEMO.foul=1; audit("operator",L("Filter cleaned. Relearning its clean level","濾膜已清洗，重新建立基準"),""); renderAll(); }
+  else if(t.hasAttribute("data-refit")){ GT.reset(); audit("operator",L("Growth model restarted","生長模型重啟"),""); renderAll(); }
+  else if(t.hasAttribute("data-restart")){ startRun("demo"); renderAll(); }
+  else if(t.hasAttribute("data-link")) toggleLink();
+  else if(t.hasAttribute("data-wx")){ wxFetch(); }
+  else if(t.id==="link-btn") showView("setup");
+  else if(d.dwin){ S.dataWin = d.dwin==="all" ? "all" : +d.dwin; renderAll(); }
+  else if(t.id==="stop") safeState();
+});
+document.addEventListener("keydown", function(e){
+  if((e.key==="Enter"||e.key===" ") && e.target.dataset && e.target.dataset.map){ e.preventDefault(); e.target.dispatchEvent(new MouseEvent("click",{bubbles:true})); }
+});
+document.addEventListener("change", function(e){
+  var k=e.target.dataset && e.target.dataset.cfg; if(!k) return;
+  var v=e.target.type==="text" ? e.target.value : parseFloat(e.target.value);
+  if(e.target.type!=="text" && !isFinite(v)) return;
+  CFG[k]=v; saveCfg();
+  audit("operator",L("Setting ","設定 ")+k+" = "+v,"");
+  if(k==="lat"||k==="lon"){ WX.src="none"; wxFetch(); }
+  if(k==="odScale"||k==="transferSd"||k==="sigmaY") GT.fit();
+  e.target.blur(); renderAll();
+});
+
+applyStatic();
+startRun("demo");
+wxSnapshot(); WX.src="none";
+wxFetch(); lastWx=Date.now();
+tick();
+setInterval(tick, 1000);
+})();
+</script>
+</body>
+</html>
