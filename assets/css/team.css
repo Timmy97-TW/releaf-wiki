@@ -3,10 +3,11 @@
    Layout & type system after iGEM Marburg 2024; label pills after Unicamp-Brazil.
 
    Project-flavoured touches, all subtle:
-   · cards "light up" on hover (optogenetic activation, the photo warms, a green
-     ring switches on), see .card:hover
-   · a leaf mark grows out of every section rule
-   · lead vs. vice lead differ only by a filled badge + a green top edge
+   · cards "light up" on hover (optogenetic activation: the photo warms and the
+     frame switches from team green to that person's own task colours), see
+     .card:hover
+   · a profile wears the same frame, built from the tasks its person worked on
+   · the task row in the legend is a filter: one press shows who was on a task
    ========================================================================== */
 
 /* ---- Fonts ---------------------------------------------------------------
@@ -79,7 +80,9 @@ img { display: block; max-width: 100%; }
   object-position: center 58%;   /* trims the ceiling without clipping heads */
   background: var(--leaf-100);
 }
-@media (max-width: 820px) { .hero__img { aspect-ratio: 4 / 3; } }
+/* On a narrow screen the photograph is shown whole. A taller crop looked
+   bigger but cut the people at both ends out of their own team photo. */
+@media (max-width: 820px) { .hero__img { aspect-ratio: 1920 / 1089; object-position: center; } }
 
 /* a hairline of leaf green closes the photo off from the toolbar */
 .hero__edge {
@@ -150,6 +153,9 @@ img { display: block; max-width: 100%; }
 .toolbar__jump a.is-current { color: var(--leaf-900); }
 .toolbar__jump a.is-current::after { left: 0; right: 0; }
 
+/* nobody in this section is on the task being shown; a press brings it back */
+.toolbar__jump a.is-off { opacity: .45; }
+
 /* the first segment carries the weight, Project Leads */
 .toolbar__jump a:first-child {
   font-weight: 800;
@@ -180,13 +186,40 @@ img { display: block; max-width: 100%; }
   border: 1px solid rgb(23 23 23 / .06);
   border-radius: 12px;
 }
-@media (max-width: 639px) { .legend { width: calc(100% - 3rem); padding: 1.15rem 1.15rem 1rem; } }
+@media (max-width: 639px) { .legend { width: calc(100% - 2rem); margin-top: 1.5rem; padding: 1.05rem 1rem .95rem; } }
+
+/* The three definitions sit in a <details>. From 880px up it is held open by
+   team.js and its title is plain text; on a phone the title is a switch, so
+   the roster is not two screens of reading away. */
+.legend__majors > summary { list-style: none; }
+.legend__majors > summary::-webkit-details-marker { display: none; }
 
 .legend__title {
-  margin: 0 0 1rem;
+  margin: 0;
   font-size: .66rem; font-weight: 800;
   letter-spacing: .15em; text-transform: uppercase;
   color: var(--leaf-700);
+}
+.legend__tracks { margin-top: 1rem; }
+
+@media (min-width: 880px) {
+  .legend__majors > summary { pointer-events: none; }
+}
+@media (max-width: 879px) {
+  .legend__majors > summary {
+    display: flex; align-items: center; justify-content: space-between;
+    min-height: 2rem;
+    cursor: pointer;
+  }
+  .legend__majors > summary::after {
+    content: "";
+    width: .5rem; height: .5rem; margin-right: .2rem;
+    border-right: 2px solid currentColor; border-bottom: 2px solid currentColor;
+    transform: translateY(-25%) rotate(45deg);
+    transition: transform .25s;
+  }
+  .legend__majors[open] > summary::after { transform: translateY(15%) rotate(-135deg); }
+  .legend__majors > summary:focus-visible { outline: 2px solid var(--leaf-700); outline-offset: 4px; border-radius: 4px; }
 }
 
 /* three quiet columns, hairline between */
@@ -221,43 +254,120 @@ img { display: block; max-width: 100%; }
   border-top: 1px solid rgb(23 23 23 / .08);
 }
 @media (min-width: 880px) { .legend__tasks { grid-template-columns: 1.85fr 1fr; } }
+@media (max-width: 879px) { .legend__tasks { margin-top: .8rem; } }
 
+/* pill, term, then the definition: on one line where there is room, the
+   definition on a line of its own where there is not */
 .legend__task {
   margin: 0;
-  display: grid;
-  grid-template-columns: max-content max-content 1fr;
+  display: flex; flex-wrap: wrap;
   align-items: baseline;
-  gap: .45rem;
+  gap: .2rem .45rem;
   font-size: .775rem; line-height: 1.55;
   color: var(--gray-600);
 }
 .legend__task .tag { align-self: center; }
 .legend__term { color: var(--black); font-weight: 700; white-space: nowrap; }
-.legend__term::after { content: ""; }
+.legend__task .legend__def { flex: 1 1 14rem; }
 
 /* every task on the board, on its own hairline under the two key pills */
 .legend__all {
   margin-top: 1.15rem;
   padding-top: .95rem;
   border-top: 1px solid rgb(23 23 23 / .08);
+  scroll-margin-top: calc(var(--nav-h) + 70px);
 }
 .legend__all-title {
   margin: 0 0 .7rem;
+  display: flex; flex-wrap: wrap; align-items: baseline; gap: .15rem .7rem;
   font-size: .6875rem; font-weight: 700; letter-spacing: .1em;
   text-transform: uppercase; color: var(--gray-500);
 }
-.legend__row { display: flex; flex-wrap: wrap; gap: .35rem; }
-.legend__chip { cursor: default; }
+.legend__hint {
+  font-size: .775rem; font-weight: 400;
+  letter-spacing: 0; text-transform: none;
+}
+.legend__row { display: flex; flex-wrap: wrap; gap: .4rem; }
+
+/* Each task is a switch. At rest it is the filled pill it always was. Once a
+   task is picked, that one keeps its fill and gains a ring, and the others
+   step back to the washed member tint, still readable, still pressable. */
+.legend__chip {
+  border: 0;
+  font-family: inherit;
+  cursor: pointer;
+  background: var(--fill);
+  /* fill and ink swap at once: three of the fills are gradients, which cannot
+     fade, and a half-faded label on a finished background is unreadable */
+  transition: transform .2s cubic-bezier(.2,.7,.3,1), box-shadow .2s;
+}
+.legend__chip:hover { transform: translateY(-1px); box-shadow: 0 4px 10px -3px rgb(23 23 23 / .4); }
+.legend__chip:focus-visible { outline: 2px solid var(--leaf-700); outline-offset: 2px; }
+.legend__chip:disabled { opacity: .4; cursor: default; transform: none; box-shadow: none; }
+.legend__count {
+  margin-left: .1rem;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+  opacity: .78;
+}
+.legend__row.is-filtering .legend__chip:not(.is-on) {
+  background: var(--wash);
+  color: var(--ink);
+  box-shadow: none;
+}
+.legend__row.is-filtering .legend__chip:not(.is-on) .tag__dot { background: currentColor; opacity: .5; }
+.legend__chip.is-on { box-shadow: 0 0 0 2px #fbfbf9, 0 0 0 4px var(--c); }
+/* a finger needs more to aim at than a pointer does */
+@media (pointer: coarse) {
+  .legend__row { gap: .5rem; }
+  .legend__chip { font-size: .76rem; padding: .28rem .7rem .28rem .6rem; }
+}
+
+/* what the filter is showing, and the way back */
+.legend__status {
+  display: flex; flex-wrap: wrap; align-items: center; gap: .35rem .55rem;
+  margin: .95rem 0 0;
+  font-size: .84rem; line-height: 1.4;
+  color: var(--gray-600);
+}
+.legend__status[hidden] { display: none; }
+.legend__status-dot { width: .55rem; height: .55rem; border-radius: 50%; background: var(--c); flex: none; }
+.legend__status-task { color: var(--black); font-weight: 700; }
+.legend__reset {
+  margin-left: .35rem;
+  padding: .28rem .8rem;
+  border: 1px solid var(--gray-300); border-radius: 50rem;
+  background: var(--white);
+  font: inherit; font-size: .76rem; font-weight: 600;
+  color: var(--leaf-900);
+  cursor: pointer;
+  transition: border-color .2s, background .2s;
+}
+.legend__reset:hover { border-color: var(--leaf-500); background: var(--leaf-100); }
+.legend__reset:focus-visible { outline: 2px solid var(--leaf-700); outline-offset: 2px; }
 
 .key__own { background: var(--gray-600); }
 .key__mem { background: rgb(82 82 82 / .13); color: var(--gray-600); }
+
+/* The roster re-forming under a filter: the cards that stay rise into place
+   a beat apart. team.js numbers them (--i) and takes the class off again once
+   they have landed. */
+@keyframes card-in {
+  from { opacity: 0; transform: translateY(10px); }
+  to   { opacity: 1; transform: none; }
+}
+.is-swapping .card:not(.card--open) {
+  animation: card-in .36s cubic-bezier(.2,.7,.3,1) both;
+  animation-delay: calc(min(var(--i, 0), 11) * 24ms);
+}
 
 /* ================================================================ GRID ===== */
 
 main { padding-bottom: 5rem; }
 
-.section { max-width: var(--max); margin: 0 auto; padding: 0 1.5rem; }
+.section { max-width: var(--max); margin: 0 auto; padding: 0 1rem; }
 @media (min-width: 640px) { .section { padding: 0 2rem; } }
+.section[hidden] { display: none; }
 
 .section__title {
   font-size: clamp(1.8rem, 3.2vw, 2.25rem);   /* text-4xl at full width */
@@ -268,24 +378,36 @@ main { padding-bottom: 5rem; }
   scroll-margin-top: calc(var(--nav-h) + 60px);
 }
 .section:first-of-type .section__title { margin-top: 3rem; }
-
-
-/* headings stand on their own, no rule, no ornament */
-:root {
-  --leaf-mask: url("data:image/svg+xml;charset=utf-8,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath d='M6.05 8.05c-2.73 2.73-2.73 7.15-.02 9.88 1.47-3.4 4.09-6.24 7.36-7.93-2.77 2.34-4.71 5.61-5.59 9.28 2.6 1.23 5.8.78 7.95-1.37C19.43 14.47 20 4 20 4S9.53 4.57 6.05 8.05z'/%3E%3C/svg%3E");
+@media (max-width: 559px) {
+  .section__title { margin-top: 3rem; }
+  .section:first-of-type .section__title { margin-top: 2.25rem; }
 }
+
+/* how many people the section is showing: quiet, raised beside the title */
+.section__count {
+  margin-left: .55rem;
+  font-size: .42em; font-weight: 600;
+  letter-spacing: .02em;
+  font-variant-numeric: tabular-nums;
+  color: var(--gray-500);
+  vertical-align: .95em;
+}
+.section__count:empty { display: none; }
 
 .section__note { color: var(--gray-600); margin: 0 0 .55rem; }
 .section__note:last-of-type { margin-bottom: 1.9rem; }
 
-/* 4 across (Marburg ships 3, widened per request) */
+/* 4 across (Marburg ships 3, widened per request). A phone gets two compact
+   cards a row instead of one tall one: forty-six people in a single column
+   ran to forty-five screens. */
 .grid {
   display: grid;
-  grid-template-columns: repeat(1, minmax(0, 1fr));
-  gap: 1.25rem;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: .75rem;
   align-items: stretch;
 }
-@media (min-width: 560px)  { .grid { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+.grid[hidden] { display: none; }
+@media (min-width: 560px)  { .grid { gap: 1.25rem; } }
 @media (min-width: 900px)  { .grid { grid-template-columns: repeat(3, minmax(0, 1fr)); } }
 @media (min-width: 1120px) { .grid { grid-template-columns: repeat(4, minmax(0, 1fr)); } }
 
@@ -324,14 +446,20 @@ main { padding-bottom: 5rem; }
   cursor: pointer;
   transition: transform .3s cubic-bezier(.2,.7,.3,1), box-shadow .3s, opacity .3s;
 }
+.card[hidden] { display: none; }
 
-/* optogenetic activation: the portrait warms and a green ring switches on */
-.card:hover,
-.card:focus-visible {
+/* optogenetic activation: the portrait warms and the frame switches on */
+.card:hover {
   transform: translateY(-4px);
   box-shadow: 0 0 0 2px var(--leaf-500), 0 12px 28px -14px rgb(20 64 43 / .55),
               0 0 26px -6px rgb(79 156 111 / .5);
-  outline: none;
+}
+/* the same for keyboard focus; its own rule, so a browser without :has()
+   drops only this one and keeps the hover */
+.card:has(.card__open:focus-visible) {
+  transform: translateY(-4px);
+  box-shadow: 0 0 0 2px var(--leaf-500), 0 12px 28px -14px rgb(20 64 43 / .55),
+              0 0 26px -6px rgb(79 156 111 / .5);
 }
 .card:hover .card__media img { filter: saturate(1.08) brightness(1.03); }
 
@@ -405,6 +533,39 @@ main { padding-bottom: 5rem; }
 /* an unclaimed seat carries its own hotter frame and animation */
 .card--open::after { content: none; }
 
+/* The frame switched on. Under the pointer, or under keyboard focus, the green
+   box gives way to the person's own task colours: the same gradient their
+   profile is framed in (team.js sets --frame per card). At rest every card is
+   the one team green; the colours are what a person brings to it. Drawn as a
+   masked ring so it lands exactly on the green frame it replaces. */
+@supports ((-webkit-mask-composite: xor) or (mask-composite: exclude)) {
+  .card::before {
+    content: "";
+    position: absolute; inset: 0;
+    padding: 3px;
+    border-radius: var(--radius);
+    background: var(--frame, var(--leaf-700));
+    -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+    -webkit-mask-composite: xor;
+            mask: linear-gradient(#000 0 0) content-box exclude, linear-gradient(#000 0 0);
+    pointer-events: none;
+    z-index: 3;
+    opacity: 0;
+    transition: opacity .3s;
+  }
+  .card--open::before { content: none; }
+  .card:hover::before { opacity: 1; }
+  .card:has(.card__open:focus-visible)::before { opacity: 1; }
+  /* the ring is the frame now, so the plain green halo outside it steps down */
+  .card:hover {
+    box-shadow: 0 12px 28px -14px rgb(20 64 43 / .55), 0 0 26px -6px rgb(79 156 111 / .5);
+  }
+  .card:has(.card__open:focus-visible) {
+    box-shadow: 0 12px 28px -14px rgb(20 64 43 / .55), 0 0 26px -6px rgb(79 156 111 / .5);
+  }
+  .card--open:hover { box-shadow: 0 0 0 1px rgb(20 64 43 / .18), 0 18px 34px -18px rgb(20 64 43 / .75); }
+}
+
 .card__media {
   position: relative;
   width: 100%; padding-top: 125%;
@@ -473,6 +634,25 @@ main { padding-bottom: 5rem; }
   letter-spacing: -.012em; line-height: 1.25;
   margin: 0;
 }
+/* The name is the button, stretched over the whole card: one press target for
+   a pointer, and for a screen reader a heading, a button and readable text
+   underneath instead of one opaque block. */
+.card__open {
+  appearance: none;
+  margin: 0; padding: 0; border: 0;
+  background: none;
+  font: inherit; letter-spacing: inherit; color: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+.card__open::after {
+  content: "";
+  position: absolute; inset: 0;
+  border-radius: var(--radius);
+  z-index: 4;
+}
+.card__open:focus { outline: none; }
+.card__open:focus-visible::after { outline: 3px solid var(--leaf-900); outline-offset: 2px; }
 
 .card__meta {
   font-size: .715rem; font-weight: 600;
@@ -485,9 +665,11 @@ main { padding-bottom: 5rem; }
 .card__tags {
   display: flex; flex-wrap: wrap; gap: .3rem;
   margin: .65rem 0 0;
-  padding-bottom: .8rem;
+  padding: 0 0 .8rem;
+  list-style: none;
   border-bottom: 1px solid rgb(23 23 23 / .07);
 }
+.card__tags li { display: flex; }
 
 /* no bio below? then the rule under the pills has nothing to separate */
 .card__tags:last-child { border-bottom: 0; padding-bottom: 0; }
@@ -539,39 +721,76 @@ main { padding-bottom: 5rem; }
 }
 /* member, the same hue, washed right back */
 .tag--mem { font-weight: 600; }
+/* the task the filter is showing, ringed in its own colour on every card
+   that carries it. A ring, not a fill: a filled pill means task owner. */
+.tag.is-hit { box-shadow: inset 0 0 0 1.5px var(--c); }
+
+/* ---- two to a row on a phone --------------------------------------------
+   The compact card keeps the portrait, the name, the school line and every
+   task pill. The bio waits in the profile, one tap away. */
+@media (max-width: 559px) {
+  .card__body { padding: .6rem .65rem .75rem; }
+  .card__badges { flex-wrap: wrap; margin-bottom: .4rem; }
+  .card__role, .card__track { font-size: .5rem; white-space: normal; }
+  .card__name { font-size: .95rem; }
+  .card__meta { font-size: .625rem; letter-spacing: .035em; }
+  .card__tags { gap: .22rem; margin-top: .5rem; padding-bottom: 0; border-bottom: 0; }
+  .card .tag { font-size: .625rem; padding: .05rem .42rem; }
+  .card__bio, .card__more { display: none; }
+  .card--open .card__body { padding: .6rem .65rem .65rem; }
+  .open__mark { font-size: 3.4rem; }
+  .card__media--open::after { inset: 9px; }
+}
 
 /* =============================================================== MODAL ===== */
 
+/* Always laid out, shown by visibility, so opening and closing can fade. A
+   hidden profile is out of the tab order and out of the accessibility tree. */
 .modal {
   position: fixed; inset: 0; z-index: 50;
-  display: none;
+  display: flex;
   align-items: center; justify-content: center;
+  gap: 1rem;
   padding: 1.5rem;
   background: rgb(6 20 13 / .88);
   -webkit-backdrop-filter: blur(5px); backdrop-filter: blur(5px);
+  overscroll-behavior: contain;
+  visibility: hidden;
+  opacity: 0;
+  transition: opacity .18s ease, visibility 0s linear .18s;
 }
-.modal.is-open { display: flex; }
+.modal.is-open {
+  visibility: visible;
+  opacity: 1;
+  transition: opacity .22s ease;
+}
 
 /* the frame is built per person from their own task colours */
 .modal__frame {
   position: relative;
-  width: 100%; max-width: 940px;
+  flex: 0 1 920px;
+  min-width: 0;
   max-height: 90vh;
+  max-height: 90dvh;
   padding: 9px;
   border-radius: 18px;
   background: var(--frame, linear-gradient(135deg, #14402b, #4f9c6f));
   box-shadow: 0 30px 70px -30px rgb(0 0 0 / .8), 0 0 0 1px rgb(255 255 255 / .12);
   overflow: hidden;
+  transform: translateY(12px) scale(.985);
+  transition: transform .32s cubic-bezier(.2,.7,.3,1);
 }
+.modal.is-open .modal__frame { transform: none; }
 
 .modal__panel {
   position: relative;
-  max-height: calc(90vh - 14px);
+  max-height: calc(90vh - 18px);
+  max-height: calc(90dvh - 18px);
   overflow: auto;
+  overscroll-behavior: contain;
   background: var(--white);
   border-radius: 10px;
 }
-@media (min-width: 700px) { .modal__frame { max-width: 920px; } }
 
 /* ---- working photo left, goofy right, the bio boxed below ---------------
    Nothing is cropped: both photos take one shared height and keep their own
@@ -595,20 +814,21 @@ main { padding-bottom: 5rem; }
   height: min(54vh, calc((100cqw - var(--gap)) / var(--ratio-sum, 1.6)));
   border-radius: 6px;
   background: var(--leaf-100);
+  /* each photo fades in once it has arrived (team.js adds .is-ready) */
+  opacity: 0;
+  transition: opacity .28s ease;
 }
+.modal__shot-img.is-ready { opacity: 1; }
 .modal__shot-img[hidden] { display: none; }
 /* one landscape photo, edge to edge of the panel, never cropped */
 .modal__pair--solo .modal__shot-img { width: 100%; height: auto; }
+
 .modal__body {
   position: relative;
   margin: 10px;
   padding: 1.6rem 1.8rem 1.8rem;
   border: 1px solid rgb(23 23 23 / .1);
   border-radius: 8px;
-}
-@media (max-width: 520px) {
-  .modal__body { padding: 1.2rem 1.2rem 1.4rem; }
-  .modal__name { font-size: 1.6rem; }
 }
 
 /* a sprig of leaves, one leaf per task, watermarked behind the text */
@@ -635,29 +855,135 @@ main { padding-bottom: 5rem; }
   position: relative;
   color: var(--gray-500); font-size: .74rem; font-weight: 600;
   letter-spacing: .07em; text-transform: uppercase;
-  margin: .4rem 0 1.15rem;
-}
-.modal__text { position: relative; margin: 0; color: var(--gray-700); font-size: 1rem; line-height: 1.7; text-wrap: pretty; }
-.modal__text p { margin: 0; }
-.modal__text p + p { margin-top: .85em; }
-.modal__tags {
-  position: relative;
-  margin: 1.35rem 0 0;
-  padding: .9rem 0 0;
-  border-bottom: 0;
-  border-top: 1px solid rgb(23 23 23 / .09);
+  margin: .4rem 0 0;
 }
 
+/* The task pills sit under the name, where they put names to the colours the
+   frame is made of. Each is a button: press one to see everybody on it. */
+.modal__tags {
+  position: relative;
+  margin: .8rem 0 0;
+  padding: 0;
+  border-bottom: 0;
+  gap: .35rem;
+}
+.modal__tags[hidden] { display: none; }
+.modal__tags .tag {
+  border: 0;
+  font-family: inherit;
+  font-size: .75rem;
+  padding: .14rem .68rem;
+  cursor: pointer;
+  transition: box-shadow .2s, transform .2s;
+}
+.modal__tags .tag:hover { box-shadow: inset 0 0 0 1.5px var(--c); transform: translateY(-1px); }
+.modal__tags .tag:focus-visible { outline: 2px solid var(--c); outline-offset: 2px; }
+
+.modal__text { position: relative; margin: 1.2rem 0 0; color: var(--gray-700); font-size: 1rem; line-height: 1.7; text-wrap: pretty; }
+.modal__text p { margin: 0; }
+.modal__text p + p { margin-top: .85em; }
+
+/* outside the scrolling panel, so it stays in reach all the way down a bio */
 .modal__close {
-  position: absolute; top: .6rem; right: .7rem;
+  position: absolute; top: calc(9px + .6rem); right: calc(9px + .7rem);
   z-index: 3;
   width: 2.1rem; height: 2.1rem;
+  padding: 0;
   background: rgb(255 255 255 / .92); border: 0; border-radius: 50%;
   box-shadow: 0 2px 8px rgb(0 0 0 / .18);
   cursor: pointer;
   font-size: 1.35rem; line-height: 1; color: var(--gray-600);
+  transition: color .2s, transform .2s;
 }
-.modal__close:hover { color: var(--black); }
+.modal__close:hover { color: var(--black); transform: scale(1.06); }
+.modal__close:focus-visible { outline: 2px solid var(--leaf-700); outline-offset: 2px; }
+
+/* ---- to the next person ---------------------------------------------------
+   Wide screen: a round arrow either side of the frame. */
+.modal__nav {
+  flex: none;
+  display: grid; place-items: center;
+  width: 2.9rem; height: 2.9rem;
+  padding: 0;
+  border: 1px solid rgb(255 255 255 / .24);
+  border-radius: 50%;
+  background: rgb(255 255 255 / .1);
+  color: #fff;
+  cursor: pointer;
+  transition: background .2s, transform .2s cubic-bezier(.2,.7,.3,1);
+}
+.modal__nav svg { width: 1.3rem; height: 1.3rem; }
+.modal__nav:hover { background: rgb(255 255 255 / .22); }
+.modal__nav--prev:hover { transform: translateX(-3px); }
+.modal__nav--next:hover { transform: translateX(3px); }
+.modal__nav:focus-visible { outline: 2px solid #fff; outline-offset: 3px; }
+.modal__nav[hidden] { display: none; }
+
+/* Narrow screen: the two neighbours by name, under the bio. */
+.modal__foot { display: none; }
+.modal__step {
+  max-width: 48%;
+  padding: .45rem 0;
+  border: 0; background: none;
+  font: inherit; font-size: .74rem; font-weight: 700;
+  letter-spacing: .05em; text-transform: uppercase;
+  color: var(--leaf-700);
+  cursor: pointer;
+}
+.modal__step--prev { text-align: left; }
+.modal__step--next { text-align: right; margin-left: auto; }
+.modal__step--prev::before { content: "\2190\00a0"; }
+.modal__step--next::after  { content: "\00a0\2192"; }
+.modal__step:hover { color: var(--leaf-900); }
+.modal__step:focus-visible { outline: 2px solid var(--leaf-700); outline-offset: 3px; border-radius: 3px; }
+.modal__step[hidden] { display: none; }
+
+@media (max-width: 1099px) {
+  .modal__nav { display: none; }
+  .modal__foot {
+    position: relative;
+    display: flex; justify-content: space-between; gap: 1rem;
+    margin-top: 1.4rem;
+    padding-top: .75rem;
+    border-top: 1px solid rgb(23 23 23 / .09);
+  }
+  .modal__foot[hidden] { display: none; }
+}
+
+/* ---- the profile on a phone ----------------------------------------------
+   Side by side, two photos would each be a thumbnail. Here they become a
+   strip: still one shared height, still uncropped, but tall enough to see,
+   with the second photo peeking in from the right to say there is more. */
+@media (max-width: 600px) {
+  .modal { padding: .6rem; }
+  .modal__frame { padding: 6px; border-radius: 16px; max-height: 94vh; max-height: 94dvh; }
+  .modal__panel { max-height: calc(94vh - 12px); max-height: calc(94dvh - 12px); }
+  .modal__close { top: calc(6px + .5rem); right: calc(6px + .5rem); }
+
+  .modal__pair {
+    --gap: 8px;
+    justify-content: flex-start;
+    margin: 8px 8px 0;
+    overflow-x: auto;
+    scroll-snap-type: x mandatory;
+    overscroll-behavior-x: contain;
+    -ms-overflow-style: none; scrollbar-width: none;
+  }
+  .modal__pair::-webkit-scrollbar { display: none; }
+  .modal__shot-img {
+    height: min(44vh, calc(88cqw / var(--ratio-max, 1.5)));
+    scroll-snap-align: center;
+  }
+  /* auto margins centre a pair that fits and vanish for one that scrolls */
+  .modal__shot-img:first-child { margin-left: auto; }
+  .modal__shot-img:last-child  { margin-right: auto; }
+  .modal__pair--solo { overflow: visible; }
+  .modal__pair--solo .modal__shot-img { height: auto; margin: 0; }
+
+  .modal__body { margin: 8px; padding: 1.15rem 1.1rem 1.25rem; }
+  .modal__name { font-size: 1.6rem; }
+  .modal__text { font-size: .97rem; line-height: 1.65; }
+}
 
 /* ============================================================ PAGE NAV ===== */
 /* The same pair of cards every other standard page ends with. This page does
@@ -684,29 +1010,6 @@ main { padding-bottom: 5rem; }
 .pagenav b { display: block; font-size: .6875rem; font-weight: 700; letter-spacing: .09em; text-transform: uppercase; color: var(--gray-450); margin-bottom: .3rem; }
 .pagenav span { font-size: 1rem; font-weight: 600; color: var(--leaf-900); }
 .pagenav .is-next { text-align: right; }
-
-/* ============================================================== FOOTER ===== */
-
-.footer {
-  border-top: 1px solid var(--gray-200);
-  background: var(--gray-100);
-  padding: 2.75rem 1.5rem;
-  text-align: center;
-  color: var(--gray-450);  /* tokens.css: 4.7:1 on gray-100 (gray-500 was 4.35:1) */
-  font-size: .82rem;
-  letter-spacing: .02em;
-}
-.footer p { margin: 0; }
-.footer::before {
-  content: "";
-  display: block;
-  width: 20px; height: 20px;
-  margin: 0 auto .85rem;
-  background: var(--leaf-500);
-  -webkit-mask: var(--leaf-mask) center / contain no-repeat;
-          mask: var(--leaf-mask) center / contain no-repeat;
-  opacity: .55;
-}
 
 /* ============================================================== FOOTER ===== */
 /* This page does not load page.css, so it carries the footer rules itself.

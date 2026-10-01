@@ -23,8 +23,14 @@
    A section's `note` renders under its title; `noteAI: true` marks a note
    the students did not write, so it takes the orange drafting colour.
 
-   Adding a new task: add one line to LABELS. It appears in the filter bar and
-   on every card automatically.
+   Adding a new task: add one line to LABELS. It appears in the legend's task
+   row, which is also the filter, and on every card automatically.
+
+   What the page builds from this file without being told:
+     · the number on each task in the legend, and beside each section title
+     · each person's frame, from the colours of their own tasks
+     · an address per person (team/#member-abby-kao) and per task
+       (team/#task-cloning), so any page of the wiki can link straight to one
    ========================================================================== */
 
 /* ---------- Label system (adopted from Unicamp-Brazil) ------------------- */
