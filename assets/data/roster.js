@@ -11,8 +11,8 @@
      goofyPhoto  profile view, right: the goofy one. Either one left "" shows
                  as an empty frame. Put the files in assets/img/members/work/
                  and assets/img/members/goofy/, named like the portrait
-     solo     true: the profile shows workPhoto alone, full width, with no
-              goofy frame beside it
+     solo     true: the profile shows one photo alone, full width: workPhoto,
+              or goofyPhoto when there is no work photo
      grade / school         the small meta line under the name
      track    subteam only ("Wet Lab", "Dry Lab", "Human Practices")
      bio      shown under the photo; clicking the card opens the full view.
@@ -295,15 +295,8 @@ const SECTIONS = [
     groups: [
     { title: "", members: [
       {
-        name: "Bruce Tsai", role: "Student Advisor",
-        photo: "", workPhoto: "assets/img/members/work/bruce-tsai.jpg", goofyPhoto: "",
-        grade: "", school: "", track: "",
-        bio: "",
-        tasks: ["Protectant", "Peptide Design"]
-      },
-      {
         name: "Caden Wu", role: "Student Advisor",
-        photo: "assets/img/members/caden-wu.jpg", workPhoto: "", goofyPhoto: "assets/img/members/goofy/caden-wu.jpg",
+        photo: "assets/img/members/caden-wu.jpg", workPhoto: "", goofyPhoto: "assets/img/members/goofy/caden-wu.jpg", solo: true,
         grade: "Junior", school: "TAS", track: "",
         bio: "Hi, I'm Caden, and I'm an advisor for GEMS Taiwan. Following a great year as a drylab member from the 2025 team, I decided to return as an advisor to support the team any way possible by sharing my knowledge and experience.",
         tasks: ["Education"]
@@ -331,7 +324,7 @@ const SECTIONS = [
       },
       {
         name: "Katherine Chen", role: "Student Advisor",
-        photo: "assets/img/members/katherine-chen.jpg", workPhoto: "assets/img/members/work/katherine-chen.jpg", goofyPhoto: "assets/img/members/goofy/katherine-chen.jpg",
+        photo: "assets/img/members/katherine-chen.jpg", workPhoto: "", goofyPhoto: "assets/img/members/goofy/katherine-chen.jpg", solo: true,
         grade: "", school: "", track: "",
         bio: "",
         tasks: ["Photography", "Data Physicalization"]
@@ -345,7 +338,7 @@ const SECTIONS = [
       },
       {
         name: "Oscar Huang", role: "Student Advisor",
-        photo: "assets/img/members/oscar-huang.jpg", workPhoto: "", goofyPhoto: "assets/img/members/goofy/oscar-huang.jpg",
+        photo: "assets/img/members/oscar-huang.jpg", workPhoto: "", goofyPhoto: "assets/img/members/goofy/oscar-huang.jpg", solo: true,
         grade: "Sophomore", school: "TAS", track: "",
         bio: "Hi I am Oscar a Sophomore at TAS and a current advisor for GEMS Taiwan. I was a former drylab member for the 2025 team, and I hope to bring meaningful impact to the team from what I have learned last year. I also hope to continue looking forward to the learning opportunities that iGEM has to offer, whether that's teamwork or technical skills.",
         tasks: ["Wiki"]
@@ -356,6 +349,13 @@ const SECTIONS = [
         grade: "Sophomore", school: "TAS", track: "",
         bio: "Hi! I’m Venus, a former project lead and wet-lab lead of the 2025 Gems Taiwan iGEM team. After an amazing experience last year, I chose to return as an advisor to support the 2026 team, share my wet-lab experience, and continue exploring the impact of synthetic biology together.",
         tasks: ["Lab"]
+      },
+      {
+        name: "Bruce Tsai", role: "Student Advisor",
+        photo: "", workPhoto: "assets/img/members/work/bruce-tsai.jpg", goofyPhoto: "",
+        grade: "", school: "", track: "",
+        bio: "",
+        tasks: ["Protectant", "Peptide Design"]
       }
     ]},
     ]
@@ -420,7 +420,7 @@ const SECTIONS = [
       },
       {
         name: "Dr. Pak", role: "Project Advisor",
-        photo: "", workPhoto: "assets/img/members/work/dr-pak.jpg", goofyPhoto: "", solo: true,
+        photo: "assets/img/members/dr-pak.jpg", workPhoto: "assets/img/members/work/dr-pak.jpg", goofyPhoto: "", solo: true,
         grade: "", school: "", track: "",
         bio: "Howdy! Pak here (yes, I lived in Houston for a few years). This is my first year with iGEM, and what an eye-opener! Between the high level of science, the dedication of both instructors and students, and an amazing sense of curiosity, it’s been an incredible ride. As a newcomer to synbio, I’ve learned right alongside the team. Having worked in both academia and industrial R&D, watching these budding scientists tackle such challenging issues is truly rewarding and inspiring.",
         tasks: []

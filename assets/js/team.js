@@ -422,7 +422,8 @@
        shape, so the row's height is the width divided by the sum of the two
        aspect ratios. The CSS does the division; this supplies the sum once
        both photos know their size. */
-    /* A solo profile shows the work photo alone across the full width. */
+    /* A solo profile shows one photo alone across the full width: the work
+       photo, or the goofy one when there is no work photo. */
     pair.classList.toggle("modal__pair--solo", !!m.solo);
     shots[1].hidden = !!m.solo;
     const shown = m.solo ? shots.slice(0, 1) : shots;
@@ -432,7 +433,10 @@
       pair.style.setProperty("--ratio-sum", sum.toFixed(4));
     };
     pair.style.setProperty("--ratio-sum", "1.6");
-    [[m.workPhoto, " at work"], [m.goofyPhoto, ", being goofy"]]
+    const pics = m.solo
+      ? [[m.workPhoto || m.goofyPhoto, ""], ["", ""]]
+      : [[m.workPhoto, " at work"], [m.goofyPhoto, ", being goofy"]];
+    pics
       .forEach(([src, alt], n) => {
         const img = shots[n];
         if (img.hidden) { img.onload = null; img.removeAttribute("src"); img.alt = ""; return; }
