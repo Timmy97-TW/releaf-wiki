@@ -5,7 +5,7 @@
    if it is missing, so removing a section from index.html never breaks the
    rest of the file.
 
-     0  spotlight   the pointer opens a light in the hero's photograph onto the reactor
+     0  two states  the hero crossfades from the farm to the reactor and back
      1  reveal      one-shot fade-and-rise for .rise
      2  reactor     wakes the WebGL reactor before it is needed
      3  parts       point at a demand card, its parts light in the WebGL reactor
@@ -75,107 +75,44 @@
     };
   })());
 
-  /* ═══════════════════════════════════════════════════════ 0  SPOTLIGHT ══ */
-  /* The hero is two pictures stacked, and the photograph on top has a mask
-     whose light is centred on --spot-x / --spot-y with core --spot-r
-     (home.css). This moves the centre, says when the light is on, and sets
-     --spot-near: 1 while the pointer is on the machine, falling smoothly to 0
-     one and a half lights away from it, which is how far the light opens
-     onto the machine rather than only dimming the photograph. The machine's
-     place comes from the same custom properties home.css draws it with. A
-     mouse lights it by hovering and puts it out by leaving; a finger lights it
-     where it lands and leaves it there, since a touch screen has no hover and
-     a drag across the hero is the reader scrolling. */
+  /* ════════════════════════════════════════════════════════ 0  TWO STATES ══ */
+  /* The hero holds the farm, then the machine, on a slow clock: FARM_MS on
+     the farm (long enough to read Farmer Chen's words), MACHINE_MS on the
+     reactor, then back. home-hero.css does the crossfade; this only toggles
+     .is-machine. The clock runs only while the hero is on screen and the tab
+     is visible, and restarts on the farm when the reader comes back. With
+     reduced motion, or without script, the hero is the farm and stays so. */
 
-  (function spotlight() {
-    var frames = document.getElementById("hero-spot");
-    var hero = frames && frames.closest(".hero");
-    if (!hero) return;
-    var art = frames.querySelector(".hero__frame--reactor");
+  (function twoStates() {
+    var hero = document.querySelector(".hero");
+    if (!hero || reduced || !document.getElementById("hero-spot")) return;
+    var FARM_MS = 7000, MACHINE_MS = 5500;
+    var timer = 0, inView = true, machine = false;
 
-    var hint = hero.querySelector(".hero__hint");
-    if (hint && !window.matchMedia("(hover: hover)").matches) {
-      hint.textContent = "Tap the field to find the reactor";
+    function set(on) { machine = on; hero.classList.toggle("is-machine", on); }
+    function stop() { window.clearTimeout(timer); timer = 0; }
+    function tick() {
+      set(!machine);
+      timer = window.setTimeout(tick, machine ? MACHINE_MS : FARM_MS);
     }
-    hero.classList.add("has-spot");
-
-    /* 30 Sep, round 4 (owner). The farm stays whole until the pointer lands
-       in ONE small circle at the centre of the hero, --hole-d of its width
-       across (home-hero.css). Then the light opens out from there over the
-       WHOLE machine (.is-open; --spot-r grows to --spot-full on its
-       transition, so the machine zooms out of the field), and stays open
-       while the pointer is over the machine. Leaving the machine, or the
-       hero, closes it. The machine's box comes from the same custom
-       properties home.css draws it with; read once, and after a resize. */
-    var box = null;
-    function measure() {
-      var cs = getComputedStyle(frames);
-      var n = function (k) { return parseFloat(cs.getPropertyValue(k)); };
-      var f = frames.getBoundingClientRect(), b = art.getBoundingClientRect();
-      var ar = n("--r-ar"), w = Math.min(b.width, ar * b.height), h = Math.min(b.height, b.width / ar);
-      var m = {
-        x: b.left - f.left + n("--r-ox") * (b.width - w) + n("--r-cx") * w,
-        y: b.top - f.top + n("--r-oy") * (b.height - h) + n("--r-cy") * h,
-        hw: n("--r-hw") * w, hh: n("--r-hh") * h,
-        cx: f.width / 2, cy: f.height / 2, cr: (n("--hole-d") || 0.3) * f.width / 2
-      };
-      if (!isFinite(m.x + m.y + m.hw + m.hh + m.cr) || m.hw <= 0) return null;
-      frames.style.setProperty("--spot-x", m.x + "px");
-      frames.style.setProperty("--spot-y", m.y + "px");
-      frames.style.setProperty("--spot-full", (1.08 * Math.max(m.hw, m.hh)) + "px");
-      return m;
-    }
-    window.addEventListener("resize", function () { box = null; });
-
-    var x = 0, y = 0, queued = false, open = false;
-    function draw() {
-      queued = false;
-      if (!box) box = measure();
-      if (!box) return;
-      var dcx = x - box.cx, dcy = y - box.cy;
-      var ex = (x - box.x) / (box.hw * 1.1), ey = (y - box.y) / (box.hh * 1.1);
-      if (!open && dcx * dcx + dcy * dcy <= box.cr * box.cr) open = true;
-      else if (open && ex * ex + ey * ey > 1) open = false;
-      frames.classList.toggle("is-open", open);
-      if (open) hero.classList.add("is-found");
-    }
-    function aim(e) {
-      var r = frames.getBoundingClientRect();
-      x = e.clientX - r.left;
-      y = e.clientY - r.top;
-      if (!queued) { queued = true; requestAnimationFrame(draw); }
-    }
-    function light(e) {
-      aim(e);
-      frames.classList.add("is-lit");
+    function start() {
+      stop();
+      if (!inView || document.hidden) return;
+      timer = window.setTimeout(tick, machine ? MACHINE_MS : FARM_MS);
     }
 
-    hero.addEventListener("pointermove", function (e) {
-      if (e.pointerType === "mouse" || e.pointerType === "pen") light(e);
+    if ("IntersectionObserver" in window) {
+      new IntersectionObserver(function (entries) {
+        inView = entries[0].isIntersecting;
+        if (inView) start();
+        else { stop(); set(false); }
+      }, { threshold: 0.35 }).observe(hero);
+    }
+    document.addEventListener("visibilitychange", function () {
+      if (document.hidden) stop(); else start();
     });
-    hero.addEventListener("pointerleave", function (e) {
-      if (e.pointerType === "mouse" || e.pointerType === "pen") {
-        open = false;
-        frames.classList.remove("is-lit", "is-open");
-      }
-    });
-    // A finger lights the field only with a tap. pointerdown comes before
-    // the browser knows whether the touch is a scroll, so the light waits for
-    // the pointerup of a touch that did not travel; a scroll ends in
-    // pointercancel instead, and the reader's first flick reveals nothing.
-    var tap = null;
-    hero.addEventListener("pointerdown", function (e) {
-      if (e.pointerType === "touch") tap = { id: e.pointerId, x: e.clientX, y: e.clientY };
-    });
-    hero.addEventListener("pointercancel", function (e) {
-      if (tap && tap.id === e.pointerId) tap = null;
-    });
-    hero.addEventListener("pointerup", function (e) {
-      if (e.pointerType !== "touch" || !tap || tap.id !== e.pointerId) return;
-      var moved = Math.abs(e.clientX - tap.x) + Math.abs(e.clientY - tap.y);
-      tap = null;
-      if (moved < 10) light(e);
-    });
+    window.addEventListener("beforeprint", function () { stop(); set(false); });
+    start();
   })();
 
   /* ══════════════════════════════════════════════════════════ 1  REVEAL ══ */
@@ -541,10 +478,10 @@
      Transform and opacity only, written once a frame through
      window.__homeFrame.
 
-       0.10 to 1.16  "An answer has to meet five demands." alone, then the
-                     five chips arrive under it, one by one
+       0.10 to 1.16  the question alone, then the five demands arrive
+                     under it, one by one, each with its line
        1.16 to 1.30  the five, held
-       1.30 to 1.55  the heading fades out, on white
+       1.30 to 1.55  the question and the lines fade out, on white
        1.58 to 1.88  the white turns to ink, quickly and on a steep curve so
                      it hardly lingers in grey; the chips stay where they
                      are (dark green on white, then the tag's look on ink)
@@ -552,8 +489,9 @@
                      the reactor
        2.35 to 2.70  the reactor comes up from the middle of the five,
                      0.85 to 1 with its opacity; no overshoot
-       2.55 to 3.00  "Make it where it grows." and the lede settle, then the
-                     cards open round their tags
+       2.62 to 2.82  the name, ReLEAF
+       2.74 to 2.94  the line under it
+       2.84 to 3.06  each card's words open under its tag
        3.00 to 3.10  the finished band, held
 
      The chips land exactly on the tags and are drawn like them (they share
@@ -576,8 +514,9 @@
     var runwayEl = dx.querySelector(".dx__runway");
     var paper = dx.querySelector(".dx__paper");
     var row = dmd.querySelector(".dmd__chips");
-    var title = dmd.querySelector(".dmd__title");
+    var title = dmd.querySelector(".dmd__head");
     var chips = [].slice.call(dmd.querySelectorAll(".dmd__chip"));
+    var says = [].slice.call(dmd.querySelectorAll(".dmd__say"));
     var stage = sol.querySelector(".rxs__stage");
     var head = sol.querySelector(".rxs__head");
     var lede = sol.querySelector(".rxs__lede");
@@ -613,7 +552,7 @@
     var RUN = 3.1;
     var fits = window.matchMedia("(min-width: 980px) and (min-height: 640px)");
     var live = false, geo = null, navH = 68, parked = null, printing = false;
-    var moved = [title, head, lede, model, sol, paper].concat(chips);
+    var moved = [title, head, lede, model, sol, paper].concat(chips, says);
     var cache = new Map();
 
     // write only what changed since the last frame
@@ -690,7 +629,7 @@
       if (!m || !geo) return;
       var s = m.s, g = geo;
 
-      // the heading fades out while the page is still white
+      // the question and the lines fade out while the page is still white
       var tOut = inOut(span(s, 1.3, 1.55));
       put(title, "opacity", f3(1 - tOut));
       put(title, "transform", tOut <= 0 ? "none" : "translateY(" + px(-20 * tOut) + ")");
@@ -712,6 +651,10 @@
         var x = (s1.x - s0.x) * f, y = (s1.y - s0.y) * f + (1 - a) * 22;
         put(c, "transform", "translate(" + px(x) + "," + px(y) + ") scale(" + f3(sc * (0.9 + 0.1 * a)) + ")");
         put(c, "opacity", f3(handed ? 0 : a));
+        if (says[k]) {
+          put(says[k], "opacity", f3(a * (1 - tOut)));
+          put(says[k], "transform", a >= 1 ? "none" : "translateY(" + px((1 - a) * 22) + ")");
+        }
       });
       put(grid, "--dx-tag", handed ? "1" : "0");
 
@@ -719,13 +662,13 @@
       var r = easeOut(span(s, 2.35, 2.7));
       put(model, "opacity", f3(r));
       put(model, "transform", r >= 1 ? "none" : "scale(" + f3(0.85 + 0.15 * r) + ")");
-      // then its words settle and the cards open round their tags
-      var h = easeOut(span(s, 2.55, 2.82)), l = easeOut(span(s, 2.62, 2.9));
+      // then its name, then the line under it, then the cards' words
+      var h = easeOut(span(s, 2.62, 2.82)), l = easeOut(span(s, 2.74, 2.94));
       put(head, "opacity", f3(h));
       put(head, "transform", h >= 1 ? "none" : "translateY(" + px(16 * (1 - h)) + ")");
       put(lede, "opacity", f3(l));
       put(lede, "transform", l >= 1 ? "none" : "translateY(" + px(12 * (1 - l)) + ")");
-      var card = easeOut(span(s, 2.7, 3.0));
+      var card = easeOut(span(s, 2.84, 3.06));
       put(grid, "--dx-card", f3(card));
       dx.classList.toggle("is-early", card < 0.6);
 

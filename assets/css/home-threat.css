@@ -2,20 +2,14 @@
    ReLeaf homepage: 01 THE THREAT. Rebuilt 1 Oct.
    -----------------------------------------------------------------------------
    The head across the top; under it the text column (the current view's
-   caption and places, the farmers' line, the demand it earns) beside the map.
-   Below 900px it is one column: head, map, text.
+   caption and the farmers' line) beside the map. Below 900px it is one
+   column: head, map, text.
 
-   FIVE VIEWS: vol, farm, nights, age, all. Every view-bound element carries
-   data-v, and the checked radio shows the ones that match, through :has().
-   Without :has() only the volatility view shows and the switch hides. No
-   script anywhere in this section.
-
-   ALL is a stack: the farmland (threat-stack-base.webp), then one
-   translucent rust layer per threat (threat-stack-vol/-nights/-age.webp),
-   multiplied, so farmland under two threats is visibly darker than under
-   one. When All is chosen the three land one after another; with reduced
-   motion they are simply there. The key's three swatches are the composited
-   colours: none #e4dfcf, one #a56851, two #773120 (build/threat-stack.py).
+   THREE VIEWS: vol, farm, nights (1 Oct: farmer age and the stacked "All"
+   went, with Jacquelyn's note that they did not connect to the problem).
+   Every view-bound element carries data-v, and the checked radio shows the
+   ones that match, through :has(). Without :has() only the volatility view
+   shows and the switch hides. No script anywhere in this section.
 
    Pins are placed by inline left/top in % of the 840 x 1267 canvas, fitted
    to the rasters (see build/threat_common.py).
@@ -114,46 +108,33 @@
   height: min(calc(var(--pb-screen) - 2 * var(--screen-pad) - 5rem), 40rem);
   aspect-ratio: 840 / 1267;
 }
-.th-map__img, .th-map__stack, .th-map__stack img { position: absolute; inset: 0; width: 100%; height: 100%; display: block; }
-.th-map__stack img + img { mix-blend-mode: multiply; }
+.th-map__img { position: absolute; inset: 0; width: 100%; height: 100%; display: block; }
 
 /* every view-bound picture and pin starts hidden but volatility's */
-:is(.th-map__img, .th-map__stack, .th-lab)[data-v] {
+:is(.th-map__img, .th-lab)[data-v] {
   opacity: 0; visibility: hidden;
   transition: opacity .35s ease, visibility 0s linear .35s;
 }
-:is(.th-map__img, .th-map__stack, .th-lab)[data-v="vol"] { opacity: 1; visibility: visible; }
+:is(.th-map__img, .th-lab)[data-v="vol"] { opacity: 1; visibility: visible; }
 @supports selector(:has(*)) {
-  .th:has(.th-views input:not([value="vol"]):checked) :is(.th-map__img, .th-map__stack, .th-lab)[data-v="vol"] { opacity: 0; visibility: hidden; transition: opacity .35s ease, visibility 0s linear .35s; }
+  .th:has(.th-views input:not([value="vol"]):checked) :is(.th-map__img, .th-lab)[data-v="vol"] { opacity: 0; visibility: hidden; transition: opacity .35s ease, visibility 0s linear .35s; }
   .th:has(.th-views input:not([value="vol"]):checked) .th-view[data-v="vol"] { display: none; }
-.th:has(.th-views input[value="vol"]:checked) :is(.th-map__img, .th-map__stack, .th-lab)[data-v="vol"] { opacity: 1; visibility: visible; transition-delay: 0s; }
+.th:has(.th-views input[value="vol"]:checked) :is(.th-map__img, .th-lab)[data-v="vol"] { opacity: 1; visibility: visible; transition-delay: 0s; }
 .th:has(.th-views input[value="vol"]:checked) .th-view[data-v="vol"] { display: block; }
 .th:has(.th-views input[value="vol"]:checked) .th-key [data-v]:not([data-v~="vol"]) { display: none; }
-.th:has(.th-views input[value="farm"]:checked) :is(.th-map__img, .th-map__stack, .th-lab)[data-v="farm"] { opacity: 1; visibility: visible; transition-delay: 0s; }
+.th:has(.th-views input[value="farm"]:checked) :is(.th-map__img, .th-lab)[data-v="farm"] { opacity: 1; visibility: visible; transition-delay: 0s; }
 .th:has(.th-views input[value="farm"]:checked) .th-view[data-v="farm"] { display: block; }
 .th:has(.th-views input[value="farm"]:checked) .th-key [data-v]:not([data-v~="farm"]) { display: none; }
-.th:has(.th-views input[value="nights"]:checked) :is(.th-map__img, .th-map__stack, .th-lab)[data-v="nights"] { opacity: 1; visibility: visible; transition-delay: 0s; }
+.th:has(.th-views input[value="nights"]:checked) :is(.th-map__img, .th-lab)[data-v="nights"] { opacity: 1; visibility: visible; transition-delay: 0s; }
 .th:has(.th-views input[value="nights"]:checked) .th-view[data-v="nights"] { display: block; }
 .th:has(.th-views input[value="nights"]:checked) .th-key [data-v]:not([data-v~="nights"]) { display: none; }
-.th:has(.th-views input[value="age"]:checked) :is(.th-map__img, .th-map__stack, .th-lab)[data-v="age"] { opacity: 1; visibility: visible; transition-delay: 0s; }
-.th:has(.th-views input[value="age"]:checked) .th-view[data-v="age"] { display: block; }
-.th:has(.th-views input[value="age"]:checked) .th-key [data-v]:not([data-v~="age"]) { display: none; }
-.th:has(.th-views input[value="all"]:checked) :is(.th-map__img, .th-map__stack, .th-lab)[data-v="all"] { opacity: 1; visibility: visible; transition-delay: 0s; }
-.th:has(.th-views input[value="all"]:checked) .th-view[data-v="all"] { display: block; }
-.th:has(.th-views input[value="all"]:checked) .th-key [data-v]:not([data-v~="all"]) { display: none; }
 }
 @supports not selector(:has(*)) {
   .th-views, .th-key [data-v]:not([data-v~="vol"]) { display: none; }
 }
 
-/* ALL: the three threats land one after another, then the pins */
-.th-stack__t { opacity: 0; transition: opacity .6s ease; }
-.th:has(.th-views input[value="all"]:checked) .th-stack__t {
-  opacity: 1; transition-delay: calc(.2s + var(--i) * .75s);
-}
 @media (prefers-reduced-motion: reduce) {
-  :is(.th-map__img, .th-map__stack, .th-lab)[data-v], .th-stack__t { transition: none !important; }
-  .th-stack__t { opacity: 1; }
+  :is(.th-map__img, .th-lab)[data-v] { transition: none !important; }
 }
 
 /* the switch: a segmented control over the map, its name beside it */
@@ -178,7 +159,6 @@
 }
 .th-views label:hover span { box-shadow: inset 0 0 0 1px var(--leaf-700); }
 .th-views input:checked + span { background: var(--leaf-900); color: var(--white); box-shadow: none; }
-.th-views input[value="all"]:checked + span { background: #773120; }
 .th-views input:focus-visible + span { outline: 2px solid var(--leaf-700); outline-offset: 2px; }
 
 .th-pin {
@@ -207,15 +187,12 @@
 .th-key__ramp i:nth-child(3) { background: var(--vol-3); }
 .th-key__ramp i:nth-child(4) { background: var(--vol-4); }
 .th-key__ramp i:nth-child(5) { background: var(--vol-5); }
-/* build/threat-nights.py and threat-age.py paint these exact hexes */
+/* build/threat-nights.py paints these exact hexes */
 .th-key__ramp--nights i:nth-child(1) { background: #ddd8c2; }
 .th-key__ramp--nights i:nth-child(2) { background: #cbbf98; }
 .th-key__ramp--nights i:nth-child(3) { background: #c2984e; }
 .th-key__ramp--nights i:nth-child(4) { background: #ae6a38; }
 .th-key__ramp--nights i:nth-child(5) { background: #9a3d22; }
-.th-key__ramp--age i:nth-child(1) { background: #ddd8c2; }
-.th-key__ramp--age i:nth-child(2) { background: #c2984e; }
-.th-key__ramp--age i:nth-child(3) { background: #9a3d22; }
 .th-key__ends { display: flex; justify-content: space-between; font-variant-numeric: tabular-nums; }
 .th-key__sw { display: flex; align-items: center; gap: .5rem; margin-top: .2rem; }
 .th-key__sw i {
@@ -253,10 +230,9 @@
    the view's caption. */
 .th-view__cap {
   font-size: clamp(1.25rem, 1.05rem + .7vw, 1.75rem);
-  line-height: 1.2; letter-spacing: -.018em; max-width: 18ch;
+  line-height: 1.2; letter-spacing: -.018em;
   text-wrap: balance;
 }
-.th-view[data-v="all"] .th-view__cap { color: #5a1a0e; max-width: 16ch; }
 .th-lab {
   position: absolute; z-index: 1;
   display: flex; flex-direction: column; gap: .05rem;
@@ -276,11 +252,4 @@
 .th-lab--l { transform: translate(calc(-100% + .25rem), -.45rem); padding-right: .85rem; text-align: right; align-items: flex-end; }
 .th-lab--l::before { right: 0; }
 .th-close { max-width: 22rem; }
-/* All: the key is the composited ramp, least to most stacked (the 5th to
-   95th percentile of farmland, build/threat-stack.py) */
-.th-key__ramp--all i:nth-child(1) { background: #be9986; }
-.th-key__ramp--all i:nth-child(2) { background: #9b6351; }
-.th-key__ramp--all i:nth-child(3) { background: #883f29; }
-.th-key__ramp--all i:nth-child(4) { background: #712a18; }
-.th-key__ramp--all i:nth-child(5) { background: #480d06; }
-.th-views input[value="all"]:checked + span { background: #480d06; }
+

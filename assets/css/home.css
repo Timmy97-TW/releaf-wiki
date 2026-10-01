@@ -133,284 +133,96 @@ h2.band__title {
 @media print { .rise.is-armed { opacity: 1 !important; transform: none !important; transition: none !important; } }
 
 /* ============================================================= 1  HERO ==== */
-/* Farmer Chen's field, full bleed, and the reactor under it: the pointer is a
-   light that finds the machine standing among the people in the photograph.
+/* Two states of one screen, crossfaded by home.js (piece 0), no pointer
+   needed (1 Oct, Jacquelyn: hover is not how people meet a page now).
 
-   COMPOSITION CONTRACT. Almost everything below is holding one arrangement in
-   place, and the arrangement is the point:
+     · THE FARM. The team walking Farmer Chen's field in Tamsui, full screen,
+       with her words bottom right.
+     · THE MACHINE. The farm sinks to a faint ground and the bench reactor
+       comes up in the middle, smaller than the screen, under the title.
 
-     · the headline sits in the TOP LEFT and must never land on Farmer Chen's
-       face. That is solved in the CROP, not by moving type around. The farm
-       file is cut so her head sits low and centre-left, below the headline.
-       Re-export the crop and you will move her face into the type.
-     · the student on the right is sunk by the wash. Chen is not the project;
-       the team is. Her hand, her basket and one listening student read.
-     · the reactor frame is the MACHINE and nothing else: a render of the
-       housed reactor on the hero's own ink, so the light finds an object
-       rather than a second photograph. It stands between Chen and the
-       listening student.
-     · the only other text is the foot, bottom right: the cue for the light
-       and where and when the photograph was taken.
+   The title stays through both: the farm and the machine are the two halves
+   of the claim. home-hero.css holds the sizes and the timing.
 
-   Read the notes on each rule before changing a number. */
+   THE RESTING STATE IS THE FARM. Without script, with reduced motion, or
+   while printing, the farm is whole and the reactor is read out by its alt
+   text only. */
 
-.hero { position: relative; background: var(--ink); color: var(--white); isolation: isolate; }
-
-/* THE SPOTLIGHT (Marburg 2024 did it first). Both images fill the whole
-   hero, stacked: a render of the housed reactor underneath, the farm on top.
-   The farm's mask has two layers, and the farm shows through by
-   light x zone:
-
-     · THE LIGHT, a radial gradient around (--spot-x, --spot-y) that is
-       see-through out to --spot-r and solid from --spot-fall times that.
-     · THE ZONE, a fixed soft ellipse over the machine (placed with the
-       machine, further down). Over the machine it lets the light open all
-       the way; everywhere else it lets it open only to --spot-min.
-
-   home.js writes --spot-x, --spot-y and --spot-near and says when the light
-   is on; nothing here depends on it. At rest --spot-r is 0 and the light is
-   solid everywhere, so without scripting the farm is simply whole.
-
-   THE FADE is a smoothstep (3t^2 - 2t^3) laid down as eight straight pieces
-   between --spot-r and --spot-fall x --spot-r. It leaves the core and arrives
-   at the solid farm with no slope, which is what keeps a ring from showing;
-   a straight ramp between two stops always draws one at each end. The core
-   is small and the fade is long, so the machine surfaces out of the field
-   instead of appearing behind a cut-out.
-
-   --spot-r is registered so that it transitions: the light swells open when
-   the pointer arrives and closes again when it leaves. --spot-size is
-   registered so that home.js can read the core in pixels. */
-@property --spot-r { syntax: "<length>"; inherits: true; initial-value: 0px; }
-@property --spot-size { syntax: "<length>"; inherits: true; initial-value: 0px; }
-
-.hero__frames {
-  --spot-x: 50%; --spot-y: 50%; --spot-r: 0px;
-  --spot-size: clamp(64px, 6vw, 110px);
-  --spot-fall: 2.4;
-  --spot-mask: radial-gradient(circle at var(--spot-x) var(--spot-y),
-    rgb(0 0 0 / 0)    var(--spot-r),
-    rgb(0 0 0 / .043) calc(var(--spot-r) * (1 + (var(--spot-fall) - 1) * .125)),
-    rgb(0 0 0 / .156) calc(var(--spot-r) * (1 + (var(--spot-fall) - 1) * .25)),
-    rgb(0 0 0 / .316) calc(var(--spot-r) * (1 + (var(--spot-fall) - 1) * .375)),
-    rgb(0 0 0 / .5)   calc(var(--spot-r) * (1 + (var(--spot-fall) - 1) * .5)),
-    rgb(0 0 0 / .684) calc(var(--spot-r) * (1 + (var(--spot-fall) - 1) * .625)),
-    rgb(0 0 0 / .844) calc(var(--spot-r) * (1 + (var(--spot-fall) - 1) * .75)),
-    rgb(0 0 0 / .957) calc(var(--spot-r) * (1 + (var(--spot-fall) - 1) * .875)),
-    #000              calc(var(--spot-r) * var(--spot-fall) + 1px));
-  position: absolute; inset: 0;
-  transition: --spot-r .55s cubic-bezier(.2, .7, .2, 1);
+.hero {
+  position: relative; isolation: isolate;
+  background: var(--ink); color: var(--white);
+  min-height: calc(100vh - var(--nav-h, 68px));
+  min-height: calc(100svh - var(--nav-h, 68px));
+  display: grid;
 }
-/* How far the light opens is decided in home-hero.css (the hole, and the
-   whole machine once it is found). */
-@media (prefers-reduced-motion: reduce) { .hero__frames { transition: none; } }
-
+.hero__frames { position: absolute; inset: 0; container-type: size; }
 .hero__frame { position: absolute; inset: 0; overflow: hidden; }
 .hero__frame img { width: 100%; height: 100%; object-fit: cover; }
 
-.hero__frame--farm {
-  z-index: 1;
-  -webkit-mask-image: var(--spot-mask), var(--spot-zone);
-          mask-image: var(--spot-mask), var(--spot-zone);
-}
-
-/* hero-farm-*.jpg is cut from the original at 6150x3705+22+8, which is very
-   nearly the full width of the negative and the top 90% of its height. That
-   crop does three things at once and all three are load-bearing:
-     · it takes the picture as far LEFT as the negative allows, so Chen's
-       outstretched hand, the basket on her arm and the listening student all
-       arrive in shot rather than only her portrait;
-     · it puts her head around 42% across and 44% down, which is under the
-       headline horizontally but well clear of it vertically;
-     · it leaves the student's face out near 67% across, with room for the
-       machine between her and Chen.
-   The file is cut at 1.66:1, a little taller than the frame it usually lands
-   in (about 1.75:1 at 1280x800), so on a normal desktop window the browser
-   trims HEIGHT and the horizontal arrangement above is exactly what shows.
-   Anchoring to the top spends that trim on the bottom edge, where there is
-   only soil, and keeps the gap under the headline fixed at every width.
-   Below about 1.66:1, which is a short wide window or a narrow tall one, the
-   trim flips to width and the frame closes in on Chen and the basket from
-   both sides. That is a fair second reading rather than a bug, but it is why
-   the student is not guaranteed at every size. */
+.hero__frame--farm { z-index: 1; }
 .hero__frame--farm img { object-position: 50% 42%; }
 
-/* THE MACHINE. hero-bench-*.jpg is a render of the bench reactor (the same
-   model the reactor section turns; made with build/hero-bench-render.html
-   and home-reactor.js, reduced motion, 2400x1500) on the hero's own ink, and every edge of the file is exactly --ink, so it is
-   LETTERBOXED rather than cropped: the whole machine shows at any hero shape
-   and the bars are the same colour as the hero behind them. It is contained
-   in a box that starts --r-top down the hero, which keeps the top of the
-   machine under the claim and makes it a little smaller than the full height.
-   In the wide file the machine is 56% of the file wide and 75% of it tall,
-   centred 59% across and 52% down, so in a wide hero it spans the space
-   between Chen and the listening student. The portrait file (a phone held
-   upright, picked in index.html) has it centred, 54% down.
-
-   THE ZONE. Most of the render is ink, so a full-strength light over Chen's
-   face would put a black hole in it. The zone is an ellipse over the machine:
-   inside it the light opens all the way, outside it only to --spot-min, a
-   faint dimming. How much the inside opens is --spot-near, which home.js sets
-   from how far the pointer is from the machine: 1 on it, falling smoothly to
-   0 one and a half lights away. So a light held on Chen's face is the same
-   faint dimming everywhere it falls, and the machine's green edge does not
-   show through its tail as a bright bar; as the light comes to the machine,
-   the zone opens with it.
-
-   The machine, the zone and home.js all work from the same arithmetic, in
-   container units of .hero__frames: the size of the contained file (--img-w,
-   --img-h), then the machine's centre and half-size in it (--r-cx, --r-cy,
-   --r-hw, --r-hh, fractions of the file, measured on the render). Re-render
-   the file with a different framing and these four numbers are the ones to
-   change. */
-.hero__frames {
-  container-type: size;
-  --spot-min: .3; --spot-near: 1;
-  --r-top: 9cqh; --r-bot: 0px; --r-ar: 1.6; --r-ox: .5; --r-oy: .5;
-  --r-cx: .5; --r-cy: .472; --r-hw: .436; --r-hh: .446;
-  --box-h: calc(100cqh - var(--r-top) - var(--r-bot));
-  --img-w: min(100cqw, var(--r-ar) * var(--box-h));
-  --img-h: min(var(--box-h), 100cqw / var(--r-ar));
-  --zone-x: calc(var(--r-ox) * (100cqw - var(--img-w)) + var(--r-cx) * var(--img-w));
-  --zone-y: calc(var(--r-top) + var(--r-oy) * (var(--box-h) - var(--img-h)) + var(--r-cy) * var(--img-h));
-  --zone-a: calc(1 - var(--spot-min));
-  --spot-zone: radial-gradient(calc(1.9 * var(--r-hw) * var(--img-w)) calc(1.7 * var(--r-hh) * var(--img-h))
-      at var(--zone-x) var(--zone-y),
-    rgb(0 0 0 / calc(var(--zone-a) * (1 - var(--spot-near))))        55%,
-    rgb(0 0 0 / calc(var(--zone-a) * (1 - var(--spot-near) * .844))) 66%,
-    rgb(0 0 0 / calc(var(--zone-a) * (1 - var(--spot-near) * .5)))   77.5%,
-    rgb(0 0 0 / calc(var(--zone-a) * (1 - var(--spot-near) * .156))) 89%,
-    rgb(0 0 0 / var(--zone-a)) 100%);
-}
-.hero__frame--reactor { top: var(--r-top); bottom: var(--r-bot); }
-.hero__frame--reactor img {
-  object-fit: contain;
-  object-position: calc(var(--r-ox) * 100%) calc(var(--r-oy) * 100%);
-}
-
-/* The wash. Three layers, and the first one is why Chen keeps her daylight:
-   a corner shadow anchored at the top left, sized so it has faded out before
-   it reaches her, holds the headline without dropping a grey sheet over the
-   whole field. The vertical layer is for the foot at the bottom; the
-   horizontal one is an edge vignette, heavy on the right, where a second
-   student leans into the frame out of focus. If you flatten these back into
-   one full-frame gradient, her face goes grey. The wash belongs to the farm
-   frame, so the light takes it away with the farm and the machine shows at
-   the render's own exposure. */
+/* The wash: a corner shadow for the title, a foot shadow for the quote, an
+   edge vignette on the right. It belongs to the farm frame and fades with it. */
 .hero__frame--farm::after {
   content: ""; position: absolute; inset: 0; z-index: 2;
   background:
     radial-gradient(125% 80% at 0% 0%,
-      rgb(7 11 9 / .82) 0%, rgb(7 11 9 / .46) 30%, rgb(7 11 9 / .12) 54%, transparent 72%),
+      rgb(7 11 9 / .78) 0%, rgb(7 11 9 / .42) 30%, rgb(7 11 9 / .1) 54%, transparent 72%),
     linear-gradient(180deg,
-      rgb(7 11 9 / .28) 0%, rgb(7 11 9 / .04) 36%, rgb(7 11 9 / .22) 72%, rgb(7 11 9 / .72) 100%),
-    linear-gradient(90deg, rgb(7 11 9 / .20) 0%, rgb(7 11 9 / .02) 52%, rgb(7 11 9 / .22) 74%, rgb(7 11 9 / .70) 100%);
+      rgb(7 11 9 / .24) 0%, rgb(7 11 9 / .02) 36%, rgb(7 11 9 / .2) 72%, rgb(7 11 9 / .7) 100%),
+    linear-gradient(90deg, rgb(7 11 9 / .16) 0%, rgb(7 11 9 / .02) 52%, rgb(7 11 9 / .18) 74%, rgb(7 11 9 / .62) 100%);
 }
 
-/* One column. The headline is pinned top left and the foot bottom right, and
-   the middle row is the spring that pushes them apart. */
+/* The machine. hero-bench-*.jpg is a render of the bench reactor on the
+   hero's own ink, so it is contained, never cropped, and its edges are
+   feathered into whatever is left of the farm behind it. */
+.hero__frame--reactor { z-index: 2; opacity: 0; }
+.hero__frame--reactor img {
+  object-fit: contain; object-position: 50% 50%;
+  -webkit-mask-image: radial-gradient(50% 50% at 50% 50%, #000 62%, transparent 100%);
+          mask-image: radial-gradient(50% 50% at 50% 50%, #000 62%, transparent 100%);
+}
+
+/* One column: the title top left, the foot bottom right, a spring between. */
 .hero__inner {
   position: relative; z-index: 3;
-  max-width: var(--max); margin: 0 auto;
-  padding: clamp(1.75rem, 3.2vw, 2.75rem) var(--sp-5) var(--sp-5);
-  min-height: min(90vh, 800px);
+  width: 100%; max-width: var(--max); margin: 0 auto;
+  padding: clamp(3.5rem, 2rem + 6vh, 6.5rem) var(--sp-5) clamp(1.75rem, 1rem + 3vh, 3rem);
   display: grid;
   grid-template-columns: minmax(0, 1fr);
   grid-template-rows: auto 1fr auto;
 }
 @media (min-width: 640px) { .hero__inner { padding-left: var(--sp-6); padding-right: var(--sp-6); } }
 
-/* Top left corner, and it has to STAY short. On a 1280x800 window the top of
-   Chen's hair arrives at about 245px, and line two of the h1 runs far enough
-   right to reach her, so the h1 has to finish above roughly 200px. The head is
-   the wordmark and the claim and nothing else: there is no sub-heading and no
-   credentials line any more, by request. Add a line under the claim, or push
-   the type size up, and words land on her face. */
-.hero__head { grid-row: 1; justify-self: start; max-width: 41rem; }
-
+.hero__head { grid-row: 1; justify-self: start; }
 .hero__claim {
   margin: 0;
   font-family: var(--font-display);
-  font-size: clamp(1.6rem, 3.45vw, 2.75rem);
-  font-weight: 750; line-height: 1.06; letter-spacing: -.028em;
-  color: var(--white);
+  font-weight: 750; color: var(--white);
   text-wrap: balance;
-  text-shadow: 0 2px 24px rgb(7 11 9 / .5);
 }
 
-/* The foot: Farmer Chen's words bottom left, in a neutral box (a grey
-   rule and white type, no green), and the cue for the light bottom right.
-   The cue shows only once home.js runs (.has-spot) and fades for good the
-   first time the light opens (.is-found). */
 .hero__foot {
   grid-row: 3; align-self: end;
-  display: flex; align-items: flex-end; justify-content: space-between; gap: var(--sp-5);
+  display: grid; justify-items: end; align-items: end;
 }
-.hero__note {
-  margin: 0; max-width: 30rem;
-  padding: var(--sp-3) var(--sp-4);
-  border-left: 2px solid rgb(255 255 255 / .55);
-  background: rgb(7 11 9 / .5);
-  -webkit-backdrop-filter: blur(6px); backdrop-filter: blur(6px);
-}
-.hero__note p {
-  margin: 0; font-style: italic;
-  font-size: var(--text-sm); line-height: 1.5; color: rgb(255 255 255 / .92);
-  text-wrap: pretty;
-}
+.hero__foot > * { grid-area: 1 / 1; }
+.hero__note { margin: 0; }
+.hero__note p { margin: 0; font-style: italic; text-wrap: pretty; }
 .hero__note p::before { content: "\201C"; }
 .hero__note p::after  { content: "\201D"; }
-.hero__note footer { margin-top: .5rem; display: flex; flex-wrap: wrap; gap: .1rem .6rem; font-size: .75rem; line-height: 1.4; }
-.hero__note footer b { color: var(--white); font-weight: 700; }
-.hero__note footer span { color: rgb(255 255 255 / .6); }
-.hero__hint {
-  display: none; margin: 0; flex: none;
-  font-size: .75rem; letter-spacing: .02em; line-height: 1.5;
-  color: rgb(255 255 255 / .8); text-shadow: 0 1px 12px rgb(7 11 9 / .8);
-  pointer-events: none;
-  transition: opacity .6s ease;
-}
-.hero__hint::before {
-  content: ""; display: inline-block; width: .6rem; height: .6rem; margin-right: .5rem;
-  border-radius: 50%; vertical-align: -.05rem;
-  background: radial-gradient(circle, rgb(255 255 255 / .9), rgb(255 255 255 / 0) 70%);
-}
-.hero.has-spot .hero__hint { display: block; }
-.hero.is-found .hero__hint { opacity: 0; }
 
 @media (max-width: 800px) {
-  /* The farm frame is tall and narrow here, so the browser trims WIDTH and
-     only about a third of the picture survives. There is no arrangement of
-     hand, basket and student that fits a 375px column, so this one gives up on
-     the group and keeps Chen: 42% centres her in what is left. */
   .hero__frame--farm img { object-position: 45% 50%; }
-  .hero__foot { flex-direction: column; align-items: stretch; }
-  .hero__hint { align-self: flex-end; }
-  /* A bigger light, since a fingertip is not a cursor, and a shorter fade,
-     since three times this core would cover the whole column. */
-  .hero__frames { --spot-size: clamp(64px, 18vw, 100px); --spot-fall: 2.2; }
   .hero__frame--farm::after {
     background:
       linear-gradient(180deg,
         rgb(7 11 9 / .72) 0%, rgb(7 11 9 / .22) 30%, rgb(7 11 9 / .48) 62%, rgb(7 11 9 / .93) 100%);
   }
-  .hero__inner { min-height: min(92vh, 720px); }
-  .hero__head { max-width: none; }
 }
-/* A phone held upright gets the portrait render (index.html): the machine
-   centred, 42% down the file and 48% of it tall. Its box runs from the foot
-   of the claim (--r-top, the height of the two-line head) to just above the
-   foot (--r-bot), so on a short phone the machine gets smaller instead of
-   running into the type. */
+/* a phone held upright gets the portrait files (index.html) */
 @media (max-aspect-ratio: 2/3) {
-  .hero__frames {
-    --r-top: 7.75rem; --r-bot: 5rem; --r-ar: .75; --r-oy: .5;
-    --r-cx: .5; --r-cy: .498; --r-hw: .39; --r-hh: .187;
-  }
-  /* and a portrait crop of the farm (index.html), cut from the 2400px file
-     around the part the 42% position used to keep, at full resolution: on a
-     phone the landscape 1400px file was stretched about 2.2x. Centred, it
-     frames the same Chen as before. */
   .hero__frame--farm img { object-position: 50% 50%; }
 }
 
@@ -496,8 +308,7 @@ h2.band__title {
 }
 
 /* ========================================================== 4  SYNBIO ===== */
-/* One header column, then one card: the circuit figure on top and the four
-   modules under it, on one line, each with a numbered disc in the colour of
+/* One header column, then the circuit figure and the four modules under it, on one line, each with a numbered disc in the colour of
    its box in the figure. One numbering (1 to 4), one type family, and the
    modules close the card: there is no caption (owner, 29 Sep), so the row
    takes a little more room below than above and the card ends on it. */
@@ -507,12 +318,10 @@ h2.band__title {
 .sb__head .band__title { margin-bottom: var(--sp-3); max-width: 26ch; }
 .sb__lede { margin: 0; max-width: 58ch; text-wrap: pretty; }
 
-.sb-card {
-  margin: 0;
-  border: 1px solid var(--gray-200); border-radius: var(--radius);
-  background: var(--white);
-  overflow: hidden;
-}
+/* 1 Oct (Jacquelyn: the outline round it read as generated). No box: the
+   figure and the four modules sit straight on the white, and the modules'
+   own rail is the only line. */
+.sb-card { margin: 0; background: var(--white); }
 
 /* the figure: its own width reserved by the <img>'s attributes. Narrower
    than 42rem it scrolls sideways (60rem on a phone, so the labels stay
@@ -537,8 +346,7 @@ h2.band__title {
 
 /* the four modules: numbered discs on one rail, under the figure */
 .sb-seq {
-  list-style: none; margin: 0; padding: var(--sp-5) var(--sp-5) var(--sp-6);
-  border-top: 1px solid var(--gray-200);
+  list-style: none; margin: 0; padding: var(--sp-6) 0 0;
   display: grid; grid-template-columns: repeat(4, minmax(0, 1fr));
   column-gap: var(--sp-5);
   position: relative;

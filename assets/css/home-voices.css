@@ -1,13 +1,13 @@
 /* =============================================================================
    HOMEPAGE 5, INTEGRATED HUMAN PRACTICES ("the voices"). Owned by #ihp only.
 
-   Rebuilt 1 Oct. The headline on a line of its own, the lede under it, then
-   four rows that zigzag: photograph left and words right, then the other way
-   round, from 760px. The words sit centred against the photograph. Below
-   760px a row stacks, photograph first.
+   Rebuilt 1 Oct (Jacquelyn: one photograph should not fill a screen). The
+   headline, then three perspectives side by side from 760px, farmers,
+   experts, industry, each a 4:3 photograph, its role and one line. Below
+   760px they stack.
 
-   MOTION. Each row is a .rise (home.js piece 1): it fades up once and its
-   picture settles from a slight zoom. Opacity and transform only. With
+   MOTION. The row is a .rise (home.js piece 1): it fades up once and its
+   pictures settle from a slight zoom. Opacity and transform only. With
    scripting off or reduced motion, nothing is hidden.
    ========================================================================== */
 
@@ -32,18 +32,18 @@
 }
 
 /* --------------------------------------------------------------- rows --- */
+/* One row of three from 760px, the same width each; an arrow in the gap
+   between two carries the order. The line under each role is set a step
+   smaller than a heading, so three sit side by side without crowding. */
 .vx__rows {
+  --vx-gap: clamp(2rem, 4vw, 3.5rem);
   list-style: none;
-  margin: clamp(2.5rem, 6vh, 4rem) 0 0;
+  margin: clamp(2rem, 5vh, 3rem) 0 0;
   padding: 0;
   display: grid;
-  gap: clamp(2.5rem, 6vw, 4.5rem);
+  gap: var(--sp-6) var(--vx-gap);
 }
-.vx-row {
-  display: grid;
-  gap: var(--sp-4) clamp(2rem, 5vw, 4.5rem);
-  align-items: center;
-}
+.vx-row { position: relative; display: grid; align-content: start; gap: var(--sp-4); }
 .vx-row__photo {
   overflow: hidden;
   border-radius: var(--radius);
@@ -51,7 +51,7 @@
 }
 .vx-row__photo img {
   display: block; width: 100%; height: auto;
-  aspect-ratio: 3 / 2; object-fit: cover;
+  aspect-ratio: 4 / 3; object-fit: cover;
 }
 .vx-row__role {
   margin: 0 0 var(--sp-2);
@@ -60,29 +60,26 @@
 }
 .vx-row__line {
   margin: 0;
-  font-size: clamp(1.375rem, 1rem + 1.2vw, 2rem);
-  font-weight: 700; line-height: 1.15; letter-spacing: -.02em;
+  font-size: clamp(1.1875rem, 1rem + .6vw, 1.5rem);
+  font-weight: 700; line-height: 1.2; letter-spacing: -.015em;
   color: var(--leaf-900);
   text-wrap: balance;
 }
-.vx-row__changed {
-  margin: var(--sp-4) 0 0;
-  font-size: clamp(1rem, .95rem + .2vw, 1.125rem); line-height: 1.5;
-  color: var(--gray-700);
-  text-wrap: pretty;
-}
-
 @media (min-width: 760px) {
-  .vx-row { grid-template-columns: minmax(0, 6fr) minmax(0, 5fr); }
-  /* the zigzag: every second row puts its photograph on the right */
-  .vx-row:nth-child(even) { grid-template-columns: minmax(0, 5fr) minmax(0, 6fr); }
-  .vx-row:nth-child(even) .vx-row__photo { order: 2; }
-  .vx-row__text { max-width: 26rem; }
-  .vx-row:nth-child(even) .vx-row__text { justify-self: end; }
+  .vx__rows { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+  /* the order: a short arrow centred in the gap, level with the photographs */
+  .vx-row { container-type: inline-size; }
+  .vx-row:not(:last-child)::after {
+    content: ""; position: absolute;
+    top: calc(37.5cqw - .45rem); right: calc(-.5 * var(--vx-gap) - .3rem);
+    width: .7rem; height: .7rem;
+    border-top: 2px solid var(--gray-400); border-right: 2px solid var(--gray-400);
+    transform: rotate(45deg);
+  }
 }
 
 /* --------------------------------------------------------------- motion --- */
 @media (prefers-reduced-motion: no-preference) {
   .vx-row__photo img { transition: transform 1.2s cubic-bezier(.2, .7, .2, 1); }
-  .vx-row.rise.is-armed:not(.in) .vx-row__photo img { transform: scale(1.04); }
+  .vx__rows.rise.is-armed:not(.in) .vx-row__photo img { transform: scale(1.04); }
 }
