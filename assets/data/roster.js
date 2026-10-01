@@ -65,7 +65,7 @@ const SECTIONS = [
     id: "project-leads",
     title: "Project Leads",
     openSlots: 4,
-    note: "A project lead is the face of the project. The role is irreplaceable, it carries the team on its shoulders, and it reaches into every arm of the work.\nOur instructors do not believe anyone has grown into it yet, and there is no rush. The seat stays open, and we are looking forward to the day one of us earns it.",
+    note: "A project lead is the face of the project. The role is irreplaceable, it carries the team on its shoulders, and it reaches into every arm of the work.",
     groups: [
     { title: "", members: [] },
     ]
