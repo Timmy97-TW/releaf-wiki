@@ -17,11 +17,14 @@
      track    subteam only ("Wet Lab", "Dry Lab", "Human Practices")
      bio      shown under the photo; clicking the card opens the full view.
               A blank line ("\n\n") starts a new paragraph in the profile
-     bioAI    true when the bio was not written by the person (orange mark)
+     bioAI    true when the bio was not written by the person. Kept as the
+              record of what still needs a student; since 2 October the page
+              does not colour it, see assets/js/team.js
      tasks    the tasks this person is on -> one pill each, everybody a member
 
    A section's `note` renders under its title; `noteAI: true` marks a note
-   the students did not write, so it takes the orange drafting colour.
+   the students did not write. Like bioAI it is a record only: every word on
+   this page is shown in black.
 
    Adding a new task: add one line to LABELS. It appears in the legend's task
    row, which is also the filter, and on every card automatically.
@@ -71,7 +74,7 @@ const SECTIONS = [
     id: "project-leads",
     title: "Project Leads",
     openSlots: 4,
-    note: "A project lead is the face of the project. The role is irreplaceable, it carries the team on its shoulders, and it reaches into every arm of the work.",
+    note: "Project leads are the pillars of the project, they carried the project on their shoulders with excellence, accountability, and agency. ReLeaf is relieved to have them.",
     groups: [
     { title: "", members: [] },
     ]
@@ -253,7 +256,7 @@ const SECTIONS = [
       {
         name: "Sara Chen",
         photo: "assets/img/members/sara-chen.jpg", workPhoto: "assets/img/members/work/sara-chen.jpg", goofyPhoto: "assets/img/members/goofy/sara-chen.jpg",
-        grade: "Sophomore", school: "WEGO", track: "Wet Lab",
+        grade: "Sophomore", school: "WEGO", track: "Dry Lab",
         bio: "Hi everyone, I am Sara. I initially joined iGEM to look for my passion in synthetic Biology. The experience of transferring from wet lab to dry lab changes me a lot. Although transferring between groups is not common, I manage to find the similarities between these two labs. Even though I have a pretty rough time to catch up in dry lab, I think making decisions from two different perspectives of conducting experiment and prediction helps a lot. For example, I was in charge in plants when I was in wet lab. The experience of taking care of plants allows me to look for research for modules that correlated more to the conditions in lab. Overall, I realized the importance of communication and collaboration between labs to win or achieve our goals together.",
         tasks: ["Lab", "Plant"]
       },

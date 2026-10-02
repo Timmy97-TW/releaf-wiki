@@ -9,6 +9,12 @@
      the people who worked on it (also from a link, team/#task-cloning)
    · a profile has its own address (team/#member-abby-kao), steps to its
      neighbours with the arrow keys, and closes on Escape or the Back button
+
+   Everything on this page is black. The rest of the wiki paints drafted text
+   orange through class="ai"; from 2 October this page does not, because it
+   introduces forty-six people and two colours of text read as a page half
+   finished rather than as a team. roster.js keeps its bioAI and noteAI flags
+   as the record of which words still want a student's own.
    ========================================================================== */
 (function () {
   "use strict";
@@ -65,10 +71,8 @@
 
   /* A bio can run to several paragraphs, separated in roster.js by a blank
      line ("\n\n"). The card shows them as one clamped run of text; the
-     profile gives each its own paragraph. `bioAI: true` marks a bio the
-     students did not write, so it takes the orange drafting colour. */
+     profile gives each its own paragraph. */
   const parasOf = (m) => (m.bio || "").split(/\n\s*\n/).map((t) => t.trim()).filter(Boolean);
-  const bioClass = (base, m) => base + (m.bioAI ? " ai" : "");
 
   const metaOf = (m) => [m.grade, m.school].filter(Boolean).join(" · ");
 
@@ -274,7 +278,7 @@
     if (tags) body.appendChild(tags);
 
     if (m.bio) {
-      body.appendChild(el("p", bioClass("card__bio", m), parasOf(m).join(" ")));
+      body.appendChild(el("p", "card__bio", parasOf(m).join(" ")));
       const more = el("span", "card__more", "Read more");
       more.setAttribute("aria-hidden", "true");
       body.appendChild(more);
@@ -325,9 +329,8 @@
       rec.count = el("span", "section__count");
       h.appendChild(rec.count);
       s.appendChild(h);
-      /* noteAI: the note was drafted for the team, not written by them */
       if (sec.note) sec.note.split("\n").forEach((line) =>
-        s.appendChild(el("p", "section__note" + (sec.noteAI ? " ai" : ""), line)));
+        s.appendChild(el("p", "section__note", line)));
 
       let count = 0;
 
@@ -365,7 +368,7 @@
 
       /* a section with an explanatory note does not also need an empty box */
       if (!count && !sec.note) {
-        s.appendChild(el("div", "empty ai", "Coming soon. This section fills in as roles are confirmed."));
+        s.appendChild(el("div", "empty", "Coming soon. This section fills in as roles are confirmed."));
       }
 
       holder.appendChild(s);
@@ -399,14 +402,12 @@
   /* ------------------------------------------------------------ legend --- */
 
   function legend() {
-    /* The legend's wording was drafted for the team rather than written by
-       the students, so its text carries the orange drafting mark. */
     const wrap = el("div", "legend");
 
     /* On a phone the three definitions fold away behind their title, so the
        roster starts on the first screen; on a wide screen they stay open. */
     const majors = el("details", "legend__majors");
-    const title = el("summary", "legend__title ai", "What a major means");
+    const title = el("summary", "legend__title", "What a major means");
     majors.appendChild(title);
 
     const tracks = el("div", "legend__tracks");
@@ -426,7 +427,7 @@
     ].forEach(([label, text]) => {
       const col = el("div", "legend__track");
       col.appendChild(el("span", "card__track card__track--major", label));
-      col.appendChild(el("p", "legend__def ai", text));
+      col.appendChild(el("p", "legend__def", text));
       tracks.appendChild(col);
     });
     majors.appendChild(tracks);
@@ -448,7 +449,7 @@
       pill.appendChild(document.createTextNode("Task"));
       item.appendChild(pill);
       item.appendChild(el("b", "legend__term", term));
-      item.appendChild(el("span", "legend__def ai", def));
+      item.appendChild(el("span", "legend__def", def));
       return item;
     };
     tasks.appendChild(task(true, "Task owner",
@@ -466,7 +467,7 @@
     const all = el("div", "legend__all");
     all.id = "tasks";
     const head = el("p", "legend__all-title", "The tasks");
-    head.appendChild(el("span", "legend__hint ai", "Select one to see who worked on it"));
+    head.appendChild(el("span", "legend__hint", "Select one to see who worked on it"));
     all.appendChild(head);
 
     const row = el("div", "legend__row");
@@ -761,8 +762,8 @@
     const text = modal.querySelector(".modal__text");
     text.innerHTML = "";
     const paras = parasOf(m);
-    if (paras.length) paras.forEach((t) => text.appendChild(el("p", m.bioAI ? "ai" : null, t)));
-    else text.appendChild(el("p", "modal__soon ai", "Bio coming soon."));
+    if (paras.length) paras.forEach((t) => text.appendChild(el("p", null, t)));
+    else text.appendChild(el("p", "modal__soon", "Bio coming soon."));
 
     /* the way to the next person: arrows beside the frame on a wide screen,
        two names under the bio on a narrow one */
