@@ -118,6 +118,8 @@
       const line = window.innerHeight * 0.4;
       let id = null;
       for (const h of heads) {
+        /* a heading inside a closed tab panel has no box; it is not where the reader is */
+        if (!h.getClientRects().length) continue;
         if (h.getBoundingClientRect().top <= line) id = h.id; else break;
       }
       if (id === current) return;
