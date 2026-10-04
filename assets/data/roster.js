@@ -313,7 +313,7 @@ const SECTIONS = [
     groups: [
     { title: "", members: [
       {
-        name: "Caden Wu", role: "Student Advisor",
+        name: "Caden Wu", role: "Student Advisor", hidden: true,
         photo: "assets/img/members/caden-wu.jpg", workPhoto: "", goofyPhoto: "assets/img/members/goofy/caden-wu.jpg", solo: true,
         grade: "Junior", school: "TAS", track: "",
         bio: "Hi, I'm Caden, and I'm an advisor for GEMS Taiwan. Following a great year as a drylab member from the 2025 team, I decided to return as an advisor to support the team any way possible by sharing my knowledge and experience.",
@@ -334,14 +334,14 @@ const SECTIONS = [
         tasks: ["Video", "Photography"]
       },
       {
-        name: "Ian Cheng", role: "Student Advisor",
+        name: "Ian Cheng", role: "Student Advisor", hidden: true,
         photo: "assets/img/members/ian-cheng.jpg", workPhoto: "assets/img/members/work/ian-cheng.jpg", goofyPhoto: "assets/img/members/goofy/ian-cheng.jpg",
         grade: "Sophomore", school: "TAS", track: "Wet Lab",
         bio: "Hi! I'm Ian, and I'm an advisor this year. I'm passionate about ecology and zoology, and I bring that same passion to synthetic biology as well. I hope to support the team through my wet lab knowledge, as well as my artistic ability.",
         tasks: []
       },
       {
-        name: "Katherine Chen", role: "Student Advisor",
+        name: "Katherine Chen", role: "Student Advisor", hidden: true,
         photo: "assets/img/members/katherine-chen.jpg", workPhoto: "", goofyPhoto: "assets/img/members/goofy/katherine-chen.jpg", solo: true,
         grade: "", school: "", track: "",
         bio: "",
@@ -355,7 +355,7 @@ const SECTIONS = [
         tasks: ["Hardware", "Bioreactor", "Wiki"]
       },
       {
-        name: "Oscar Huang", role: "Student Advisor",
+        name: "Oscar Huang", role: "Student Advisor", hidden: true,
         photo: "assets/img/members/oscar-huang.jpg", workPhoto: "", goofyPhoto: "assets/img/members/goofy/oscar-huang.jpg", solo: true,
         grade: "Sophomore", school: "TAS", track: "",
         bio: "Hi I am Oscar a Sophomore at TAS and a current advisor for GEMS Taiwan. I was a former drylab member for the 2025 team, and I hope to bring meaningful impact to the team from what I have learned last year. I also hope to continue looking forward to the learning opportunities that iGEM has to offer, whether that's teamwork or technical skills.",
@@ -376,7 +376,8 @@ const SECTIONS = [
         tasks: ["Protectant", "Peptide Design"]
       }
     ]},
-    ]
+    ],
+    afterword: { text: "We appreciate the contributions of the following members from the 2025 team.", names: "" }
   },
   {
     id: "support-team",
