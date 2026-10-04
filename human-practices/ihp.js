@@ -25,6 +25,7 @@
     var strip  = btns[0].parentNode;
     var seg    = strip.classList.contains("seg__track");
     var span   = strip.classList.contains("span");
+    var app    = strip.classList.contains("app__list");
     var current = -1;
 
     /* the segmented control's white thumb slides under the chosen button;
@@ -65,14 +66,39 @@
       });
       panels.forEach(function (p, n) {
         p.hidden = n !== i;
-        if (n === i && changed && animate && (seg || span) && !reduce) {
+        if (n === i && changed && animate && (seg || span || app) && !reduce) {
           p.classList.remove("is-entering");
           void p.offsetWidth;
           p.classList.add("is-entering");
         }
       });
       place(animate);
+      if (mini) mini.forEach(function (m, n) { m.setAttribute("aria-pressed", n === i ? "true" : "false"); });
       if (span) thread.update();
+    }
+
+    /* under the conversations, the ruler again: choosing another expert
+       there switches to them and goes back up to the start of their turn */
+    var mini = null;
+    if (span) {
+      var copy = strip.cloneNode(true);
+      $$(".span__thumb", copy).forEach(function (t) { t.remove(); });
+      copy.className = "span span--mini";
+      copy.removeAttribute("role");
+      copy.removeAttribute("aria-orientation");
+      copy.setAttribute("role", "group");
+      mini = $$(".span__row", copy);
+      mini.forEach(function (m, n) {
+        ["id", "role", "aria-controls", "aria-selected", "tabindex"].forEach(function (a) { m.removeAttribute(a); });
+        m.addEventListener("click", function () {
+          if (n === current) return;
+          btns[n].click();
+          var hero = $(".conv__hero", panels[n]) || panels[n];
+          var nav = parseFloat(getComputedStyle(document.documentElement).getPropertyValue("--nav-h")) || 68;
+          window.scrollTo({ top: window.scrollY + hero.getBoundingClientRect().top - nav - 24, behavior: reduce ? "auto" : "smooth" });
+        });
+      });
+      root.appendChild(copy);
     }
 
     /* a rail marked data-rail-top (the pipelines) is long: choosing another
@@ -140,13 +166,16 @@
         if (!n.classList.contains("msg")) { prev = n; return; }
         var side = n.classList.contains("msg--us") ? "us" : "them";
         var body = $(".msg__body", n);
-        if (wide && prev && prev.classList.contains("msg")) {
+        var pics = $(".msg__pics", n);
+        /* a turn with photographs fills both columns, so it keeps its own row */
+        if (wide && prev && prev.classList.contains("msg") && !pics && !$(".msg__pics", prev)) {
           var natural = n.offsetTop;
           var lift = $(".msg__body", prev).offsetHeight * 0.5;
           var top = Math.max(bottom[side] + 20, prevTop + 76, natural - lift);
           if (top < natural) n.style.marginTop = (top - natural) + "px";
         }
         bottom[side] = n.offsetTop + body.offsetTop + body.offsetHeight;
+        if (pics) bottom[side === "us" ? "them" : "us"] = n.offsetTop + pics.offsetTop + pics.offsetHeight;
         prevTop = n.offsetTop;
         prev = n;
       });
@@ -189,6 +218,7 @@
       window.addEventListener("scroll", queue, { passive: true });
       window.addEventListener("resize", relayout);
       if (document.fonts && document.fonts.ready) document.fonts.ready.then(relayout);
+      $$(".thread img").forEach(function (im) { if (!im.complete) im.addEventListener("load", relayout); });
       queue();
     }
     return { init: init, update: queue };
