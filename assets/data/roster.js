@@ -369,7 +369,7 @@ const SECTIONS = [
         tasks: ["Lab"]
       },
       {
-        name: "Bruce Tsai", role: "Student Advisor",
+        name: "Bruce Tsai", role: "Student Advisor", hidden: true,
         photo: "", workPhoto: "assets/img/members/work/bruce-tsai.jpg", goofyPhoto: "",
         grade: "", school: "", track: "",
         bio: "",
@@ -377,7 +377,7 @@ const SECTIONS = [
       }
     ]},
     ],
-    afterword: { text: "We appreciate the contributions of the following members from the 2025 team.", names: "" }
+    afterword: { text: "We appreciate the contributions of the following members from the 2025 team.", names: "Caden Wu, Ian Cheng, Katherine Chen, Oscar Huang, Bruce Tsai" }
   },
   {
     id: "support-team",
