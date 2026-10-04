@@ -498,39 +498,57 @@
   overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap;
 }
 
-/* system tabs */
+/* system tabs: three cards, the one that is open filled in. A small
+   pointer under the open card slides with it toward its panel.           */
 .tabset--sys { margin-top: var(--sp-7); }
 .tabset--sys > .tabset__bar {
   position: sticky; top: var(--nav-h); z-index: 6;
-  display: grid; grid-template-columns: repeat(3, minmax(9rem, 1fr));
+  display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: .75rem;
+  padding: .75rem 0 1rem; overflow: visible;
   background: var(--white);
-  border-bottom: 1px solid var(--gray-200);
-  box-shadow: 0 1px 0 var(--white);
 }
 .tabset--sys > .tabset__bar > .tabset__tab {
-  display: grid; grid-template-columns: auto auto 1fr; grid-template-rows: auto auto;
-  column-gap: .5rem; row-gap: .1rem; align-items: center; text-align: left;
-  padding: var(--sp-4) var(--sp-4) calc(var(--sp-4) + 2px);
+  display: grid; grid-template-columns: auto minmax(0, 1fr); column-gap: 1rem; align-items: center;
+  padding: 1.1rem 1.35rem; text-align: left; white-space: normal;
+  border: 1.5px solid var(--gray-200); border-radius: 14px; background: var(--white);
+  color: var(--leaf-900);
+  transition: background-color .25s ease, border-color .25s ease, color .25s ease, box-shadow .25s ease, transform .25s ease;
 }
-.tabset--sys > .tabset__bar > .tabset__tab:hover { background: var(--leaf-50); color: var(--leaf-900); }
-.tabset--sys > .tabset__bar > .tabset__tab[aria-selected="true"] { color: var(--leaf-900); }
+.tabset--sys > .tabset__bar > .tabset__tab:hover {
+  border-color: var(--leaf-500); transform: translateY(-2px);
+  box-shadow: 0 6px 18px -10px rgb(20 64 43 / .45);
+}
+.tabset--sys > .tabset__bar > .tabset__tab[aria-selected="true"] {
+  background: var(--leaf-900); border-color: var(--leaf-900); color: var(--white);
+  transform: none; box-shadow: 0 10px 24px -14px rgb(20 64 43 / .7);
+}
+.tabset--sys > .tabset__bar > .tabset__tab:focus-visible { outline: 3px solid var(--leaf-500); outline-offset: 3px; }
 .tabset__icon {
-  grid-row: 1 / 3; width: 2.1rem; height: 2.1rem; margin-right: .35rem;
+  grid-row: 1 / 3; width: 3.25rem; height: 3.25rem; padding: .7rem; border-radius: 12px;
+  background: var(--leaf-50); color: var(--leaf-700);
   fill: none; stroke: currentColor; stroke-width: 1.4; stroke-linecap: round; stroke-linejoin: round;
+  transition: background-color .25s ease, color .25s ease;
 }
-.tabset__tab[aria-selected="true"] .tabset__icon { color: var(--leaf-700); }
-.tabset__no { font-size: var(--text-sm); font-weight: 600; color: var(--gray-450); font-variant-numeric: tabular-nums; }
-.tabset--sys .tabset__label { font-size: 1.125rem; font-weight: 650; letter-spacing: -.01em; }
-.tabset__sub { grid-column: 2 / 4; font-size: var(--text-xs); color: var(--gray-500); }
-.tabset--sys > .tabset__panel { padding-top: var(--sp-6); }
+.tabset__tab[aria-selected="true"] .tabset__icon { background: rgb(255 255 255 / .12); color: var(--white); }
+.tabset__no { display: none; }
+.tabset--sys .tabset__label { align-self: end; font-size: 1.45rem; font-weight: 700; letter-spacing: -.02em; line-height: 1.15; }
+.tabset__sub { align-self: start; margin-top: .15rem; font-size: var(--text-sm); color: var(--gray-500); font-variant-numeric: tabular-nums; }
+.tabset__tab[aria-selected="true"] .tabset__sub { color: var(--leaf-200); }
+.tabset--sys > .tabset__bar > .tabset__ink {
+  top: auto; bottom: .15rem; height: .55rem; background: none; border-radius: 0;
+}
+.tabset--sys > .tabset__bar > .tabset__ink::after {
+  content: ""; position: absolute; left: 50%; top: 0; width: 1rem; height: 1rem;
+  background: var(--leaf-900); transform: translate(-50%, -60%) rotate(45deg); border-radius: 2px;
+}
+.tabset--sys > .tabset__panel { padding-top: var(--sp-5); }
 .tabset--sys > .tabset__panel > .stand { margin-top: 0; }
-@media (max-width: 640px) {
-  .tabset--sys > .tabset__bar { grid-template-columns: repeat(3, minmax(0, 1fr)); }
-  .tabset--sys > .tabset__bar > .tabset__tab { padding: var(--sp-3) var(--sp-2); grid-template-columns: auto 1fr; }
+@media (max-width: 760px) {
+  .tabset--sys > .tabset__bar { gap: .4rem; }
+  .tabset--sys > .tabset__bar > .tabset__tab { grid-template-columns: 1fr; padding: .8rem .75rem; border-radius: 10px; }
   .tabset__icon { display: none; }
-  .tabset__no { display: none; }
-  .tabset--sys .tabset__label { font-size: 1rem; }
-  .tabset__sub { grid-column: 1 / -1; }
+  .tabset--sys .tabset__label { font-size: 1.05rem; }
+  .tabset__sub { font-size: var(--text-xs); }
 }
 
 /* topic pills inside a system */
