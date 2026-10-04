@@ -119,7 +119,7 @@
   function topLine(root) {
     var line = navH();
     var sys = root.parentElement && root.parentElement.closest(".tabset--sys");
-    if (sys) line += $(".tabset__bar", sys).offsetHeight;
+    if (sys) line += $(".tabset__bar", sys).offsetHeight + 16;
     return line;
   }
 
@@ -133,6 +133,8 @@
     var current = -1;
 
     function place() {
+      /* the system bar publishes its height so the strips below can pin under it */
+      if (root.hasAttribute("data-sticky")) root.style.setProperty("--sys-h", bar.offsetHeight + "px");
       if (!ink || current < 0) return;
       var t = tabs[current];
       ink.style.width = t.offsetWidth + "px";
