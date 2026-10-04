@@ -1,9 +1,9 @@
 /* =============================================================================
    ReLeaf: the Integrated Human Practices page
    -----------------------------------------------------------------------------
-   Two small behaviours. With JavaScript off every rail shows its first panel
-   and every carousel is a strip you can scroll sideways; nothing on the page
-   is reachable only by clicking. The evolution map is evomap.js.
+   Two small behaviours. With JavaScript off every rail shows all of its
+   panels, so nothing on the page is reachable only by clicking. The
+   evolution map, and opening a record a link points at, are evomap.js.
    ========================================================================== */
 
 (function () {
@@ -29,8 +29,20 @@
       panels.forEach(function (p, n) { p.hidden = n !== i; });
     }
 
+    /* a rail marked data-rail-top (the pipelines) is long: choosing another
+       tab from deep inside one starts the reader at the top of the new one.
+       Only a reader's own click does this; a link landing in a write-up
+       switches the tab without moving the page.                          */
+    var toTop = root.hasAttribute("data-rail-top");
     btns.forEach(function (b, i) {
-      b.addEventListener("click", function () { show(i); });
+      b.addEventListener("click", function (e) {
+        show(i);
+        if (toTop && e.isTrusted) {
+          var nav = parseFloat(getComputedStyle(document.documentElement).getPropertyValue("--nav-h")) || 68;
+          var top = root.getBoundingClientRect().top;
+          if (top < nav) window.scrollTo({ top: window.scrollY + top - nav - 12, behavior: "instant" });
+        }
+      });
       b.addEventListener("keydown", function (e) {
         var d = e.key === "ArrowRight" ? 1 : e.key === "ArrowLeft" ? -1 : 0;
         if (!d) return;
@@ -43,82 +55,12 @@
     show(0);
   }
 
-  /* ---- 2. carousels ------------------------------------------------------ */
+  /* ---- 2. short labels in the contents rail ------------------------------ */
+  /* page.js builds the rail from the heading text; a heading that carries
+     data-toc gets that shorter label in the rail instead. The number span
+     page.js renders stays where it is.                                      */
 
-  function carousel(root) {
-    var track  = $(".carousel__track", root);
-    var slides = $$(".carousel__slide", root);
-    var prev   = $(".carousel__btn--prev", root);
-    var next   = $(".carousel__btn--next", root);
-    var count  = $(".carousel__count", root);
-    if (!track || !slides.length) return;
-
-    function current() {
-      var left = track.getBoundingClientRect().left, best = 0, d = Infinity;
-      slides.forEach(function (s, i) {
-        var dd = Math.abs(s.getBoundingClientRect().left - left);
-        if (dd < d) { d = dd; best = i; }
-      });
-      return best;
-    }
-
-    function update() {
-      var i = current();
-      var atEnd = track.scrollLeft + track.clientWidth >= track.scrollWidth - 4;
-      if (count) count.textContent = (atEnd ? slides.length : i + 1) + " / " + slides.length;
-      if (prev) prev.disabled = track.scrollLeft <= 4;
-      if (next) next.disabled = atEnd;
-    }
-
-    function go(d) {
-      var i = Math.max(0, Math.min(slides.length - 1, current() + d));
-      var dx = slides[i].getBoundingClientRect().left - track.getBoundingClientRect().left;
-      track.scrollTo({ left: track.scrollLeft + dx });
-    }
-
-    if (prev) prev.addEventListener("click", function () { go(-1); });
-    if (next) next.addEventListener("click", function () { go(1); });
-    track.addEventListener("keydown", function (e) {
-      if (e.key === "ArrowRight") { e.preventDefault(); go(1); }
-      if (e.key === "ArrowLeft")  { e.preventDefault(); go(-1); }
-    });
-
-    var t;
-    track.addEventListener("scroll", function () { clearTimeout(t); t = setTimeout(update, 60); }, { passive: true });
-    window.addEventListener("resize", update);
-    update();
-  }
-
-  /* ---- 3. pipelines: filter the interview cards by domain --------------- */
-  /* Without JavaScript every card shows and the buttons do nothing. */
-
-  function pipes(root) {
-    var btns  = $$(".pipes__btn", root);
-    var cards = $$(".stk", root);
-    var status = $(".pipes__status", root);
-    function has(c, area) { return area === "all" || (" " + c.dataset.areas + " ").indexOf(" " + area + " ") > -1; }
-    btns.forEach(function (b) {
-      var n = cards.filter(function (c) { return has(c, b.dataset.area); }).length;
-      var out = $(".pipes__n", b);
-      if (out) out.textContent = n;
-      b.addEventListener("click", function () {
-        var area = b.dataset.area, shown = 0;
-        btns.forEach(function (x) { x.setAttribute("aria-pressed", x === b ? "true" : "false"); });
-        cards.forEach(function (c) { var on = has(c, area); c.hidden = !on; if (on) shown++; });
-        if (status) status.textContent = area === "all" ? "" : "Showing " + shown + " of " + cards.length + " interviews: " + b.firstChild.textContent.trim() + ".";
-      });
-    });
-  }
-
-  /* ---- 4. short labels in the contents rail ------------------------------ */
-  /* page.js builds the rail from the heading text. Our headings are long,
-     deliberately: each one is a claim, not a category. A rail of claims is a
-     rail you have to scroll, so the rail gets the short name instead. Every
-     heading carries data-toc; the evolution map's heading is owned by
-     evomap.js, so its label lives in the fallback below, keyed on section id.
-     The number span page.js renders stays where it is.                      */
-
-  var SECTION_LABEL = { evolution: "Evolution map" };
+  var SECTION_LABEL = {};
 
   function shortenToc() {
     var list = $(".toc__list");
@@ -147,8 +89,6 @@
 
   function start() {
     $$("[data-rail]").forEach(rail);
-    $$("[data-carousel]").forEach(carousel);
-    $$("[data-pipes]").forEach(pipes);
 
     /* This file is loaded after page.js, so the rail is already there. If the
        load order is ever changed back, watch for it rather than give up.     */
