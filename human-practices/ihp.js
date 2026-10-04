@@ -24,13 +24,15 @@
     if (!btns.length) return;
     var strip  = btns[0].parentNode;
     var seg    = strip.classList.contains("seg__track");
+    var span   = strip.classList.contains("span");
     var current = -1;
 
-    /* the segmented control's white thumb slides under the chosen button */
+    /* the segmented control's white thumb slides under the chosen button;
+       on the continuous-engagement ruler it slides down to the chosen row */
     var thumb = null;
-    if (seg) {
+    if (seg || span) {
       thumb = document.createElement("span");
-      thumb.className = "seg__thumb";
+      thumb.className = span ? "span__thumb" : "seg__thumb";
       thumb.setAttribute("aria-hidden", "true");
       strip.insertBefore(thumb, strip.firstChild);
       strip.classList.add("has-thumb");
@@ -39,8 +41,13 @@
       if (!thumb || current < 0) return;
       var b = btns[current];
       if (!animate) thumb.style.transition = "none";
-      thumb.style.width = b.offsetWidth + "px";
-      thumb.style.transform = "translateX(" + b.offsetLeft + "px)";
+      if (span) {
+        thumb.style.height = b.offsetHeight + "px";
+        thumb.style.transform = "translateY(" + b.offsetTop + "px)";
+      } else {
+        thumb.style.width = b.offsetWidth + "px";
+        thumb.style.transform = "translateX(" + b.offsetLeft + "px)";
+      }
       if (!animate) { void thumb.offsetWidth; thumb.style.transition = ""; }
       /* keep the chosen button in view when the control scrolls sideways */
       if (strip.scrollWidth > strip.clientWidth) {
@@ -58,13 +65,14 @@
       });
       panels.forEach(function (p, n) {
         p.hidden = n !== i;
-        if (n === i && changed && animate && seg && !reduce) {
+        if (n === i && changed && animate && (seg || span) && !reduce) {
           p.classList.remove("is-entering");
           void p.offsetWidth;
           p.classList.add("is-entering");
         }
       });
       place(animate);
+      if (span) thread.update();
     }
 
     /* a rail marked data-rail-top (the pipelines) is long: choosing another
@@ -82,7 +90,7 @@
         }
       });
       b.addEventListener("keydown", function (e) {
-        var d = e.key === "ArrowRight" ? 1 : e.key === "ArrowLeft" ? -1 : 0;
+        var d = e.key === "ArrowRight" || e.key === "ArrowDown" ? 1 : e.key === "ArrowLeft" || e.key === "ArrowUp" ? -1 : 0;
         if (!d) return;
         e.preventDefault();
         var n = (i + d + btns.length) % btns.length;
@@ -101,7 +109,90 @@
       if (document.fonts && document.fonts.ready) document.fonts.ready.then(function () { place(false); });
     }
     if (seg) reveal(root);
+    if (span) ruler(strip);
   }
+
+  /* the ruler's bars grow from first meeting to second the first time it is seen */
+  function ruler(strip) {
+    if (reduce || !("IntersectionObserver" in window)) return;
+    strip.classList.add("span-anim");
+    var io = new IntersectionObserver(function (es) {
+      es.forEach(function (e) { if (e.isIntersecting) { strip.classList.add("is-seen"); io.disconnect(); } });
+    }, { rootMargin: "0px 0px -15% 0px" });
+    io.observe(strip);
+  }
+
+  /* a conversation thread. On a wide screen each reply starts beside the
+     turn before it, as far up as it can go without touching a bubble on
+     its own side; the spine stops at the last speaker. The spine fills down
+     to a line a little below the middle of the screen, and each turn
+     appears once the fill reaches it.                                     */
+  var thread = (function () {
+    var ts = [], queued = false, anim = false;
+
+    function layout(t) {
+      var items = $$(":scope > .msg, :scope > .meet, :scope > .gap", t);
+      items.forEach(function (n) { n.style.marginTop = ""; });
+      var first = $(".msg", t);
+      var wide = first && getComputedStyle(first).gridTemplateColumns.split(" ").length === 3;
+      var bottom = { them: -1e9, us: -1e9 }, prev = null, prevTop = -1e9;
+      items.forEach(function (n) {
+        if (!n.classList.contains("msg")) { prev = n; return; }
+        var side = n.classList.contains("msg--us") ? "us" : "them";
+        var body = $(".msg__body", n);
+        if (wide && prev && prev.classList.contains("msg")) {
+          var natural = n.offsetTop;
+          var lift = $(".msg__body", prev).offsetHeight * 0.5;
+          var top = Math.max(bottom[side] + 20, prevTop + 76, natural - lift);
+          if (top < natural) n.style.marginTop = (top - natural) + "px";
+        }
+        bottom[side] = n.offsetTop + body.offsetTop + body.offsetHeight;
+        prevTop = n.offsetTop;
+        prev = n;
+      });
+      var last = $$(":scope > .msg", t).pop();
+      var node = last && $(".msg__node", last);
+      t._len = node ? last.offsetTop + node.offsetTop + node.offsetHeight / 2 : t.offsetHeight;
+      t.style.setProperty("--tail", Math.max(0, t.offsetHeight - t._len) + "px");
+      t._laid = t.offsetWidth;
+    }
+
+    function update() {
+      queued = false;
+      var line = window.innerHeight * 0.66;
+      ts.forEach(function (t) {
+        if (t.offsetParent === null) return;
+        if (t._laid !== t.offsetWidth) layout(t);
+        if (!anim) return;
+        var r = t.getBoundingClientRect();
+        if (r.top > window.innerHeight + 200) return;
+        light(t, r.bottom < 0 ? t._len + 1 : line - r.top);
+      });
+    }
+    function light(t, y) {
+      var f = Math.max(0, Math.min(1, y / t._len));
+      if (!t._max || f > t._max) t._max = f;       /* the spine never empties again */
+      t.style.setProperty("--fill", t._max.toFixed(4));
+      var reach = t._max * t._len;
+      $$(":scope > .msg, :scope > .meet, :scope > .gap", t).forEach(function (n) {
+        var at = n.offsetTop + (n.classList.contains("msg") ? 28 : n.classList.contains("gap") ? 10 : n.offsetHeight / 2);
+        if (at <= reach + 1) n.classList.add("is-lit");
+      });
+    }
+    function queue() { if (!queued) { queued = true; requestAnimationFrame(update); } }
+    function relayout() { ts.forEach(function (t) { t._laid = 0; }); queue(); }
+    function init() {
+      ts = $$(".thread");
+      if (!ts.length) return;
+      anim = !reduce;
+      if (anim) ts.forEach(function (t) { t.classList.add("thread-anim"); });
+      window.addEventListener("scroll", queue, { passive: true });
+      window.addEventListener("resize", relayout);
+      if (document.fonts && document.fonts.ready) document.fonts.ready.then(relayout);
+      queue();
+    }
+    return { init: init, update: queue };
+  })();
 
   /* cards and connections ease in the first time each one is reached */
   function reveal(root) {
@@ -164,6 +255,7 @@
   }
 
   function start() {
+    thread.init();
     $$("[data-rail]").forEach(rail);
 
     /* This file is loaded after page.js, so the rail is already there. If the
