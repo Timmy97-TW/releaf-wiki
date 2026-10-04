@@ -18,6 +18,8 @@
     const n = i + 1;
     if (!fig.id) fig.id = "fig-" + n;
     fig.setAttribute("data-fignum", n);
+    // the drawing-sheet plate tag in css/polish.css prints this one, zero-padded the way a sheet numbers plates
+    fig.setAttribute("data-plate", n < 10 ? "0" + n : String(n));
 
     const cap = fig.querySelector("figcaption");
     if (!cap || cap.querySelector(".fignum")) return;

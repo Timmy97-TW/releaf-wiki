@@ -150,7 +150,11 @@
    the mark silently does not paint — which is why the hub had none. */
 /* --c is the hub deck's own instrument colour, so a mark inside a deck marks
    in that instrument's colour and the neutral --accent catches the rest. */
-.mark, .ann, .q { --mk: var(--amber, var(--c, var(--accent, #d3dae3))); }
+.mark, .ann, .q { --mk: var(--amber, var(--c, var(--mk-base, var(--accent, #d3dae3)))); }
+/* the hub and the notebook set no --amber (each instrument carries its own colour), so they
+   name the ink the marks should use instead of falling through to neutral grey */
+body.hub { --mk-base: var(--c-reactor); }
+body[data-instrument="notebook"] { --mk-base: #4fae74; }
 
 /* 1. marker-pen swipe, for the sentence that carries the section */
 /* The element selectors are deliberate. A bare `.mark` is (0,1,0) and loses to
@@ -207,12 +211,14 @@
    The breakpoint is not a guess. Each margin is (100vw - 96px - 760px) / 2, so
    a 250px margin needs about 1356px of viewport. Below that there is no room
    and the caption stays where it was, under the figure. */
+/* 3 Oct 2026: on the white record captions sit under their figures at every width, as on the team wiki, so the
+   margin captions below apply to the dark theme only (body:not(.doc-light)). */
 @media (min-width: 1360px) {
   /* Only figures that stand alone in a section. The small multiples inside
      .frames sit side by side in a row, so each caption has to stay under its
      own image — pushed to the margin they would all stack on one another. */
-  .doc .sec > figure { position: relative; }
-  .doc .sec > figure > figcaption {
+  body:not(.doc-light) .doc .sec > figure { position: relative; }
+  body:not(.doc-light) .doc .sec > figure > figcaption {
     position: absolute; top: 0; left: calc(100% + 2.2rem);
     width: 250px; max-width: none;
     margin: 0; padding: 0 0 0 .85rem;
@@ -220,15 +226,15 @@
     text-align: left;
     border-left: 1px solid var(--line);
   }
-  .doc .sec > figure > figcaption b { display: block; margin-bottom: .35em; color: var(--fg); }
+  body:not(.doc-light) .doc .sec > figure > figcaption b { display: block; margin-bottom: .35em; color: var(--fg); }
 
   /* A caption is positioned from its figure's right edge, so a figure narrower
      than the column drags its caption back into the text. The hero plate is
      capped at 430px and centred; let the figure box fill the column and centre
      the image inside it instead — the picture is unchanged, the caption lands
      in the margin with the others. */
-  .doc .sec > figure.frame.hero { max-width: none; }
-  .doc .sec > figure.frame.hero > .frame-img { max-width: 430px; margin-inline: auto; }
+  body:not(.doc-light) .doc .sec > figure.frame.hero { max-width: none; }
+  body:not(.doc-light) .doc .sec > figure.frame.hero > .frame-img { max-width: 430px; margin-inline: auto; }
 }
 
 /* ---- staggered reveal ------------------------------------------------- */
@@ -441,7 +447,7 @@ table .num, ul.mini li b, .bom-count { font-variant-numeric: tabular-nums; }
 .palette[hidden] { display: none; }
 .palette-scrim {
   position: absolute; inset: 0;
-  background: rgba(4,6,9,.72); -webkit-backdrop-filter: blur(6px); backdrop-filter: blur(6px);
+  background: rgba(4,6,9,.72); backdrop-filter: blur(6px);
   animation: palFade .18s var(--ease-io) both;
 }
 @keyframes palFade { from { opacity: 0 } to { opacity: 1 } }
@@ -500,7 +506,7 @@ table .num, ul.mini li b, .bom-count { font-variant-numeric: tabular-nums; }
   display: inline-flex; align-items: center; gap: .4rem;
   padding: .5rem .7rem; border-radius: var(--r-pill);
   border: 1px solid var(--line); background: rgba(10,13,18,.82);
-  -webkit-backdrop-filter: blur(8px); backdrop-filter: blur(8px); cursor: pointer;
+  backdrop-filter: blur(8px); cursor: pointer;
   color: var(--dim); font-family: var(--mono);
   font-size: .55rem; letter-spacing: .16em; text-transform: uppercase;
   transition: color .25s var(--ease-io), border-color .25s var(--ease-io), opacity .3s var(--ease-io);
@@ -858,12 +864,12 @@ table.bom tfoot td {
    the text for free. */
 .doc-wrap::after {
   content: ""; position: fixed; z-index: 0; pointer-events: none;
-  right: -6vw; top: 50%; transform: translateY(-50%);
+  right: -12vw; top: 50%; transform: translateY(-50%);
   width: min(56vw, 780px); aspect-ratio: 1 / 1;
   background-repeat: no-repeat;
   background-position: center;
   background-size: contain;
-  opacity: .085;
+  opacity: .07;
   -webkit-mask-image: radial-gradient(70% 70% at 50% 50%, #000 30%, transparent 78%);
           mask-image: radial-gradient(70% 70% at 50% 50%, #000 30%, transparent 78%);
 }
@@ -885,6 +891,9 @@ body[data-instrument="bioreactor"] .doc-wrap::after {
 
 @media (max-width: 900px) { .doc-wrap::after { display: none; } }
 @media print { .doc-wrap::after { display: none !important; } }
+
+/* on the paper theme a white card on near-white paper left only a hairline */
+body.doc-light .onward-card { background: #f7f5f0; border-color: rgba(15, 19, 25, .14); }
 
 /* ---- atmosphere canvas ------------------------------------------------- */
 .atmos-layer {
@@ -1219,10 +1228,10 @@ body.doc-light::before {
    Mounting it — board, hairline, registration marks, a plate number
    straddling the top rule, a ruled caption — is what a drawing sheet does,
    and it costs no new markup. --- */
-body.doc-light .doc { counter-reset: plate; }
+/* The corner tag reads the number js/figures.js gave the figure, so the plate and the caption
+   can never disagree; a figure that script has not reached yet simply shows no tag. */
 body.doc-light .frame {
   position: relative;
-  counter-increment: plate;
   background: #fff;
   border: 1px solid rgba(15, 19, 25, .13);
   border-radius: var(--r-md);
@@ -1249,8 +1258,9 @@ body.doc-light .frame::before {
     left bottom, left bottom, right bottom, right bottom;
 }
 /* plate number, sitting on the top rule the way a drawing sheet labels one */
+body.doc-light .frame:not([data-plate])::after { content: none; }
 body.doc-light .frame::after {
-  content: "FIG " counter(plate, decimal-leading-zero);
+  content: "FIG " attr(data-plate);
   position: absolute; top: 0; right: 16px; transform: translateY(-50%);
   padding: 0 .55em; background: #fff;
   font-family: var(--mono); font-size: .55rem; font-weight: 600;
@@ -1356,7 +1366,7 @@ html.js body.doc-light .sec > h3.in::after { transform: scaleX(1); }
   letter-spacing: .16em; text-transform: uppercase;
   padding: .32em .6em; border-radius: var(--r-xs);
   background: rgba(8, 10, 14, .74); color: #eef3f8;
-  -webkit-backdrop-filter: blur(3px); backdrop-filter: blur(3px);
+  backdrop-filter: blur(3px);
 }
 .wipe-tag-a { left: 10px; }
 .wipe-tag-b { right: 10px; }
@@ -1875,7 +1885,7 @@ body.doc-light table .num { font-variant-numeric: tabular-nums lining-nums; }
   font-family: var(--mono); font-size: .72rem; font-weight: 700;
 }
 .score-col.yes li::before { content: "\2713"; color: #4ad98a; }
-.score-col.no  li::before { content: "\2022"; color: #ff8a6a; }
+.score-col.no  li::before { content: "\2013"; color: #ff8a6a; }
 .score-col li cite {
   display: block; margin-top: .18rem; font-style: normal;
   font-family: var(--mono); font-size: .52rem; letter-spacing: .12em;
@@ -1909,7 +1919,7 @@ body.doc-light .score-col.no  li::before { color: #a83a1c; }
   background: linear-gradient(90deg,
     color-mix(in srgb, var(--amber) 55%, transparent), var(--amber));
 }
-.bom-facts { display: grid; grid-template-columns: repeat(4, 1fr); gap: .7rem; margin: 0; }
+.bom-facts { display: grid; grid-template-columns: repeat(4, 1fr); gap: .7rem; }
 .bom-facts div { display: flex; flex-direction: column; gap: .15rem; }
 .bom-facts dt {
   font-family: var(--mono); font-size: .5rem; letter-spacing: .16em;
@@ -2123,216 +2133,36 @@ body.doc-light .bom-meter { background: rgba(15, 19, 25, .10); }
 @view-transition { navigation: auto; }
 @media (prefers-reduced-motion: reduce) { @view-transition { navigation: none; } }
 
+/* ---------------------------------------------------------------------------
+   Phones: a floor under the small print.
 
-/* ---- reading-label floor (accessibility, Sep 2026) ----------------------
-   The section set many of its uppercase mono labels at 7-10px. This block
-   raises every label a reader has to read to 11px, and table headers,
-   captions and definition terms to 12px. It changes size only: colour,
-   tracking, case and layout are left as they were.
+   The micro-labels — figure numbers, citations, table headers, stat labels,
+   dates — are set in mono at sizes that read cleanly on a desktop and fall to
+   8–10px on a 390px screen; the notebook's 62 page captions were the worst of
+   it at 8.3px. This is a floor and nothing else: it changes no desktop page,
+   and it is marked important because each of these labels is already sized by
+   its own page's sheet, several of which load after this one.
+   Chart and diagram text is left alone — it is laid out inside an SVG that
+   scales as a whole, and raising it would collide with the drawing.
+   --------------------------------------------------------------------------- */
+@media (max-width: 700px) {
+  figcaption .fignum, caption .fignum, figcaption b,
+  cite, cite a,
+  .doc th, .doc dt, .stats dt,
+  .part-mark span, .specgrid h4, .headline-stats span,
+  .od-read span, .delta span,
+  .eyebrow, .scroll-cue, .loader span, .map-more,
+  .spec-card-title, .wipe-tag, .planned b, .score-col h5,
+  .onward-k, .rel-n, .bc-key em, .demo-head b,
+  .iter-date, .openitem-tag, .bom-count, .pick-role-sm,
+  .demo-controls button, .mx-hint, .i2-h b, .i2-h i, .stage-hint,
+  .pick-list-head span, .circuit-tag, .syswalk-rname, .score-col h4,
+  .feature-tag, .panel .prole,
+  .outro-meta, .title-rule span, .lanes-rule span,
+  .nbr-map .lane-name, .nbr-map .lane-name a,
+  body.hub .nb-sech .nb-bar, body.hub .nb-field b { font-size: 11px !important; }
 
-   Scope. Floored: labels, tags, figure and table numbers, step numbers,
-   captions, control labels, hints and the notebook's page/week labels.
-   Left alone on purpose, as decoration or as parts of a larger figure:
-     · SVG chart text (.i2-*, .od-grid, .od-xt, .od-ax, .od-phase, .bp-loop,
-       .autodraw/.syswalk text.dim): it scales with its viewBox, so its
-       declared size is not its drawn size;
-     · unit suffixes set in em inside a big number (.stats dd em,
-       .headline-stats b em, .keynote-fig em, .rl-v em, .mx-v em);
-     · the week ruler on the notebook's build timeline below 760px, where
-       21 ticks share a phone's width (the lane spans and readout carry the
-       same weeks); it is floored at wider widths;
-     · the transient 3D loader ("Loading 100%");
-     · the 3D panels' outlined part number (.panel > .tag). It is meant to be
-       2.3rem, but the record's later `.tag` pill rule (.52rem) wins at
-       desktop widths, so it draws at 8.3px there. The HUD counter carries the
-       same number (floored above); fixing the number is a design call left
-       to upstream.
-
-   Each selector repeats the original with `:root body` in front, so it wins
-   on specificity whatever order the page loads its sheets in (the notebook
-   page loads notebook.css after this file). Two originals are !important,
-   so their floor is too. When carrying this upstream, the cleaner fix is to
-   edit the size at each original rule; this list names every one of them. */
-
-/* 11px: labels */
-:root body :is(
-  .eyebrow, .stats dt, .scroll-cue, .prole, .spec-k, .build-n, .legend-h,
-  .ch-name, .ch-val, .legend-f, .counter, .doc-nav-label,
-  .doc-nav a b, .part-mark span, .openitem-tag, .spec-card-title, .iter-n,
-  .delta span, .filter-steps b, .metrics span, .fig-slot span,
-  .headline-stats span, .phases span, .mx-h, .mx-w, .mx-v, .mx-note, .mx-hint,
-  .i2-h, .frame figcaption b, .frame-note, .fignum, .cad-dl, .map-n,
-  .stage-hint, .lg, .circuit-tag, .rel-n, .iter-date, .pick-role,
-  .pick-link, .pick-clear, .pick-list-head, .pick-role-sm, .planned b,
-  .working-name, .title-rule span, .od-read span, .od-hint,
-  /* polish.css */
-  .bom-count, .onward-k, .p-kind, .p-sub, .palette-foot, .palette-hint,
-  .palette-foot kbd, .palette-hint kbd, .wipe-tag,
-  .wipe-vs, .wipe-picks button, .autodraw figcaption b,
-  .syswalk-fig figcaption b, .backbtn, .triple-label b, .triple figcaption b,
-  .feature-tag, .triple-play, .triple-jump button, .demo-head b,
-  .demo-controls label, .demo-controls button, .demo figcaption b,
-  .score-col > h4, .score-col > h5, .score-col li cite, .syswalk-readout,
-  .syswalk-step-n,
-  /* hub.css */
-  .deck-n, .deck-role, .deck-go, .lanes-rule, .lanes-readout-w, .lane-name,
-  .lane-span, .bp-head, .sys-tag,
-  /* notebook.css */
-  .nb-chip, .nb-field, .nb-edge-l, .nb-key-i, .nb-bar, .nb-reel-play,
-  .nb-pick-w, .nb-go-sub, .nbr-rail-h, .nbr-rail a b, .nbr-page figcaption,
-  .nbr-hit-w
-) { font-size: .6875rem; }
-
-/* hydroponics leaves these two unstyled (16px); only the pages that shrank them */
-:root body:not([data-instrument="hydroponics"]) :is(.outro-meta, .skip-link) { font-size: .6875rem; }
-
-:root body :is(.protocol li)::before,
-:root body :is(.blank-slot, .frame.empty .frame-img)::after,
-:root body.doc-light :is(.frame, .frames .frame)::after,
-:root body.doc-light .frame.empty .frame-img::before,
-:root body :is(.autodraw.scrolls, .syswalk-fig.scrolls)::after { font-size: .6875rem; }
-:root body.doc-light .frame figcaption b { font-size: .6875rem; }
-:root body .specgrid h4, :root body .map-more { font-size: .6875rem !important; }
-
-/* The record's tag pills. Not the 3D panels' big outlined part number, which
-   is also .tag (2.3rem, a direct child of .panel). This also undoes an upstream
-   slip: the instrument pages' `@media (max-width: 900px) { .tag { font-size:
-   1.8rem } }` was meant for that number and blew the pills up to 28.8px on a
-   phone; they now read 11px at every width. */
-:root body :not(.panel) > .tag { font-size: .6875rem; }
-
-/* the hydroponics story cards scale their tag with the card (--ck) */
-:root body[data-instrument="hydroponics"] .panel :is(.tag, .prole) { font-size: max(.6875rem, calc(.66rem * var(--ck, 1))); }
-
-/* the hub's orbit labels keep their container-width scaling above 11px */
-:root body.hub .orb-word { font-size: clamp(.6875rem, .74cqw, .75rem); }
-:root body.hub .orb-k { font-size: clamp(.6875rem, .76cqw, .75rem); }
-
-@media (min-width: 761px) { :root body .lanes-scale { font-size: .6875rem; } }
-/* on a phone the lane names had 6.5rem and already clipped three of seven;
-   1rem more keeps the same names readable at the larger size */
-@media (max-width: 760px) { :root body .lanes-panel { --nx-l: 7.5rem; } }
-
-/* 12px: table headers, captions, definition terms. 11px on a phone, where
-   12px tracked capitals squeezed the tables' text columns (the DiOPAL bill of
-   materials grew a sixth of its height) and sat level with the values under
-   them. */
-:root body :is(table caption, table th, .spec-card dt, .demo-read dt, .bom-facts dt),
-:root body.doc-light table.bom caption { font-size: .75rem; }
-@media (max-width: 600px) {
-  :root body :is(table caption, table th, .spec-card dt, .demo-read dt, .bom-facts dt),
-  :root body.doc-light table.bom caption { font-size: .6875rem; }
-}
-
-
-/* ==========================================================================
-   28 September 2026 update
-   ========================================================================== */
-
-/* The owner's dash rule: no decorative short line segments. The rules either
-   side of the eyebrows, the short bars on part dividers, deck numbers, story
-   tags and the hub's rail, and the hydroponics title rule all go. Legend keys
-   become square swatches instead of short lines. */
-.eyebrow::before, .eyebrow::after,
-.intro .eyebrow::before, .intro .eyebrow::after,
-body.hub .hero .eyebrow::before, body.hub .hero .eyebrow::after,
-.deck-n::after, .bp-head::after, .panel .tag::after, .part::after,
-body.hub .rail li::before { content: none !important; display: none !important; }
-.title-rule > i { display: none !important; }
-.legend-row .sw { width: 10px; height: 10px; border-radius: 2px; }
-body.hub .orbit-legend li::before {
-  width: 10px; height: 10px; margin: 0 .75rem 0 0; vertical-align: -1px;
-  border: 0; border-radius: 2px; background: var(--c-reactor);
-}
-body.hub .orbit-legend .lg-hand::before {
-  border: 1.6px dashed rgba(242, 245, 248, .6); background: transparent; box-sizing: border-box;
-}
-
-/* Last updated line under each record header */
-.last-updated {
-  margin: .9rem 0 0; font-family: var(--mono); font-size: .6875rem;
-  letter-spacing: .14em; text-transform: uppercase; color: var(--dim, #8a93a0);
-}
-.last-updated b { color: var(--muted, #c3cad3); font-weight: 600; }
-
-/* Figures that are charts, sketches or screenshots: shown whole, not cropped */
-.frame.fit .frame-img { aspect-ratio: auto; background: #f4f5f6; }
-.frame.fit .frame-img img { height: auto; object-fit: contain; filter: none; }
-.frame.fit.dark .frame-img { background: #0b0d10; }
-.frames.two { grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); }
-.frame.fit.wide-fig { max-width: 720px; }
-
-/* DBTL cycles: one <details> per cycle, the claim in the summary */
-.cyc {
-  margin: 1rem 0; border: 1px solid rgba(255, 255, 255, .09);
-  border-radius: var(--r-sm, 10px); background: rgba(255, 255, 255, .018);
-}
-.cyc > summary {
-  list-style: none; cursor: pointer; padding: 1rem 1.2rem;
-  display: grid; grid-template-columns: auto minmax(0, 1fr) auto; gap: .2rem 1rem; align-items: baseline;
-}
-.cyc > summary::-webkit-details-marker { display: none; }
-.cyc-n { font-family: var(--mono); font-size: .6875rem; letter-spacing: .16em; text-transform: uppercase; color: var(--amber); white-space: nowrap; }
-.cyc-t { font-size: 1.05rem; font-weight: 600; color: var(--fg); }
-.cyc-s { grid-column: 2; font-size: .9rem; line-height: 1.6; color: var(--dim, #8a93a0); }
-.cyc > summary::after {
-  content: "+"; grid-column: 3; grid-row: 1; font-family: var(--mono); font-size: 1.1rem;
-  color: var(--amber); transition: transform .25s ease;
-}
-.cyc[open] > summary::after { transform: rotate(45deg); }
-.cyc > summary:hover { background: rgba(255, 255, 255, .025); }
-.cyc > summary:focus-visible { outline: 2px solid var(--amber); outline-offset: 2px; }
-.cyc-body { padding: .2rem 1.2rem 1.2rem; border-top: 1px solid rgba(255, 255, 255, .06); }
-.cyc-body h4 {
-  margin: 1.4rem 0 .5rem !important; font-family: var(--mono); font-size: .75rem !important; font-weight: 600;
-  letter-spacing: .16em; text-transform: uppercase; color: var(--amber);
-}
-.cyc-body ul { padding-left: 1.2rem; max-width: 64ch; }
-.cyc-body li { color: var(--muted); margin-bottom: .5rem; }
-.cyc.soon > summary { cursor: default; }
-@media (max-width: 600px) {
-  .cyc > summary { grid-template-columns: minmax(0, 1fr) auto; }
-  .cyc-n { grid-column: 1; }
-  .cyc-t, .cyc-s { grid-column: 1; }
-  .cyc > summary::after { grid-column: 2; }
-}
-
-/* small data tables inside a record; they scroll inside .table-scroll on a phone */
-table.data { min-width: 0; }
-table.data td, table.data th { white-space: nowrap; }
-.table-scroll > table.data.wide { min-width: 520px; }
-
-/* plain lists inside a record section */
-.sec ul.plain, .sec ol.plain { max-width: 64ch; padding-left: 1.2rem; color: var(--muted); }
-.sec ol.steps li { margin-bottom: .35rem; font-size: .98rem; }
-.sec .note-in-progress { font-size: .9rem !important; color: var(--dim) !important; }
-.cyc.soon { padding: .85rem 1.2rem; }
-.cyc.soon .cyc-line { margin: 0 !important; font-size: .95rem !important; line-height: 1.6; }
-.cyc.soon .cyc-line .cyc-n { margin-right: .7rem; }
-.cyc.soon .cyc-line b { color: var(--fg); margin-right: .5rem; }
-/* the plate badge carries the same number as the caption, not a separate count */
-body.doc-light figure.frame::after { content: none; }
-body.doc-light figure.frame[data-fignum]::after { content: "FIG " attr(data-fignum); }
-/* figures that keep the students' own numbering (their text refers to them by it) */
-body.doc-light figure.frame.own-num::after { content: none; }
-/* the drafting mark has to beat the standfirst's !important ink */
-html:not(.ai-off) .standfirst.ai, html:not(.ai-off) .ai .standfirst { color: var(--ai-ink) !important; }
-
-/* ---- LaTeX maths (assets/vendor/katex, used on the photometer record) ---- */
-/* A single long equation is one unbreakable line, so on a phone it used to push
-   the whole page sideways instead of scrolling. Every displayed equation now
-   scrolls inside its own box. The padding keeps descenders and the bottom of a
-   fraction clear of the hidden vertical edge. */
-.katex-display { overflow-x: auto; overflow-y: hidden; padding: .2rem 0 .35rem; }
-
-/* r2 (29 Sep): a species name inside a numbered heading keeps its italic, not the number's mono style */
-.sec h3 > span i, .sec h4 > span i {
-  font-family: inherit; font-style: italic; font-size: inherit; color: inherit;
-  font-weight: inherit; min-width: 0;
-}
-/* the circuit spec lists: label on the left, the value (one span) on the right */
-ul.mini li > span:last-child:not(:first-child) { text-align: right; }
-/* two-column spec tables wrap their values on a phone instead of hiding them off the edge */
-@media (max-width: 640px) {
-  table.data td { white-space: normal; }
+  .nbr-page figcaption { font-size: 11.5px !important; }
+  .doc dt, .stats dt { letter-spacing: .08em !important; }
+  .skip-link { font-size: 12px !important; }
 }

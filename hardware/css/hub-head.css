@@ -1,0 +1,152 @@
+/* ==========================================================================
+   The section head — one component for every section, on both grounds
+   ==========================================================================
+   After the build log was rebuilt, the page had two header languages: the
+   notebook with pill eyebrows and a two-tone headline, and the instrument
+   sections above it with a single line of mono and a plain title. The result
+   read as a finished section bolted under a draft one — the opposite of the
+   brief's first word, "integrated".
+
+   So there is one head now. Pills that say what the section is and how big
+   it is; a headline that makes the claim in full ink and qualifies it in a
+   quieter one; and the lede set beside it rather than under it, so the head
+   costs two lines of height instead of five.
+
+       <header class="sh">              dark ground (the default)
+       <header class="sh on-paper">     white ground
+   ========================================================================== */
+
+.sh {
+  --sh-ink: var(--fg, #eef2f6);
+  /* 60%, not 46% (round 18, judge): the instruments' subtitle measured 4.32:1, and at phone and tablet sizes it is
+     normal text, which needs 4.5. 60% is 6.4-7.2:1 and still reads quieter than the title. */
+  --sh-soft: color-mix(in srgb, var(--fg, #eef2f6) 60%, transparent);
+  --sh-muted: var(--faint, #8b95a3);
+  --sh-pill: rgba(255, 255, 255, .11);
+  --sh-pill-bg: rgba(255, 255, 255, .025);
+  --sh-acc: #3ddc8b;
+
+  display: grid; gap: 0 3rem; align-items: end;
+  grid-template-columns: minmax(0, 1.3fr) minmax(0, 1fr);
+  margin-bottom: clamp(1.75rem, 3.4vw, 2.6rem);
+}
+.sh.on-paper {
+  --sh-ink: #14402b;
+  --sh-soft: #8a949f;
+  --sh-muted: #5a6470;
+  --sh-pill: #e4e7ea;
+  --sh-pill-bg: #fff;
+  --sh-acc: #23684a;
+}
+
+.sh-k {
+  grid-column: 1 / -1;
+  display: flex; flex-wrap: wrap; gap: .4rem; margin: 0 0 1.1rem; padding: 0;
+  /* 11px at every width (round 18, judge): 10.56px mono is hard to read on a 1x screen, and phones need 11 */
+  font-family: var(--mono); font-size: .6875rem; letter-spacing: .15em; text-transform: uppercase;
+}
+.sh-k span {
+  padding: .32rem .62rem; border-radius: 999px;
+  border: 1px solid var(--sh-pill); background: var(--sh-pill-bg); color: var(--sh-muted);
+}
+.sh-k span:first-child {
+  color: var(--sh-acc);
+  border-color: color-mix(in srgb, var(--sh-acc) 38%, transparent);
+  background: color-mix(in srgb, var(--sh-acc) 8%, transparent);
+}
+
+.sh-t {
+  margin: 0; font-family: var(--sans); font-weight: 650;
+  font-size: clamp(1.95rem, 1.1rem + 2.3vw, 3rem);
+  letter-spacing: -.03em; line-height: 1.04; color: var(--sh-ink);
+}
+.sh.on-paper .sh-t { font-weight: 700; }
+/* No headline ends on one stranded word. "Follow the culture, from light to /
+   plant." and "The whole system, on one / sheet." both did, at 1440. */
+.sh-t { text-wrap: balance; }
+.sh-lede { text-wrap: pretty; }
+/* the claim, then its qualification */
+.sh-t em { font-style: normal; color: var(--sh-soft); }
+
+.sh-lede { margin: .9rem 0 .2rem; max-width: 52ch; font-size: .98rem; line-height: 1.6; color: var(--sh-muted); }
+
+@media (max-width: 980px) {
+  .sh { grid-template-columns: 1fr; }
+}
+
+/* ---- round 7: no stranded last words, anywhere below the landing ---------
+   Balancing the headlines was not enough. Measured at four widths, eleven
+   blocks still ended on a word alone: "...as the water level / moves.",
+   "...in the / beam", "...the centre of the / loop". Paragraphs get `pretty`
+   (it only re-breaks the last lines, so a measure stays a measure); short
+   labels get `balance`. Scoped to the overhaul's own sections, so the landing
+   renders exactly as it did. */
+:is(.fl, .sg, .sc, .bl, .nb-paper) :is(p, li, h3) { text-wrap: pretty; }
+:is(.fl-stat span, .sg-big span, .sg-join span, .sg-k, .sc-flow, .sc-role, .sc-stat span) { text-wrap: balance; }
+
+
+/* ---- round 9 ---------------------------------------------------------------
+   The headline takes the hero's own treatment: the claim in a vertical
+   gradient of white, so the sections below the landing are set the way its
+   title is. The qualification keeps its grey (its own fill colour, which paints
+   over the clipped gradient). On paper the gradient runs through the greens. */
+@supports ((-webkit-background-clip: text) or (background-clip: text)) {
+  .sh-t {
+    background: linear-gradient(#fff 15%, #e9eef3 60%, #cfd8e2);
+    -webkit-background-clip: text; background-clip: text; -webkit-text-fill-color: transparent;
+  }
+  .sh.on-paper .sh-t { background-image: linear-gradient(#0f3322 20%, #14402b 60%, #236046); }
+  .sh-t em { -webkit-text-fill-color: var(--sh-soft); }
+}
+
+/* The floor a model stands on: a perspective grid in the instrument's colour,
+   inside every live frame. It sits under the transparent WebGL canvas and the
+   poster, and fades out before it reaches the frame's edge. */
+.holo-floor {
+  position: absolute; left: -28%; right: -28%; bottom: -6%; height: 62%;
+  pointer-events: none; z-index: 0;
+  background:
+    repeating-linear-gradient(90deg, color-mix(in srgb, var(--c, #5aa9ff) 32%, transparent) 0 1px, transparent 1px 26px),
+    repeating-linear-gradient(0deg,  color-mix(in srgb, var(--c, #5aa9ff) 32%, transparent) 0 1px, transparent 1px 26px);
+  transform: rotateX(66deg); transform-origin: 50% 100%;
+  -webkit-mask-image: radial-gradient(55% 75% at 50% 85%, #000 25%, transparent 72%);
+          mask-image: radial-gradient(55% 75% at 50% 85%, #000 25%, transparent 72%);
+  opacity: .34;
+}
+/* the floor powers on with the station: two flickers, then steady */
+@keyframes holo-on { 0% { opacity: 0; } 30% { opacity: .55; } 45% { opacity: .12; } 60% { opacity: .45; } 100% { opacity: .34; } }
+@media (prefers-reduced-motion: reduce) { .holo-floor { animation: none !important; } }
+
+/* The ground under the instruments. A dot grid — the notebook's paper has one,
+   so the dark half gets its own — fading out toward the edges, and a slow
+   aurora in the reactor's colour behind the centre of the system (`--ax/--ay`
+   say where that is). Both sit under the content; nothing else changes. */
+.fl, .sc { position: relative; isolation: isolate; }
+.fl::before, .sc::before {
+  content: ""; position: absolute; inset: 0; z-index: -1; pointer-events: none;
+  background-image: radial-gradient(rgba(255,255,255,.075) 1px, transparent 1.3px);
+  background-size: 26px 26px;
+  -webkit-mask-image: radial-gradient(78% 72% at 50% 50%, #000 15%, transparent 96%);
+          mask-image: radial-gradient(78% 72% at 50% 50%, #000 15%, transparent 96%);
+}
+.fl::after, .sc::after {
+  content: ""; position: absolute; z-index: -1; pointer-events: none;
+  left: var(--ax, 50%); top: var(--ay, 45%); width: min(980px, 95vw); aspect-ratio: 1;
+  translate: -50% -50%; border-radius: 50%;
+  background: radial-gradient(closest-side, color-mix(in srgb, var(--aurora, #5aa9ff) 14%, transparent), transparent 70%);
+  animation: aurora 10s ease-in-out infinite alternate;
+}
+@keyframes aurora { from { opacity: .65; scale: .94; } to { opacity: 1; scale: 1.06; } }
+@media (prefers-reduced-motion: reduce) { .fl::after, .sc::after { animation: none; } }
+/* The auroras reach past the viewport on a phone (a flipped v5 stage put its
+   centre at 73%); clip, not hidden, so nothing becomes a scroll container. */
+.fl, .sc, .sg, .sg-st { overflow-x: clip; }
+
+/* A head with a subtitle instead of a lede (the instruments, 2 Oct 2026): the subtitle sits under the title in the
+   quieter ink, the way the notebook's head qualifies its claim. */
+.sh--sub { grid-template-columns: minmax(0, 1fr); }
+.sh-sub {
+  margin: .55rem 0 0; grid-column: 1;
+  font-family: var(--sans); font-weight: 500; font-size: clamp(1.15rem, 1.9vw, 1.6rem);
+  letter-spacing: -.015em; line-height: 1.2; color: var(--sh-soft);
+}

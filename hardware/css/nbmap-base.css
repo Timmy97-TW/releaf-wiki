@@ -1,0 +1,249 @@
+/* Layout shared by both map experiments.
+   The reader's own intro says you can "jump by week from the index on the
+   left", but .nbr-wrap never had a base grid rule — only overrides inside two
+   media queries — so the week index has been rendering full width above the
+   scans instead of beside them. Both experiments need the index out of the
+   reading column, so the rule lives here rather than in either variant. */
+
+.nbr-wrap {
+  display: grid;
+  grid-template-columns: 13.5rem minmax(0, 1fr);
+  gap: 1.9rem;
+  align-items: start;
+}
+.nbr-rail  { grid-column: 1; }
+.nbr-pages { grid-column: 2; }
+
+/* The rail is sticky too, so it has to clear whatever the map is occupying at
+   the top. nbmap.js publishes the pinned band's height as --nbmap-h; when
+   there is no pinned band the fallback is the page's own header offset. */
+.nbr-rail {
+  top: calc(var(--topbar-h, 78px) + var(--nbmap-h, 0px) + .9rem);
+  max-height: calc(100vh - var(--topbar-h, 78px) - var(--nbmap-h, 0px) - 2.4rem);
+}
+
+@media (max-width: 980px) {
+  .nbr-wrap { grid-template-columns: 1fr; }
+  .nbr-rail, .nbr-pages { grid-column: 1; }
+}
+
+/* ---------- shared by both experiments ---------------------------------- */
+
+/* Read / unread. The chart fills in as you go, which is most of what an index
+   over 62 scans is for. The unread state is deliberately mild: at first glance
+   nothing is read, and a heavy dim made the map look broken on arrival rather
+   than empty. The current mark is always full strength regardless. */
+.lane-dot { transition: opacity .22s var(--ease-out), transform .22s var(--ease-out),
+                        box-shadow .22s var(--ease-out); }
+.lane-dot:not(.read) { opacity: .58; }
+.lane-dot.read, .lane-dot.here, .lane-dot:hover, .lane-dot:focus-visible { opacity: 1; }
+
+/* The mark you are on. Colour comes from the lane, so each build reads as
+   itself rather than everything glowing the same accent. */
+.lane-dot.here {
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--c, #7aa2f7) 32%, transparent),
+              0 0 14px color-mix(in srgb, var(--c, #7aa2f7) 55%, transparent);
+  z-index: 3;
+}
+/* Quieten the other builds by their run and label only. Dimming the whole
+   lane stacked on top of the unread-dot opacity and took off-lane marks down
+   to a quarter strength, which read as missing rather than inactive. */
+.lanes:has(.lane.here) .lane:not(.here) .lane-run,
+.lanes:has(.lane.here) .lane:not(.here) .lane-name,
+.lanes:has(.lane.here) .lane:not(.here) .lane-span { opacity: .45; }
+.lane.here .lane-name { color: var(--fg); }
+.lane.here .lane-run  { filter: brightness(1.3); }
+
+/* Co-located entries. See the note in nbmap.js: two entries in one week of one
+   build were drawn at identical coordinates, hiding ten of the thirty-one
+   marks. Both orientations divide the week cell instead. */
+.lane-dot { left: calc((var(--a) + (var(--slot, 0) + .5) / var(--slots, 1)) / var(--n) * 100%); }
+
+/* The playhead: continuous reading position on the week axis, interpolated
+   between entries rather than snapped to them. Orientation is set per variant. */
+.nbmap-play { position: absolute; z-index: 2; pointer-events: none; opacity: .85; }
+
+/* Week numbers are jump targets now, so they need to look like it. */
+.lanes-scale span[role="button"] { cursor: pointer; }
+.lanes-scale span[role="button"]:hover,
+.lanes-scale span[role="button"]:focus-visible { color: var(--fg); outline: none; }
+.lanes-scale span[role="button"]:focus-visible { text-decoration: underline; }
+.lanes-scale span.here { color: var(--fg); font-weight: 600; }
+.lanes-scale span.empty { opacity: .45; }
+
+/* Announced, not shown — the visual readout is not reachable by a screen
+   reader as a change. */
+.nbmap-live {
+  position: absolute; width: 1px; height: 1px; margin: -1px;
+  padding: 0; border: 0; overflow: hidden; white-space: nowrap;
+  clip: rect(0 0 0 0); clip-path: inset(50%);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .lane-dot, .nbmap-play { transition: none; }
+}
+
+
+/* Hit targets. The dot stays 11px because that is the right size to read; the
+   target around it grows to something a finger or a shaky pointer can hit.
+   Sized to the tightest real gap (14px between two entries sharing a week) so
+   neighbouring targets do not steal each other's clicks. */
+.lane-dot.hitpad::after {
+  content: "";
+  position: absolute;
+  left: 50%; top: 50%;
+  width: 22px; height: 20px;
+  transform: translate(-50%, -50%);
+}
+.lane-dot { position: absolute; }
+
+/* ---------- reading the record as threads -------------------------------
+   Seven builds run interleaved through 62 scans, and until now the only way to
+   tell which spread belonged to which build was a two-letter mark printed
+   inside the scan photograph — not text, not searchable, not decodable unless
+   you already knew the code. Every scan now carries a spine in its build's
+   colour, so the threads are visible while you scroll and the same colour means
+   the same thing in the map, the week index and the page. */
+.nbr-page { position: relative; padding-left: 10px; }
+.nbr-page::before {
+  content: "";
+  position: absolute; left: 0; top: 0; bottom: 0;
+  width: 3px; border-radius: 3px;
+  background: var(--c, var(--line));
+  opacity: .30;
+  transition: opacity .25s var(--ease-out), width .25s var(--ease-out);
+}
+.nbr-page.nbmap-current::before { opacity: 1; width: 4px; }
+
+.nbr-page[data-owner="BR"] { --c: var(--c-reactor); }
+.nbr-page[data-owner="PH"] { --c: var(--c-photometer); }
+.nbr-page[data-owner="LP"] { --c: var(--c-diopal); }
+.nbr-page[data-owner="HB"] { --c: #c48bff; }
+.nbr-page[data-owner="IS"] { --c: #ff6fb5; }
+.nbr-page[data-owner="FP"] { --c: #4ad9d9; }
+.nbr-page[data-owner="--"] { --c: #8e9bab; }
+
+/* ---------- following one build ----------
+   Dim, never hide: the notebook is a record and a record with holes in it is a
+   different document. Everything outside the thread stays on the page, stays
+   scrollable and stays findable by search — it just stops competing. */
+.nbmap-off { opacity: .34; filter: saturate(.45); transition: opacity .3s var(--ease-out); }
+.nbr-page.nbmap-off::before { opacity: .12; }
+.lane.nbmap-off { opacity: .3; }
+.lane[aria-pressed="true"] .lane-name::before {
+  color: var(--fg);
+  text-shadow: 0 0 10px color-mix(in srgb, var(--c, #7aa2f7) 70%, transparent);
+}
+
+.nbmap-status {
+  margin: .55rem 0 0; font-size: .68rem; color: var(--dim); line-height: 1.4;
+}
+.nbmap-status b { color: var(--fg); font-weight: 600; }
+.nbmap-clear {
+  display: inline; margin-left: .35rem; padding: 0;
+  background: none; border: 0; cursor: pointer;
+  color: var(--accent); font: inherit; text-decoration: underline;
+}
+.nbmap-count {
+  margin: .35rem 0 0;
+  font-family: var(--mono); font-size: .56rem; letter-spacing: .12em;
+  text-transform: uppercase; color: var(--faint);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .nbr-page::before, .nbmap-off { transition: none; }
+}
+
+/* The key: names the seven builds, and doubles as the control for following
+   one. Colour is the only thing shared between the map, the week index and the
+   page spines, so the swatch is the thing that makes the whole page decodable. */
+/* One line across the top of the record. */
+.nbmap-key-bar {
+  margin: .2rem 0 1.1rem;
+  padding: .55rem 0;
+  border-top: 1px solid var(--line);
+  border-bottom: 1px solid var(--line);
+}
+.nbmap-key {
+  list-style: none; display: flex; flex-wrap: wrap;
+  gap: .25rem 1.15rem; margin: 0; padding: 0;
+}
+.nbmap-key li { margin: 0; }
+.nbmap-key-b {
+  display: inline-flex; align-items: center; gap: .3rem;
+  padding: .1rem .1rem; border: 0; background: none; cursor: pointer;
+  color: var(--dim); font: inherit; font-size: .72rem; line-height: 1.5;
+  text-align: left;
+  border-radius: 4px;
+}
+.nbmap-key-b span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.nbmap-key-b i {
+  width: 9px; height: 9px; border-radius: 2px; flex: none;
+  background: var(--c, var(--dim));
+}
+.nbmap-key-b:hover, .nbmap-key-b:focus-visible { color: var(--fg); outline: none; }
+.nbmap-key-b:focus-visible { box-shadow: 0 0 0 2px color-mix(in srgb, var(--accent) 55%, transparent); }
+.nbmap-key-b[aria-pressed="true"] { color: var(--fg); }
+.nbmap-key-b[aria-pressed="true"] i { box-shadow: 0 0 8px var(--c, var(--accent)); }
+.nbmap-key-b[data-mark="BR"] { --c: var(--c-reactor); }
+.nbmap-key-b[data-mark="PH"] { --c: var(--c-photometer); }
+.nbmap-key-b[data-mark="LP"] { --c: var(--c-diopal); }
+.nbmap-key-b[data-mark="HB"] { --c: #c48bff; }
+.nbmap-key-b[data-mark="IS"] { --c: #ff6fb5; }
+.nbmap-key-b[data-mark="FP"] { --c: #4ad9d9; }
+.nbmap-key-b[data-mark="--"] { --c: #8e9bab; }
+
+/* ---------- the build, turning ----------
+   A chart tells you when something happened. This tells you what it was. */
+/* Its own card under the chart, not a child of the chart's panel. Inside the
+   panel it was the flex item that lost when the column ran short, and it
+   spilled out past the panel's rounded border looking like a bug — which it
+/* ---------- the build ----------
+   A chart tells you when something happened; this tells you what it was. A
+   still at a three-quarter angle, matching the hub's instrument icons.
+
+   It used to be a 24-frame turntable. Dropped: perpetual motion beside a page
+   of text is a distraction, it would have needed a pause control under WCAG
+   2.2.2, and the sprite animation was one more thing running on a page that
+   was already dropping frames. */
+.nbmap-cad {
+  flex: none;
+  margin: .7rem 0 0;
+  padding: .7rem .8rem .75rem;
+  border: 1px solid var(--line);
+  border-radius: var(--r-lg, 12px);
+  background: rgba(255, 255, 255, .012);
+  display: flex; flex-direction: column; align-items: center; gap: .35rem;
+}
+.nbmap-cad img {
+  display: block; width: 132px; height: 132px;
+  filter: drop-shadow(0 6px 14px rgba(0, 0, 0, .5));
+}
+.nbmap-cad:not(.has-cad) { padding: .45rem .8rem; }
+.nbmap-cad:not(.has-cad) img { display: none; }
+.nbmap-cad-cap {
+  font-family: var(--mono); font-size: .56rem; letter-spacing: .12em;
+  text-transform: uppercase; color: var(--dim); text-align: center;
+}
+.nbmap-cad.has-cad .nbmap-cad-cap { color: var(--c, var(--fg)); }
+.nbmap-cad[data-mark="BR"] { --c: var(--c-reactor); }
+.nbmap-cad[data-mark="PH"] { --c: var(--c-photometer); }
+.nbmap-cad[data-mark="LP"] { --c: var(--c-diopal); }
+.nbmap-cad[data-mark="HB"] { --c: #c48bff; }
+.nbmap-cad[data-mark="IS"] { --c: #ff6fb5; }
+.nbmap-cad[data-mark="FP"] { --c: #4ad9d9; }
+.nbmap-cad[data-mark="--"] { --c: #8e9bab; }
+
+@media (prefers-reduced-motion: reduce) {
+  /* the model still shows, it simply never turns */
+}
+
+/* ---------- the scans ----------
+   content-visibility: auto was tried here and REMOVED. The reasoning was sound
+   — 62 scans, 4.3 MB decoded each, an 81,000px document — but measured at depth
+   it took frames from 16.6ms to 326.9ms, twenty times worse. On a page whose
+   images are already decoded, the size negotiation it forces for every element
+   entering and leaving the render window costs far more than the painting it
+   skips. Do not put it back without measuring at scroll depth; measuring near
+   the top of the document shows nothing, which is how it got in. */
+

@@ -648,7 +648,12 @@
        under the middle at all, just the 3.175 mm slab. All of the float volume
        is in two box sections running the length of the two LONG sides. One
        void: x -56.9..56.9, y -44.6..-37.7, z -20.32..0, closed underneath by a
-       1.7 mm skin. Mirrored at +y. 14,367 mm^3 each, 28.7 cm^3 the pair. */
+       1.7 mm skin. Mirrored at +y. 14,367 mm^3 each, 28.7 cm^3 the pair.
+       (Re-measured from the STL's own void shells, 3 Oct 2026: x -57.16..57.16,
+       y -44.66..-37.68, the lower sides chamfered ~45 deg to a point (a pentagon),
+       1.59 mm walls and floor, 21.13 cm^3 each, 42.27 cm^3 the pair; the 28.7
+       above counted only the straight runs. The captions quote the re-measured
+       values; the drawn box below is unchanged.) */
     // The chamber is NOT a straight bar. Ray-cast on a 0.25 mm grid, each one is
     // a BRACKET: a run the full length of its long side, then a leg that hooks
     // inward at each short end and tapers as it goes — from x -42.25 at
@@ -703,7 +708,7 @@
     if (loader) loader.classList.add("hide");
     onScroll(true); draw();
   }).catch(function (e) {
-    if (loader) loader.textContent = "Could not load the model: " + e.message;
+    if (loader) loader.textContent = "Could not load the model — " + e.message;
   });
 
   /* ---------- water ---------- */
@@ -1860,7 +1865,7 @@
   //                     caption that hands straight to the next one
   const CAPS = [
     { win: [0.156, 0.262], drop: 0.145, bot: 0.242, handoff: true, n: "01", name: "Thirteen seats", role: "Bore pattern",
-      body: "&empty;11.26&nbsp;mm bores on a 21.59&nbsp;mm pitch, staggered <span class='nw'>4, 5, 4</span> so the outer rows sit half a pitch off the middle one." },
+      body: "Teardrop bores, a &empty;10.39&nbsp;mm circle drawn out to a point 11.69&nbsp;mm long, on a 21.59&nbsp;mm pitch, staggered <span class='nw'>4&ndash;5&ndash;4</span> so the outer rows sit half a pitch off the middle one." },
     // The holders fall through the type band (0.300-0.3856, left to right), and
     // with the type on win it was solid from 0.334 while cones crossed the
     // headline and the body copy until 0.369 at every viewport. The TYPE now
@@ -1883,7 +1888,7 @@
     // 0.175 -> 0.190 -> 0.145 of h. The hold is untouched.
     { win: [0.526, 0.602], drop: 0.190, bot: 0.270, dIn: [0.482, 0.526], dOut: [0.614, 0.662],
       n: "03", name: "Two sealed rails", role: "Why it floats",
-      body: "Each long side is a closed box section, 113.8&nbsp;mm long and 20.3&nbsp;mm deep, capped underneath by a 1.7&nbsp;mm skin. The pair encloses 28.7&nbsp;cm&sup3; the water cannot get into. Nothing hangs below the middle of the plate." },
+      body: "Each long side hides a sealed chamber 114.3&nbsp;mm long: a box section chamfered to a point underneath, a teardrop-like pentagon 20.3&nbsp;mm deep in 1.59&nbsp;mm walls. The pair holds 42.3&nbsp;cm&sup3; the water cannot get into. Nothing hangs below the middle of the plate." },
     { win: [0.654, 0.758], drop: 0.145, bot: 0.382, handoff: "water", n: "04", name: "Handles", role: "Lifting out",
       body: "They clip into slots moulded into the plate, so the whole raft lifts clear of the reservoir without touching a plant." },
     // The raft is still coming down (0.800-0.868) as 05 arrives, and its handle

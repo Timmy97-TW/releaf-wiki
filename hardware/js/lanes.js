@@ -81,7 +81,7 @@
     panel.classList.remove("tracking", "reading");
     scale.forEach(function (s) { s.classList.remove("on"); });
     rows.forEach(function (row) { row.classList.remove("on"); });
-    if (rw) rw.textContent = "\u00a0";
+    if (rw) rw.textContent = "\u2014\u2014";
     if (rt) rt.textContent = "Point at a mark to read its week";
     panel.style.removeProperty("--c");
   };
@@ -98,11 +98,15 @@
     if (lane) panel.style.setProperty("--c", window.getComputedStyle(lane).getPropertyValue("--c"));
   };
   panel.querySelectorAll(".lane-dot").forEach(function (dot) {
+    // the dots carry their week and title in data attributes; without a name they
+    // reach a screen reader as thirty-one consecutive bare links
+    if (!dot.getAttribute("aria-label")) {
+      dot.setAttribute("aria-label", "Week " + (dot.getAttribute("data-w") || "") +
+        (dot.getAttribute("data-t") ? " — " + dot.getAttribute("data-t") : ""));
+    }
     dot.addEventListener("pointerenter", function () { say(dot); });
     dot.addEventListener("focus", function () { say(dot); });
-    // the native tooltip duplicates the readout and arrives a second late;
-    // its words stay on as the link's name, the dot has no text of its own
-    if (dot.title && !dot.hasAttribute("aria-label")) dot.setAttribute("aria-label", dot.title);
+    // the native tooltip duplicates the readout and arrives a second late
     dot.removeAttribute("title");
   });
 })();

@@ -1,0 +1,234 @@
+/* Experiment B — the pipeline map stood up beside the notebook.
+   Same chart, same data, rotated: weeks run down the page in the direction the
+   scans do, so the map reads as a scrollbar with meaning on it. The markup is
+   untouched — the dots already carry --a (week index) and --n (span), so the
+   position maths only moves from `left` to `top`. */
+
+.nbmap-side .nbr-wrap { grid-template-columns: 12.5rem minmax(0, 1fr) 16.5rem; }
+.nbmap-side .nbr-rail  { grid-column: 1; }
+.nbmap-side .nbr-pages { grid-column: 2; }
+/* A definite height, not a max-height. The chart was capped at 27rem inside an
+   otherwise empty 787px column: 21 weeks in 432px is 20.6px a week, which is
+   what forced 7px type and 11px hit targets. Giving the column a real height
+   lets the chart claim the rest of it and everything downstream gets room. */
+.nbmap-side [data-nbmap="side"] {
+  grid-column: 3;
+  position: sticky;
+  top: calc(var(--topbar-h, 78px) + .9rem);
+  height: calc(100vh - var(--topbar-h, 78px) - 2.4rem);
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  /* Last line of defence. If the window is genuinely too short for the chart,
+     the model and the readout, the column scrolls rather than letting its
+     contents pile out over each other. */
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  scrollbar-width: thin;
+}
+.nbmap-side [data-nbmap="side"]::-webkit-scrollbar { width: 6px; }
+.nbmap-side [data-nbmap="side"]::-webkit-scrollbar-thumb {
+  background: var(--line); border-radius: 3px;
+}
+.nbmap-side [data-nbmap="side"] > .nbr-map {
+  margin: 0; min-height: 0; flex: 1 1 auto; display: flex; flex-direction: column;
+}
+/* the chart yields height to the model card, never the other way round */
+.nbmap-side .nbmap-cad { flex: none; }
+
+/* One title, not two. The head said "When each one was being built" and the
+   rule directly beneath it said "BUILD TIMELINE" — the same thing twice, in a
+   column that has no space to spare. The rule goes; the sentence stays,
+   because it is the one that explains itself. */
+.nbmap-side .lanes-head { margin: 0 0 .5rem; flex: none; }
+.nbmap-side .lanes-head h2 { font-size: .8rem; line-height: 1.3; margin: 0; }
+.nbmap-side .lanes-head p { display: none; }
+.nbmap-side .lanes-rule { display: none; }
+
+.nbmap-side .lanes-panel {
+  --nx-l: 0; --nx-r: 0;
+  margin-top: 0;
+  padding: .7rem .8rem .8rem;
+  flex: 1 1 auto;
+  /* NOT min-height:0. That let the panel be squeezed below its own contents,
+     and the week scale does not shrink — it overflowed, so the numbers ended
+     up outside the panel's border sitting on top of the readout. Respecting
+     the content minimum is what keeps everything inside the box. */
+  min-height: auto;
+  display: flex;
+  flex-direction: column;
+}
+
+
+/* --- the chart, rotated --------------------------------------------------- */
+/* Now that every ancestor has a definite height, flex:1 resolves and the chart
+   takes whatever the head, rule and readout leave. A floor stops it collapsing
+   to nothing on a short window. */
+.nbmap-side .lanes {
+  flex: 1 1 auto;
+  flex-direction: row;
+  align-items: stretch;
+  gap: .1rem;
+  /* Back to the height the chart had before the model card arrived: 21 week
+     rows want room to breathe, and squeezing them to make space for anything
+     else is what started the pile-up. */
+  /* Grows into whatever the head, readout and model card leave, with a floor
+     that keeps 21 week rows readable on a short window. */
+  min-height: 17rem;
+}
+.nbmap-side .lane {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  flex: 1 1 0;
+  min-width: 0;
+  gap: .3rem;
+}
+
+/* Column heads are the two-letter marks the notebook already uses ("BR
+   bioreactor. PH photometer.") — the full names only fit here rotated, and
+   rotated they came out clipped and unreadable. The real name stays in the
+   DOM for screen readers and in the title attribute for a hover. */
+.nbmap-side .lane-name {
+  order: 0; flex: none;
+  font-size: 0; line-height: 1;
+  padding: 0; height: 1.05rem;
+  overflow: visible; text-align: center;
+  cursor: default;
+}
+.nbmap-side .lane-name a { font-size: 0; }
+.nbmap-side .lane-name::before {
+  content: "··";
+  font-family: var(--mono);
+  font-size: .62rem;
+  letter-spacing: .06em;
+  color: var(--c, var(--dim));
+}
+.nbmap-side .lane[data-mark="BR"] .lane-name::before { content: "BR"; }
+.nbmap-side .lane[data-mark="PH"] .lane-name::before { content: "PH"; }
+.nbmap-side .lane[data-mark="LP"] .lane-name::before { content: "LP"; }
+.nbmap-side .lane[data-mark="HB"] .lane-name::before { content: "HB"; }
+.nbmap-side .lane[data-mark="IS"] .lane-name::before { content: "IS"; }
+.nbmap-side .lane[data-mark="FP"] .lane-name::before { content: "FP"; }
+
+.nbmap-side .lane-track { order: 1; width: 13px; flex: 1 1 auto; height: auto; }
+/* The W05–W12 range labels are what collided with the week scale in the first
+   pass: they are a right-hand column in a horizontal chart and have nowhere to
+   go in a vertical one. The same information is the extent of the run. */
+.nbmap-side .lane-span { display: none; }
+.nbmap-side .lane-run {
+  top: calc(var(--a) / var(--n) * 100%);
+  left: 50%;
+  width: 5px;
+  height: calc(var(--b) / var(--n) * 100%);
+  transform: translateX(-50%);
+}
+.nbmap-side .lane-dot {
+  /* (--slot + .5) / --slots divides the week cell so co-located entries
+     separate without leaving the week they belong to. Defaults to dead centre. */
+  top: calc((var(--a) + (var(--slot, 0) + .5) / var(--slots, 1)) / var(--n) * 100%);
+  left: 50%;
+  margin: 0;
+  transform: translate(-50%, -50%);
+}
+.nbmap-side .lane-dot.here { transform: translate(-50%, -50%) scale(1.6); }
+
+/* The scale is a child of .lanes, so it becomes the first column of the row
+   rather than something positioned over it. Its top padding matches the mark
+   header so week 04 lines up with the top of the tracks, not above them. */
+.nbmap-side .lanes-scale {
+  order: -1;
+  flex: none;
+  width: 1.5rem;
+  margin: 0 .3rem 0 0;
+  display: grid;
+  grid-auto-flow: row;
+  grid-auto-rows: 1fr;
+  padding-top: calc(1.05rem + .3rem);
+  /* was .46rem — 7.4px, below anything readable. The chart now has 29px week
+     rows instead of 20, so the scale can afford to be legible. */
+  font-size: .58rem;
+  line-height: 1;
+  text-align: right;
+}
+.nbmap-side .lanes-grid,
+.nbmap-side .lanes-cursor { display: none; }
+
+/* Two lines, always. Titles run from three words to eleven, so a min-height
+   either clipped the long ones or left a hole under the short ones; a fixed
+   two-line box with an ellipsis keeps the chart above it from moving. */
+.nbmap-side .lanes-readout {
+  flex: none;
+  margin-top: .75rem;
+  padding-top: .6rem;
+  flex-direction: column;
+  gap: .15rem;
+  min-height: 0;
+}
+.nbmap-side .lanes-readout-w { font-size: .58rem; letter-spacing: .12em; }
+.nbmap-side .lanes-readout-t {
+  font-size: .74rem; line-height: 1.35; color: var(--fg);
+  display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 2;
+  overflow: hidden; min-height: 2.7em;
+}
+
+/* The lane you are pointing at, while you point at it. */
+.nbmap-side .lane.peek .lane-name::before { color: var(--fg); }
+.nbmap-side .lane.peek .lane-track {
+  background: color-mix(in srgb, var(--c, #7aa2f7) 10%, transparent);
+  border-radius: 999px;
+}
+
+/* Weeks run top to bottom here, so the playhead lies across the columns at
+   the week you are reading — the same gesture, rotated with the chart. */
+.nbmap-side .nbmap-play {
+  left: calc(1.5rem + .3rem); right: 0;
+  top: calc(1.25rem + var(--play, 0) * (100% - 1.25rem));
+  height: 1px;
+  background: linear-gradient(to right,
+    color-mix(in srgb, var(--accent) 62%, transparent), transparent);
+  transition: top .18s var(--ease-out);
+}
+.nbmap-side .nbmap-play::before {
+  content: ""; position: absolute; left: -3px; top: -3px;
+  width: 7px; height: 7px; border-radius: 50%;
+  background: var(--accent);
+  box-shadow: 0 0 10px color-mix(in srgb, var(--accent) 70%, transparent);
+}
+
+@media (max-width: 1240px) {
+  /* Not enough width for three columns; fold the map above the scans. */
+  .nbmap-side .nbr-wrap { grid-template-columns: 12.5rem minmax(0, 1fr); }
+  .nbmap-side [data-nbmap="side"] {
+    grid-column: 1 / -1; grid-row: 1; position: static; max-height: none;
+  }
+  .nbmap-side .lanes { flex-direction: column; padding-left: 0; }
+  .nbmap-side .lane { flex-direction: row; gap: 0; }
+  .nbmap-side .lane-name {
+    order: 0; font-size: .58rem; height: auto;
+    width: var(--nx-l, 9.5rem); text-align: left;
+  }
+  .nbmap-side .lane-name::before { content: none; }
+  .nbmap-side .lane-name a { font-size: .58rem; }
+  .nbmap-side .lane-track { width: auto; height: 20px; }
+  .nbmap-side .lane-span { display: block; }
+  .nbmap-side .lane-run {
+    top: 50%; left: calc(var(--a) / var(--n) * 100%);
+    width: calc(var(--b) / var(--n) * 100%); height: 5px; transform: none;
+  }
+  .nbmap-side .lane-dot {
+    top: 50%;
+    left: calc((var(--a) + (var(--slot, 0) + .5) / var(--slots, 1)) / var(--n) * 100%);
+    transform: translateY(-50%); margin: -5.5px 0 0 -1px;
+  }
+  .nbmap-side .lanes-scale { position: static; grid-auto-flow: column; width: auto; font-size: .52rem; }
+  .nbmap-side .lanes-head p { display: block; }
+  .nbmap-side .nbmap-play {
+    left: var(--nx-l); right: var(--nx-r); top: auto; bottom: 0; height: auto;
+  }
+  .nbmap-side .nbmap-play::before { display: none; }
+}
+@media (max-width: 980px) {
+  .nbmap-side .nbr-wrap { grid-template-columns: 1fr; }
+  .nbmap-side .nbr-rail, .nbmap-side .nbr-pages { grid-column: 1; }
+}

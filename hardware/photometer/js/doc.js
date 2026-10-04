@@ -40,5 +40,10 @@
     if (!el) return;
     e.preventDefault();
     el.scrollIntoView({ behavior: smooth ? "smooth" : "auto", block: "start" });
+    // A smooth scroll that never moves focus leaves the skip link pointing at nothing: the
+    // next Tab lands back in the header. Give the target focus without scrolling it again.
+    if (!el.hasAttribute("tabindex")) el.setAttribute("tabindex", "-1");
+    el.focus({ preventScroll: true });
+    if (history.replaceState) history.replaceState(null, "", a.getAttribute("href"));
   });
 })();

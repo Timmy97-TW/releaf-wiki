@@ -5,9 +5,20 @@
 <meta name="viewport" content="width=device-width, initial-scale=1" />
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='7' fill='%2305060a'/%3E%3Ccircle cx='16' cy='16' r='9.5' fill='none' stroke='%235aa9ff' stroke-width='2.5'/%3E%3Ccircle cx='16' cy='16' r='3.6' fill='%23ffa23d'/%3E%3C/svg%3E" />
 <title>Perfusion Bioreactor, Hardware | ReLeaf &middot; iGEM 2026</title>
-<meta name="description" content="An interactive walkthrough of the GEMS-Taiwan perfusion bioreactor: a hollow-fiber membrane loop built to grow B. subtilis and let protectant out while keeping the organism in the culture loop." />
-<link rel="stylesheet" href="css/style.css?v=8854b7d4" />
-<link rel="stylesheet" href="../css/polish.css?v=r2b0929" />
+<meta name="description" content="The GEMS-Taiwan perfusion bioreactor: a hollow-fiber membrane loop that grows B. subtilis and is designed to let the protectant out, not the cells." />
+<meta name="theme-color" content="#05060a" />
+<!-- Link previews. The image path is relative so it follows the site wherever it is hosted; make these
+     absolute if a scraper needs it (some resolve only absolute og:image URLs). -->
+<meta property="og:type" content="website" />
+<meta property="og:site_name" content="ReLeaf · iGEM 2026" />
+<meta property="og:title" content="Perfusion Bioreactor — GEMS-Taiwan Hardware" />
+<meta property="og:description" content="The GEMS-Taiwan perfusion bioreactor: a hollow-fiber membrane loop that grows B. subtilis and is designed to let the protectant out, not the cells." />
+<meta property="og:image" content="../img/film/hub-film-poster.jpg" />
+<meta name="twitter:card" content="summary_large_image" />
+<link rel="stylesheet" href="css/style.css?v=763ac42f" />
+<link rel="stylesheet" href="../css/polish.css?v=f857778d" />
+<!-- Wiki alignment layer: matches the main wiki's document styling. Delete this one line to revert. -->
+<link rel="stylesheet" href="../css/wiki-align.css?v=e522198b" />
 <link rel="stylesheet" href="../../assets/css/nav.css" />
 <link rel="stylesheet" href="../../assets/css/nav-dark.css" />
 <script>document.documentElement.className+=' js'</script>
@@ -32,33 +43,34 @@
   <b>Hardware</b>
   <a href="../">Overview</a>
   <a href="../photometer/">Photometer</a>
-  <a href="../diopal/">DiOPAL</a>
+  <a href="../diopal/">LPA</a>
   <a href="../bioreactor/" aria-current="page">Bioreactor</a>
   <a href="../hydroponics/">Hydroponics</a>
   <a href="../notebook/">Notebook</a>
 </nav>
 
-<main id="main">
+<main id="main" tabindex="-1">
 <section class="intro">
-  <div class="eyebrow ai">Perfusion bioreactor</div>
-  <h1 class="ai">The bacteria stay in the loop.<br />Only <span>what they secrete</span> leaves.</h1>
-  <p class="lede ai">
+  <div class="eyebrow">Perfusion bioreactor</div>
+  <p class="intro-title">The bacteria stay in the loop.<br />Only <span>what they secrete</span> leaves.</p>
+  <p class="lede">
     A hollow&#8209;fiber membrane splits the system in two. Engineered
-    <i>B.&nbsp;subtilis</i> <span class="mark">circulates on the lumen side and is meant never to leave it</span>;
+    <i>B.&nbsp;subtilis</i> <span class="mark">circulates on the lumen side and is intended never to leave it</span>;
     the protectant it secretes is designed to cross into the shell side and go to the
-    field. <span class="ann">The barrier is physical: the fiber pore is smaller than the cells, and shell&#8209;side medium
-    plated in cycle&nbsp;1 produced no colonies (<a href="#containment">Part 5</a>)</span>.
+    field. <span class="ann">Containment is designed to be physical rather than
+    procedural: the fiber pore is smaller than the cells, and shell&#8209;side medium
+    plated in cycle&nbsp;1 produced no colonies (<a href="#sec51">5.1</a>)</span>.
   </p>
 
   <div class="stage">
-    <canvas id="gl"></canvas>
+    <canvas id="gl" role="img" aria-label="Interactive 3D model of the bioreactor loop, slowly turning; drag to orbit it."></canvas>
     <div class="loader" id="loader">Loading <span id="load-pct">0%</span></div>
     <div class="stage-hint">Drag to orbit</div>
   </div>
 
   <div class="legend-row">
-    <span class="lg"><i class="sw lumen"></i>Lumen side: culture loop</span>
-    <span class="lg"><i class="sw shell"></i>Shell side: protectant harvest</span>
+    <span class="lg"><i class="sw lumen"></i>Lumen side &mdash; culture loop</span>
+    <span class="lg"><i class="sw shell"></i>Shell side &mdash; protectant harvest</span>
     <span class="lg"><i class="sw beam"></i>OD600 measuring beam</span>
   </div>
 </section>
@@ -69,12 +81,13 @@
   <ol>
     <li><a href="#purpose"><b>01</b> Purpose</a></li>
     <li><a href="#highlights"><b>02</b> Hardware Highlights</a></li>
-    <li><a href="#dbtl"><b>03</b> Engineering the Bioreactor</a></li>
-    <li><a href="#final"><b>04</b> Final Design (Lab)</a></li>
+    <li><a href="#engineering"><b>03</b> Engineering the Bioreactor</a></li>
+    <li><a href="#final-design"><b>04</b> Final Design (Lab)</a></li>
     <li><a href="#containment"><b>05</b> Containment &amp; Safety</a></li>
     <li><a href="#reproduction"><b>06</b> Reproduction</a></li>
-    <li><a href="#future"><b>07</b> Limitations &amp; Future Plans</a></li>
-    <li><a href="#parts"><b>08</b> Structural Parts</a></li>
+    <li><a href="#outlook"><b>07</b> Limitations &amp; Future Plans</a></li>
+    <li><a href="#structural-parts"><b>08</b> Structural Parts</a></li>
+    <li><a href="#references"><b>09</b> References</a></li>
   </ol>
 </nav>
 
@@ -82,12 +95,24 @@
 
   <header class="doc-head">
     <div class="eyebrow">Technical record</div>
-    <h1>ReLeaf Perfusion<br />Bioreactor</h1>
+    <h1>RELEAF Perfusion<br />Bioreactor</h1>
     <p class="standfirst">
-      Our bioreactor hardware turns engineered biology into a contained, controllable,
-      and deployable biomanufacturing system.
+      The production stage of RELEAF. Engineered <i>B.&nbsp;subtilis</i> grows in a
+      stirred reservoir and is perfused continuously through a PES hollow&#8209;fiber
+      membrane. Protectant is intended to diffuse across the fiber wall into the shell
+      side and be drawn off to the field; the bacteria are retained on the lumen side
+      for the life of the run.
     </p>
-    <p class="last-updated">Last updated <b>2 October 2026</b></p>
+    <p class="doc-aim">
+      This record is written so that the device can be rebuilt independently from the
+      information given here. It does not meet that standard yet &mdash; suppliers and
+      several specifications are still outstanding. Values, parts and passages that
+      are not yet established are marked in orange rather than estimated.
+    </p>
+    <div class="status">
+      <span class="status-dot"></span>
+      <span class="status-label">Orange labels such as <span class="todo">not on record</span> mark what the team has not yet written or measured, and where its sources disagree. The design&ndash;build&ndash;test&ndash;learn cycles are reported in Part&nbsp;3, in four tracks.</span>
+    </div>
   </header>
 
   <!-- ─────────── PART 1 ─────────── -->
@@ -99,9 +124,9 @@
   <section class="sec" id="sec11">
     <h3><i>1.1</i> From TgPGPR to a Bioreactor</h3>
     <p>
-      Our original design put the engineering in the soil. A transgenic plant growth
-      promoting rhizobacterium would colonize the roots and produce protectant where the
-      plant needed it. No delivery, no hardware.
+      Our original design put the engineering in the soil. A transgenic plant
+      growth&#8209;promoting rhizobacterium would colonize the roots and produce protectant
+      where the plant needed it. No delivery, no hardware.
     </p>
     <p>
       The flaw was control. Once a transgenic organism is released, expression, dose and
@@ -111,46 +136,68 @@
     <p>
       What we needed from the bacteria was the molecule, not the organism. So we moved the
       organism into a machine and left only the product in the field. Stress appears, the
-      grower turns on the light, protectant is made and delivered. A release problem
-      became a containment problem, and containment is something hardware can solve.
+      grower turns on the light, protectant is made and delivered. <b class="mark">A release
+      problem became a containment problem</b>, and containment is something hardware can
+      solve.
     </p>
-
   </section>
 
   <section class="sec" id="sec12">
-    <h3><i>1.2</i> <span>Why <i>B.&nbsp;subtilis</i> and Perfusion Hollow Fiber</span></h3>
+    <h3><i>1.2</i> <span>Why <span class="sp">B.&nbsp;subtilis</span> and Perfusion Hollow Fiber</span></h3>
     <p>
-      <i>Bacillus subtilis</i> 168 is well characterized, industrially proven, and native
-      to the rhizosphere. Critically, it secretes protein into the medium, so the
-      protectant is already outside the cell.
+      <i>Bacillus subtilis</i> 168 is well characterized, industrially proven, and native to
+      the rhizosphere. Critically, it secretes protein into the medium, so the protectant is
+      already outside the cell.
     </p>
     <p>
-      That makes separation a question of size. In a perfusion hollow fiber bioreactor,
-      culture circulates through the fiber lumens while medium flows past on the other
-      side. Protectant crosses the membrane. Bacteria cannot. Medium is exchanged
-      continuously, so the culture holds high density for weeks rather than growing to a
-      peak and being harvested.
+      That makes separation a question of size. In a perfusion hollow&#8209;fiber
+      bioreactor, culture circulates through the fiber lumens while medium flows past on the
+      other side. Protectant crosses the membrane; whole bacteria are too large to follow it.
+      Medium is exchanged continuously, so the culture is meant to hold high density for
+      weeks rather than growing to a peak and being harvested.
     </p>
-
   </section>
 
   <section class="sec" id="sec13">
     <h3><i>1.3</i> Against Shelf Production</h3>
     <p>
-      Centralized manufacturing suits stable chemicals. Peptides degrade in storage, often
-      require cold chain, and lose potency before use.
+      Centralized manufacturing suits stable chemicals. Many peptides degrade in storage,
+      often require a cold chain, and lose potency before use.
     </p>
     <p>
       The timing is also wrong. A bottle filled months earlier cannot respond to a drought
       that arrives this week. Producing on site means the protectant is fresh, the dose
       matches the conditions, and no one pays to refrigerate and ship water.
     </p>
+  </section>
+
+  <section class="sec" id="sec14">
+    <h3><i>1.4</i> Role in the Project</h3>
     <p>
-      Centralized factories are efficient for large-scale production, but they are
-      separated from the time and place where plant stress occurs. ReLeaf explores a
-      complementary model: compact, contained biomanufacturing closer to the farm,
-      enabling more responsive production when protection is needed.
+      RELEAF runs <b>predict &rarr; produce &rarr; protect</b>. The AIoT stage predicts
+      plant stress and issues a light signal; this bioreactor is the
+      <b>produce</b> stage that receives it. The
+      <a href="../diopal/index.html">LPA</a> is the instrument built to establish
+      which light conditions drive protectant expression, and the
+      <a href="../photometer/index.html">photometer</a> is embedded in this loop as
+      its eye. What leaves here is designed to be cell&#8209;free protectant, bound for soil
+      or a hydroponic line.
     </p>
+
+    <div class="rel-strip">
+      <a class="rel-card" href="../diopal/index.html">
+        <span class="rel-n">Upstream</span><b>LPA</b>
+        <span class="rel-note">defines the light that induces expression</span>
+      </a>
+      <a class="rel-card is-self" href="#purpose">
+        <span class="rel-n">This device</span><b>Bioreactor</b>
+        <span class="rel-note">grows the culture, separates the product</span>
+      </a>
+      <a class="rel-card" href="../photometer/index.html">
+        <span class="rel-n">Embedded</span><b>Photometer</b>
+        <span class="rel-note">reads OD600 in&#8209;line, without sampling</span>
+      </a>
+    </div>
   </section>
 
   <!-- ─────────── PART 2 ─────────── -->
@@ -160,32 +207,43 @@
   </section>
 
   <section class="sec" id="sec21">
-    <h3><i>2.1</i> Hollow-Fiber Perfusion</h3>
+    <h3><i>2.1</i> Hollow&#8209;Fiber Perfusion</h3>
     <p>
-      Medium is exchanged while the culture runs. Waste leaves, nutrients arrive, and the
-      run never stops. Density is sustained rather than peaked, and the product comes off
-      as a continuous stream.
+      Medium is designed to be exchanged while the culture runs: waste leaves, nutrients
+      arrive, and the run does not have to stop. Density is sustained rather than peaked,
+      and the product comes off as a continuous stream.
     </p>
+    <aside class="callout">
+      <h4>Why perfusion rather than batch</h4>
+      <p>
+        A batch reactor must be opened to be harvested, and every opening is a
+        containment event and a contamination risk. Perfusion is designed to move product
+        out continuously through a barrier that retains the organism, so the culture
+        vessel stays closed from inoculation to shutdown.
+      </p>
+    </aside>
   </section>
 
   <section class="sec" id="sec22">
     <h3><i>2.2</i> Containment and Product Release</h3>
     <p>
       The membrane is the separation step, not merely a wall. Pore size admits the
-      protectant and excludes the cells, so the component that contains the organism is
-      the component that delivers the product. Everything reaching the plant has crossed a
-      barrier no cell can pass.
+      protectant and excludes the cells, so the component that contains the organism is the
+      component that delivers the product. Everything reaching the plant has crossed a
+      barrier sized to stop whole cells.
     </p>
   </section>
 
   <section class="sec" id="sec23">
     <h3><i>2.3</i> Integrated Monitoring</h3>
     <p>
-      An in-line photometer reads OD600 through a flow cell without drawing a sample.
-      Dissolved oxygen and pH are measured in the vessel, and transmembrane pressure is
-      tracked so fouling appears as a trend rather than a failure. All of it reports to
-      one operator interface.
+      An in&#8209;line photometer reads OD600 through a flow cell without drawing a sample.
+      pH sensing sits on the harvest side of the loop (<a href="#sec25">2.5</a>), and
+      transmembrane pressure (TMP) is tracked so that fouling appears as a trend rather than a
+      failure. All of it reports to one operator interface
+      (<a class="xref" href="#fig-dashboard"></a>).
     </p>
+    <div class="todo"><b>To confirm &middot; pH and dissolved oxygen</b>The doc says dissolved oxygen and pH are measured in the vessel. On this page pH sits on the harvest side (<a href="#sec25">2.5</a>); no dissolved&#8209;oxygen probe is on the parts list or on the 4&nbsp;September dashboard; an in&#8209;line pH meter and a DO sensor are outlined for integration v3 (<a href="#int3">3.4</a>); and the team's newer cost sheet lists a DO sensor only as optional.</div>
     <p>
       A machine intended to run unattended on a farm must be able to report its own
       condition.
@@ -194,16 +252,14 @@
 
   <section class="sec" id="sec24">
     <h3><i>2.4</i> AI</h3>
-    <p class="note-in-progress ai">
-      Not written yet. The stress predictor itself is on the
-      <a href="../../model/">Model</a> page.
-    </p>
+    <div class="todo"><b>Unwritten &middot; 2.4 AI</b>The doc has this heading and no text yet. It is likely the stress predictor, the stage that sends the light signal this bioreactor answers (<a href="#sec14">1.4</a>); confirm.</div>
   </section>
 
-  <section class="sec ai" id="sec25">
+  <section class="sec" id="sec25">
     <h3><i>2.5</i> How the Loop Is Laid Out</h3>
     <p>
-      Everything below refers to one of two fluid paths. They meet only at the membrane wall.
+      Everything in the record below refers to one of two fluid paths. They meet only at the
+      membrane wall.
     </p>
 
     <div class="circuits">
@@ -212,15 +268,15 @@
         <h4>Culture loop</h4>
         <p>
           Medium reservoir &rarr; peristaltic pump &rarr; in&#8209;line photometer &rarr;
-          fiber lumens &rarr; back to the reservoir. Contains the organism, and stays
-          closed for the duration of the run; the Luer valves are used for bleed and
-          sampling.
+          fiber lumens &rarr; back to the reservoir. Contains the organism. Closed for the
+          duration of the run; the only access to it is the dual Luer valve listed in the
+          bill of materials, used for bleed and sampling.
         </p>
         <ul class="mini">
-          <li><span>Reservoir</span><span><b>500 mL</b> vessel, <b>300 mL</b> working volume</span></li>
-          <li><span>Inoculum</span><span><b>20 mL</b> overnight <i>B. subtilis</i> culture</span></li>
-          <li><span>Flow rate</span><b>94 mL/min</b></li>
-          <li><span>Stirring</span><span><b>200 rpm</b> magnetic (added cycle&nbsp;2)</span></li>
+          <li><span>Reservoir</span><span><b>500&nbsp;mL</b> vessel, <b>300&nbsp;mL</b> working volume</span></li>
+          <li><span>Inoculum</span><span><b>20&nbsp;mL</b> multi&#8209;overnight <i>B.&nbsp;subtilis</i> culture</span></li>
+          <li><span>Flow rate</span><span><b>94&nbsp;mL/min</b></span></li>
+          <li><span>Stirring</span><span><b>200&nbsp;rpm</b> magnetic, added in cycle&nbsp;2</span></li>
         </ul>
       </article>
       <article class="circuit shell">
@@ -229,15 +285,28 @@
         <p>
           The space around the fibers. Fills by diffusion across the fiber wall, is
           drawn off through the shell ports, and carries protectant to the delivery
-          stage. The 0.2&nbsp;&micro;m pore passes the protectant and stops whole cells
-          (see <a href="#containment">Part&nbsp;5</a>).
+          stage. The 0.2&nbsp;&micro;m rating passes the protectant freely &mdash; ACC
+          deaminase runs at about 42&nbsp;kDa on our blot &mdash; while still stopping whole
+          cells; it does not stop everything, and what that costs in containment terms is set
+          out in <a href="#sec51">5.1</a>.
         </p>
         <ul class="mini">
-          <li><span>Membrane</span><span><b>PES hollow fiber</b>, pore <b>0.2 &micro;m</b></span></li>
-          <li>Delivery to soil or hydroponic line</li>
+          <li><span>Membrane</span><span><b>PES hollow fiber</b></span></li>
+          <li><span>Pore rating</span><span><b>0.2&nbsp;&micro;m</b></span></li>
+          <li><span>Lumen volume</span><span><b>~200&nbsp;mL</b></span></li>
+          <li><span>Area</span><span><b>150&nbsp;cm&sup2;</b>, eight fibers <span class="todo">area, fibers and volume disagree</span></span></li>
+          <li><span>Delivery</span><span>soil or hydroponic line</span></li>
         </ul>
       </article>
     </div>
+
+    <div class="todo"><b>Not on record &middot; the membrane</b>A measured rejection or transmission figure for the protectant across the 0.2&nbsp;&micro;m membrane: the pore is a size filter, not a molecular&#8209;weight cut&#8209;off (<a href="#sec51">5.1</a>), so the separation margin has to be measured rather than read off a rating. Also the reasons for the cartridge as fitted &mdash; PES rather than another fiber material, and 150&nbsp;cm&sup2; across eight fibers for a 300&nbsp;mL working volume. The three cartridge figures also disagree with each other: about 200&nbsp;mL of lumen inside 150&nbsp;cm&sup2; of fiber implies a bore of about 5&nbsp;cm (volume&nbsp;&divide;&nbsp;area = radius&nbsp;&divide;&nbsp;2). Confirm which is right.</div>
+
+    <h4>The system, stage by stage</h4>
+    <p>
+      The full setup as designed, including the sensing and delivery stages that sit
+      either side of the reactor itself.
+    </p>
 
     <!-- The system diagram, walked rather than drawn. It used to draw itself once
      on entry and then sit there; the reader still had to assemble the order of
@@ -247,9 +316,10 @@
      of the narration is the page's own — the schematic's own description, the
      paragraph below it, the figcaption and the spec grid. -->
 <div class="syswalk" id="syswalk">
+ <figure class="syswalk-figure" id="fig-syswalk" aria-labelledby="fig-schematic">
   <div class="syswalk-grid">
     <div class="syswalk-stage">
-      <figure class="syswalk-fig" aria-labelledby="fig-schematic">
+      <div class="syswalk-fig">
       <svg viewBox="0 0 660 470" role="img" aria-label="Two-circuit flow schematic. Culture loop on the left: medium reservoir to peristaltic pump, along the top through the in-line photometer, into the top of the hollow-fiber membrane column, and back through a pinch valve to the reservoir. Harvest loop on the right: shell-side fluid leaves the column through a harvest pump, past optical density and pH sensors, through a pH regulator, and out to delivery. The two loops meet only at the membrane wall.">
         <!-- culture loop, drawn in the direction the culture travels -->
         <rect class="part" data-step="1" data-stage="1" x="70" y="250" width="100" height="64" rx="4"/>
@@ -301,13 +371,7 @@
         <text class="lbl"     data-step="19" data-stage="7" x="500" y="382">To delivery</text>
         <text class="lbl big" data-step="19" data-stage="7" x="500" y="412">product stream</text>
       </svg>
-      <figcaption id="fig-schematic">
-        <b>Two circuits</b> The culture loop closes on itself (reservoir, pump, photometer,
-        lumens, back to the reservoir) and is closed for the duration of the run. Only the
-        shell side leaves the machine, and its only route out of the culture is through the
-        fiber wall.
-      </figcaption>
-    </figure>
+    </div>
       <div class="syswalk-readout" aria-hidden="true">
         <span class="syswalk-rn">01</span>
         <span class="syswalk-rsep">/</span>
@@ -320,7 +384,7 @@
         <li class="syswalk-step" data-stage="1">
           <span class="syswalk-step-n">01</span>
           <h4>Culture in the reservoir</h4>
-          <p>A stirred 300 mL working volume. Expression is induced by a green light signal driven by the AIoT stress predictor. A magnetic stir bar runs at 200 rpm, added in cycle 2, after sedimentation was diagnosed.</p>
+          <p>A stirred 300 mL working volume. Expression is induced by a green light signal driven by the AIoT stress predictor. A magnetic stir bar runs at 200 rpm — added in cycle 2, after sedimentation was diagnosed.</p>
         </li>
         <li class="syswalk-step" data-stage="2">
           <span class="syswalk-step-n">02</span>
@@ -330,17 +394,17 @@
         <li class="syswalk-step" data-stage="3">
           <span class="syswalk-step-n">03</span>
           <h4>The only crossing</h4>
-          <p>The membrane wall is the single place the two circuits touch. The organism is retained on the lumen side.</p>
+          <p>A hollow-fiber membrane splits the system in two. This wall is the single place the two circuits touch, and the organism is retained on the lumen side.</p>
         </li>
         <li class="syswalk-step" data-stage="4">
           <span class="syswalk-step-n">04</span>
           <h4>Nothing leaves the culture loop</h4>
-          <p>Culture returns down the lumens and through a pinch valve to the reservoir. The only way out of the culture loop is through the membrane wall.</p>
+          <p>Culture returns down the lumens and through a pinch valve to the reservoir. Nothing leaves the culture loop except through the membrane wall.</p>
         </li>
         <li class="syswalk-step" data-stage="5">
           <span class="syswalk-step-n">05</span>
           <h4>Harvest, on the shell side</h4>
-          <p>A second pump moves shell-side fluid out of the column. Anything in that stream crossed the fiber wall, whose 0.2&nbsp;&micro;m pore is smaller than a <i>B.&nbsp;subtilis</i> cell; shell&#8209;side medium plated in cycle&nbsp;1 produced no colonies (<a href="#containment">Part 5</a>). The stream is cell&#8209;free for as long as the cartridge stays intact.</p>
+          <p>A second pump moves shell-side fluid out of the column. Anything in that stream crossed the fiber wall, whose 0.2&nbsp;&micro;m pore is smaller than a <i>B.&nbsp;subtilis</i> cell; shell&#8209;side medium plated in cycle&nbsp;1 produced no colonies (<a href="#sec51">5.1</a>). The stream is designed to be cell&#8209;free for as long as the cartridge stays intact.</p>
         </li>
         <li class="syswalk-step" data-stage="6">
           <span class="syswalk-step-n">06</span>
@@ -355,832 +419,916 @@
         <li class="syswalk-step" data-stage="8">
           <span class="syswalk-step-n">08</span>
           <h4>One closed loop, one open path</h4>
-          <p>Culture circulates and never leaves. What crosses the membrane wall and goes to the field is the protectant together with anything else below the 0.2&nbsp;&micro;m pore: medium components, vesicles, debris (<a href="#containment">Part 5</a>). Whole cells are what the wall is there to stop. Containment is physical at the membrane wall; the Luer sampling valves are the one place procedure still matters.</p>
+          <p>Culture circulates and never leaves. What crosses the membrane wall and goes to the field is the protectant together with anything else below the 0.2&nbsp;&micro;m pore &mdash; medium components, vesicles, debris (<a href="#sec51">5.1</a>). Whole cells are what the wall is there to stop. Containment is physical at the membrane wall; the Luer sampling valves are the one place procedure still matters.</p>
         </li>
     </ol>
   </div>
+  <figcaption id="fig-schematic">
+    <b>Two circuits</b> The culture loop closes on itself — reservoir, pump, photometer,
+    lumens, back to the reservoir — and is closed for the duration of the run. Only the
+    shell side leaves the machine, and its only route out of the culture is through the
+    fiber wall.
+  </figcaption>
+ </figure>
 </div>
-
-
   </section>
 
   <!-- ─────────── PART 3 ─────────── -->
-  <section class="part" id="dbtl" data-n="3">
+  <section class="part" id="engineering" data-n="3">
     <div class="part-mark"><span>Part</span><b>3</b></div>
     <h2>Engineering the Bioreactor</h2>
   </section>
 
+  <section class="sec">
+    <p class="sec-lede">
+      Four tracks, each with its own design&ndash;build&ndash;test&ndash;learn cycles: growing
+      the organism, reading it in line, controlling pressure and flow across the membrane, and
+      running the whole loop together. Cycles that are outlined but not yet written are marked in
+      orange.
+    </p>
+    <nav class="tracks" id="dbtl-map" aria-label="Design, build, test and learn cycles by track">
+      <div class="track">
+        <a class="track-h" href="#sec31"><i>3.1</i>Bacteria growth</a>
+        <ol>
+          <li><a href="#bg1"><b>1</b><span>Prototype&nbsp;I</span></a></li>
+          <li><a href="#bg2"><b>2</b><span>Prototype&nbsp;II, 37&nbsp;&deg;C</span></a></li>
+        </ol>
+      </div>
+      <div class="track">
+        <a class="track-h" href="#sec32"><i>3.2</i>In&#8209;line photometer</a>
+        <ol>
+          <li><a href="#pm1"><b>1</b><span>Light path</span></a></li>
+          <li><a href="#pm2"><b>2</b><span>V1, flat</span></a></li>
+          <li><a href="#pm3"><b>3</b><span>V2, vertical</span></a></li>
+          <li><a href="#pm4"><b>4</b><span>Angled stand</span></a></li>
+          <li><a href="#pm5"><b>5</b><span>V4, 400&nbsp;h run</span></a></li>
+          <li><a href="#pm6"><b>6</b><span>TiO<sub>2</sub> calibration</span></a></li>
+          <li class="tk-todo"><a href="#pm7"><b>7</b><span>SiO<sub>2</sub> calibration</span></a></li>
+          <li class="tk-todo"><a href="#pm8"><b>8</b><span>Simplified</span></a></li>
+        </ol>
+      </div>
+      <div class="track">
+        <a class="track-h" href="#sec33"><i>3.3</i>Membrane, pressure, flow</a>
+        <ol>
+          <li class="tk-todo"><a href="#hfm1"><b>1</b><span>Pressure transducer</span></a></li>
+          <li class="tk-todo"><a href="#hfm2"><b>2</b><span>TMP, &Delta;P&ndash;Q round&nbsp;1</span></a></li>
+          <li class="tk-todo"><a href="#hfm3"><b>3</b><span>Flowmeter, &Delta;P&ndash;Q round&nbsp;2</span></a></li>
+          <li class="tk-todo"><a href="#hfm4"><b>4</b><span>Magnetic pump</span></a></li>
+        </ol>
+      </div>
+      <div class="track">
+        <a class="track-h" href="#sec34"><i>3.4</i>Integration</a>
+        <ol>
+          <li><a href="#int1"><b>v1</b><span>ACC deaminase, constitutive</span></a></li>
+          <li class="tk-todo"><a href="#int2"><b>v2</b><span>Valves and control</span></a></li>
+          <li class="tk-todo"><a href="#int3"><b>v3</b><span>Light, pH and interface</span></a></li>
+        </ol>
+      </div>
+      <p class="tracks-key" aria-hidden="true"><span class="tk-k">written</span><span class="tk-k is-todo">outlined, not written yet</span></p>
+    </nav>
+  </section>
+
   <section class="sec" id="sec31">
     <h3><i>3.1</i> Bacteria Growth</h3>
-    <details class="cyc">
-      <summary><span class="cyc-n">Cycle 1</span><span class="cyc-t">Culture <i>Bacillus subtilis</i> 168 in 22&nbsp;&#8451;</span>
-        <span class="cyc-s">The first continuous flow loop, and the first containment plate.</span></summary>
-      <div class="cyc-body">
-        <h4>Design</h4>
-        <p>
-          Initially, the objective of our design was to establish a functional continuous
-          flow system utilizing a PES hollow fiber membrane. This preliminary build provided
-          initial insights into structural limitations and potential hardware optimizations.
-          The design of our Bioreactor comprises a PES Hollow Fiber Membrane, medium
-          reservoir, Peristaltic pump, and luer valve, offering a simple, continuous
-          flow-through mechanism (Figure&nbsp;1 &amp; Figure&nbsp;2).
-        </p>
-        <p>
-          Within this first cycle, we utilized a PES hollow fiber protein membrane (lumen
-          volume: ~200&nbsp;mL) connected to a 500&nbsp;mL LB medium reservoir containing
-          300&nbsp;mL of LB medium, inoculated with 20&nbsp;mL of a multi-overnight
-          <i>B.&nbsp;subtilis</i> liquid culture.
-        </p>
-        <div class="frames two">
-          <figure id="fig-p1-sketch" class="own-num frame fit"><div class="frame-img"><img src="photos/proto1-sketch.webp" width="476" height="448" alt="Hand-drawn sketch of prototype I: PES hollow fiber membrane on top, a peristaltic pump and sampling Luer valve on the left, and the medium reservoir below." loading="lazy" decoding="async"></div>
-            <figcaption><span class="fignum">Figure 1.</span> Illustration of Prototype I (0606)</figcaption></figure>
-          <figure id="fig-p1-setup" class="own-num frame fit"><div class="frame-img"><img src="photos/proto1-setup.webp" width="630" height="370" alt="Prototype I on the bench: a peristaltic pump beside a medium bottle of culture." loading="lazy" decoding="async"></div>
-            <figcaption><span class="fignum">Figure 2.</span> Physical Setup of Prototype I (0606)</figcaption></figure>
-        </div>
-        <h4>Test</h4>
-        <p>
-          Within early phase testing, the peristaltic pump achieved the target flow rate of
-          94&nbsp;mL/min; however, the trial was prematurely terminated due to localized
-          medium leakage within the peristaltic pump. We then evaluated microbial viability,
-          yielding final OD600 readings of 0.304 (in-tube) and 0.48 (medium reservoir)
-          (Figure&nbsp;3). To confirm the microbial presence and viability, 2&nbsp;mL of the
-          medium was extracted from the Shell side of the Hollow fiber membrane and was
-          plated on LB agar to examine colony formation. From this, we observed the absence
-          of colony formation, providing functional proof that our bioreactor is bio-safe
-          for public agricultural usage.
-        </p>
-        <div class="frames two">
-          <figure id="fig-p1-od" class="own-num frame fit"><div class="frame-img"><img src="photos/proto1-od.webp" width="914" height="408" alt="Line chart of OD600 against time in hours for the flask and the bioreactor over about 25 hours; the bioreactor line stays near the bottom." loading="lazy" decoding="async"></div>
-            <figcaption><span class="fignum">Figure 3.</span> Graphical Comparison of the OD600 growth curve of the microbial medium in the Bioreactor vs. a Standard Laboratory Flask</figcaption></figure>
-          <figure id="fig-p1-plate" class="own-num frame fit"><div class="frame-img"><img src="photos/proto1-plate.webp" width="1000" height="1000" alt="An LB agar plate with no visible colonies." loading="lazy" decoding="async"></div>
-            <figcaption><span class="fignum">Figure 4.</span> LB plate with medium derived from prototype I (0606) exhibiting no colony formation</figcaption></figure>
-        </div>
-        <h4>Learn</h4>
-        <p>
-          The divergent OD600 values between the tube and reservoir indicated poor microbial
-          viability and pointed to two key hardware limitations for the next DBTL cycle.
-          Exhibiting these factors, we hypothesize that the lack of active mixing led to
-          nutrient stratification and cell sedimentation within the reservoir, limiting
-          growth. In order to address the mechanical leakage, we identified the need for
-          biocompatible tubing (BPT) to ensure higher durability and more stable sealing
-          between transition points of the pump. Furthermore, to overcome the observed lack
-          of microbial growth, we plan to incorporate an active magnetic stirring mechanism,
-          inspired by the Biology laboratory Hot plate magnetic stirrer, to prevent
-          sedimentation and ensure a homogeneous nutrient distribution. In addition, to
-          improve the data collection accuracy and minimize contamination risks, we plan to
-          relocate our initial sampling ports directly to the medium reservoir&rsquo;s outlet
-          within our next DBTL cycle.
-        </p>
-      </div>
-    </details>
 
-    <details class="cyc">
-      <summary><span class="cyc-n">Cycle 2</span><span class="cyc-t">Culture <i>Bacillus subtilis</i> 168 in 37&nbsp;&#8451;</span>
-        <span class="cyc-s">Magnetic stirring added: the bioreactor reached plateau (OD600 ~0.8 to 0.9) after 2 hours, the flask after 4.5 hours.</span></summary>
-      <div class="cyc-body">
-        <h4>Design</h4>
-        <p>
-          Improving on the previous design, a 200&nbsp;rpm magnetic stir was added to the
-          medium reservoir to prevent sedimentation and ensure a homogeneous nutrient
-          distribution. In addition, the sampling sector was placed closer to the medium
-          reservoir to acquire a more accurate measurement as the reservoir holds much more
-          relative volume compared to the hollow fiber membrane, giving us a more averaged
-          prediction of the total OD of the entire bioreactor module.
-        </p>
-        <figure id="fig-p2-sketch" class="own-num frame fit" style="max-width:360px"><div class="frame-img"><img src="photos/proto2-sketch.webp" width="711" height="890" alt="Hand-drawn sketch of prototype II: hollow fiber membrane, sampler, peristaltic pump, and the medium reservoir on a magnetic stirrer." loading="lazy" decoding="async"></div>
-          <figcaption><span class="fignum">Figure 1.</span> Illustration of Prototype II (0614)</figcaption></figure>
-        <h4>Test</h4>
-        <p>
-          As before, the peristaltic pump maintained the target flow rate of 94&nbsp;mL/min
-          for the entirety of testing. However, instead of experimenting with room
-          temperature, the bioreactor (experiment) and flask (control) were maintained at
-          37 degrees Celsius. In contrast to our last attempt, this time the experiment ran
-          successfully, helping us secure the full growth curve of our bacteria, with the
-          bioreactor reaching the plateau phase (OD600 ~0.8 to 0.9) after 2 hours, and the
-          flask reaching the plateau phase (OD600 ~0.6 to 0.8) after 4.5 hours.
-        </p>
-        <figure id="fig-p2-od" class="own-num frame fit wide-fig"><div class="frame-img"><img src="photos/proto2-od.webp" width="855" height="452" alt="Line chart of OD600 against time in minutes for the flask and the bioreactor at 37 degrees; the bioreactor rises first and plateaus near 0.85." loading="lazy" decoding="async"></div>
-          <figcaption><span class="fignum">Figure 2.</span> Graphical Comparison of the OD600 growth curve of the microbial medium in the Bioreactor vs. a Standard Laboratory Flask</figcaption></figure>
-        <h4>Learn</h4>
-        <p>
-          The successful generation of the OD600 growth curve confirmed and justified that
-          adding the continuous magnetic stirring mechanism is crucial to preventing
-          sedimentation and maintaining optimal system efficiency. Moving forward, the next
-          DBTL cycle will evaluate the system's performance and growth kinetics at a reduced
-          temperature of 22&nbsp;&deg;C. Moreover, to ensure the long-term reliability of our
-          Bioreactor and prevent tube degradation observed in earlier trials, upgrading to
-          higher-durability BPT tubing is necessary for the next round of testing.
-        </p>
-        <p class="fineprint ai">
-          The flask's working volume, inoculum and shaking speed were not recorded, and this
-          cycle changed stirring, sampling point and temperature together, so read the
-          reactor and flask comparison as promising rather than controlled.
-        </p>
-      </div>
-    </details>
+    <ol class="iters dbtl">
+      <li id="bg1">
+        <div class="iter-n">01</div>
+        <div class="iter-body">
+          <h4>Culture <span class="sp">B.&nbsp;subtilis</span> 168 at room temperature (22&nbsp;&deg;C)</h4>
+          <div class="iter-date">Bacteria growth &middot; Cycle 1 &middot; Prototype I &middot; 6 June 2026</div>
 
-    <details class="cyc">
-      <summary><span class="cyc-n">Expert feedback</span><span class="cyc-t">First meeting with Professor Chang</span>
-        <span class="cyc-s">18 June 2026: scale-up, foaming, transmembrane pressure, membrane size and OD600 limits.</span></summary>
-      <div class="cyc-body">
-        <p>
-          On June 18th, 2026, our team met in person with Professor Chang Chia-Hsiu
-          (張嘉修), an expert in plant pathology. This meeting was a defining moment for
-          ReLeaf, shaping our hardware designs in many fundamental ways. The meeting mainly
-          focused on the feasibility of our hollow-fiber bioreactor design and scaling
-          challenges we anticipated for ReLeaf.
-        </p>
-        <h4>Scale-Up</h4>
-        <p>
-          Professor Chang highlighted several unpredictable bottlenecks when scaling. He
-          noted that heat transfer behaves differently between small and large vessels, and
-          that B.&nbsp;subtilis favors higher temperatures for faster growth, a factor that
-          becomes harder to control at scale.
-        </p>
-        <h4>Foaming Management</h4>
-        <p>
-          Excessive foaming was identified as a major concern, particularly because it can
-          damage the hollow fiber membrane. Professor Chang pointed us toward two possible
-          solutions: mutating the gene responsible for surfactant production or using
-          chemical defoamers. Mutating the gene stops the problem at the root, but is more
-          challenging, whereas chemical defoamers are easy to implement but may be less
-          effective.
-        </p>
-        <h4>Transmembrane Pressure</h4>
-        <p>
-          One of the most significant gaps Professor Chang identified was that our design
-          lacked a pressure or driving force to push the protectant from the lumen side
-          (where it is produced) to the shell side (where it leaves the hollow fiber
-          membrane). He explained that increasing flow rate would not solve this problem,
-          since it only recirculates the fluid rather than generating outward pressure. He
-          recommended adding a valve to build pressure while reducing tube diameter to
-          concentrate the outward force.
-        </p>
-        <h4>Hollow Fiber Membrane</h4>
-        <p>
-          Professor Chang advised that our current membrane may be oversized, increasing the
-          risk of cells adhering to or clogging the fiber walls. He recommended decreasing
-          the membrane size and emphasized that we should be prepared to clearly justify our
-          choice of hollow fiber technology to judges. He also stressed that monitoring flow
-          rate and transmembrane pressure is essential, as these indicate membrane fouling
-          (caking).
-        </p>
-        <h4>OD600 Measurement</h4>
-        <p>
-          For optical density measurements, he noted a key limitation: once OD600 exceeds 1,
-          samples must be diluted before accurate readings can be taken.
-        </p>
-        <p>
-          This meeting directly shaped our hardware roadmap. Most notably, we identified the
-          need to create a pinch valve to generate the pressure required to push
-          protectants, a gap in our design we hadn't previously recognized. We also came away
-          with several long-term considerations to investigate further: preventing foaming,
-          reducing membrane and tube dimensions, and scaling.
-        </p>
-      </div>
-    </details>
+          <h5 class="dbtl-h">Design</h5>
+          <p>
+            The objective of this first design was a functional continuous&#8209;flow system
+            around a PES hollow&#8209;fiber membrane, and the preliminary build gave the first
+            insight into its structural limitations and the hardware changes it needed. It
+            comprises a PES hollow&#8209;fiber membrane, a medium reservoir, a peristaltic pump
+            and a Luer valve: a simple, continuous flow&#8209;through mechanism
+            (<a class="xref" href="#fig-c1-sketch"></a>, <a class="xref" href="#fig-c1-setup"></a>).
+          </p>
+          <p>
+            We used a PES hollow&#8209;fiber protein membrane (lumen volume ~200&nbsp;mL)
+            connected to a 500&nbsp;mL reservoir holding 300&nbsp;mL of LB medium, inoculated
+            with 20&nbsp;mL of a multi&#8209;overnight <i>B.&nbsp;subtilis</i> liquid culture.
+          </p>
+
+
+          <h5 class="dbtl-h">Build</h5>
+          <div class="todo"><b>Unwritten &middot; Build</b>The doc has a Build heading for Prototype&nbsp;I and no text yet. The sketch and the bench photograph show the loop as designed and as built.</div>
+          <div class="frames">
+            <figure class="frame square contain" id="fig-c1-sketch">
+              <div class="frame-img"><img src="photos/c1-prototype-illustration.webp" alt="Sketch of Prototype I: the PES hollow-fiber membrane, the peristaltic pump, a sampling Luer valve and the medium reservoir" loading="lazy" decoding="async"></div>
+              <figcaption><b>Prototype I</b> The loop as designed: reservoir, pump, membrane and return, with a sampling Luer valve.</figcaption>
+            </figure>
+            <figure class="frame land" id="fig-c1-setup">
+              <div class="frame-img"><img src="photos/c1-prototype-setup.webp" alt="Prototype I on the bench: peristaltic pump, membrane cartridge and reservoir bottle" loading="lazy" decoding="async"></div>
+              <figcaption><b>On the bench</b> The same loop, set up in June 2026.</figcaption>
+            </figure>
+          </div>
+
+          <h5 class="dbtl-h">Test</h5>
+          <p>
+            The loop ran at room temperature.
+            <span class="todo">doc title says 22&nbsp;&deg;C; not measured</span>
+            The peristaltic pump reached the target flow rate of <b>94&nbsp;mL/min</b>, but the
+            trial ended early when medium leaked at the pump. Final OD600 readings were
+            <b>0.304</b> in the tube and <b>0.48</b> in the medium reservoir
+            (<a class="xref" href="#fig-growth-c1"></a>). To check whether any viable cells had
+            crossed the membrane, 2&nbsp;mL of medium was drawn from the shell side and plated on
+            LB agar. <b class="mark">No colonies formed</b> (<a class="xref" href="#fig-plate"></a>)
+            &mdash; the first evidence that whole cells were not reaching the shell side, from a
+            single plating (<a href="#sec51">5.1</a>).
+          </p>
+          <figure class="chart-fig" id="fig-growth-c1">
+            <div class="bc" data-chart="growth-c1"><img src="photos/c1-growth-chart.webp" alt="Line chart of OD600 against time in hours: the flask control rises to about 2.5 by 25 hours while the bioreactor rises only from about 0.17 to 0.3 to 0.37" loading="lazy" decoding="async"></div>
+            <figcaption><b>Cycle 1</b> OD600 against time for the bioreactor and a flask control. The flask culture grew to about 2.4; the bioreactor culture grew far less, from about 0.17 to 0.3&ndash;0.37 by the end of the run.</figcaption>
+          </figure>
+          <figure class="frame square hero" id="fig-plate">
+            <div class="frame-img"><img src="photos/c1-lb-plate.webp" alt="LB agar plate spread with shell-side medium, showing no colonies" loading="lazy" decoding="async"></div>
+            <figcaption>
+              <b>Containment check</b> 2&nbsp;mL drawn from the shell side and plated on
+              LB agar. No colonies were recovered, so no culturable
+              <i>B.&nbsp;subtilis</i> reached the shell side in this run. Single plating;
+              replicate count and incubation time and temperature were not recorded
+              (<a href="#sec51">5.1</a>).
+            </figcaption>
+          </figure>
+
+          <h5 class="dbtl-h">Learn</h5>
+          <p>
+            The divergent OD600 values between the tube and the reservoir indicated poor growth
+            and pointed to two hardware limitations for the next cycle. We hypothesize that the
+            lack of active mixing led to nutrient stratification and cell sedimentation in the
+            reservoir, limiting growth. To stop the leak, the loop needed biocompatible BPT
+            tubing, for higher durability and a more stable seal at the pump. To overcome the
+            lack of growth, we planned an active magnetic stirrer &mdash; inspired by the
+            laboratory hot&#8209;plate stirrer &mdash; to prevent sedimentation and keep nutrients
+            evenly distributed. And to improve data accuracy and reduce contamination risk, the
+            sampling port was to move to the medium reservoir's outlet.
+          </p>
+        </div>
+      </li>
+
+      <li id="bg2">
+        <div class="iter-n">02</div>
+        <div class="iter-body">
+          <h4>Culture <span class="sp">B.&nbsp;subtilis</span> 168 at 37&nbsp;&deg;C</h4>
+          <div class="iter-date">Bacteria growth &middot; Cycle 2 &middot; Prototype II &middot; 14 June 2026</div>
+
+          <h5 class="dbtl-h">Design</h5>
+          <p>
+            A <b>200&nbsp;rpm</b> magnetic stirrer was added to the medium reservoir to prevent
+            sedimentation and keep nutrients evenly distributed. The sampler was moved next to
+            the medium reservoir: the reservoir holds far more of the volume than the
+            hollow&#8209;fiber membrane, so a reading there is a better average of the OD of the
+            whole bioreactor module (<a class="xref" href="#fig-c2-sketch"></a>).
+          </p>
+          <figure class="frame contain" id="fig-c2-sketch">
+            <div class="frame-img"><img src="photos/c2-prototype-illustration.webp" alt="Sketch of Prototype II: hollow-fiber membrane, sampler, peristaltic pump, and the medium reservoir on a magnetic stirrer" loading="lazy" decoding="async"></div>
+            <figcaption><b>Prototype II</b> The magnetic stirrer under the reservoir, and the sampler beside it.</figcaption>
+          </figure>
+
+          <h5 class="dbtl-h">Build</h5>
+          <div class="todo"><b>Unwritten &middot; Build</b>The doc has a Build heading for Prototype&nbsp;II and no text yet.</div>
+
+          <h5 class="dbtl-h">Test</h5>
+          <p>
+            As before, the peristaltic pump held 94&nbsp;mL/min for the whole run. This time the
+            bioreactor (experiment) and a flask (control) were held at <b>37&nbsp;&deg;C</b>
+            rather than room temperature, and the run gave the full growth curve: the bioreactor
+            reached its plateau (OD600 ~0.8&ndash;0.9) after <b>2&nbsp;hours</b>, the flask
+            (OD600 ~0.6&ndash;0.8) after <b>4.5&nbsp;hours</b>.
+          </p>
+          <div class="headline-stats">
+            <div><b>0.8&ndash;0.9</b><span>Reactor plateau OD600</span></div>
+            <div><b>2<em>h</em></b><span>Reactor, time to plateau</span></div>
+            <div><b>4.5<em>h</em></b><span>Flask control, time to plateau</span></div>
+            <div><b>37<em>&deg;C</em></b><span>Both arms</span></div>
+          </div>
+          <figure class="chart-fig" id="fig-growth">
+            <div class="bc" data-chart="growth-c2"><img src="photos/c2-growth-chart.webp" alt="Line chart of OD600 against time in minutes: the bioreactor rises to about 0.9 by 200 minutes, the flask to about 0.8 by about 280 minutes" loading="lazy" decoding="async"></div>
+            <figcaption>
+              <b>Cycle 2</b> OD600 against time for the bioreactor and the flask control at
+              37&nbsp;&deg;C. Both arms reach plateau; the reactor arm reaches it in less than
+              half the time. The flask's working volume, inoculum and shaking speed were not
+              recorded, so the arms are not matched &mdash; see below.
+            </figcaption>
+          </figure>
+          <aside class="callout warn">
+            <h4>How far this comparison actually goes</h4>
+            <p>
+              Both arms used the same medium and temperature, but that is not a controlled
+              comparison. The flask's working volume, inoculum and shaking speed are not
+              recorded here, and the reactor holds 300&nbsp;mL of medium against a flask volume we
+              have not stated &mdash; so the two arms may differ in more than the thing being
+              tested. Prototype&nbsp;II also changed three variables at once &mdash; stirring, the
+              sampling point and the temperature &mdash; which means stirring is not proven on its
+              own. Read this as a promising difference, not a measured one,
+              until the arms are matched and the series published.
+            </p>
+          </aside>
+
+          <h5 class="dbtl-h">Learn</h5>
+          <p>
+            The full OD600 growth curve supports continuous magnetic stirring as the fix for
+            sedimentation &mdash; though this cycle also changed the sampling point and the
+            temperature, so stirring is not isolated as the cause. The next cycle will
+            evaluate performance and growth kinetics at a reduced temperature of
+            <b>22&nbsp;&deg;C</b>. To keep the bioreactor reliable over long runs and stop the
+            tube degradation seen in earlier trials, the next round of testing needs
+            higher&#8209;durability BPT tubing.
+          </p>
+        </div>
+      </li>
+    </ol>
+    <p class="to-map"><a href="#dbtl-map">&uarr; Back to the cycle map</a></p>
   </section>
 
   <section class="sec" id="sec32">
-    <h3><i>3.2</i> In-Line Flow-Cell Photometer</h3>
-    <p class="fineprint"><i>A subsystem of the ReLeaf bioreactor.</i></p>
+    <h3><i>3.2</i> In&#8209;Line Photometer</h3>
     <p>
-      The In-Line Flow-Cell Photometer, which will also be consistently referred to as our
-      &ldquo;photometer&rdquo; in the rest of this wiki, is the optical density monitoring
-      subsystem of our bioreactor. It has the ability to draw continuous, live data from
-      the lumen loop of our hollow fiber bioreactor by passing the medium in which our
-      bacteria lives through a 2&nbsp;mm wavelength path flow cuvette where the optical
-      density of the bacteria in solution is then recorded and plotted on our continuous
-      data graph. This can be done without ever drawing a sample of our solution. This
-      document reports the DBTL cycles of our photometer that we&rsquo;ve continued to
-      develop across this 2026 iGEM year. To dive deeper into the reports on how our
-      photometer system could be reproduced, the specific part numbers and 3 dimensional
-      CAD files that we designed are provided at the bottom of the document.
-      <span class="ai">On this wiki they are on the <a href="../photometer/">photometer page</a>.</span>
+      The in&#8209;line flow&#8209;cell photometer is the optical&#8209;density monitoring
+      subsystem of the bioreactor. It draws continuous, live data from the lumen loop by
+      passing the culture through a flow cuvette with a <b>0.2&nbsp;mm</b> path, where the
+      optical density of the bacteria in solution is recorded and plotted &mdash; without ever
+      drawing a sample. These are its design&ndash;build&ndash;test&ndash;learn cycles; the
+      instrument itself, part by part, has <a href="../photometer/index.html">its own record</a>.
     </p>
 
-    <details class="cyc">
-      <summary><span class="cyc-n">Cycle 1</span><span class="cyc-t">In-Line Photometer Light Path</span>
-        <span class="cyc-s">The measured spacings became the fixed geometry for every build after this one.</span></summary>
-      <div class="cyc-body">
-        <h4>Design</h4>
-        <p>
-          Before anything was printed we had to know where each optical component actually
-          belongs. We used magnetic helping hands, the clip tool that holds parts locked in
-          place and is normally used for soldering, to hold our 600 nanometer LED in line
-          with a purchased paralleling lens. That gives us parallel light, which we then
-          block with a 2&nbsp;mm slit so only a small portion of the beam continues through a
-          beam splitter and on to two lux sensors.
-        </p>
-        <h4>Build</h4>
-        <p>
-          We locked the LED, slit, beam splitter and both lux sensors in position relative to
-          each other and left only the paralleling lens free to move. Fixing everything else
-          made the lens position the single variable. That is what let us read off the real
-          world distances we would need for a 3D CAD model of the photometer layout, one that
-          passes the light through smoothly and cleanly enough to gather consistent data,
-          rather than guessing at them.
-        </p>
-        <figure class="frame fit dark wide-fig"><div class="frame-img"><img src="photos/ph1-lightpath.webp" width="1400" height="1050" alt="Bench layout of the light path: LED, lens, slit and sensors held in magnetic helping hands above a tray." loading="lazy" decoding="async"></div>
-          <figcaption class="ai">The bench light path, held in magnetic helping hands.</figcaption></figure>
-        <h4>Test</h4>
-        <p>
-          With the other components locked down, we shifted the paralleling lens along the
-          axis until the light path steadily illuminated both sensors. Doing that meant
-          nudging the slit and the sensors slightly as well, to bring the path into line.
-          Then we measured the distance between every component and turned the layout into a
-          drawing our drylab hardware team could develop into a CAD model with everything
-          anchored in place.
-        </p>
-        <h4>Learn</h4>
-        <p>
-          The measured spacings became the fixed geometry for every build after this one. We
-          measured the tip of the LED to the focal lens at <b>5.5&nbsp;cm</b>, the lens to
-          the center of the beam splitter at <b>10&nbsp;cm</b>, and the center of the beam
-          splitter to each sensor at <b>2&nbsp;cm</b>.
-        </p>
-      </div>
-    </details>
+    <ol class="iters dbtl">
+      <li id="pm1">
+        <div class="iter-n">01</div>
+        <div class="iter-body">
+          <h4>Light path</h4>
+          <div class="iter-date">Photometer &middot; Cycle 1 &middot; bench layout</div>
 
-    <details class="cyc">
-      <summary><span class="cyc-n">Cycle 2</span><span class="cyc-t">In-Line Photometer V1</span>
-        <span class="cyc-s">Stand the light path up so bubbles rise out of it, and tighten the component tolerances.</span></summary>
-      <div class="cyc-body">
-        <h4>Design</h4>
-        <p>
-          V1 turns the bench layout into a self-contained instrument that sits in the loop.
-          Two decisions shaped it. The light path stays flat and horizontal, since the bench
-          arrangement was already on one plane and that was the most direct way to translate
-          it into a printed part. And every component stays independently adjustable,
-          because we did not yet trust the cycle&nbsp;1 spacings to be final and expected to
-          keep tuning the alignment. The flow cuvette goes in line with the recirculating
-          loop rather than being filled by hand, so the culture is measured where it already
-          flows and nothing has to be drawn out to read it.
-        </p>
-        <h4>Build</h4>
-        <p>
-          The whole optical train mounts on a single printed rail. Each component sits on the
-          rail and slides along it, set by hand against the distances from cycle&nbsp;1. The
-          flow cuvette is plumbed into the recirculating loop with tubing at both ends, so
-          the instrument reads the culture as it passes through.
-        </p>
-        <h4>Test</h4>
-        <p>
-          Data fluctuation was way too drastic due to bubbling within the flow cuvette as well
-          as high tolerance for lenses and beam splitters.
-        </p>
-        <div class="frames">
-          <figure class="frame"><div class="frame-img"><img src="photos/ph2-v1-a.webp" width="900" height="1200" alt="Photometer V1 on the bench: the horizontal printed rail with the flow cuvette plumbed in." loading="lazy" decoding="async"></div></figure>
-          <figure class="frame"><div class="frame-img"><img src="photos/ph2-v1-b.webp" width="900" height="1200" alt="Close view of V1 with the amber LED lit along the horizontal rail." loading="lazy" decoding="async"></div></figure>
-          <figure class="frame"><div class="frame-img"><img src="photos/ph2-v1-c.webp" width="900" height="1200" alt="V1 rail with the sensor end and wiring." loading="lazy" decoding="async"></div></figure>
+          <h5 class="dbtl-h">Design</h5>
+          <p>
+            Before anything was printed we had to know where each optical component actually
+            belongs. We used magnetic helping hands &mdash; the clip tool normally used to hold
+            parts for soldering &mdash; to hold our amber 600&nbsp;nm LED in line with
+            a purchased paralleling lens. That gives parallel light, which a 2&nbsp;mm slit then
+            narrows so only a small portion of the beam continues through a beam splitter and on
+            to two lux sensors.
+          </p>
+
+          <h5 class="dbtl-h">Build</h5>
+          <p>
+            We locked the LED, slit, beam splitter and both lux sensors in position relative to
+            each other and left only the paralleling lens free to move. Fixing everything else
+            made the lens position the single variable. That is what let us read off the
+            real&#8209;world distances we would need for a 3D CAD model of the photometer layout
+            &mdash; one that passes the light through smoothly and cleanly enough to gather
+            consistent data &mdash; rather than guessing at them.
+          </p>
+          <figure class="frame land" id="fig-pm1">
+            <div class="frame-img"><img src="photos/pm1-bench-light-path.webp" alt="Bench layout: helping hands holding the optics, a sensor holder, lens mounts and a caliper on a mat" loading="lazy" decoding="async"></div>
+            <figcaption><b>Bench layout</b> The optical train held in helping hands, with the lens mounts and a caliper for the spacings.</figcaption>
+          </figure>
+
+          <h5 class="dbtl-h">Test</h5>
+          <p>
+            With the other components locked down, we shifted the paralleling lens along the
+            axis until the light path steadily illuminated both sensors, nudging the slit and the
+            sensors slightly to bring the path into line. Then we measured the distance between
+            every component and turned the layout into a drawing our dry&#8209;lab hardware team
+            could develop into a CAD model with everything anchored in place.
+          </p>
+
+          <h5 class="dbtl-h">Learn</h5>
+          <p>The measured spacings became the fixed geometry for every build after this one.</p>
+          <div class="specgrid">
+            <div><h4>LED tip to lens</h4><p><b>5.5&nbsp;cm</b></p></div>
+            <div><h4>Lens to beam&#8209;splitter center</h4><p><b>10&nbsp;cm</b></p></div>
+            <div><h4>Beam splitter to each sensor</h4><p><b>2&nbsp;cm</b></p></div>
+          </div>
         </div>
-        <h4>Learn</h4>
-        <p>Two problems, and both were structural rather than electronic.</p>
-        <p>
-          The data fluctuated drastically. Bubbles in the flow cuvette were sitting directly
-          in the beam, and with a horizontal path a bubble had nowhere to go. It parks in the
-          light and stays there until flow happens to push it out, so a single bubble can
-          corrupt a long stretch of readings.
-        </p>
-        <p>
-          The independently adjustable mounts were also too loose. The lens and beam splitter
-          could drift between runs, which meant the geometry we so carefully measured in
-          cycle&nbsp;1 was not actually being held. Adjustability helped during alignment and
-          hurt everywhere else.
-        </p>
-        <p>
-          Both point the same direction. Stand the light path up so bubbles rise out of it,
-          and tighten the component tolerances.
-        </p>
-      </div>
-    </details>
+      </li>
 
-    <details class="cyc">
-      <summary><span class="cyc-n">Cycle 3</span><span class="cyc-t">In-Line Photometer V2</span>
-        <span class="cyc-s">The optics were not the main problem. Our calibration procedure was.</span></summary>
-      <div class="cyc-body">
-        <h4>Design</h4>
-        <p>
-          V2 stands the light path up. The LED fires upward through the flow cuvette, so a
-          bubble in the cell rises along the beam axis and leaves the light instead of
-          settling in it. This uses buoyancy to solve the problem rather than relying on flow
-          to sweep bubbles out, which is what failed in V1. We also gave up most of the
-          adjustability in exchange for tighter seats, since by this point the cycle&nbsp;1
-          spacings were the thing we wanted held rather than the thing we wanted to keep
-          changing.
-        </p>
-        <h4>Build</h4>
-        <p>
-          A wide square base plate was printed with a mounting adapter for the rail, so the
-          assembly stands rigidly on the bench with the optical axis vertical. The component
-          seats were tightened so the lens and splitter hold their measured positions.
-        </p>
-        <figure class="frame" style="max-width:330px"><div class="frame-img"><img src="photos/ph3-v2.webp" width="902" height="1200" alt="Photometer V2 standing vertically in a dark box, the amber LED glowing through the column." loading="lazy" decoding="async"></div></figure>
-        <h4>Test</h4>
-        <p>
-          We ran two samples through V2 and compared the result against the Bio-Drop. The
-          instrument was zeroed on the growth medium, so medium reads 0 by definition. The
-          second sample was 2&nbsp;mL of titanium dioxide suspension, which gives a stable
-          scattering target that does not grow or settle out between readings the way a
-          culture would.
-        </p>
-        <div class="table-scroll">
-          <table class="data">
-            <caption>Blank: medium</caption>
-            <thead><tr><th scope="col"></th><th scope="col">Sample</th><th scope="col">Reference</th><th scope="col">OD</th></tr></thead>
-            <tbody>
-              <tr><td>Medium</td><td>660 lux</td><td>92.5 lux</td><td>0 au</td></tr>
-              <tr><td>2 mL titanium dioxide</td><td>495 lux</td><td>92.5 lux</td><td>62.5 au</td></tr>
-            </tbody>
-          </table>
+      <li id="pm2">
+        <div class="iter-n">02</div>
+        <div class="iter-body">
+          <h4>V1 &mdash; flat and adjustable</h4>
+          <div class="iter-date">Photometer &middot; Cycle 2 &middot; V1</div>
+
+          <h5 class="dbtl-h">Design</h5>
+          <p>
+            V1 turns the bench layout into a self&#8209;contained instrument that sits in the
+            loop. Two decisions shaped it. The light path stays flat and horizontal, since the
+            bench arrangement was already on one plane and that was the most direct way to
+            translate it into a printed part. And every component stays independently
+            adjustable, because we did not yet trust the cycle&nbsp;1 spacings to be final and
+            expected to keep tuning the alignment. The flow cuvette goes in line with the
+            recirculating loop rather than being filled by hand, so the culture is measured where
+            it already flows and nothing has to be drawn out to read it.
+          </p>
+
+          <h5 class="dbtl-h">Build</h5>
+          <p>
+            The whole optical train mounts on a single printed rail. Each component sits on the
+            rail and slides along it, set by hand against the distances from cycle&nbsp;1. The
+            flow cuvette is plumbed into the recirculating loop with tubing at both ends, so the
+            instrument reads the culture as it passes through.
+          </p>
+          <div class="frames">
+            <figure class="frame" id="fig-pm2-a">
+              <div class="frame-img"><img src="photos/pm2-v1-rig.webp" alt="The V1 photometer on the bench, lit, with wiring to the controller" loading="lazy" decoding="async"></div>
+              <figcaption><b>V1</b> In use on the bench.</figcaption>
+            </figure>
+            <figure class="frame" id="fig-pm2-b">
+              <div class="frame-img"><img src="photos/pm2-v1-light-path.webp" alt="Close-up of the amber beam running along the black printed rail" loading="lazy" decoding="async"></div>
+              <figcaption><b>The beam</b> Running along the flat printed rail.</figcaption>
+            </figure>
+            <figure class="frame" id="fig-pm2-c">
+              <div class="frame-img"><img src="photos/pm2-v1-rail.webp" alt="The V1 rail with its mounts and the sensor end, wired to a breadboard" loading="lazy" decoding="async"></div>
+              <figcaption><b>The rail</b> Its sliding mounts and the sensor end.</figcaption>
+            </figure>
+          </div>
+
+          <h5 class="dbtl-h">Test</h5>
+          <p>
+            Data fluctuation was far too drastic, from bubbles in the flow cuvette and from high
+            tolerances on the lenses and beam splitter.
+            <span class="todo">V1 readings not on record</span>
+          </p>
+
+          <h5 class="dbtl-h">Learn</h5>
+          <p>Two problems, and both were structural rather than electronic.</p>
+          <p>
+            The data fluctuated drastically. Bubbles in the flow cuvette were sitting directly in
+            the beam, and with a horizontal path a bubble had nowhere to go. It parks in the
+            light and stays there until flow happens to push it out, so a single bubble can
+            corrupt a long stretch of readings.
+          </p>
+          <p>
+            The independently adjustable mounts were also too loose. The lens and beam splitter
+            could drift between runs, which meant the geometry we so carefully measured in
+            cycle&nbsp;1 was not actually being held. Adjustability helped during alignment and
+            hurt everywhere else.
+          </p>
+          <p>
+            Both point the same direction: stand the light path up so bubbles rise out of it, and
+            tighten the component tolerances.
+          </p>
         </div>
-        <p>
-          The reference channel held at 92.5 lux across both readings. That tells us the
-          source was stable between measurements, so the drop on the sample channel came
-          from the sample and not from the LED.
-        </p>
-        <h4>Learn</h4>
-        <p>The optics were not the main problem. Our calibration procedure was.</p>
-        <p>
-          We had been blanking Releaf against growth medium. The Bio-Drop is calibrated on
-          distilled water. That means the two instruments were reporting absorbance relative
-          to different baselines, and the roughly 20% disagreement we had been attributing to
-          our optics was largely a procedural artifact.
-        </p>
-        <p>
-          This is where our calibration standard protocol comes from. The blank is distilled
-          water, so our baseline matches the instrument we validate against, and every
-          comparison after this cycle uses it.
-        </p>
-      </div>
-    </details>
+      </li>
 
-    <details class="cyc">
-      <summary><span class="cyc-n">Cycle 4</span><span class="cyc-t">Angled Stand</span>
-        <span class="cyc-s">The tilted geometry holds up; the reference channel moved 6.4%, which shaped V4.</span></summary>
-      <div class="cyc-body">
-        <h4>Design</h4>
-        <p>
-          Standing the path up helped, but bubbles still paused in the cell. Tilting the
-          whole instrument means no surface inside the cuvette is horizontal, so a bubble has
-          a continuous upward path along the wall and nothing flat to rest against. We put
-          the tilt in a wedge under the body rather than building it into the optics, which
-          keeps the cycle&nbsp;1 beam geometry untouched and lets us reprint the wedge at a
-          different angle without disturbing the alignment. We also decided to stop treating
-          bubbles as purely an optical problem and remove gas from the loop before a run
-          instead.
-        </p>
-        <h4>Build</h4>
-        <p>
-          The body sits on a printed wedge with structural support underneath so it does not
-          flex under its own weight. A dual luer valve with syringes is fitted to the loop,
-          used to bleed gas out before the instrument is started.
-        </p>
-        <figure class="frame" style="max-width:330px"><div class="frame-img"><img src="photos/ph4-angled.webp" width="900" height="1200" alt="The photometer tilted on its printed wedge stand, wired to an Arduino on the bench." loading="lazy" decoding="async"></div></figure>
-        <h4>Test</h4>
-        <p>
-          We zeroed on medium and ran two titanium dioxide suspensions through the same cell,
-          1&nbsp;mL and 2&nbsp;mL, using titanium dioxide because it scatters light
-          consistently and does not grow or settle the way a culture would. The sample
-          channel dropped from 137.63 lux on the blank to 120.44 lux at 1&nbsp;mL and 111.62
-          lux at 2&nbsp;mL, giving readings of 0.3712 and 0.5785 au. The reference channel
-          sat at 17.23 lux on the blank and 18.33 lux on both samples.
-        </p>
-        <div class="table-scroll">
-          <table class="data">
-            <caption>Blank: 0</caption>
-            <thead><tr><th scope="col"></th><th scope="col">Sample</th><th scope="col">Reference</th><th scope="col">OD</th></tr></thead>
-            <tbody>
-              <tr><td>Medium</td><td>137.63 lux</td><td>17.23 lux</td><td>0 au</td></tr>
-              <tr><td>1 mL Titanium Dioxide</td><td>120.44 lux</td><td>18.33 lux</td><td>0.3712 au</td></tr>
-              <tr><td>2 mL Titanium Dioxide</td><td>111.62 lux</td><td>18.33 lux</td><td>0.5785 au</td></tr>
-            </tbody>
-          </table>
+      <li id="pm3">
+        <div class="iter-n">03</div>
+        <div class="iter-body">
+          <h4>V2 &mdash; vertical</h4>
+          <div class="iter-date">Photometer &middot; Cycle 3 &middot; V2</div>
+
+          <h5 class="dbtl-h">Design</h5>
+          <p>
+            V2 stands the light path up. The LED fires upward through the flow cuvette, so a
+            bubble in the cell rises along the beam axis and leaves the light instead of settling
+            in it. This uses buoyancy to solve the problem rather than relying on flow to sweep
+            bubbles out, which is what failed in V1. We also gave up most of the adjustability in
+            exchange for tighter seats, since by this point the cycle&nbsp;1 spacings were the
+            thing we wanted held rather than the thing we wanted to keep changing.
+          </p>
+
+          <h5 class="dbtl-h">Build</h5>
+          <p>
+            A wide square base plate was printed with a mounting adapter for the rail, so the
+            assembly stands rigidly on the bench with the optical axis vertical. The component
+            seats were tightened so the lens and splitter hold their measured positions.
+          </p>
+          <figure class="frame hero" id="fig-pm3">
+            <div class="frame-img"><img src="photos/pm3-v2-vertical.webp" alt="The V2 photometer standing upright on its base plate, the amber LED lit at the top" loading="lazy" decoding="async"></div>
+            <figcaption><b>V2</b> The optical axis stood vertical on a square base plate.</figcaption>
+          </figure>
+
+          <h5 class="dbtl-h">Test</h5>
+          <p>
+            We ran two samples through V2 and compared the result against the BioDrop. The
+            instrument was zeroed on the growth medium, so medium reads 0 by definition. The
+            second sample was 2&nbsp;mL of titanium dioxide suspension, which gives a stable
+            scattering target that does not grow or settle out between readings the way a culture
+            would.
+          </p>
+          <div class="table-scroll">
+            <table class="readings">
+              <caption>V2 readings &mdash; blank: medium</caption>
+              <thead><tr><th scope="col">Sample</th><th class="num" scope="col">Sample sensor</th><th class="num" scope="col">Reference sensor</th><th class="num" scope="col">OD</th></tr></thead>
+              <tbody>
+                <tr><td data-label="Sample">Medium</td><td data-label="Sample sensor" class="num">660 lux</td><td data-label="Reference sensor" class="num">92.5 lux</td><td data-label="OD" class="num">0 au</td></tr>
+                <tr><td data-label="Sample">2&nbsp;mL titanium dioxide</td><td data-label="Sample sensor" class="num">495 lux</td><td data-label="Reference sensor" class="num">92.5 lux</td><td data-label="OD" class="num">62.5 au <span class="todo">lux give 0.125</span></td></tr>
+              </tbody>
+            </table>
+          </div>
+          <p>
+            The reference channel held at 92.5&nbsp;lux across both readings. That tells us the
+            source was stable between measurements, so the drop on the sample channel came from
+            the sample and not from the LED.
+          </p>
+
+          <h5 class="dbtl-h">Learn</h5>
+          <p>The optics were not the main problem. Our calibration procedure was.</p>
+          <p>
+            We had been blanking RELEAF against growth medium. The BioDrop is calibrated on
+            distilled water. That means the two instruments were reporting absorbance relative to
+            different baselines, and the roughly 20% disagreement we had been attributing to our
+            optics was largely a procedural artifact.
+          </p>
+          <p>
+            This is where our calibration standard protocol comes from. The blank is distilled
+            water, so our baseline matches the instrument we validate against, and every
+            comparison after this cycle uses it.
+            <span class="todo">but cycle&nbsp;4 blanks on medium</span>
+          </p>
+          <div class="todo"><b>To confirm &middot; cycle 3</b><ul>
+            <li><b>62.5&nbsp;au.</b> The table's own lux values give &minus;log(495&nbsp;/&nbsp;660) = 0.125, or 0.625 at the dashboard's factor of five (cycle&nbsp;5); &ldquo;62.5&rdquo; reads like 0.625 with the decimal moved.</li>
+            <li><b>The blank.</b> This cycle makes distilled water the blank for every later comparison, but cycle&nbsp;4 zeroes on medium, and the photometer's own blank protocol blanks on medium.</li>
+          </ul></div>
         </div>
-        <h4>Learn</h4>
-        <p>
-          The instrument responds in the right direction and separates the two
-          concentrations cleanly, so the tilted geometry holds up. Doubling the titanium
-          dioxide only moved the reading by a factor of 1.56, which we cannot yet explain from
-          this data alone.
-        </p>
-        <p>
-          The reference channel is the bigger finding. It moved 6.4% between the blank and
-          the samples, and the reference beam is split off before the sample, so nothing in
-          the cuvette should be able to change it. Either the source drifted or the reference
-          path is picking up light it should not see. Ambient light is the other candidate,
-          since the path is open to the room and neither sensor is shielded from it. A
-          reference channel we cannot trust is a reference channel we cannot correct with.
-        </p>
-        <p>
-          Everything so far has also been static samples held in the cell. Titanium dioxide
-          tells us the optics work, but it does not move, does not grow, and does not produce
-          bubbles. The instrument has to hold up on culture flowing through the loop over a
-          long run before any of this means anything.
-        </p>
-        <p>
-          That is what shapes V4. We need the light path enclosed from the LED to both
-          sensors so only our own source reaches them. We need direct control of the LED
-          rather than running it at a fixed drive, in case the source itself is drifting. We
-          need to see both channels live during a run instead of reading them off at the end.
-          And then we need to put real culture through it.
-        </p>
-      </div>
-    </details>
+      </li>
 
-    <details class="cyc">
-      <summary><span class="cyc-n">Cycle 5</span><span class="cyc-t">In-Line Photometer V4 and the 22&nbsp;&deg;C <i>B.&nbsp;subtilis</i> 168 Growth Curve</span>
-        <span class="cyc-s">A continuous in-line run that passed 400 hours without a single sampling event.</span></summary>
-      <div class="cyc-body">
-        <h4>Design</h4>
-        <p>V4 is the version we ran the long experiment on. Three changes carry it.</p>
-        <ul>
-          <li>Component positions are fixed at their default alignment. Nothing slides any
-            more, which removes the drift that hurt V1.</li>
-          <li>Every mount surface that touches glass is lined with TPU. It grips the cuvette
-            and lens firmly and stops the rigid printed material scratching the optical
-            surfaces. Scratches on a 0.2&nbsp;mm cuvette window are not cosmetic, since
-            scattering from a damaged surface reaches the same detector as scattering from
-            cells.</li>
-          <li>Snap-in covers run the full length of the light path from LED to sample sensor,
-            so no room light reaches either detector. A photometer that responds to the
-            lights being switched on is not measuring the sample.</li>
-        </ul>
-        <h4>Build</h4>
-        <p>
-          The instrument runs on an Arduino UNO Q. Both lux sensors report over the same bus.
-          The interface is a live web dashboard served on the local network, so the run can be
-          watched from any machine without touching the rig.
-        </p>
-        <p>
-          The dashboard shows current OD600, elapsed time, sample lux, reference lux, the
-          sample to reference ratio, the bubble and outlier rejection rate, and the running
-          data point count.
-        </p>
-        <figure class="frame" style="max-width:330px"><div class="frame-img"><img src="photos/ph5-v4.webp" width="900" height="1200" alt="Photometer V4 on its angled stand with covers fitted along the light path, wired to the controller." loading="lazy" decoding="async"></div></figure>
-        <h4>Test</h4>
-        <p>
-          A continuous run of engineered B.&nbsp;subtilis 168 at 22&nbsp;&deg;C, drawn from
-          the bioreactor loop and passed through the flow cell in line, so no sampling event
-          interrupted the culture and no material was removed to measure it. The run passed
-          400 hours.
-        </p>
-        <p>
-          Snapshots from the run, all from the same experiment. At 3d 7h 57m the dashboard
-          read 586 points, OD 0.7661, sample 171.67 lx, reference 26.67 lx, ratio 6.44x,
-          reject rate 42.9%. At 6d 20h 58m it read 1097 points, OD 0.7683, sample 171.49 lx,
-          reference 26.67 lx, ratio 6.43x, reject 14.3%. At 7d 21h 28m it read 1244 points,
-          OD 1.1804, sample 141.85 lx, reference 26.67 lx, ratio 5.32x, reject 0%.
-        </p>
-        <div class="frames two">
-          <figure class="frame"><div class="frame-img"><img src="photos/ph5-run.webp" width="900" height="1200" alt="The run in the incubator cabinet: culture bottle on a stirrer, pump and the photometer on its stand." loading="lazy" decoding="async"></div></figure>
-          <figure class="frame fit dark"><div class="frame-img"><img src="photos/ph5-curve.webp" width="1400" height="545" alt="The dashboard's OD600 trace across the run: a slow rise, a dip, a second rise to a plateau and a decline." loading="lazy" decoding="async"></div></figure>
+      <li id="pm4">
+        <div class="iter-n">04</div>
+        <div class="iter-body">
+          <h4>Angled stand</h4>
+          <div class="iter-date">Photometer &middot; Cycle 4</div>
+
+          <h5 class="dbtl-h">Design</h5>
+          <p>
+            Standing the path up helped, but bubbles still paused in the cell. Tilting the whole
+            instrument means no surface inside the cuvette is horizontal, so a bubble has a
+            continuous upward path along the wall and nothing flat to rest against. We put the
+            tilt in a wedge under the body rather than building it into the optics, which keeps
+            the cycle&nbsp;1 beam geometry untouched and lets us reprint the wedge at a different
+            angle without disturbing the alignment. We also decided to stop treating bubbles as
+            purely an optical problem and remove gas from the loop before a run instead.
+          </p>
+
+          <h5 class="dbtl-h">Build</h5>
+          <p>
+            The body sits on a printed wedge with structural support underneath so it does not
+            flex under its own weight. A dual Luer valve with syringes is fitted to the loop,
+            used to bleed gas out before the instrument is started.
+          </p>
+          <figure class="frame hero" id="fig-pm4">
+            <div class="frame-img"><img src="photos/pm4-angled-stand.webp" alt="The photometer column tilted on its printed wedge stand, LED lit at the top, wired to the controller" loading="lazy" decoding="async"></div>
+            <figcaption><b>Angled stand</b> The optical column tilted on its printed wedge.</figcaption>
+          </figure>
+
+          <h5 class="dbtl-h">Test</h5>
+          <p>
+            We zeroed on medium and ran two titanium dioxide suspensions through the same cell,
+            1&nbsp;mL and 2&nbsp;mL, using titanium dioxide because it scatters light consistently
+            and does not grow or settle the way a culture would. The sample channel dropped from
+            137.63&nbsp;lux on the blank to 120.44&nbsp;lux at 1&nbsp;mL and 111.62&nbsp;lux at
+            2&nbsp;mL. The reference channel sat at 17.23&nbsp;lux on the blank and 18.33&nbsp;lux
+            on both samples.
+          </p>
+          <div class="table-scroll">
+            <table class="readings">
+              <caption>Angled&#8209;stand readings &mdash; blank: medium</caption>
+              <thead><tr><th scope="col">Sample</th><th class="num" scope="col">Sample sensor</th><th class="num" scope="col">Reference sensor</th><th class="num" scope="col">OD</th></tr></thead>
+              <tbody>
+                <tr><td data-label="Sample">Medium</td><td data-label="Sample sensor" class="num">137.63 lux</td><td data-label="Reference sensor" class="num">17.23 lux</td><td data-label="OD" class="num">0 au</td></tr>
+                <tr><td data-label="Sample">1&nbsp;mL titanium dioxide</td><td data-label="Sample sensor" class="num">120.44 lux</td><td data-label="Reference sensor" class="num">18.33 lux</td><td data-label="OD" class="num">0.3712 au <span class="todo">formula: 0.085; &times;5: 0.42</span></td></tr>
+                <tr><td data-label="Sample">2&nbsp;mL titanium dioxide</td><td data-label="Sample sensor" class="num">111.62 lux</td><td data-label="Reference sensor" class="num">18.33 lux</td><td data-label="OD" class="num">0.5785 au <span class="todo">formula: 0.118; &times;5: 0.59</span></td></tr>
+              </tbody>
+            </table>
+          </div>
+
+          <h5 class="dbtl-h">Learn</h5>
+          <p>
+            The instrument responds in the right direction and separates the two concentrations
+            cleanly, so the tilted geometry holds up. Doubling the titanium dioxide only moved the
+            reading by a factor of 1.56, which we cannot yet explain from this data alone.
+          </p>
+          <p>
+            The reference channel is the bigger finding. It moved 6.4% between the blank and the
+            samples, and the reference beam is split off before the sample, so nothing in the
+            cuvette should be able to change it. Either the source drifted or the reference path
+            is picking up light it should not see. Ambient light is the other candidate, since the
+            path is open to the room and neither sensor is shielded from it. A reference channel
+            we cannot trust is a reference channel we cannot correct with.
+          </p>
+          <p>
+            Everything so far has also been static samples held in the cell. Titanium dioxide
+            tells us the optics work, but it does not move, does not grow, and does not produce
+            bubbles. The instrument has to hold up on culture flowing through the loop over a long
+            run before any of this means anything.
+          </p>
+          <p>
+            That is what shapes V4. We need the light path enclosed from the LED to both sensors so
+            only our own source reaches them. We need direct control of the LED rather than running
+            it at a fixed drive, in case the source itself is drifting. We need to see both
+            channels live during a run instead of reading them off at the end. And then we need to
+            put real culture through it.
+          </p>
+          <div class="todo"><b>To confirm &middot; cycle 4</b>The doc's 0.3712 and 0.5785&nbsp;au are not reproduced from these lux values. The calculation written out later (cycle&nbsp;5) gives 0.085 and 0.118, or 0.42 and 0.59 at the dashboard's factor of five: 0.5785 is within 2% of the second, and 0.3712 matches neither.</div>
         </div>
-        <p class="fineprint ai">
-          The full trace, traced from the dashboard, is drawn on the
-          <a href="../photometer/#sec35">photometer page</a>.
-        </p>
-        <h4>Learn</h4>
-        <p>
-          The run covers lag through decline in one unbroken series, which is the thing a
-          manual sampling routine cannot produce. It is also where the instrument&rsquo;s
-          limits became visible.
-        </p>
-        <ul>
-          <li>Noise is tight below about 0.4 OD and ragged above about 0.8, so the useful
-            precision is not flat across the range.</li>
-          <li>The rejection rate moved from 42.9% to 14.3% to 0% within one run. Those cannot
-            all be cumulative, and the rejection rule is not yet written down anywhere. It
-            needs stating as a rule, including the window the rate is computed over, before
-            any filtered data appears on the wiki.</li>
-          <li>The dashboard expects a sample to reference ratio near 10:1 and we measured 5.3x
-            to 6.4x, so either the split ratio or the expectation is wrong.</li>
-          <li>It is still unresolved whether the reported OD uses the reference channel or
-            only sample against blank. The two disagree, and that has to be settled before the
-            growth curve can be published.</li>
-        </ul>
-      </div>
-    </details>
+      </li>
 
-    <details class="cyc">
-      <summary><span class="cyc-n">Cycle 6</span><span class="cyc-t">Calibration Using TiO<sub>2</sub></span>
-        <span class="cyc-s">The raw, uncalibrated output already matches the Bio-Drop to a median paired difference under 4%, so no calibration transform is needed.</span></summary>
-      <div class="cyc-body">
-        <h4>Design</h4>
-        <p>
-          We needed to design a way in order to ensure that our photometer data readings were
-          aligned with real world values. However, using culture to calibrate would lead to
-          issues in growth time, settling, or cell lysis, leading us to come up with
-          TiO<sub>2</sub> suspension as a stable scattering target. The iGEM standard for
-          OD600 calibration is actually done with the help of SiO<sub>2</sub>, but because we
-          had TiO<sub>2</sub> readily available, it performed nearly exactly the same when
-          suspended in 1% SDS solution, and was much cheaper, we decided to delay our
-          SiO<sub>2</sub> calibration and began preparing known concentrations of
-          TiO<sub>2</sub> running through 500&nbsp;mL solution.
-        </p>
-        <p>
-          We used a Bio-Drop cuvette spectrophotometer as our reference instrument for this
-          calibration assessment and ran the calibration curve twice.
-        </p>
-        <p>
-          The two tests probed at different things. The first test that we ran (Test&nbsp;1),
-          we increased the amount of TiO<sub>2</sub> within our solution by 1 gram at a time
-          for 40 data points, giving dense sampling that resolves how linear each instrument
-          is across the full range. And for the second (Test&nbsp;2), we increased the amount
-          of TiO<sub>2</sub> within our solution by 1 gram at a time until we hit 10 grams,
-          where we began to increase by increments of 5 instead until 60. This gave a wider
-          range with uniform spacing that gives the cleanest direct agreement comparison
-          after we already proved strong linearity. We decided to start off with smaller
-          increments deliberately, to create a more accurate low-density measurement region
-          just in case our in-line photometer proved inaccurate at low values.
-        </p>
-        <h4>Build</h4>
-        <p>
-          The calibration loop consisted of a magnetic stirrer, a peristaltic pump, our
-          photometer, and a 500&nbsp;mL reservoir. The reservoir cap had holes for the inlet
-          of the photometer loop, the outlet of our loop, a sampling port, and an air hole
-          that prevented a vacuum from forming during sampling or pressurization when adding
-          TiO<sub>2</sub>.
-        </p>
-        <p>
-          Because scattering rises linearly with the mass of an inert, suspended particle,
-          the mass of TiO<sub>2</sub> added serves as a common ground-truth linear axis in
-          which both instruments can be judged independently, not only against each other.
-        </p>
-        <h4>Test</h4>
-        <p>
-          Two single-point exclusions were applied, each on objective grounds, and both are
-          shown as open markers in the figures rather than deleted. In Test&nbsp;1, the
-          mg&nbsp;=&nbsp;37 Bio-Drop reading is a handling error, off the trend of its
-          neighbors. In Test&nbsp;2, the mg&nbsp;=&nbsp;5 Bio-Drop reading violates
-          monotonicity: it exceeds the readings both above and below it, which is impossible
-          for an increasing standard. In both cases, the paired Releaf reading is on trend,
-          confirming the error is in the reference measurement, not the photometer, and
-          proving the effectiveness of an in-line measurement device.
-        </p>
-        <p><b>6.3.1 Baseline Linearity, goodness of fit (Figure 1, Test 1)</b><br />
-          The raw uncalibrated Releaf output agrees with the Bio-Drop readings to a large
-          extent. Test&nbsp;1&rsquo;s data shows a slope of near 1, and a y-intercept of near
-          0, when the graph of (Releaf x, Bio-Drop y) is drawn.
-        </p>
-        <p><b>6.3.2 Linearity against the ground-truth standard (Figure 2, Test 2)</b><br />
-          Plotted against TiO<sub>2</sub> mass added, both instruments track the standard
-          closely across the full range, each regressing against mass at R&sup2;&nbsp;&gt;&nbsp;0.999
-          (Releaf 0.9999, Bio-Drop 0.9998). The raw uncalibrated output is linear in true
-          concentration to the same degree as the reference instrument.
-        </p>
-        <p><b>6.3.3 Direct agreement with the reference (Figure 3, Test 2)</b><br />
-          Plotted directly against the Bio-Drop with the line of identity, the raw Releaf
-          points fall along y&nbsp;=&nbsp;x, agreeing to a median paired difference of 3.8%.
-          The raw, uncalibrated instrument therefore matches the reference across the working
-          range without any transform. A line fit through the raw Test&nbsp;2 points has a
-          residual scatter of RMSE&nbsp;=&nbsp;0.011 OD600 (R&sup2;&nbsp;=&nbsp;0.9997) about
-          that line; this quantifies the tightness of the raw agreement and is not a
-          correction applied to the data.
-        </p>
-        <div class="frames">
-          <figure id="fig-ti-1" class="own-num frame fit"><div class="frame-img"><img src="photos/ph6-test1.webp" width="877" height="649" alt="Scatter of Bio-Drop OD600 against ReLeaf OD600 for Test 1 with a best-fit line y = 1.106x minus 0.038, R squared 0.9957, and the line y = x." loading="lazy" decoding="async"></div>
-            <figcaption><span class="fignum">Figure 1.</span> Baseline linearity, goodness of fit (Test 1)</figcaption></figure>
-          <figure id="fig-ti-2" class="own-num frame fit"><div class="frame-img"><img src="photos/ph6-test2-mass.webp" width="958" height="664" alt="OD600 of ReLeaf and Bio-Drop against TiO2 mass added in Test 2; both straight lines, R squared 0.9999 and 0.9998." loading="lazy" decoding="async"></div>
-            <figcaption><span class="fignum">Figure 2.</span> Linearity against the ground-truth standard (Test 2)</figcaption></figure>
-          <figure id="fig-ti-3" class="own-num frame fit"><div class="frame-img"><img src="photos/ph6-test2-agree.webp" width="781" height="717" alt="ReLeaf OD600 against Bio-Drop OD600 for Test 2 along the line y = x, slope 0.942, R squared 0.9997." loading="lazy" decoding="async"></div>
-            <figcaption><span class="fignum">Figure 3.</span> Direct agreement with the reference (Test 2)</figcaption></figure>
+      <li id="pm5">
+        <div class="iter-n">05</div>
+        <div class="iter-body">
+          <h4>V4, and the 22&nbsp;&deg;C growth curve</h4>
+          <div class="iter-date">Photometer &middot; Cycle 5 &middot; V4 &middot; continuous <span class="sp">B.&nbsp;subtilis</span> 168 run</div>
+
+          <h5 class="dbtl-h">Design</h5>
+          <p>V4 is the version we ran the long experiment on. Three changes carry it.</p>
+          <ul class="checks">
+            <li><b>Component positions are fixed at their default alignment.</b> Nothing slides any
+              more, which removes the drift that hurt V1.</li>
+            <li><b>Every mount surface that touches glass is lined with TPU.</b> It grips the cuvette
+              and lens firmly and stops the rigid printed material scratching the optical surfaces.
+              Scratches on a 0.2&nbsp;mm cuvette window are not cosmetic, since scattering from a
+              damaged surface reaches the same detector as scattering from cells.</li>
+            <li><b>Snap&#8209;in covers run the full length of the light path</b> from LED to sample
+              sensor, so no room light reaches either detector. A photometer that responds to the
+              lights being switched on is not measuring the sample.</li>
+          </ul>
+
+          <h5 class="dbtl-h">Build</h5>
+          <p>
+            The instrument runs on an Arduino UNO&nbsp;Q. Both lux sensors report over the same bus.
+            The interface is a live web dashboard served on the local network, so the run can be
+            watched from any machine without touching the rig. The dashboard shows current OD600,
+            elapsed time, sample lux, reference lux, the sample&#8209;to&#8209;reference ratio, the
+            bubble and outlier rejection rate, and the running data&#8209;point count.
+          </p>
+          <div class="frames">
+            <figure class="frame" id="fig-pm5-a">
+              <div class="frame-img"><img src="photos/pm5-v4.webp" alt="The V4 photometer: an enclosed black column on its angled base, wired to the Arduino" loading="lazy" decoding="async"></div>
+              <figcaption><b>V4</b> Fixed mounts, TPU&#8209;lined seats and snap&#8209;in covers along the light path.</figcaption>
+            </figure>
+            <figure class="frame" id="fig-pm5-b">
+              <div class="frame-img"><img src="photos/pm5-v4-incubator-run.webp" alt="The V4 photometer running beside a culture bottle on a shelf inside an incubator" loading="lazy" decoding="async"></div>
+              <figcaption><b>The long run</b> V4 logging the culture inside the incubator.</figcaption>
+            </figure>
+          </div>
+
+          <h5 class="dbtl-h">Test</h5>
+          <p>
+            A continuous run of engineered <i>B.&nbsp;subtilis</i> 168 at 22&nbsp;&deg;C, drawn from
+            the bioreactor loop and passed through the flow cell in line, so no sampling event
+            interrupted the culture and no material was removed to measure it. <b>The run passed
+            400 hours.</b> <span class="todo">start date of the run</span>
+          </p>
+          <figure class="chart-fig od-wrap" id="fig-od-run">
+            <div id="od-chart"></div>
+            <figcaption>
+              <b>Continuous record</b> Traced from the live dashboard at 14&nbsp;d 0&nbsp;h 11&nbsp;m
+              &mdash; the first 336&nbsp;h of the run, 2132 points. The band is the raw scatter, the
+              line its median. <span class="todo">raw data set not yet published</span>
+            </figcaption>
+          </figure>
+          <p>Snapshots from the run, all from the same experiment:</p>
+          <div class="table-scroll">
+            <table class="readings">
+              <caption>Dashboard snapshots &mdash; one continuous run</caption>
+              <thead><tr><th scope="col">Elapsed</th><th class="num" scope="col">Points</th><th class="num" scope="col">OD</th><th class="num" scope="col">Sample</th><th class="num" scope="col">Reference</th><th class="num" scope="col">Ratio</th><th class="num" scope="col">Rejected</th></tr></thead>
+              <tbody>
+                <tr><td data-label="Elapsed">3&nbsp;d 7&nbsp;h 57&nbsp;m</td><td data-label="Points" class="num">586</td><td data-label="OD" class="num">0.7661</td><td data-label="Sample" class="num">171.67 lx</td><td data-label="Reference" class="num">26.67 lx</td><td data-label="Ratio" class="num">6.44&times;</td><td data-label="Rejected" class="num">42.9%</td></tr>
+                <tr><td data-label="Elapsed">6&nbsp;d 20&nbsp;h 58&nbsp;m</td><td data-label="Points" class="num">1097</td><td data-label="OD" class="num">0.7683</td><td data-label="Sample" class="num">171.49 lx</td><td data-label="Reference" class="num">26.67 lx</td><td data-label="Ratio" class="num">6.43&times;</td><td data-label="Rejected" class="num">14.3%</td></tr>
+                <tr><td data-label="Elapsed">7&nbsp;d 21&nbsp;h 28&nbsp;m</td><td data-label="Points" class="num">1244</td><td data-label="OD" class="num">1.1804</td><td data-label="Sample" class="num">141.85 lx</td><td data-label="Reference" class="num">26.67 lx</td><td data-label="Ratio" class="num">5.32&times;</td><td data-label="Rejected" class="num">0%</td></tr>
+              </tbody>
+            </table>
+          </div>
+
+          <h5 class="dbtl-h">Learn</h5>
+          <p>
+            The run covers lag through decline in one unbroken series, which is the thing a manual
+            sampling routine cannot produce. It is also where the instrument's limits became
+            visible.
+          </p>
+          <ul class="checks">
+            <li>Noise is tight below about 0.4&nbsp;OD and ragged above about 0.8, so the useful
+              precision is not flat across the range.</li>
+            <li>The rejection rate moved from 42.9% to 14.3% to 0% within one run. Those cannot all
+              be cumulative, and the rejection rule had not been written down; it needed stating as
+              a rule, including the window the rate is computed over, before filtered data could
+              appear here. It is now specified in the <a href="../photometer/index.html">photometer
+              record</a>: each reading is a burst of 14, and 42.9% and 14.3% are exactly 6 and 2 of
+              14.</li>
+            <li>The dashboard expects a sample&#8209;to&#8209;reference ratio near 10:1 and we measured
+              5.3&times; to 6.4&times;, so either the split ratio or the expectation is wrong.
+              <span class="todo">implied blank ratio ~9.2</span></li>
+            <li>The run's notes leave it unresolved whether the reported OD uses the reference channel
+              or only sample against blank; the two disagree, and that has to be settled before the
+              growth curve can be published. The doc's photometer tab now writes the calculation out:
+              OD600&nbsp;=&nbsp;&minus;log[&thinsp;S&nbsp;/&nbsp;(K&middot;R)&thinsp;], with K the
+              sample&#8209;to&#8209;reference ratio on the blank. The dashboard reports five times that
+              value; with the factor, all three snapshots above reproduce with one K&nbsp;&asymp;&nbsp;9.16.
+              <span class="todo">&times;5 not stated in the doc</span></li>
+          </ul>
+          <div class="todo"><b>To confirm &middot; cycle 5</b><ul>
+            <li><b>The factor of five.</b> Inferred from the dashboard, not stated in the doc: with it, the three snapshots and <a class="xref" href="#fig-dashboard"></a> reproduce exactly; without it they would read 0.153, 0.154 and 0.236.</li>
+            <li><b>The ratio.</b> The snapshots imply a sample&#8209;to&#8209;reference ratio of about 9.2 on the blank, close to the expected 10:1; the 5.3&times; to 6.4&times; were read with culture in the cell, which lowers the sample channel.</li>
+          </ul></div>
         </div>
-        <p>
-          <b>Corroboration across the two runs.</b> The two runs therefore agree with the
-          Bio-Drop to within a few percent independently of each other (Test&nbsp;2 over a
-          narrow range with fine uniform spacing, Test&nbsp;1 over a wider range reaching
-          higher density; both sets of figures above). Because the raw output holds this
-          agreement across two separate runs rather than a single fit, the readings can be
-          trusted across the working range without a calibration step.
-        </p>
-        <h4>Learn</h4>
-        <p>
-          The runs answered the question we built them for, but not in the way we expected.
-          We originally expected the Releaf readings would need a calibration transform, fit
-          against the Bio-Drop, to report real-world OD600; instead the two runs showed that
-          no calibration is needed. The raw, uncalibrated Releaf output already sits near
-          one-to-one with the reference (median paired difference under 4%) and tracks the
-          ground-truth mass standard with a residual scatter no larger than the
-          Bio-Drop&rsquo;s: in Test&nbsp;1, 0.024 OD600 for Releaf against 0.030 for the
-          Bio-Drop.
-        </p>
-        <p>
-          This changed our plan. Because agreement is already within a few percent, and
-          because the Bio-Drop is itself the slightly less linear of the two instruments
-          against the ground-truth standard, fitting our readings to the Bio-Drop would tie
-          them to the reference instrument&rsquo;s own measurement error without improving
-          agreement that is already tight. A calibration step, in other words, could make the
-          readings worse rather than better. On the evidence of these two runs we therefore
-          treat calibration as unnecessary rather than pending, and every reading in this
-          wiki, including the continuous growth curve, is reported directly from raw
-          uncalibrated Releaf output.
-        </p>
-        <p>
-          Two properties emerged from this cycle. First, within the range where a cuvette
-          spectrophotometer is trusted, the uncalibrated photometer matches it to within a few
-          percent across the full working range. Second, and categorically, the Releaf
-          photometer records these readings in line and continuously, drawing culture through
-          the flow cell without withdrawing a sample or interrupting the culture. A cuvette
-          instrument cannot monitor a live bioreactor; it measures grab samples one at a
-          time. That continuous capability, demonstrated in Section 3.5, is what makes the
-          instrument useful for closed-loop monitoring rather than merely accurate.
-        </p>
-        <p>
-          The SiO<sub>2</sub> calibration we deferred in the Design stage remains available as
-          a future check, but on the strength of the TiO<sub>2</sub> comparison it is a
-          confirmation step, not a dependency.
-        </p>
-      </div>
-    </details>
+      </li>
 
-    <div class="cyc soon">
-      <p class="cyc-line"><span class="cyc-n">Cycle 7</span> <b>Calibration Using SiO<sub>2</sub></b>
-        <span class="ai">Not written yet.</span></p>
-    </div>
-    <div class="cyc soon">
-      <p class="cyc-line"><span class="cyc-n">Cycle 8</span> <b>Simplified Photometer</b>
-        <span class="ai">Not written yet as a cycle. The rationale, design changes and first
-        bench result are in Part&nbsp;8 of the <a href="../photometer/#simplified">photometer page</a>.</span></p>
-    </div>
+      <li id="pm6">
+        <div class="iter-n">06</div>
+        <div class="iter-body">
+          <h4>Calibration using TiO<sub>2</sub></h4>
+          <div class="iter-date">Photometer &middot; Cycle 6 &middot; two calibration runs against the BioDrop</div>
+
+          <h5 class="dbtl-h">Design</h5>
+          <p>
+            We needed a way to make sure the photometer's readings align with real&#8209;world
+            values. Calibrating with culture would bring problems of growth time, settling and cell
+            lysis, so we chose a TiO<sub>2</sub> suspension as a stable scattering target. The iGEM
+            standard for OD600 calibration uses SiO<sub>2</sub>, but TiO<sub>2</sub> was readily
+            available, performed nearly the same when suspended in 1% SDS solution, and was much
+            cheaper, so we deferred the SiO<sub>2</sub> calibration and prepared known
+            concentrations of TiO<sub>2</sub> in 500&nbsp;mL of solution.
+          </p>
+          <p>
+            A BioDrop cuvette spectrophotometer was the reference instrument, and the
+            calibration curve was run twice. The two tests probed different things. In Test&nbsp;1
+            we added TiO<sub>2</sub> 1&nbsp;mg at a time for 40 data points
+            <span class="todo">doc: grams; workbook: mg</span>, a dense, uniform series that resolves how
+            linear each instrument is. In Test&nbsp;2 we added 1&nbsp;mg at a time up to 10&nbsp;mg
+            and then 5&nbsp;mg at a time up to 60&nbsp;mg, the cleanest direct agreement comparison
+            once linearity was established. <span class="todo">doc calls this the wider range</span> Starting with small increments was deliberate: it gives
+            a more accurate low&#8209;density region, in case the in&#8209;line photometer proved
+            inaccurate at low values.
+          </p>
+
+          <h5 class="dbtl-h">Build</h5>
+          <p>
+            The calibration loop consisted of a magnetic stirrer, a peristaltic pump, our
+            photometer, and a 500&nbsp;mL reservoir. The reservoir cap had holes for the inlet of the
+            photometer loop, the outlet of the loop, a sampling port, and an air hole that prevented
+            a vacuum from forming during sampling or pressurization when adding TiO<sub>2</sub>.
+          </p>
+          <p>
+            Because scattering rises linearly with the mass of an inert suspended particle, the mass
+            of TiO<sub>2</sub> added is a common ground&#8209;truth axis against which both
+            instruments can be judged independently, not only against each other.
+          </p>
+
+          <h5 class="dbtl-h">Test</h5>
+          <p>
+            Two single&#8209;point exclusions were applied, each on objective grounds, and both are
+            shown as open markers rather than deleted. In Test&nbsp;1 the 37&nbsp;mg BioDrop
+            reading is a handling error, off the trend of its neighbors. In Test&nbsp;2 the
+            5&nbsp;mg BioDrop reading breaks monotonicity &mdash; it exceeds the readings both
+            above and below it, which is impossible for an increasing standard. In both cases the
+            paired RELEAF reading is on trend, which places the error in the reference measurement
+            rather than the photometer.
+          </p>
+          <p>
+            <b>Baseline linearity (Test&nbsp;1).</b> The raw, uncalibrated RELEAF output agrees with
+            the BioDrop to a large extent: plotted as RELEAF against BioDrop, Test&nbsp;1
+            has a slope near 1 and an intercept near 0 (<a class="xref" href="#fig-tio2-t1"></a>).
+          </p>
+          <figure class="chart-fig" id="fig-tio2-t1">
+            <div class="bc" data-chart="tio2-t1"></div>
+            <figcaption><b>Test 1</b> BioDrop OD600 against the raw photometer reading for each TiO<sub>2</sub> mass from 2 to 41&nbsp;mg, drawn from the run's workbook, with a least&#8209;squares line and the line of identity.</figcaption>
+          </figure>
+          <p>
+            <b>Linearity against the ground&#8209;truth standard (Test&nbsp;2).</b> Plotted against
+            TiO<sub>2</sub> mass added, both instruments track the standard closely across the full
+            range, each regressing against mass at R&sup2;&nbsp;&gt;&nbsp;0.999 (RELEAF 0.9999,
+            BioDrop 0.9998). The raw uncalibrated output is linear in true concentration to the
+            same degree as the reference instrument (<a class="xref" href="#fig-tio2-t2-mass"></a>).
+          </p>
+          <figure class="chart-fig" id="fig-tio2-t2-mass">
+            <div class="bc" data-chart="tio2-t2-mass"><img src="photos/pm6-test2-mass-chart.webp" alt="Test 2: OD600 of the RELEAF photometer and the BioDrop against TiO2 mass added, both close to straight lines" loading="lazy" decoding="async"></div>
+            <figcaption><b>Test 2</b> OD600 of each instrument against TiO<sub>2</sub> added, each with its own fit.</figcaption>
+          </figure>
+          <p>
+            <b>Direct agreement with the reference (Test&nbsp;2).</b> Plotted directly against the
+            BioDrop with the line of identity, the raw RELEAF points fall along y&nbsp;=&nbsp;x,
+            agreeing to a median paired difference of 3.8%. The raw, uncalibrated instrument therefore
+            matches the reference across the working range without any transform
+            <span class="todo">~0.03 high below 0.35&nbsp;OD</span>. A line fit through
+            the raw Test&nbsp;2 points has a residual scatter of RMSE&nbsp;=&nbsp;0.011&nbsp;OD600
+            (R&sup2;&nbsp;=&nbsp;0.9997) about that line; this quantifies how tight the raw agreement
+            is and is not a correction applied to the data
+            (<a class="xref" href="#fig-tio2-t2-identity"></a>).
+          </p>
+          <figure class="chart-fig" id="fig-tio2-t2-identity">
+            <div class="bc" data-chart="tio2-t2-identity"><img src="photos/pm6-test2-agreement-chart.webp" alt="Test 2: RELEAF OD600 against BioDrop OD600, points along the line of identity" loading="lazy" decoding="async"></div>
+            <figcaption><b>Test 2</b> RELEAF against the BioDrop, with the line of identity.</figcaption>
+          </figure>
+          <p>
+            <b>Corroboration across the two runs.</b> The two runs agree with the BioDrop to
+            within a few percent independently of each other &mdash; Test&nbsp;1 with fine, uniform
+            1&nbsp;mg steps reaching higher density, Test&nbsp;2 with coarser steps over a narrower
+            range. Because the raw output holds this agreement across two separate runs rather than a
+            single fit, the readings can be trusted across the working range without a calibration
+            step. <span class="todo">doc swaps Test&nbsp;1/2 spacing</span>
+          </p>
+
+          <h5 class="dbtl-h">Learn</h5>
+          <p>
+            The runs answered the question we built them for, but not in the way we expected. We
+            expected the RELEAF readings would need a calibration transform, fitted against the
+            BioDrop, to report real&#8209;world OD600; instead the two runs showed that no
+            calibration is needed. The raw, uncalibrated output already sits near one&#8209;to&#8209;one
+            with the reference (median paired difference under 4%) and tracks the ground&#8209;truth
+            mass standard with a residual scatter comparable to the BioDrop's (Test&nbsp;1,
+            2&ndash;40&nbsp;mg: 0.030 against 0.031&nbsp;OD600
+            <span class="todo">doc: 0.024 against 0.030</span>).
+          </p>
+          <p>
+            This changed our plan. Agreement is already within a few percent, and the BioDrop is
+            itself the slightly less linear of the two instruments against the ground&#8209;truth
+            standard, so fitting our readings to the BioDrop would tie them to the reference
+            instrument's own measurement error without improving agreement that is already tight. A
+            calibration step, in other words, could make the readings worse rather than better. On the
+            evidence of these two runs we treat calibration as unnecessary rather than pending, and
+            every reading in this record &mdash; including the continuous growth curve &mdash; is
+            reported directly from raw uncalibrated RELEAF output.
+          </p>
+          <p>
+            Two properties emerged from this cycle. First, within the range where a cuvette
+            spectrophotometer is trusted, the uncalibrated photometer matches it to within a few
+            percent across the full working range. Second, and categorically, the RELEAF photometer
+            records these readings in line and continuously, drawing culture through the flow cell
+            without withdrawing a sample or interrupting the culture. A cuvette instrument cannot
+            monitor a live bioreactor; it measures grab samples one at a time. That continuous
+            capability, demonstrated in <a href="#pm5">cycle&nbsp;5</a>, is what makes the instrument
+            useful for closed&#8209;loop monitoring rather than merely accurate.
+          </p>
+          <p>
+            The SiO<sub>2</sub> calibration we deferred in the design stage remains available as a
+            future check, but on the strength of the TiO<sub>2</sub> comparison it is a confirmation
+            step, not a dependency.
+          </p>
+          <div class="todo"><b>To confirm &middot; cycle 6</b><ul>
+            <li><b>Units.</b> The doc adds TiO<sub>2</sub> &ldquo;1 gram at a time&rdquo;; the workbook is in milligrams.</li>
+            <li><b>Spacing and range.</b> The doc's Design text and the workbook give Test&nbsp;1 the fine, uniform 1&nbsp;mg spacing; its corroboration paragraph gives it to Test&nbsp;2. The Design text also calls Test&nbsp;2 the wider range, but by OD Test&nbsp;1 reaches higher, about 2.5 against 1.9.</li>
+            <li><b>Residual scatter.</b> The doc gives 0.024 for RELEAF against 0.030 for the BioDrop in Test&nbsp;1; the workbook gives 0.030 against 0.031 over 2&ndash;40&nbsp;mg.</li>
+            <li><b>Low OD.</b> Below about 0.35&nbsp;OD the raw RELEAF readings sit 0.02&ndash;0.05&nbsp;OD above the BioDrop (<a class="xref" href="#fig-tio2-t2-identity"></a>), so &ldquo;within a few percent&rdquo; holds above that; the 3.8% median comes from the upper range.</li>
+            <li><b>OD per milligram.</b> The tests give different OD per milligram on both instruments, about 0.05 in Test&nbsp;1 against 0.03 in Test&nbsp;2, which the doc does not explain; the corroboration paragraph treats them as two runs of one standard.</li>
+          </ul></div>
+        </div>
+      </li>
+
+      <li id="pm7" class="unwritten">
+        <div class="iter-n">07</div>
+        <div class="iter-body">
+          <h4>Calibration using SiO<sub>2</sub></h4>
+          <div class="iter-date">Photometer &middot; Cycle 7</div>
+          <div class="todo"><b>Unwritten &middot; Cycle 7</b>The doc has this cycle's Design, Build, Test and Learn headings and no text yet. Cycle&nbsp;6 deferred the SiO<sub>2</sub> calibration, the iGEM standard for OD600, as a confirmation step rather than a dependency.</div>
+        </div>
+      </li>
+
+      <li id="pm8" class="unwritten">
+        <div class="iter-n">08</div>
+        <div class="iter-body">
+          <h4>Simplified photometer</h4>
+          <div class="iter-date">Photometer &middot; Cycle 8</div>
+          <div class="todo"><b>Unwritten &middot; Cycle 8</b>Headings only in the doc. Its outline: a simplified photometer with no paralleling lens, tested for reliability and accuracy by re&#8209;running the sampling against the BioDrop. The doc's photometer tab disagrees with itself here: its final&#8209;assembly section says the compact design was shown to have little to no deviation in accuracy, while its section on the simplified design says it has not been tested yet. No test data are on record. The instrument itself is described on the <a href="../photometer/index.html">photometer page</a>.</div>
+        </div>
+      </li>
+    </ol>
+    <p class="to-map"><a href="#dbtl-map">&uarr; Back to the cycle map</a></p>
   </section>
 
   <section class="sec" id="sec33">
-    <h3><i>3.3</i> Hollow Fiber Membrane, Pressure, and Flow Control</h3>
-    <ul class="plain">
-      <li>DBTL cycle 1: Pressure transductor</li>
-      <li>DBTL cycle 2: Transmembrane pressure and &Delta;P-Q measurement round 1</li>
-      <li>DBTL cycle 3: Flowmeter and &Delta;P-Q measurement round 2</li>
-      <li>DBTL cycle 4: Magnetic pump test</li>
-    </ul>
-    <p>
-      For our Final Bioreactor Configuration, we also planned to integrate a Pinch Valve and
-      Pressure Sensor, linking them up through code in order to increase the efficiency of
-      Protectant secretion through our Hollow Fiber Membrane. To do this however, we needed
-      to prove that the relationship between measured pressure and flow rate of our
-      bioreactor is linear in order to manage the rest of our bioreactor functions. This test
-      utilized our hollow fiber membrane, T-valves, as well as our Pinch Valve and Pressure
-      Sensors.
-    </p>
-    <p class="note-in-progress ai">
-      Not written yet: the build, results and learnings of the four cycles above, which are
-      the team's outline.
-    </p>
+    <h3><i>3.3</i> <span>Hollow&#8209;Fiber Membrane, Pressure and Flow Control</span></h3>
+    <div class="todo"><b>Unwritten &middot; 3.3 membrane, pressure and flow</b>This track is in the doc's outline only. Its four cycles, below, have titles and no design, build, test or learn text yet. The pressure and flow readings they lead to appear on the operator dashboard of integration cycle&nbsp;1 (<a class="xref" href="#fig-dashboard"></a>).</div>
+
+    <ol class="iters dbtl outline">
+      <li id="hfm1" class="unwritten">
+        <div class="iter-n">01</div>
+        <div class="iter-body">
+          <h4>Pressure transducer</h4>
+          <div class="iter-date">Membrane, pressure and flow &middot; Cycle 1 &middot; outlined</div>
+        </div>
+      </li>
+      <li id="hfm2" class="unwritten">
+        <div class="iter-n">02</div>
+        <div class="iter-body">
+          <h4>Transmembrane pressure and &Delta;P&ndash;Q measurement, round&nbsp;1</h4>
+          <div class="iter-date">Membrane, pressure and flow &middot; Cycle 2 &middot; outlined</div>
+        </div>
+      </li>
+      <li id="hfm3" class="unwritten">
+        <div class="iter-n">03</div>
+        <div class="iter-body">
+          <h4>Flowmeter and &Delta;P&ndash;Q measurement, round&nbsp;2</h4>
+          <div class="iter-date">Membrane, pressure and flow &middot; Cycle 3 &middot; outlined</div>
+        </div>
+      </li>
+      <li id="hfm4" class="unwritten">
+        <div class="iter-n">04</div>
+        <div class="iter-body">
+          <h4>Magnetic pump test</h4>
+          <div class="iter-date">Membrane, pressure and flow &middot; Cycle 4 &middot; outlined</div>
+        </div>
+      </li>
+    </ol>
+    <p class="to-map"><a href="#dbtl-map">&uarr; Back to the cycle map</a></p>
   </section>
 
   <section class="sec" id="sec34">
     <h3><i>3.4</i> Bioreactor Integration</h3>
 
-    <details class="cyc">
-      <summary><span class="cyc-n">Cycle 1</span><span class="cyc-t">Bioreactor v1</span>
-        <span class="cyc-s">ACC deaminase was successfully secreted to the shell side but expression is weak.</span></summary>
-      <div class="cyc-body">
-        <h4>Design</h4>
-        <p>
-          This cycle tests integration, not the optogenetic circuit. ACC deaminase is placed
-          under a constitutive promoter so the strain expresses continuously, which removes
-          light control as a variable. Culture circulates through the lumen side, protectant
-          crosses into the shell side, and cells cannot. Everything else in the loop exists to
-          keep that separation running unattended. A peristaltic pump circulates the culture,
-          a medium reservoir feeds it, the in-line photometer reads OD600 without opening the
-          system, and pressure and flow sensors confirm perfusion holds at the set rate.
-        </p>
-        <h4>Build</h4>
-        <div class="frames two">
-          <figure class="frame"><div class="frame-img"><img src="photos/v1-build-a.webp" width="794" height="1062" alt="Bioreactor v1 inside an incubator: culture bottle on a stirrer, photometer, pumps and tubing, with the dashboard on a laptop above." loading="lazy" decoding="async"></div>
-            <figcaption class="ai">Bioreactor v1 assembled in the incubator.</figcaption></figure>
-          <figure class="frame fit dark"><div class="frame-img"><img src="photos/v1-build-b.webp" width="1400" height="804" alt="The bioreactor's operating dashboard on a laptop: OD trace, pressure and flow readings, and pump and valve controls." loading="lazy" decoding="async"></div>
-            <figcaption class="ai">The operating interface during the run.</figcaption></figure>
+    <ol class="iters dbtl">
+      <li id="int1">
+        <div class="iter-n">01</div>
+        <div class="iter-body">
+          <h4>Bioreactor v1</h4>
+          <div class="iter-date">Integration &middot; Cycle 1 &middot; ACC deaminase under a constitutive promoter</div>
+
+          <h5 class="dbtl-h">Design</h5>
+          <p>
+            This cycle tests integration, not the optogenetic circuit. ACC deaminase is placed under
+            a constitutive promoter so the strain expresses continuously, which removes light control
+            as a variable. Culture circulates through the lumen side, protectant crosses into the
+            shell side, and cells are retained. Everything else in the loop exists to keep that
+            separation running unattended. A peristaltic pump circulates the culture, a medium
+            reservoir feeds it, the in&#8209;line photometer reads OD600 without opening the system,
+            and pressure and flow sensors confirm perfusion holds at the set rate.
+          </p>
+
+
+          <h5 class="dbtl-h">Build</h5>
+          <div class="todo"><b>Unwritten &middot; Build</b>The doc has a Build heading for this cycle and no text yet. Its outline puts three pieces of work here: the bioreactor operation system, versions&nbsp;1 and&nbsp;2; integrating the hollow&#8209;fiber membrane, sensors, pump control and power supply; and a CIP (clean&#8209;in&#8209;place) method.</div>
+          <div class="frames duo">
+            <figure class="frame" id="fig-int1">
+              <div class="frame-img"><img src="photos/int1-setup.webp" alt="The integrated bioreactor loop on a rack, with a laptop above it showing the operator dashboard" loading="lazy" decoding="async"></div>
+              <figcaption><b>Bioreactor v1</b> The integrated loop running, with the dashboard on the laptop above it.</figcaption>
+            </figure>
+            <figure class="frame wide" id="fig-dashboard">
+              <div class="frame-img"><img src="photos/int1-dashboard.webp" alt="The operator dashboard: OD600 over 53 hours, flow rate, and feed, retentate, permeate and transmembrane pressure" loading="lazy" decoding="async"></div>
+              <figcaption><b>Operator dashboard</b> 4 September 2026, 53&nbsp;h into a recording: OD600 with its sample and reference channels, flow rate, and feed, retentate and permeate pressure with the transmembrane pressure computed from them.</figcaption>
+            </figure>
+          </div>
+
+          <h5 class="dbtl-h">Test</h5>
+          <p>
+            Engineered <i>B.&nbsp;subtilis</i> was run in the system and ACC deaminase was secreted
+            across the membrane (<a class="xref" href="#fig-blot"></a>).
+            <span class="todo">run date; the 4 Sep run?</span>
+          </p>
+          <figure class="frame natural" id="fig-blot">
+            <div class="frame-img"><img src="photos/int1-blot.webp" alt="Western blot: lumen-side cell lysate, lumen-side medium and shell-side medium sampled at 14 to 44 hours, with the ACC deaminase band marked at about 42 kDa" loading="lazy" decoding="async"></div>
+            <figcaption><b>Western blot</b> Lumen&#8209;side cell lysate and medium, and shell&#8209;side medium, sampled from 14 to 44&nbsp;h; the ACC deaminase band is marked at ~42&nbsp;kDa. At this size a shell&#8209;side band is faint at best. <span class="todo">which shell&#8209;side lane shows the band</span></figcaption>
+          </figure>
+
+          <h5 class="dbtl-h">Learn</h5>
+          <p>ACC deaminase was successfully secreted to the shell side, but expression is weak.</p>
         </div>
-        <h4>Test</h4>
-        <p>
-          Engineered <i>B.&nbsp;subtilis</i> was run in the system and ACC deaminase was
-          secreted across the membrane.
-        </p>
-        <figure class="frame fit wide-fig"><div class="frame-img"><img src="photos/v1-blot.webp" width="1140" height="456" alt="Protein gel of lumen-side cell lysate, lumen-side medium and shell-side medium at 14 to 44 hours, with a band near 42 kDa marked ACCD." loading="lazy" decoding="async"></div>
-          <figcaption class="ai">Lumen-side cell lysate and medium, and shell-side medium, sampled from 14 to 44 h; the ~42&nbsp;kDa ACCD band is marked.</figcaption></figure>
-        <h4>Learn</h4>
-        <p>ACC deaminase was successfully secreted to the shell side but expression is weak.</p>
-        <h4 class="ai">Also in this cycle</h4>
-        <ul class="plain">
-          <li>Bioreactor operation system v1 and v2</li>
-          <li>Integration of HFM, sensor, pump control, and power supply</li>
-          <li>CIP method</li>
-        </ul>
-      </div>
-    </details>
+      </li>
 
-    <details class="cyc">
-      <summary><span class="cyc-n">Cycle 2</span><span class="cyc-t">Bioreactor v2</span>
-        <span class="cyc-s ai">Not written yet.</span></summary>
-      <div class="cyc-body">
-        <ul class="plain">
-          <li>Bioreactor operation system v3</li>
-          <li>Pressure transductor release valve</li>
-          <li>Automated Luer valve controller</li>
-          <li>Pinch valve</li>
-        </ul>
-        <p class="note-in-progress ai">Not written yet. The list above is the team's outline for this cycle.</p>
-      </div>
-    </details>
+      <li id="int2" class="unwritten">
+        <div class="iter-n">02</div>
+        <div class="iter-body">
+          <h4>Bioreactor v2</h4>
+          <div class="iter-date">Integration &middot; Cycle 2</div>
+          <div class="todo"><b>Unwritten &middot; Bioreactor v2</b>A heading only in the doc. Its outline lists the bioreactor operation system, version&nbsp;3; a release valve for the pressure transducers; an automated Luer valve controller; and the pinch valve.</div>
+        </div>
+      </li>
 
-    <details class="cyc">
-      <summary><span class="cyc-n">Cycle 3</span><span class="cyc-t">Bioreactor v3</span>
-        <span class="cyc-s ai">Not written yet.</span></summary>
-      <div class="cyc-body">
-        <ul class="plain">
-          <li>Light control</li>
-          <li>Inline pH meter</li>
-          <li>Developed UI</li>
-          <li>Biosecurity secondary design</li>
-        </ul>
-        <p class="note-in-progress ai">Not written yet. The list above is the team's outline for this cycle.</p>
-      </div>
-    </details>
-
-    <details class="cyc">
-      <summary><span class="cyc-n">Expert feedback</span><span class="cyc-t">Second meeting with Professor Chang</span>
-        <span class="cyc-s">4 September 2026: 22&nbsp;&deg;C growth, quantifying protectant, and farmer accessibility.</span></summary>
-      <div class="cyc-body">
-        <p>
-          Our team met with Professor Chang Chia-Hsiu (張嘉修) again on 9/4, 2026. This was 3
-          months after the first meeting, which happened during the initiation phase of our
-          project. During this time, we had conducted several experiments already and had
-          built a fully functioning bioreactor with a user interface. The main goal of the
-          meeting was consequently to validate our work and identify ways to improve. It was
-          a valuable chance to make sure we were on the right track and didn&rsquo;t overlook
-          anything.
-        </p>
-        <h4>Bacterial Growth at 22&nbsp;&deg;C</h4>
-        <p>
-          In our test of B.&nbsp;subtilis&rsquo;s growth at 22&nbsp;&deg;C, we observed an
-          inconsistent growth pattern. This problem was also present in the newer experiment
-          with our engineered B.&nbsp;subtilis. Professor Chang raised two possible reasons:
-          the bioreactor was either contaminated, or this could be a characteristic of the
-          strain we chose, and he asked whether we had tested plasmid stability. Professor
-          Chang's main recommendation was thus to repeat the experiment, since this kind of
-          inconsistency is common but hard to explain from a single run. If a repeat trial
-          behaves correctly, that's sufficient confirmation to move forward.
-        </p>
-        <h4>Quantifying Protectant Production</h4>
-        <p>
-          Professor Chang reminded us that judges will likely ask how we confirm protectant
-          release. Since B.&nbsp;subtilis can't produce a fluorescent marker like neon, and
-          true quantification methods may be too costly, we discussed alternatives: a DNPH
-          assay, hydroponic testing, and possibly color-based indicators so farmers could
-          visually gauge bacteria/protectant density themselves. Professor Chang's underlying
-          prompt was for us to think concretely about how we demonstrate that protectants are
-          actually being produced.
-        </p>
-        <h4>Real-World Usage &amp; Farmer Accessibility</h4>
-        <p>
-          On future usage, Professor Chang advised that for realistic deployment we should
-          make the bioreactor more modular and easy to handle. The more farmer-friendly the
-          system is, the more attractive it becomes. Ideally the B.&nbsp;subtilis component
-          would be a simple replaceable capsule, similar to swapping a battery, rather than
-          requiring hands-on technical control. Another point he mentioned is that he felt our
-          current language creates distance from a farmer's perspective. Professor Chang
-          advised simplifying phrasing and tying the project explicitly to the SDG. This way,
-          farmers can better understand why having our bioreactor is a good idea.
-        </p>
-        <p>
-          This meeting was insightful and helpful. Professor Chang not only gave us advice on
-          how to conduct experiments, but also pointed out weak spots we did not identify. He
-          advised us to find a reliable way to quantify protectant production and reframed
-          our presentation to be more farmer-accessible and SDG-linked. With this
-          information, we can make the ReLeaf bioreactor even more effective and accessible,
-          helping us expand our impact.
-        </p>
-      </div>
-    </details>
+      <li id="int3" class="unwritten">
+        <div class="iter-n">03</div>
+        <div class="iter-body">
+          <h4>Bioreactor v3</h4>
+          <div class="iter-date">Integration &middot; Cycle 3</div>
+          <div class="todo"><b>Unwritten &middot; Bioreactor v3</b>A heading only in the doc. Its outline lists light control, an in&#8209;line pH meter, the finished user interface, a secondary biosecurity design and, if one can be added, a dissolved&#8209;oxygen sensor.</div>
+        </div>
+      </li>
+    </ol>
+    <p class="to-map"><a href="#dbtl-map">&uarr; Back to the cycle map</a></p>
   </section>
 
   <!-- ─────────── PART 4 ─────────── -->
-  <section class="part" id="final" data-n="4">
+  <section class="part" id="final-design" data-n="4">
     <div class="part-mark"><span>Part</span><b>4</b></div>
     <h2>Final Design (Lab)</h2>
   </section>
 
+  <section class="sec">
+    <div class="todo"><b>Unwritten &middot; final CAD and prototype photo</b>The doc's outline opens this part with the final CAD of the lab bioreactor and a photograph of the finished prototype. Neither is in the doc yet.</div>
+  </section>
+
   <section class="sec" id="sec41">
     <h3><i>4.1</i> Key Specifications</h3>
-    <p class="sec-lede ai">
-      The specification is still under discussion in the team; the values below are the ones
-      stated in the cycles above and in the assembly guide's parts list.
+    <p>
+      Ten specifications define the lab design. The values below are the ones stated elsewhere
+      in this record and in the draft assembly guide (<a href="#sec62">6.2</a>); where the final
+      design's value is not yet recorded, the row says so.
     </p>
     <div class="table-scroll">
-      <table class="data">
-        <caption>Key specifications</caption>
+      <table class="specs">
+        <caption>Key specifications, lab bioreactor</caption>
+        <thead><tr><th scope="col">Specification</th><th scope="col">As recorded</th></tr></thead>
         <tbody>
-          <tr><th scope="row">Working volume</th><td>300 mL LB in a 500 mL reservoir</td></tr>
-          <tr><th scope="row">Membrane</th><td>PES hollow fiber membrane, 0.2 &micro;m pore</td></tr>
-          <tr><th scope="row">Flow rate</th><td>94 mL/min</td></tr>
-          <tr><th scope="row">Stirring</th><td>200 rpm magnetic stirrer</td></tr>
-          <tr><th scope="row">Tubing</th><td>Biocompatible tubing (BPT)</td></tr>
-          <tr><th scope="row">Temperature</th><td>37 &deg;C (cycle 2); 22 &deg;C growth curve (photometer cycle 5)</td></tr>
-          <tr><th scope="row">Pumps</th><td>BP1000-DNUN64B peristaltic pump, 1 L/min; H0009 liquid pump, 1.5 L/min; CKP-DC-S08, 5 mL/min</td></tr>
-          <tr><th scope="row">Sensors</th><td>In-line photometer, pressure transducers, flow meter, pH sensor, droplet sensor, turbidimeter</td></tr>
-          <tr><th scope="row">LEDs</th><td>3 m green light LED strip</td></tr>
-          <tr><th scope="row">Pressure regulation</th><td>Pinch valve</td></tr>
+          <tr><th scope="row">Working volume</th><td>300&nbsp;mL of LB in a 500&nbsp;mL reservoir, as run in bacteria growth cycles 1&ndash;2 (<a href="#sec31">3.1</a>). The assembly guide's parts list has two 1&nbsp;L reservoirs and a 100&nbsp;mL one. <span class="todo">final working volume</span></td></tr>
+          <tr><th scope="row">Membrane</th><td>PES hollow fiber, 0.2&nbsp;&micro;m pore, ~200&nbsp;mL lumen volume (<a href="#sec25">2.5</a>) <span class="todo">volume, area and fibers disagree</span></td></tr>
+          <tr><th scope="row">Flow rate</th><td>94&nbsp;mL/min on the culture loop, held by the peristaltic pump in cycles 1&ndash;2 (<a href="#sec31">3.1</a>); about 371&nbsp;mL/min on the 4&nbsp;September integration&#8209;v1 dashboard (<a class="xref" href="#fig-dashboard"></a>) <span class="todo">final flow rate</span></td></tr>
+          <tr><th scope="row">Stirring</th><td>Magnetic stirrer and stir bar, 200&nbsp;rpm, in the reservoir, from cycle&nbsp;2 (<a href="#bg2">3.1</a>)</td></tr>
+          <tr><th scope="row">Tubing</th><td>Biocompatible BPT tubing, called for after cycle&nbsp;1 leaked at the pump and still planned after cycle&nbsp;2 (<a href="#sec31">3.1</a>) <span class="todo">whether BPT is fitted; size and supplier</span></td></tr>
+          <tr><th scope="row">Temperature</th><td>37&nbsp;&deg;C for the growth curve on the loop (<a href="#bg2">3.1</a>); 22&nbsp;&deg;C for the 400&nbsp;h photometer run (<a href="#pm5">3.2</a>) <span class="todo">operating temperature</span></td></tr>
+          <tr><th scope="row">Pumps</th><td>BP1000&#8209;DNUN64B electric peristaltic pump, 1&nbsp;L/min; H0009 liquid pump, 1.5&nbsp;L/min; CKP&#8209;DC&#8209;S08, 5&nbsp;mL/min <span class="todo">which line each pump drives</span></td></tr>
+          <tr><th scope="row">Sensors</th><td>In&#8209;line photometer for OD600; feed, retentate and permeate pressure transducers, with transmembrane pressure computed on the dashboard; flow meter; pH sensor; droplet sensor (<a href="#sec52">5.2</a>); a turbidity meter for protectant level, in the doc's user&#8209;manual outline <span class="todo">turbidity meter not yet specified</span></td></tr>
+          <tr><th scope="row">LEDs</th><td>3&nbsp;m green&#8209;light LED strip, switched by the stress prediction to induce expression (<a href="#sec14">1.4</a>). The doc's brochure draft gives green at about 526&nbsp;nm to switch expression on and red at about 670&nbsp;nm to switch it off (CcaS&ndash;CcaR). <span class="todo">intensity at the vessel; the strip's wavelength</span></td></tr>
+          <tr><th scope="row">Pressure regulation</th><td>Pinch valve, outlined for integration cycle&nbsp;2 (<a href="#int2">3.4</a>). Feed, retentate and permeate read about 0.20&nbsp;bar each on the 4&nbsp;September dashboard (<a class="xref" href="#fig-dashboard"></a>). <span class="todo">pinch valve design</span></td></tr>
         </tbody>
       </table>
     </div>
@@ -1188,11 +1336,7 @@
 
   <section class="sec" id="sec42">
     <h3><i>4.2</i> Proof of Concept</h3>
-    <p class="note-in-progress ai">
-      Not written yet. The planned run links stress, sensor, green light, protectant and the
-      hydroponics plate, and reports its flow conditions, temperature, pressure, and
-      starting and final OD.
-    </p>
+    <div class="todo"><b>Unwritten &middot; 4.2 proof of concept</b>A heading only in the doc. Its outline asks for the whole chain in one run &mdash; stress, sensor, green light, protectant and the hydroponic plate &mdash; reported as a demonstrated culture run with its flow conditions, temperature and pressure, and its starting and final OD. One run's flow and pressures are already on record: the 4&nbsp;September integration&#8209;v1 dashboard (<a class="xref" href="#fig-dashboard"></a>) shows about 371&nbsp;mL/min and about 0.20&nbsp;bar on the feed, retentate and permeate lines.</div>
   </section>
 
   <!-- ─────────── PART 5 ─────────── -->
@@ -1201,47 +1345,135 @@
     <h2>Containment &amp; Safety</h2>
   </section>
 
+  <section class="sec">
+    <p class="sec-lede">
+      Making sure synthetic organisms do not enter the wild is a responsibility for everyone
+      working with genetically modified organisms. Biosafety is likewise a top priority for
+      the RELEAF bioreactor.
+    </p>
+  </section>
+
   <section class="sec" id="sec51">
-    <p>
-      Making sure synthetic organisms don&rsquo;t enter the wild is a responsibility for
-      everyone working with genetically modified organisms. Likewise, biosafety is a top
-      priority for the ReLeaf bioreactor.
-    </p>
-    <h3><i>5.1</i> <span>How <i>B.&nbsp;subtilis</i> Is Contained: Cell Size vs. Membrane Pore Size</span></h3>
-    <p>
-      The ReLeaf bioreactor was designed to make sure our bacteria remain contained in the
-      setup. The hollow fiber membrane physically blocks bacteria from leaving the lumen
-      side, since the pore size of the membrane (0.2&nbsp;&micro;m) is much smaller than
-      the cell size of B.&nbsp;subtilis (0.25 to 1.0&nbsp;&micro;m in diameter). To validate
-      this theory, a simple test was conducted. When the bioreactor was running, we
-      collected medium from the lumen and shell sides and plated them. After 24&nbsp;h at
-      37&nbsp;&deg;C, the samples were compared with each other.
-    </p>
-    <figure class="own-num frame fit wide-fig" id="fig-plate"><div class="frame-img"><img src="photos/containment-plates.webp" width="867" height="514" alt="Two LB plates headed Confirmed Bacteria Containment: the lumen side medium plate shows growth, the shell side medium plate shows none." loading="lazy" decoding="async"></div>
-      <figcaption><span class="fignum">Figure 1.</span> Lumen and shell-side bacterial plates.</figcaption></figure>
-    <p>
-      As shown, the hollow fiber membrane is a successful physical barrier to prevent
-      B.&nbsp;subtilis from being released unintentionally into the wild.
-    </p>
-    <aside class="callout ai">
-      <h4>What the pore does not stop</h4>
+    <h3><i>5.1</i> <span>How <span class="sp">B.&nbsp;subtilis</span> Is Contained: Cell Size vs. Membrane Pore Size</span></h3>
+
+    <aside class="keynote">
+      <div class="keynote-fig">0<em>colonies</em></div>
       <p>
-        The fitted membrane is rated 0.2&nbsp;&micro;m. It has no 50&nbsp;kDa
-        molecular&#8209;weight cut&#8209;off and does not retain secreted vesicles. The
-        pore is large enough to pass ACC deaminase, which is its purpose, and so it also
-        passes small vesicles and cell debris. Containment rests on cell size, and the plating above is its evidence.
+        From shell&#8209;side medium, in both platings on record: cycle&nbsp;1, and a
+        lumen&#8209;and&#8209;shell comparison in which the lumen plate grew. The separation the
+        design depends on was tested directly rather than assumed &mdash; see
+        <a class="xref" href="#fig-plate"></a> and <a class="xref" href="#fig-plates"></a>.
       </p>
     </aside>
 
-    <h3><i>5.2</i> Safety Precautions: Leak Prevention</h3>
     <p>
-      The ReLeaf bioreactor has several mechanisms to prevent accidents from happening. For
-      leak prevention, two systems work together. First, a droplet sensor is situated below
-      the entire setup. This sensor notifies the user via the user interface.
+      The RELEAF bioreactor is designed to keep its bacteria inside the setup. The
+      hollow&#8209;fiber membrane is a physical barrier between the lumen side, where the culture
+      circulates, and the shell side, where the product leaves: its pore size,
+      <b>0.2&nbsp;&micro;m</b>, is smaller than the cell diameter of <i>B.&nbsp;subtilis</i>,
+      <b>0.25 to 1.0&nbsp;&micro;m</b> <span class="todo">source for the cell size</span>
+      (<a class="xref" href="#fig-pore"></a>).
     </p>
-    <p class="note-in-progress ai">
-      Not written yet: the second leak system, sterilization and disposal.
+
+    <figure class="chart-fig sizefig" id="fig-pore">
+      <svg class="size-svg" viewBox="0 0 400 304" role="img" aria-labelledby="fig-pore-t">
+        <title id="fig-pore-t">Drawn to scale: a membrane pore 0.2 micrometers wide, with Bacillus subtilis cells of 0.25 and 1.0 micrometer diameter on the lumen side. The smallest cell is wider than the pore; protectant passes through it to the shell side.</title>
+        <text class="sz-side lumen" x="12" y="24">LUMEN SIDE</text>
+        <text class="sz-dim" x="12" y="46"><tspan font-style="italic">B. subtilis</tspan> cells</text>
+        <!-- 1 µm = 160 px: the cells are 40 and 160 px across, the pore 32 px -->
+        <circle class="sz-cell" cx="296" cy="119" r="80"/>
+        <text class="sz-num" x="296" y="118" text-anchor="middle">1.0 µm</text>
+        <text class="sz-dim" x="296" y="138" text-anchor="middle">largest</text>
+        <circle class="sz-cell" cx="136" cy="179" r="20"/>
+        <text class="sz-num" x="136" y="148" text-anchor="middle">0.25 µm</text>
+        <text class="sz-dim" x="136" y="128" text-anchor="middle">smallest</text>
+        <!-- the fiber wall, with one pore -->
+        <rect class="sz-wall" x="-2" y="200" width="122" height="14"/>
+        <rect class="sz-wall" x="152" y="200" width="250" height="14"/>
+        <circle class="sz-prot" cx="131" cy="205" r="2.4"/>
+        <circle class="sz-prot" cx="142" cy="210" r="2.4"/>
+        <circle class="sz-prot" cx="128" cy="244" r="2.4"/>
+        <circle class="sz-prot" cx="141" cy="252" r="2.4"/>
+        <circle class="sz-prot" cx="133" cy="263" r="2.4"/>
+        <text class="sz-prot-l" x="152" y="262">protectant passes</text>
+        <!-- pore width -->
+        <line class="sz-dimline" x1="120" y1="230" x2="152" y2="230"/>
+        <line class="sz-dimline" x1="120" y1="224" x2="120" y2="236"/>
+        <line class="sz-dimline" x1="152" y1="224" x2="152" y2="236"/>
+        <text class="sz-num" x="112" y="235" text-anchor="end">0.2 µm pore</text>
+        <text class="sz-side shell" x="12" y="292">SHELL SIDE</text>
+        <!-- scale bar -->
+        <line class="sz-scale" x1="296" y1="280" x2="376" y2="280"/>
+        <line class="sz-scale" x1="296" y1="274" x2="296" y2="286"/>
+        <line class="sz-scale" x1="376" y1="274" x2="376" y2="286"/>
+        <text class="sz-dim" x="336" y="300" text-anchor="middle">0.5 µm</text>
+      </svg>
+      <figcaption><b>Cell size against pore size</b> Drawn to scale from the figures above: the membrane's 0.2&nbsp;&micro;m pore, and <i>B.&nbsp;subtilis</i> cells at the smallest and largest diameters quoted <span class="todo">source pending</span>. Even the smallest cell is wider than the pore. The wall is not to scale.</figcaption>
+    </figure>
+
+    <p>
+      To test it, medium was collected from the lumen and the shell side while the bioreactor
+      was running, plated, and compared after 24&nbsp;h at 37&nbsp;&deg;C
+      <span class="todo">which run, and its date</span>. Colonies grew from the lumen side and
+      none from the shell side (<a class="xref" href="#fig-plates"></a>): in this test the
+      membrane held <i>B.&nbsp;subtilis</i> on the lumen side &mdash; the physical barrier the design
+      relies on to keep it from being released. Cycle&nbsp;1's plating of
+      2&nbsp;mL of shell&#8209;side medium had the same result.
     </p>
+
+    <figure class="frame natural" id="fig-plates">
+      <div class="frame-img"><img src="photos/containment-plates.webp" width="867" height="430" alt="Two LB agar plates side by side: the lumen-side medium plate has streaks of white colonies, the shell-side medium plate, labeled Bioreactor Biosecurity Test, 24 hr, has none" loading="lazy" decoding="async"></div>
+      <figcaption><b>Lumen and shell&#8209;side plates</b> Medium from each side of the running bioreactor after 24&nbsp;h at 37&nbsp;&deg;C. Colonies grew from the lumen side, where the culture circulates; none grew from the shell side.</figcaption>
+    </figure>
+
+    <p>
+      An earlier version of this specification claimed a 50&nbsp;kDa
+      molecular&#8209;weight cut&#8209;off and stated that the membrane retains secreted
+      membrane vesicles. Neither is correct for the part fitted, which is rated
+      <b>0.2&nbsp;&micro;m</b> &mdash; large enough to pass ACC deaminase, which is its intended
+      function, and therefore large enough to pass small vesicles and cell debris.
+      <b>Containment here rests on cell size alone.</b>
+      The earlier claim was withdrawn in
+      <a href="../notebook/index.html#w18-20">week&nbsp;18</a>.
+    </p>
+
+    <div class="todo"><b>Not on record &middot; replicates</b>How many plates or biological replicates stand behind each plating, and, for cycle&nbsp;1's, the incubation time and temperature. A containment claim needs its <i>n</i>.</div>
+    <div class="todo"><b>Not on record &middot; integrity check</b>Whether a cartridge integrity check &mdash; pressure hold or bubble point &mdash; is run before or after a session. The plates test the barrier on one cartridge at one moment; a broken fiber or a failed seal partway through a run would put culture straight into the harvest stream. Transmembrane&#8209;pressure monitoring (<a href="#sec52">5.2</a>) is designed to flag that during a run.</div>
+  </section>
+
+  <section class="sec" id="sec52">
+    <h3><i>5.2</i> <span>Safety Precautions: Leak Prevention</span></h3>
+    <p>
+      The RELEAF bioreactor carries several safeguards against accidents during operation.
+      Leak prevention relies on two complementary systems: one for liquid escaping the setup,
+      one for faults inside the membrane module.
+    </p>
+    <div class="specgrid two">
+      <div>
+        <h4>External leaks &middot; droplet sensor</h4>
+        <p>A droplet sensor sits beneath the entire setup and detects any liquid escaping from the system. When it senses moisture it alerts the user through the software interface, so the leak can be dealt with before it causes damage or contamination.</p>
+      </div>
+      <div>
+        <h4>Internal faults &middot; transmembrane pressure</h4>
+        <p>The system continuously monitors the transmembrane pressure (TMP) across the hollow&#8209;fiber membrane. A leak or membrane breach reduces the pressure difference between the lumen and shell sides, so an abnormally low TMP is an early sign of a failure, often before any liquid can be seen.</p>
+      </div>
+    </div>
+    <p>
+      Direct physical detection and real&#8209;time pressure monitoring together are designed to
+      give redundant protection: both external leaks and internal membrane faults should be
+      caught quickly, protecting the experiment, the surrounding equipment and the user.
+      <span class="todo">TMP alarm threshold; alarm test</span>
+    </p>
+  </section>
+
+  <section class="sec" id="sec53">
+    <h3><i>5.3</i> Sterilization</h3>
+    <div class="todo"><b>Unwritten &middot; 5.3 Sterilization</b>A heading in the doc's outline. Its assembly&#8209;guide checklist says what belongs here: which parts are autoclaved, which are chemically sterilized and which must never be autoclaved; the autoclave cycle for each (temperature, time, dry or liquid); which sub&#8209;assemblies go together before autoclaving and which after; the tubing and filter specifications, with the 0.22&nbsp;&micro;m vent filter's placement; and the aseptic connections for inoculation and sampling.</div>
+  </section>
+
+  <section class="sec" id="sec54">
+    <h3><i>5.4</i> Disposal</h3>
+    <div class="todo"><b>Unwritten &middot; 5.4 Disposal</b>A heading in the doc's outline. Its checklist asks for post&#8209;run decontamination and disposal, and its user&#8209;manual outline has a section on disposing of the device. Neither is written yet.</div>
   </section>
 
   <!-- ─────────── PART 6 ─────────── -->
@@ -1254,168 +1486,289 @@
     <h3><i>6.1</i> Materials List</h3>
     <div class="table-scroll">
       <table class="bom" data-summary="off">
-        <caption>Bioreactor components, lab use</caption>
+        <caption>Bioreactor components</caption>
         <thead>
-          <tr><th scope="col">Component</th><th class="num" scope="col">Quantity</th><th class="num" scope="col">Price (NTD)</th><th class="num" scope="col">USD</th></tr>
+          <tr><th scope="col">Component</th><th class="num" scope="col">Qty</th><th class="num" scope="col">Cost (TWD)</th></tr>
         </thead>
         <tbody>
-          <tr><td>Magnetic Stir Bar</td><td class="num">1</td><td class="num">120</td><td class="num">3.78</td></tr>
-          <tr><td>Spectrophotometer</td><td class="num">1</td><td class="num">14,000</td><td class="num">441.36</td></tr>
-          <tr><td>Pump</td><td class="num">4</td><td class="num">2,500</td><td class="num">78.81</td></tr>
-          <tr><td>Pressure Sensor</td><td class="num">3</td><td class="num">1,800</td><td class="num">56.75</td></tr>
-          <tr><td>Hollow Fiber Membrane</td><td class="num">1</td><td class="num">7,800</td><td class="num">245.90</td></tr>
-          <tr><td>Sampler</td><td class="num">1</td><td class="num">400</td><td class="num">12.61</td></tr>
-          <tr><td>Air filter</td><td class="num">1</td><td class="num">300</td><td class="num">9.46</td></tr>
-          <tr><td>Luer Valve</td><td class="num">6</td><td class="num">180</td><td class="num">5.67</td></tr>
-          <tr><td>Reservoir</td><td class="num">2</td><td class="num">180</td><td class="num">5.67</td></tr>
-          <tr><td>Flow meter</td><td class="num">1</td><td class="num">350</td><td class="num">11.03</td></tr>
-          <tr><td>Luer Lock</td><td class="num">20</td><td class="num">400</td><td class="num">12.61</td></tr>
-          <tr><td>pH sensor</td><td class="num">1</td><td class="num">2,450</td><td class="num">77.24</td></tr>
+          <tr><td>Hollow-fiber membrane</td><td class="num">1</td><td class="num">7,800</td></tr>
+          <tr><td>Pump</td><td class="num">4</td><td class="num">2,500</td></tr>
+          <tr><td>Pressure sensor</td><td class="num">3</td><td class="num">1,800</td></tr>
+          <tr><td>pH sensor</td><td class="num">1</td><td class="num">2,450</td></tr>
+          <tr><td>Flow meter</td><td class="num">1</td><td class="num">350</td></tr>
+          <tr><td>Sampler</td><td class="num">1</td><td class="num">400</td></tr>
+          <tr><td>Air filter</td><td class="num">1</td><td class="num">300</td></tr>
+          <tr><td>Reservoir</td><td class="num">2</td><td class="num">180</td></tr>
+          <tr><td>Magnetic stir bar</td><td class="num">1</td><td class="num">120</td></tr>
+          <tr><td>Luer valve</td><td class="num">5</td><td class="num">150</td></tr>
+          <tr><td>Luer lock</td><td class="num">20</td><td class="num">400</td></tr>
+        </tbody>
+        <tbody class="bom-ref">
+          <tr><td>Spectrophotometer <span class="ref-note">(reference, not built in)</span></td><td class="num">1</td><td class="num">14,000</td></tr>
         </tbody>
         <tfoot>
-          <tr><th scope="row">Sum (must-have parts)</th><td></td><td class="num">30,480</td><td class="num">960.91</td></tr>
-          <tr><th scope="row">Optional: DO sensor</th><td class="num">1</td><td class="num">6,000</td><td class="num">189.16</td></tr>
+          <tr><td>Parts total</td><td></td><td class="num">16,450</td></tr>
+          <tr class="bom-sheet"><td>Sheet total, with the reference spectrophotometer</td><td></td><td class="num">30,450</td></tr>
         </tfoot>
       </table>
     </div>
-    <p class="fineprint ai">
-      From the team's Bioreactor Cost Sheet (lab-use version). The sheet's Sum is the total
-      of the price column as entered; whether each price is per unit or per line is not
-      stated. The detailed cost analysis sits in the
-      <a href="../../entrepreneurship/">business plan</a>.
+    <p class="fineprint">
+      Costs are as entered on the team's component sheet, in New Taiwan dollars. The sheet does not
+      say whether a price is per unit or per line, and its total adds the column &mdash; about US$960
+      at the sheet's own conversion. The spectrophotometer is the
+      reference instrument the photometer is checked against, not a part of the build: without it the
+      parts come to NT$16,450.
     </p>
+    <div class="todo"><b>Not on record &middot; materials list</b>Suppliers, part numbers and dimensions for every row, as the doc's outline asks, with the total carried into the business plan's cost analysis. The list also has to be reconciled with the doc's assembly guide and parts table: they name three pumps where this sheet costs four; list four pressure transducers where it has three; need five filters (one per membrane segment, plus one) where it costs one air filter, and twelve Luer valves (two per segment, plus four) where it costs five; and add parts it does not cost &mdash; a droplet sensor, a pinch valve, a flow cuvette, a 100&nbsp;mL reservoir and a 3&nbsp;m green LED strip. The team wiki shows a newer sheet (six Luer valves at NT$180, total NT$30,480, a DO sensor optional at NT$6,000); confirm which is current.</div>
+  </section>
+
+  <section class="sec" id="sec62">
     <h3><i>6.2</i> Assembly Guide and Brochure</h3>
+    <div class="todo"><b>In progress &middot; assembly guide and brochure</b>The doc marks both as in progress. Below is the team's working draft of the guide's first stages &mdash; the four membrane segments, their leak check and the start of the main assembly &mdash; shown as a draft, not yet a build guide. What is still blank, and what does not yet agree with the rest of this record, is listed under each part. The photometer's own build is on the <a href="../photometer/index.html">photometer page</a>.</div>
 
-    <h4>In-Lumen, In-Shell, Out-Lumen and Out-Shell segments</h4>
-    <p>Get materials, for each of the four segments:</p>
-    <ul class="plain">
-      <li>1x Filter</li>
-      <li>7.5&nbsp;cm of <span class="pending s"></span> tubing</li>
-      <li>2x Luer Valves</li>
-      <li>Pressure transducer</li>
-      <li>Wiring</li>
-    </ul>
-    <ol class="steps">
-      <li>Cut the tubing into 3 sections of lengths A (<span class="pending s"></span>),
-        B (<span class="pending s"></span>), and C (<span class="pending s"></span>).</li>
-      <li>Connect the sections to the luer valve as follows:
+    <div class="asm-draft">
+    <p class="asm-draft-tag">Working draft</p>
+    <h4>The four membrane segments</h4>
+    <p>
+      One segment connects each of the membrane's four ports &mdash; In&#8209;Lumen, In&#8209;Shell,
+      Out&#8209;Lumen and Out&#8209;Shell &mdash; and all four are built the same way.
+    </p>
+    <div class="asm">
+      <div class="asm-kit">
+        <h5>For each segment</h5>
         <ul>
-          <li>A &rarr; left</li>
-          <li>B &rarr; middle</li>
-          <li>C &rarr; right</li>
-        </ul></li>
-      <li>Attach the middle section (B) to the filter</li>
-      <li>Attach the left section (A) to the pressure transducer</li>
-      <li>Attach the right section (C) to the middle port of the second luer valve</li>
-    </ol>
-    <h4>Verification test</h4>
-    <ol class="steps">
-      <li>Turn the handle on the second valve such that the middle handle lands on the right
-        port (closes left pathway). Hold the right port facing up and feed water into it
-        using a dropper (3 to 5 drops).
-        <ul>
-          <li>Slowly rotate the handle on the center valve and note any leaks.</li>
-          <li>Leakage may result from loose or damaged tubing and a broken luer valve, so
-            check the tubing and replace the valve if leaking persists</li>
-        </ul></li>
-    </ol>
+          <li>1&times; filter</li>
+          <li>7.5&nbsp;cm of tubing</li>
+          <li>2&times; Luer valves</li>
+          <li>1&times; pressure transducer</li>
+          <li>Wiring</li>
+        </ul>
+      </div>
+      <ol class="asm-steps">
+        <li>Cut the tubing into three sections, A, B and C.</li>
+        <li>Connect the sections to the first Luer valve: A to the left port, B to the middle, C to the right.</li>
+        <li>Attach the middle section (B) to the filter.</li>
+        <li>Attach the left section (A) to the pressure transducer.</li>
+        <li>Attach the right section (C) to the middle port of the second Luer valve.</li>
+      </ol>
+    </div>
+    <div class="todo"><b>Blanks in this part of the draft</b>The tubing type, the wire type, and the lengths of sections A, B and C.</div>
+    <aside class="callout check">
+      <h4>Check before going on: leak test</h4>
+      <p>
+        Turn the handle of the second valve so that it points at the right port, closing the left
+        pathway. Hold the right port facing up and feed 3&ndash;5 drops of water into it with a
+        dropper, then slowly rotate the handle of the center valve <span class="todo">which valve</span> and watch for leaks. A leak
+        comes from loose or damaged tubing or a broken Luer valve: check the tubing, and replace
+        the valve if the leak persists.
+      </p>
+    </aside>
 
-    <h4>Part synthesis</h4>
-    <p>Get materials:</p>
-    <ul class="plain">
-      <li>Tubing, <span class="pending s"></span></li>
-      <li>1x BP1000-DNUN64B Electric Peristaltic Pump, 1 L/min</li>
-      <li>1x H0009 Liquid Pump, 1.5 L/min</li>
-      <li>1x CKP-DC-S08, 5 mL/min</li>
-      <li>1x Flow Cuvette</li>
-      <li>1x pH Sensor</li>
-      <li>1x Magnetic Stirrer + Stirrer Bar</li>
-      <li>1x Droplet Sensor</li>
-      <li>1x Filter</li>
-      <li>1x Flow Meter</li>
-      <li>2x 1L Reservoir</li>
-      <li>1x 100mL Reservoir</li>
-      <li>1x 3m Green Light LED strip</li>
-      <li>4x Luer Valve</li>
-      <li>1x Pair of Gloves</li>
-    </ul>
-    <ol class="steps">
-      <li>Put on the gloves</li>
-      <li>Gather the In-Lumen, In-Shell, Out-Lumen, and Out-Shell segments of the bioreactor
-        and attach each of them to one side of the Hollow Fiber Membrane as shown in the
-        image.</li>
-      <li>Connect the other side of the In-Shell to one end of the flow cuvette using a
-        3 inch long tube, ensuring a tight fit by tugging on the tube and the other end of
-        the flow cuvette (be careful, do not break the flow cuvette)</li>
-      <li>Connect a 2 inch long tube to the &ldquo;In&rdquo; of the flow meter (the side that
-        the arrow is pointing away from)</li>
-      <li>Connect the other side of the flow meter to the &ldquo;In&rdquo; of the
-        BP1000-DNUN64B Electric Peristaltic Pump (the Left side of the pump) with a 4 inch
-        long tube.</li>
-      <li>Connect the &ldquo;Out&rdquo; of the BP1000-DNUN64B Electric Peristaltic Pump to a
-        head hold in the Shell-side reservoir (one of the 1L reservoirs) with a 6 inch long
-        tube.</li>
-      <li>Attach a ~3 inch long tube on the inner side of that same head&rsquo;s hole such
-        that the tube reaches near the bottom of the reservoir without standing in the way of
-        the very center of the reservoir (where the magnetic stir bar will be) and without
-        pressing up against the reservoir wall so that liquid can&rsquo;t escape.
+    <h4>Main assembly</h4>
+    <div class="asm">
+      <div class="asm-kit">
+        <h5>Materials</h5>
         <ul>
-          <li>Assemble with the cap off of the reservoir and do checks after reattaching the
-            cap.</li>
-        </ul></li>
-      <li>Connect a 2 inch long tube from the &ldquo;Out&rdquo; of a filter and attach it to
-        another head hold on the Shell-side reservoir. This one doesn&rsquo;t require another
-        tube on the inner side because its role is purely to allow for oxygen and gas to pass
-        into the system without affecting sterility.</li>
-    </ol>
-    <p class="note-in-progress ai">
-      Not written yet: the remaining part-synthesis steps, the sterility run, the debug and
-      repair section, and the brochure.
-    </p>
-    <p class="ai">
-      The photometer's own step-by-step assembly (wiring, crimping and print settings) is
-      already written up on the <a href="../photometer/#reproduction">photometer page</a>.
-    </p>
+          <li>Tubing</li>
+          <li>1&times; BP1000&#8209;DNUN64B electric peristaltic pump, 1&nbsp;L/min</li>
+          <li>1&times; H0009 liquid pump, 1.5&nbsp;L/min</li>
+          <li>1&times; CKP&#8209;DC&#8209;S08 pump, 5&nbsp;mL/min</li>
+          <li>1&times; flow cuvette</li>
+          <li>1&times; pH sensor</li>
+          <li>1&times; magnetic stirrer and stir bar</li>
+          <li>1&times; droplet sensor</li>
+          <li>1&times; filter</li>
+          <li>1&times; flow meter</li>
+          <li>2&times; 1&nbsp;L reservoirs</li>
+          <li>1&times; 100&nbsp;mL reservoir</li>
+          <li>1&times; 3&nbsp;m green&#8209;light LED strip</li>
+          <li>4&times; Luer valves</li>
+          <li>1 pair of gloves</li>
+        </ul>
+      </div>
+      <ol class="asm-steps">
+        <li>Put on the gloves.</li>
+        <li>Attach the In&#8209;Lumen, In&#8209;Shell, Out&#8209;Lumen and Out&#8209;Shell segments each to its own side of the hollow&#8209;fiber membrane.</li>
+        <li class="asm-flag">Connect the other end of the In&#8209;Shell segment to one end of the flow cuvette with a 3&#8209;inch tube. Tug the tube and the cuvette's other end to check the fit &mdash; gently, as the flow cuvette breaks.</li>
+        <li>Connect a 2&#8209;inch tube to the &ldquo;In&rdquo; of the flow meter, the side the arrow points away from.</li>
+        <li>Connect the other side of the flow meter to the &ldquo;In&rdquo; of the BP1000&#8209;DNUN64B pump, its left side, with a 4&#8209;inch tube.</li>
+        <li class="asm-flag">Connect the &ldquo;Out&rdquo; of the pump to a hole in the cap of the shell&#8209;side reservoir, one of the 1&nbsp;L reservoirs, with a 6&#8209;inch tube.</li>
+        <li class="asm-flag">On the inner side of the same hole, attach a ~3&#8209;inch tube that reaches near the bottom of the reservoir, clear of the center, where the stir bar turns, and not pressed against the wall. Assemble with the cap off, and check again once the cap is back on.</li>
+        <li class="asm-flag">Connect a 2&#8209;inch tube from the &ldquo;Out&rdquo; of a filter to another hole in the cap of the shell&#8209;side reservoir. It needs no inner tube: its only job is to let oxygen and gas into the system without affecting sterility.</li>
+      </ol>
+    </div>
+    <div class="todo"><b>To confirm &middot; main assembly</b><ul>
+      <li><b>Lumen or shell.</b> Steps&nbsp;3 and 6&ndash;8, numbered in orange, put the flow cuvette and the stirred culture reservoir on the shell side: In&#8209;Shell to the cuvette, then a &ldquo;shell&#8209;side reservoir&rdquo; with the stir bar and the vent filter. The rest of this record puts the culture and the photometer on the lumen side (<a href="#sec25">2.5</a>, <a href="#sec51">5.1</a>). Build from these steps only once the team has settled which side is which.</li>
+      <li><b>Blanks.</b> The tubing's length and type, and the photo step&nbsp;2 refers to.</li>
+    </ul></div>
+    </div>
+    <div class="todo"><b>Unwritten &middot; the rest of the guide</b>The draft stops after step&nbsp;8, at &ldquo;Next,&rdquo;. Still to write: the remaining connections, the pinch&#8209;valve build and its check, the verification and sterility run, the debug&#8209;and&#8209;repair section, the step&#8209;by&#8209;step photos or diagrams the outline asks for, and the product brochure.</div>
+  </section>
+
+  <section class="sec" id="sec63">
+    <h3><i>6.3</i> Culture and Medium</h3>
+    <div class="specgrid">
+      <div><h4>Organism</h4><p><i>B.&nbsp;subtilis</i> 168; engineered strains in the 400&nbsp;h run and integration v1</p></div>
+      <div><h4>Medium</h4><p>LB, <b>300 mL</b> working volume</p></div>
+      <div><h4>Inoculum</h4><p><b>20 mL</b> multi&#8209;overnight liquid culture</p></div>
+      <div><h4>Temperature</h4><p><b>37&nbsp;&deg;C</b> in growth cycle&nbsp;2; <b>22&nbsp;&deg;C</b> for the 400&nbsp;h photometer run</p></div>
+    </div>
+  </section>
+
+  <section class="sec" id="sec64">
+    <h3><i>6.4</i> Design Files</h3>
+    <div class="todo"><b>Unwritten &middot; 6.4 Design files</b>The doc's outline ends Reproduction with downloadable design files: the CAD, dimensions and component drawings. Its assembly&#8209;guide checklist adds the native CAD with open exports (STEP, STL), print settings for every printed part, and the bill of materials as a downloadable CSV. None is published yet.</div>
+  </section>
+
+  <section class="sec" id="sec65">
+    <h3><i>6.5</i> Scale&#8209;Up</h3>
+    <div class="todo"><b>Unwritten &middot; 6.5 Scale&#8209;up</b>A heading in the doc's outline, with no text yet.</div>
   </section>
 
   <!-- ─────────── PART 7 ─────────── -->
-  <section class="part" id="future" data-n="7">
+  <section class="part" id="outlook" data-n="7">
     <div class="part-mark"><span>Part</span><b>7</b></div>
     <h2>Limitations &amp; Future Plans</h2>
   </section>
 
   <section class="sec" id="sec71">
+    <h3><i>7.1</i> What This Reactor Has Actually Shown</h3>
+    <div class="score">
+      <div class="score-head">
+        <span>Each result below comes from the build that produced it; the builds still to come are outlined in <a href="#sec33">3.3</a> and <a href="#sec34">3.4</a>.</span>
+      </div>
+      <div class="score-cols">
+        <div class="score-col yes">
+          <h4>Demonstrated</h4>
+          <ul>
+            <li><b>No <i>B.&nbsp;subtilis</i> found on the shell side (two platings).</b> Shell-side medium
+              plated on LB agar produced no colonies, in cycle&nbsp;1 and again beside a lumen&#8209;side
+              plate that grew.
+              <cite>Bacteria growth, cycle 1 &middot; <a href="#sec51">5.1 Containment</a> &middot; two platings</cite></li>
+            <li><b>ACC deaminase reaches the shell side.</b> Engineered <i>B.&nbsp;subtilis</i> in the
+              integrated loop secreted it across the membrane, with weak expression.
+              <span class="todo">the shell&#8209;side band is faint</span>
+              <cite><a href="#int1">Integration, cycle 1</a> &middot; western blot</cite></li>
+            <li><b>The culture reached plateau in the reactor.</b> It did so faster than the
+              flask arm run alongside it, on a comparison that is not controlled.
+              <cite><a href="#bg2">Bacteria growth, cycle 2</a> &middot; see the caveat there</cite></li>
+            <li><b>The photometer needs no calibration transform.</b> Raw readings of a TiO<sub>2</sub>
+              standard agree with the BioDrop across two separate runs.
+              <cite><a href="#pm6">Photometer, cycle 6</a></cite></li>
+            <li><b>The loop runs closed.</b> OD is read in line, so the vessel is not
+              opened to produce the OD trace.
+              <cite><a href="#sec25">2.5 How the Loop Is Laid Out</a></cite></li>
+            <li><b>A wrong claim was found and withdrawn.</b> The 50&nbsp;kDa cut-off and
+              the vesicle claim were checked against the part actually bought.
+              <cite><a href="../notebook/index.html#w18-20">Week 18</a></cite></li>
+          </ul>
+        </div>
+        <div class="score-col no">
+          <h4>Not established</h4>
+          <ul>
+            <li><b>How much product is in the harvest stream.</b> The blot shows ACC deaminase on the
+              shell side, weakly; no concentration or transfer rate has been measured.
+              <cite><a href="#sec72">7.2 Open Parameters</a> &middot; transfer rate open</cite></li>
+            <li><b>Containment with an <i>n</i>.</b> Two platings, with no replicate count stated for
+              either, and no incubation conditions for the first.
+              <cite><a href="#sec51">5.1 Containment</a> &middot; and the pore passes vesicles and debris</cite></li>
+            <li><b>The flask comparison as a controlled test.</b> Flask volume, inoculum
+              and shaking speed are unstated, and prototype&nbsp;II changed three variables at once.
+              <cite><a href="#bg2">Bacteria growth, cycle 2</a> &middot; stirring not proven on its own</cite></li>
+            <li><b>Why either arm plateaus where it does.</b> No aeration path is
+              described for the cycle&nbsp;2 rig (the later assembly draft adds a vent filter,
+              <a href="#sec62">6.2</a>), and dissolved oxygen was not measured, so oxygen
+              limitation is not excluded.
+              <cite><a href="#bg2">Cycle 2</a> &middot; oxygen not measured</cite></li>
+            <li><b>Membrane integrity over a run.</b> The platings test the barrier at a moment.
+              Transmembrane&#8209;pressure monitoring is designed to flag a breach during a run, but no
+              alarm test or cartridge integrity check is recorded.
+              <cite><a href="#sec52">5.2 Leak prevention</a> &middot; the barrier is the only containment stage</cite></li>
+            <li><b>Continuous operation.</b> No medium feed was fitted in integration v1, so
+              volume taken off on the shell side was not replaced. The final parts list adds a
+              5&nbsp;mL/min pump and a 100&nbsp;mL reservoir, but not what they feed.
+              <cite><a href="#int1">Integration, cycle 1</a> &middot; a refill mechanism is future work, <a href="#refill">7.4</a></cite></li>
+            <li><b>Fouling and service life.</b> Transmembrane pressure is now logged, but no fouling
+              trend over a multi&#8209;day run has been reported.
+              <cite>Highest-priority open parameter</cite></li>
+            <li><b>Field temperature on the membrane loop.</b> Cycle&nbsp;1 ran at room temperature
+              and ended early; the growth curve on the loop is at 37&nbsp;&deg;C.
+              <cite><a href="#bg1">Bacteria growth, cycle 1</a></cite></li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="sec" id="sec72">
+    <h3><i>7.2</i> Open Parameters</h3>
+    <div class="params">
+      <article class="param prio">
+        <div class="param-head"><h4>Membrane fouling</h4><span class="tag hot">Highest priority</span></div>
+        <p>
+          A cake of retained cells, plus protein and debris, accumulating on the lumen wall will reduce flux
+          and eventually protectant transfer. No fouling measurement has been made
+          over a long run, and it is the most likely limit on service life.
+        </p>
+        <div class="openitem tight"><span class="openitem-tag">Needs</span><p>Transmembrane pressure logged across a multi&#8209;day run &mdash; the feed, retentate and permeate transducers that give it are now fitted.</p></div>
+      </article>
+      <article class="param">
+        <div class="param-head"><h4>Protectant transfer rate</h4><span class="tag">Open</span></div>
+        <p>How fast product crosses into the shell side, and whether it, not growth, sets system throughput. The blot shows that it crosses, not how fast.</p>
+        <div class="openitem tight"><span class="openitem-tag">Needs</span><p>Shell&#8209;side concentration against time.</p></div>
+      </article>
+      <article class="param">
+        <div class="param-head"><h4>Field temperature</h4><span class="tag">Open</span></div>
+        <p>The growth curve on the membrane loop is at 37&nbsp;&deg;C. The device will run near 22&nbsp;&deg;C.</p>
+        <div class="openitem tight"><span class="openitem-tag">Needs</span><p>A 22&nbsp;&deg;C growth curve on the membrane loop.</p></div>
+      </article>
+      <article class="param">
+        <div class="param-head"><h4>Run duration</h4><span class="tag">Open</span></div>
+        <p>The longest recording known to have the membrane module fitted is about two days (53&nbsp;h, integration cycle&nbsp;1). The 400&nbsp;h photometer record was drawn from the bioreactor loop, in the doc's words. <span class="todo">whether the membrane was fitted</span> Field use implies weeks.</p>
+        <div class="openitem tight"><span class="openitem-tag">Needs</span><p>An extended run with the membrane module fitted and the photometer logging throughout.</p></div>
+      </article>
+    </div>
+  </section>
+
+  <section class="sec" id="sec73">
+    <h3><i>7.3</i> What Would Make This Deployable</h3>
+    <ul class="checks">
+      <li><b>A multi-day run</b> with the photometer logging continuously, to establish that the loop is stable over the timescale a field deployment needs.</li>
+      <li><b>A fouling curve</b> from transmembrane pressure, turning a two&#8209;day run with the membrane into a stated service interval.</li>
+      <li><b>22&nbsp;&deg;C kinetics</b>, so the throughput claim reflects field conditions rather than an incubator.</li>
+      <li><b>Replicated containment plating</b> with a stated <i>n</i>, so the safety claim carries a number.</li>
+      <li><b>A costed BOM</b> against a named commercial perfusion system.</li>
+    </ul>
+  </section>
+
+  <section class="sec" id="sec74">
+    <h3><i>7.4</i> Future Plans</h3>
     <p>
-      Due to a constrained timescale, our team wasn&rsquo;t able to complete all of the
-      dreams we had in mind. The main two goals that we had were the 3-Chamber Bioreactor
-      concept, as well as our quick-slot <i>B.&nbsp;subtilis</i> and medium refill
-      mechanism.
+      With a constrained timescale, the team could not complete everything it had in mind. The two
+      main goals still open are the three&#8209;chamber bioreactor and a quick&#8209;slot
+      <i>B.&nbsp;subtilis</i> and medium refill mechanism.
     </p>
-    <h3><i>7.1</i> Three-Chamber Concept</h3>
+
+    <h4 id="three-chamber">Three&#8209;chamber concept</h4>
     <p>
-      Our 3-Chamber Bioreactor concept arose when we were researching protectants to be
-      produced and excreted by our <i>Bacillus subtilis</i>. We didn&rsquo;t narrow our
-      search to just one, however; we actually broadened our focus to 3 main protectants:
-      ACC deaminase, LEA peptide, and BoPep. These 3 protectants became the framework for
-      our hardware designs.
-    </p>
-    <p>
-      These protectants target different types and combinations of plant stress, making it
-      important for small-scale farmers to have direct access to all three, rather than
-      having to merely choose one. This led us to come up with a 3 chamber concept in which
-      green light and red light would turn on in these isolated compartments to determine
-      what protectant would be produced and secreted to be spread out to their plants.
+      The three&#8209;chamber concept arose while we were researching which protectants our
+      <i>B.&nbsp;subtilis</i> should produce and secrete. Rather than narrowing the search to one,
+      we broadened it to three: <b>ACC deaminase</b>, <b>LEA peptide</b> and <b>BoPep4</b>. These
+      three protectants became the framework for our hardware designs.
     </p>
     <p>
-      The requirements for this hardware that we were not yet able to complete were
-      designing a fully sterile, modular, compartment system that was easily reproducible.
-      The difficulties were that 3D prints we used are unable to be completely waterproof,
-      limiting the ease of production and testing.
+      They target different types and combinations of plant stress, so a small&#8209;scale farmer
+      is better served by direct access to all three than by having to choose one. That led to a
+      concept of three isolated compartments, in which green and red light switch on to determine
+      which protectant is produced and secreted for the plants.
     </p>
     <p>
-      However, we have designed 3D model concepts through CAD to express the viability of
-      this design idea.
+      What we could not yet complete is a fully sterile, modular compartment system that is easy
+      to reproduce: the 3D prints we used cannot be made completely waterproof, which limits how
+      easily the chambers can be produced and tested. We have instead designed the concept in CAD,
+      to show that the idea is viable.
     </p>
+
     <figure class="triple feature" id="triple">
       <div class="feature-tag">The packaged design</div>
       <div class="triple-stage">
@@ -1433,50 +1786,67 @@
           <button type="button" data-seek="0.82">3</button>
         </div>
       </div>
-      <figcaption class="ai">
+      <figcaption>
         <b>Three-channel package</b> The lid lifts, the front window clears, and the camera
-        moves down the three chambers in turn. Nothing here has been built: it is the
+        moves down the three chambers in turn. Nothing here has been built &mdash; it is the
         packaged arrangement the single&#8209;channel prototype is a step toward, drawn from
         the CAD, and it shows the volume the whole thing would have to fit in.
       </figcaption>
     </figure>
-    <h3><i>7.2</i> <span><i>B.&nbsp;subtilis</i> and Medium Refill Mechanism</span></h3>
-    <p class="note-in-progress ai">
-      Planned, not yet drawn. Professor Chang's suggestion of a replaceable culture capsule,
-      swapped like a battery (3.4), is the direction.
-    </p>
+
+    <h4 id="refill">Quick&#8209;slot <i>B.&nbsp;subtilis</i> and medium refill</h4>
+    <div class="todo"><b>Unwritten &middot; refill mechanism</b>The second future goal: a quick&#8209;slot mechanism for refilling the bioreactor with <i>B.&nbsp;subtilis</i> and fresh medium. The doc's paragraph on it stops after its first words, and the CAD or animation its outline asks for is not made yet.</div>
   </section>
 
   <!-- ─────────── PART 8 ─────────── -->
-  <section class="part" id="parts" data-n="8">
+  <section class="part" id="structural-parts" data-n="8">
     <div class="part-mark"><span>Part</span><b>8</b></div>
     <h2>Structural Parts</h2>
   </section>
 
   <section class="sec" id="sec81">
-    <div class="rel-strip">
-      <a class="rel-card" href="../photometer/">
-        <span class="rel-n">Structural part</span><b>Photometer</b>
-        <span class="rel-note ai">its own page: optics, CAD, electronics and assembly</span>
+    <p class="sec-lede">
+      The reassembly deep&#8209;dive: each structural part of the bioreactor will have a brief
+      explanation and its CAD. Only the photometer's is written so far.
+    </p>
+    <div class="sparts">
+      <a class="spart" href="../photometer/index.html">
+        <span class="spart-k">Own page</span>
+        <h4>Photometer</h4>
+        <p>The in&#8209;line OD600 photometer, part by part. Its design&ndash;build&ndash;test&ndash;learn cycles are in <span class="nowrap">3.2</span> above.</p>
+        <span class="spart-go" aria-hidden="true">&rarr;</span>
       </a>
-      <div class="rel-card">
-        <span class="rel-n">Structural part</span><b>Flow rate &amp; sensor</b>
-        <span class="rel-note ai">not written yet</span>
+      <div class="spart is-todo">
+        <span class="spart-k">Unwritten</span>
+        <h4>Flow rate &amp; sensor</h4>
+        <p><span class="todo">brief explanation and CAD</span></p>
       </div>
-      <div class="rel-card">
-        <span class="rel-n">Structural part</span><b>Pump control</b>
-        <span class="rel-note ai">not written yet</span>
+      <div class="spart is-todo">
+        <span class="spart-k">Unwritten</span>
+        <h4>Pump control</h4>
+        <p><span class="todo">brief explanation and CAD</span></p>
       </div>
-      <div class="rel-card">
-        <span class="rel-n">Structural part</span><b>Pressure transducer</b>
-        <span class="rel-note ai">not written yet</span>
+      <div class="spart is-todo">
+        <span class="spart-k">Unwritten</span>
+        <h4>Pressure transducer</h4>
+        <p><span class="todo">brief explanation and CAD</span></p>
       </div>
     </div>
   </section>
 
+  <!-- ─────────── PART 9 ─────────── -->
+  <section class="part" id="references" data-n="9">
+    <div class="part-mark"><span>Part</span><b>9</b></div>
+    <h2>References</h2>
+  </section>
+
+  <section class="sec" id="sec91">
+    <div class="todo"><b>Unwritten &middot; references</b>The doc's References heading is empty. Statements on this page that need a source include the <i>B.&nbsp;subtilis</i> cell diameter of 0.25&ndash;1.0&nbsp;&micro;m (<a href="#sec51">5.1</a>); <i>B.&nbsp;subtilis</i> 168 as well characterized, industrially proven and native to the rhizosphere (<a href="#sec12">1.2</a>); peptides degrading in storage and needing a cold chain (<a href="#sec13">1.3</a>); and, in <a href="#pm6">photometer cycle&nbsp;6</a>, the iGEM SiO<sub>2</sub> standard for OD600 calibration, TiO<sub>2</sub> performing like SiO<sub>2</sub> in 1% SDS, and scattering rising linearly with the mass of an inert particle.</div>
+  </section>
+
   <!-- Reading one instrument used to be a dead end: the only way out was back
        to the hub, so anyone comparing the three had to go up and down twice.
-       These carry the instrument's own colour, so the jump is legible before
+       These carry the instrument's own color, so the jump is legible before
        it is read. -->
   <nav class="onward" aria-label="The other instruments">
       <a class="onward-card onward-photometer" href="../photometer/index.html">
@@ -1487,7 +1857,7 @@
       </a>
       <a class="onward-card onward-diopal" href="../diopal/index.html">
         <span class="onward-k">Next instrument</span>
-        <b>DiOPAL</b>
+        <b>LPA</b>
         <span class="onward-role">Dual-wavelength LED array</span>
         <i aria-hidden="true">&rarr;</i>
       </a>
@@ -1499,7 +1869,7 @@
       </a>
   </nav>
 
-  <footer class="doc-foot">
+  <footer class="doc-foot" role="contentinfo">
     <div class="outro-meta">GEMS-Taiwan &middot; iGEM 2026 &middot; Biomanufacturing</div>
     <!-- Required on every page for judging: license notice + repository link. -->
     <div class="legal">
@@ -1520,22 +1890,26 @@
 
 <script src="../js/vendor/three.min.js?v=9274bbce"></script>
 <script src="../js/vendor/STLLoader.js?v=c392b93d"></script>
-<script src="../js/render-quality.js?v=6cd0d091"></script>
+<script src="../js/render-quality.js?v=707e6ddf"></script>
 <script src="../js/packed-loader.js?v=eb28100c"></script>
 <script src="js/parts.js?v=27d144d3"></script>
-<script src="js/components.js?v=bf2c89e0"></script>
+<script src="js/components.js?v=2ca4b6aa"></script>
 <script src="js/flow-paths.js?v=13350b69"></script>
 <script src="js/scene.js?v=fae8ff6c"></script>
-<script src="js/product.js?v=6728df4c"></script>
-<script src="js/doc.js?v=bd14e050"></script>
+<script src="js/product.js?v=3ce60c71"></script>
+<script src="../photometer/js/od600-run.js?v=e36eb48d"></script>
+<script src="../photometer/js/od600.js?v=72f10459"></script>
+<script src="js/traced.js?v=cf273f49"></script>
+<script src="js/charts.js?v=a52eb03b"></script>
+<script src="js/doc.js?v=a3cb0636"></script>
 <script src="../js/toc.js?v=3c82154c"></script>
-<script src="../js/figures.js?v=ba34987a"></script>
+<script src="../js/figures.js?v=f8f00208"></script>
 <script src="js/picker.js?v=3c0e9497"></script>
 <script src="../js/chrome.js?v=27d9c2d1"></script>
 <script src="../js/atmos.js?v=15acf0e1"></script>
 <script src="../js/autodraw.js?v=7d624cdf"></script>
 <script src="../js/syswalk.js?v=02ebc8bb"></script>
-<script src="../js/polish.js?v=d40fbf60"></script>
+<script src="../js/polish.js?v=26a624b8"></script>
 <script src="../../assets/data/site-nav.js" fetchpriority="high"></script>
 <script src="../../assets/js/nav.js" fetchpriority="high"></script>
 </body>

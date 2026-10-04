@@ -15,11 +15,27 @@
     sec.classList.toggle("is-away", es[0].intersectionRatio < 0.01);
   }, { threshold: [0, 0.01] }).observe(sec);
 
+  // A touch screen has no hover, so in the orbit layout the first tap on a model's disc opens its details, as pointing at it does,
+  // and a second tap (or a tap on its words or its details) follows the link. A tap anywhere else, or Escape, closes them.
+  const touch = window.matchMedia("(hover: none)");
+  function closeAll() { sec.querySelectorAll(".orb-body.is-open").forEach(function (b) { b.classList.remove("is-open"); }); }
+  sec.addEventListener("click", function (e) {
+    if (!touch.matches || window.innerWidth < 68.6875 * parseFloat(getComputedStyle(document.documentElement).fontSize)) return;
+    const core = e.target.closest(".orb-core");
+    const body = core && core.closest(".orb-body");
+    if (!body || body.classList.contains("is-open")) return;
+    e.preventDefault();
+    closeAll();
+    body.classList.add("is-open");
+  });
+  document.addEventListener("click", function (e) { if (!e.target.closest(".orb-body")) closeAll(); });
+  document.addEventListener("keydown", function (e) { if (e.key === "Escape") closeAll(); });
+
   // The intro: the rings open out of the core, the instruments arrive on them, then the words. Not under
-  // reduced motion, not in the stacked phone layout, and not if the orbit is already in view on load.
+  // reduced motion, not in the stacked layout (below 1100px), and not if the orbit is already in view on load.
   const reduced = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
   const stage = sec.querySelector(".orbit-stage");
-  if (reduced || !stage || window.innerWidth < 980 || stage.getBoundingClientRect().top < window.innerHeight * 0.7) return;
+  if (reduced || !stage || window.innerWidth < 68.6875 * parseFloat(getComputedStyle(document.documentElement).fontSize) || stage.getBoundingClientRect().top < window.innerHeight * 0.7) return;
   sec.classList.add("is-armed");
   let started = false;
   function go() {

@@ -1,0 +1,85 @@
+/* Experiment A — the pipeline map pinned across the top.
+   The map is the index to 62 scans, so it stays reachable while you read them
+   rather than scrolling away after the first screen. Once the scans are what
+   you are actually reading it compacts to a band: the lanes and the mark you
+   are on survive, the chrome around them does not. */
+
+[data-nbmap="top"] {
+  position: sticky;
+  /* Clear the site's fixed .topbar (z-index 50) — sticking to 0 puts the top
+     lanes underneath it, which is exactly how the first pass looked. */
+  top: var(--topbar-h, 78px);
+  z-index: 40;
+  margin: 0 0 1.2rem;
+  max-height: calc(100vh - var(--topbar-h, 78px) - 2rem);
+  background: color-mix(in srgb, var(--bg) 94%, transparent);
+  backdrop-filter: blur(14px) saturate(1.1);
+  -webkit-backdrop-filter: blur(14px) saturate(1.1);
+  border-bottom: 1px solid transparent;
+  transition: border-color .28s var(--ease-out), background .28s var(--ease-out);
+}
+[data-nbmap="top"] > .nbr-map { margin: 0; padding: .6rem 0 .2rem; }
+[data-nbmap="top"] .lanes-panel {
+  transition: opacity .3s var(--ease-out), transform .3s var(--ease-out);
+  transform-origin: top center;
+}
+
+/* --- compact state --------------------------------------------------------
+   Height is the thing being bought back: the full chart is ~347px, which is a
+   third of a laptop screen standing between the reader and the page they came
+   for. Rows shrink, the scale and readout fold away, and the whole band drops
+   slightly back so the scan behind it stays the subject. */
+/* Compact, not gone. It sheds the heading, the rule and the tail column, and
+   it drops a little back — but every lane, every mark and the week scale stay
+   on screen, because the whole point of pinning the map is that you can still
+   see where you are in it while you read. */
+[data-nbmap="top"].compact {
+  border-bottom-color: var(--line);
+  background: color-mix(in srgb, var(--bg) 97%, transparent);
+  box-shadow: 0 10px 24px -18px #000;
+}
+[data-nbmap="top"].compact .lanes-panel { opacity: .92; }
+[data-nbmap="top"].compact .lanes-head,
+[data-nbmap="top"].compact .lanes-rule,
+[data-nbmap="top"].compact .lanes-grid { display: none; }
+/* The readout stays. A pinned map that cannot say what you are looking at is
+   decoration; it just loses its rule and sits on one line. */
+[data-nbmap="top"].compact .lanes-readout {
+  margin: .4rem 0 0; padding-top: 0; border-top: 0;
+  min-height: 0; font-size: .72rem; gap: .55rem;
+}
+[data-nbmap="top"].compact .lanes-panel { padding: .5rem .8rem .55rem; }
+[data-nbmap="top"].compact .lane-track { height: 13px; }
+[data-nbmap="top"].compact .lanes { gap: .15rem; }
+[data-nbmap="top"].compact .lane-name { font-size: .52rem; }
+[data-nbmap="top"].compact .lane-span { opacity: 0; }
+[data-nbmap="top"].compact .lanes-scale { font-size: .52rem; opacity: .7; }
+[data-nbmap="top"].compact > .nbr-map { padding: .3rem 0 .1rem; }
+[data-nbmap="top"]:hover .lanes-panel,
+[data-nbmap="top"]:focus-within .lanes-panel { opacity: 1; }
+
+/* Weeks run left to right here, so the playhead is a vertical line standing
+   in the lanes at the week you are reading. */
+[data-nbmap="top"] .nbmap-play {
+  top: 1.1rem; bottom: 0;
+  left: calc(var(--nx-l) + var(--play, 0) * (100% - var(--nx-l) - var(--nx-r)));
+  width: 1px;
+  background: linear-gradient(to bottom,
+    color-mix(in srgb, var(--accent) 62%, transparent), transparent);
+  transition: left .18s var(--ease-out);
+}
+[data-nbmap="top"] .nbmap-play::before {
+  content: ""; position: absolute; top: -3px; left: -3px;
+  width: 7px; height: 7px; border-radius: 50%;
+  background: var(--accent);
+  box-shadow: 0 0 10px color-mix(in srgb, var(--accent) 70%, transparent);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  [data-nbmap="top"] .lanes-panel,
+  [data-nbmap="top"] .nbmap-play { transition: none; }
+}
+@media (max-width: 980px) {
+  /* On a phone the band would eat the screen; let it scroll away instead. */
+  [data-nbmap="top"] { position: static; backdrop-filter: none; }
+}

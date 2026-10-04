@@ -1,0 +1,221 @@
+/* The lab bench, V1 — the widget's styles (round 4, 3 Oct 2026: the commercial bioreactor, a product illustration).
+
+   Everything is under `.bw` (or `bw-`-prefixed), so the widget can sit inside another page (hub v8) without its
+   names meeting that page's: the hub's stylesheets already style .stage, .tag, .no, .st, .frame and .in.
+
+   One layout, a section of a page (data-mode="section"): the page's heading, then the drawing, which takes whatever
+   height is left so the whole section is one screen, then the four instrument cards. The key sits in the drawing's
+   top-right corner. The standalone page (index.html, .bw-body) wraps it in the hub's own section shell, so the two
+   look the same. On a phone (<= 760px): heading, drawing, the four cards two by two, the key.
+
+   White page, cream bench. Type: the system sans for words, the hub's Unbounded for the four key figures, mono only
+   for the balloons' numbers and the section's pill. */
+.bw, .bw-body {
+  --paper: #ffffff;
+  --ink: #1e2a36;
+  --ink-2: #47535f;
+  --ink-3: #626c77;
+  --hair: #e4e7ea;
+  --br: #5aa9ff; --br-i: #1f5f9e;
+  --ph: #ffa23d; --ph-i: #8a5100;
+  --lp: #3ddc8b; --lp-i: #1f7a4d;
+  --hy: #b18cff; --hy-i: #5b3fa8;
+  --bw-sans: -apple-system, BlinkMacSystemFont, "Inter", "Segoe UI", Roboto, sans-serif;
+  --bw-mono: ui-monospace, "SFMono-Regular", Menlo, Consolas, monospace;
+  --bw-ease: cubic-bezier(.22, .61, .36, 1);
+  --bw-ease-out: cubic-bezier(.16, 1, .3, 1);
+}
+@font-face { font-family: "Unbounded Title"; src: url("../fonts/unbounded-500-latin.woff") format("woff"); font-weight: 500; font-display: swap; }
+.bw, .bw * { box-sizing: border-box; }
+.bw { position: relative; color: var(--ink); font-family: var(--bw-sans); -webkit-font-smoothing: antialiased; }
+.bw a { color: inherit; }
+
+/* ------------------------------------------------- the standalone page: the hub's section shell */
+html:has(.bw-body), .bw-body { margin: 0; background: #fff; }
+.bw-body { color: var(--ink); font-family: var(--bw-sans); -webkit-font-smoothing: antialiased; }
+.bw-body *, .bw-body *::before, .bw-body *::after { box-sizing: border-box; }
+.bw-shell {
+  max-width: 1280px; margin-inline: auto; height: 100vh; height: 100svh; min-height: 600px;
+  display: flex; flex-direction: column;
+  padding: clamp(1.25rem, 6svh, 4rem) clamp(1.25rem, 4vw, 3.5rem) clamp(1rem, 2.6svh, 1.75rem);
+}
+.bw-head { flex: none; margin-bottom: clamp(.2rem, 1svh, .8rem); }
+.bw-head .bw-k { display: flex; gap: .4rem; margin: 0 0 clamp(.5rem, 1.4svh, .9rem); font: 400 11px/1 var(--bw-mono); letter-spacing: .15em; text-transform: uppercase; }
+.bw-head .bw-k span { padding: .32rem .62rem; border-radius: 999px; color: #23684a; border: 1px solid color-mix(in srgb, #23684a 38%, transparent); background: color-mix(in srgb, #23684a 8%, transparent); }
+.bw-head h1 { margin: 0; font: 700 clamp(1.75rem, .9rem + 1.9vw, 2.55rem)/1.04 var(--bw-sans); letter-spacing: -.03em; color: #14402b; }
+.bw-head .bw-sub { margin: .3rem 0 0; font-size: clamp(1.05rem, .8rem + .7vw, 1.35rem); letter-spacing: -.01em; color: #8a949f; }
+.bw-shell > .bw { flex: 1 1 auto; min-height: 0; }
+
+/* ------------------------------------------------------------------ the stage */
+.bw-stage { position: relative; z-index: 1; }
+#bw-gl { position: absolute; inset: 0; width: 100%; height: 100%; display: block; }
+#bw-gl.hot { cursor: pointer; }
+.bw-ov { position: absolute; inset: 0; width: 100%; height: 100%; overflow: visible; pointer-events: none; }
+.bw-ov .bw-ld { fill: none; stroke-width: 1; stroke-linecap: round; stroke-linejoin: round; opacity: .55; transition: opacity .25s var(--bw-ease); }
+.bw-ov .bw-ad { stroke-width: 1.25; }
+.bw-ov .bw-dc-big { fill: none; stroke: #c98a3c; stroke-width: 1.25; transition: stroke-width .25s var(--bw-ease); }
+.bw-ov .bw-dc-small { fill: none; stroke: #c98a3c; stroke-width: 1; stroke-dasharray: 3 3.5; opacity: .75; }
+.bw-ov .bw-dc-tan { stroke: #c98a3c; stroke-width: 1; stroke-dasharray: 3 4; opacity: .5; }
+.bw-ov .bw-dn { fill: none; stroke: var(--ph-i); stroke-width: 1; opacity: .55; }
+.bw-ov .bw-dn-dot { fill: #fff; stroke: var(--ph-i); stroke-width: 1.25; }
+.bw-loading { position: absolute; left: 50%; top: 50%; transform: translate(-50%, -50%); margin: 0; font: 500 13px/1 var(--bw-sans);
+  color: var(--ink-3); transition: opacity .5s var(--bw-ease); }
+.bw-loading.gone { opacity: 0; pointer-events: none; }
+.bw-loading.err { color: #b42318; }
+
+/* -------------------------------------------------------------------- the key */
+.bw-key { z-index: 0; font-size: 12.5px; color: var(--ink-2); pointer-events: none; transition: opacity .25s var(--bw-ease); }
+.bw.bw-has-hot .bw-key { opacity: .3; }
+.bw-key ul { list-style: none; margin: 0; padding: 0; display: grid; gap: 8px; }
+.bw-key li { display: flex; align-items: center; gap: 10px; line-height: 1.2; }
+.bw-sw { flex: none; width: 26px; height: 6px; display: inline-block; border-radius: 3px; }
+.bw-sw-loop { background: linear-gradient(90deg, #2f86f0 0 9px, #e3f1ff 9px 14px, #2f86f0 14px); box-shadow: inset 0 -1px 0 rgba(12, 77, 156, .35); }
+.bw-sw-beam { height: 5px; border-radius: 3px; background: linear-gradient(#ffd28a 0 18%, #ff8a1f 18% 36%, #fffaf0 36% 64%, #ff8a1f 64% 82%, #ffd28a 82%);
+  box-shadow: 0 0 5px 1px rgba(255, 170, 70, .45); }
+.bw-key-note { margin: 10px 0 0; font-size: 11.5px; line-height: 1.5; color: var(--ink-3); max-width: 34ch; text-wrap: pretty; }
+.bw-scale-note { display: none; }          /* hub v8 only (its own.css shows it): there the LPA and the plate are drawn larger */
+
+/* ---------------------------------------------------------------- the cards */
+.bw-parts { z-index: 3; }
+.bw-parts ol { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 12px; }
+.bw-parts li { min-width: 0; }
+.bw-parts a { position: relative; display: grid; grid-template-columns: auto minmax(0, 1fr) auto; column-gap: 10px; align-items: center; height: 100%;
+  padding: 13px 14px 14px 12px; border: 1px solid var(--hair); border-radius: 14px; background: #fff; text-decoration: none; outline: none;
+  transition: border-color .25s var(--bw-ease), box-shadow .3s var(--bw-ease), background .25s var(--bw-ease), transform .3s var(--bw-ease-out); }
+.bw-parts a:hover, .bw-parts a.on, .bw-parts a:focus-visible {
+  border-color: color-mix(in srgb, var(--c) 70%, #fff); background: color-mix(in srgb, var(--c) 6%, #fff);
+  box-shadow: 0 12px 28px -18px color-mix(in srgb, var(--ci) 70%, transparent); transform: translateY(-1px); }
+.bw-parts a:focus-visible { box-shadow: 0 0 0 2px #fff, 0 0 0 4px var(--ci); }
+.bw-parts .bw-no { grid-row: 1 / span 2; align-self: start; margin-top: 1px; width: 26px; height: 26px; border-radius: 50%; display: grid; place-items: center;
+  border: 1.5px solid var(--ci); color: var(--ci); background: #fff; font: 600 12px/1 var(--bw-mono); transition: background .2s, color .2s; }
+.bw-parts a:hover .bw-no, .bw-parts a.on .bw-no, .bw-parts a:focus-visible .bw-no { background: var(--ci); color: #fff; }
+.bw-parts .bw-nm { font-weight: 650; font-size: 15.5px; letter-spacing: -.01em; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.bw-parts .bw-go { grid-column: 3; grid-row: 1; font-size: 12.5px; font-weight: 600; color: var(--ci); opacity: 0; transform: translateX(-3px);
+  transition: opacity .2s, transform .25s var(--bw-ease); }
+.bw-parts a:hover .bw-go, .bw-parts a.on .bw-go, .bw-parts a:focus-visible .bw-go { opacity: 1; transform: none; }
+.bw-parts .bw-rl { grid-column: 2 / -1; margin-top: 1px; font-size: 12.5px; line-height: 1.3; color: var(--ink-3); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.bw-parts .bw-st { grid-column: 2 / -1; margin-top: 9px; font-size: 12px; color: var(--ink-2); line-height: 1.2; display: flex; align-items: baseline; gap: 6px; min-width: 0; }
+.bw-parts .bw-st b { flex: none; font: 500 21px/1 "Unbounded Title", var(--bw-sans); color: var(--ink); letter-spacing: -.03em; }
+.bw-parts .bw-st span { min-width: 0; line-height: 1.25; }
+.bw-parts .bw-say { display: none; }
+
+/* ------------------------------------------------------------------- the tags */
+.bw-tags { position: absolute; inset: 0; pointer-events: none; z-index: 3; }
+.bw-tag { position: absolute; left: 0; top: 0; pointer-events: auto; display: block; width: max-content; max-width: 290px;
+  color: var(--ink); text-decoration: none; padding: 4px 12px 4px 4px; border-radius: 999px; border: 1px solid transparent;
+  background: rgba(255, 255, 255, .86); box-shadow: 0 1px 2px rgba(20, 30, 40, .04);
+  transition: background .25s var(--bw-ease), border-color .25s var(--bw-ease), box-shadow .25s var(--bw-ease), opacity .25s var(--bw-ease), border-radius .25s var(--bw-ease); }
+.bw-tag .bw-row { display: flex; align-items: center; gap: 8px; }
+.bw-tag .bw-no { flex: none; width: 24px; height: 24px; border-radius: 50%; display: grid; place-items: center; border: 1.5px solid var(--ci);
+  color: var(--ci); background: #fff; font: 600 11.5px/1 var(--bw-mono); transition: background .2s, color .2s; }
+.bw-tag .bw-nm { font-weight: 600; font-size: 14.5px; letter-spacing: -.01em; white-space: nowrap; }
+.bw-tag .bw-more { display: grid; grid-template-rows: 0fr; opacity: 0; margin-left: 32px; transition: grid-template-rows .32s var(--bw-ease-out), opacity .2s var(--bw-ease); }
+.bw-tag .bw-more > .bw-in { display: block; overflow: hidden; min-height: 0; }
+.bw-tag:not(.on) .bw-more { position: absolute; visibility: hidden; pointer-events: none; }   /* collapsed: takes no width */
+.bw-tag .bw-rl { display: block; margin-top: 2px; font-size: 12.5px; color: var(--ink-3); }
+.bw-tag .bw-st { display: block; margin-top: 10px; font-size: 12.5px; color: var(--ink-2); line-height: 1.25; }
+.bw-tag .bw-st b { display: block; font: 500 28px/1 "Unbounded Title", var(--bw-sans); color: var(--ink); letter-spacing: -.02em; margin-bottom: 4px; }
+.bw-tag .bw-say { display: block; margin-top: 7px; font-size: 13px; line-height: 1.45; color: var(--ink-2); white-space: normal; width: 220px; }
+.bw-tag .bw-go { display: inline-block; margin: 10px 0 2px; font-size: 13px; font-weight: 600; color: var(--ci); }
+.bw-tag.on { background: #fff; border-color: color-mix(in srgb, var(--c) 60%, #fff); border-radius: 14px; padding: 8px 14px 10px 8px;
+  box-shadow: 0 18px 40px -22px rgba(20, 30, 40, .45), 0 0 0 4px color-mix(in srgb, var(--c) 14%, transparent); z-index: 5; }
+.bw-tag.on .bw-no { background: var(--ci); color: #fff; }
+.bw-tag.on .bw-more { grid-template-rows: 1fr; opacity: 1; }
+.bw-tag.dim { opacity: .45; }
+.bw-tag.anchor-r .bw-row { flex-direction: row-reverse; }
+.bw-tag.anchor-r .bw-more { margin: 0 32px 0 0; text-align: right; }
+.bw-tag.anchor-r.on .bw-say { margin-left: auto; }
+.bw-tag.anchor-r { padding: 4px 4px 4px 12px; }
+.bw-tag.anchor-r.on { padding: 8px 8px 10px 14px; }
+.bw-pick { display: none; }
+
+/* ----------------------------------------------------------------- DETAIL A */
+/* until the models are in, there is nothing for DETAIL A or the tags to point at */
+.bw:not(.bw-ready) :is(.bw-detail, .bw-tags, .bw-ov) { visibility: hidden; }
+.bw-detail { position: absolute; left: 0; top: 0; width: 10px; height: 10px; border-radius: 50%; z-index: 2; display: block; text-decoration: none;
+  color: var(--ph-i); cursor: pointer; }
+.bw-detail-cap { position: absolute; left: 50%; bottom: 100%; transform: translate(-50%, -9px); display: flex; align-items: baseline; gap: 7px;
+  white-space: nowrap; font: 500 12.5px/1.2 var(--bw-sans); color: var(--ink-3); }
+.bw-detail-cap b { font-weight: 650; color: var(--ph-i); }
+.bw-detail-x { font-variant-numeric: tabular-nums; color: var(--ink-3); }
+.bw-detail-notes { position: absolute; inset: 0; pointer-events: none; }
+.bw-dnote { position: absolute; font: 500 12px/1.25 var(--bw-sans); color: var(--ph-i); white-space: nowrap;
+  text-shadow: 0 0 3px #fff, 0 0 3px #fff, 0 0 6px #fff; transition: opacity .2s var(--bw-ease); }
+.bw-ov .bw-dn, .bw-ov .bw-dn-dot { transition: opacity .2s var(--bw-ease); }
+/* the photometer's open card sits where the detail's notes are: they step aside while it is open */
+@media (min-width: 761px) {
+  .bw[data-hot="photometer"] .bw-dnote, .bw[data-hot="photometer"] .bw-ov :is(.bw-dn, .bw-dn-dot) { opacity: 0; }
+}
+
+/* ================================================================== layouts */
+@media (min-width: 761px) {
+  /* heading (the page's), drawing, cards, in one screen; the drawing takes what is left and runs the full width of
+     the screen; the key sits in its top-right corner, inside the section's column */
+  .bw { display: flex; flex-direction: column; min-height: 0; }
+  .bw-stage { flex: 1 1 auto; min-height: 280px; align-self: flex-start; width: 100vw; margin-left: calc(50% - 50vw); }
+  .bw-key { position: absolute; right: 0; top: 2px; width: 250px; }
+  .bw-parts { flex: none; margin-top: 10px; }
+}
+@media (min-width: 761px) and (max-width: 1180px) {
+  .bw-parts ol { gap: 8px; }
+  .bw-parts a { padding: 11px 12px 12px 10px; column-gap: 9px; align-items: start; }
+  .bw-parts .bw-go { display: none; }
+  .bw-parts .bw-nm { font-size: 14.5px; }
+  /* the figure above its words, so every card's figure sits on the same line whatever its words do */
+  .bw-parts .bw-st { display: block; margin-top: 8px; }
+  .bw-parts .bw-st b { display: block; font-size: 19px; margin-bottom: 4px; }
+  .bw-key { width: 210px; }
+}
+@media (min-width: 761px) and (max-width: 1000px) { .bw-parts ol { grid-template-columns: 1fr 1fr; } }
+
+/* nothing is laid over the drawing's foot: the bench's legs fade out into the paper instead of ending on a line */
+#bw-gl { -webkit-mask-image: linear-gradient(#000 88%, transparent 99.5%); mask-image: linear-gradient(#000 88%, transparent 99.5%); }
+
+/* ------------------------------------------------------------------ phone */
+@media (max-width: 760px) {
+  .bw-shell { height: auto; min-height: 0; padding: 22px 0 20px; }
+  .bw-head { padding-inline: 20px; margin-bottom: 0; }
+  .bw-head .bw-k { margin-bottom: .6rem; }
+  .bw-body .bw { --bw-stage-h: max(330px, calc(100svh - 356px)); }
+  .bw { display: flex; flex-direction: column; }
+  .bw-parts { order: 2; }
+  .bw-key { order: 3; }
+  .bw-stage { height: var(--bw-stage-h, 560px); margin: 4px 0 0; overflow: hidden; }
+  .bw #bw-gl { -webkit-mask-image: linear-gradient(#000 86%, transparent 99%); mask-image: linear-gradient(#000 86%, transparent 99%); }
+  .bw-parts { margin: 6px 14px 0; }
+  .bw-parts ol { grid-template-columns: 1fr 1fr; gap: 8px; }
+  .bw-parts a { padding: 10px 8px 11px 8px; column-gap: 7px; border-radius: 12px; align-items: start; }
+  .bw-parts .bw-no { width: 24px; height: 24px; font-size: 11px; }
+  .bw-parts .bw-nm { font-size: 13.5px; letter-spacing: -.015em; }
+  .bw-parts .bw-rl, .bw-parts .bw-go { display: none; }
+  .bw-parts .bw-st { margin-top: 5px; display: block; font-size: 11.5px; line-height: 1.3; color: var(--ink-3); }
+  .bw-parts .bw-st b { display: block; font-size: 19px; margin-bottom: 3px; }
+  .bw-parts .bw-st span { white-space: normal; }
+  .bw-key { margin: 18px 20px 0; display: grid; gap: 10px; }
+  .bw-key ul { grid-auto-flow: row; }
+  /* on a phone the drawing carries only the numbered balloons; a tap opens one into its card */
+  .bw-tag, .bw-tag.anchor-r { padding: 3px; background: transparent; box-shadow: none; max-width: 230px; }
+  .bw-tag .bw-nm { display: none; }
+  .bw-tag.on, .bw-tag.anchor-r.on { padding: 3px; background: transparent; border-color: transparent; box-shadow: none; }
+  .bw-tag.on .bw-more { display: none; }
+  .bw-tag.on .bw-no { box-shadow: 0 0 0 5px color-mix(in srgb, var(--c) 35%, transparent); }
+  .bw-detail-cap { left: 100%; bottom: auto; top: 4%; transform: translate(12px, 0); flex-direction: column; align-items: flex-start; gap: 1px;
+    white-space: nowrap; line-height: 1.3; font-size: 12px; }
+  /* the picked instrument's card: a sheet at the bottom of the screen */
+  .bw-pick { display: block; position: fixed; left: 10px; right: 10px; bottom: 10px; z-index: 60; background: #fff;
+    border: 1.5px solid var(--ci, var(--hair)); border-radius: 14px; box-shadow: 0 18px 40px -16px rgba(20, 30, 40, .5);
+    transform: translateY(calc(100% + 24px)); visibility: hidden; transition: transform .32s var(--bw-ease-out), visibility 0s linear .32s; }
+  .bw-pick.show { transform: none; visibility: visible; transition: transform .32s var(--bw-ease-out), visibility 0s; }
+  .bw-pick-a { display: grid; grid-template-columns: auto 1fr; column-gap: 10px; padding: 14px 44px 15px 14px; text-decoration: none; color: var(--ink); }
+  .bw-pick-a .bw-no { grid-row: 1 / span 2; width: 28px; height: 28px; border-radius: 50%; display: grid; place-items: center; background: var(--ci); color: #fff; font: 600 12px/1 var(--bw-mono); }
+  .bw-pick-a .bw-nm { font-weight: 650; font-size: 16px; }
+  .bw-pick-a .bw-rl { font-size: 12.5px; color: var(--ink-3); margin-top: 1px; }
+  .bw-pick-a .bw-st { grid-column: 2; margin-top: 9px; font-size: 12.5px; color: var(--ink-2); }
+  .bw-pick-a .bw-st b { font: 500 22px/1 "Unbounded Title", var(--bw-sans); color: var(--ink); margin-right: 5px; }
+  .bw-pick-a .bw-say { grid-column: 2; margin-top: 6px; font-size: 13px; line-height: 1.45; color: var(--ink-2); }
+  .bw-pick-a .bw-go { grid-column: 2; margin-top: 10px; font-size: 13px; font-weight: 600; color: var(--ci); }
+  .bw-pick-x { position: absolute; right: 8px; top: 8px; width: 32px; height: 32px; border: 0; border-radius: 50%; background: transparent; color: var(--ink-3); font-size: 22px; line-height: 1; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .bw *, .bw-body * { transition-duration: .01ms !important; }
+}

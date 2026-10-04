@@ -82,7 +82,7 @@
   const hits = document.getElementById("nbr-hits");
   if (!box || !hits) return;
 
-  const MARKS = { BR: "Bioreactor", PH: "Photometer", LP: "DiOPAL", HB: "Humidity box",
+  const MARKS = { BR: "Bioreactor", PH: "Photometer", LP: "LPA", HB: "Humidity box",
                   IS: "Imaging station", FP: "Floating plate", "--": "Pre-pivot" };
   let index = null, loading = false;
 

@@ -1,0 +1,652 @@
+/* =========================================================================
+   Wiki alignment layer
+   =========================================================================
+   Brings the component pages' DOCUMENT half into the same visual language as
+   the main ReLeaf wiki (timmy97-tw.github.io/releaf-wiki), so a reader moving
+   between the two is reading one publication rather than two.
+
+   What it deliberately does NOT touch:
+
+     - The dark hero and the 3D walkthrough. Every rule here is scoped to
+       `body.doc-light`, which the page only carries once the reader is past
+       the machine and into the record. polish.css explains why that split
+       exists: hardware photographs against black, documents read as ink on
+       paper. That decision stays.
+     - The hardware display faces. "Oxanium Title" and "Unbounded Title" are
+       used only by the hub and by `.story-*` selectors in each instrument's
+       own stylesheet -- checked, not assumed -- so the landing keeps its
+       typography and the document never had it to lose.
+
+   NOT REMOVABLE ANY MORE (3 Oct 2026). The records rewritten that night
+   mark what is not on record yet with `.todo` chips and blocks, and this
+   file gives them their base style and their orange (the owner's rule);
+   the pages only adjust layout. The bar-less top, the leaf links and the
+   panel hairlines live here too. Drop the <link> and the marks lose
+   their colour.
+
+   The token values below are the main wiki's own, read off its computed
+   styles rather than guessed at.
+   ========================================================================= */
+
+body.doc-light {
+  /* the main wiki's palette */
+  --w-leaf-900: #14402b;
+  --w-leaf-700: #23684a;
+  --w-leaf-500: #4f9c6f;
+  --w-leaf-200: #cfe4d8;
+  --w-leaf-100: #e3f0e8;
+  --w-leaf-50:  #f4f9f6;
+  --w-amber-700: #92610c;
+  --w-amber-100: #fdf3dc;
+  --w-rust-700:  #9a3d22;
+  --w-rust-100:  #fbeae4;
+  --w-slate-700: #3f5468;
+  --w-slate-100: #e8eef4;
+  --w-line:      #e5e5e5;
+  /* Their link ink. Ours were unstyled -- body links rendered as plain text in
+     the text colour with no underline, so a reader could not tell a link from
+     a bolded phrase without hovering. This is the single biggest readability
+     gap between the two sites. */
+  --w-link: #c2410c;
+
+  --w-measure:   68ch;
+  --w-radius:    .5rem;
+  --w-radius-sm: .3125rem;
+}
+
+/* --- measure ------------------------------------------------------------
+   Their prose runs to 68ch and ours to 760px, which at our 16.8px body is
+   about 76 characters -- long enough that the eye loses the line return on a
+   wide monitor. Figures, tables and the part list are left alone: the measure
+   is for running text, and it is only running text that suffers. */
+body.doc-light .doc-wrap section.sec > p,
+body.doc-light .doc-wrap section.part > p,
+body.doc-light .doc-wrap section.sec > ul,
+body.doc-light .doc-wrap section.sec > ol {
+  max-width: var(--w-measure);
+}
+
+/* --- headings -----------------------------------------------------------
+   Two changes. Their h2 is 700 at -0.015em; ours was 600 at -0.038em, which
+   is display tracking -- it looks intentional on a hero and cramped over a
+   paragraph. And their section numbers are set in the heading's own face,
+   in the leaf green, rather than in a smaller mono amber: the number reads as
+   part of the heading instead of as a tag stuck to the front of it. */
+body.doc-light .doc-wrap section.part > h2 {
+  font-size: clamp(1.5rem, 1.15rem + 1.05vw, 2rem);
+  font-weight: 700;
+  letter-spacing: -.015em;
+  color: var(--w-leaf-900);
+}
+body.doc-light .doc-wrap section.sec > h3 {
+  font-weight: 700;
+  letter-spacing: -.012em;
+  color: var(--w-leaf-900);
+}
+body.doc-light .doc-wrap section.sec > h3 > i {
+  font-family: inherit;
+  font-size: inherit;
+  font-weight: 700;
+  font-style: normal;
+  letter-spacing: inherit;
+  color: var(--w-leaf-700);
+  margin-right: .45em;
+}
+
+/* --- links in prose -----------------------------------------------------
+   Scoped to running text, tables and captions. Cards, chips, the onward
+   links and anything that already reads as a control keep their own
+   treatment -- underlining those would make the page look like a link farm.
+
+   The rule this replaces is `.sec p a:not(.xref):not(.pick-link)` at (0,3,2):
+   ink-coloured, no underline, a 38%-alpha amber border-bottom and a gradient
+   that wipes in on hover. It is a nice affordance but at REST a link is not
+   distinguishable from bold text, which is the opposite of what the main wiki
+   does. The selectors below carry (0,5,3) so they win outright rather than by
+   source order, and they switch off the gradient and the border so the two
+   underlines cannot both show. */
+body.doc-light .doc-wrap .sec p a:not(.xref):not(.pick-link),
+body.doc-light .doc-wrap .sec li a:not(.xref):not(.pick-link),
+body.doc-light .doc-wrap .sec td a:not(.xref):not(.pick-link),
+body.doc-light .doc-wrap .standfirst a:not(.xref):not(.pick-link),
+body.doc-light .doc-wrap .doc-aim a:not(.xref):not(.pick-link),
+body.doc-light .doc-wrap figcaption a:not(.xref):not(.pick-link) {
+  color: var(--w-link);
+  background-image: none;
+  border-bottom: 0;
+  text-decoration: underline;
+  text-decoration-thickness: 1px;
+  text-underline-offset: 2.7px;
+}
+body.doc-light .doc-wrap .sec p a:not(.xref):not(.pick-link):hover,
+body.doc-light .doc-wrap .sec li a:not(.xref):not(.pick-link):hover,
+body.doc-light .doc-wrap .sec td a:not(.xref):not(.pick-link):hover,
+body.doc-light .doc-wrap .standfirst a:not(.xref):not(.pick-link):hover,
+body.doc-light .doc-wrap .doc-aim a:not(.xref):not(.pick-link):hover,
+body.doc-light .doc-wrap figcaption a:not(.xref):not(.pick-link):hover {
+  color: var(--w-rust-700);
+  background-size: 0 0;
+  text-decoration-thickness: 2px;
+}
+
+/* --- figure captions ----------------------------------------------------
+   Theirs are body-sized sentence case with a bold lead-in; ours were 13px
+   with the lead-in at 9px mono uppercase and 0.16em of tracking. At that size
+   the label stops being readable as words and becomes a texture, and the
+   caption stops being part of the document. The markup already carries
+   sentence case inside <b> -- only the CSS was shouting. */
+body.doc-light .doc-wrap figcaption {
+  font-size: .9375rem;
+  line-height: 1.62;
+  color: var(--fg);
+  max-width: var(--w-measure);
+}
+body.doc-light .doc-wrap figcaption > b,
+body.doc-light .doc-wrap figcaption .fignum {
+  font-family: inherit;
+  font-size: inherit;
+  font-weight: 700;
+  letter-spacing: 0;
+  text-transform: none;
+  color: var(--fg);
+}
+body.doc-light .doc-wrap figcaption .fignum { color: var(--w-leaf-700); }
+
+/* --- callouts -----------------------------------------------------------
+   Same element name on both sites, so this is only a change of dress: theirs
+   is a 3px solid border in a semantic colour over a flat tint, with the label
+   carried by the border rather than by a gradient. The variants exist so a
+   page can say what KIND of aside it is; `.warn` is ours and is mapped onto
+   their amber so existing markup keeps working. */
+body.doc-light .doc-wrap aside.callout {
+  border: 0;
+  border-left: 3px solid var(--w-leaf-500);
+  border-radius: var(--w-radius-sm);
+  background: var(--w-leaf-50);
+  padding: 1rem 1.5rem;
+  margin-block: 1.5rem;
+}
+body.doc-light .doc-wrap aside.callout > :first-child { margin-top: 0; }
+body.doc-light .doc-wrap aside.callout > :last-child  { margin-bottom: 0; }
+
+body.doc-light .doc-wrap aside.callout.warn,
+body.doc-light .doc-wrap aside.callout--amber {
+  border-left-color: var(--w-amber-700);
+  background: var(--w-amber-100);
+}
+body.doc-light .doc-wrap aside.callout--rust {
+  border-left-color: var(--w-rust-700);
+  background: var(--w-rust-100);
+}
+body.doc-light .doc-wrap aside.callout--slate {
+  border-left-color: var(--w-slate-700);
+  background: var(--w-slate-100);
+}
+
+/* An uppercase lead label, the way their asides open. Only applies when a
+   page asks for it, so nothing existing changes shape. */
+body.doc-light .doc-wrap aside.callout > .callout-label {
+  display: block;
+  font-family: var(--mono);
+  font-size: .75rem;
+  font-weight: 600;
+  letter-spacing: .08em;
+  text-transform: uppercase;
+  color: var(--w-leaf-700);
+  margin-bottom: .5rem;
+}
+body.doc-light .doc-wrap aside.callout.warn > .callout-label { color: var(--w-amber-700); }
+
+/* --- contents box -------------------------------------------------------
+   Their table of contents is a <details> on the page's own grey with a hairline
+   and an 8px radius, rather than a floating panel. */
+body.doc-light .doc-wrap details.toc,
+body.doc-light .doc-wrap .toc > details {
+  background: var(--bg-2);
+  border: 1px solid var(--w-line);
+  border-radius: var(--w-radius);
+  padding: 0;
+}
+
+/* --- section rule -------------------------------------------------------
+   A hairline above each numbered part, in their leaf-200 rather than a neutral
+   grey, so the divisions read as part of the same system as the headings. */
+body.doc-light .doc-wrap section.part {
+  border-top-color: var(--w-leaf-200);
+}
+
+/* --- two colours the light theme never got -----------------------------
+   Both are pre-existing, and both only show once the page flips to
+   `doc-light`; neither is caused by anything above.
+
+   `b.mark` -- the highlighted key sentence -- computes to rgb(242,245,248).
+   That is the DARK theme's near-white ink, left behind when the light theme
+   was written, so the emphasis lands as near-white text on a white document.
+   It now takes the main wiki's amber tint, which is what a highlight is for.
+
+   `a.xref` -- the "Figure 12" cross-references -- computes to #5aa9ff, a blue
+   tuned against black. On white that measures 2.4:1, and polish.css is
+   explicit that text on this surface has to clear 4.5:1. The main wiki gives
+   every link one colour, so these take the same rust as prose links: 5.2:1. */
+body.doc-light .doc-wrap b.mark,
+body.doc-light .doc-wrap .mark {
+  color: var(--fg);
+  background: var(--w-amber-100);
+  box-decoration-break: clone;
+  -webkit-box-decoration-break: clone;
+  padding: .06em .28em;
+  border-radius: 3px;
+}
+body.doc-light .doc-wrap a.xref {
+  color: var(--w-link);
+  text-decoration: underline;
+  text-decoration-thickness: 1px;
+  text-underline-offset: 2.7px;
+}
+body.doc-light .doc-wrap a.xref:hover { color: var(--w-rust-700); text-decoration-thickness: 2px; }
+
+
+/* =========================================================================
+   2 Oct 2026 (night): the component pages without their bar, and the team
+   wiki's own marks for what is not written yet.
+   ========================================================================= */
+
+/* --- no bar, only the way back ----------------------------------------
+   Owner: "Remove indiv components page green bar on top, leave only the
+   'back to hardware'". On the team wiki the site's own menu sits across the
+   top (it replaced this bar there too), so nothing of ours may draw a band.
+   The header keeps its place and its job, but it is only a button now: no
+   scrim, no blur, no green, no breadcrumb, and it does not catch clicks
+   outside the button. */
+body .topbar,
+body.doc-light .topbar {
+  background: none !important; box-shadow: none !important;
+  -webkit-backdrop-filter: none !important; backdrop-filter: none !important;
+  padding: 16px clamp(14px, 2.4vw, 26px) !important;
+  right: auto !important; pointer-events: none;
+}
+body .topbar::after, body.doc-light .topbar::after { display: none !important; }
+.topbar .topbar-meta, .topbar .brand { display: none !important; }
+.topbar .backbtn { pointer-events: auto; box-shadow: 0 6px 18px -10px rgba(0, 0, 0, .55); }
+/* over the dark hero: glass, as it was */
+.topbar .backbtn {
+  background: color-mix(in srgb, var(--bg, #05060a) 78%, transparent);
+  -webkit-backdrop-filter: blur(8px); backdrop-filter: blur(8px);
+}
+/* over the white record: the team wiki's leaf green on white */
+body.doc-light .topbar .backbtn {
+  background: rgba(255, 255, 255, .94); color: var(--w-leaf-900);
+  border-color: var(--w-leaf-200);
+  box-shadow: 0 1px 2px rgba(15, 19, 25, .06), 0 8px 20px -12px rgba(15, 19, 25, .35);
+}
+body.doc-light .topbar .backbtn i { color: var(--w-leaf-700); }
+body.doc-light .topbar .backbtn:hover, body.doc-light .topbar .backbtn:focus-visible {
+  background: var(--w-leaf-50); border-color: var(--w-leaf-500);
+}
+
+/* --- what is not written yet: the team wiki's marks ----------------------
+   The team wiki writes a missing value as a short amber label saying what is
+   missing ("not on record", "full reference needed"), and a missing passage as
+   an amber block naming who owes it. Owner: "For the missing info, mark the
+   text orange like the team wiki did." These are their rules (page.css .todo,
+   engineering.css .eng .todo), on their tokens. */
+.todo {
+  display: inline-block;
+  padding: .08em .5em; margin: 0 .08em;
+  border-radius: 3px;
+  background: var(--w-amber-100); border: 1px solid #e8cf95;
+  color: var(--w-amber-700);
+  font-family: inherit; font-size: .8125rem; font-weight: 650; font-style: normal;
+  letter-spacing: .02em; line-height: 1.45; vertical-align: .05em;
+  white-space: normal; text-transform: none;
+}
+td .todo, th .todo, li .todo { font-size: .78rem; }
+div.todo, p.todo, aside.todo {
+  display: block;
+  margin: 1rem 0; padding: .9rem 1.05rem;
+  border-radius: var(--w-radius-sm);
+  font-size: .9375rem; font-weight: 500; letter-spacing: 0; line-height: 1.6;
+  max-width: var(--w-measure);
+}
+div.todo > b, p.todo > b, aside.todo > b {
+  display: block; margin-bottom: .25rem;
+  font-size: .6875rem; font-weight: 700; letter-spacing: .09em; text-transform: uppercase;
+}
+div.todo > :last-child { margin-bottom: 0; }
+
+/* The page's older mark, an empty ruled blank, says only that something is
+   missing. Wherever one is left it now reads as the team's label, in their
+   amber, with words in it. A page should still write what is missing
+   (<span class="todo">unit cost</span>); this is the floor, not the style. */
+body.doc-light .pending {
+  display: inline-block; height: auto !important; min-width: 0 !important;
+  border: 1px solid #e8cf95 !important; border-radius: 3px !important;
+  background: var(--w-amber-100) !important;
+  color: var(--w-amber-700); padding: .08em .5em; margin: 0 .08em;
+  font-size: .8125rem; font-weight: 650; letter-spacing: .02em; line-height: 1.45; vertical-align: .05em;
+}
+body.doc-light .pending::after { display: none !important; }
+/* polish.js puts a screen-reader "to be confirmed" inside each blank, so a blank is
+   never :empty; its only child being that note is what makes it one */
+body.doc-light .pending:empty::before,
+body.doc-light .pending:has(> .sr-only:only-child)::before { content: "not on record"; }
+body.doc-light .pending.s:empty::before,
+body.doc-light .pending.s:has(> .sr-only:only-child)::before { content: "TBD"; }
+body.doc-light .pending.eq:empty::before,
+body.doc-light .pending.eq:has(> .sr-only:only-child)::before { content: "equation to come"; }
+
+@media print {
+  .todo, body.doc-light .pending { border: 1pt solid #b8860b !important; background: none !important; color: #8a5a00 !important; }
+}
+
+/* Phone text floor (house rule: no label under 11 px on a phone). The back button and the hero stories' act tags
+   are set at 0.6rem (9.6 px) for desktop; on a phone they come up to 11 px. */
+@media (max-width: 700px) {
+  body .topbar .backbtn { font-size: 11px; letter-spacing: .12em; }
+  body .story .cap-tag { font-size: 11px; letter-spacing: .2em; }
+  body .panel .tag, body .panel .prole { font-size: 11px; letter-spacing: .16em; }   /* the hydroponics walkthrough eyebrow */
+}
+
+/* ---- Amber means one thing: missing information (3 Oct, after the design judges) ----
+   The record's decoration used the instruments' dark-theme amber, so a drop cap, an h3 tick or a "FIG 03" tag sat
+   beside an amber "to confirm" chip in the same colour. On the team wiki amber is reserved for .todo; decoration is
+   leaf. So the record's accents take the team's greens, the drop caps and the giant outlined part numerals go (the
+   team wiki has neither), and figure frames lose their corner tags (the caption already numbers them). */
+body.doc-light .doc .part + .sec > p:first-of-type::first-letter {
+  float: none; font-size: inherit; font-weight: inherit; line-height: inherit; padding: 0; margin: 0; color: inherit; }
+body.doc-light .doc .part::before { display: none; }
+body.doc-light .doc-wrap .sec > h3 { border-top: 0; padding-top: 0; }
+body.doc-light .doc-wrap .sec > h3::after { display: none; }
+body.doc-light .doc-wrap .doc-head h1 {
+  background: none; -webkit-text-fill-color: currentColor; color: var(--w-leaf-900); font-weight: 700; letter-spacing: -.022em; }
+body.doc-light .doc-wrap .doc-head .eyebrow { font: 600 .8125rem/1.4 var(--sans); letter-spacing: .09em; color: var(--w-leaf-700); }
+body.doc-light :is(.headline-stats b, .keynote-fig, .map-n, .part-mark b, .filter-steps b, .spec-card-title, .demo-head b) {
+  color: var(--w-leaf-700); }
+body.doc-light .doc caption .fignum { font: inherit; font-weight: 700; letter-spacing: 0; text-transform: none; color: var(--w-leaf-700); }
+body.doc-light .doc .frame::before, body.doc-light .doc .frame::after { content: none; }
+body.doc-light .doc-nav a .rail-fill { background: var(--w-leaf-700); }
+body.doc-light :focus-visible { outline-color: var(--w-leaf-700); outline-offset: 3px; }
+/* a cross-reference never breaks between "Figure" and its number */
+body.doc-light .doc a.xref { white-space: nowrap; }
+
+/* Panels on the record: the team wiki separates them with a 1px hairline, not a drop shadow; the section map's
+   cards are white, and their lists start level. */
+body.doc-light .callout, body.doc-light .keynote, body.doc-light .openitem, body.doc-light .map-card,
+body.doc-light .rel-card, body.doc-light .equation, body.doc-light .specgrid > div, body.doc-light .od-wrap,
+body.doc-light .params .param {
+  box-shadow: none; border: 1px solid #e5e5e5;
+}
+body.doc-light .map-card:hover, body.doc-light .rel-card:hover { box-shadow: none; border-color: var(--w-leaf-200); }
+body.doc-light .map-card { background: #fff; align-content: start; }
+
+/* The "Jump to /" hint on the record: a white pill like the back button, top right, clear of the margin captions */
+body.doc-light .palette-hint {
+  top: 16px; bottom: auto; right: clamp(14px, 2.4vw, 26px); opacity: 1;
+  background: rgba(255, 255, 255, .94); color: var(--w-leaf-900); border: 1px solid var(--w-leaf-200);
+  font-size: 11px; box-shadow: 0 6px 18px -12px rgba(20, 64, 43, .45);
+}
+
+/* Missing information is ORANGE, as the owner asked ("mark the text orange like the team wiki did"): the team wiki
+   marks unconfirmed and in-progress text with its --ai-ink, #c2410c (5.18:1 on white). Chips and the "Unwritten"
+   blocks use it, on a pale orange ground, so a missing value reads at a glance and never as decoration. */
+body .todo { background: #fff3eb; border-color: #fdba8c; color: #c2410c; }
+body div.todo, body p.todo, body aside.todo { background: #fff7f2; border-color: #fdba8c; border-left-color: #c2410c; color: #9a3412; }
+body div.todo > b, body p.todo > b, body aside.todo > b { color: #c2410c; }
+body.doc-light .pending { background: #fff3eb; border-color: #fdba8c; color: #c2410c; }
+
+/* Running text: near-black at about 62 characters, as the team wiki sets it (ours was slate #4d5866 at ~95). */
+body.doc-light { --w-measure: 62ch; }
+body.doc-light .doc-wrap section.sec > p, body.doc-light .doc-wrap section.part > p,
+body.doc-light .doc-wrap section.sec > ul > li, body.doc-light .doc-wrap section.sec > ol > li { color: #262626; }
+
+/* Phones: polish.css's 11 px floor shrank caption lead-ins and figure numbers BELOW the 15 px caption text they
+   lead; they take the caption's own size instead. */
+@media (max-width: 700px) {
+  body.doc-light .doc-wrap figcaption > b, body.doc-light .doc-wrap figcaption .fignum { font-size: inherit !important; }
+}
+
+/* Links take the team's leaf green now that orange means "missing" (3 Oct). The 17 Sep alignment had copied
+   #c2410c as the team's link ink; on the live team wiki plain links are leaf #23684a and #c2410c marks only
+   unconfirmed text. One colour, one meaning. */
+body.doc-light { --w-link: var(--w-leaf-700); }
+
+/* Tables, the team's way: Inter 13 px bold leaf-900 headers on leaf-50, hairline rows, no heavy zebra */
+body.doc-light .doc-wrap table th {
+  font-family: var(--sans); font-size: .8125rem; font-weight: 700; letter-spacing: 0; text-transform: none;
+  color: var(--w-leaf-900); background: var(--w-leaf-50);
+}
+body.doc-light .doc-wrap table th, body.doc-light .doc-wrap table td { border-bottom: 1px solid var(--w-line); }
+body.doc-light .doc-wrap table tbody tr:nth-child(even) { background: transparent; }
+
+/* =========================================================================
+   3 Oct 2026, morning: the fixes the four page fixers handed back as shared
+   (their logs: dev/night-logs/2026-10-03/). Each one was found on one page
+   and is true of all four, so it lives here once. All of it is scoped to the
+   light record; the hub and the dark heroes are untouched.
+   ========================================================================= */
+
+/* Figure plates take the panels' 1px hairline. The drop shadow was the dark theme's depth cue, the team wiki has
+   none, and three of the four pages still had it. */
+body.doc-light .doc .frame, body.doc-light .doc .autodraw, body.doc-light .doc .syswalk-fig,
+body.doc-light .doc .fig.plate { box-shadow: none; border: 1px solid #e5e5e5; }
+
+/* The last amber decoration on the record, so orange only ever means "missing":
+   the HUD corner brackets on callouts, keynotes, tables and photos; the stat readouts' tint, ring, corner tick and
+   glow; the keynote's warm wash; the amber lead of each part rule; the reading-progress bar; the status legend. */
+body.doc-light :is(.keynote, .callout, .table-scroll, .circuits .circuit, .params .param)::after { content: none; }
+body.doc-light .frame-img::before, body.doc-light .frame-img::after { content: none; }
+body.doc-light .headline-stats > div { background: #fff; box-shadow: none; border: 1px solid #e5e5e5; }
+body.doc-light .headline-stats > div::after { content: none; }
+body.doc-light :is(.headline-stats b, .keynote-fig) { text-shadow: none; }
+body.doc-light .keynote { background: #fff; }
+body.doc-light .doc .part::after { background: linear-gradient(90deg, var(--w-leaf-500), transparent 62%); }
+body.doc-light .progress-bar, body.doc-light #bar { background: var(--w-leaf-700) !important; box-shadow: none !important; }
+body.doc-light .status { background: #fff; border-color: #e5e5e5; }
+
+/* Links the prose rule did not reach: values in the spec sheets, and links inside a missing-information mark, which
+   take the mark's own ink, underlined (one had fallen back to the browser's blue). */
+body.doc-light .doc-wrap .sec dd a:not(.xref):not(.pick-link) {
+  color: var(--w-link); background-image: none; border-bottom: 0;
+  text-decoration: underline; text-decoration-thickness: 1px; text-underline-offset: 2.7px;
+}
+body.doc-light .doc-wrap .sec .todo a:not(.xref):not(.pick-link),
+body.doc-light .doc-wrap .todo a, body.doc-light .doc-wrap .todo a.xref {
+  color: inherit; border-bottom: 0; background: none;
+  text-decoration: underline; text-decoration-thickness: 1px; text-underline-offset: 2.5px;
+}
+
+/* Phones: table numbers take their caption's size, as figure numbers already do; and the "swipe to see the full
+   diagram" hint comes up from 8.3 px to the 11 px floor. */
+@media (max-width: 700px) {
+  body.doc-light .doc-wrap table caption .fignum { font-size: inherit !important; }
+}
+@media (max-width: 760px) {
+  body .autodraw.scrolls::after, body .syswalk-fig.scrolls::after { font-size: 11px; letter-spacing: .12em; }
+}
+
+/* The section map. From 1101 px the contents rail beside it lists every section, and on a phone the map is the only
+   contents list, where every section under every part ran two or three screens. At both ends it becomes what the
+   team wiki's contents box is: the parts alone, number and title on hairlines, in two columns on a desktop and one
+   on a phone. Long titles ("DBTL Cycle 3: Enclosed and Software-Controlled Instrument") wrap inside their row
+   instead of spilling out of a card. In between it keeps its cards and their sections, since nothing else lists
+   them there. */
+body.doc-light .doc-map .map-n { font-size: 11px; letter-spacing: .06em; }
+@media (min-width: 1101px), (max-width: 700px) {
+  body.doc-light .doc-wrap .doc-map {
+    display: block; columns: 2; column-gap: 2.25rem;
+    border-top: 1px solid var(--w-line); margin-bottom: 3.5rem;
+  }
+  body.doc-light .doc-wrap .doc-map .map-card {
+    display: grid; grid-template-columns: 2rem minmax(0, 1fr); grid-template-areas: "n t";
+    align-items: baseline; column-gap: .5rem; row-gap: 0; min-height: 0;
+    break-inside: avoid; padding: .6rem .3rem;
+    border: 0; border-bottom: 1px solid var(--w-line); border-radius: 0; background: none; transform: none;
+  }
+  body.doc-light .doc-wrap .doc-map .map-card:hover, body.doc-light .doc-wrap .doc-map .map-card:focus-visible {
+    background: var(--w-leaf-50); border-color: var(--w-line); transform: none;
+  }
+  body.doc-light .doc-wrap .doc-map .map-sub { display: none; }
+  body.doc-light .doc-wrap .doc-map .map-n { grid-area: n; padding-top: 0; color: var(--w-leaf-700); }
+  body.doc-light .doc-wrap .doc-map .map-t { grid-area: t; font-size: .95rem; line-height: 1.35; font-weight: 600; color: var(--w-leaf-900); }
+}
+@media (max-width: 700px) { body.doc-light .doc-wrap .doc-map { columns: 1; } }
+
+/* The onward cards match the section map: white, the team's hairline, a leaf hover. Their small label reads at
+   11 px, and the arrow is leaf ink rather than the instrument's colour at 70% (1.3-2.3:1 on the old warm grey). */
+body.doc-light .onward .onward-card { background: #fff; border-color: var(--w-line); }
+body.doc-light .onward .onward-card:hover, body.doc-light .onward .onward-card:focus-visible {
+  background: var(--w-leaf-50); border-color: var(--w-leaf-500);
+}
+body.doc-light .onward .onward-k { font-size: 11px; letter-spacing: .14em; color: #5f6b78; }
+body.doc-light .onward .onward-card i { color: var(--w-leaf-700); opacity: 1; }
+
+/* The header: the standfirst and the note under it at the running text's ~62-character measure (they ran the full
+   760 px, about 105 characters), and the note set as the team's leaf aside. */
+body.doc-light .doc-wrap .doc-head > p { max-width: var(--w-measure); }
+body.doc-light .doc-wrap .doc-head .doc-aim {
+  border-left: 3px solid var(--w-leaf-500); background: var(--w-leaf-50); color: #262626;
+  padding: .9rem 1.1rem; border-radius: var(--w-radius-sm);
+}
+
+/* The "Jump to /" hint rode over the margin captions at 1360 px and wider, and the owner asked for nothing at the
+   top of the record but the way back. On the record it is gone; the "/" key still opens the palette, and the hint
+   still shows over the hero. */
+body.doc-light .palette-hint { display: none; }
+
+/* The footer's credits line at full strength (it was 3.72:1 at .78 opacity). The licence notice and the repository
+   link are not touched. */
+body.doc-light .legal .credits { opacity: 1; }
+
+/* The hydroponics card in the onward links, in the hub's hydroponics purple (the photometer's "next" is now the plate,
+   following the hub's order: DiOPAL, bioreactor, photometer, hydroponics). */
+.onward-hydro { --c: var(--c-floating, #b18cff); }
+
+/* Captions under their figures at every width, as on the team wiki: polish.css's margin captions (from 1360 px)
+   now apply to the dark theme only, so a figure on the record looks the same at every width. */
+
+/* =========================================================================
+   DBTL cycle headers (3 Oct 2026). Owner: "The DBTL cycles are a main thing, so I want the section title to be more
+   visible." A cycle's part header becomes a band: a ring that names the cycle and quarters into Design, Build, Test,
+   Learn (clockwise from the top, the order they happen), the title at a larger size, one line saying what the cycle
+   asked, and a strip of the four stages that jumps to each. Shared by every page that writes up cycles.
+
+   Markup, inside the cycle's own section.part (its h2 stays as it is, so the rail and the section map still read it):
+     <section class="part dbtl-part" id="cycle1" data-n="3">
+       <div class="part-mark">…</div>
+       <div class="dbtl-head">
+         <div class="dbtl-ring" aria-hidden="true"><i class="q d">D</i><i class="q b">B</i><i class="q t">T</i><i class="q l">L</i>
+           <span>Cycle</span><b>1</b></div>
+         <div class="dbtl-tx">
+           <p class="dbtl-kick">DBTL cycle 1 <span>of 3</span></p>
+           <h2>…</h2>
+           <p class="dbtl-gist">…one line, from the cycle's own text…</p>
+         </div>
+       </div>
+       <ol class="dbtl-steps" aria-label="The cycle's four stages">
+         <li class="d"><a href="#sec31"><b>D</b><span><em>Design</em>…a few words…</span></a></li>   (b, t, l the same;
+         a stage the record has not written yet takes class "gap" and its few words say so)
+       </ol>
+     </section>
+   ========================================================================= */
+body.doc-light .doc .part.dbtl-part {
+  --dq-d: var(--w-leaf-900); --dq-b: var(--w-leaf-700); --dq-t: #2e7d5b; --dq-l: #1d6a62;   /* white letters on each: 11.7, 6.7, 5.0, 6.4 : 1 */
+  min-height: 0; margin-top: 5.5rem; padding: 1.6rem 1.6rem 1.35rem;
+  background: linear-gradient(180deg, var(--w-leaf-50), #fff 78%);
+  border: 1px solid var(--w-leaf-200); border-top: 4px solid var(--w-leaf-700); border-radius: .5rem;
+}
+body.doc-light .doc .part.dbtl-part::after { display: none; }
+body.doc-light .doc .part.dbtl-part > .part-mark { display: none; }
+.dbtl-head { display: grid; grid-template-columns: auto minmax(0, 1fr); gap: 1.4rem; align-items: center; }
+.dbtl-ring {
+  position: relative; width: 104px; height: 104px; border-radius: 50%; flex: none;
+  display: grid; place-content: center; text-align: center;
+  background: conic-gradient(from -45deg, var(--dq-d) 0 25%, var(--dq-b) 0 50%, var(--dq-t) 0 75%, var(--dq-l) 0 100%);
+}
+.dbtl-ring::before { content: ""; position: absolute; inset: 17px; border-radius: 50%; background: #fff; box-shadow: inset 0 0 0 1px var(--w-leaf-200); }
+.dbtl-ring > span, .dbtl-ring > b { position: relative; display: block; }
+.dbtl-ring > span { font: 600 11px/1 var(--sans); letter-spacing: .12em; text-transform: uppercase; color: var(--w-leaf-700); }
+.dbtl-ring > b { font: 800 2.15rem/1 var(--sans); letter-spacing: -.03em; color: var(--w-leaf-900); margin-top: .1rem; }
+.dbtl-ring .q { position: absolute; font: 700 11px/1 var(--sans); font-style: normal; color: #fff; }
+.dbtl-ring .q.d { top: 3px; left: 50%; translate: -50% 0; }
+.dbtl-ring .q.b { right: 4px; top: 50%; translate: 0 -50%; }
+.dbtl-ring .q.t { bottom: 3px; left: 50%; translate: -50% 0; }
+.dbtl-ring .q.l { left: 4px; top: 50%; translate: 0 -50%; }
+.dbtl-kick { margin: 0 0 .35rem; font: 700 .8125rem/1.2 var(--sans); letter-spacing: .1em; text-transform: uppercase; color: var(--w-leaf-700); }
+.dbtl-kick span { color: #5f6b78; font-weight: 600; }
+body.doc-light .doc-wrap section.part.dbtl-part > .dbtl-head h2, body.doc-light .doc-wrap .dbtl-head h2 {
+  margin: 0; font-size: clamp(1.75rem, 1.2rem + 1.6vw, 2.5rem); line-height: 1.1; font-weight: 800;
+  letter-spacing: -.022em; color: var(--w-leaf-900); text-wrap: balance;
+}
+body.doc-light .doc-wrap .dbtl-gist { margin: .55rem 0 0; max-width: 62ch; font-size: 1.02rem; line-height: 1.55; color: #262626; }
+ol.dbtl-steps {
+  list-style: none; margin: 1.3rem 0 0; padding: 0;
+  display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: .55rem;
+}
+ol.dbtl-steps > li { margin: 0; position: relative; }
+ol.dbtl-steps > li + li::before {
+  content: ""; position: absolute; left: -.55rem; top: 50%; width: .55rem; height: 2px; background: var(--w-leaf-200);
+}
+body.doc-light .doc-wrap ol.dbtl-steps a {
+  display: grid; grid-template-columns: auto minmax(0, 1fr); gap: .6rem; align-items: start; height: 100%; box-sizing: border-box;
+  padding: .65rem .75rem; border-radius: .375rem; background: #fff; border: 1px solid var(--w-line);
+  color: #262626; text-decoration: none; transition: border-color .2s ease, background .2s ease, transform .2s ease;
+}
+body.doc-light .doc-wrap ol.dbtl-steps a:hover, body.doc-light .doc-wrap ol.dbtl-steps a:focus-visible {
+  border-color: var(--w-leaf-500); background: var(--w-leaf-50); transform: translateY(-1px);
+}
+ol.dbtl-steps a > b {
+  display: grid; place-items: center; width: 1.75rem; height: 1.75rem; border-radius: 50%;
+  font: 700 .8125rem/1 var(--sans); color: #fff; background: var(--dq-d);
+}
+ol.dbtl-steps li.b a > b { background: var(--dq-b); }
+ol.dbtl-steps li.t a > b { background: var(--dq-t); }
+ol.dbtl-steps li.l a > b { background: var(--dq-l); }
+ol.dbtl-steps a > span { font-size: .875rem; line-height: 1.4; color: #4a5560; }
+ol.dbtl-steps a > span em { display: block; font-style: normal; font-weight: 700; font-size: .9375rem; color: var(--w-leaf-900); }
+ol.dbtl-steps li.gap a { background: #fff7f2; border-color: #fdba8c; }
+ol.dbtl-steps li.gap a > span { color: #9a3412; }
+ol.dbtl-steps li.gap a > b { background: #c2410c; }
+@media (max-width: 700px) {
+  body.doc-light .doc .part.dbtl-part { padding: 1.15rem 1rem 1rem; margin-top: 4rem; }
+  .dbtl-head { gap: .95rem; }
+  .dbtl-ring { width: 84px; height: 84px; }
+  .dbtl-ring::before { inset: 15px; }
+  .dbtl-ring > b { font-size: 1.7rem; }
+  ol.dbtl-steps { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  ol.dbtl-steps > li + li::before { display: none; }
+}
+@media (prefers-reduced-motion: reduce) { body.doc-light .doc-wrap ol.dbtl-steps a { transition: none; } }
+/* The kicker and the ring already say "DBTL cycle N", so the h2's own "DBTL Cycle N: " prefix is kept for the rail,
+   the section map and screen readers, and hidden from view. */
+.dbtl-head h2 .dbtl-pre {
+  position: absolute; width: 1px; height: 1px; margin: -1px; padding: 0; overflow: hidden;
+  clip: rect(0 0 0 0); clip-path: inset(50%); white-space: nowrap; border: 0;
+}
+/* Phones: the ring beside the kicker, the title and the line under it full width. */
+@media (max-width: 700px) {
+  .dbtl-head { grid-template-columns: auto minmax(0, 1fr); grid-template-areas: "ring kick" "h2 h2" "gist gist"; row-gap: .7rem; }
+  .dbtl-head > .dbtl-tx { display: contents; }
+  .dbtl-ring { grid-area: ring; width: 72px; height: 72px; }
+  .dbtl-ring::before { inset: 13px; }
+  .dbtl-ring > span { font-size: 11px; letter-spacing: .06em; }
+  .dbtl-ring > b { font-size: 1.45rem; }
+  .dbtl-ring .q { font-size: 11px; }
+  .dbtl-ring .q.d, .dbtl-ring .q.t { translate: -50% 0; }
+  .dbtl-head .dbtl-kick { grid-area: kick; align-self: center; margin: 0; }
+  body.doc-light .doc-wrap .dbtl-head h2 { grid-area: h2; }
+  body.doc-light .doc-wrap .dbtl-head .dbtl-gist { grid-area: gist; margin: 0; }
+}
+@media (max-width: 700px) { .dbtl-ring > span { display: none; } .dbtl-ring > b { margin-top: 0; } }
+
+/* Shared fixes the photometer polish handed back (3 Oct 2026):
+   - figure and table cross-references carried polish.css's amber border under their own underline;
+   - links in table header cells were not reached by the prose-link rule;
+   - the DBTL ring's four colours are defined for the whole record, so a ring can stand outside a cycle header
+     (the photometer's "Eight DBTL cycles" band). */
+body.doc-light .doc-wrap a.xref { border-bottom: 0; }
+body.doc-light .doc-wrap .sec th a:not(.xref):not(.pick-link) {
+  color: var(--w-link); background-image: none; border-bottom: 0;
+  text-decoration: underline; text-decoration-thickness: 1px; text-underline-offset: 2.7px;
+}
+body.doc-light { --dq-d: var(--w-leaf-900); --dq-b: var(--w-leaf-700); --dq-t: #2e7d5b; --dq-l: #1d6a62; }
+.dbtl-ring { --dq-d: var(--w-leaf-900, #14402b); --dq-b: var(--w-leaf-700, #23684a); --dq-t: #2e7d5b; --dq-l: #1d6a62; }

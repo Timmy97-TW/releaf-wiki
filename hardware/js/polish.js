@@ -4,6 +4,17 @@
 // No dependencies, no CDN. Every observer is guarded so a page that lacks a
 // given element simply skips that block rather than throwing.
 (function () {
+  /* A .pending chip is an empty span: on screen it is a dashed placeholder, but in the
+     accessibility tree it was nothing at all — and on the hydroponics page five headings
+     consist of one. Give each an off-screen word so the gap is spoken, once. */
+  document.querySelectorAll(".pending").forEach(function (el) {
+    if (el.textContent.trim() || el.querySelector(".sr-only")) return;
+    const sr = document.createElement("span");
+    sr.className = "sr-only";
+    sr.textContent = "to be confirmed";
+    el.appendChild(sr);
+  });
+
   const reduced = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
 
   /* ---------- reach helper ----------
@@ -242,7 +253,6 @@
        It recomputes from the DOM, so it cannot drift from the table it
        describes: the day someone types a price in, this moves. */
     (function summarise() {
-      if (table.dataset.summary === "off") return;
       const rows = Array.prototype.slice.call(table.tBodies[0].rows);
       let priced = 0, identified = 0, sum = 0;
       rows.forEach(function (tr) {
@@ -259,14 +269,14 @@
       bar.className = "bom-summary";
       bar.innerHTML =
         '<div class="bom-meter"><span style="width:' + pct + '%"></span></div>' +
-        '<dl class="bom-facts">' +
+        '<div class="bom-facts">' +
           "<div><dt>Line items</dt><dd>" + rows.length + "</dd></div>" +
           "<div><dt>With a part number</dt><dd>" + identified + " / " + rows.length + "</dd></div>" +
           "<div><dt>Costed</dt><dd>" + priced + " / " + rows.length + "</dd></div>" +
           "<div><dt>Priced so far</dt><dd>" +
-            (priced ? sum.toFixed(2) : "none") + "</dd></div>" +
-        "</dl>" +
-        '<p class="bom-note ai">' + (
+            (priced ? sum.toFixed(2) : "&mdash;") + "</dd></div>" +
+        "</div>" +
+        '<p class="bom-note">' + (
           priced === rows.length
             ? "Every line is costed, so the figure above is the build cost."
             : priced === 0
@@ -304,7 +314,10 @@
     heads.forEach(function (th, ci) {
       th.setAttribute("data-sort", "");
       th.setAttribute("tabindex", "0");
-      th.setAttribute("role", "button");
+      // it stays a columnheader: giving it role="button" drops the header
+      // association, so a data cell no longer announces which column it is in
+      if (!th.getAttribute("scope")) th.setAttribute("scope", "col");
+      th.setAttribute("title", "Sort by this column");
       function keyFor(row) {
         const cell = row.cells[ci];
         const txt = cell ? cell.textContent.trim() : "";
@@ -434,7 +447,7 @@
     { label: "Hardware hub", sub: "All four instruments", href: rel + "index.html" },
     { label: "Bioreactor", sub: "Perfusion loop", href: rel + "bioreactor/index.html" },
     { label: "Photometer", sub: "In-line OD600", href: rel + "photometer/index.html" },
-    { label: "DiOPAL", sub: "Dual-wavelength LED array", href: rel + "diopal/index.html" },
+    { label: "LPA", sub: "Dual-wavelength LED array", href: rel + "diopal/index.html" },
     { label: "Hydroponics", sub: "Floating growth plate", href: rel + "hydroponics/index.html" },
     { label: "Notebook", sub: "The engineering record, week by week", href: rel + "notebook/index.html" },
   ];
@@ -443,7 +456,7 @@
   PAGES.forEach(function (p) {
     items.push({ label: p.label, sub: p.sub, kind: "Page", href: p.href });
   });
-  document.querySelectorAll(".doc .part h2, .doc .sec h3").forEach(function (h) {
+  document.querySelectorAll(".doc .part h2, .doc .sec h3, .doc section:not(.part) > .dbtl-head h2").forEach(function (h) {
     const sec = h.closest("section");
     let id = sec && sec.id;
     if (!id) {

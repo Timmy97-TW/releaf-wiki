@@ -1,4 +1,4 @@
-// DiOPAL technical record — contents rail, condition matrix, and the I² chart.
+// Bioreactor technical record — contents rail (copied from the DiOPAL record; its matrix and I² chart do nothing here).
 (function () {
 
   // ---------- condition matrix ----------
@@ -93,6 +93,39 @@
   // ---------- contents rail ----------
   const nav = document.getElementById("doc-nav");
   if (!nav) return;
+
+  // Each part lists its own sections under it, read from the record's h3s so the list cannot drift from the
+  // headings; only the part being read shows them. Built before polish.js runs, so its scrollspy picks the
+  // section entries up with the rest.
+  Array.prototype.forEach.call(nav.querySelectorAll(":scope > ol > li > a"), function (a) {
+    const part = document.querySelector(a.getAttribute("href"));
+    if (!part) return;
+    const subs = [];
+    for (let el = part.nextElementSibling; el && !el.classList.contains("part"); el = el.nextElementSibling) {
+      const h = el.id ? el.querySelector(":scope > h3") : null;
+      if (h) subs.push({ id: el.id, h: h });
+    }
+    if (!subs.length) return;
+    const ol = document.createElement("ol");
+    ol.className = "rail-sub";
+    subs.forEach(function (s) {
+      const i = s.h.querySelector("i");
+      const num = i ? i.textContent.trim() : "";
+      const text = s.h.textContent.replace(/\s+/g, " ").trim().slice(num.length).trim();
+      const li = document.createElement("li");
+      const link = document.createElement("a");
+      link.href = "#" + s.id;
+      link.title = text;
+      const b = document.createElement("b"); b.textContent = num;
+      const span = document.createElement("span"); span.textContent = text;
+      link.appendChild(b); link.appendChild(span);
+      li.appendChild(link);
+      ol.appendChild(li);
+    });
+    a.parentNode.appendChild(ol);
+  });
+  const parts = Array.prototype.slice.call(nav.querySelectorAll(":scope > ol > li"));
+
   const links = Array.prototype.slice.call(nav.querySelectorAll("a"));
   const targets = links.map(function (a) {
     const el = document.querySelector(a.getAttribute("href"));
@@ -100,13 +133,16 @@
   }).filter(Boolean);
   if (!targets.length) return;
 
+  // The same reading line as polish.js's scrollspy, so the two never disagree about the entry that is lit.
   function update() {
-    const line = window.innerHeight * 0.34;
+    const line = window.innerHeight * 0.42;
     let active = null;
     targets.forEach(function (t) {
       if (t.el.getBoundingClientRect().top <= line) active = t;
     });
     links.forEach(function (a) { a.classList.toggle("on", !!active && a === active.a); });
+    const open = active ? active.a.closest("#doc-nav > ol > li") : null;
+    parts.forEach(function (li) { li.classList.toggle("open", li === open); });
   }
 
   let ticking = false;
@@ -126,5 +162,10 @@
     if (!el) return;
     e.preventDefault();
     el.scrollIntoView({ behavior: smooth ? "smooth" : "auto", block: "start" });
+    // A smooth scroll that never moves focus leaves the skip link pointing at nothing: the
+    // next Tab lands back in the header. Give the target focus without scrolling it again.
+    if (!el.hasAttribute("tabindex")) el.setAttribute("tabindex", "-1");
+    el.focus({ preventScroll: true });
+    if (history.replaceState) history.replaceState(null, "", a.getAttribute("href"));
   });
 })();

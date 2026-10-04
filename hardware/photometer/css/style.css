@@ -87,11 +87,11 @@ h1, h2 { font-weight: 600; letter-spacing: -0.035em; margin: 0; }
   letter-spacing: .3em; text-transform: uppercase;
   color: var(--amber); margin-bottom: 1.6rem;
 }
-.intro h1 {
+.intro :is(h1, .intro-title) {
   font-size: clamp(2.4rem, 7vw, 5rem);
   line-height: 1.02; margin-bottom: 1.6rem;
 }
-.intro h1 span { color: var(--amber); }
+.intro :is(h1, .intro-title) span { color: var(--amber); }
 .intro > p {
   max-width: 44ch; margin: 0 auto;
   color: var(--muted); font-size: 1rem; line-height: 1.7;
@@ -426,7 +426,7 @@ h1, h2 { font-weight: 600; letter-spacing: -0.035em; margin: 0; }
     rgba(255,255,255,.012) 0 8px, transparent 8px 16px);
 }
 .blank-slot::after {
-  content: attr(data-label) ": to be written";
+  content: attr(data-label) " — to be written";
   font-family: var(--mono); font-size: .6rem;
   letter-spacing: .2em; text-transform: uppercase; color: var(--faint);
 }
@@ -618,6 +618,8 @@ table tfoot td {
 
 /* ---- flow path ---- */
 .flow { color: var(--fg); font-weight: 500; white-space: nowrap; }
+/* at 320px the nowrap chain is wider than the screen */
+@media (max-width: 24rem) { .flow { white-space: normal; } }
 .flow i { color: var(--amber); font-style: normal; margin: 0 .18em; }
 
 /* ---- parameters ---- */
@@ -834,8 +836,8 @@ h2 { letter-spacing: -.038em; }
 body.leaving { opacity: 0; transition: opacity .32s var(--ease); }
 
 /* the hero title gets real presence */
-.intro h1 { font-size: clamp(2.7rem, 8.4vw, 6rem); line-height: .96; }
-.intro h1 span { filter: drop-shadow(0 0 26px color-mix(in srgb, var(--amber) 22%, transparent)); }
+.intro :is(h1, .intro-title) { font-size: clamp(2.7rem, 8.4vw, 6rem); line-height: .96; }
+.intro :is(h1, .intro-title) span { filter: drop-shadow(0 0 26px color-mix(in srgb, var(--amber) 22%, transparent)); }
 
 /* rules either side of the eyebrow, so it sits rather than floats */
 .intro .eyebrow, .doc-head .eyebrow {
@@ -1040,7 +1042,7 @@ stroke='white' stroke-width='2' stroke-linecap='round'>\
   display: grid; place-items: center;
   padding: clamp(16px, 4vw, 54px);
   background: rgba(6,7,9,.93);
-  -webkit-backdrop-filter: blur(7px); backdrop-filter: blur(7px);
+  backdrop-filter: blur(7px);
   opacity: 0; transition: opacity .22s var(--ease);
   cursor: zoom-out;
 }
@@ -1238,9 +1240,1456 @@ body.doc-light .od-event text { fill: #c1392a; }
   text-transform: uppercase; color: var(--amber);
 }
 
-/* A "Not written yet." note can be the first paragraph of a part (Part 2),
-   and the part-opener raised initial in ../css/polish.css would turn its N
-   into a drop cap. Notes are not openers. */
-body.doc-light .doc .part + .sec > p.note-in-progress:first-of-type::first-letter {
-  float: none; font-size: inherit; font-weight: inherit; color: inherit; padding: 0;
+/* The opening line is display type, not the document's heading: the instrument's name in the
+   record below is the page's one h1. This keeps the line looking exactly as it did. */
+.intro .intro-title { margin: 0; font-weight: 600; letter-spacing: -.045em; }
+
+/* ========================================================== function story
+   The scroll-driven story that opens this page. It replaces the teardown that
+   used to sit here; the teardown's own rules (.track, .stage, .card, .panel,
+   .build, .counter and the .hud/.loader/.rail it shared) are still above in
+   this file, untouched, so putting it back is a paste and not a merge.
+
+   Everything below is scoped under .story for exactly that reason: .hud,
+   .loader and .rail mean one thing to the teardown and another here, and
+   `.story .hud` outranks a bare `.hud` without either having to be deleted.
+
+   The display face is declared here because these instrument pages never
+   needed it before — it lives in css/hub.css, which they do not load.
+   Tokens (--mono, --sans, --fg, --faint, --line, --ease) come from
+   ../css/polish.css; only --accent is set, per instrument. */
+@font-face {
+  font-family: "Oxanium Title";
+  src: url("../../fonts/oxanium-600-latin.woff") format("woff");
+  font-weight: 600; font-style: normal; font-display: block;
+  unicode-range: U+0020-007E, U+00B7, U+2013-2014, U+2018-2019, U+201C-201D, U+2026;
 }
+
+.story { --accent: #ffa23d; }
+
+
+
+/* ------------------------------------------------------------------- stage */
+.story { position: relative; }
+
+.story .story-stage {
+  position: sticky; top: 0;
+  height: 100svh; min-height: 520px;
+  overflow: hidden;
+  background:
+    radial-gradient(120% 90% at 50% 8%, rgba(120, 140, 170, .05), transparent 60%),
+    var(--bg);
+}
+
+.story #gl { position: absolute; inset: 0; width: 100%; height: 100%; display: block; }
+
+
+/* -------------------------------------------------------------- title card */
+.story .story-title {
+  /* Left column, not centred: the photometer is a tall mast and DiOPAL is a
+     wide block, and both read better holding one side of the frame with the
+     type down the other than with words laid over the middle of them. */
+  /* Higher and further in than the caption column: the title is the one piece
+     of type that shares the frame with the whole instrument, so it sits nearer
+     the middle and above centre, with the model holding the right. */
+  position: absolute; left: clamp(1.4rem, 9vw, 7.5rem); top: 37%;
+  transform: translateY(-50%);
+  text-align: left; z-index: 4; pointer-events: none;
+  width: min(86vw, 28rem);
+  transition: none;
+}
+
+.story .story-title .eyebrow {
+  font-family: var(--mono); font-size: .62rem; letter-spacing: .42em;
+  text-transform: uppercase; color: var(--accent); margin-bottom: 1.1rem;
+}
+
+.story .story-title .line {
+  margin: 0;
+  font-family: "Oxanium Title", var(--sans);
+  font-weight: 600; letter-spacing: -.02em; line-height: 1.02;
+  font-size: clamp(2.1rem, 6.2vw, 4.4rem);
+  text-shadow: 0 0 64px rgba(0, 0, 0, .85);
+}
+
+.story .title-rule {
+  display: flex; align-items: center; gap: .8rem;
+  justify-content: flex-start; margin-top: 1.3rem;
+}
+
+.story .title-rule i { height: 1px; width: clamp(1.6rem, 5vw, 3rem); background: linear-gradient(90deg, var(--accent), transparent); }
+
+.story .title-rule i:last-child { display: none; }
+
+.story .title-rule span {
+  font-family: var(--mono); font-size: .58rem; letter-spacing: .34em;
+  text-transform: uppercase; color: var(--accent);
+}
+
+
+/* ---------------------------------------------------------------- captions */
+.story .hud {
+  position: absolute; left: clamp(1.1rem, 4vw, 4.2rem); bottom: clamp(1.6rem, 7vh, 5rem);
+  width: min(30rem, 44vw); z-index: 5; pointer-events: none;
+}
+
+.story .cap {
+  position: absolute; left: 0; bottom: 0; width: 100%;
+  opacity: 0; visibility: hidden; will-change: opacity, transform;
+}
+
+.story .cap-tag {
+  display: flex; align-items: center; gap: .7rem;
+  font-family: var(--mono); font-size: .6rem; letter-spacing: .26em;
+  text-transform: uppercase; color: var(--accent); margin-bottom: .75rem;
+}
+
+.story .cap-tag i { height: 1px; width: 1.9rem; background: var(--accent); opacity: .6; display: block; }
+
+.story .cap-name {
+  font-family: "Oxanium Title", var(--sans); font-weight: 600;
+  font-size: clamp(1.35rem, 2.5vw, 2.05rem); letter-spacing: -.015em; line-height: 1.1;
+}
+
+.story .cap-rule { height: 1px; width: 3.4rem; background: var(--line); margin: .85rem 0 .8rem; }
+
+.story .cap p {
+  margin: 0; max-width: 34ch;
+  font-size: clamp(.86rem, 1.05vw, .98rem); line-height: 1.62; color: #c3cbd6;
+  text-wrap: pretty;
+}
+
+.story .cap p b, .story .cap p strong { color: var(--fg); font-weight: 600; }
+
+.story .cap p em { color: var(--accent); font-style: normal; }
+
+
+/* -------------------------------------------------------------- act rail */
+.story .rail {
+  position: absolute; right: clamp(.9rem, 2.2vw, 2.2rem); top: 50%;
+  transform: translateY(-50%);
+  display: flex; flex-direction: column; gap: .62rem; z-index: 5; pointer-events: none;
+}
+
+.story .rail i {
+  display: block; width: 14px; height: 2px; background: rgba(255, 255, 255, .16);
+  transition: background .35s var(--ease), width .35s var(--ease);
+}
+
+.story .rail i.on { background: var(--accent); width: 24px; }
+
+
+/* ---------------------------------------------------- loader and scroll cue */
+.story .loader {
+  position: absolute; inset: 0; display: grid; place-items: center; z-index: 8;
+  background: var(--bg); color: var(--faint);
+  font-family: var(--mono); font-size: .62rem; letter-spacing: .3em; text-transform: uppercase;
+  transition: opacity .7s var(--ease);
+}
+
+.story .loader.gone { opacity: 0; pointer-events: none; }
+
+.story .scroll-cue {
+  position: absolute; left: 50%; bottom: 2.1rem; transform: translateX(-50%);
+  display: flex; flex-direction: column; align-items: center; gap: .55rem;
+  font-family: var(--mono); font-size: .56rem; letter-spacing: .38em;
+  text-transform: uppercase; color: var(--faint); z-index: 5; pointer-events: none;
+}
+
+.story .scroll-cue i { display: block; width: 1px; height: 34px; background: linear-gradient(180deg, var(--faint), transparent); }
+
+
+/* ------------------------------------------------------------------ phones */
+@media (max-width: 860px) {
+
+  .story .hud { width: auto; right: clamp(1.1rem, 4vw, 2rem); bottom: 1.4rem; }
+
+  .story .cap p { max-width: none; font-size: .9rem; }
+
+  .story .cap-name { font-size: 1.3rem; }
+
+  .story .rail { display: none; }
+}
+
+
+@media (prefers-reduced-motion: reduce) {
+
+  .story .cap, .story .story-title { transition: none !important; }
+}
+
+/* --- this page's own --- */
+
+  /* The story runs over ten viewport-heights; the stage is sticky inside it. */
+  /* 1400vh, not 1000. The camera does nearly all of its travel in the
+     last 45% of each act, so a 100 px wheel notch was moving the picture
+     by most of a screen and the scroll read as jerky. A longer track is
+     the direct fix: the same moves, spread over 40% more scrolling. */
+  .story { height: 1400vh; }
+
+
+  /* sensor readouts, positioned each frame from the 3D anchors */
+  .story .ro {
+    position: absolute; left: 0; top: 0; z-index: 5; pointer-events: none;
+    opacity: 0; visibility: hidden; will-change: transform, opacity;
+    font-family: var(--mono); white-space: nowrap;
+  }
+
+  .story .ro .k {
+    display: block; font-size: .58rem; letter-spacing: .26em; text-transform: uppercase;
+    color: #97a1ad; margin-bottom: .3rem;
+  }
+
+  .story .ro b { font-size: 1.28rem; font-weight: 600; color: #f0f4f9; letter-spacing: .02em; }
+
+  .story .ro .u { font-size: .62rem; color: var(--faint); margin-left: .28rem; }
+
+  .story .ro::before {
+    content: ""; position: absolute; left: -14px; top: 50%; width: 10px; height: 1px;
+    background: rgba(255,255,255,.28);
+  }
+
+  .story .ro.right::before { left: auto; right: -14px; }
+
+  .story .ro.big b { font-size: 1.75rem; color: var(--accent); }
+
+  .story .ro.big { padding: .55rem .8rem; border: 1px solid rgba(255,162,61,.30); border-radius: 8px;
+            background: rgba(10,9,7,.62); backdrop-filter: blur(5px); }
+
+  .story .ro.big::before { display: none; }
+
+  .story .ro.big.hot { border-color: rgba(255,162,61,.65); }
+
+  /* a rejected point: the reading is real, the log does not keep it */
+  .story .ro.reject b { color: #ff7a6b; }
+
+  .story .ro.big.reject { border-color: rgba(255,122,107,.55); background: rgba(22,8,7,.7); }
+
+  .story .ro.reject .k { color: #ff9c8f; }
+
+  .story .ro.reject b::after {
+    content: ""; display: inline-block; width: 100%; height: 1px; margin-left: -100%;
+    background: #ff7a6b; position: relative; top: -.42em;
+  }
+
+
+  /* the traced record */
+  .story #curve { position: absolute; inset: 0; width: 100%; height: 100%; z-index: 3; opacity: 0; pointer-events: none; }
+
+
+  /* A scrim under the type. Act 3 puts a lit cuvette exactly where the caption
+     sits, and body copy at 0.9rem cannot hold against it. */
+  .story .scrim {
+    /* Sized to the caption, not to the screen — see the DiOPAL stylesheet for
+       the measurement. Same geometry here so the two stories agree. */
+    position: absolute; left: 0; bottom: 0; width: min(30rem, 52vw); height: 62%;
+    z-index: 4; pointer-events: none;
+    /* `to right`, not 105deg. A tilted gradient's stops run along a line of
+       length W*sin(a) + H*cos(a), which at 105deg over a 480 x 558 box is 608px
+       -- so the `0%` alpha stop at 92% sits at 559px along that axis, which is
+       579px horizontally, 99px PAST the element's right edge. The element clips
+       the fade partway through and leaves a hard vertical cut at x = 480 on
+       every frame of the story. Horizontal, the gradient line is exactly the
+       width, so 92% is 92% of 480 and the last 8% is genuinely clear -- at any
+       height and any aspect ratio, which a tuned percentage cannot promise.
+       Measured at x 481: step +3.07 before, -0.09 after, the same as removing
+       the scrim altogether. */
+    background: linear-gradient(to right, rgba(3,4,7,.86) 0%, rgba(3,4,7,.64) 48%, rgba(3,4,7,0) 92%);
+    /* The top edge fades out. With the aurora at a strength you can actually
+       see, the scrim's straight top edge cut it with a hard horizontal line
+       across the left of the opening and the close. */
+    -webkit-mask-image: linear-gradient(to bottom, transparent 0%, #000 34%);
+    mask-image: linear-gradient(to bottom, transparent 0%, #000 34%);
+  }
+
+
+  /* The opening's right-hand column. The title holds the left, the instrument
+     the middle; without this the right third of the first frame is empty.
+     Every number here is already on the wiki page — 600 nm, the 0.2 mm cell,
+     the 400 h run (section 3.3's own heading; the 336 h is the traced portion
+     of it) and the 2,132 points logged. Quoting 336 here put two different
+     run lengths on one page — this column and act 6's title. */
+  .story .title-stats {
+    position: absolute; right: clamp(1.4rem, 7vw, 6rem); top: 37%;
+    transform: translateY(-50%);
+    z-index: 4; pointer-events: none; list-style: none; margin: 0; padding: 0;
+    text-align: right; opacity: 0; visibility: hidden;
+  }
+
+  .story .title-stats li { margin: 0 0 1.45rem; }
+
+  .story .title-stats li:last-child { margin-bottom: 0; }
+
+  .story .title-stats b {
+    font-family: var(--mono); font-weight: 600; font-size: clamp(1.1rem, 2.1vw, 1.6rem);
+    color: #eef3f8; letter-spacing: .01em;
+  }
+
+  .story .title-stats span { font-family: var(--mono); font-size: .62rem; color: var(--faint); margin-left: .3rem; }
+
+  .story .title-stats i {
+    display: block; font-style: normal; font-family: var(--mono);
+    font-size: .54rem; letter-spacing: .26em; text-transform: uppercase;
+    color: #8b95a3; margin-top: .3rem;
+  }
+
+  @media (max-width: 760px) {
+
+    /* four numbers down the side of a 390 px frame collide with the mast */
+    .story .title-stats { display: none; }
+}
+
+
+  /* the closing line */
+  .story .endline {
+    position: absolute; left: clamp(1.1rem, 4vw, 4.2rem); top: 50%; transform: translateY(-50%);
+    z-index: 5; opacity: 0; visibility: hidden; pointer-events: none;
+    font-family: "Oxanium Title", var(--sans); font-weight: 600;
+    font-size: clamp(1.5rem, 3.4vw, 2.6rem); letter-spacing: -.02em; line-height: 1.12;
+    max-width: 22ch; text-shadow: 0 0 50px rgba(0,0,0,.9);
+  }
+
+  .story .endline em { color: var(--accent); font-style: normal; }
+
+.doc-wrap {
+  --blend-h: clamp(170px, 20vh, 300px);
+  --blend-glow: rgba(255, 162, 61, .13);
+}
+
+
+/* The seam itself. The stage is sticky inside the track, so when the record
+   finally arrives it is the stage's own bottom edge that meets it — which is
+   why matching colours across that edge is the whole job. The render's bottom
+   row is whatever the frame happens to hold there (floor, cable, instrument),
+   so instead of trying to match it, the last 16vh of the stage is faded to the
+   page's own #05060a. Both sides of the seam are then the same colour and the
+   band below carries on from it.
+
+   It sits under the captions (z 5) and over the scrim (z 4), and at 16vh it
+   reads for the rest of the story as the bottom vignette a frame like this
+   wants anyway. */
+.story .story-stage::after {
+  content: ""; position: absolute; left: 0; right: 0; bottom: 0;
+  height: clamp(120px, 16vh, 215px); pointer-events: none; z-index: 4;
+  background: linear-gradient(to bottom,
+    rgba(5, 6, 10, 0) 0%, rgba(5, 6, 10, .30) 42%,
+    rgba(5, 6, 10, .74) 74%, rgb(5, 6, 10) 100%);
+}
+
+/* ---------------------------------------------------- story -> record blend
+   The record used to begin on a 1px rule laid straight across the stage: dark
+   3D, hard line, paper. That rule is what made the two halves of the page read
+   as two pages. It is gone, and in its place the record opens through a band
+   that starts at the stage's own colour and dissolves into the page's, so the
+   instrument fades into the document instead of being cut off it.
+
+   The band is a real element, not a pseudo: ../css/polish.css loads after this
+   file and already owns both .doc-wrap::before (the cursor glow) and ::after
+   (the watermark), so a pseudo here loses some properties to it and keeps
+   others, which is worse than losing outright.
+
+   Drawn in both themes deliberately. In the light record it crosses the whole
+   distance from #05060a to white; in the dark one there is almost no distance
+   to cross and the band simply keeps the seam from being an edge. The colour
+   it starts from is written out rather than taken from --bg, because --bg is
+   the thing changing underneath it. */
+.doc-wrap { border-top: 0; padding-top: var(--blend-h); }
+.story-blend {
+  position: absolute; left: 0; right: 0; top: 0;
+  height: var(--blend-h); pointer-events: none; z-index: 0;
+  background:
+    /* A breath of the instrument's own colour across the crossing, so the
+       dissolve carries the story's light into the page rather than going grey.
+       Centred well down the band, not at its top: peaked at the top it put a
+       warm bar right on the seam and made a worse edge than the rule it
+       replaced — measured, rgb(33,23,16) against rgb(5,6,10) one pixel above. */
+    radial-gradient(120% 74% at 50% 64%, var(--blend-glow) 0%, transparent 58%),
+    linear-gradient(to bottom,
+      rgb(5, 6, 10) 0%,
+      rgba(5, 6, 10, .90) 26%,
+      rgba(5, 6, 10, .58) 50%,
+      rgba(5, 6, 10, .24) 74%,
+      rgba(5, 6, 10, 0) 100%);
+}
+
+/* ------------------------------------------------------------ landing chrome
+   Four corner brackets and one slow sweep across the stage, both keyed to the
+   title's fade by the scene so they dress the landing and nothing else. Kept
+   thin and low: the point is that the opening frame reads as an instrument
+   being presented, not that anyone notices a bracket. */
+.story .hero-frame {
+  position: absolute; inset: 0; z-index: 4; pointer-events: none;
+  opacity: 0; visibility: hidden;
+}
+.story .hero-frame i {
+  position: absolute; width: 30px; height: 30px;
+  border: 1px solid var(--accent); opacity: .62;
+}
+/* The top pair clears the fixed header, which is 75px tall and sits at z 50
+   over the stage: at a 22px inset both of them were behind it. */
+.story .hero-frame i.hf-tl { left: 26px; top: 92px; border-right: 0; border-bottom: 0; }
+.story .hero-frame i.hf-tr { right: 26px; top: 92px; border-left: 0; border-bottom: 0; }
+.story .hero-frame i.hf-bl { left: 26px; bottom: 26px; border-right: 0; border-top: 0; }
+.story .hero-frame i.hf-br { right: 26px; bottom: 26px; border-left: 0; border-top: 0; }
+/* one pass every nine seconds, a fifth of a percent of the frame's luminance —
+   enough to make the stage feel alive, not enough to read as a scanline */
+.story .hero-scan {
+  position: absolute; left: 0; right: 0; height: 26vh; top: -30vh;
+  background: linear-gradient(to bottom,
+    transparent 0%, color-mix(in srgb, var(--accent) 12%, transparent) 50%, transparent 100%);
+  animation: heroScan 9s linear infinite;
+}
+@keyframes heroScan {
+  0%   { transform: translateY(0); opacity: 0; }
+  12%  { opacity: 1; }
+  88%  { opacity: 1; }
+  100% { transform: translateY(150vh); opacity: 0; }
+}
+@media (max-width: 760px) {
+  .story .hero-frame i { width: 18px; height: 18px; }
+  .story .hero-frame i.hf-tl, .story .hero-frame i.hf-tr { top: 84px; }
+  .story .hero-frame i.hf-bl, .story .hero-frame i.hf-br { bottom: 14px; }
+  .story .hero-frame i.hf-tl, .story .hero-frame i.hf-bl { left: 14px; }
+  .story .hero-frame i.hf-tr, .story .hero-frame i.hf-br { right: 14px; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .story .hero-scan { animation: none; opacity: 0; }
+}
+
+
+/* ===========================================================================
+   The record, rebuilt to the team's writing doc (2 Oct 2026, night)
+   ---------------------------------------------------------------------------
+   Components used only by the rebuilt record below the story. This sheet
+   loads before polish.css and wiki-align.css, so anything that restyles a
+   shared component carries a `body.doc-light` prefix and an extra class to
+   win on specificity rather than on order. Colours are the team wiki's own
+   (leaf, amber, slate, rust, hairline #e5e5e5), with fallbacks for the
+   moment before the page turns light.
+   =========================================================================== */
+body[data-instrument="photometer"] {
+  --pm-leaf-900: var(--w-leaf-900, #14402b);
+  --pm-leaf-700: var(--w-leaf-700, #23684a);
+  --pm-leaf-500: var(--w-leaf-500, #4f9c6f);
+  --pm-leaf-200: var(--w-leaf-200, #cfe4d8);
+  --pm-leaf-50:  var(--w-leaf-50, #f4f9f6);
+  --pm-amber-700: var(--w-amber-700, #92610c);
+  --pm-hair: #e5e5e5;
+  --pm-ink: #1f2933;
+  --pm-ink-2: #556070;
+}
+
+/* ---- plates for drawings, the chart and the wipe ------------------------
+   The same mount as the optical-path diagram (.autodraw): white board,
+   hairline, a soft drop. */
+.cadfig, .diafig, .run-fig, .wipe-fig { margin: 2.2rem 0; position: relative; }
+body.doc-light .doc .cadfig,
+body.doc-light .doc .diafig,
+body.doc-light .doc .run-fig,
+body.doc-light .doc .wipe-fig {
+  background: #fff;
+  border: 1px solid #e5e5e5;
+  border-radius: .3125rem;
+  padding: 18px 18px 4px;
+  box-shadow: none;
+}
+/* the caption is ruled off inside the plate (at every width since 3 Oct 2026: on the record captions no longer move
+   into the margin at 1360 px) */
+body.doc-light .doc :is(.cadfig, .diafig, .run-fig, .wipe-fig) > figcaption {
+  margin-top: .9rem; padding: .8rem 2px .95rem;
+  border-top: 1px solid rgba(15, 19, 25, .11);
+}
+.cadfig svg, .diafig svg { display: block; width: 100%; height: auto; overflow: visible; }
+
+/* ---- 1.2 the exploded assembly ------------------------------------------ */
+.cadfig-grid {
+  display: grid; gap: 22px 26px; align-items: center;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 272px);
+}
+.cadfig-draw { min-width: 0; }
+.cad-legend { list-style: none; margin: 0; padding: 0; counter-reset: cad; }
+.cad-legend li {
+  counter-increment: cad; position: relative;
+  padding: .42rem 0 .42rem 2.15rem; margin: 0;
+  border-top: 1px solid var(--pm-hair);
+  font-size: .9rem; line-height: 1.38; color: var(--pm-ink-2);
+}
+.cad-legend li:first-child { border-top: 0; }
+.cad-legend li::before {
+  content: counter(cad);
+  position: absolute; left: 0; top: .42rem;
+  width: 1.45rem; height: 1.45rem; border-radius: 50%;
+  display: grid; place-content: center;
+  border: 1.5px solid var(--pm-leaf-700); background: #fff;
+  font: 700 .74rem/1 var(--sans); color: var(--pm-leaf-900);
+}
+.cad-legend li b { display: block; color: var(--pm-ink); font-weight: 650; }
+.cad-key {
+  display: flex; flex-wrap: wrap; align-items: center; gap: .3rem .55rem;
+  margin: .7rem 0 0 !important; font-size: .82rem !important; color: var(--pm-ink-2) !important;
+}
+.cad-key .sw { display: inline-block; width: .8rem; height: .8rem; border-radius: 2px; vertical-align: -.1em; }
+.cad-key .sw.glass { background: #bcd4e7; box-shadow: inset 0 0 0 1px #8fb2cd; }
+.cad-key .sw.pcb { background: #6ea486; box-shadow: inset 0 0 0 1px #4f8a6c; margin-left: .35rem; }
+/* the as-built photo is a frame (so it opens full size) without the plate */
+.cadfig .frame.asbuilt { margin: 1rem 0 0; max-width: 220px; }
+body.doc-light .doc .cadfig .frame.asbuilt {
+  padding: 0; border: 0; background: none; box-shadow: none;
+}
+body.doc-light .doc .cadfig .frame.asbuilt::before,
+body.doc-light .doc .cadfig .frame.asbuilt::after { content: none; display: none; }
+.cadfig .asbuilt-cap {
+  margin: .45rem 0 0 !important; font: 600 .78rem var(--mono) !important;
+  letter-spacing: .08em; text-transform: uppercase; color: var(--pm-ink-2) !important;
+}
+
+/* the drawing's own ink: three tones per material, lines on top */
+.cad .f-printed.t0 { fill: #c3c9d0; } .cad .f-printed.t1 { fill: #dadfe4; } .cad .f-printed.t2 { fill: #eef0f3; }
+.cad .f-glass.t0   { fill: #9fc0da; } .cad .f-glass.t1   { fill: #bcd4e7; } .cad .f-glass.t2   { fill: #dbe8f3; }
+.cad .f-pcb.t0     { fill: #4f8a6c; } .cad .f-pcb.t1     { fill: #6ea486; } .cad .f-pcb.t2     { fill: #97c0aa; }
+.cad .f-led.t0     { fill: #e3962f; } .cad .f-led.t1     { fill: #efb35a; } .cad .f-led.t2     { fill: #f7d29a; }
+.cad .f-dark.t0    { fill: #2b3137; } .cad .f-dark.t1    { fill: #3d454d; } .cad .f-dark.t2    { fill: #59626b; }
+.cad .ln-c { fill: none; stroke: #3b444d; stroke-width: .42; stroke-linecap: round; stroke-linejoin: round; }
+.cad .ln-o { fill: none; stroke: #1b2127; stroke-width: .95; stroke-linecap: round; stroke-linejoin: round; }
+.cad .ld { stroke: var(--pm-leaf-700); stroke-width: 1; }
+.cad .ad { fill: var(--pm-leaf-700); }
+.cad .mk { fill: #fff; stroke: var(--pm-leaf-700); stroke-width: 1.5; }
+.cad .mn { font: 700 12.5px var(--sans); fill: var(--pm-leaf-900); text-anchor: middle; }
+
+/* ---- 3.5 the elevation --------------------------------------------------- */
+.elevfig .cadfig-draw { max-width: 430px; margin: 0 auto; }
+.elev .x-fill { fill: #f1f3f6; }
+.elev .x-ln { fill: none; stroke: #a3acb6; stroke-width: .55; stroke-linejoin: round; }
+.elev .o-ln { fill: none; stroke: #2d3843; stroke-width: .42; stroke-linejoin: round; }
+.elev .beam-glow { fill: none; stroke: #f0a13a; stroke-width: 6; opacity: .22; stroke-linecap: round; }
+.elev .beam { fill: none; stroke: #c27410; stroke-width: 1.7; stroke-linecap: round; }
+.elev .beam.ref { stroke-width: 1.25; }
+.elev .br { fill: none; stroke: var(--pm-leaf-700); stroke-width: 1.2; }
+.elev .gnd { fill: none; stroke: #7c8792; stroke-width: 1; stroke-dasharray: 3 3; }
+.elev .dim { fill: none; stroke: var(--pm-amber-700); stroke-width: 1.3; }
+.elev .ldr { fill: none; stroke: #7c8792; stroke-width: .8; }
+.elev text { font-family: var(--sans); font-size: 11px; fill: var(--pm-ink); }
+.elev .pt { font-weight: 650; fill: var(--pm-leaf-900); }
+.elev .mm { font-family: var(--mono); font-weight: 600; fill: var(--pm-amber-700); }
+.elev .sub { fill: var(--pm-ink-2); }
+.elev .e { text-anchor: end; }
+
+/* ---- 2.1 and 4.1, the hand-drawn diagrams -------------------------------- */
+.diafig .dia { max-width: 470px; margin: 0 auto; }
+.diafig .dia.spectrum { max-width: 520px; }
+.dia text { font-family: var(--sans); font-size: 10.5px; fill: var(--pm-ink); }
+.dia .m { text-anchor: middle; }
+.dia .e { text-anchor: end; }
+.dia .ttl { font-weight: 700; font-size: 12px; fill: var(--pm-leaf-900); }
+.dia .pl, .dia .pn, .dia .tkl, .dia .nm { font-family: var(--mono); font-size: 10px; fill: #3f4954; }
+.dia .cv.s, .dia .gl, .dia .tm { fill: var(--pm-ink-2); }
+.dia .tm { font-size: 9.5px; }
+.dia .dn { font-weight: 650; font-size: 11px; }
+/* spectrum (not .spec, which the old HUD panels still own) */
+.spectrum .hatch { stroke: #a3acb6; stroke-width: 1.2; }
+.spectrum .bar-edge { fill: none; stroke: rgba(15, 19, 25, .28); stroke-width: .8; }
+.spectrum .tk { stroke: var(--pm-ink-2); stroke-width: 1; }
+.spectrum .tkl { text-anchor: middle; }
+.spectrum .tkl.u { text-anchor: start; }
+.spectrum .pk { stroke-width: 1.6; }
+.spectrum .pk.g { stroke: #2f8a46; } .spectrum .pk.r { stroke: #c0392b; }
+.spectrum .pk.a { stroke: #b36a0c; stroke-width: 2.4; }
+.spectrum .pkd.g { fill: #2f8a46; } .spectrum .pkd.r { fill: #c0392b; }
+.spectrum .pka { fill: #b36a0c; }
+.spectrum .lb { font-weight: 600; }
+.spectrum .lb.a { fill: #8a510b; font-weight: 700; }
+.spectrum .zn, .spectrum .zl { fill: none; stroke: var(--pm-ink-2); stroke-width: 1; }
+/* wiring */
+.wire .w { fill: none; stroke: #2f3a44; stroke-width: 1.45; stroke-linejoin: round; stroke-linecap: round; }
+.wire .sig { stroke: var(--pm-leaf-700); }
+.wire .pwr5 { stroke: #9a3d22; }
+.wire .pwr3 { stroke: #a5700f; }
+.wire .sda { stroke: #3f5468; }
+.wire .scl { stroke: #6b54a3; }
+.wire .gnd { stroke: #161b20; }
+.wire .jn { fill: #161b20; }
+.wire .mcu { fill: var(--pm-leaf-50); stroke: var(--pm-leaf-700); stroke-width: 1.3; }
+.wire .pin { fill: #fff; stroke: #2f3a44; stroke-width: 1; }
+.wire .res { fill: #fff; stroke: #2f3a44; stroke-width: 1.3; }
+.wire .qb { fill: none; stroke: #2f3a44; stroke-width: 2.4; }
+.wire .qc { fill: none; stroke: #2f3a44; stroke-width: 1; }
+.wire .arr { fill: #2f3a44; }
+.wire .led { fill: #fbe3bb; stroke: #92610c; stroke-width: 1.3; stroke-linejoin: round; }
+.wire .ray { fill: none; stroke: #cf8418; stroke-width: 1.1; stroke-linecap: round; }
+.wire .dev { fill: #fff; stroke: #2f3a44; stroke-width: 1.2; }
+
+/* ---- 1.3 the run chart inside its plate ---------------------------------- */
+body.doc-light .doc .run-fig .od-wrap {
+  margin: 0; padding: 0; background: none; box-shadow: none; border-radius: 0; border: 0;
+}
+body.doc-light .doc .run-fig .od-wrap::before { display: none; }
+#fig-incubator .frame-img img { object-position: center 72%; }
+/* (Figure 7's single-photo sizing moved to the 3.2 before/after pair, 3 Oct polishing round, at the end of this file) */
+
+/* ---- 1.1 the bill of materials, in the team wiki's table ---------------- */
+.tablewrap {
+  margin: 1.6rem 0; overflow-x: auto; background: #fff;
+  border: 1px solid var(--pm-hair); border-radius: .3125rem;
+}
+.doc table.bom-doc { min-width: 0; width: 100%; font-size: .92rem; border-collapse: collapse; }
+.doc table.bom-doc caption {
+  caption-side: top; text-align: left; padding: .8rem .9rem .7rem;
+  font: 600 .86rem/1.4 var(--sans); letter-spacing: 0; text-transform: none;
+  color: var(--pm-ink); border-bottom: 1px solid var(--pm-hair);
+}
+body.doc-light .doc table.bom-doc thead th {
+  padding: .55rem .9rem; white-space: nowrap;
+}
+body.doc-light .doc table.bom-doc td {
+  padding: .6rem .9rem; border-bottom: 1px solid var(--pm-hair);
+  color: var(--pm-ink); line-height: 1.5; vertical-align: top; background: none;
+}
+body.doc-light .doc table.bom-doc td:first-child { font-weight: 650; white-space: nowrap; }
+body.doc-light .doc table.bom-doc tbody tr:hover td { background: #fafafa; }
+.doc table.bom-doc .num { text-align: right; white-space: nowrap; width: 1%; }
+body.doc-light .doc table.bom-doc tfoot td {
+  background: var(--pm-leaf-50); border-top: 1px solid var(--pm-leaf-200); border-bottom: 0;
+  font-weight: 700; color: var(--pm-leaf-900); padding: .65rem .9rem;
+}
+.bom-lines { list-style: none; margin: 0; padding: 0; }
+.doc .sec .bom-lines li { font-size: inherit; line-height: 1.5; margin: 0; }
+.doc .sec .bom-lines li + li { margin-top: .12rem; }
+/* phones: each row becomes a card, the costs a labelled pair under it */
+@media (max-width: 620px) {
+  .tablewrap { overflow: visible; border: 0; background: none; }
+  .doc table.bom-doc, .doc table.bom-doc tbody, .doc table.bom-doc tfoot,
+  .doc table.bom-doc tr, .doc table.bom-doc td { display: block; width: auto; }
+  .doc table.bom-doc thead { display: none; }
+  .doc table.bom-doc caption { display: block; padding: 0 0 .7rem; border: 0; }
+  body.doc-light .doc table.bom-doc tbody tr {
+    border: 1px solid var(--pm-hair); border-radius: .3125rem; background: #fff;
+    padding: .65rem .85rem .55rem; margin-bottom: .55rem;
+  }
+  body.doc-light .doc table.bom-doc td { border: 0; padding: .1rem 0; }
+  body.doc-light .doc table.bom-doc td:first-child { white-space: normal; margin-bottom: .15rem; }
+  body.doc-light .doc table.bom-doc td.num {
+    display: inline-flex; align-items: baseline; gap: .4rem; width: auto;
+    text-align: left; margin: .35rem 1.1rem 0 0;
+  }
+  .doc table.bom-doc td.num::before {
+    content: attr(data-k); font: 700 11px/1.3 var(--sans); letter-spacing: .06em;
+    text-transform: uppercase; color: var(--pm-ink-2);
+  }
+  body.doc-light .doc table.bom-doc tfoot tr {
+    border: 1px solid var(--pm-leaf-200); border-radius: .3125rem; background: var(--pm-leaf-50);
+    padding: .6rem .85rem; display: flex; align-items: baseline; justify-content: space-between;
+  }
+  body.doc-light .doc table.bom-doc tfoot td { border: 0; padding: 0; background: none; }
+  body.doc-light .doc table.bom-doc tfoot td.num { margin: 0; }
+  .doc table.bom-doc tfoot td.num::before { content: none; }
+}
+
+/* ---- numbered lists: reasons (2.1), portions (3.5) ----------------------- */
+.doc .sec ol.reasons, .doc .sec ol.portions {
+  list-style: none; margin: 1.1rem 0 1.4rem; padding: 0; counter-reset: rs; max-width: var(--w-measure, 68ch);
+}
+.doc .sec ol.reasons > li, .doc .sec ol.portions > li {
+  counter-increment: rs; position: relative; padding-left: 2.4rem; margin: 0 0 1rem;
+  color: var(--muted);
+}
+.doc .sec ol.reasons > li::before, .doc .sec ol.portions > li::before {
+  content: counter(rs);
+  position: absolute; left: 0; top: .2rem;
+  width: 1.6rem; height: 1.6rem; border-radius: 50%;
+  display: grid; place-content: center;
+  border: 1.5px solid var(--pm-leaf-700);
+  font: 700 .8rem/1 var(--sans); color: var(--pm-leaf-900);
+}
+
+/* ---- 3.1 three requirements --------------------------------------------- */
+.doc .sec ol.reqs {
+  list-style: none; margin: 1.3rem 0 1.6rem; padding: 0; counter-reset: rq;
+  display: grid; gap: .8rem; grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+.doc .sec ol.reqs > li {
+  counter-increment: rq; margin: 0; padding: .95rem 1rem 1.05rem;
+  border: 1px solid var(--pm-hair); border-top: 3px solid var(--pm-leaf-500);
+  border-radius: .3125rem; background: #fff;
+  font-size: .94rem; line-height: 1.55;
+}
+.doc .sec ol.reqs > li::before {
+  content: "0" counter(rq);
+  display: block; margin-bottom: .35rem;
+  font: 600 .74rem/1 var(--mono); letter-spacing: .1em; color: var(--pm-leaf-700);
+}
+.doc .sec ol.reqs > li b { display: block; margin-bottom: .3rem; font-size: 1rem; color: var(--pm-ink); }
+.doc .sec ol.reqs > li span { color: var(--muted); }
+@media (max-width: 760px) { .doc .sec ol.reqs { grid-template-columns: 1fr; } }
+
+/* ---- 4.3 the two equations ----------------------------------------------- */
+body.doc-light .doc .equation.eqn {
+  justify-content: center; gap: .45rem; flex-wrap: nowrap;
+  background: #fff; border: 1px solid rgba(15, 19, 25, .13); border-left: 3px solid var(--pm-leaf-500);
+  font-family: var(--sans); font-size: 1.12rem; color: var(--pm-ink);
+  padding: 1rem 1.1rem; overflow-x: auto;
+}
+.eqn i { font-family: "Iowan Old Style", Georgia, "Times New Roman", serif; font-style: italic; }
+.eqn sub { font-size: .66em; }
+.eqn .eq-lhs { font-family: var(--sans); font-size: 1em; color: inherit; }
+.eqn .eq-eq { color: var(--pm-ink-2); margin: 0 .1rem; }
+.eqn .eq-fn { white-space: nowrap; }
+.eqn .eq-par { font-size: 1.9em; font-weight: 200; line-height: 1; color: var(--pm-ink-2); }
+.frac { display: inline-flex; flex-direction: column; align-items: center; vertical-align: middle; }
+.frac > span { padding: .08em .4em; line-height: 1.3; white-space: nowrap; }
+.frac > span + span { border-top: 1.5px solid currentColor; }
+.doc .sec p.eq-key { font-size: .92rem; color: var(--pm-ink-2); }
+
+/* ---- 7 the specification sheet ------------------------------------------ */
+.doc .spec-card.specs dl { display: block; margin: 0 0 .2rem; }
+.doc .spec-card.specs dl > div {
+  display: grid; grid-template-columns: 9.5rem minmax(0, 1fr); gap: .2rem 1.1rem;
+  padding: .55rem 0; border-top: 1px solid var(--pm-hair);
+}
+.doc .spec-card.specs dl > div:first-child { border-top: 0; padding-top: .2rem; }
+.doc .spec-card.specs dt { font-size: .66rem; letter-spacing: .12em; margin: .2rem 0 0; }
+.doc .spec-card.specs dd { font-size: .95rem; line-height: 1.5; font-weight: 450; color: var(--pm-ink); }
+.doc .spec-card.specs dd a { white-space: nowrap; }
+@media (max-width: 620px) {
+  .doc .spec-card.specs dl > div { grid-template-columns: 1fr; }
+}
+.doc .spec-card.print dd { color: var(--pm-ink); }
+
+/* ---- 7.1 the cost keynote ------------------------------------------------ */
+.doc .keynote.cost .keynote-fig { font-variant-numeric: tabular-nums; }
+
+/* ---- 9 the design files -------------------------------------------------- */
+.doc .sec ol.files {
+  list-style: none; margin: 1.3rem 0 1.6rem; padding: 0;
+  display: grid; gap: .7rem; grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+.doc .sec ol.files > li {
+  display: flex; gap: .8rem; margin: 0; padding: .85rem .95rem .8rem;
+  border: 1px solid var(--pm-hair); border-radius: .3125rem; background: #fff;
+}
+.files .fn {
+  flex: none; width: 1.6rem; height: 1.6rem; border-radius: 50%;
+  display: grid; place-content: center; margin-top: .05rem;
+  border: 1.5px solid var(--pm-leaf-700); font: 700 .8rem/1 var(--sans); color: var(--pm-leaf-900);
+}
+.files .fb { min-width: 0; }
+.files .fb b { display: block; font-size: .98rem; color: var(--pm-ink); }
+.doc .sec .files .fb p { margin: .2rem 0 0; font-size: .88rem; line-height: 1.5; max-width: none; color: var(--muted); }
+.doc .sec .files .fb p.dl { display: flex; flex-wrap: wrap; align-items: center; gap: .4rem .9rem; margin-top: .55rem; }
+.doc .sec .files .dl a {
+  display: inline-flex; align-items: baseline; gap: .45rem;
+  padding: .28rem .6rem; border-radius: .3125rem;
+  border: 1px solid var(--pm-leaf-200); background: var(--pm-leaf-50);
+  font: 700 .8rem/1.3 var(--sans); color: var(--pm-leaf-900); text-decoration: none;
+}
+.doc .sec .files .dl a span { font: 500 .74rem/1.3 var(--mono); color: var(--pm-leaf-700); }
+.doc .sec .files .dl a:hover, .doc .sec .files .dl a:focus-visible {
+  border-color: var(--pm-leaf-500); background: #fff; color: var(--pm-leaf-900);
+}
+.files .step { font: 600 .8rem/1.3 var(--sans); color: var(--pm-ink-2); }
+@media (max-width: 700px) { .doc .sec ol.files { grid-template-columns: 1fr; } }
+
+/* ---- phones ---------------------------------------------------------------
+   The diagrams are drawn about a phone's width across, so their type only has
+   to grow a little to clear 11px on screen; the layouts leave room for it. */
+@media (max-width: 700px) {
+  body.doc-light .doc :is(.cadfig, .diafig, .run-fig, .wipe-fig) { padding: 12px 12px 2px; }
+  .cadfig-grid { grid-template-columns: 1fr; }
+  .cadfig .frame.asbuilt { max-width: 62%; }
+  .cad .mn { font-size: 13px; }
+  .elev text { font-size: 12.5px; }
+  .dia text { font-size: 12.5px; }
+  .dia .ttl { font-size: 13.5px; }
+  .dia .pl, .dia .pn, .dia .tkl, .dia .nm, .dia .tm, .dia .dn { font-size: 12.5px; }
+  .cad-legend li, .cad-key { font-size: .9rem !important; }
+  .filter-steps b { font-size: 11px; }
+  .asbuilt-cap { font-size: 11px !important; }
+}
+
+/* ---- second pass, after looking at it -------------------------------------- */
+/* the download buttons outrank the prose-link rule (0,5,3) in wiki-align.css */
+body.doc-light .doc-wrap .doc .sec .files p.dl a {
+  color: var(--pm-leaf-900); text-decoration: none; background: var(--pm-leaf-50);
+}
+body.doc-light .doc-wrap .doc .sec .files p.dl a:hover,
+body.doc-light .doc-wrap .doc .sec .files p.dl a:focus-visible { background: #fff; }
+/* print settings read as rows, like the specification sheet */
+.doc .spec-card.print dl { display: block; margin: 0 0 .5rem; }
+.doc .spec-card.print dl > div {
+  display: grid; grid-template-columns: 9.5rem minmax(0, 1fr); gap: .2rem 1.1rem;
+  padding: .45rem 0; border-top: 1px solid var(--pm-hair);
+}
+.doc .spec-card.print dl > div:first-child { border-top: 0; padding-top: .1rem; }
+.doc .spec-card.print dt { font-size: .66rem; letter-spacing: .12em; margin: .2rem 0 0; }
+.doc .spec-card.print dd { font-size: .95rem; font-weight: 450; }
+@media (max-width: 620px) { .doc .spec-card.print dl > div { grid-template-columns: 1fr; } }
+
+/* ---- phones: the shared parts of the record that dip under 11px ----------
+   polish.css floors many labels at 11px; these slipped past it, or (the
+   caption lead-in) were floored *down* to 11px from the caption's own size
+   once wiki-align.css made the lead-in body-sized. */
+@media (max-width: 700px) {
+  body[data-instrument="photometer"] .headline-stats { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+  body[data-instrument="photometer"] .headline-stats b em { font-size: 11px; }
+  body[data-instrument="photometer"] .headline-stats span { letter-spacing: .06em !important; }
+  body[data-instrument="photometer"] .od-read em { font-size: 11px; }
+  body[data-instrument="photometer"] .demo-controls label { font-size: 11px !important; }
+  /* the section map is the only contents list on a phone, and with ten parts
+     and their sections it ran three screens long: titles only, two across */
+  body[data-instrument="photometer"] .doc-map { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: .5rem; }
+  body[data-instrument="photometer"] .doc-map .map-sub { display: none; }
+  body[data-instrument="photometer"] .doc-map .map-card { padding: .7rem .75rem; min-height: 0; }
+  body[data-instrument="photometer"] .doc-map .map-n { font-size: 11px; }
+  body[data-instrument="photometer"] .doc-map .map-t { font-size: .9rem; line-height: 1.3; }
+}
+
+
+/* ===========================================================================
+   3 Oct 2026, after the judges
+   ---------------------------------------------------------------------------
+   Page-only fixes. The record-wide ones (leaf accents, hairline panels, the
+   "Jump to" pill, the orange missing-information marks, link colour, table
+   headers, the 62ch measure, caption lead-ins on phones) live in
+   ../css/wiki-align.css and are not repeated here.
+   =========================================================================== */
+
+/* A missing-information mark and the punctuation after it never part: the
+   mark flows as text inside the wrapper, so a long one still wraps, and the
+   full stop stays on its last line instead of starting the next. */
+.doc .nobr { white-space: nowrap; }
+.doc .nobr > .todo {
+  display: inline; white-space: normal;
+  -webkit-box-decoration-break: slice; box-decoration-break: slice;
+}
+/* A link inside a missing-information mark reads as part of the mark: its
+   ink, underlined (none of the record's link rules reach these, so the one in
+   the note under the title fell back to the browser's blue). */
+body.doc-light .doc-wrap .todo a,
+body.doc-light .doc-wrap .todo a.xref {
+  color: inherit; border-bottom: 0; background: none;
+  text-decoration: underline; text-decoration-thickness: 1px; text-underline-offset: 2.5px;
+}
+
+/* ---- the section map ------------------------------------------------------
+   From 1101px the contents rail beside it lists the same sections, so the map
+   is the ten parts only, two rows of five. */
+@media (min-width: 1101px) {
+  body[data-instrument="photometer"] .doc-map {
+    grid-template-columns: repeat(5, minmax(0, 1fr)); gap: .5rem; margin-bottom: 3rem;
+  }
+  body[data-instrument="photometer"] .doc-map .map-sub { display: none; }
+  body[data-instrument="photometer"] .doc-map .map-card { padding: .75rem .8rem .8rem; row-gap: 0; column-gap: .55rem; }
+  body[data-instrument="photometer"] .doc-map .map-t { font-size: .9rem; line-height: 1.3; }
+}
+/* small print on the record reads at 11 px on a desktop too */
+body.doc-light[data-instrument="photometer"] .doc-map .map-n { font-size: 11px; letter-spacing: .06em; }
+body.doc-light[data-instrument="photometer"] .doc .part-mark span { font-size: 11px; letter-spacing: .16em; }
+body.doc-light[data-instrument="photometer"] .doc .headline-stats span { font-size: 11px; letter-spacing: .1em; }
+body.doc-light[data-instrument="photometer"] .doc .spec-card-title { font-size: 11px; letter-spacing: .14em; }
+body.doc-light[data-instrument="photometer"] .doc .filter-steps b { font-size: 11px; }
+body.doc-light[data-instrument="photometer"] .doc-map .map-more { font-size: 11px !important; letter-spacing: .06em; }
+@media (max-width: 700px) {
+  /* "Points traced (first 336 h)" in two lines, not four, in a third of a phone */
+  body.doc-light[data-instrument="photometer"] .doc .headline-stats > div { padding: .85rem .4rem; }
+  body.doc-light[data-instrument="photometer"] .doc .headline-stats span { letter-spacing: .02em !important; }
+}
+
+/* ---- part dividers: a rule and a title, without a third of a screen of
+   empty space above every part */
+body.doc-light[data-instrument="photometer"] .doc-wrap .doc .part {
+  min-height: 0; padding-top: 3.5rem; margin-top: 5rem;
+}
+body.doc-light[data-instrument="photometer"] .doc-wrap .doc .part:first-of-type { margin-top: 0; }
+
+/* ---- section numbers sit next to their titles, not in a 59px column ---- */
+body.doc-light[data-instrument="photometer"] .doc-wrap section.sec > h3 { gap: 0; }
+body.doc-light[data-instrument="photometer"] .doc-wrap section.sec > h3 > i { min-width: 0; }
+
+/* ---- card grids and the photo pair run the full column, like the table and
+   the plates beside them */
+body.doc-light .doc-wrap section.sec > ol.reqs,
+body.doc-light .doc-wrap section.sec > ol.files { max-width: none; }
+#sec13 .frames { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+@media (max-width: 620px) { #sec13 .frames { grid-template-columns: 1fr; } }
+
+/* ---- 1.1: the costs are one note above the table; in it, a muted dash ---- */
+.doc table.bom-doc td.nc { color: #6b7580; }
+@media (max-width: 620px) {
+  /* every cost is blank, so a phone's cards carry the part and its specification only */
+  body.doc-light .doc table.bom-doc tbody td.nc { display: none; }
+}
+
+/* ---- Figure 1: the drawing starts at the top of its plate, the legend is
+   names only (the descriptions are in 9.1), the photo is a thumbnail ---- */
+.cadfig-grid { align-items: start; }
+.cadfig .frame.asbuilt { max-width: 160px; }
+@media (max-width: 700px) {
+  .cad-legend { columns: 2; column-gap: 1.1rem; }
+  .cad-legend li { break-inside: avoid; }
+  .cad-legend li:nth-child(5) { border-top: 0; }
+}
+
+/* ---- Figure 2, the run chart: drawn at its own width by js/od600.js, so
+   these sizes are real pixels; leaf rather than amber, which marks what is
+   missing */
+.run-fig svg.odc .od-grid text, .run-fig svg.odc .od-xt { font-size: 11px; }
+.run-fig svg.odc .od-ax { font-size: 11px; letter-spacing: .1em; }
+.run-fig svg.odc .od-phase text { font-size: 11px; letter-spacing: .12em; }
+.run-fig svg.odc .od-event text { font-size: 11px; letter-spacing: .08em; }
+body.doc-light .run-fig .od-read > div:first-child {
+  display: grid; grid-template-columns: auto auto; column-gap: .2em;
+  align-items: baseline; justify-content: start;
+}
+body.doc-light .run-fig .od-read > div:first-child > span { grid-column: 1 / -1; }
+body.doc-light .run-fig .od-read span { font-size: 11px; letter-spacing: .12em; }
+body.doc-light .run-fig .od-read em { font-size: .8rem; }
+body.doc-light .run-fig .od-hint { font-size: 11px; letter-spacing: .1em; color: #6b7580; }
+body.doc-light .run-fig { --od-fill: var(--w-leaf-500); }
+body.doc-light .run-fig .od-line { stroke: var(--w-leaf-700); }
+body.doc-light .run-fig .od-band { fill: var(--w-leaf-500); opacity: .22; }
+body.doc-light .run-fig .od-read b.hi { color: var(--w-leaf-700); }
+body.doc-light .run-fig .od-cursor circle { fill: var(--w-leaf-700); stroke: #fff; }
+body.doc-light .run-fig .od-phase text,
+body.doc-light .run-fig .od-phase.p2 text { fill: #556070; }
+
+/* ---- Figure 6, redrawn in the hand of Figures 5 and 10: sentence case, the
+   reference sensor on the side the CAD has it, and no sideways scroll ---- */
+#fig-optics svg { max-width: 430px; min-width: 0; margin: 0 auto; }
+#fig-optics svg text {
+  font-family: var(--sans); font-size: 10.5px; letter-spacing: 0; text-transform: none; fill: #1f2933;
+}
+#fig-optics svg text.nm { font-weight: 650; font-size: 11px; }
+#fig-optics svg text.sub { fill: #556070; }
+#fig-optics .beam { stroke: #c27410; stroke-width: 2.2; stroke-linecap: round; fill: none; opacity: 1; }
+#fig-optics .beam.ref { stroke-width: 1.5; }
+#fig-optics .glass { fill: rgba(159, 192, 218, .42); stroke: #4a7898; stroke-width: 1.2; }
+#fig-optics .split { stroke: #4a7898; stroke-width: 2.6; stroke-linecap: round; }
+#fig-optics .jaw { fill: #c3c9d0; stroke: #3b444d; stroke-width: 1; }
+#fig-optics .sensor { fill: #97c0aa; stroke: #4f8a6c; stroke-width: 1.2; }
+#fig-optics .led { fill: #fbe3bb; stroke: #92610c; stroke-width: 1.3; }
+@media (max-width: 700px) {
+  #fig-optics svg text { font-size: 12.5px; }
+  #fig-optics svg text.nm { font-size: 13px; }
+}
+
+/* ---- Figure 7: the rail and its wiring, not the bench under it (object-position above) */
+
+/* ---- Figure 8: the four builds side by side, uncropped, in one glance ---- */
+.doc .builds .build-strip {
+  list-style: none; margin: 0; padding: 0;
+  display: grid; gap: .75rem; grid-template-columns: repeat(4, minmax(0, 1fr));
+}
+.doc .builds .build-strip > li { margin: 0; padding: 0; }
+.doc .builds .build-strip .frame-img { aspect-ratio: 3 / 4; }
+.doc .builds .build-strip .frame-img img { object-position: center 50%; }
+.doc .sec .builds .build-strip p {
+  margin: .45rem 0 0; max-width: none; font-size: .86rem; line-height: 1.35; color: #3a434d;
+}
+.doc .sec .builds .build-strip p b {
+  color: var(--w-leaf-700, #23684a); font-weight: 700; margin-right: .3em; font-variant-numeric: tabular-nums;
+}
+.frame.builds:hover img { transform: none; }
+.frame.builds .frame-img:hover img { transform: scale(1.035); }
+@media (max-width: 620px) {
+  .doc .builds .build-strip { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
+
+/* ---- plates on this page all wear the team's hairline: the photo frames and
+   the self-drawing diagram too, so no plate here has a drop shadow ---- */
+body.doc-light[data-instrument="photometer"] .doc .frame,
+body.doc-light[data-instrument="photometer"] .doc .autodraw {
+  border: 1px solid #e5e5e5; border-radius: .3125rem; box-shadow: none;
+}
+
+/* ---- 4.2: the demo on white, its caption beside it on wide screens ------ */
+@media (min-width: 1360px) {
+  /* the caption sits in the margin, outside the figure: it was clipped away */
+  body[data-instrument="photometer"] .doc .sec > figure.demo { overflow: visible; }
+}
+body.doc-light .doc .demo { background: #fff; border: 1px solid #e5e5e5; border-radius: .3125rem; box-shadow: none; }
+body.doc-light .doc .demo-head {
+  background: var(--w-leaf-50); border-bottom-color: #e5e5e5;
+  border-radius: calc(.3125rem - 1px) calc(.3125rem - 1px) 0 0;
+}
+body.doc-light .doc .demo-head span { color: #3a434d; }
+body.doc-light .doc .demo-plot { background: #fff; border: 1px solid #e5e5e5; border-radius: .25rem; }
+body.doc-light .doc .demo-controls input[type="range"] { accent-color: var(--w-leaf-700); }
+body.doc-light .doc .demo-controls label,
+body.doc-light .doc .demo-controls button,
+body.doc-light .doc .demo-read dt,
+body.doc-light .doc .demo-head b { font-size: 11px; letter-spacing: .1em; }
+.doc .demo p.demo-legend {
+  display: flex; flex-wrap: wrap; gap: .3rem 1.1rem; margin: .65rem 0 0; max-width: none;
+  font-size: 12px; line-height: 1.4; color: #3a434d;
+}
+.doc .demo p.demo-legend > span { display: inline-flex; align-items: center; gap: .4rem; }
+.demo-legend i { display: inline-block; flex: none; }
+.demo-legend .ln { width: 18px; height: 0; border-top: 2px solid #23684a; }
+.demo-legend .ln.mean { border-top: 2px dashed #3f5468; }
+.demo-legend .dt { width: 8px; height: 8px; border-radius: 50%; background: #3a434d; }
+.demo-legend .dt.rej { background: #c1392a; box-shadow: 0 0 0 2px #fff, 0 0 0 3.3px #c1392a; margin: 0 2px; }
+.demo-legend .sw.band { width: 16px; height: 10px; border-radius: 2px; background: rgba(79, 156, 111, .22); }
+
+/* ---- 7 and 9.1: the specification sheet and the print settings ---------- */
+body.doc-light .doc .spec-card { background: #fff; border: 1px solid #e5e5e5; border-radius: .3125rem; box-shadow: none; }
+body.doc-light .doc .spec-card dt { font-size: 11px; letter-spacing: .1em; }
+/* The sheet's section links take the record's own link ink: the shared prose-link
+   rule (wiki-align.css) does not reach a <dd>, so these kept the old amber underline. */
+body.doc-light .doc-wrap .spec-card dd a {
+  color: var(--w-link); border-bottom: 0; text-decoration: underline;
+  text-decoration-thickness: 1px; text-underline-offset: 2.7px;
+}
+.doc .spec-card.print dd { line-height: 1.5; }
+.doc .spec-card p.spec-src { margin: -.35rem 0 .9rem; max-width: none; font-size: .86rem; line-height: 1.5; color: #556070; }
+
+/* ---- the crossing from the story into the record: no brown tint on paper */
+body.doc-light .doc-wrap { --blend-glow: transparent; }
+
+/* Phone text floor (house rule: no label under 11 px on a phone): the hero's sensor readouts were 9.3 px. */
+@media (max-width: 700px) {
+  .story .ro .k { font-size: 11px; letter-spacing: .16em; }
+  .story .ro .u { font-size: 11px; }
+}
+
+/* ---- 9.1: each design file shows its part, rendered from its own STL, tucked into the card's bottom-right corner:
+   cut off by the card's edge and fading out toward the text, so it reads as part of the card, not a thumbnail.
+   The renders are photos/parts/partN.webp (three.js, sage clay, the same three-quarter view for all eight). */
+.doc .sec ol.files > li { position: relative; overflow: hidden; isolation: isolate; }
+.files .fb { position: relative; z-index: 1; }
+.doc .sec .files .fb p:not(.dl) { max-width: calc(100% - 5.5rem); }
+.files .f-part {
+  position: absolute; z-index: 0; right: -20px; bottom: -24px; width: 158px; height: 124px;
+  object-fit: contain; object-position: right bottom;
+  pointer-events: none; user-select: none; opacity: .88;
+  -webkit-mask-image: radial-gradient(130% 130% at 100% 100%, #000 45%, rgba(0,0,0,.6) 64%, transparent 86%);
+          mask-image: radial-gradient(130% 130% at 100% 100%, #000 45%, rgba(0,0,0,.6) 64%, transparent 86%);
+  transition: transform .45s cubic-bezier(.2,.8,.2,1), opacity .3s ease;
+}
+.doc .sec ol.files > li:hover .f-part, .doc .sec ol.files > li:focus-within .f-part { transform: translate(-6px, -6px); opacity: 1; }
+@media (max-width: 700px) { .files .f-part { width: 132px; height: 108px; right: -18px; bottom: -20px; } }
+@media (prefers-reduced-motion: reduce) { .files .f-part { transition: none; } }
+@media print { .files .f-part { display: none; } }
+
+/* =========================================================================
+   Polishing round, 3 Oct 2026. Everything below is new in this round; delete from here to the end to undo it.
+   ========================================================================= */
+
+/* ---- the eight DBTL cycles: a band in the shared DBTL look (wiki-align.css: .dbtl-head, .dbtl-ring, .dbtl-kick),
+   on a plain section rather than a section.part so toc.js keeps numbering the doc's ten parts. One card per cycle,
+   in order: its ring badge, its build, a thumbnail from its own photos, D (what it changed) and L (what it taught),
+   a link to its write-up (the title; the whole card is the target) and to the section here that tells the same step. */
+body.doc-light .doc .pm-cycles {
+  margin: 3.25rem 0 0; padding: 1.6rem 1.5rem 1.5rem;
+  background: linear-gradient(180deg, var(--w-leaf-50), #fff 55%);
+  border: 1px solid var(--w-leaf-200); border-top: 4px solid var(--w-leaf-700); border-radius: .5rem;
+  scroll-margin-top: 1.25rem;
+}
+.pm-cycles ol.cyc {
+  list-style: none; margin: 1.45rem 0 0; padding: 0;
+  display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: .75rem;
+}
+.pm-cycles .cyc-c {
+  position: relative; margin: 0; display: flex; flex-direction: column; min-width: 0;
+  background: #fff; border: 1px solid var(--w-line); border-radius: .375rem;
+  transition: border-color .2s ease, box-shadow .2s ease, transform .2s ease;
+}
+.pm-cycles .cyc-c:hover, .pm-cycles .cyc-c:focus-within {
+  border-color: var(--w-leaf-500); transform: translateY(-2px);
+}
+.pm-cycles .cyc-img {
+  aspect-ratio: 4 / 3; overflow: hidden; background: #eef1ef;
+  border-radius: calc(.375rem - 1px) calc(.375rem - 1px) 0 0;
+}
+.pm-cycles .cyc-img img { display: block; width: 100%; height: 100%; object-fit: cover; }
+.pm-cycles .cyc-img { position: relative; }
+.pm-cycles .cyc-img.chart { background: #fff; }
+.pm-cycles .cyc-img.chart img { object-fit: contain; padding: .3rem .3rem 1.6rem; box-sizing: border-box; }
+.pm-cycles .cyc-c:nth-child(5) .cyc-img img { object-position: center 72%; }
+/* which build the photo shows, as a label on the photo */
+.pm-cycles .cyc-v {
+  position: absolute; left: .45rem; bottom: .45rem; padding: .22rem .45rem; border-radius: .25rem;
+  font: 650 11px/1.2 var(--sans); letter-spacing: .02em; color: var(--w-leaf-900);
+  background: rgba(255, 255, 255, .92); box-shadow: 0 1px 2px rgba(0, 0, 0, .18);
+}
+.pm-cycles .cyc-b { flex: 1; display: flex; flex-direction: column; padding: .7rem .75rem .75rem; }
+.pm-cycles p.cyc-k {
+  display: flex; align-items: center; gap: .5rem; margin: 0; max-width: none;
+  font: 700 11px/1.2 var(--sans); letter-spacing: .08em; text-transform: uppercase; color: var(--w-leaf-700);
+}
+/* the cycle's badge: the band's ring in miniature, D B T L quartered clockwise from the top */
+.pm-cycles .cyc-ring {
+  position: relative; flex: none; width: 30px; height: 30px; border-radius: 50%; display: grid; place-items: center;
+  background: conic-gradient(from -45deg, var(--dq-d, #14402b) 0 25%, var(--dq-b, #23684a) 0 50%, var(--dq-t, #2e7d5b) 0 75%, var(--dq-l, #1d6a62) 0 100%);
+}
+.pm-cycles .cyc-ring::before { content: ""; position: absolute; inset: 4px; border-radius: 50%; background: #fff; }
+.pm-cycles .cyc-ring > b {
+  position: relative; font: 800 .875rem/1 var(--sans); letter-spacing: 0; color: var(--w-leaf-900);
+  font-variant-numeric: tabular-nums;
+}
+/* the cycles are one path: a hairline runs from each badge back to the card before it, along each row */
+.pm-cycles .cyc-c:not(:nth-child(4n+1)) .cyc-ring::after {
+  content: ""; position: absolute; right: 100%; top: 50%; height: 2px; margin-top: -1px;
+  width: calc(.75rem + .75rem + 1px); background: var(--w-leaf-200);
+}
+body.doc-light .doc-wrap .pm-cycles .cyc-c h3 {
+  display: block; margin: .55rem 0 .5rem; padding: 0; border: 0;
+  font: 750 1rem/1.25 var(--sans); letter-spacing: -.01em; color: var(--w-leaf-900); text-wrap: balance;
+}
+.pm-cycles .cyc-c h3 a { color: inherit; text-decoration: none; }
+.pm-cycles .cyc-c h3 a::after { content: ""; position: absolute; inset: 0; z-index: 1; border-radius: .375rem; }
+.pm-cycles .cyc-c h3 a:focus-visible { outline: none; }
+.pm-cycles .cyc-c h3 a:focus-visible::after { outline: 2px solid var(--w-leaf-700); outline-offset: 2px; }
+.pm-cycles .cyc-c dl { margin: 0; display: grid; gap: .45rem; }
+.pm-cycles .cyc-c dl > div { display: grid; grid-template-columns: auto minmax(0, 1fr); gap: .45rem; align-items: start; }
+.pm-cycles .cyc-c dt {
+  display: grid; place-items: center; width: 1.2rem; height: 1.2rem; margin-top: .08rem; border-radius: 50%;
+  font: 700 11px/1 var(--sans); color: #fff; background: var(--dq-d, #14402b);
+}
+.pm-cycles .cyc-c dt.l { background: var(--dq-l, #1d6a62); }
+.pm-cycles .cyc-c dd { margin: 0; font-size: .84rem; line-height: 1.42; color: #2f3a44; }
+.pm-cycles .cyc-c p.cyc-gap { margin: 0; max-width: none; font-size: .84rem; line-height: 1.42; color: #9a3412; }
+.pm-cycles .cyc-c p.cyc-here {
+  position: relative; z-index: 2; margin: auto 0 0; padding-top: .65rem; max-width: none;
+  font-size: .8125rem; line-height: 1.3; color: #5f6b78;
+}
+body.doc-light .doc-wrap .pm-cycles p.cyc-here a {
+  color: var(--w-leaf-700); text-decoration: underline; text-decoration-thickness: 1px; text-underline-offset: 2.5px;
+}
+/* cycles 7 and 8: outlined in the doc, not written, so orange, the record's colour for what is missing */
+.pm-cycles .cyc-c.gap { background: #fffaf6; border-color: #fdba8c; }
+.pm-cycles .cyc-c.gap:hover, .pm-cycles .cyc-c.gap:focus-within { border-color: #c2410c; }
+.pm-cycles .cyc-c.gap .cyc-img {
+  display: grid; place-items: center;
+  background: repeating-linear-gradient(-45deg, #fff7f2 0 9px, #feecdc 9px 18px);
+}
+.pm-cycles .cyc-c.gap .cyc-img span {
+  font: 700 11px/1.2 var(--sans); letter-spacing: .1em; text-transform: uppercase; color: #9a3412;
+  padding: .3rem .55rem; border: 1px dashed #f0a473; border-radius: .25rem; background: #fffaf6;
+}
+.pm-cycles .cyc-c.gap .cyc-ring { background: #c2410c; }
+.pm-cycles .cyc-c.gap .cyc-ring > b { color: #9a3412; }
+.pm-cycles .cyc-c.gap p.cyc-k { color: #9a3412; }
+/* the rail's entry: the ring, tiny */
+.doc-nav a b.rail-cyc {
+  display: inline-block; width: .62rem; height: .62rem; border-radius: 50%; flex: none; align-self: center;
+  background: conic-gradient(from -45deg, var(--dq-d, #14402b) 0 25%, var(--dq-b, #23684a) 0 50%, var(--dq-t, #2e7d5b) 0 75%, var(--dq-l, #1d6a62) 0 100%);
+  -webkit-mask: radial-gradient(circle, transparent 38%, #000 40%); mask: radial-gradient(circle, transparent 38%, #000 40%);
+}
+/* narrower columns: two across, each card a row (thumbnail left, words right) */
+@media (max-width: 999px) {
+  .pm-cycles ol.cyc { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .pm-cycles .cyc-c { flex-direction: row; }
+  .pm-cycles .cyc-img { flex: none; width: 34%; aspect-ratio: auto; border-radius: calc(.375rem - 1px) 0 0 calc(.375rem - 1px); }
+  .pm-cycles .cyc-c:not(:nth-child(4n+1)) .cyc-ring::after { display: none; }
+}
+@media (max-width: 700px) {
+  body.doc-light .doc .pm-cycles { margin-top: 2.5rem; padding: 1.15rem .85rem 1rem; }
+  .pm-cycles ol.cyc { grid-template-columns: 1fr; gap: .6rem; margin-top: 1.15rem; }
+  .pm-cycles .cyc-img { width: 30%; max-width: 110px; }
+  .pm-cycles .cyc-b { padding: .6rem .7rem .65rem; }
+  body.doc-light .doc-wrap .pm-cycles .cyc-c h3 { margin: .45rem 0 .4rem; }
+  .pm-cycles .cyc-c dd, .pm-cycles .cyc-c p.cyc-gap { font-size: .8125rem; }
+  .pm-cycles .cyc-c.gap .cyc-img span { padding: .25rem .35rem; letter-spacing: .06em; text-align: center; }
+}
+@media (prefers-reduced-motion: reduce) { .pm-cycles .cyc-c, .doc a.cyc-tag { transition: none; } .pm-cycles .cyc-c:hover, .pm-cycles .cyc-c:focus-within { transform: none; } }
+@media print { .pm-cycles .cyc-img { display: none; } }
+
+/* ---- a cycle, inline: the band's ring at chip size, linking to that cycle's write-up (Figure 8 and elsewhere) ---- */
+.doc a.cyc-tag {
+  display: inline-flex; align-items: center; gap: .4rem; max-width: 100%;
+  padding: .14rem .55rem .14rem .16rem; border: 1px solid var(--w-leaf-200); border-radius: 999px; background: #fff;
+  font: 650 12px/1.25 var(--sans); letter-spacing: .01em; color: var(--w-leaf-900); text-decoration: none; white-space: nowrap;
+  transition: border-color .2s ease, background .2s ease;
+}
+.doc a.cyc-tag:hover, .doc a.cyc-tag:focus-visible { border-color: var(--w-leaf-500); background: var(--w-leaf-50); }
+.doc a.cyc-tag > i {
+  position: relative; flex: none; display: grid; place-items: center; width: 20px; height: 20px; border-radius: 50%;
+  font: 800 11px/1 var(--sans); font-style: normal; color: var(--w-leaf-900);
+  background: conic-gradient(from -45deg, var(--dq-d, #14402b) 0 25%, var(--dq-b, #23684a) 0 50%, var(--dq-t, #2e7d5b) 0 75%, var(--dq-l, #1d6a62) 0 100%);
+  isolation: isolate;
+}
+.doc a.cyc-tag > i::before { content: ""; position: absolute; inset: 3px; border-radius: 50%; background: #fff; z-index: -1; }
+
+/* ---- Figure 8: under each build, what it showed (3.4's own words) and the cycle that built it ---- */
+.doc .sec .builds .build-strip > li { display: flex; flex-direction: column; align-items: flex-start; }
+.doc .sec .builds .build-strip p.bs-why {
+  margin: .2rem 0 .5rem; font-size: .84rem; line-height: 1.4; color: #3a434d; font-weight: 400;
+}
+.doc .sec .builds .build-strip a.cyc-tag { margin-top: auto; }
+/* the shared prose-link rule (wiki-align.css, 0,5,3) underlines every link in a list or paragraph: not these chips */
+body.doc-light .doc-wrap .doc :is(.sec, figure) a.cyc-tag:not(.xref) { color: var(--w-leaf-900); text-decoration: none; }
+body.doc-light .doc-wrap .doc :is(.sec, figure) a.cyc-tag:not(.xref):hover { color: var(--w-leaf-900); text-decoration: none; }
+
+/* ---- 1.1: the bill of materials in three groups (light path in beam order, electronics, printed body), each part
+   on the light path pictured from its own CAD model in the 3D walkthrough's colours (photos/parts/*.webp) ---- */
+body.doc-light .doc table.bom-doc tr.bom-grp th {
+  padding: .7rem .9rem .45rem; text-align: left; white-space: normal;
+  font: 700 .8125rem/1.35 var(--sans); letter-spacing: .06em; text-transform: uppercase; color: var(--w-leaf-700);
+  background: #fff; border-bottom: 1px solid var(--w-leaf-200);
+}
+body.doc-light .doc table.bom-doc tr.bom-grp th > span {
+  margin-left: .35rem; font-weight: 400; letter-spacing: 0; text-transform: none; font-size: .84rem; color: #5f6b78;
+}
+body.doc-light .doc table.bom-doc tbody + tbody tr.bom-grp th { padding-top: 1.1rem; }
+body.doc-light .doc table.bom-doc tbody tr.bom-grp:hover th { background: #fff; }
+.bom-c { display: inline-flex; align-items: center; gap: .7rem; }
+.bom-ic {
+  flex: none; display: grid; place-items: center; width: 52px; height: 44px; margin: -.3rem 0;
+  border-radius: .3125rem; background: radial-gradient(circle at 50% 45%, #fff 0, #f3f5f4 75%);
+  border: 1px solid #eceeed;
+}
+.bom-ic img { display: block; max-width: 44px; max-height: 36px; width: auto; height: auto; object-fit: contain; }
+@media (max-width: 620px) {
+  body.doc-light .doc table.bom-doc tbody tr.bom-grp {
+    border: 0; background: none; padding: .9rem .1rem .35rem; margin: 0;
+  }
+  body.doc-light .doc table.bom-doc tbody:first-of-type tr.bom-grp { padding-top: .1rem; }
+  body.doc-light .doc table.bom-doc tr.bom-grp th { display: block; padding: 0; border: 0; background: none; }
+  body.doc-light .doc table.bom-doc tr.bom-grp th > span { display: block; margin: .15rem 0 0; }
+  .bom-ic { width: 48px; height: 40px; }
+  .bom-ic img { max-width: 40px; max-height: 32px; }
+}
+body.doc-light .doc table.bom-doc tbody:is(.g-light, .g-body) td { vertical-align: middle; }
+
+/* ---- 4.2: the live dashboard, uncropped (the rate tile is at its right edge), the tile outlined in leaf ---- */
+.frame.dash .frame-img { aspect-ratio: 1200 / 675; background: #0b0d10; }
+.frame.dash .frame-img img { object-fit: contain; object-position: center; filter: none; }
+.frame.dash .dash-mark { position: absolute; inset: 0; width: 100%; height: 100%; pointer-events: none; }
+.frame.dash .dash-mark rect { fill: none; stroke: #7ee0a5; stroke-width: 5; vector-effect: non-scaling-stroke; }
+.frame.dash .dash-mark rect { stroke-width: 2.5px; filter: drop-shadow(0 0 4px rgba(126, 224, 165, .7)); }
+.frame.dash:hover img, .frame.dash .frame-img:hover img { transform: none; }
+.frame.dash .dash-zoom { position: absolute; inset: 0; }
+.frame.dash .dash-zoom img { position: absolute; inset: 0; }
+/* phones: the photo is too small to read whole, so it opens on the stats row around the outlined tile; a tap shows
+   all of it (the lightbox) */
+@media (max-width: 620px) {
+  /* the photo and its outline scale together (same box, same origin); the wrapper stays frame-sized, so the
+     lightbox's click target and focus ring are the frame itself */
+  .frame.dash .dash-zoom > img, .frame.dash .dash-zoom > svg { transform: scale(1.85); transform-origin: 88% 10%; }
+}
+
+/* ---- 3.5: the last portion's four components as a list in beam order, each with its part (the 1.1 renders; the slit
+   drawn as Figure 6 draws it) ---- */
+.doc .sec ol.portions ul.pp { list-style: none; margin: .7rem 0 .2rem; padding: 0; display: grid; gap: .5rem; }
+.doc .sec ol.portions ul.pp > li {
+  display: grid; grid-template-columns: 2.6rem minmax(0, 1fr); gap: .7rem; align-items: center; margin: 0;
+  padding: .4rem .6rem .4rem .4rem; border: 1px solid #eceeed; border-radius: .3125rem; background: #fcfdfc;
+}
+.doc .sec ol.portions ul.pp > li::before { content: none; }
+.pp-ic { display: grid; place-items: center; width: 2.6rem; height: 2.1rem; }
+.pp-ic img { display: block; max-width: 2.6rem; max-height: 2.1rem; width: auto; height: auto; }
+.pp-ic svg { width: 2.3rem; height: auto; overflow: visible; }
+.pp-ic svg .jaw { fill: #c3c9d0; stroke: #3b444d; stroke-width: 1; }
+.pp-ic svg .beam { stroke: #c27410; stroke-width: 2.2; stroke-linecap: round; }
+/* Figure 9's measurements were in the old amber, which now reads as "missing" next to the orange marks: leaf, like
+   the brackets they label (the beam stays amber: it is the 600 nm light) */
+.elev .mm { fill: var(--w-leaf-700, #23684a); }
+.elev .dim { stroke: var(--w-leaf-700, #23684a); }
+
+/* ---- 6.1: the three costly optical parts, which two stay and which one is changed ---- */
+.doc .sec figure.costly { margin: 1.5rem 0 1.6rem; }
+.doc .sec ol.cst { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: .75rem; }
+.doc .sec ol.cst > li {
+  position: relative; margin: 0; padding: .85rem .9rem .9rem; display: flex; flex-direction: column; align-items: flex-start;
+  background: #fff; border: 1px solid var(--w-line); border-radius: .375rem;
+}
+.cst .cst-ic {
+  align-self: stretch; display: grid; place-items: center; height: 74px; margin-bottom: .6rem;
+  border-radius: .3125rem; background: radial-gradient(circle at 50% 45%, #fff 0, #f2f5f3 80%);
+}
+.cst .cst-ic img { display: block; max-width: 82%; max-height: 60px; width: auto; height: auto; }
+.cst .cst-v {
+  display: inline-flex; align-items: center; gap: .3rem; padding: .12rem .45rem; border-radius: 999px;
+  font: 700 11px/1.3 var(--sans); letter-spacing: .08em; text-transform: uppercase;
+  color: var(--w-leaf-900); background: var(--w-leaf-50); border: 1px solid var(--w-leaf-200);
+}
+.cst .keep .cst-v::before { content: "\2713"; font-size: 12px; letter-spacing: 0; }
+.doc .sec ol.cst > li > b { margin: .45rem 0 .2rem; font-size: 1rem; color: var(--w-leaf-900); }
+.doc .sec ol.cst > li > p { margin: 0; max-width: none; font-size: .86rem; line-height: 1.45; color: #3a434d; }
+/* the one that goes: its picture faded and crossed through, its tag in slate rather than leaf */
+.doc .sec ol.cst > li.go { border-style: dashed; border-color: #b8c2cc; background: #fbfcfd; }
+.cst .go .cst-ic { background: repeating-linear-gradient(-45deg, #f6f8fa 0 7px, #eef2f5 7px 14px); }
+.cst .go .cst-ic img { opacity: .55; }
+.cst .go .cst-ic::after {
+  content: ""; position: absolute; width: 58%; height: 2px; background: #3f5468; transform: rotate(-24deg); border-radius: 2px;
+}
+.cst .go .cst-ic { position: relative; }
+.cst .go .cst-v { color: #3f5468; background: #eef2f5; border-color: #c9d3dc; }
+.cst .go .cst-v::before { content: "\21BB"; font-size: 12px; letter-spacing: 0; }
+@media (max-width: 620px) {
+  .doc .sec ol.cst { grid-template-columns: 1fr; gap: .55rem; }
+  .doc .sec ol.cst > li { display: grid; grid-template-columns: 92px minmax(0, 1fr); column-gap: .8rem; align-items: start; }
+  .cst .cst-ic { grid-row: 1 / span 3; height: 70px; margin: 0; }
+  .doc .sec ol.cst > li > .cst-v { justify-self: start; }
+  .doc .sec ol.cst > li > b { margin: .35rem 0 .15rem; }
+}
+.doc .sec figure.costly > figcaption { margin-top: .8rem; }
+
+/* ---- 3.1: each requirement says which cycles worked on it and where this record tells it ---- */
+.doc .sec ol.reqs > li { display: flex; flex-direction: column; }
+.doc .sec ol.reqs > li p.req-by {
+  display: flex; flex-wrap: wrap; align-items: center; gap: .35rem .4rem; margin: auto 0 0; padding-top: .8rem; max-width: none;
+  font-size: .8125rem; line-height: 1.3; color: #5f6b78;
+}
+.doc .sec ol.reqs > li p.req-by > span { flex-basis: 100%; font: 700 11px/1.3 var(--sans); letter-spacing: .08em; text-transform: uppercase; color: #5f6b78; }
+.doc .sec ol.reqs > li p.req-by a.cyc-tag { font-size: 12px; }
+
+/* ---- 3.3: each mounting decision beside the printed parts it shaped (the 9.1 renders, numbered as in Figure 1) ---- */
+.doc .sec .mt { display: grid; gap: 1.15rem; margin: 1.1rem 0 0; }
+.doc .sec .mt-row { display: grid; grid-template-columns: 11rem minmax(0, 1fr); gap: 1.25rem; align-items: start; }
+body.doc-light .doc-wrap .doc .sec .mt-row > p { margin: 0; max-width: var(--w-measure, 62ch); color: #262626; }
+.mt-pics {
+  display: flex; justify-content: center; align-items: center; gap: .35rem;
+  height: 5.6rem; padding: .4rem .5rem; border: 1px solid #eceeed; border-radius: .375rem;
+  background: radial-gradient(circle at 50% 40%, #fff 0, #f2f5f3 85%);
+}
+.mt-p { position: relative; flex: 1 1 0; min-width: 0; height: 100%; display: grid; place-items: center; }
+.mt-p img { display: block; max-width: 100%; max-height: 3.9rem; width: auto; height: auto; }
+.mt-p i {
+  position: absolute; left: 0; top: .05rem; display: grid; place-items: center; width: 1.15rem; height: 1.15rem;
+  border-radius: 50%; border: 1.3px solid var(--w-leaf-700); background: rgba(255, 255, 255, .92);
+  font: 700 11px/1 var(--sans); font-style: normal; color: var(--w-leaf-900);
+}
+@media (max-width: 620px) {
+  .doc .sec .mt-row { grid-template-columns: 1fr; gap: .55rem; }
+  .mt-pics { height: 4.6rem; justify-content: flex-start; }
+  .mt-p { flex: 0 1 5.5rem; }
+  .mt-p img { max-height: 3.2rem; }
+}
+
+/* ---- 3.2: the approach in two photos, open and adjustable first, locked and enclosed after ---- */
+.frame.pair { max-width: 600px; margin-left: auto; margin-right: auto; }
+.frame.pair .pair-g { display: grid; grid-template-columns: minmax(0, 1fr) 2rem minmax(0, 1fr); align-items: center; }
+.frame.pair .frame-img { aspect-ratio: 3 / 4; }
+.frame.pair .pair-i:first-child .frame-img img { object-position: center 30%; }
+.frame.pair .pair-i:last-child .frame-img img { object-position: center 40%; }
+.doc .sec .frame.pair .pair-i > p {
+  display: flex; flex-wrap: wrap; align-items: center; gap: .3rem .45rem; margin: .5rem 0 0; max-width: none;
+  font-size: .9rem; line-height: 1.35; color: #262626;
+}
+.doc .sec .frame.pair .pair-i > p > b { color: var(--w-leaf-700); font-weight: 700; }
+.doc .sec .frame.pair .pair-i > p > a.cyc-tag { flex-basis: auto; }
+.frame.pair .pair-to {
+  align-self: center; margin-top: -3.2rem; justify-self: center; width: 1.1rem; height: 1.1rem;
+  border-top: 2px solid var(--w-leaf-500); border-right: 2px solid var(--w-leaf-500); transform: rotate(45deg) translate(-3px, 3px);
+}
+@media (max-width: 620px) {
+  .frame.pair .pair-g { grid-template-columns: minmax(0, 1fr) 1.1rem minmax(0, 1fr); }
+  .frame.pair .pair-to { width: .7rem; height: .7rem; }
+  .doc .sec .frame.pair .pair-i > p { font-size: .84rem; }
+}
+
+/* ---- Figure 10: one part of the wiring at a time (js/wire-nets.js). The buttons name the same four things as the
+   lead-ins of 4.1, and each wears its wires' colour. ---- */
+#fig-wiring .nets {
+  display: flex; flex-wrap: wrap; align-items: center; justify-content: center; gap: .4rem; margin: .9rem auto .2rem; max-width: 560px;
+}
+#fig-wiring .nets-k { font: 700 11px/1.3 var(--sans); letter-spacing: .1em; text-transform: uppercase; color: #5f6b78; margin-right: .2rem; }
+#fig-wiring .nets button {
+  display: inline-flex; align-items: center; gap: .4rem; padding: .3rem .65rem .3rem .45rem; border-radius: 999px;
+  border: 1px solid var(--w-line); background: #fff; cursor: pointer;
+  font: 600 12.5px/1.25 var(--sans); color: #262626; transition: border-color .2s ease, background .2s ease;
+}
+#fig-wiring .nets button:hover, #fig-wiring .nets button.on { border-color: var(--w-leaf-500); background: var(--w-leaf-50); }
+#fig-wiring .nets button[aria-pressed="true"] { border-color: var(--w-leaf-700); background: var(--w-leaf-50); box-shadow: inset 0 0 0 1px var(--w-leaf-700); }
+#fig-wiring .nets button:focus-visible { outline: 2px solid var(--w-leaf-700); outline-offset: 2px; }
+#fig-wiring .nets i { flex: none; width: 1rem; height: .32rem; border-radius: 2px; }
+#fig-wiring .nets .sw-gnd { background: #161b20; }
+#fig-wiring .nets .sw-led { background: var(--w-leaf-700); }
+#fig-wiring .nets .sw-bus { background: linear-gradient(90deg, #3f5468 50%, #6b54a3 50%); }
+#fig-wiring .nets .sw-pwr { background: linear-gradient(90deg, #9a3d22 50%, #a5700f 50%); }
+#fig-wiring svg.wire [class*="n-"] { transition: opacity .2s ease; }
+#fig-wiring svg.wire.hl [class*="n-"] { opacity: .13; }
+#fig-wiring svg.wire.hl-gnd .n-gnd, #fig-wiring svg.wire.hl-led .n-led,
+#fig-wiring svg.wire.hl-bus .n-bus, #fig-wiring svg.wire.hl-pwr .n-pwr { opacity: 1; }
+#fig-wiring svg.wire.hl-gnd path.w.n-gnd, #fig-wiring svg.wire.hl-led path.w.n-led,
+#fig-wiring svg.wire.hl-bus path.w.n-bus, #fig-wiring svg.wire.hl-pwr path.w.n-pwr { stroke-width: 2.3; }
+#sec41 p[data-net] { transition: background-color .2s ease; border-radius: .25rem; }
+@media (hover: hover) { #sec41 p[data-net]:hover { background: var(--w-leaf-50); box-shadow: -.5rem 0 0 var(--w-leaf-50), .5rem 0 0 var(--w-leaf-50); } }
+@media (prefers-reduced-motion: reduce) { #fig-wiring svg.wire [class*="n-"], #sec41 p[data-net], #fig-wiring .nets button { transition: none; } }
+@media print { #fig-wiring .nets { display: none; } }
+@media (max-width: 620px) {
+  #fig-wiring .nets { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: .35rem; }
+  #fig-wiring .nets-k { grid-column: 1 / -1; text-align: center; margin: 0; }
+  #fig-wiring .nets button { justify-content: flex-start; font-size: 12px; padding: .35rem .5rem .35rem .45rem; text-align: left; }
+}
+/* subscripts (TiO2, SiO2) in the cycle cards' small text keep to the 11 px floor */
+.pm-cycles sub { font-size: 11px; }
+
+/* ---- Figure 6: the split's two shares written on the two beams (2.2's 90% and 10%) ---- */
+#fig-optics svg text.pct { font-weight: 750; font-size: 11.5px; fill: #1f2933; paint-order: stroke; stroke: #fff; stroke-width: 3px; stroke-linejoin: round; }
+@media (max-width: 700px) { #fig-optics svg text.pct { font-size: 13px; } }
+
+/* ---- 8.2: the LED, its clip and the mount, from the CAD ---- */
+.doc .sec figure.ledclip { margin: 1.4rem 0 1.5rem; }
+.ledclip .lc-g {
+  display: flex; align-items: center; justify-content: center; gap: 1.2rem; max-width: 520px; margin: 0 auto;
+  padding: 1rem 1.2rem .8rem; border: 1px solid var(--w-line); border-radius: .375rem;
+  background: radial-gradient(ellipse at 50% 40%, #fff 0, #f3f5f4 85%);
+}
+.ledclip .lc-i { display: flex; flex-direction: column; align-items: center; }
+.ledclip .lc-i img { display: block; width: auto; height: 104px; object-fit: contain; }
+.ledclip .lc-i:last-child img { height: 112px; }
+.doc .sec .ledclip .lc-i p { margin: .5rem 0 0; max-width: none; font-size: .84rem; line-height: 1.35; color: #3a434d; text-align: center; }
+.ledclip .lc-in {
+  display: inline-flex; align-items: center; gap: .3rem; font: 600 12px/1 var(--sans); color: #5f6b78; white-space: nowrap;
+}
+.ledclip .lc-in i { font-style: normal; font-size: 15px; color: var(--w-leaf-700); }
+@media (max-width: 620px) {
+  .ledclip .lc-g { gap: .6rem; padding: .8rem .6rem .7rem; }
+  .ledclip .lc-i img { height: 84px; }
+  .ledclip .lc-i:last-child img { height: 88px; }
+}
+.doc .sec figure.ledclip > figcaption { margin-top: .75rem; }
+
+/* ---- 7: the specification sheet's component rows carry the same CAD pictures as the bill of materials ---- */
+.doc .spec-card.specs dl > div.has-ic { grid-template-columns: 9.5rem minmax(0, 1fr) 3rem; align-items: center; }
+.doc .spec-card.specs dl > div.has-ic > dt { align-self: start; }
+.spec-card .sp-ic { display: grid; place-items: center; width: 3rem; height: 2.3rem; }
+.spec-card .sp-ic img { display: block; max-width: 3rem; max-height: 2.3rem; width: auto; height: auto; }
+@media (max-width: 620px) {
+  .doc .spec-card.specs dl > div.has-ic { grid-template-columns: minmax(0, 1fr) 2.6rem; }
+  .doc .spec-card.specs dl > div.has-ic > dt { grid-column: 1; }
+  .doc .spec-card.specs dl > div.has-ic > dd { grid-column: 1; }
+  .doc .spec-card.specs dl > div.has-ic > .sp-ic { grid-column: 2; grid-row: 1 / span 2; width: 2.6rem; height: 2rem; }
+  .spec-card .sp-ic img { max-width: 2.6rem; max-height: 2rem; }
+}
+
+/* ---- 5.2: cycle 6's agreement chart (the doc's own figure, from the bioreactor page's photos) ---- */
+.frame.tio2 { max-width: 400px; margin-left: auto; margin-right: auto; }
+.frame.tio2 .frame-img { aspect-ratio: 781 / 717; background: #fff; }
+.frame.tio2 .frame-img img { object-fit: contain; filter: none; }
+.frame.tio2:hover img, .frame.tio2 .frame-img:hover img { transform: none; }
+/* links in the bill of materials' group headers: the shared prose-link rule reaches td but not th */
+body.doc-light .doc-wrap .doc table.bom-doc tr.bom-grp th a:not(.xref) {
+  color: var(--w-link); border-bottom: 0; background-image: none;
+  text-decoration: underline; text-decoration-thickness: 1px; text-underline-offset: 2.5px;
+}
+
+/* =========================================================================
+   Judge pass, 3 Oct 2026 (after the polishing round). Delete from here to the end to undo it; the round's own block
+   above also lost its ring-colour override (the band, its chips and the rail ring now take the shared --dq-* colours
+   from wiki-align.css).
+   ========================================================================= */
+
+/* the contents rail's current number in leaf, as on the LPA and hydroponics pages: amber is for missing information */
+body.doc-light .doc-nav a.on b { color: var(--w-leaf-700); }
+
+/* From 1360 px wiki-align.css puts every caption under its figure with margin and padding 0 (0,3,3). That beat the
+   round's spacing on Figure 14 and zeroed the try-it demo's inset caption (Figure 11). */
+body.doc-light .doc .sec > figure.costly > figcaption { margin-top: .8rem; }
+@media (min-width: 1360px) {
+  body.doc-light .doc .sec > figure.demo > figcaption { padding: .85rem 1.1rem 1rem; }
+}
+
+/* Figure 15 as a plate, like Figures 7 and 13: the picture and its caption one width, the caption under a hairline
+   (it used to run the full column under a 520 px box centred above it) */
+body.doc-light .doc .sec > figure.ledclip {
+  max-width: 520px; margin: 1.4rem auto 1.5rem; padding: 14px 14px 2px; box-sizing: border-box;
+  background: #fff; border: 1px solid #e5e5e5; border-radius: .3125rem;
+}
+body.doc-light .doc .sec > figure.ledclip .lc-g { max-width: none; border: 0; border-radius: .25rem; }
+body.doc-light .doc .sec > figure.ledclip > figcaption {
+  max-width: none; margin: 12px 0 0; padding: 10px 2px 12px; border-top: 1px solid rgba(15, 19, 25, .11);
+}
+
+/* cycles 7 and 8: the "Not written yet" tag stays inside its striped thumbnail in the narrow row cards */
+.pm-cycles .cyc-c.gap .cyc-img span { max-width: calc(100% - 1rem); box-sizing: border-box; text-align: center; }

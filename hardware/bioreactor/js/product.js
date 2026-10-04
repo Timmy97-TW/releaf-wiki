@@ -221,8 +221,6 @@
   // and decimated to something that fits the deploy budget; the manifest there
   // already carries the role, so no name lookup is needed. Its parts are served
   // from package/_pack.bin (tools/pack_models.py), under their STL names.
-  // Embedded, the pack is fetched relative to the page, so a host outside this
-  // folder (the homepage) says where it lives.
   const DIR = embedded ? "package/" : "placed/";
   const loader = embedded ? PackedModel.bundle(DIR) : new THREE.STLLoader();
   fetch(DIR + "_manifest.json", { cache: "reload" })
@@ -346,17 +344,7 @@
   }, { passive: false });
   window.addEventListener("resize", render);
   if (embedded && "ResizeObserver" in window) {
-    /* render() sets the canvas height, which resizes this same parent (and
-       can bring in a scrollbar that changes its width) inside the observer's
-       own callback: Safari reported that as a "ResizeObserver loop" error.
-       Rendering on the next frame, and only when the width moved, breaks it. */
-    var lastW = 0, queued = false;
-    new ResizeObserver(function (entries) {
-      var w = entries[0].contentRect.width;
-      if (w === lastW || queued) return;
-      lastW = w; queued = true;
-      requestAnimationFrame(function () { queued = false; render(); });
-    }).observe(canvas.parentElement);
+    new ResizeObserver(render).observe(canvas.parentElement);
   }
 
   // 40 RPM puts exactly 4 revolutions in 6 seconds, and a 3-roller head repeats
@@ -717,11 +705,9 @@
     const label = host.querySelector(".triple-label");
     const scrub = host.querySelector(".triple-scrub");
     const bar = host.querySelector(".triple-bar");
-    // The reveal is a camera move, so it answers prefers-reduced-motion: the
-    // tour is built either way, it simply holds on its opening frame.
-    const calm = window.matchMedia &&
-                 window.matchMedia("(prefers-reduced-motion: reduce)").matches;
-    let clock = 0, playing = !calm, held = false, lastNow = 0, ready = false;
+    // Under reduced motion the tour waits for the reader: it starts paused, one click from Play.
+    const still = !!(window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches);
+    let clock = 0, playing = !still, held = false, lastNow = 0, ready = false;
 
     function size2() {
       const w = Math.max(2, Math.round(canvas.parentElement.getBoundingClientRect().width));
@@ -743,6 +729,12 @@
             '<i>Each chamber runs a different protectant</i>';
       }
       if (bar) bar.style.width = (t / animLength() * 100).toFixed(1) + "%";
+      // without a value a role="slider" announces as blank, however far it has moved
+      if (scrub) {
+        const pct = Math.round(t / animLength() * 100);
+        scrub.setAttribute("aria-valuenow", pct);
+        scrub.setAttribute("aria-valuetext", pct + "% through the tour");
+      }
     }
 
     let raf2 = null;
@@ -791,7 +783,7 @@
       });
     });
     const play = host.querySelector(".triple-play");
-    if (play && calm) { play.textContent = "Play"; play.setAttribute("aria-pressed", "false"); }
+    if (play && still) { play.setAttribute("aria-pressed", "false"); play.textContent = "Play"; }
     if (play) play.addEventListener("click", function () {
       playing = !playing;
       play.setAttribute("aria-pressed", String(playing));

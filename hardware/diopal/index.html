@@ -4,10 +4,21 @@
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='7' fill='%2305060a'/%3E%3Ccircle cx='16' cy='16' r='9.5' fill='none' stroke='%235aa9ff' stroke-width='2.5'/%3E%3Ccircle cx='16' cy='16' r='3.6' fill='%23ffa23d'/%3E%3C/svg%3E" />
-<title>DiOPAL, Hardware | ReLeaf &middot; iGEM 2026</title>
-<meta name="description" content="An interactive teardown of DiOPAL, the GEMS-Taiwan dual-wavelength optogenetic LED array." />
-<link rel="stylesheet" href="css/style.css?v=9e3ea848" />
-<link rel="stylesheet" href="../css/polish.css?v=r2b0929" />
+<title>LPA, Hardware | ReLeaf &middot; iGEM 2026</title>
+<meta name="description" content="An interactive teardown of the LPA, the GEMS-Taiwan dual-wavelength optogenetic LED array." />
+<meta name="theme-color" content="#05060a" />
+<!-- Link previews. The image path is relative so it follows the site wherever it is hosted; make these
+     absolute if a scraper needs it (some resolve only absolute og:image URLs). -->
+<meta property="og:type" content="website" />
+<meta property="og:site_name" content="ReLeaf · iGEM 2026" />
+<meta property="og:title" content="LPA — GEMS-Taiwan Hardware" />
+<meta property="og:description" content="An interactive teardown of the LPA, the GEMS-Taiwan dual-wavelength optogenetic LED array." />
+<meta property="og:image" content="../img/card-diopal.png" />
+<meta name="twitter:card" content="summary_large_image" />
+<link rel="stylesheet" href="css/style.css?v=39c954d2" />
+<link rel="stylesheet" href="../css/polish.css?v=f857778d" />
+<!-- Wiki alignment layer: matches the main wiki's document styling. Delete this one line to revert. -->
+<link rel="stylesheet" href="../css/wiki-align.css?v=e522198b" />
 <link rel="stylesheet" href="../../assets/css/nav.css" />
 <link rel="stylesheet" href="../../assets/css/nav-dark.css" />
 <script>document.documentElement.className+=' js'</script>
@@ -32,724 +43,1091 @@
   <b>Hardware</b>
   <a href="../">Overview</a>
   <a href="../photometer/">Photometer</a>
-  <a href="../diopal/" aria-current="page">DiOPAL</a>
+  <a href="../diopal/" aria-current="page">LPA</a>
   <a href="../bioreactor/">Bioreactor</a>
   <a href="../hydroponics/">Hydroponics</a>
   <a href="../notebook/">Notebook</a>
 </nav>
 
-<!-- intro -->
-<main id="main">
-<section class="intro">
-  <div class="eyebrow ai">Dual-wavelength optogenetic array</div>
-  <h1 class="ai">Six ways to ask<br />a cell <span>one question</span></h1>
-  <p class="ai">
-    Green light switches protectant production on. Red switches it off. DiOPAL
-    holds twenty-four cultures under six defined light conditions at once, so the
-    answer arrives in a single run.
-  </p>
+<main id="main" tabindex="-1">
+<!-- The function story. The stage is sticky inside a tall track and
+     scroll position through that track is the only input the scene takes.
+     This replaced the teardown that used to sit here; everything needed to
+     put the teardown back is in dev/disassembly/. -->
+<div class="story" id="story">
+  <div class="story-stage">
+    <canvas id="gl" role="img" aria-label="The LPA under light, built up as the page scrolls."></canvas>
+    <canvas id="duty" aria-hidden="true"></canvas>
+    <div class="scrim" aria-hidden="true"></div>
+    <div id="labels" aria-hidden="true"></div>
 
-  <dl class="stats">
-    <div><dt>LEDs</dt><dd>24</dd></div>
-    <div><dt>Conditions</dt><dd>6</dd></div>
-    <div><dt>Replicates each</dt><dd>4</dd></div>
-    <div><dt>Wavelengths</dt><dd>2</dd></div>
-  </dl>
-
-  <div class="scroll-cue">Scroll</div>
-</section>
-
-<!-- scroll-driven 3D showcase -->
-<div class="track" id="track">
-  <div class="stage" id="stage">
-    <canvas id="gl"></canvas>
-    <div class="hud">
-
-      <div class="card" id="hero-card">
-        <div class="eyebrow">The complete instrument</div>
-        <h2>DiOPAL</h2>
-        <p class="ai">
-          Eight parts around a 6 × 4 grid of LEDs. Scroll to take it apart.
-        </p>
-      </div>
-
-      <div class="panel panel-l" id="panel-l"></div>
-      <div class="panel panel-r" id="panel-r"></div>
-
-      <div class="build" id="build-step"></div>
-
-      <div class="card" id="finale">
-        <div class="eyebrow">Assembled</div>
-        <h2>One run, six conditions</h2>
-        <p class="ai">
-          Two wavelengths at three intensity tiers, with four matched LEDs to a
-          column, so every condition has the same surroundings.
-        </p>
-      </div>
-
-      <div class="counter" id="counter"></div>
-      <div class="rail" id="rail"></div>
+    <!-- Landing chrome. Four corner brackets and one slow sweep, keyed to the
+         title's own fade, so the opening frame reads as an instrument being
+         presented rather than a render sitting on a page. No words: the act
+         already has all it needs. -->
+    <div class="hero-frame" aria-hidden="true">
+      <i class="hf-tl"></i><i class="hf-tr"></i><i class="hf-bl"></i><i class="hf-br"></i>
+      <span class="hero-scan"></span>
+    </div>
+    <div class="story-title" id="title">
+      <div class="eyebrow">LPA</div>
+      <p class="line">One question, six answers</p>
+      <div class="title-rule"><i></i><span>Dual-wavelength array</span><i></i></div>
     </div>
 
-    <div class="loader" id="loader">
-      <span>Loading geometry</span>
-      <b id="load-pct">0%</b>
-    </div>
+
+    <!-- Four numbers that were on the cover this page used to open with. The
+         story's own caption carries the sentence; these carry the scale. -->
+    <ul class="title-stats" id="stats" aria-hidden="true">
+      <li><b>520</b><span>nm</span><i>green channel</i></li>
+      <li><b>660</b><span>nm</span><i>red channel</i></li>
+      <li><b>24</b><span></span><i>cultures at once</i></li>
+      <li><b>6</b><span></span><i>light conditions</i></li>
+    </ul>
+
+    <div class="hud" id="hud" aria-live="polite"></div>
+
+    <p class="endline" id="endline">Six conditions. One run. <em>One variable.</em></p>
+
+    <div class="loader" id="loader">Loading <span id="load-pct">0%</span></div>
+    <div class="scroll-cue" id="cue"><span>Scroll</span><i></i></div>
   </div>
 </div>
 
-<section class="outro">
-  <div class="eyebrow">Three iterations</div>
-  <p class="outro-lead ai">
-    From a dual-LED breadboard to an enclosed, light-shielded instrument with
-    calibrated <strong>low</strong>, <strong>medium</strong> and <strong>high</strong>
-    tiers on both channels.
-  </p>
-</section>
-
-<!-- ══════════════════ technical record ══════════════════ -->
+<!-- ══════════════════ technical record ══════════════════
+     Rebuilt 2 Oct 2026 (night) from the team's writing doc, "Component Page:
+     DiOPAL", sections 2-10. Section 1 of that tab is the 3D walkthrough above.
+     Orange .todo marks are the doc's own notes on what is still missing. -->
 <div class="doc-wrap">
+<div class="story-blend" aria-hidden="true"></div>
 <aside class="doc-nav" id="doc-nav">
   <div class="doc-nav-label">Contents</div>
   <ol>
-    <li><a href="#overview"><b>02</b> Purpose</a></li>
+    <li><a href="#story"><b>01</b> Hardware highlights</a></li>
+    <li><a href="#purpose"><b>02</b> Purpose</a></li>
     <li><a href="#cycle1"><b>03</b> DBTL Cycle 1</a></li>
-    <li><a href="#matching"><b>04</b> DBTL Cycle 2</a></li>
+    <li><a href="#cycle2"><b>04</b> DBTL Cycle 2</a></li>
     <li><a href="#cycle3"><b>05</b> DBTL Cycle 3</a></li>
     <li><a href="#final"><b>06</b> Final Design</a></li>
     <li><a href="#poc"><b>07</b> Proof of Concept</a></li>
     <li><a href="#level2"><b>08</b> Intensity Variability</a></li>
-    <li><a href="#materials"><b>09</b> Reproduction</a></li>
+    <li><a href="#reproduction"><b>09</b> Reproduction</a></li>
+    <li><a href="#references"><b>10</b> References</a></li>
   </ol>
 </aside>
 
 <article class="doc">
 
   <header class="doc-head">
-    <div class="eyebrow">Component Page</div>
-    <h1>DiOPAL</h1>
-    <p class="standfirst"><i>Dual-wavelength Optogenetic Programmable Array of LEDs</i></p>
-    <p class="last-updated">Last updated <b>2 October 2026</b></p>
+    <div class="eyebrow">Technical record</div>
+    <h1>LPA</h1>
+    <p class="standfirst">
+      <b>A dual&#8209;wavelength LED array.</b> A testing apparatus
+      that holds engineered <i>Bacillus subtilis</i>&nbsp;168 under six defined light
+      conditions in a single run, so the effect of wavelength and intensity on protectant
+      production can be measured directly.
+    </p>
+    <p class="doc-aim">
+      Section&nbsp;1, the hardware highlights, is the 3D walkthrough above. Where a value or a
+      passage is not on record yet, it is marked in orange with what is missing rather than
+      estimated.
+    </p>
   </header>
 
-  <!-- ─────────── PURPOSE ─────────── -->
-  <section class="part" id="overview" data-n="2">
+  <!-- ─────────── 2 PURPOSE ─────────── -->
+  <section class="part" id="purpose" data-n="2">
     <div class="part-mark"><span>Section</span><b>02</b></div>
     <h2>Purpose</h2>
   </section>
 
   <section class="sec">
+    <p class="nodrop">
+      The LPA is a testing apparatus, not part of the bioreactor control loop. It exists to
+      answer one biological question:
+    </p>
+    <blockquote class="pull">
+      How does the wavelength and intensity of applied light affect protectant development
+      in engineered <i>Bacillus subtilis</i>&nbsp;168?
+    </blockquote>
     <p>
-      DiOPAL is a testing apparatus, not part of the bioreactor control loop. It exists to
-      answer one biological question. How does the wavelength and intensity of applied
-      light affect protectant development in engineered Bacillus subtilis 168?
+      The strain carries a CcaS/CcaR light&#8209;responsive expression system. Green light
+      induces protectant production and red light halts it. To characterise that switch we
+      need to expose cultures to defined wavelengths at defined intensities, repeatably, with
+      nothing else varying. The LPA is the fixture that makes that possible.
     </p>
     <p>
-      The strain carries a CcaS/CcaR light-responsive expression system. Green light
-      induces protectant production and red light halts it. To characterize that switch we
-      need to expose cultures to defined wavelengths at defined intensities, repeatably,
-      with nothing else varying. DiOPAL is the fixture that makes that possible.
+      The array is a 4&nbsp;&times;&nbsp;6 grid built around two wavelengths and three
+      intensity levels. Each of the three tiers has a green channel and a red channel, and
+      each channel is four internal&#8209;resistance&#8209;matched LEDs. One run therefore
+      compares low, medium and high intensity at both wavelengths at the same time, under
+      identical external conditions, which is the only way the comparison is fair.
     </p>
+
+    <figure class="autodraw layout" id="fig-layout" aria-labelledby="layout-cap">
+      <svg viewBox="0 0 660 300" role="img" aria-label="Top view of the array: six columns of four LEDs on the LED holder. From left, a green and a red column at the low tier, then at the mid tier, then at the high tier, drawn brighter as the tier rises. One column, outlined, is one light condition: four matched LEDs under four tubes. Green induces protectant production and red halts it; the six columns give six conditions per run.">
+        <rect class="part" data-step="1" x="170" y="58" width="318" height="212" rx="10"/>
+
+        <g class="fade" data-step="2">
+          <circle class="part g static t1" cx="197" cy="88" r="15"/>
+          <circle class="part g static t1" cx="197" cy="138" r="15"/>
+          <circle class="part g static t1" cx="197" cy="188" r="15"/>
+          <circle class="part g static t1" cx="197" cy="238" r="15"/>
+        </g>
+        <g class="fade" data-step="2">
+          <circle class="part r static t1" cx="250" cy="88" r="15"/>
+          <circle class="part r static t1" cx="250" cy="138" r="15"/>
+          <circle class="part r static t1" cx="250" cy="188" r="15"/>
+          <circle class="part r static t1" cx="250" cy="238" r="15"/>
+        </g>
+        <g class="fade" data-step="3">
+          <circle class="part g static t2" cx="303" cy="88" r="15"/>
+          <circle class="part g static t2" cx="303" cy="138" r="15"/>
+          <circle class="part g static t2" cx="303" cy="188" r="15"/>
+          <circle class="part g static t2" cx="303" cy="238" r="15"/>
+        </g>
+        <g class="fade" data-step="3">
+          <circle class="part r static t2" cx="356" cy="88" r="15"/>
+          <circle class="part r static t2" cx="356" cy="138" r="15"/>
+          <circle class="part r static t2" cx="356" cy="188" r="15"/>
+          <circle class="part r static t2" cx="356" cy="238" r="15"/>
+        </g>
+        <g class="fade" data-step="4">
+          <circle class="part g static t3" cx="409" cy="88" r="15"/>
+          <circle class="part g static t3" cx="409" cy="138" r="15"/>
+          <circle class="part g static t3" cx="409" cy="188" r="15"/>
+          <circle class="part g static t3" cx="409" cy="238" r="15"/>
+        </g>
+        <g class="fade" data-step="4">
+          <circle class="part r static t3" cx="462" cy="88" r="15"/>
+          <circle class="part r static t3" cx="462" cy="138" r="15"/>
+          <circle class="part r static t3" cx="462" cy="188" r="15"/>
+          <circle class="part r static t3" cx="462" cy="238" r="15"/>
+        </g>
+
+        <!-- a tier is a green and a red column -->
+        <path class="part thin" data-step="5" d="M182 44 V38 H265 V44"/>
+        <path class="part thin" data-step="5" d="M288 44 V38 H371 V44"/>
+        <path class="part thin" data-step="5" d="M394 44 V38 H477 V44"/>
+        <text class="lbl" data-step="5" x="223.5" y="28" text-anchor="middle">Low</text>
+        <text class="lbl" data-step="5" x="329.5" y="28" text-anchor="middle">Mid</text>
+        <text class="lbl" data-step="5" x="435.5" y="28" text-anchor="middle">High</text>
+
+        <!-- one column is one condition -->
+        <rect class="beam thin" data-step="5" x="177" y="66" width="40" height="194" rx="20"/>
+        <line class="beam thin side" data-step="5" x1="140" y1="163" x2="177" y2="163"/>
+        <text class="side lbl" data-step="5" x="20" y="146">One condition</text>
+        <text class="side lbl dim" data-step="5" x="20" y="166">4 matched LEDs</text>
+        <text class="side lbl dim" data-step="5" x="20" y="184">under 4 tubes</text>
+
+        <g class="fade side" data-step="6">
+          <circle class="part g static t3" cx="516" cy="110" r="7"/>
+        </g>
+        <text class="side lbl" data-step="6" x="532" y="114">Green</text>
+        <text class="side lbl dim" data-step="6" x="532" y="131">induces</text>
+        <g class="fade side" data-step="6">
+          <circle class="part r static t3" cx="516" cy="160" r="7"/>
+        </g>
+        <text class="side lbl" data-step="6" x="532" y="164">Red</text>
+        <text class="side lbl dim" data-step="6" x="532" y="181">halts</text>
+        <text class="side lbl big" data-step="6" x="504" y="246">6 conditions</text>
+        <text class="side lbl dim" data-step="6" x="504" y="266">per run</text>
+      </svg>
+      <figcaption id="layout-cap">
+        <b>The array from above</b> Six columns of four LEDs: a green and a red column at each
+        of the three intensity tiers. Each column is one light condition, and its four matched
+        LEDs light four tubes. Brightness here only marks the tier.
+      </figcaption>
+    </figure>
+
     <p>
-      The array is a 4 &times; 6 grid built around two wavelengths and three intensity
-      levels. Each of the three tiers has a green channel and a red channel, and each
-      channel is four internal-resistance-matched LEDs. One run therefore compares low,
-      medium and high intensity at both wavelengths at the same time, under identical
-      external conditions, which is the only way the comparison is fair.
+      Intensity is set by pulse&#8209;width modulation from an Arduino through three MOSFETs, one
+      per tier, and each tier is held constant for the whole of a test. The LPA applies a fixed
+      dose rather than adjusting output as it goes. <span class="mark">It characterises, it does
+      not&nbsp;control.</span>
     </p>
-    <div class="ai"><div class="matrix" id="matrix"></div></div>
+
+    <!-- Polish round, 3 Oct: the path through the three cycles in one view. Each panel is that
+         cycle's own build photo (the doc's photos for that cycle), what it added and what it
+         found, in the words of its sections; the whole panel links to the cycle. -->
     <p>
-      Intensity is set by pulse-width modulation from an Arduino through a MOSFET, and each
-      tier is held constant for the whole of a test. DiOPAL applies a fixed dose rather than
-      adjusting output as it goes. It characterizes, it does not control.
+      The LPA reached this form in three design&#8209;build&#8209;test&#8209;learn cycles, and
+      what each cycle found set the next one&rsquo;s design (<a class="xref" href="#fig-glance"></a>).
     </p>
-    <figure class="frame hero">
-      <div class="frame-img"><img src="photos/iter3-a.webp" width="900" height="1200" alt="DiOPAL assembled: a white tube holder with 24 wells sitting on the black enclosure, an Arduino beside it." loading="lazy" decoding="async"></div>
-      <figcaption class="ai"><b>The instrument</b> Twenty-four tubes over twenty-four LEDs, in a light-tight box.</figcaption>
+    <figure class="glance" id="fig-glance" aria-labelledby="glance-cap">
+      <ol class="glance-list">
+        <li class="gl-c1">
+          <span class="gl-img"><img src="photos/iter1-a.webp" width="899" height="1200" alt="The cycle-1 array on a desk: a black printed LED holder with a few green and red LEDs lit, wired across to a breadboard." loading="lazy" decoding="async"></span>
+          <span class="gl-tx">
+            <span class="gl-k"><i aria-hidden="true"></i>Cycle 1</span>
+            <a class="gl-t" href="#cycle1">Dual&#8209;wavelength array</a>
+            <span class="gl-row"><em>Added</em>A green and a red LED per column, nothing calibrated</span>
+            <span class="gl-row"><em>Found</em>LED output varies, and outside light gets in</span>
+          </span>
+        </li>
+        <li class="gl-c2">
+          <span class="gl-img"><img src="photos/iter2-b.webp" width="897" height="1200" alt="The cycle-2 LED holder stood upright on a desk, most of its LEDs lit, rows of red alternating with rows of green, reflected in a clear parts box in front." loading="lazy" decoding="async"></span>
+          <span class="gl-tx">
+            <span class="gl-k"><i aria-hidden="true"></i>Cycle 2</span>
+            <a class="gl-t" href="#cycle2">Matched output, light shielding</a>
+            <span class="gl-row"><em>Added</em>40&nbsp;LEDs measured, 24&nbsp;matched in fours; cover from outside light</span>
+            <span class="gl-row"><em>Found</em>Matching works, but the tiers must come from PWM</span>
+          </span>
+        </li>
+        <li class="gl-c3">
+          <span class="gl-img"><img src="photos/iter3-b.webp" width="900" height="1200" alt="The cycle-3 LPA on a desk: the white tube holder seated in the black housing, its wells lit green and red, a grey slider plate at the side of the housing." loading="lazy" decoding="async"></span>
+          <span class="gl-tx">
+            <span class="gl-k"><i aria-hidden="true"></i>Cycle 3</span>
+            <a class="gl-t" href="#cycle3">Enclosed, set in code</a>
+            <span class="gl-row"><em>Added</em>Housing, intensity set in code, sliders, tube holder</span>
+            <span class="gl-row"><em>Found</em>On a shaker a post snapped, and the white holder leaked light</span>
+          </span>
+        </li>
+        <li class="gl-fin">
+          <span class="gl-img"><img src="photos/final-black-holder.webp" width="750" height="1000" alt="The final LPA: the black tube holder with its 24 bores seated in the black housing." loading="lazy" decoding="async"></span>
+          <span class="gl-tx">
+            <span class="gl-k"><i aria-hidden="true"></i>Final design</span>
+            <a class="gl-t" href="#final">Black holder, four screws</a>
+            <span class="gl-row"><em>Changed</em>Tube holder in black, 4&nbsp;wall loops; four screws, not two; solder joints reinforced</span>
+            <span class="gl-row gap"><em>Tested</em>Culture runs (sections 7&ndash;8) not on record yet</span>
+          </span>
+        </li>
+      </ol>
+      <figcaption id="glance-cap">
+        <b>Three cycles at a glance</b> Each photo is the LPA as built at that stage. What a cycle
+        found became the next one&rsquo;s design: cycle&nbsp;2 matched the LEDs and shut out
+        outside light, cycle&nbsp;3 moved the tiers into software, and its overnight test gave
+        the final build its black tube holder. Each panel links to its section.
+      </figcaption>
     </figure>
   </section>
 
-  <!-- ─────────── CYCLE 1 ─────────── -->
-  <section class="part" id="cycle1" data-n="3">
+  <!-- ─────────── 3 CYCLE 1 ─────────── -->
+  <section class="part dbtl-part" id="cycle1" data-n="3">
     <div class="part-mark"><span>Section</span><b>03</b></div>
-    <h2>DBTL Cycle 1: Dual-Wavelength Array</h2>
+    <div class="dbtl-head">
+      <div class="dbtl-ring" aria-hidden="true"><i class="q d">D</i><i class="q b">B</i><i class="q t">T</i><i class="q l">L</i><span>Cycle</span><b>1</b></div>
+      <div class="dbtl-tx">
+        <p class="dbtl-kick">DBTL cycle 1 <span>of 3</span></p>
+        <h2><span class="dbtl-pre">DBTL Cycle 1: </span>Dual&#8209;Wavelength Array</h2>
+        <p class="dbtl-gist">Does the idea work at all? A green and a red LED in every column, switched on and off, with nothing calibrated yet.</p>
+      </div>
+    </div>
+    <ol class="dbtl-steps" aria-label="Cycle 1, stage by stage">
+      <li class="d"><a href="#sec31"><b>D</b><span><em>Design</em>A green and a red LED per column</span></a></li>
+      <li class="b"><a href="#sec32"><b>B</b><span><em>Build</em>The first array, wired to a breadboard</span></a></li>
+      <li class="t gap"><a href="#sec33"><b>T</b><span><em>Test</em>Not on record yet</span></a></li>
+      <li class="l"><a href="#sec34"><b>L</b><span><em>Learn</em>LED output varies, and outside light gets in</span></a></li>
+    </ol>
   </section>
 
-  <section class="sec">
+  <section class="sec" id="sec31">
     <h3><i>3.1</i> Design</h3>
     <p>
-      The first build tests the simplest version of the idea. Put a green and a red LED in
-      each column so we can switch between them quickly and exercise the on and off control
+      The first build tests the simplest version of the idea: put a green and a red LED in
+      each column, so we can switch between them quickly and exercise the on and off control
       of protectant production directly. Nothing is calibrated at this stage, because the
       question is whether the concept works at all before we spend effort making it precise.
     </p>
     <p>
-      Wire-management prints were included from the start, since even at this size the
+      Wire&#8209;management prints were included from the start, since even at this size the
       harness gets unmanageable fast.
     </p>
+  </section>
+
+  <section class="sec" id="sec32">
     <h3><i>3.2</i> Build</h3>
-    <ul class="plain">
-      <li><b>27 May</b> Finished wiring LEDs to breadboard. No power source, no MOSFETs for
-        intensity, no Arduino.</li>
-      <li><b>28 May</b> Finalized wiring entirety of LPA. Began attempting Arduino code using
-        Arduino Uno-Q.</li>
-    </ul>
-    <p class="note-in-progress ai">Not written yet: the board layout.</p>
-    <figure class="frame" style="max-width:330px"><div class="frame-img"><img src="photos/iter1-a.webp" width="899" height="1200" alt="The first array on the bench: a black LED holder with green and red LEDs, wired to a breadboard and an Arduino." loading="lazy" decoding="async"></div>
-      <figcaption class="ai"><b>Cycle 1</b> The first array, driven from a breadboard.</figcaption></figure>
+    <figure class="frame hero solo">
+      <div class="frame-img"><img src="photos/iter1-a.webp" width="899" height="1200" alt="The first LPA on a desk: a black printed LED holder with a few green and red LEDs lit, wired across to a breadboard and a microcontroller board." loading="lazy" decoding="async"></div>
+      <figcaption><b>Cycle 1 on the bench</b> The first array: green and red LEDs in a black printed holder, wired out to a breadboard.</figcaption>
+    </figure>
+    <div class="todo"><b>Unwritten &middot; 3.2 Build</b>The board layout, and how the LEDs were
+      wired and driven at this stage. More construction photos from this cycle are wanted too.</div>
+  </section>
+
+  <section class="sec" id="sec33">
     <h3><i>3.3</i> Test</h3>
-    <ul class="plain">
-      <li><b>30 May</b> Found many issues including: power source to allow for voltage and
-        current adjustment, diode usage, bad wire management, tinkering with the MOSFET gate,
-        source, and drain.</li>
-      <li><b>1 June</b> Fixed all present issues. Worked out code, intensity is fixed,
-        however, 0 is maximum and 255 (supposedly maximum) is off. Goals: fix intensity
-        issues, rewire to allow for higher current and 12 Volts, purchase more resistors
-        (560 ohm) and more LEDs.</li>
-      <li><b>6 June</b> Finished rewiring; led to fixed intensity code issues.</li>
-    </ul>
+    <div class="todo"><b>Unwritten &middot; 3.3 Test</b>What was run on iteration&nbsp;1 and what
+      came out of it.</div>
+  </section>
+
+  <section class="sec" id="sec34">
     <h3><i>3.4</i> Learn</h3>
     <p>
-      The dual-wavelength concept worked, but two things were not controlled and both
+      The dual&#8209;wavelength concept worked, but two things were not controlled, and both
       matter more than they first appear.
     </p>
-    <p>
-      Output consistency between LEDs was not controlled. Internal-resistance variance is a
-      common problem in cheap single-bulb LEDs. Nominally identical parts draw different
-      currents and emit different intensities at the same drive level. As long as that is
-      true, an intensity tier is not a real quantity and the wavelength comparison is not
-      fair either, since the green and red channels would be running at unknown relative
-      brightness.
-    </p>
-    <p>
-      External light was not blocked. Ambient light adds an unknown amount of illumination
-      to every tube, and it lands hardest on the low-intensity condition, which is exactly
-      where we need the cleanest separation.
-    </p>
-    <p>Both have to be solved before intensity means anything, which is what cycle 2 is for.</p>
+    <div class="limits prose">
+      <div>
+        <h4>LED&#8209;to&#8209;LED output was not consistent</h4>
+        <p>
+          Internal&#8209;resistance variance is a common problem in cheap single&#8209;bulb
+          LEDs. Nominally identical parts draw different currents and emit different
+          intensities at the same drive level. As long as that is true, an intensity tier is
+          not a real quantity, and the wavelength comparison is not fair either, since the
+          green and red channels would be running at unknown relative brightness.
+        </p>
+      </div>
+      <div>
+        <h4>External light was not blocked</h4>
+        <p>
+          Ambient light adds an unknown amount of illumination to every tube, and it lands
+          hardest on the low&#8209;intensity condition, which is exactly where we need the
+          cleanest separation.
+        </p>
+      </div>
+    </div>
+    <p>Both have to be solved before intensity means anything, which is what <a href="#cycle2">cycle&nbsp;2</a> is for.</p>
   </section>
 
-  <!-- ─────────── CYCLE 2 ─────────── -->
-  <section class="part" id="matching" data-n="4">
+  <!-- ─────────── 4 CYCLE 2 ─────────── -->
+  <section class="part dbtl-part" id="cycle2" data-n="4">
     <div class="part-mark"><span>Section</span><b>04</b></div>
-    <h2>DBTL Cycle 2: Matched Output and Light Shielding</h2>
+    <div class="dbtl-head">
+      <div class="dbtl-ring" aria-hidden="true"><i class="q d">D</i><i class="q b">B</i><i class="q t">T</i><i class="q l">L</i><span>Cycle</span><b>2</b></div>
+      <div class="dbtl-tx">
+        <p class="dbtl-kick">DBTL cycle 2 <span>of 3</span></p>
+        <h2><span class="dbtl-pre">DBTL Cycle 2: </span>Matched Output and Light Shielding</h2>
+        <p class="dbtl-gist">Make intensity a real quantity: measure every LED, build columns of matched LEDs, and shield the array from outside light.</p>
+      </div>
+    </div>
+    <ol class="dbtl-steps" aria-label="Cycle 2, stage by stage">
+      <li class="d"><a href="#sec41"><b>D</b><span><em>Design</em>Three intensity tiers from matched LEDs</span></a></li>
+      <li class="b"><a href="#sec42"><b>B</b><span><em>Build</em>Every LED measured on its own, then rewired</span></a></li>
+      <li class="t"><a href="#sec43"><b>T</b><span><em>Test</em>40 readings, sorted into matched groups</span></a></li>
+      <li class="l"><a href="#sec44"><b>L</b><span><em>Learn</em>Matching works; the tiers must come from PWM</span></a></li>
+    </ol>
   </section>
 
-  <section class="sec">
+  <section class="sec" id="sec41">
     <h3><i>4.1</i> Design</h3>
     <p>
-      Cycle 2 introduces the three-intensity structure that defines the array, and the LED
-      matching needed to make it real.
+      Cycle&nbsp;2 introduces the three&#8209;intensity structure that defines the array, and
+      the LED matching needed to make it real.
     </p>
     <p>
-      The approach is to measure the lumen output of every LED individually and use that to
+      The approach is to measure the light output of every LED individually and use that to
       identify units with similar internal resistance. From the matched units we form three
       groups of four per wavelength, one group per intensity tier, arranged as columns.
+    </p>
+    <p>
       Because the LEDs within a column are matched, the column can be recalibrated as a unit
       through straightforward mathematical adjustment, so that every column at a given tier
       matches every other. That is what makes low, medium and high reproducible quantities
       rather than labels.
     </p>
     <p>
-      Coverage was added to block external light, so that the intensity a culture receives
-      is the intensity we set.
+      Coverage was added to block external light, so that the intensity a culture receives is
+      the intensity we set.
     </p>
+  </section>
 
+  <section class="sec" id="sec42">
     <h3><i>4.2</i> Build</h3>
     <p>
-      Every LED was driven at 5&nbsp;V and measured individually on a lux meter using a
-      printed sensor fixture, so each reading is taken at the same distance and orientation.
-      Each LED carries a tag made of its row and its column, with rows A to D running
-      downward and columns 1 to 5 running across, so any physical LED can be traced back to
-      its own measurement. The array was then rewired with the matched units grouped into
-      columns.
+      Every LED was driven at 5&nbsp;V and measured individually on a lux meter
+      <span class="todo">model and resolution not on record</span> using a printed sensor
+      fixture, so each reading is taken at the same distance and orientation. Each LED carries
+      a tag made of its row and its column, with rows A to D running downward and columns
+      1 to 5 running across, so any physical LED can be traced back to its own measurement.
+      The array was then rewired with the matched units grouped into columns.
     </p>
-    <p class="note-in-progress ai">Not written yet: the lux meter model and resolution.</p>
-    <div class="frames">
-      <figure class="frame"><div class="frame-img"><img src="photos/c2-fixture.webp" width="900" height="1200" alt="The printed sensor fixture: a round black holder with one LED lit green over the lux sensor, wired on the desk." loading="lazy" decoding="async"></div></figure>
-      <figure class="frame"><div class="frame-img"><img src="photos/iter1-b.webp" width="900" height="1200" alt="A row of LEDs laid out on the desk, each lead tagged with an orange label." loading="lazy" decoding="async"></div></figure>
-      <figure class="frame"><div class="frame-img"><img src="photos/c2-supply.webp" width="899" height="1200" alt="The bench power supply set to 5.0 V." loading="lazy" decoding="async"></div></figure>
-      <figure class="frame"><div class="frame-img"><img src="photos/iter2-b.webp" width="897" height="1200" alt="The LED holder standing upright with rows of green and red LEDs lit." loading="lazy" decoding="async"></div></figure>
-      <figure class="frame"><div class="frame-img"><img src="photos/iter2-a.webp" width="1067" height="1097" alt="The rewired array: tagged leads running from the LED holder to a breadboard, green and red LEDs lit." loading="lazy" decoding="async"></div></figure>
-      <figure class="frame"><div class="frame-img"><img src="photos/c2-wiring.webp" width="917" height="1200" alt="MOSFETs on a breadboard driving the columns, with jumper wires to the array." loading="lazy" decoding="async"></div></figure>
-      <figure class="frame"><div class="frame-img"><img src="photos/c2-tagged.webp" width="770" height="1200" alt="The LED holder from the back, every lead tagged and bundled." loading="lazy" decoding="async"></div></figure>
+    <div class="frames trio">
+      <figure class="frame">
+        <div class="frame-img"><img src="photos/lux-rig.webp" width="820" height="1093" alt="A round black printed fixture on a desk with one green LED lit at its centre, wired to the bench, the lux meter's case behind it." loading="lazy" decoding="async"></div>
+        <figcaption><b>Measure</b> One LED at a time in the printed sensor fixture, at a fixed distance and angle.</figcaption>
+      </figure>
+      <figure class="frame">
+        <div class="frame-img"><img src="photos/iter1-b.webp" width="900" height="1200" alt="A row of loose LEDs laid along the edge of a desk, each pair of leads carrying an orange paper tag." loading="lazy" decoding="async"></div>
+        <figcaption><b>Tag</b> Every LED labelled with its row and column, so its reading follows it.</figcaption>
+      </figure>
+      <figure class="frame" id="fig-rewire">
+        <div class="frame-img"><img src="photos/iter2-a.webp" width="1067" height="1097" alt="The black LED holder standing upright with green and red LEDs lit, tagged red and black leads running from it to a breadboard in front." loading="lazy" decoding="async"></div>
+        <figcaption><b>Rewire</b> The matched LEDs back in the holder, grouped into columns.</figcaption>
+      </figure>
     </div>
+  </section>
 
+  <section class="sec" id="sec43">
     <h3><i>4.3</i> Test</h3>
-    <p>All 20 green LEDs at 5&nbsp;V, in kLux.</p>
-    <div class="table-scroll">
-      <table class="data">
-        <caption>Green LEDs at 5 V (kLux)</caption>
-        <thead><tr><th scope="col"></th><th scope="col">1</th><th scope="col">2</th><th scope="col">3</th><th scope="col">4</th><th scope="col">5</th></tr></thead>
-        <tbody>
-          <tr><th scope="row">A</th><td>2.54</td><td>2.19</td><td>2.33</td><td>2.40</td><td>2.40</td></tr>
-          <tr><th scope="row">B</th><td>2.37</td><td>2.11</td><td>2.34</td><td>2.48</td><td>2.33</td></tr>
-          <tr><th scope="row">C</th><td>2.01</td><td>2.37</td><td>2.38</td><td>2.42</td><td>2.36</td></tr>
-          <tr><th scope="row">D</th><td>2.33</td><td>2.05</td><td>2.35</td><td>2.45</td><td>2.20</td></tr>
-        </tbody>
-      </table>
+    <p>
+      All 20 green LEDs were read in kLux and all 20 red LEDs in lux, each at 5&nbsp;V. The
+      tables are laid out by the measurement tags of 4.2 (rows A to D, columns 1 to 5), not by
+      the array's 4&nbsp;&times;&nbsp;6 grid. The shading marks which matched group each LED
+      went into.
+    </p>
+    <div class="lux-key" aria-hidden="true">
+      <span><i class="t-low"></i>Low</span><span><i class="t-mid"></i>Mid</span><span><i class="t-high"></i>High</span><span><i class="t-none"></i>Not used</span>
     </div>
-    <p>All 20 red LEDs at 5&nbsp;V, in lux.</p>
-    <div class="table-scroll">
-      <table class="data">
-        <caption>Red LEDs at 5 V (lux)</caption>
-        <thead><tr><th scope="col"></th><th scope="col">1</th><th scope="col">2</th><th scope="col">3</th><th scope="col">4</th><th scope="col">5</th></tr></thead>
-        <tbody>
-          <tr><th scope="row">A</th><td>431</td><td>371</td><td>424</td><td>393</td><td>438</td></tr>
-          <tr><th scope="row">B</th><td>400</td><td>380</td><td>430</td><td>397</td><td>360</td></tr>
-          <tr><th scope="row">C</th><td>410</td><td>410</td><td>360</td><td>416</td><td>397</td></tr>
-          <tr><th scope="row">D</th><td>411</td><td>390</td><td>360</td><td>388</td><td>428</td></tr>
-        </tbody>
-      </table>
+    <div class="lux-pair">
+      <div class="table-scroll plain">
+        <table class="lux green" id="tbl-green">
+          <caption>Green LEDs at 5&nbsp;V, kLux</caption>
+          <thead><tr><th scope="col"><span class="sr-only">Row</span></th><th scope="col">1</th><th scope="col">2</th><th scope="col">3</th><th scope="col">4</th><th scope="col">5</th></tr></thead>
+          <tbody>
+            <tr><th scope="row">A</th><td data-tag="A1" data-v="2.54" data-g="none">2.54</td><td data-tag="A2" data-v="2.19" data-g="none">2.19</td><td data-tag="A3" data-v="2.33" data-g="low">2.33<span class="sr-only"> (low)</span></td><td data-tag="A4" data-v="2.40" data-g="high">2.40<span class="sr-only"> (high)</span></td><td data-tag="A5" data-v="2.40" data-g="high">2.40<span class="sr-only"> (high)</span></td></tr>
+            <tr><th scope="row">B</th><td data-tag="B1" data-v="2.37" data-g="mid">2.37<span class="sr-only"> (mid)</span></td><td data-tag="B2" data-v="2.11" data-g="none">2.11</td><td data-tag="B3" data-v="2.34" data-g="low">2.34<span class="sr-only"> (low)</span></td><td data-tag="B4" data-v="2.48" data-g="none">2.48</td><td data-tag="B5" data-v="2.33" data-g="low">2.33<span class="sr-only"> (low)</span></td></tr>
+            <tr><th scope="row">C</th><td data-tag="C1" data-v="2.01" data-g="none">2.01</td><td data-tag="C2" data-v="2.37" data-g="mid">2.37<span class="sr-only"> (mid)</span></td><td data-tag="C3" data-v="2.38" data-g="high">2.38<span class="sr-only"> (high)</span></td><td data-tag="C4" data-v="2.42" data-g="high">2.42<span class="sr-only"> (high)</span></td><td data-tag="C5" data-v="2.36" data-g="mid">2.36<span class="sr-only"> (mid)</span></td></tr>
+            <tr><th scope="row">D</th><td data-tag="D1" data-v="2.33" data-g="low">2.33<span class="sr-only"> (low)</span></td><td data-tag="D2" data-v="2.05" data-g="none">2.05</td><td data-tag="D3" data-v="2.35" data-g="mid">2.35<span class="sr-only"> (mid)</span></td><td data-tag="D4" data-v="2.45" data-g="none">2.45</td><td data-tag="D5" data-v="2.20" data-g="none">2.20</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <div class="table-scroll plain">
+        <table class="lux red" id="tbl-red">
+          <caption>Red LEDs at 5&nbsp;V, lux</caption>
+          <thead><tr><th scope="col"><span class="sr-only">Row</span></th><th scope="col">1</th><th scope="col">2</th><th scope="col">3</th><th scope="col">4</th><th scope="col">5</th></tr></thead>
+          <tbody>
+            <tr><th scope="row">A</th><td data-tag="A1" data-v="431" data-g="high">431<span class="sr-only"> (high)</span></td><td data-tag="A2" data-v="371" data-g="none">371</td><td data-tag="A3" data-v="424" data-g="high">424<span class="sr-only"> (high)</span></td><td data-tag="A4" data-v="393" data-g="low">393<span class="sr-only"> (low)</span></td><td data-tag="A5" data-v="438" data-g="none">438</td></tr>
+            <tr><th scope="row">B</th><td data-tag="B1" data-v="400" data-g="none">400</td><td data-tag="B2" data-v="380" data-g="none">380</td><td data-tag="B3" data-v="430" data-g="high">430<span class="sr-only"> (high)</span></td><td data-tag="B4" data-v="397" data-g="low">397<span class="sr-only"> (low)</span></td><td data-tag="B5" data-v="360" data-g="none">360</td></tr>
+            <tr><th scope="row">C</th><td data-tag="C1" data-v="410" data-g="mid">410<span class="sr-only"> (mid)</span></td><td data-tag="C2" data-v="410" data-g="mid">410<span class="sr-only"> (mid)</span></td><td data-tag="C3" data-v="360" data-g="none">360</td><td data-tag="C4" data-v="416" data-g="mid">416<span class="sr-only"> (mid)</span></td><td data-tag="C5" data-v="397" data-g="low">397<span class="sr-only"> (low)</span></td></tr>
+            <tr><th scope="row">D</th><td data-tag="D1" data-v="411" data-g="mid">411<span class="sr-only"> (mid)</span></td><td data-tag="D2" data-v="390" data-g="low">390<span class="sr-only"> (low)</span></td><td data-tag="D3" data-v="360" data-g="none">360</td><td data-tag="D4" data-v="388" data-g="none">388</td><td data-tag="D5" data-v="428" data-g="high">428<span class="sr-only"> (high)</span></td></tr>
+          </tbody>
+        </table>
+      </div>
     </div>
-    <p>Sorting those into groups of four by output gives the matched sets. Green, in kLux.</p>
-    <ul class="plain">
-      <li>2.33, 2.33, 2.33, 2.34</li>
-      <li>2.35, 2.36, 2.37, 2.37</li>
-      <li>2.38, 2.50, 2.50, 2.42</li>
-    </ul>
-    <p>Red, in kLux.</p>
-    <ul class="plain">
-      <li>0.390, 0.393, 0.397, 0.397</li>
-      <li>0.410, 0.410, 0.411, 0.416</li>
-      <li>0.424, 0.428, 0.430, 0.431</li>
-    </ul>
-    <p>After rewiring, the six channels read as follows, in kLux.</p>
-    <div class="table-scroll">
-      <table class="data">
-        <caption>The six channels after rewiring (kLux)</caption>
+    <p>
+      Sorting those into groups of four by output gives the matched sets, one per tier and
+      wavelength. After rewiring, the six channels read as follows, in kLux.
+    </p>
+    <div class="table-scroll plain">
+      <table class="chan">
+        <caption>The six channels after rewiring, kLux: the readings of <a class="xref" href="#tbl-green"></a> and <a class="xref" href="#tbl-red"></a>, regrouped</caption>
         <thead><tr><th scope="col">Green low</th><th scope="col">Red low</th><th scope="col">Green mid</th><th scope="col">Red mid</th><th scope="col">Green high</th><th scope="col">Red high</th></tr></thead>
         <tbody>
           <tr><td>2.33</td><td>0.390</td><td>2.35</td><td>0.410</td><td>2.38</td><td>0.424</td></tr>
-          <tr><td>2.33</td><td>0.393</td><td>2.36</td><td>0.410</td><td>2.50</td><td>0.428</td></tr>
-          <tr><td>2.33</td><td>0.397</td><td>2.37</td><td>0.411</td><td>2.50</td><td>0.430</td></tr>
+          <tr><td>2.33</td><td>0.393</td><td>2.36</td><td>0.410</td><td class="flag">2.40</td><td>0.428</td></tr>
+          <tr><td>2.33</td><td>0.397</td><td>2.37</td><td>0.411</td><td class="flag">2.40</td><td>0.430</td></tr>
           <tr><td>2.34</td><td>0.397</td><td>2.37</td><td>0.416</td><td>2.42</td><td>0.431</td></tr>
         </tbody>
       </table>
     </div>
-    <figure class="fig ai">
-      <div id="i2-chart"></div>
+    <div class="todo note"><b>To confirm</b>The doc lists green high as 2.38, 2.50, 2.50, 2.42,
+      but the raw table has no 2.50 reading: A4 and A5 both read 2.40. The two marked cells are
+      shown from the raw table.</div>
+  </section>
+
+  <section class="sec" id="sec44">
+    <h3><i>4.4</i> Learn</h3>
+    <figure class="fig plate spread" id="fig-spread">
+      <div id="spread-chart" class="spread-chart"></div>
       <figcaption>
-        Every LED measured at 5&nbsp;V before matching, with the units kept for each tier
-        called out. The chart's green high group uses 2.40 where the table above reads 2.50.
-        <!-- the 2.40 / 2.50 mismatch is on the team's feedback list -->
-        Choose a condition in the grid under Purpose to light its four LEDs.
+        <b>The spread is real, and matching tightens it</b> Every LED from <a class="xref" href="#tbl-green"></a>
+        and <a class="xref" href="#tbl-red"></a> on one axis (top), then the twelve kept per
+        colour magnified (bottom). Hollow dots are the eight per colour that were not used.
       </figcaption>
     </figure>
-
-    <h3><i>4.4</i> Learn</h3>
     <p>
-      The variance is real and it is large. The green LEDs ran from 2.01 to 2.54 kLux, a
-      spread of 26% across parts sold as identical. The red LEDs ran from 360 to 438 lux, a
-      spread of 22%. Building intensity tiers out of unsorted LEDs would have meant every
-      column sitting at an unknown brightness, so the matching step is not optional.
+      The variance is real and it is large. The green LEDs ran from 2.01 to 2.54&nbsp;kLux, a
+      spread of 26% across parts sold as identical. The red LEDs ran from 360 to 438&nbsp;lux, a
+      spread of 22%. Building intensity tiers out of unsorted LEDs would have meant every column
+      sitting at an unknown brightness, so the matching step is not optional.
     </p>
     <p>
       Sorting by measured output tightens each group considerably. The green low group holds
-      2.33 to 2.34 and the green mid group holds 2.35 to 2.37, which is well inside 1%. The
-      red groups hold to about 2% each.
+      2.33 to 2.34 and the green mid group holds 2.35 to 2.37, which is well inside 1%. The red
+      groups hold to about 2% each.
     </p>
-    <p>Two things did not come out clean and both need addressing before this data supports an intensity claim.</p>
-    <ul class="plain">
-      <li>The green high group spans 2.38 to 2.50, roughly 5%, which is five times looser
-        than the other two green groups. It is the leftover group, made of what did not
-        match anything else.</li>
-      <li>The separation between tiers is smaller than we need. Green low to green high is
-        about 7% and red low to red high is about 10%. That is the natural spread of the
-        parts, sorted, rather than three distinct light levels.</li>
+    <p>Two things did not come out clean, and both need addressing before this data supports an intensity claim.</p>
+    <ul class="flags">
+      <li>
+        <b>The loosest of the three green groups.</b> Green high spans 2.38 to 2.42&nbsp;kLux,
+        about 1.7%, against 0.4% and 0.9% for the other two green groups. It is the leftover
+        group, made of what did not match anything else.
+        <div class="todo note"><b>To confirm</b>On the raw readings this group (1.7%) is as tight
+          as the red groups (about 2%), so this point may not stand. The doc&rsquo;s &ldquo;roughly
+          5%, five times looser&rdquo; rests on two 2.50 readings that are not in
+          <a class="xref" href="#tbl-green"></a>. Team to decide.</div>
+      </li>
+      <li>
+        <b>The tiers are too close together.</b> Green low to green high is about 4%, and red
+        low to red high about 10%. That is the natural spread of the parts, sorted, rather than
+        three distinct light levels.
+        <div class="todo note"><b>To confirm</b>The doc gives about 7% for green, from the same
+          2.50 readings.</div>
+      </li>
     </ul>
     <p>
-      The tiers therefore have to come from the PWM duty cycle rather than from LED
-      selection. Matching makes the four LEDs in a column agree with each other, and software
-      sets how bright that column runs. That is what cycle 3 builds.
+      <span class="mark">The tiers therefore have to come from the PWM duty cycle rather than from
+      LED selection.</span> Matching makes the four LEDs in a column agree with each other, and
+      software sets how bright that column runs. That is what <a href="#cycle3">cycle&nbsp;3</a> builds.
     </p>
     <p>
       What remained after this cycle was also practical. The electronics were still exposed,
-      intensity was still set by hand, and there was no dedicated way to hold the test tubes
-      in a repeatable position under the array.
+      intensity was still set by hand, and there was no dedicated way to hold the test tubes in
+      a repeatable position over the array.
     </p>
   </section>
 
-  <!-- ─────────── CYCLE 3 ─────────── -->
-  <section class="part" id="cycle3" data-n="5">
+  <!-- ─────────── 5 CYCLE 3 ─────────── -->
+  <section class="part dbtl-part" id="cycle3" data-n="5">
     <div class="part-mark"><span>Section</span><b>05</b></div>
-    <h2>DBTL Cycle 3: Enclosed and Software-Controlled Instrument</h2>
+    <div class="dbtl-head">
+      <div class="dbtl-ring" aria-hidden="true"><i class="q d">D</i><i class="q b">B</i><i class="q t">T</i><i class="q l">L</i><span>Cycle</span><b>3</b></div>
+      <div class="dbtl-tx">
+        <p class="dbtl-kick">DBTL cycle 3 <span>of 3</span></p>
+        <h2><span class="dbtl-pre">DBTL Cycle 3: </span>Enclosed and Software&#8209;Controlled Instrument</h2>
+        <p class="dbtl-gist">Turn the array into an instrument someone else can use: enclosed, set in code, assembled without tools, with the tubes held at a fixed distance over the LEDs.</p>
+      </div>
+    </div>
+    <ol class="dbtl-steps" aria-label="Cycle 3, stage by stage">
+      <li class="d"><a href="#sec51"><b>D</b><span><em>Design</em>Enclosure, intensity in code, sliders, fixed tubes</span></a></li>
+      <li class="b"><a href="#sec52"><b>B</b><span><em>Build</em>Arduino PWM through three MOSFETs, one per tier</span></a></li>
+      <li class="t"><a href="#sec53"><b>T</b><span><em>Test</em>Overnight on a shaker: a post snapped, light leaked</span></a></li>
+      <li class="l"><a href="#sec54"><b>L</b><span><em>Learn</em>Four screws, reinforced solder joints, black tube holder</span></a></li>
+    </ol>
   </section>
 
-  <section class="sec">
+  <section class="sec" id="sec51">
     <h3><i>5.1</i> Design</h3>
     <p>
-      Cycle 3 keeps the calibrated tiers and the light shielding from cycle 2 and turns the
-      array into something that can be handed to someone else and used. Four changes do that.
+      Cycle&nbsp;3 keeps the calibrated tiers and the light shielding from cycle&nbsp;2 and turns
+      the array into something that can be handed to someone else and used. Four changes do
+      that. Each is tagged with the CAD part it lives in.
     </p>
-    <ul class="plain">
-      <li>An outer frame print houses the wiring and the Arduino, so the electronics are
-        enclosed rather than sitting loose on the bench</li>
-      <li>Light intensity is varied in code, so a run is defined by a set of values rather
-        than by a physical adjustment someone has to remember</li>
-      <li>Slider prints allow assembly and disassembly without tools</li>
-      <li>A tall print holds the test tubes at a fixed position under the array, so the
-        distance between LED and culture is the same every run</li>
-    </ul>
-    <h3><i>5.2</i> Build</h3>
-    <p>
-      Control runs from an Arduino Uno R4 WiFi. PWM signals from the Arduino drive a MOSFET
-      for each LED group, and software sets the duty cycle for each intensity tier. The
-      selected intensities are held constant for the duration of a test so each culture
-      receives a fixed, well-defined dose. Three calibrated tiers across two wavelengths give
-      six defined light conditions per run.
-    </p>
-    <div class="frames">
-      <figure class="frame"><div class="frame-img"><img src="photos/iter3-a.webp" width="900" height="1200" alt="DiOPAL enclosed: the white tube holder seated on the black housing." loading="lazy" decoding="async"></div></figure>
-      <figure class="frame"><div class="frame-img"><img src="photos/iter3-b.webp" width="900" height="1200" alt="DiOPAL from the front, the housing's sliders visible under the tube holder." loading="lazy" decoding="async"></div></figure>
-      <figure class="frame"><div class="frame-img"><img src="photos/c3-top.webp" width="900" height="1200" alt="Looking down into the 24 wells, lit alternately green and red." loading="lazy" decoding="async"></div></figure>
-      <figure class="frame"><div class="frame-img"><img src="photos/c3-side.webp" width="900" height="1200" alt="DiOPAL on the desk with the Arduino cable connected." loading="lazy" decoding="async"></div></figure>
+    <!-- Each card shows the part it is tagged with, rendered from that part's STL in the colour it
+         was printed in this cycle (the tube holder was still white: 5.3). The code card has no part,
+         so it carries a pulse-width (PWM) pictogram, not data. -->
+    <div class="filter-steps changes with-parts">
+      <div><img class="chg-part" src="photos/parts/housing.webp" width="420" height="341" alt="" loading="lazy" decoding="async"><b>01 &middot; LPA_Box</b><p><strong>Enclosed electronics</strong>An outer frame
+        print houses the LED wiring and the perf board, so the electronics are enclosed rather than
+        sitting loose on the bench.</p></div>
+      <div><svg class="chg-part chg-pwm" viewBox="0 0 120 64" aria-hidden="true" focusable="false">
+          <path class="ax" d="M4 52 H116"/>
+          <path d="M4 52 H12 V14 H27 V52 H42 V14 H57 V52 H72 V14 H87 V52 H102 V14 H116"/>
+        </svg><b>02 &middot; Arduino code</b><p><strong>Intensity in code</strong>Light intensity
+        is varied in code, so a run is defined by a set of values rather than by a physical
+        adjustment someone has to remember.</p></div>
+      <div><span class="chg-part chg-pair"><img src="photos/parts/left-c.webp" width="420" height="246" alt="" loading="lazy" decoding="async"><img src="photos/parts/right-c.webp" width="420" height="235" alt="" loading="lazy" decoding="async"></span><b>03 &middot; Left_C, Right_C</b><p><strong>Tool&#8209;free assembly</strong>Slider
+        prints allow assembly and disassembly without tools.</p></div>
+      <div><img class="chg-part" src="photos/parts/tube-holder-white.webp" width="420" height="389" alt="" loading="lazy" decoding="async"><b>04 &middot; Tube_Holder</b><p><strong>Fixed tube position</strong>A tall print
+        holds the test tubes at a fixed position over the array, so the distance between LED
+        and culture is the same every run.</p></div>
     </div>
-    <figure class="autodraw" aria-labelledby="drive-cap">
-      <svg class="ai" viewBox="0 0 660 380" role="img" aria-label="Drive chain. Software sets a duty cycle per tier; the Arduino carries one PWM pin per group along a bus to six MOSFETs; each MOSFET switches one column of four internal-resistance-matched LEDs. The six columns are a green and a red channel at each of three intensity tiers, which is where the six light conditions come from.">
-        <rect class="part" data-step="1" x="24" y="120" width="94" height="44" rx="3"/>
-        <line class="beam" data-step="2" x1="118" y1="142" x2="150" y2="142"/>
-        <rect class="part" data-step="3" x="150" y="120" width="94" height="44" rx="3"/>
-        <line class="beam" data-step="4" x1="244" y1="142" x2="296" y2="142"/>
-        <line class="beam" data-step="5" x1="296" y1="40"  x2="296" y2="280"/>
-
-        <!-- six groups: green and red at each of three tiers -->
-        <line class="beam" data-step="6" x1="296" y1="40" x2="330" y2="40"/>
-        <rect class="part" data-step="6" x="330" y="27" width="46" height="26" rx="2"/>
-        <line class="beam" data-step="6" x1="376" y1="40" x2="412" y2="40"/>
-        <circle class="part g static fade" data-step="6" cx="432" cy="40" r="10"/>
-        <circle class="part g static fade" data-step="6" cx="468" cy="40" r="10"/>
-        <circle class="part g static fade" data-step="6" cx="504" cy="40" r="10"/>
-        <circle class="part g static fade" data-step="6" cx="540" cy="40" r="10"/>
-
-        <line class="beam" data-step="7" x1="296" y1="88" x2="330" y2="88"/>
-        <rect class="part" data-step="7" x="330" y="75" width="46" height="26" rx="2"/>
-        <line class="beam" data-step="7" x1="376" y1="88" x2="412" y2="88"/>
-        <circle class="part r static fade" data-step="7" cx="432" cy="88" r="10"/>
-        <circle class="part r static fade" data-step="7" cx="468" cy="88" r="10"/>
-        <circle class="part r static fade" data-step="7" cx="504" cy="88" r="10"/>
-        <circle class="part r static fade" data-step="7" cx="540" cy="88" r="10"/>
-
-        <line class="beam" data-step="8" x1="296" y1="136" x2="330" y2="136"/>
-        <rect class="part" data-step="8" x="330" y="123" width="46" height="26" rx="2"/>
-        <line class="beam" data-step="8" x1="376" y1="136" x2="412" y2="136"/>
-        <circle class="part g static fade" data-step="8" cx="432" cy="136" r="10"/>
-        <circle class="part g static fade" data-step="8" cx="468" cy="136" r="10"/>
-        <circle class="part g static fade" data-step="8" cx="504" cy="136" r="10"/>
-        <circle class="part g static fade" data-step="8" cx="540" cy="136" r="10"/>
-
-        <line class="beam" data-step="9" x1="296" y1="184" x2="330" y2="184"/>
-        <rect class="part" data-step="9" x="330" y="171" width="46" height="26" rx="2"/>
-        <line class="beam" data-step="9" x1="376" y1="184" x2="412" y2="184"/>
-        <circle class="part r static fade" data-step="9" cx="432" cy="184" r="10"/>
-        <circle class="part r static fade" data-step="9" cx="468" cy="184" r="10"/>
-        <circle class="part r static fade" data-step="9" cx="504" cy="184" r="10"/>
-        <circle class="part r static fade" data-step="9" cx="540" cy="184" r="10"/>
-
-        <line class="beam" data-step="10" x1="296" y1="232" x2="330" y2="232"/>
-        <rect class="part" data-step="10" x="330" y="219" width="46" height="26" rx="2"/>
-        <line class="beam" data-step="10" x1="376" y1="232" x2="412" y2="232"/>
-        <circle class="part g static fade" data-step="10" cx="432" cy="232" r="10"/>
-        <circle class="part g static fade" data-step="10" cx="468" cy="232" r="10"/>
-        <circle class="part g static fade" data-step="10" cx="504" cy="232" r="10"/>
-        <circle class="part g static fade" data-step="10" cx="540" cy="232" r="10"/>
-
-        <line class="beam" data-step="11" x1="296" y1="280" x2="330" y2="280"/>
-        <rect class="part" data-step="11" x="330" y="267" width="46" height="26" rx="2"/>
-        <line class="beam" data-step="11" x1="376" y1="280" x2="412" y2="280"/>
-        <circle class="part r static fade" data-step="11" cx="432" cy="280" r="10"/>
-        <circle class="part r static fade" data-step="11" cx="468" cy="280" r="10"/>
-        <circle class="part r static fade" data-step="11" cx="504" cy="280" r="10"/>
-        <circle class="part r static fade" data-step="11" cx="540" cy="280" r="10"/>
-
-        <!-- tier brackets: the pairing is what turns six columns into three tiers -->
-        <line class="part thin" data-step="12" x1="586" y1="30" x2="586" y2="98"/>
-        <line class="part thin" data-step="12" x1="586" y1="126" x2="586" y2="194"/>
-        <line class="part thin" data-step="12" x1="586" y1="222" x2="586" y2="290"/>
-
-        <text class="lbl"     data-step="1"  x="24"  y="112">Software</text>
-        <text class="lbl dim" data-step="1"  x="24"  y="182">duty cycle</text>
-        <text class="lbl"     data-step="3"  x="150" y="112">Arduino</text>
-        <text class="lbl dim" data-step="3"  x="150" y="182">one pin per group</text>
-        <text class="lbl"     data-step="6"  x="326" y="16">MOSFET ×6</text>
-        <text class="lbl"     data-step="6"  x="424" y="16">4 matched LEDs</text>
-        <text class="lbl dim" data-step="12" x="596" y="68">low</text>
-        <text class="lbl dim" data-step="12" x="596" y="164">med</text>
-        <text class="lbl dim" data-step="12" x="596" y="260">high</text>
-        <text class="lbl dim" data-step="12" x="24"  y="330">520 nm induces · 660 nm halts</text>
-        <text class="lbl big" data-step="12" x="24"  y="362">6 conditions</text>
-      </svg>
-      <figcaption id="drive-cap" class="ai">
-        <b>Drive chain</b> Nothing in the light path is adjusted during a run. The duty cycle
-        is fixed per tier before the test starts, so every tube sees a dose that can be
-        stated as a number rather than reconstructed from a log.
-      </figcaption>
-    </figure>
-    <h3><i>5.3</i> Test</h3>
-    <p>
-      LPA broke on 8/6, with one column of green and red not being able to be controlled by
-      MOSFETs and two columns having extremely weak light. Attempts to fix by changing
-      MOSFETs, using new jumper wires, and checking solder couldn&rsquo;t fix the problems.
-      LEDs were not broken themselves because when directly connected to power source,
-      skipping all of the MOSFET controls, all lights were able to show max intensity.
-    </p>
-    <p>
-      On the following day, we changed onto an Arduino UNO as the UNO Q was not required for
-      the basic capabilities of the LPA hardware. When changing onto UNO, two columns that
-      used to have weak intensity the previous day suddenly had power. However, last column
-      still unable to be controlled via MOSFET. Upon changing onto new MOSFET, light was
-      fixed. Solder on the old one was messed up and led to one of the spikes to become
-      fragile and broken. When reassembling LPA, middle column of light was turned off.
-      Jumper wire connected to MOSFET was weak.
-    </p>
-    <p>
-      During our overnight LPA test run, the connection point on the bottom plate broke off.
-      This happened because the LPA was put on a shaker, and the frequency was likely too
-      high for the print to handle. Several wires came undone, and had to be resoldered.
-    </p>
-    <p>
-      The white tube holder print allowed light to leak into neighboring holes. This messed
-      with our data, as the test tubes are receiving light from different sources.
-    </p>
-    <h3><i>5.4</i> Learn</h3>
-    <p>
-      It is quite time consuming to assemble and disassemble the LPA. The jumper wire is very
-      loose on the MOSFET spike. LEDs require enough current and voltage in order to work
-      properly.
-    </p>
-    <p>
-      In future runs, we will screw in all 4 screws onto the bottom plate instead of just 2.
-      This should distribute the force more equally so it is less likely to break. Soldered
-      connections were all reinforced so that they wouldn&rsquo;t break under the same
-      conditions.
-    </p>
-    <p>
-      We replaced the white tube holder print with a black one, and also increased the wall
-      thickness from 2 loops to 4 loops.
-    </p>
-<div class="ai">
-      <div class="wipe" data-shots='[{"src": "photos/iter1-a.webp", "cap": "01 \u00b7 Single LED"}, {"src": "photos/iter2-a.webp", "cap": "02 \u00b7 Dual LED"}, {"src": "photos/iter3-a.webp", "cap": "03 \u00b7 Final"}]'></div>
-      <p class="wipe-note">Drag to compare any two builds in the same frame and at the same scale.</p>
-</div>
   </section>
 
-  <!-- ─────────── FINAL DESIGN ─────────── -->
+  <section class="sec" id="sec52">
+    <h3><i>5.2</i> Build</h3>
+    <p>
+      Control runs from an Arduino Uno R4 WiFi. PWM signals from the Arduino drive three MOSFETs,
+      one per intensity tier, and software sets the duty cycle for each tier. The selected intensities are held constant for the
+      duration of a test, so each culture receives a fixed, well&#8209;defined dose. Three
+      calibrated tiers across two wavelengths give six defined light conditions per run.
+    </p>
+
+    <figure class="autodraw drive" id="fig-drive" aria-labelledby="drive-cap">
+      <svg viewBox="0 0 660 380" role="img" aria-label="Drive chain. Software sets a duty cycle for each tier; the Arduino's PWM pins run along a bus to three MOSFETs, one per intensity tier; each MOSFET switches a green and a red column of four matched LEDs. Three tiers across two wavelengths give six light conditions.">
+        <rect class="part" data-step="1" x="24" y="168" width="94" height="44" rx="3"/>
+        <line class="beam" data-step="2" x1="118" y1="190" x2="150" y2="190"/>
+        <rect class="part" data-step="3" x="150" y="168" width="94" height="44" rx="3"/>
+        <line class="beam" data-step="4" x1="244" y1="190" x2="296" y2="190"/>
+        <line class="beam" data-step="5" x1="296" y1="80" x2="296" y2="300"/>
+
+        <!-- low tier -->
+        <line class="beam" data-step="6" x1="296" y1="80" x2="330" y2="80"/>
+        <rect class="part" data-step="6" x="330" y="65" width="50" height="30" rx="2"/>
+        <path class="beam" data-step="6" d="M380 80 H404 M404 60 V100 M404 60 H420 M404 100 H420"/>
+        <g class="fade" data-step="6">
+          <circle class="part g static t1" cx="436" cy="60" r="9"/>
+          <circle class="part g static t1" cx="468" cy="60" r="9"/>
+          <circle class="part g static t1" cx="500" cy="60" r="9"/>
+          <circle class="part g static t1" cx="532" cy="60" r="9"/>
+        </g>
+        <g class="fade" data-step="6">
+          <circle class="part r static t1" cx="436" cy="100" r="9"/>
+          <circle class="part r static t1" cx="468" cy="100" r="9"/>
+          <circle class="part r static t1" cx="500" cy="100" r="9"/>
+          <circle class="part r static t1" cx="532" cy="100" r="9"/>
+        </g>
+
+        <!-- mid tier -->
+        <line class="beam" data-step="7" x1="296" y1="190" x2="330" y2="190"/>
+        <rect class="part" data-step="7" x="330" y="175" width="50" height="30" rx="2"/>
+        <path class="beam" data-step="7" d="M380 190 H404 M404 170 V210 M404 170 H420 M404 210 H420"/>
+        <g class="fade" data-step="7">
+          <circle class="part g static t2" cx="436" cy="170" r="9"/>
+          <circle class="part g static t2" cx="468" cy="170" r="9"/>
+          <circle class="part g static t2" cx="500" cy="170" r="9"/>
+          <circle class="part g static t2" cx="532" cy="170" r="9"/>
+        </g>
+        <g class="fade" data-step="7">
+          <circle class="part r static t2" cx="436" cy="210" r="9"/>
+          <circle class="part r static t2" cx="468" cy="210" r="9"/>
+          <circle class="part r static t2" cx="500" cy="210" r="9"/>
+          <circle class="part r static t2" cx="532" cy="210" r="9"/>
+        </g>
+
+        <!-- high tier -->
+        <line class="beam" data-step="8" x1="296" y1="300" x2="330" y2="300"/>
+        <rect class="part" data-step="8" x="330" y="285" width="50" height="30" rx="2"/>
+        <path class="beam" data-step="8" d="M380 300 H404 M404 280 V320 M404 280 H420 M404 320 H420"/>
+        <g class="fade" data-step="8">
+          <circle class="part g static t3" cx="436" cy="280" r="9"/>
+          <circle class="part g static t3" cx="468" cy="280" r="9"/>
+          <circle class="part g static t3" cx="500" cy="280" r="9"/>
+          <circle class="part g static t3" cx="532" cy="280" r="9"/>
+        </g>
+        <g class="fade" data-step="8">
+          <circle class="part r static t3" cx="436" cy="320" r="9"/>
+          <circle class="part r static t3" cx="468" cy="320" r="9"/>
+          <circle class="part r static t3" cx="500" cy="320" r="9"/>
+          <circle class="part r static t3" cx="532" cy="320" r="9"/>
+        </g>
+
+        <!-- tier brackets -->
+        <line class="part thin" data-step="9" x1="558" y1="50" x2="558" y2="110"/>
+        <line class="part thin" data-step="9" x1="558" y1="160" x2="558" y2="220"/>
+        <line class="part thin" data-step="9" x1="558" y1="270" x2="558" y2="330"/>
+
+        <text class="lbl"     data-step="1"  x="24"  y="160">Software</text>
+        <text class="lbl dim" data-step="1"  x="24"  y="230">duty cycle</text>
+        <text class="lbl dim" data-step="1"  x="24"  y="245">per tier</text>
+        <text class="lbl"     data-step="3"  x="150" y="160">Arduino</text>
+        <text class="lbl dim" data-step="3"  x="150" y="230">Uno R4 WiFi</text>
+        <text class="lbl dim" data-step="3"  x="150" y="245">PWM pins</text>
+        <text class="lbl"     data-step="6"  x="326" y="38">MOSFET &#215;3</text>
+        <text class="lbl"     data-step="6"  x="426" y="38">Green + red column</text>
+        <text class="lbl dim" data-step="9" x="568" y="84">low</text>
+        <text class="lbl dim" data-step="9" x="568" y="194">mid</text>
+        <text class="lbl dim" data-step="9" x="568" y="304">high</text>
+        <text class="lbl dim" data-step="9" x="24"  y="330">green induces &#183; red halts</text>
+        <text class="lbl big" data-step="9" x="24"  y="362">6 conditions</text>
+      </svg>
+      <figcaption id="drive-cap">
+        <b>Drive chain</b> The duty cycle for each tier is fixed in software before the run;
+        the Arduino&rsquo;s PWM pins drive three MOSFETs, one per tier, and each MOSFET switches
+        a green and a red column of four.
+        Nothing in the light path changes during a run, so each culture receives a fixed,
+        well&#8209;defined dose.
+      </figcaption>
+    </figure>
+
+    <!-- Polish round, 3 Oct: the drive chain as built. The doc's cycle-2 photos include the three
+         MOSFETs on a breadboard (p54_5); its cycle-3 photos show them on the perf board (p57_1). -->
+    <figure class="frame pair" id="fig-mosfets">
+      <div class="pair-row">
+        <div class="pair-cell">
+          <div class="frame-img"><img src="photos/mosfet-breadboard.webp" width="900" height="1178" alt="Three black MOSFETs with metal tabs standing in a row on a white breadboard, coloured jumper wires running to them, the edge of the black LED holder at the left." loading="lazy" decoding="async"></div>
+          <span class="pair-tag"><b>Cycle 2</b>On a breadboard, beside the LED holder</span>
+        </div>
+        <span class="pair-arrow" aria-hidden="true"></span>
+        <div class="pair-cell">
+          <div class="frame-img"><img class="c3-inside" src="photos/c3-inside.webp" width="660" height="880" alt="The LPA with its housing lifted off: the black 24-bore LED holder held on corner screws above a green perf board, a bundle of red and black wires with orange paper tags beneath it and three MOSFETs on the board, all on a dusty grey bottom plate with cone-shaped posts." loading="lazy" decoding="async"></div>
+          <span class="pair-tag"><b>Cycle 3</b>On the perf board, under the LED holder</span>
+        </div>
+      </div>
+      <figcaption>
+        <b>Three MOSFETs, two boards</b> The switching stage of <a class="xref" href="#fig-drive"></a>
+        as built. In cycle&nbsp;2 the three MOSFETs stood on a breadboard on the bench; in
+        cycle&nbsp;3 they sit on the perf board under the LED holder, which the housing covers
+        (shown here lifted off).
+      </figcaption>
+    </figure>
+
+    <div class="frames duo">
+      <figure class="frame" id="fig-enclosed">
+        <div class="frame-img"><img src="photos/iter3-a.webp" width="900" height="1200" alt="The LPA assembled on a desk: a white 24-well tube holder seated in the top of a black printed housing, one lit tube standing in a corner well. Beside the housing, the Arduino sits on the desk on a clear base, with a USB-C cable and three jumper wires tagged P9, P10 and P11 running to the housing." loading="lazy" decoding="async"></div>
+        <figcaption><b>Enclosed</b> Cycle&nbsp;3 assembled: the white tube holder on the black housing, the Arduino beside it on the desk.</figcaption>
+      </figure>
+      <figure class="frame" id="fig-wells">
+        <div class="frame-img"><img src="photos/wells-lit.webp" width="1100" height="1467" alt="Looking down into the white tube holder: 24 wells lit, the columns alternating green and red, one capped tube glowing green in a corner well." loading="lazy" decoding="async"></div>
+        <figcaption><b>Under light</b> The 24 wells from above, green and red columns alternating.</figcaption>
+      </figure>
+    </div>
+  </section>
+
+  <section class="sec" id="sec53">
+    <h3><i>5.3</i> Test</h3>
+    <p>
+      During our overnight test run, the connection point on the bottom plate broke off. This
+      happened because the LPA was put on a shaker, and the frequency was likely too high for the
+      print to handle. Several wires came undone and had to be resoldered.
+    </p>
+    <!-- Polish round, 3 Oct: the doc's 5.3 photos include the LPA on the shaker (p57_0, new crop)
+         beside the snapped post (p57_2). -->
+    <div class="frames duo land">
+      <figure class="frame" id="fig-shaker">
+        <div class="frame-img"><img src="photos/c3-shaker.webp" width="580" height="483" alt="Close-up of the LPA on a lab shaker: the lower edge of the black housing with a screw, the grey bottom plate beneath it with white debris spread around a torn hole, a black rubber mat, and the shaker's blue front panel with a dial marked 60 and 80 and a strip of yellow tape by its knob." loading="lazy" decoding="async"></div>
+        <figcaption><b>On the shaker</b> The LPA&rsquo;s base after the overnight run: white debris around a torn hole in the bottom plate, the shaker&rsquo;s dial below.</figcaption>
+      </figure>
+      <figure class="frame" id="fig-break">
+        <div class="frame-img"><img src="photos/c3-break.webp" width="1000" height="835" alt="A grey printed bottom plate with a cone-shaped base; fingers hold the snapped-off cylindrical post just above it, a screw through its top, with the perf board, three MOSFETs and dust on the plate behind." loading="lazy" decoding="async"></div>
+        <figcaption><b>The snapped post</b> One of the bottom plate&rsquo;s connection posts, broken off its base.</figcaption>
+      </figure>
+    </div>
+    <p>
+      The white tube holder print (<a class="xref" href="#fig-wells"></a>) allowed light to leak
+      into neighbouring holes. This compromised our data, as the test tubes were receiving light
+      from more than one source.
+    </p>
+  </section>
+
+  <section class="sec" id="sec54">
+    <h3><i>5.4</i> Learn</h3>
+    <div class="limits prose">
+      <div>
+        <h4>Hold the plate at four points</h4>
+        <p>
+          In future runs we will screw in all four screws on the bottom plate instead of just
+          two, which should distribute the force more evenly so it is less likely to break.
+          Every soldered connection was reinforced so that it would not break under the same
+          conditions.
+        </p>
+      </div>
+      <div>
+        <h4>Black, thicker tube holder</h4>
+        <p>
+          We replaced the white tube holder print with a black one, and increased its wall
+          thickness from 2&nbsp;loops to 4 (<a class="xref" href="#fig-final"></a>; the last two
+          panels of <a class="xref" href="#fig-glance"></a> set the white and the black side by
+          side).
+        </p>
+      </div>
+    </div>
+  </section>
+
+  <!-- ─────────── 6 FINAL DESIGN ─────────── -->
   <section class="part" id="final" data-n="6">
     <div class="part-mark"><span>Section</span><b>06</b></div>
     <h2>Final Design</h2>
   </section>
 
-  <section class="sec">
+  <section class="sec" id="sec61">
     <h3><i>6.1</i> Final CAD and Prototype Photo</h3>
-    <p class="ai">The final CAD is the 3D model at the top of this page; the prototype photos are in 5.2.</p>
+    <p>
+      The final CAD is rendered in 3D at <a href="#story">the top of this page</a>
+      <span class="todo wrap">the 3D model there still shows the white tube holder; the final
+      one is black (5.4)</span>.
+      <a class="xref" href="#fig-cad"></a> lays out its parts, numbered as in the CAD file list
+      in <a href="#sec93">9.3</a>, <a class="xref" href="#fig-final"></a> is the final prototype,
+      and <a class="xref" href="#fig-section"></a> in <a href="#sec62">6.2</a> cuts through the
+      assembly to show how the parts stack.
+    </p>
+    <figure class="frame cad" id="fig-cad">
+      <div class="frame-img">
+        <img src="photos/cad-parts.webp" width="1600" height="900" alt="Rendering of the LPA's CAD parts laid out side by side: the black housing, the black tube holder with 24 bores, the black LED holder, the grey bottom plate with four posts, the green perf board and the two grey slider plates." loading="lazy" decoding="async">
+        <span class="balloon" data-p="1" style="left:24.5%;top:63.5%">1</span>
+        <span class="balloon" data-p="2" style="left:76.5%;top:36.5%">2</span>
+        <span class="balloon" data-p="3" style="left:92%;top:31%">3</span>
+        <span class="balloon" data-p="4" style="left:9%;top:17%">4</span>
+        <span class="balloon" data-p="5" style="left:66%;top:9%">5</span>
+        <span class="balloon" data-p="6" style="left:41.5%;top:12.5%">6</span>
+        <span class="balloon pcb" data-p="7" style="left:51%;top:53%">7</span>
+      </div>
+      <figcaption>
+        <b>The CAD, part by part</b> At true relative scale and coloured as printed for the
+        final build: <span class="cad-key"><span class="pk" data-p="1">1&nbsp;Bottom_Plate</span> &middot; <span class="pk" data-p="2">2&nbsp;Left_C</span> &middot;
+        <span class="pk" data-p="3">3&nbsp;Right_C</span> &middot; <span class="pk" data-p="4">4&nbsp;LPA_Box</span> &middot; <span class="pk" data-p="5">5&nbsp;LED_Holder</span> &middot;
+        <span class="pk" data-p="6">6&nbsp;Tube_Holder</span> &middot; <span class="pk" data-p="7">7&nbsp;perf board</span> (bought, modelled for fit)</span>.
+      </figcaption>
+    </figure>
+    <figure class="frame hero solo" id="fig-final">
+      <div class="frame-img"><img src="photos/final-black-holder.webp" width="750" height="1000" alt="The final LPA on a desk: a black printed tube holder with 24 round bores seated in the top of the black housing, the slider tab on its side." loading="lazy" decoding="async"></div>
+      <figcaption><b>Final prototype</b> The black tube holder that replaced the white one, seated on the housing.</figcaption>
+    </figure>
+  </section>
+
+  <section class="sec" id="sec62">
     <h3><i>6.2</i> Key Specifications</h3>
-    <ul class="plain">
-      <li>Array layout of 4 &times; 6, being 2 wavelengths &times; 3 intensity tiers, with 4 matched LEDs per column</li>
-      <li>Green channel around 535 nm, which induces protectant expression <!-- student note: confirm --></li>
-      <li>Red channel around 670 nm, which halts it <!-- student note: confirm --></li>
-      <li>Three intensity tiers, resistance-matched and mathematically recalibrated to match across columns</li>
-      <li>Control by Arduino PWM through a MOSFET, held constant for the duration of a test</li>
-      <li>External-light coverage isolating the cultures from ambient light</li>
-      <li>Enclosed frame for wiring and Arduino, with slider prints for tool-free assembly</li>
-      <li>Tall print sized to hold test tubes at a fixed distance from the array</li>
-    </ul>
+    <dl class="datasheet">
+      <div><dt>Array</dt><dd>4&nbsp;&times;&nbsp;6 (rows &times; columns), being 2 wavelengths &times; 3 intensity tiers, with 4 matched LEDs per column</dd></div>
+      <div><dt>Green channel</dt><dd>Around 535&nbsp;nm, which induces protectant expression <span class="todo wrap">the CcaS/CcaR literature value, not measured on our LEDs (6.3); the 3D walkthrough above shows 520&nbsp;nm</span></dd></div>
+      <div><dt>Red channel</dt><dd>Around 670&nbsp;nm, which halts it <span class="todo wrap">the CcaS/CcaR literature value, not measured on our LEDs (6.3); the 3D walkthrough above shows 660&nbsp;nm</span></dd></div>
+      <div><dt>Intensity tiers</dt><dd>Three, resistance&#8209;matched and mathematically recalibrated to match across columns <span class="todo wrap">recalibration values and duty cycle per tier not on record; the 3D walkthrough above shows 16, 52 and 100%: confirm</span></dd></div>
+      <div><dt>Control</dt><dd>Arduino PWM through three MOSFETs, one per tier (<a href="#sec52">5.2</a>), held constant for the duration of a test</dd></div>
+      <div><dt>Shielding</dt><dd>External&#8209;light coverage isolating the cultures from ambient light</dd></div>
+      <div><dt>Enclosure</dt><dd>Enclosed frame for the LED wiring, with slider prints for tool&#8209;free assembly</dd></div>
+      <div><dt>Tube holder</dt><dd>Tall print sized to hold test tubes at a fixed distance from the array <span class="todo wrap">tube type and size, and the LED&#8209;to&#8209;tube distance, not on record</span></dd></div>
+    </dl>
+    <!-- Polish round, 3 Oct: the assembled stack, which no other figure shows. Every outline is the
+         full-resolution CAD export (LPA/stl), cut at y = 9.1 mm through the second row of bores by
+         tools/section_svg.py in the polish log; the dimensions are the ones listed under it. -->
+    <figure class="fig plate sect" id="fig-section">
+      <div class="sect-box">
+        <svg viewBox="-150 -168 300 224" role="img" aria-labelledby="section-cap">
+          <path class="sx-cl" d="M-45 -44V-152M-27 -44V-152M-9 -44V-152M9 -44V-152M27 -44V-152M45 -44V-152"/>
+          <path class="sx p-plate" d="M-105.4 36.7L-105.4 41.3 105.4 41.3 105.4 35 -105.4 35Z"/>
+          <path class="sx p-box" d="M71.6 -66.5L85.3 -66.5 86.3 -66.1 86.6 -65.5 91.2 -45.8 74.9 -45.8 70.4 -65.1 70.7 -66ZM-70.4 -65L-74.9 -45.8 -91.2 -45.8 -86.6 -65.5 -86.2 -66.2 -85.3 -66.5 -71.5 -66.5 -70.7 -66ZM-89.5 27.2L-89.5 35 -105.4 35 -105.4 15 -93.8 -34.7 -77.5 -34.7 -89.5 16.8ZM89.5 27.2L89.5 16.8 77.5 -34.7 93.8 -34.7 105.4 15 105.4 35 89.5 35Z"/>
+          <path class="sx p-pcb" d="M-80 -1.5H80V0H-80Z"/>
+          <path class="sx p-slide" d="M-51.7 -35.5L-51.3 -35.8 -51.3 -44.7 -51.6 -45 -104.8 -45 -105.6 -44.7 -105.9 -44.1 -108.7 -31.9 -108.4 -31.2 -107.7 -30.7 -105.3 -30.7 -104.7 -30.9 -104.1 -31.6 -103.3 -34.7 -102.9 -35.2 -102.3 -35.5ZM102.2 -35.5L102.8 -35.3 103.3 -34.8 104.1 -31.6 104.7 -30.9 105.3 -30.7 107.7 -30.7 108.3 -31.1 108.7 -31.6 108.7 -32.3 106 -44 105.6 -44.7 105 -45 51.7 -45 51.3 -44.7 51.3 -35.8 51.6 -35.5Z"/>
+          <path class="sx p-led" d="M41.8 -46.5L41.8 -54 37.1 -54 37.1 -66.5 34.9 -66.5 34.9 -54 30.2 -54 30.2 -46.5ZM48.2 -50.2L48.2 -46.5 55.3 -46.5 55.3 -63.5 64 -63.5 64 -56.1 66.2 -56.1 66.2 -66.5 52.9 -66.5 52.9 -54 48.2 -54ZM-48.2 -46.5L-48.2 -54 -52.9 -54 -52.9 -66.5 -66.2 -66.5 -66.2 -56.1 -64 -56.1 -64 -63.5 -55.2 -63.5 -55.2 -46.5ZM-41.8 -50.2L-41.8 -46.5 -30.2 -46.5 -30.2 -54 -34.9 -54 -34.9 -66.5 -37.1 -66.5 -37.1 -54 -41.8 -54ZM-5.8 -50.2L-5.8 -46.5 5.8 -46.5 5.8 -54 1.1 -54 1.1 -66.5 -1.1 -66.5 -1.1 -54 -5.8 -54ZM-19.6 -54L-23.8 -54 -23.8 -46.5 -12.2 -46.5 -12.2 -54 -16.9 -54 -16.9 -66.5 -19.1 -66.5 -19.1 -54ZM16.9 -54L12.2 -54 12.2 -46.5 23.8 -46.5 23.8 -54 19.1 -54 19.1 -66.5 16.9 -66.5ZM-66.2 -47.5L-66.2 -50.2 -64 -50.2 -64 -46.5 -66.2 -46.5ZM64 -47.5L64 -50.2 66.2 -50.2 66.2 -46.5 64 -46.5Z"/>
+          <path class="sx p-tube" d="M-53.3 -69.5L-53 -69.5 -53 -66.5 -68.1 -66.5 -68.1 -81.5 -57.3 -81.5 -57.3 -146.5 -53.5 -146.5 -53.5 -69.5ZM-36.8 -69.5L-37 -69.5 -37 -66.5 -35 -66.5 -35 -69.5 -35.5 -69.5 -35.5 -146.5 -36.5 -146.5 -36.5 -69.5ZM-18.8 -69.5L-19 -69.5 -19 -66.5 -17 -66.5 -17 -69.5 -17.5 -69.5 -17.5 -146.5 -18.5 -146.5 -18.5 -69.5ZM-0.8 -69.5L-1 -69.5 -1 -66.5 1 -66.5 1 -69.5 0.5 -69.5 0.5 -146.5 -0.5 -146.5 -0.5 -69.5ZM17.2 -69.5L17 -69.5 17 -66.5 19 -66.5 19 -69.5 18.5 -69.5 18.5 -146.5 17.5 -146.5 17.5 -69.5ZM53.5 -103.6L53.5 -146.5 55.5 -146.5 55.5 -81.5 66.2 -81.5 66.2 -66.5 53 -66.5 53 -69.5 53.5 -69.5ZM36.5 -112.4L36.5 -146.5 35.5 -146.5 35.5 -69.5 35 -69.5 35 -66.5 37 -66.5 37 -69.5 36.5 -69.5Z"/>
+          <path class="sx-dim" d="M-109 41.35H-126M-90 -66.5H-126M-72 -146.5H-126M-122 41.35V-146.5M-105.4 46V58M105.4 46V58M-105.4 54H105.4M-9 -150V-158M9 -150V-158M-9 -155H9"/>
+          <path class="sx-tick" d="M-124.5 43.85L-119.5 38.85M-124.5 -64L-119.5 -69M-124.5 -144L-119.5 -149M-107.9 56.5L-102.9 51.5M102.9 56.5L107.9 51.5M-11.5 -152.5L-6.5 -157.5M6.5 -152.5L11.5 -157.5"/>
+        </svg>
+        <span class="balloon" data-p="1" style="left:31.7%;top:92.0%">1</span>
+        <span class="balloon" data-p="2" style="left:17.7%;top:58.1%">2</span>
+        <span class="balloon" data-p="3" style="left:82.3%;top:58.1%">3</span>
+        <span class="balloon" data-p="4" style="left:19.3%;top:77.2%">4</span>
+        <span class="balloon" data-p="5" style="left:50.0%;top:49.8%">5</span>
+        <span class="balloon" data-p="6" style="left:38.0%;top:22.3%">6</span>
+        <span class="balloon pcb" data-p="7" style="left:60.0%;top:74.7%">7</span>
+        <span class="sx-lbl sx-v" style="left:9.3%;top:69.3%">108&nbsp;mm</span>
+        <span class="sx-lbl sx-v" style="left:9.3%;top:27.5%">80&nbsp;mm</span>
+        <span class="sx-lbl sx-h" style="left:50.0%;top:99.1%">211&nbsp;mm</span>
+        <span class="sx-lbl sx-h" style="left:50.0%;top:2.9%">18&nbsp;mm</span>
+      </div>
+      <figcaption id="section-cap">
+        <b>The LPA in section</b> Cut from the CAD files through the second row of bores, the parts
+        numbered as in <a class="xref" href="#fig-cad"></a>. The <span class="pk" data-p="7">perf board&nbsp;(7)</span> sits on the bottom
+        plate&rsquo;s four corner posts (outside this cut) inside the <span class="pk" data-p="4">housing&nbsp;(4)</span>; the <span class="pk" data-p="5">LED holder&nbsp;(5)</span> sits in the
+        housing&rsquo;s top and the <span class="pk" data-p="6">tube holder&nbsp;(6)</span> stands on it, every tube bore over an LED
+        bore on the same 18&nbsp;mm pitch. The <span class="pk" data-p="2 3">sliders&nbsp;(2,&nbsp;3)</span> pass through the
+        housing&rsquo;s sides.
+      </figcaption>
+    </figure>
+    <dl class="datasheet cad-dims">
+      <div class="ds-head"><dt>Measured from the CAD files</dt><dd></dd></div>
+      <div><dt>Footprint</dt><dd>211&nbsp;&times;&nbsp;164&nbsp;mm (217&nbsp;mm across the sliders)</dd></div>
+      <div><dt>Height</dt><dd>108&nbsp;mm from the bottom plate to the top of the housing; the tube holder adds 80&nbsp;mm</dd></div>
+      <div><dt>LED grid</dt><dd>4&nbsp;&times;&nbsp;6 on an 18&nbsp;mm pitch, shared by the LED holder and the tube holder</dd></div>
+      <div><dt>Tube bores</dt><dd>24, each 17&nbsp;mm across, narrowing to 16&nbsp;mm in a 3&nbsp;mm lip at the LED end</dd></div>
+      <div><dt>Between tubes</dt><dd>1&nbsp;mm of wall between neighbouring bores (2&nbsp;mm at the lip): the 18&nbsp;mm pitch less a 17&nbsp;mm bore</dd></div>
+    </dl>
+  </section>
+
+  <section class="sec" id="sec63">
     <h3><i>6.3</i> Limitations</h3>
-    <p>
-      DiOPAL applies a fixed dose and does not respond to the culture, so it cannot be used
-      to close a control loop. That is deliberate, but it means nothing here transfers
-      directly to the bioreactor without a feedback path being added.
-    </p>
-    <p>
-      The wavelengths are currently taken as the classic CcaS/CcaR values rather than
-      measured on our own parts, so the stated peaks are assumptions until the LEDs are
-      characterized.
-    </p>
-    <p>
-      Matching corrects for spread between LEDs at build time. It does not correct for drift
-      as the LEDs age or warm up during a long run.
-    </p>
-    <aside class="callout ai">
-      <h4>A note on the units</h4>
+    <div class="limits prose">
+      <div>
+        <h4>A fixed dose, no feedback</h4>
+        <p>
+          The LPA applies a fixed dose and does not respond to the culture, so it cannot be used
+          to close a control loop. That is deliberate, but it means nothing here transfers
+          directly to the bioreactor without a feedback path being added.
+        </p>
+      </div>
+      <div>
+        <h4>Wavelengths assumed, not measured</h4>
+        <p>
+          The wavelengths are currently taken as the classic CcaS/CcaR values rather than
+          measured on our own parts, so the stated peaks are assumptions until the LEDs are
+          characterised.
+        </p>
+      </div>
+      <div>
+        <h4>No correction for drift</h4>
+        <p>
+          Matching corrects for spread between LEDs at build time. It does not correct for
+          drift as the LEDs age or warm up during a long run.
+        </p>
+      </div>
+    </div>
+    <aside class="callout callout--slate units">
+      <span class="callout-label">A note on the units</span>
       <p>
-        Every intensity on this page is reported in lux, which is weighted for human vision
-        (peak near 555&nbsp;nm), so the weighting error is not the same size on the green and
-        red channels. The dose that matters to the cells is photon flux
-        (&micro;mol&nbsp;m&#8315;&sup2;&nbsp;s&#8315;&sup1;). The team found this in
+        Every reading on this page is in lux, which is weighted for human vision (peak near
+        555&nbsp;nm), so the weighting error is not the same size on the green and the red
+        channel. The dose that matters to the cells is photon flux, in
+        &micro;mol&nbsp;m<sup>&minus;2</sup>&nbsp;s<sup>&minus;1</sup>. The team found this in
         <a href="../notebook/index.html#w16-15">week&nbsp;16</a>; until the readings are
-        converted, the numbers compare LEDs against each other and cannot be compared with a
-        published dose.
+        converted, they compare LEDs with each other and cannot be compared with a published
+        dose.
       </p>
     </aside>
   </section>
 
-  <!-- ─────────── PROOF OF CONCEPT ─────────── -->
+  <!-- ─────────── 7 PROOF OF CONCEPT ─────────── -->
   <section class="part" id="poc" data-n="7">
     <div class="part-mark"><span>Section</span><b>07</b></div>
     <h2>Proof of Concept</h2>
   </section>
 
-  <section class="sec">
+  <section class="sec" id="sec7x">
     <p>
-      The purpose of this section is to show a culture run completed end to end under
-      DiOPAL, without yet claiming any relationship between intensity and production rate.
-      That relationship is the subject of section 8.
+      The purpose of this section is to show a culture run completed end to end under the LPA,
+      without yet claiming any relationship between intensity and production rate. That
+      relationship is the subject of <a href="#level2">section&nbsp;8</a>.
     </p>
-    <p class="note-in-progress ai">
-      Not written yet. Planned: 7.1 Demonstrated Culture Run, 7.2 Flow Conditions,
-      7.3 Temperature and Pressure, 7.4 Starting and Final OD.
-    </p>
+    <!-- The doc has headed 7.1-7.4 and not written them; one block per section, as on the
+         team wiki. Each item keeps its old id so a deep link still lands on it. -->
+    <div class="todo plan"><b>Unwritten &middot; 7.1&ndash;7.4</b>
+      <ol>
+        <li id="sec71"><b>7.1 Demonstrated Culture Run</b> A culture run completed end to end
+          under the LPA: what was grown, for how long, and under which light conditions.
+          <a href="#sec53">5.3</a> mentions an overnight test run.</li>
+        <li id="sec72"><b>7.2 Flow Conditions</b> For the LPA&rsquo;s tubes, the shaking: the
+          shaker frequency of that run (<a href="#sec53">5.3</a>), and whether the tubes were
+          capped.</li>
+        <li id="sec73"><b>7.3 Temperature and Pressure</b> The incubation temperature during the
+          run, and whether pressure applies to the LPA&rsquo;s tubes at all.</li>
+        <li id="sec74"><b>7.4 Starting and Final OD</b> Optical density of the cultures at the
+          start and at the end of the run.</li>
+      </ol>
+    </div>
   </section>
 
-  <!-- ─────────── LEVEL 2 ─────────── -->
+  <!-- ─────────── 8 LEVEL 2 TEST ─────────── -->
   <section class="part" id="level2" data-n="8">
     <div class="part-mark"><span>Section</span><b>08</b></div>
     <h2>Level 2 Test: Intensity Variability</h2>
   </section>
 
-  <section class="sec">
+  <section class="sec" id="sec8x">
     <p>
-      This is the test DiOPAL was built for. Holding wavelength fixed and varying intensity
-      across the three calibrated tiers, does protectant production change with the
-      intensity applied?
+      This is the test the LPA was built for. Holding wavelength fixed and varying intensity
+      across the three calibrated tiers, <span class="mark">does protectant production change
+      with the intensity&nbsp;applied?</span>
     </p>
-    <p class="note-in-progress ai">
-      Not written yet. Planned: 8.1 Temperature, 8.2 Graphs, 8.3 Data Analysis,
-      8.4 Learnings, 8.5 Limitations.
-    </p>
+    <div class="todo plan"><b>Unwritten &middot; 8.1&ndash;8.5</b>
+      <ol>
+        <li id="sec81"><b>8.1 Temperature</b> The temperature the cultures were held at during
+          the test.</li>
+        <li id="sec82"><b>8.2 Graphs</b> Protectant production against intensity tier, at each
+          wavelength.</li>
+        <li id="sec83"><b>8.3 Data Analysis</b> How the readings were analysed, and whether
+          production changes with intensity.</li>
+        <li id="sec84"><b>8.4 Learnings</b> The answer to the question above, and what it means
+          for the three tiers.</li>
+        <li id="sec85"><b>8.5 Limitations</b> What the test cannot show, including the limits
+          of lux readings noted in <a href="#sec63">6.3</a>.</li>
+      </ol>
+    </div>
   </section>
 
-  <!-- ─────────── REPRODUCTION ─────────── -->
-  <section class="part" id="materials" data-n="9">
+  <!-- ─────────── 9 REPRODUCTION ─────────── -->
+  <section class="part" id="reproduction" data-n="9">
     <div class="part-mark"><span>Section</span><b>09</b></div>
     <h2>Reproduction</h2>
   </section>
 
-  <section class="sec">
+  <section class="sec" id="sec91">
     <h3><i>9.1</i> Materials List</h3>
     <p>
-      Full costing is kept in the LPA cost sheet, which feeds the cost analysis in the
-      business plan.
+      Full costing is kept in the LPA cost sheet <span class="todo">public link pending</span>,
+      which feeds the cost analysis in the business plan.
     </p>
-    <div class="table-scroll">
-      <table class="bom">
+    <div class="table-scroll plain">
+      <table class="mat bom-list">
         <caption>Bill of materials</caption>
         <thead>
-          <tr><th>Component</th><th>Part number / spec</th><th class="num">Qty</th><th class="num">Unit</th><th class="num">Total</th><th>Supplier</th></tr>
+          <tr><th scope="col">Component</th><th scope="col">Part number / spec</th><th class="num" scope="col">Qty</th><th class="num" scope="col">Unit cost (TWD)</th><th class="num" scope="col">Total (TWD)</th><th scope="col">Supplier</th></tr>
         </thead>
         <tbody>
-          <tr>
-            <td>Green LED</td>
-            <td><span class="pending"></span>, peak <span class="pending s"></span> nm, FWHM <span class="pending s"></span> nm, V<sub>f</sub> <span class="pending s"></span> V, I<sub>f</sub> <span class="pending s"></span> mA, viewing angle <span class="pending s"></span>°</td>
-            <td class="num">12</td><td class="num"><span class="pending s"></span></td><td class="num"><span class="pending s"></span></td><td><span class="pending s"></span></td>
-          </tr>
-          <tr>
-            <td>Red LED</td>
-            <td><span class="pending"></span>, peak <span class="pending s"></span> nm, FWHM <span class="pending s"></span> nm, V<sub>f</sub> <span class="pending s"></span> V, I<sub>f</sub> <span class="pending s"></span> mA, viewing angle <span class="pending s"></span>°</td>
-            <td class="num">12</td><td class="num"><span class="pending s"></span></td><td class="num"><span class="pending s"></span></td><td><span class="pending s"></span></td>
-          </tr>
-          <tr>
-            <td>Microcontroller</td><td><b>Arduino Uno R4 WiFi</b></td>
-            <td class="num">1</td><td class="num"><span class="pending s"></span></td><td class="num"><span class="pending s"></span></td><td><span class="pending s"></span></td>
-          </tr>
-          <tr>
-            <td>Perf board</td><td><span class="pending"></span></td>
-            <td class="num">1</td><td class="num"><span class="pending s"></span></td><td class="num"><span class="pending s"></span></td><td><span class="pending s"></span></td>
-          </tr>
-          <tr>
-            <td>Power supply</td><td><span class="pending"></span>, 5 V, <span class="pending s"></span> A</td>
-            <td class="num">1</td><td class="num"><span class="pending s"></span></td><td class="num"><span class="pending s"></span></td><td><span class="pending s"></span></td>
-          </tr>
-          <tr>
-            <td>Hook-up wire</td><td><span class="pending s"></span> AWG</td>
-            <td class="num"><span class="pending s"></span></td><td class="num"><span class="pending s"></span></td><td class="num"><span class="pending s"></span></td><td><span class="pending s"></span></td>
-          </tr>
-          <tr>
-            <td>Solder</td><td><span class="pending"></span></td>
-            <td class="num"><span class="pending s"></span></td><td class="num"><span class="pending s"></span></td><td class="num"><span class="pending s"></span></td><td><span class="pending s"></span></td>
-          </tr>
-          <tr>
-            <td>Heat-set inserts</td><td><span class="pending"></span>, M<span class="pending s"></span> × <span class="pending s"></span> mm</td>
-            <td class="num"><span class="pending s"></span></td><td class="num"><span class="pending s"></span></td><td class="num"><span class="pending s"></span></td><td><span class="pending s"></span></td>
-          </tr>
-          <tr>
-            <td>Screws</td><td><span class="pending"></span>, M<span class="pending s"></span> × <span class="pending s"></span> mm</td>
-            <td class="num"><span class="pending s"></span></td><td class="num"><span class="pending s"></span></td><td class="num"><span class="pending s"></span></td><td><span class="pending s"></span></td>
-          </tr>
-          <tr>
-            <td>Filament, PLA</td><td>Bambu Lab PLA Basic, 1.75 mm, 1 kg spool</td>
-            <td class="num">1</td><td class="num">355.99</td><td class="num"><span class="pending s"></span></td><td><span class="pending s"></span></td>
-          </tr>
+          <tr><td data-label="Component"><span class="v">Green LED</span></td><td data-label="Spec"><span class="v"><span class="todo">part no., peak and FWHM (nm), V<sub>f</sub>, I<sub>f</sub>, viewing angle</span></span></td><td class="num" data-label="Qty"><span class="v">12</span></td><td class="num nr" data-label="Unit cost (TWD)"><span class="v">&mdash;</span></td><td class="num nr" data-label="Total (TWD)"><span class="v">&mdash;</span></td><td class="nr" data-label="Supplier"><span class="v">&mdash;</span></td></tr>
+          <tr><td data-label="Component"><span class="v">Red LED</span></td><td data-label="Spec"><span class="v"><span class="todo">part no., peak and FWHM (nm), V<sub>f</sub>, I<sub>f</sub>, viewing angle</span></span></td><td class="num" data-label="Qty"><span class="v">12</span></td><td class="num nr" data-label="Unit cost (TWD)"><span class="v">&mdash;</span></td><td class="num nr" data-label="Total (TWD)"><span class="v">&mdash;</span></td><td class="nr" data-label="Supplier"><span class="v">&mdash;</span></td></tr>
+          <tr><td data-label="Component"><span class="v">MOSFET</span></td><td data-label="Spec"><span class="v"><span class="todo">part no.</span></span></td><td class="num" data-label="Qty"><span class="v">3</span></td><td class="num nr" data-label="Unit cost (TWD)"><span class="v">&mdash;</span></td><td class="num nr" data-label="Total (TWD)"><span class="v">&mdash;</span></td><td class="nr" data-label="Supplier"><span class="v">&mdash;</span></td></tr>
+          <tr><td data-label="Component"><span class="v">Microcontroller</span></td><td data-label="Spec"><span class="v">Arduino Uno R4 WiFi</span></td><td class="num" data-label="Qty"><span class="v">1</span></td><td class="num nr" data-label="Unit cost (TWD)"><span class="v">&mdash;</span></td><td class="num nr" data-label="Total (TWD)"><span class="v">&mdash;</span></td><td class="nr" data-label="Supplier"><span class="v">&mdash;</span></td></tr>
+          <tr><td data-label="Component"><span class="v">Perf board</span></td><td data-label="Spec"><span class="v"><span class="todo">part no.</span> 160&nbsp;&times;&nbsp;100&nbsp;mm in the CAD</span></td><td class="num" data-label="Qty"><span class="v">1</span></td><td class="num nr" data-label="Unit cost (TWD)"><span class="v">&mdash;</span></td><td class="num nr" data-label="Total (TWD)"><span class="v">&mdash;</span></td><td class="nr" data-label="Supplier"><span class="v">&mdash;</span></td></tr>
+          <tr><td data-label="Component"><span class="v">Power supply</span></td><td data-label="Spec"><span class="v"><span class="todo">model</span>, 5&nbsp;V, <span class="todo">current (A)</span></span></td><td class="num" data-label="Qty"><span class="v">1</span></td><td class="num nr" data-label="Unit cost (TWD)"><span class="v">&mdash;</span></td><td class="num nr" data-label="Total (TWD)"><span class="v">&mdash;</span></td><td class="nr" data-label="Supplier"><span class="v">&mdash;</span></td></tr>
+          <tr><td data-label="Component"><span class="v">Hook&#8209;up wire</span></td><td data-label="Spec"><span class="v">20&nbsp;AWG jumpers, 10&nbsp;cm</span></td><td class="num" data-label="Qty"><span class="v">12</span></td><td class="num nr" data-label="Unit cost (TWD)"><span class="v">&mdash;</span></td><td class="num nr" data-label="Total (TWD)"><span class="v">&mdash;</span></td><td class="nr" data-label="Supplier"><span class="v">&mdash;</span></td></tr>
+          <tr><td data-label="Component"><span class="v">Solder</span></td><td data-label="Spec"><span class="v"><span class="todo">type</span></span></td><td class="num" data-label="Qty"><span class="v">1 roll</span></td><td class="num nr" data-label="Unit cost (TWD)"><span class="v">&mdash;</span></td><td class="num nr" data-label="Total (TWD)"><span class="v">&mdash;</span></td><td class="nr" data-label="Supplier"><span class="v">&mdash;</span></td></tr>
+          <tr><td data-label="Component"><span class="v">Heat&#8209;set inserts</span></td><td data-label="Spec"><span class="v"><span class="todo">type</span>, M<span class="todo">size</span> &times; <span class="todo">length</span>&nbsp;mm</span></td><td class="num nr" data-label="Qty"><span class="v">&mdash;</span></td><td class="num nr" data-label="Unit cost (TWD)"><span class="v">&mdash;</span></td><td class="num nr" data-label="Total (TWD)"><span class="v">&mdash;</span></td><td class="nr" data-label="Supplier"><span class="v">&mdash;</span></td></tr>
+          <tr><td data-label="Component"><span class="v">Screws</span></td><td data-label="Spec"><span class="v"><span class="todo">type</span>, M<span class="todo">size</span> &times; <span class="todo">length</span>&nbsp;mm</span></td><td class="num nr" data-label="Qty"><span class="v">&mdash;</span></td><td class="num nr" data-label="Unit cost (TWD)"><span class="v">&mdash;</span></td><td class="num nr" data-label="Total (TWD)"><span class="v">&mdash;</span></td><td class="nr" data-label="Supplier"><span class="v">&mdash;</span></td></tr>
+          <tr><td data-label="Component"><span class="v">Filament, PLA</span></td><td data-label="Spec"><span class="v">Bambu Lab PLA Basic, 1.75&nbsp;mm, 1&nbsp;kg spool</span></td><td class="num" data-label="Qty"><span class="v">1</span></td><td class="num" data-label="Unit cost (TWD)"><span class="v">355.99</span></td><td class="num nr" data-label="Total (TWD)"><span class="v">&mdash;</span></td><td class="nr" data-label="Supplier"><span class="v">&mdash;</span></td></tr>
         </tbody>
         <tfoot>
-          <tr><td colspan="4">Total</td><td class="num"><span class="pending s"></span></td><td>TWD</td></tr>
+          <tr><td>Total</td><td></td><td></td><td></td><td class="num" data-label="Total (TWD)"><span class="v"><span class="todo">not on record</span></span></td><td></td></tr>
         </tfoot>
       </table>
     </div>
+    <div class="todo note"><b>Not on record</b>Unit cost, total and supplier for every line
+      (only the PLA spool&rsquo;s unit cost is known), and the quantities of heat&#8209;set
+      inserts and screws. The MOSFET, wire and solder rows are taken from the team&rsquo;s
+      general cost list: to confirm.</div>
+    <p class="tnote">
+      Twelve LEDs of each colour go into the array; they were picked from twenty of each,
+      measured one by one (<a href="#sec43">4.3</a>). The roll of solder is shared with the
+      team&rsquo;s other instruments.
+    </p>
 
-    <h3 class="minor">Printed parts</h3>
-    <div class="table-scroll">
-      <table class="bom">
+    <div class="table-scroll plain">
+      <table class="mat prints">
         <caption>Printed parts</caption>
-        <thead><tr><th>Part</th><th>Material</th><th class="num">Filament</th><th class="num">Infill</th></tr></thead>
+        <thead><tr><th scope="col">Part</th><th scope="col">Material</th><th class="num" scope="col">Filament (g)</th><th class="num" scope="col">Infill</th></tr></thead>
         <tbody>
-          <tr><td>LPA_Box</td><td><span class="swatch black"></span>Black PLA</td><td class="num"><span class="pending s"></span> g</td><td class="num"><span class="pending s"></span></td></tr>
-          <tr><td>Bottom_Plate</td><td><span class="swatch grey"></span>Grey PLA</td><td class="num"><span class="pending s"></span> g</td><td class="num"><span class="pending s"></span></td></tr>
-          <tr><td>Tube_Holder</td><td><span class="swatch black"></span>Black PLA</td><td class="num"><span class="pending s"></span> g</td><td class="num"><span class="pending s"></span></td></tr>
-          <tr><td>LED_Holder</td><td><span class="swatch black"></span>Black PLA</td><td class="num"><span class="pending s"></span> g</td><td class="num"><span class="pending s"></span></td></tr>
-          <tr><td>Left_C</td><td><span class="swatch grey"></span>Grey PLA</td><td class="num"><span class="pending s"></span> g</td><td class="num"><span class="pending s"></span></td></tr>
-          <tr><td>Right_C</td><td><span class="swatch grey"></span>Grey PLA</td><td class="num"><span class="pending s"></span> g</td><td class="num"><span class="pending s"></span></td></tr>
+          <tr><td data-label="Part"><span class="v"><img class="tp" src="photos/parts/housing.webp" width="420" height="341" alt="" loading="lazy" decoding="async">LPA_Box</span></td><td data-label="Material"><span class="v"><span class="swatch black"></span>Black PLA</span></td><td class="num nr" data-label="Filament"><span class="v">&mdash;</span></td><td class="num nr" data-label="Infill"><span class="v">&mdash;</span></td></tr>
+          <tr><td data-label="Part"><span class="v"><img class="tp" src="photos/parts/base-plate.webp" width="420" height="242" alt="" loading="lazy" decoding="async">Bottom_Plate</span></td><td data-label="Material"><span class="v"><span class="swatch grey"></span>Grey PLA</span></td><td class="num nr" data-label="Filament"><span class="v">&mdash;</span></td><td class="num nr" data-label="Infill"><span class="v">&mdash;</span></td></tr>
+          <tr><td data-label="Part"><span class="v"><img class="tp" src="photos/parts/tube-holder.webp" width="420" height="389" alt="" loading="lazy" decoding="async">Tube_Holder</span></td><td data-label="Material"><span class="v"><span class="swatch black"></span>Black PLA, 4 wall loops (<a href="#sec54">5.4</a>) <span class="todo">the doc&rsquo;s table says white</span></span></td><td class="num nr" data-label="Filament"><span class="v">&mdash;</span></td><td class="num nr" data-label="Infill"><span class="v">&mdash;</span></td></tr>
+          <tr><td data-label="Part"><span class="v"><img class="tp" src="photos/parts/led-holder.webp" width="420" height="243" alt="" loading="lazy" decoding="async">LED_Holder</span></td><td data-label="Material"><span class="v"><span class="swatch black"></span>Black PLA</span></td><td class="num nr" data-label="Filament"><span class="v">&mdash;</span></td><td class="num nr" data-label="Infill"><span class="v">&mdash;</span></td></tr>
+          <tr><td data-label="Part"><span class="v"><img class="tp" src="photos/parts/left-c.webp" width="420" height="246" alt="" loading="lazy" decoding="async">Left_C</span></td><td data-label="Material"><span class="v"><span class="swatch grey"></span>Grey PLA</span></td><td class="num nr" data-label="Filament"><span class="v">&mdash;</span></td><td class="num nr" data-label="Infill"><span class="v">&mdash;</span></td></tr>
+          <tr><td data-label="Part"><span class="v"><img class="tp" src="photos/parts/right-c.webp" width="420" height="235" alt="" loading="lazy" decoding="async">Right_C</span></td><td data-label="Material"><span class="v"><span class="swatch grey"></span>Grey PLA</span></td><td class="num nr" data-label="Filament"><span class="v">&mdash;</span></td><td class="num nr" data-label="Infill"><span class="v">&mdash;</span></td></tr>
         </tbody>
       </table>
     </div>
+    <div class="todo note"><b>Not on record</b>Filament (g) and infill for every part; they
+      belong with the print settings in <a href="#sec93">9.3</a>.</div>
 
-    <h3 class="minor">Equipment</h3>
-    <p>Lux meter, 3D printer, soldering iron, calipers, and the printed sensor fixture used for LED matching.</p>
+    <h4 class="minor">Equipment</h4>
+    <p>
+      Lux meter <span class="todo">model</span>, 3D printer, soldering iron, calipers, and the
+      printed sensor fixture used for LED matching.
+    </p>
+  </section>
 
+  <section class="sec" id="sec92">
     <h3><i>9.2</i> Assembly Guide</h3>
-    <p class="note-in-progress ai">Not written yet.</p>
+    <div class="todo"><b>Unwritten &middot; 9.2 Assembly guide</b>Step-by-step assembly, detailed
+      enough that a competent engineer could reproduce the LPA from the parts in 9.1 and the files
+      in 9.3.</div>
+    <p>
+      Until it is written, <a class="xref" href="#fig-section"></a> shows how the parts stack in
+      the finished instrument, and <a class="xref" href="#fig-cad"></a> lays them out one by one.
+    </p>
+  </section>
+
+  <section class="sec" id="sec93">
     <h3><i>9.3</i> Downloadable Blueprints</h3>
-    <ul class="files ai">
-      <li>LPA_Box: <a href="models/housing.stl" download>housing.stl</a></li>
-      <li>Bottom_Plate: <a href="models/base-plate.stl" download>base-plate.stl</a></li>
-      <li>Tube_Holder: <a href="models/tube-holder.stl" download>tube-holder.stl</a></li>
-      <li>LED_Holder: <a href="models/led-holder.stl" download>led-holder.stl</a></li>
-      <li>Left_C: <a href="models/left-c.stl" download>left-c.stl</a></li>
-      <li>Right_C: <a href="models/right-c.stl" download>right-c.stl</a></li>
-    </ul>
-    <div class="ai">
-    <h3>Prior work, and what is ours</h3>
+    <div class="todo"><b>Unwritten &middot; 9.3 Print settings</b>The doc has the heading and one
+      setting so far: the black tube holder is printed with 4 wall loops (<a href="#sec54">5.4</a>).
+      Layer height, wall loops, infill and supports for each part belong here, with the filament
+      used for each in <a href="#sec91">9.1</a>.</div>
     <p>
-      DiOPAL is not a new idea. Illuminating a plate of cultures from below with
-      per&#8209;well control is the Light Plate Apparatus pattern from the optogenetics
-      literature, and our printed enclosure still carries <code>LPA_Box</code> as its part
-      name because that is where the design started. What we built on top of it is the
-      dual&#8209;wavelength column layout, the resistance&#8209;matched LED selection, and
-      the enclosure and tube holder that fit our tubes and our incubator.
+      The CAD files below are numbered as in <a class="xref" href="#fig-cad"></a>. They are
+      STL meshes in millimetres, in the instrument's own coordinates, so they open already
+      assembled.
+    </p>
+    <ol class="files">
+      <li><span class="fn">1</span><div class="fb"><b>Base Plate</b><p class="pt">Part <code>Bottom_Plate</code></p><p class="dl"><a href="models/base-plate.stl" download>STL <span>196&nbsp;KB</span></a></p></div><img class="f-part" src="photos/parts/base-plate.webp" alt="" loading="lazy" decoding="async"></li>
+      <li><span class="fn">2</span><div class="fb"><b>Left</b><p class="pt">Part <code>Left_C</code></p><p class="dl"><a href="models/left-c.stl" download>STL <span>140&nbsp;KB</span></a></p></div><img class="f-part" src="photos/parts/left-c.webp" alt="" loading="lazy" decoding="async"></li>
+      <li><span class="fn">3</span><div class="fb"><b>Right</b><p class="pt">Part <code>Right_C</code></p><p class="dl"><a href="models/right-c.stl" download>STL <span>143&nbsp;KB</span></a></p></div><img class="f-part" src="photos/parts/right-c.webp" alt="" loading="lazy" decoding="async"></li>
+      <li><span class="fn">4</span><div class="fb"><b>Box</b><p class="pt">Part <code>LPA_Box</code></p><p class="dl"><a href="models/housing.stl" download>STL <span>159&nbsp;KB</span></a></p></div><img class="f-part" src="photos/parts/housing.webp" alt="" loading="lazy" decoding="async"></li>
+      <li><span class="fn">5</span><div class="fb"><b>LPA Body</b><p class="pt">Part <code>LED_Holder</code> <span class="todo">matched by elimination: confirm</span></p><p class="dl"><a href="models/led-holder.stl" download>STL <span>196&nbsp;KB</span></a></p></div><img class="f-part" src="photos/parts/led-holder.webp" alt="" loading="lazy" decoding="async"></li>
+      <li><span class="fn">6</span><div class="fb"><b>Tube Insert</b><p class="pt">Part <code>Tube_Holder</code></p><p class="dl"><a href="models/tube-holder.stl" download>STL <span>196&nbsp;KB</span></a></p></div><img class="f-part" src="photos/parts/tube-holder.webp" alt="" loading="lazy" decoding="async"></li>
+    </ol>
+  </section>
+
+  <!-- ─────────── 10 REFERENCES ─────────── -->
+  <section class="part" id="references" data-n="10">
+    <div class="part-mark"><span>Section</span><b>10</b></div>
+    <h2>References</h2>
+  </section>
+
+  <section class="sec">
+    <p class="nodrop">
+      The LPA is not a new idea. Illuminating a plate of cultures from below with per&#8209;well
+      control is the Light Plate Apparatus pattern from the optogenetics literature
+      <span class="todo">citation</span>; our LPA follows that pattern and is named after it.
+      What we built on top of it is the dual&#8209;wavelength column
+      layout, the resistance&#8209;matched LED selection, and the enclosure and tube holder that
+      fit our&nbsp;tubes.
     </p>
     <p>
-      The biology is the CcaS/CcaR green/red switch, also from the literature, not
-      designed here. Our dose target comes from the Castillo&#8209;Hair characterisation
-      of that system, whose half&#8209;maximal point is <b>4.66&nbsp;&micro;mol&nbsp;m&#8315;&sup2;&nbsp;s&#8315;&sup1;</b>,
-      the number we are trying to bracket with the three tiers.
+      The biology is the CcaS/CcaR green/red switch, also from the literature, not designed
+      here. Our dose target comes from the Castillo&#8209;Hair characterisation of that system
+      <span class="todo">citation</span>, whose half&#8209;maximal point is
+      4.66&nbsp;&micro;mol&nbsp;m<sup>&minus;2</sup>&nbsp;s<sup>&minus;1</sup>
+      <span class="todo">value and source to confirm</span>.
     </p>
-    </div>
+    <div class="todo"><b>Unwritten &middot; 10 References</b>Full citations, with DOIs, for the
+      Light Plate Apparatus, the CcaS/CcaR system and the Castillo&#8209;Hair characterisation,
+      including the source of the 4.66 value; and a line on which parts were made here, which
+      were adapted and which were bought.</div>
   </section>
 
   <!-- Reading one instrument used to be a dead end: the only way out was back
        to the hub, so anyone comparing the three had to go up and down twice.
-       These carry the instrument's own colour, so the jump is legible before
+       These carry the instrument's own color, so the jump is legible before
        it is read. -->
   <nav class="onward" aria-label="The other instruments">
-      <a class="onward-card onward-photometer" href="../photometer/index.html">
-        <span class="onward-k">Next instrument</span>
-        <b>Photometer</b>
-        <span class="onward-role">In-line optical density</span>
-        <i aria-hidden="true">&rarr;</i>
-      </a>
       <a class="onward-card onward-reactor" href="../bioreactor/index.html">
         <span class="onward-k">Next instrument</span>
         <b>Bioreactor</b>
         <span class="onward-role">The vessel itself</span>
+        <i aria-hidden="true">&rarr;</i>
+      </a>
+      <a class="onward-card onward-photometer" href="../photometer/index.html">
+        <span class="onward-k">Also</span>
+        <b>Photometer</b>
+        <span class="onward-role">In-line optical density</span>
         <i aria-hidden="true">&rarr;</i>
       </a>
       <a class="onward-card onward-all" href="../index.html#instruments">
@@ -760,7 +1138,7 @@
       </a>
   </nav>
 
-  <footer class="doc-foot">
+  <footer class="doc-foot" role="contentinfo">
     <div class="outro-meta">GEMS-Taiwan · iGEM 2026 · Biomanufacturing</div>
     <!-- Required on every page for judging: license notice + repository link. -->
     <div class="legal">
@@ -781,18 +1159,20 @@
 
 <script src="../js/vendor/three.min.js?v=9274bbce"></script>
 <script src="../js/vendor/STLLoader.js?v=c392b93d"></script>
-<script src="../js/render-quality.js?v=6cd0d091"></script>
-<script src="js/parts.js?v=5105fbb2"></script>
-<script src="js/scene.js?v=230141aa"></script>
-<script src="js/doc.js?v=76388f9d"></script>
+<script src="../js/render-quality.js?v=707e6ddf"></script>
+<script src="../js/look.js?v=b0a3a89f"></script>
+<script src="../js/story-core.js?v=f46b2cc9"></script>
+<script src="../js/callouts.js?v=bd1e5542"></script>
+<script src="js/story.js?v=87c363f2"></script>
+<script src="js/doc.js?v=f5f3688b"></script>
 <script src="../js/annot.js?v=73ef5082"></script>
 <script src="../js/toc.js?v=3c82154c"></script>
-<script src="../js/figures.js?v=ba34987a"></script>
+<script src="../js/figures.js?v=f8f00208"></script>
 <script src="../js/chrome.js?v=27d9c2d1"></script>
 <script src="../js/atmos.js?v=15acf0e1"></script>
-<script src="../js/wipe.js?v=d7276728"></script>
+<script src="../js/wipe.js?v=2ead4af6"></script>
 <script src="../js/autodraw.js?v=7d624cdf"></script>
-<script src="../js/polish.js?v=d40fbf60"></script>
+<script src="../js/polish.js?v=26a624b8"></script>
 <script src="../../assets/data/site-nav.js" fetchpriority="high"></script>
 <script src="../../assets/js/nav.js" fetchpriority="high"></script>
 </body>

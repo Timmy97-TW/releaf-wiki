@@ -87,11 +87,11 @@ h1, h2 { font-weight: 600; letter-spacing: -0.035em; margin: 0; }
   letter-spacing: .3em; text-transform: uppercase;
   color: var(--amber); margin-bottom: 1.6rem;
 }
-.intro h1 {
+.intro :is(h1, .intro-title) {
   font-size: clamp(2.4rem, 7vw, 5rem);
   line-height: 1.02; margin-bottom: 1.6rem;
 }
-.intro h1 span { color: var(--amber); }
+.intro :is(h1, .intro-title) span { color: var(--amber); }
 .intro > p {
   max-width: 44ch; margin: 0 auto;
   color: var(--muted); font-size: 1rem; line-height: 1.7;
@@ -485,7 +485,7 @@ h1, h2 { font-weight: 600; letter-spacing: -0.035em; margin: 0; }
     rgba(255,255,255,.012) 0 8px, transparent 8px 16px);
 }
 .blank-slot::after {
-  content: attr(data-label) ": to be written";
+  content: attr(data-label) " — to be written";
   font-family: var(--mono); font-size: .6rem;
   letter-spacing: .2em; text-transform: uppercase; color: var(--faint);
 }
@@ -978,8 +978,8 @@ h2 { letter-spacing: -.038em; }
 body.leaving { opacity: 0; transition: opacity .32s var(--ease); }
 
 /* the hero title gets real presence */
-.intro h1 { font-size: clamp(2.7rem, 8.4vw, 6rem); line-height: .96; }
-.intro h1 span { filter: drop-shadow(0 0 26px color-mix(in srgb, var(--amber) 22%, transparent)); }
+.intro :is(h1, .intro-title) { font-size: clamp(2.7rem, 8.4vw, 6rem); line-height: .96; }
+.intro :is(h1, .intro-title) span { filter: drop-shadow(0 0 26px color-mix(in srgb, var(--amber) 22%, transparent)); }
 
 /* rules either side of the eyebrow, so it sits rather than floats */
 .intro .eyebrow, .doc-head .eyebrow {
@@ -1109,7 +1109,7 @@ stroke='white' stroke-width='2' stroke-linecap='round'>\
   display: grid; place-items: center;
   padding: clamp(16px, 4vw, 54px);
   background: rgba(6,7,9,.93);
-  -webkit-backdrop-filter: blur(7px); backdrop-filter: blur(7px);
+  backdrop-filter: blur(7px);
   opacity: 0; transition: opacity .22s var(--ease);
   cursor: zoom-out;
 }
@@ -1318,3 +1318,1058 @@ body.doc-light .mx-c.picked { background: rgba(18,112,63,.09); box-shadow: inset
   text-align: inherit; cursor: pointer; -webkit-appearance: none; appearance: none;
 }
 .mx-c:focus-visible { outline: 2px solid var(--amber); outline-offset: 2px; }
+
+/* The opening line is display type, not the document's heading: the instrument's name in the
+   record below is the page's one h1. This keeps the line looking exactly as it did. */
+.intro .intro-title { margin: 0; font-weight: 600; letter-spacing: -.045em; }
+
+/* ========================================================== function story
+   The scroll-driven story that opens this page. It replaces the teardown that
+   used to sit here; the teardown's own rules (.track, .stage, .card, .panel,
+   .build, .counter and the .hud/.loader/.rail it shared) are still above in
+   this file, untouched, so putting it back is a paste and not a merge.
+
+   Everything below is scoped under .story for exactly that reason: .hud,
+   .loader and .rail mean one thing to the teardown and another here, and
+   `.story .hud` outranks a bare `.hud` without either having to be deleted.
+
+   The display face is declared here because these instrument pages never
+   needed it before — it lives in css/hub.css, which they do not load.
+   Tokens (--mono, --sans, --fg, --faint, --line, --ease) come from
+   ../css/polish.css; only --accent is set, per instrument. */
+@font-face {
+  font-family: "Oxanium Title";
+  src: url("../../fonts/oxanium-600-latin.woff") format("woff");
+  font-weight: 600; font-style: normal; font-display: block;
+  unicode-range: U+0020-007E, U+00B7, U+2013-2014, U+2018-2019, U+201C-201D, U+2026;
+}
+
+.story { --accent: #46e08f; }
+
+
+
+/* ------------------------------------------------------------------- stage */
+.story { position: relative; }
+
+.story .story-stage {
+  position: sticky; top: 0;
+  height: 100svh; min-height: 520px;
+  overflow: hidden;
+  background:
+    radial-gradient(120% 90% at 50% 8%, rgba(120, 140, 170, .05), transparent 60%),
+    var(--bg);
+}
+
+.story #gl { position: absolute; inset: 0; width: 100%; height: 100%; display: block; }
+
+
+/* -------------------------------------------------------------- title card */
+.story .story-title {
+  /* Left column, not centred: the photometer is a tall mast and DiOPAL is a
+     wide block, and both read better holding one side of the frame with the
+     type down the other than with words laid over the middle of them. */
+  /* Higher and further in than the caption column: the title is the one piece
+     of type that shares the frame with the whole instrument, so it sits nearer
+     the middle and above centre, with the model holding the right. */
+  position: absolute; left: clamp(1.4rem, 9vw, 7.5rem); top: 37%;
+  transform: translateY(-50%);
+  text-align: left; z-index: 4; pointer-events: none;
+  width: min(86vw, 28rem);
+  transition: none;
+}
+
+.story .story-title .eyebrow {
+  font-family: var(--mono); font-size: .62rem; letter-spacing: .42em;
+  text-transform: uppercase; color: var(--accent); margin-bottom: 1.1rem;
+}
+
+.story .story-title .line {
+  margin: 0;
+  font-family: "Oxanium Title", var(--sans);
+  font-weight: 600; letter-spacing: -.02em; line-height: 1.02;
+  font-size: clamp(2.1rem, 6.2vw, 4.4rem);
+  text-shadow: 0 0 64px rgba(0, 0, 0, .85);
+}
+
+.story .title-rule {
+  display: flex; align-items: center; gap: .8rem;
+  justify-content: flex-start; margin-top: 1.3rem;
+}
+
+.story .title-rule i { height: 1px; width: clamp(1.6rem, 5vw, 3rem); background: linear-gradient(90deg, var(--accent), transparent); }
+
+.story .title-rule i:last-child { display: none; }
+
+.story .title-rule span {
+  font-family: var(--mono); font-size: .58rem; letter-spacing: .34em;
+  text-transform: uppercase; color: var(--accent);
+}
+
+
+/* ---------------------------------------------------------------- captions */
+.story .hud {
+  position: absolute; left: clamp(1.1rem, 4vw, 4.2rem); bottom: clamp(1.6rem, 7vh, 5rem);
+  width: min(30rem, 44vw); z-index: 5; pointer-events: none;
+}
+
+.story .cap {
+  position: absolute; left: 0; bottom: 0; width: 100%;
+  opacity: 0; visibility: hidden; will-change: opacity, transform;
+}
+
+.story .cap-tag {
+  display: flex; align-items: center; gap: .7rem;
+  font-family: var(--mono); font-size: .6rem; letter-spacing: .26em;
+  text-transform: uppercase; color: var(--accent); margin-bottom: .75rem;
+}
+
+.story .cap-tag i { height: 1px; width: 1.9rem; background: var(--accent); opacity: .6; display: block; }
+
+.story .cap-name {
+  font-family: "Oxanium Title", var(--sans); font-weight: 600;
+  font-size: clamp(1.35rem, 2.5vw, 2.05rem); letter-spacing: -.015em; line-height: 1.1;
+}
+
+.story .cap-rule { height: 1px; width: 3.4rem; background: var(--line); margin: .85rem 0 .8rem; }
+
+.story .cap p {
+  margin: 0; max-width: 34ch;
+  font-size: clamp(.86rem, 1.05vw, .98rem); line-height: 1.62; color: #c3cbd6;
+  text-wrap: pretty;
+}
+
+.story .cap p b, .story .cap p strong { color: var(--fg); font-weight: 600; }
+
+.story .cap p em { color: var(--accent); font-style: normal; }
+
+
+/* -------------------------------------------------------------- act rail */
+.story .rail {
+  position: absolute; right: clamp(.9rem, 2.2vw, 2.2rem); top: 50%;
+  transform: translateY(-50%);
+  display: flex; flex-direction: column; gap: .62rem; z-index: 5; pointer-events: none;
+}
+
+.story .rail i {
+  display: block; width: 14px; height: 2px; background: rgba(255, 255, 255, .16);
+  transition: background .35s var(--ease), width .35s var(--ease);
+}
+
+.story .rail i.on { background: var(--accent); width: 24px; }
+
+
+/* ---------------------------------------------------- loader and scroll cue */
+.story .loader {
+  position: absolute; inset: 0; display: grid; place-items: center; z-index: 8;
+  background: var(--bg); color: var(--faint);
+  font-family: var(--mono); font-size: .62rem; letter-spacing: .3em; text-transform: uppercase;
+  transition: opacity .7s var(--ease);
+}
+
+.story .loader.gone { opacity: 0; pointer-events: none; }
+
+.story .scroll-cue {
+  position: absolute; left: 50%; bottom: 2.1rem; transform: translateX(-50%);
+  display: flex; flex-direction: column; align-items: center; gap: .55rem;
+  font-family: var(--mono); font-size: .56rem; letter-spacing: .38em;
+  text-transform: uppercase; color: var(--faint); z-index: 5; pointer-events: none;
+}
+
+.story .scroll-cue i { display: block; width: 1px; height: 34px; background: linear-gradient(180deg, var(--faint), transparent); }
+
+
+/* ------------------------------------------------------------------ phones */
+@media (max-width: 860px) {
+
+  .story .hud { width: auto; right: clamp(1.1rem, 4vw, 2rem); bottom: 1.4rem; }
+
+  .story .cap p { max-width: none; font-size: .9rem; }
+
+  .story .cap-name { font-size: 1.3rem; }
+
+  .story .rail { display: none; }
+}
+
+
+@media (prefers-reduced-motion: reduce) {
+
+  .story .cap, .story .story-title { transition: none !important; }
+}
+
+/* --- this page's own --- */
+
+  /* 1400vh, not 1000. The camera does nearly all of its travel in the
+     last 45% of each act, so a 100 px wheel notch was moving the picture
+     by most of a screen and the scroll read as jerky. A longer track is
+     the direct fix: the same moves, spread over 40% more scrolling. */
+  .story { height: 1400vh; }
+
+
+  .story .scrim {
+    /* Sized to the caption, not to the screen. It used to be 62% / 44rem wide,
+       which at 1500px reached 704px — 160px past the caption's right edge and
+       across the left 200px of the rack in the overhead act, where its diagonal
+       tail sat over the plate at about 20% alpha and read as a dark band down
+       the plate's edge. Three rounds went looking for that in the shadow map.
+       The caption is left: clamp(1.1rem,4vw,4.2rem) + width: min(30rem,44vw),
+       but the TEXT inside it is capped at 34ch, so its right edge is bounded by
+       the font, not the viewport — measured at 396px at 1500 wide, about the
+       same at 1900. 30rem puts the gradient's zero at 442px: past the text,
+       short of the rack, on every desktop width. */
+    position: absolute; left: 0; bottom: 0; width: min(30rem, 52vw); height: 62%;
+    z-index: 4; pointer-events: none;
+    /* `to right`, not 105deg -- see the photometer stylesheet for the
+       measurement. The tilt put the gradient's zero 99px past this element's
+       right edge, so the fade was being clipped mid-way and left a hard
+       vertical cut at x = 480. Narrowing 44rem -> 30rem earlier moved that cut;
+       it did not remove it. Measured at x 481: step +8.69 before, -1.78 after,
+       the same as removing the scrim altogether. */
+    background: linear-gradient(to right, rgba(3,5,6,.93) 0%, rgba(3,5,6,.76) 44%, rgba(3,5,6,.22) 76%, rgba(3,5,6,0) 92%);
+    /* The top edge fades out. With a hard edge, anything bright behind it — the
+       lifted tubes in act 5 — showed a horizontal step where the scrim began. */
+    -webkit-mask-image: linear-gradient(to bottom, transparent 0%, #000 34%);
+    mask-image: linear-gradient(to bottom, transparent 0%, #000 34%);
+  }
+
+
+  /* column labels, placed from the 3D grid each frame */
+  .story #labels { position: absolute; inset: 0; z-index: 5; pointer-events: none; }
+
+  .story .collab {
+    position: absolute; left: 0; top: 0; opacity: 0; visibility: hidden;
+    font-family: var(--mono); text-align: center; white-space: nowrap;
+    will-change: transform, opacity;
+  }
+
+  .story .collab b { display: block; font-size: .8rem; font-weight: 600; color: #eef3f8; letter-spacing: .02em; }
+
+  .story .collab b span { font-size: .55rem; color: var(--faint); margin-left: .15em; }
+
+  .story .collab i {
+    display: block; font-style: normal; font-size: .52rem; letter-spacing: .24em;
+    margin-top: .2rem; color: #8b95a3;
+  }
+
+  .story .collab.green b { color: #7df0b5; }
+
+  .story .collab.red b { color: #ff8d81; }
+
+
+  /* the PWM waves, act 5 */
+  .story #duty { position: absolute; inset: 0; width: 100%; height: 100%; z-index: 4; opacity: 0; pointer-events: none; }
+
+
+  .story .endline {
+    position: absolute; left: clamp(1.1rem, 4vw, 4.2rem); top: 50%; transform: translateY(-50%);
+    z-index: 6; opacity: 0; visibility: hidden; pointer-events: none;
+    font-family: "Oxanium Title", var(--sans); font-weight: 600;
+    font-size: clamp(1.5rem, 3.4vw, 2.6rem); letter-spacing: -.02em; line-height: 1.12;
+    max-width: 20ch; text-shadow: 0 0 50px rgba(0,0,0,.9);
+  }
+
+  .story .endline em { color: var(--accent); font-style: normal; }
+
+
+  @media (max-width: 760px) {
+
+    /* Six column labels cannot sit side by side under a 390 px grid — they
+       collided into one grey smear. The grid act keeps its picture; the
+       conditions are named in the caption instead. */
+    .story .collab { display: none; }
+}
+
+.doc-wrap {
+  --blend-h: clamp(170px, 20vh, 300px);
+  --blend-glow: rgba(70, 224, 143, .11);
+}
+
+
+/* The seam itself. The stage is sticky inside the track, so when the record
+   finally arrives it is the stage's own bottom edge that meets it — which is
+   why matching colours across that edge is the whole job. The render's bottom
+   row is whatever the frame happens to hold there (floor, cable, instrument),
+   so instead of trying to match it, the last 16vh of the stage is faded to the
+   page's own #05060a. Both sides of the seam are then the same colour and the
+   band below carries on from it.
+
+   It sits under the captions (z 5) and over the scrim (z 4), and at 16vh it
+   reads for the rest of the story as the bottom vignette a frame like this
+   wants anyway. */
+.story .story-stage::after {
+  content: ""; position: absolute; left: 0; right: 0; bottom: 0;
+  height: clamp(120px, 16vh, 215px); pointer-events: none; z-index: 4;
+  background: linear-gradient(to bottom,
+    rgba(5, 6, 10, 0) 0%, rgba(5, 6, 10, .30) 42%,
+    rgba(5, 6, 10, .74) 74%, rgb(5, 6, 10) 100%);
+}
+
+/* ---------------------------------------------------- story -> record blend
+   The record used to begin on a 1px rule laid straight across the stage: dark
+   3D, hard line, paper. That rule is what made the two halves of the page read
+   as two pages. It is gone, and in its place the record opens through a band
+   that starts at the stage's own colour and dissolves into the page's, so the
+   instrument fades into the document instead of being cut off it.
+
+   The band is a real element, not a pseudo: ../css/polish.css loads after this
+   file and already owns both .doc-wrap::before (the cursor glow) and ::after
+   (the watermark), so a pseudo here loses some properties to it and keeps
+   others, which is worse than losing outright.
+
+   Drawn in both themes deliberately. In the light record it crosses the whole
+   distance from #05060a to white; in the dark one there is almost no distance
+   to cross and the band simply keeps the seam from being an edge. The colour
+   it starts from is written out rather than taken from --bg, because --bg is
+   the thing changing underneath it. */
+.doc-wrap { border-top: 0; padding-top: var(--blend-h); }
+.story-blend {
+  position: absolute; left: 0; right: 0; top: 0;
+  height: var(--blend-h); pointer-events: none; z-index: 0;
+  background:
+    /* A breath of the instrument's own colour across the crossing, so the
+       dissolve carries the story's light into the page rather than going grey.
+       Centred well down the band, not at its top: peaked at the top it put a
+       warm bar right on the seam and made a worse edge than the rule it
+       replaced — measured, rgb(33,23,16) against rgb(5,6,10) one pixel above. */
+    radial-gradient(120% 74% at 50% 64%, var(--blend-glow) 0%, transparent 58%),
+    linear-gradient(to bottom,
+      rgb(5, 6, 10) 0%,
+      rgba(5, 6, 10, .90) 26%,
+      rgba(5, 6, 10, .58) 50%,
+      rgba(5, 6, 10, .24) 74%,
+      rgba(5, 6, 10, 0) 100%);
+}
+
+  /* The opening's right-hand column, the same one the photometer carries.
+     The title holds the left, the instrument the middle; without this the
+     right third of the first frame is empty. Every number is already on the
+     page — the two wavelengths, 24 cultures, six conditions. */
+  .story .title-stats {
+    position: absolute; right: clamp(1.4rem, 7vw, 6rem); top: 37%;
+    transform: translateY(-50%);
+    z-index: 4; pointer-events: none; list-style: none; margin: 0; padding: 0;
+    text-align: right; opacity: 0; visibility: hidden;
+  }
+
+  .story .title-stats li { margin: 0 0 1.45rem; }
+
+  .story .title-stats li:last-child { margin-bottom: 0; }
+
+  .story .title-stats b {
+    font-family: var(--mono); font-weight: 600; font-size: clamp(1.1rem, 2.1vw, 1.6rem);
+    color: #eef3f8; letter-spacing: .01em;
+  }
+
+  .story .title-stats span { font-family: var(--mono); font-size: .62rem; color: var(--faint); margin-left: .3rem; }
+
+  .story .title-stats i {
+    display: block; font-style: normal; font-family: var(--mono);
+    font-size: .54rem; letter-spacing: .26em; text-transform: uppercase;
+    color: #8b95a3; margin-top: .3rem;
+  }
+
+  @media (max-width: 760px) {
+
+    /* four numbers down the side of a 390 px frame collide with the mast */
+    .story .title-stats { display: none; }
+}
+
+/* ------------------------------------------------------------ landing chrome
+   Four corner brackets and one slow sweep across the stage, both keyed to the
+   title's fade by the scene so they dress the landing and nothing else. Kept
+   thin and low: the point is that the opening frame reads as an instrument
+   being presented, not that anyone notices a bracket. */
+.story .hero-frame {
+  position: absolute; inset: 0; z-index: 4; pointer-events: none;
+  opacity: 0; visibility: hidden;
+}
+.story .hero-frame i {
+  position: absolute; width: 30px; height: 30px;
+  border: 1px solid var(--accent); opacity: .62;
+}
+/* The top pair clears the fixed header, which is 75px tall and sits at z 50
+   over the stage: at a 22px inset both of them were behind it. */
+.story .hero-frame i.hf-tl { left: 26px; top: 92px; border-right: 0; border-bottom: 0; }
+.story .hero-frame i.hf-tr { right: 26px; top: 92px; border-left: 0; border-bottom: 0; }
+.story .hero-frame i.hf-bl { left: 26px; bottom: 26px; border-right: 0; border-top: 0; }
+.story .hero-frame i.hf-br { right: 26px; bottom: 26px; border-left: 0; border-top: 0; }
+/* one pass every nine seconds, a fifth of a percent of the frame's luminance —
+   enough to make the stage feel alive, not enough to read as a scanline */
+.story .hero-scan {
+  position: absolute; left: 0; right: 0; height: 26vh; top: -30vh;
+  background: linear-gradient(to bottom,
+    transparent 0%, color-mix(in srgb, var(--accent) 12%, transparent) 50%, transparent 100%);
+  animation: heroScan 9s linear infinite;
+}
+@keyframes heroScan {
+  0%   { transform: translateY(0); opacity: 0; }
+  12%  { opacity: 1; }
+  88%  { opacity: 1; }
+  100% { transform: translateY(150vh); opacity: 0; }
+}
+@media (max-width: 760px) {
+  .story .hero-frame i { width: 18px; height: 18px; }
+  .story .hero-frame i.hf-tl, .story .hero-frame i.hf-tr { top: 84px; }
+  .story .hero-frame i.hf-bl, .story .hero-frame i.hf-br { bottom: 14px; }
+  .story .hero-frame i.hf-tl, .story .hero-frame i.hf-bl { left: 14px; }
+  .story .hero-frame i.hf-tr, .story .hero-frame i.hf-br { right: 14px; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .story .hero-scan { animation: none; opacity: 0; }
+}
+
+
+/* ==========================================================================
+   The record, rebuilt to the team's writing doc (2 Oct 2026, night)
+   --------------------------------------------------------------------------
+   The document half now follows the doc's "Component Page: DiOPAL", sections
+   2-10. These rules are the few pieces that page needed and the site did not
+   have yet; everything else (part marks, frames, autodraw plates, .limits,
+   .filter-steps, callouts, the amber .todo marks in ../css/wiki-align.css) is
+   reused as it was. Colours come from the team wiki's tokens, which
+   wiki-align.css defines on body.doc-light; each has a dark fallback for the
+   moment before the page turns to paper.
+   ========================================================================== */
+
+/* the two wavelengths, at reading weight on paper */
+.doc { --g-ink: #35c46f; --r-ink: #ff6a55; }
+body.doc-light .doc { --g-ink: #137a3c; --r-ink: #c1392a; }
+
+/* ---- key sentences ------------------------------------------------------
+   wiki-align.css gives .mark the amber tint, and on this page amber now means
+   "not on record yet". A highlighted claim must not read as a missing one, so
+   here the highlight is the team wiki's leaf tint instead. */
+body.doc-light .doc-wrap .doc span.mark {
+  background: var(--w-leaf-100);
+  box-shadow: inset 0 -1px 0 var(--w-leaf-200);
+}
+
+/* ---- tier brightness in the two schematics -------------------------------
+   Low, mid and high are drawn as three fills of the same colour. It marks the
+   tier, nothing more: the real levels are PWM duty cycles, not on record. */
+.doc .autodraw .g.t1 { fill: rgba(53, 196, 111, .14); }
+.doc .autodraw .g.t2 { fill: rgba(53, 196, 111, .42); }
+.doc .autodraw .g.t3 { fill: rgba(53, 196, 111, .88); }
+.doc .autodraw .r.t1 { fill: rgba(255, 106, 85, .14); }
+.doc .autodraw .r.t2 { fill: rgba(255, 106, 85, .42); }
+.doc .autodraw .r.t3 { fill: rgba(255, 106, 85, .88); }
+body.doc-light .doc .autodraw .g.t1 { fill: rgba(23, 132, 63, .12); }
+body.doc-light .doc .autodraw .g.t2 { fill: rgba(23, 132, 63, .40); }
+body.doc-light .doc .autodraw .g.t3 { fill: rgba(23, 132, 63, .85); }
+body.doc-light .doc .autodraw .r.t1 { fill: rgba(193, 57, 42, .12); }
+body.doc-light .doc .autodraw .r.t2 { fill: rgba(193, 57, 42, .40); }
+body.doc-light .doc .autodraw .r.t3 { fill: rgba(193, 57, 42, .85); }
+
+/* ---- prose lessons: .limits at reading size ------------------------------ */
+.limits.prose { gap: 1.2rem; margin: 1.3rem 0 1.5rem; }
+.limits.prose p { font-size: 1rem !important; line-height: 1.72; color: var(--muted); }
+.limits.prose h4 { font-size: 1rem; font-weight: 650; color: var(--fg); margin: 0 0 .35rem; display: block; }
+@media (min-width: 900px) {
+  .limits.prose.two { grid-template-columns: repeat(2, minmax(0, 1fr)); column-gap: 1.6rem; }
+}
+body.doc-light .limits > div { border-left-color: var(--w-leaf-200); }
+
+/* ---- the four cycle-3 changes: .filter-steps carrying a part name -------- */
+.filter-steps.changes { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+.filter-steps.changes b { letter-spacing: .06em; }
+.filter-steps.changes strong { display: block; color: var(--fg); font-weight: 650; font-size: .92rem; margin-bottom: .3rem; }
+.filter-steps.changes p { font-size: .88rem !important; line-height: 1.6; color: var(--muted); }
+body.doc-light .filter-steps.changes { background: var(--w-line); border-color: var(--w-line); }
+body.doc-light .filter-steps.changes b { color: var(--w-leaf-700); }
+
+/* ---- photo groups ---------------------------------------------------------- */
+.frames.trio { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+.frames.duo { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+.frames.duo .frame-img { aspect-ratio: 1 / 1; }
+.frame.hero.solo { max-width: 380px; }
+.frame.hero.solo.land { max-width: 520px; }
+.frame.hero.solo.land .frame-img { aspect-ratio: 1000 / 835; }
+@media (min-width: 1360px) {
+  .doc .sec > figure.frame.hero.solo > .frame-img { max-width: 380px; }
+  .doc .sec > figure.frame.hero.solo.land > .frame-img { max-width: 520px; }
+}
+@media (max-width: 700px) {
+  .frames.trio, .frames.duo { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: .7rem; }
+  .frames.duo .frame-img { aspect-ratio: 3 / 4; }
+  .frames.trio > .frame:nth-child(3) { grid-column: 1 / -1; }
+  .frames.trio > .frame:nth-child(3) .frame-img { aspect-ratio: 4 / 3; }
+}
+
+/* ---- tables on paper: the team wiki's light header and hairlines ---------- */
+.doc :is(table.lux, table.chan, table.mat) caption {
+  font-family: var(--sans); font-size: .875rem; letter-spacing: 0; text-transform: none;
+  color: var(--muted); padding-bottom: .55rem;
+}
+.doc :is(table.lux, table.chan, table.mat) caption .fignum { font-family: var(--sans); font-size: inherit; letter-spacing: 0; text-transform: none; font-weight: 700; }
+.doc :is(table.lux, table.chan, table.mat) caption .fignum::after { content: "."; }
+body.doc-light .doc :is(table.lux, table.chan, table.mat) caption .fignum { color: var(--w-leaf-700); }
+body.doc-light .doc :is(table.lux, table.chan, table.mat) td,
+body.doc-light .doc table.lux tbody th { border-bottom: 1px solid var(--w-line); }
+/* the HUD corner bracket polish.css draws on every .table-scroll lands on the
+   last cell of a hairline table; these tables have their own frame */
+.doc .table-scroll.plain::after { display: none; }
+
+/* ---- the 4 x 5 lux tables (4.3) -------------------------------------------
+   A cell's shade is the matched group its LED went into; unshaded LEDs were
+   not used. The shades are the cells' own colour at three strengths, and the
+   reading stays in ink on all of them (worst case 8:1). */
+.lux-key {
+  display: flex; flex-wrap: wrap; gap: .35rem 1.15rem;
+  margin: 1.1rem 0 .2rem; font-size: .84rem; color: var(--muted);
+}
+.lux-key span { display: inline-flex; align-items: center; gap: .45rem; }
+.lux-key i {
+  width: 17px; height: 17px; border-radius: 3px; display: inline-block;
+  border: 1px solid var(--line-2);
+}
+.lux-key i.t-low  { background: linear-gradient(135deg, rgba(23,132,63,.12) 50%, rgba(193,57,42,.12) 50%); }
+.lux-key i.t-mid  { background: linear-gradient(135deg, rgba(23,132,63,.26) 50%, rgba(193,57,42,.26) 50%); }
+.lux-key i.t-high { background: linear-gradient(135deg, rgba(23,132,63,.42) 50%, rgba(193,57,42,.42) 50%); }
+.lux-key i.t-none { background: transparent; }
+.lux-pair {
+  display: grid; grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0 1.4rem; margin: .4rem 0 1.4rem;
+}
+.lux-pair .table-scroll { margin: .8rem 0 0; }
+table.lux { min-width: 0; table-layout: fixed; font-size: .95rem; }
+table.lux th, table.lux td { text-align: center; padding: .5rem .2rem; }
+table.lux thead th:first-child, table.lux tbody th { width: 2.3rem; }
+table.lux tbody th { font-family: var(--mono); font-size: .8rem; color: var(--dim); letter-spacing: 0; }
+.doc table.lux td { color: var(--fg); font-weight: 500; font-variant-numeric: tabular-nums; }
+.doc table.lux td[data-g="none"] { color: var(--faint); font-weight: 400; }
+table.lux.green td[data-g="low"]  { background: rgba(23, 132, 63, .12); }
+table.lux.green td[data-g="mid"]  { background: rgba(23, 132, 63, .26); }
+table.lux.green td[data-g="high"] { background: rgba(23, 132, 63, .42); }
+table.lux.red td[data-g="low"]  { background: rgba(193, 57, 42, .12); }
+table.lux.red td[data-g="mid"]  { background: rgba(193, 57, 42, .26); }
+table.lux.red td[data-g="high"] { background: rgba(193, 57, 42, .42); }
+table.lux tbody td { border-left: 1px solid var(--bg); }
+@media (max-width: 720px) { .lux-pair { grid-template-columns: minmax(0, 1fr); } }
+
+/* ---- the six channels after rewiring -------------------------------------- */
+table.chan { min-width: 0; table-layout: fixed; font-size: .95rem; }
+table.chan th, table.chan td { text-align: center; padding: .5rem .25rem; }
+.doc table.chan td { color: var(--fg); font-variant-numeric: tabular-nums; font-weight: 500; }
+body.doc-light .doc table.chan thead th:nth-child(odd) { color: var(--g-ink); }
+body.doc-light .doc table.chan thead th:nth-child(even) { color: var(--r-ink); }
+/* the two readings the doc and the raw table disagree on */
+.doc table.chan td.flag { background: #fff3eb; box-shadow: inset 0 -2px 0 #fdba8c; }
+@media (max-width: 520px) {
+  table.chan { font-size: .86rem; }
+  table.chan th { padding: .45rem .1rem; }
+}
+
+/* ---- 4.4: spread, then matched --------------------------------------------- */
+.fig.plate { margin: 2rem 0 2.2rem; }
+body.doc-light .fig.plate {
+  background: #fff; border: 1px solid rgba(15, 19, 25, .13); border-radius: var(--r-md);
+  padding: 18px 18px 6px;
+  box-shadow: 0 1px 1px rgba(15, 19, 25, .04), 0 18px 34px -22px rgba(15, 19, 25, .40);
+}
+.spread-chart { display: grid; gap: 1.3rem; min-height: 420px; }
+.sp-head {
+  display: flex; flex-wrap: wrap; align-items: baseline; justify-content: space-between;
+  gap: .25rem 1rem; font-size: .84rem; color: var(--muted); margin-bottom: .1rem;
+}
+.sp-name { display: inline-flex; align-items: center; gap: .5rem; font-weight: 650; color: var(--fg); }
+.sp-sw { width: 9px; height: 9px; border-radius: 50%; display: inline-block; }
+.sp-sw.green { background: var(--g-ink); }
+.sp-sw.red { background: var(--r-ink); }
+.sp-sum b { color: var(--fg); font-variant-numeric: tabular-nums; white-space: nowrap; }
+.sp-sum i { font-style: normal; color: var(--faint); margin: 0 .45em; }
+.sp-svg { display: block; overflow: visible; }
+.sp-svg text { font-family: var(--mono); font-size: 11px; fill: var(--dim); }
+.sp-svg .sp-tl { text-anchor: middle; }
+.sp-svg .sp-unit { text-anchor: end; fill: var(--faint); }
+.sp-svg .sp-gl { text-anchor: middle; fill: var(--fg); }
+.sp-svg .sp-gn { text-transform: uppercase; letter-spacing: .08em; font-weight: 600; }
+.sp-svg .sp-dim { text-anchor: middle; fill: var(--muted); font-weight: 600; }
+.sp-ax, .sp-tk { stroke: var(--line-2); stroke-width: 1; }
+.sp-br { stroke: var(--muted); stroke-width: 1; }
+.sp-win { fill: rgba(127, 127, 127, .06); stroke: var(--line-2); stroke-dasharray: 3 3; }
+.sp-guide { fill: none; stroke: var(--line-2); stroke-dasharray: 3 4; }
+.sp-dot { stroke-width: 1; }
+.sp-dot.off { fill: var(--bg); stroke: #8d96a1; stroke-width: 1.2; }
+.sp-svg.green .sp-dot:not(.off) { stroke: var(--g-ink); }
+.sp-svg.red .sp-dot:not(.off) { stroke: var(--r-ink); }
+.sp-svg.green .t-low  { fill: #b8e3c6; } .sp-svg.green .t-mid  { fill: #5bb77f; } .sp-svg.green .t-high { fill: #17843f; }
+.sp-svg.red .t-low    { fill: #f6c4bb; } .sp-svg.red .t-mid    { fill: #e2725d; } .sp-svg.red .t-high   { fill: #b8321f; }
+.sp-svg rect.sp-cap { fill-opacity: .16; stroke-width: 1; }
+.sp-svg.green rect.sp-cap { fill: #17843f; stroke: rgba(23, 132, 63, .45); }
+.sp-svg.red rect.sp-cap { fill: #c1392a; stroke: rgba(193, 57, 42, .45); }
+
+/* ---- 4.4 and the doc's two disagreements ------------------------------------ */
+ul.flags { padding-left: 1.2rem; margin: .4rem 0 1.4rem; max-width: 68ch; }
+ul.flags li { margin-bottom: .9rem; color: var(--muted); }
+ul.flags li .todo { margin-top: .3rem; }
+
+/* ---- key specifications: a datasheet ------------------------------------ */
+dl.datasheet { margin: 1.3rem 0 1.6rem; border-top: 1px solid var(--line); }
+dl.datasheet > div {
+  display: grid; grid-template-columns: 10.5rem minmax(0, 1fr); gap: .3rem 1.2rem;
+  padding: .66rem 0; border-bottom: 1px solid var(--line);
+}
+dl.datasheet dt {
+  font-family: var(--mono); font-size: .72rem; letter-spacing: .08em; text-transform: uppercase;
+  color: var(--amber); padding-top: .22rem;
+}
+dl.datasheet dd { margin: 0; font-size: 1rem; line-height: 1.6; color: var(--fg); }
+dl.datasheet .ds-head { border-bottom: 0; padding-bottom: .1rem; }
+dl.datasheet .ds-head dt { color: var(--muted); grid-column: 1 / -1; }
+dl.datasheet .ds-head dd { display: none; }
+body.doc-light dl.datasheet { border-top-color: var(--w-leaf-200); }
+body.doc-light dl.datasheet > div { border-bottom-color: var(--w-line); }
+body.doc-light dl.datasheet dt { color: var(--w-leaf-700); }
+body.doc-light dl.datasheet .ds-head dt { color: var(--muted); }
+dl.datasheet.cad-dims { border-top: 0; margin-top: 1.9rem; }
+@media (max-width: 600px) {
+  dl.datasheet > div { grid-template-columns: minmax(0, 1fr); gap: .1rem; }
+}
+
+/* ---- the CAD parts plate, with numbered balloons --------------------------- */
+.frame.cad .frame-img { aspect-ratio: 16 / 9; }
+body.doc-light .frame.cad .frame-img { background: #f3f5f7; }
+.frame.cad:hover img { transform: none; }
+.frame.cad .frame-img::before { display: none; }
+.balloon {
+  position: absolute; z-index: 3; pointer-events: none;
+  transform: translate(-50%, -50%);
+  width: 22px; height: 22px; border-radius: 50%;
+  display: grid; place-items: center;
+  font: 700 11px/1 var(--mono); color: #fff;
+  background: var(--w-leaf-700, #23684a);
+  box-shadow: 0 0 0 2px #fff, 0 2px 6px rgba(0, 0, 0, .28);
+}
+.balloon.pcb { background: #3f5468; }
+.cad-key { white-space: normal; }
+@media (max-width: 700px) {
+  .balloon { width: 20px; height: 20px; }
+}
+
+/* ---- reproduction tables: on a phone each row becomes a card ------------- */
+table.mat { min-width: 600px; }
+table.mat.prints, table.mat.files { min-width: 0; }
+table.mat td { vertical-align: top; }
+table.mat .fsize { font-family: var(--mono); font-size: .75rem; color: var(--faint); white-space: nowrap; margin-left: .3rem; }
+table.mat tr.extra td { color: var(--muted); }
+@media (max-width: 700px) {
+  table.mat, table.mat.prints, table.mat.files { min-width: 0; }
+  table.mat thead { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+  table.mat, table.mat tbody, table.mat tfoot, table.mat tr { display: block; width: 100%; }
+  table.mat caption { display: block; text-align: left; }
+  table.mat tr { padding: .65rem .2rem .7rem; border-bottom: 1px solid var(--line); }
+  body.doc-light table.mat tr { border-bottom-color: var(--w-line); }
+  .doc table.mat td {
+    display: grid; grid-template-columns: 6.6rem minmax(0, 1fr); gap: .7rem; align-items: baseline;
+    padding: .16rem 0; border: 0 !important; text-align: left !important; white-space: normal !important;
+    background: none !important;
+  }
+  .doc table.mat td::before {
+    content: attr(data-label); font-family: var(--mono); font-size: 11px;
+    letter-spacing: .06em; text-transform: uppercase; color: var(--dim); padding-top: .2rem;
+  }
+  .doc table.mat td:first-child { display: block; font-size: 1rem; font-weight: 650; color: var(--fg); padding-bottom: .25rem; }
+  .doc table.mat td:first-child::before { content: none; }
+  table.mat.files td:first-child { display: none; }
+  table.mat.files td:nth-child(2) { display: block; font-size: 1rem; font-weight: 650; color: var(--fg); padding-bottom: .25rem; }
+  table.mat.files td:nth-child(2)::before { content: none; }
+  table.mat tfoot td:empty { display: none; }
+  table.mat tfoot tr { border-bottom: 0; }
+}
+
+
+/* ---- the units note --------------------------------------------------------- */
+body.doc-light .doc-wrap .doc aside.callout.callout--slate > .callout-label { color: var(--w-slate-700); }
+.callout.units p { font-size: .95rem !important; line-height: 1.65; }
+
+/* ---- a short amber note under a claim the doc and the data disagree on --- */
+div.todo.note {
+  margin: .5rem 0 1.2rem; padding: .55rem .8rem;
+  font-size: .875rem; line-height: 1.55; font-weight: 500;
+}
+div.todo.note > b { display: inline; margin: 0 .55em 0 0; }
+.doc div.todo > b { color: inherit; }
+ul.flags li div.todo.note { margin-bottom: 0; }
+
+/* ---- a name is not a drop cap ---------------------------------------------
+   polish.css raises the first letter of each part's opening paragraph. Two of
+   them open with "DiOPAL", and a raised D followed by "iOPAL" reads as a typo. */
+body.doc-light .doc .part + .sec > p.nodrop:first-of-type::first-letter {
+  float: none; font-size: inherit; line-height: inherit; padding: 0; color: inherit; font-weight: inherit;
+}
+
+/* the layout plate's headline figure, a size down so it clears the plate */
+.doc .autodraw.layout text.big { font-size: 19px; }
+
+/* ---- an amber label inside a sentence wraps with the sentence ------------
+   As an inline-block a long label became a box on its own line and pushed the
+   rest of the sentence below it on a phone. Inline, with its border cloned
+   onto each line, it reads as part of the text. Short labels look the same. */
+.doc .sec p span.todo, .doc dd span.todo, .doc figcaption span.todo {
+  display: inline; -webkit-box-decoration-break: clone; box-decoration-break: clone;
+  padding: .04em .42em; white-space: nowrap;
+}
+.doc .sec p span.todo.wrap, .doc dd span.todo.wrap { white-space: normal; }
+
+/* ---- the array plate on a phone --------------------------------------------
+   js/doc.js crops the drawing to the array itself in a column narrower than
+   the drawing's 640px, so the grid is
+   drawn near full size instead of scrolling sideways; the caption carries the
+   side notes it drops. */
+.doc .autodraw.layout.narrow svg { min-width: 0; overflow: hidden; }
+.doc .autodraw.layout.narrow .side { visibility: hidden; }
+
+/* phones: the smallest labels this page adds or reuses, held at 11px */
+@media (max-width: 700px) {
+  .filter-steps.changes b { font-size: 11px; }
+  .doc .autodraw text.dim { font-size: 11.5px; }
+  .doc-map .map-n { font-size: 11px; }
+}
+.doc td .todo sub { font-size: .9em; }
+
+
+/* ==========================================================================
+   Fixes after the two judges (3 Oct 2026, night)
+   --------------------------------------------------------------------------
+   The page loads before ../css/polish.css and ../css/wiki-align.css, so every
+   rule here out-specifies the shared rule it adjusts rather than relying on
+   order. Shared fixes that belong to all four component pages are not made
+   here; they are listed for the coordinator in the night's FIX-LOG.
+   ========================================================================== */
+
+/* ---- running text on paper -------------------------------------------------
+   wiki-align.css sets section prose in the team's near-black; the lessons in
+   .limits blocks are prose too and were still slate. */
+body.doc-light .doc-wrap .limits.prose p { color: #262626; }
+
+/* ---- widows and orphans ------------------------------------------------- */
+body.doc-light .doc-wrap :is(.sec > p, figcaption, .sec li, .limits p, div.todo, dl.datasheet dd) { text-wrap: pretty; }
+body.doc-light .doc-wrap :is(.part > h2, .sec > h3, .limits h4) { text-wrap: balance; }
+
+/* ---- a solo photo hugs its picture at every width -------------------------
+   From 1360px polish.css stretches each hero frame across the column so its
+   caption can sit in the margin; this page's portrait photos are capped at
+   380px, so each floated in about 190px of empty board either side. A solo
+   photo now keeps the plate it has below 1360px: the board fits the picture
+   and the caption sits under it, as the small multiples in .frames always do.
+   Full-width plates and diagrams keep the house margin caption. */
+@media (min-width: 1360px) {
+  body.doc-light .doc .sec > figure.frame.hero.solo { max-width: 380px; margin-left: auto; margin-right: auto; }
+  body.doc-light .doc .sec > figure.frame.hero.solo.land { max-width: 520px; }
+  body.doc-light .doc .sec > figure.frame.hero.solo > .frame-img { max-width: none; margin-left: 0; margin-right: 0; }
+  body.doc-light .doc .sec > figure.frame.hero.solo > figcaption {
+    position: static; width: auto; max-width: none; border-left: 0;
+    margin: 12px 0 0; padding: 10px 2px 12px;
+  }
+  body.doc-light .doc .sec > figure.frame.hero.solo > figcaption b { display: inline-block; margin: 0 .55em 0 0; }
+}
+
+/* ---- 5.2: three photos, the drive among them ----------------------------- */
+#fig-inside .frame-img img { object-position: center 30%; }
+
+/* ---- the drive chain on a phone --------------------------------------------
+   js/doc.js crops it to the bus, the three MOSFETs and the six columns when
+   its column is narrower than the drawing's 640px, as it does the array
+   plate; the software and Arduino boxes it drops are named in the caption. */
+.doc .autodraw.drive.narrow svg { min-width: 0; overflow: hidden; }
+/* both crops: in a column between a phone's and the drawing's own 640px, the
+   cropped view is held at a reading size rather than blown up to the column */
+.doc .autodraw.narrow svg { max-width: 440px; margin-left: auto; margin-right: auto; }
+
+/* ---- sections the doc has headed but not written: one block per section ---- */
+.doc .sec div.todo.plan ol { margin: .55rem 0 0; padding: 0; list-style: none; display: grid; gap: .5rem; }
+.doc .sec div.todo.plan li { font-size: inherit; line-height: 1.6; margin: 0; color: inherit; }
+body.doc-light .doc .sec div.todo.plan li > b { color: #262626; font-weight: 650; margin-right: .4em; }
+
+/* ---- 9.1: a minor heading below 9.1 that is not a subsection --------------- */
+body.doc-light .doc-wrap .sec > h4.minor {
+  font-size: 1.05rem; font-weight: 700; letter-spacing: -.01em; color: var(--w-leaf-900);
+  margin: 2.4rem 0 .6rem;
+}
+
+/* ---- 9.1: what is not on record is said once per table ---------------------
+   A cell with no value shows a dash; the orange note under the table names
+   what is missing. On a phone a dash cell is dropped, so each card lists only
+   what is known. */
+.doc table.mat td.nr { color: var(--faint); }
+@media (max-width: 700px) { .doc table.mat td.nr { display: none; } }
+body.doc-light .doc-wrap section.sec > p.tnote { font-size: .9rem; line-height: 1.65; color: var(--muted); margin: -.4rem 0 1.6rem; }
+.doc .table-scroll + div.todo.note { margin-top: .9rem; }
+
+/* ---- table numbers on a phone ------------------------------------------------
+   polish.css floors every caption number at 11px on a phone; a table caption is
+   14px, so its number shrank below the words it leads. wiki-align.css already
+   lifts figure captions; table captions take the same fix here. */
+@media (max-width: 700px) {
+  body.doc-light .doc-wrap table caption .fignum { font-size: inherit !important; }
+}
+
+/* ---- 9.3: the CAD files as cards, each with its part tucked into the corner (as on the photometer page) ----
+   Rendered from each part's own STL in the colour it is printed (black case, dark-grey plate and sliders, green
+   perf board): photos/parts/*.webp. The card edge cuts the part off and it fades toward the text. */
+.doc .sec ol.files {
+  list-style: none; margin: 1.3rem 0 1.6rem; padding: 0; max-width: none;
+  display: grid; gap: .7rem; grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+.doc .sec ol.files > li {
+  position: relative; overflow: hidden; isolation: isolate;
+  display: flex; gap: .8rem; margin: 0; padding: .85rem .95rem .8rem;
+  border: 1px solid #e5e5e5; border-radius: .3125rem; background: #fff; color: inherit;
+}
+.files .fn {
+  flex: none; width: 1.6rem; height: 1.6rem; border-radius: 50%;
+  display: grid; place-content: center; margin-top: .05rem;
+  border: 1.5px solid #23684a; font: 700 .8rem/1 var(--sans); color: #14402b;
+}
+.files .fb { position: relative; z-index: 1; min-width: 0; }
+.files .fb b { display: block; font-size: .98rem; color: #1f2933; }
+.doc .sec .files .fb p { margin: .2rem 0 0; font-size: .88rem; line-height: 1.5; max-width: calc(100% - 5.5rem); color: var(--muted); }
+.doc .sec .files .fb p code { font: 500 .8rem/1.3 var(--mono); color: #3a434d; }
+.doc .sec .files .fb p.dl { display: flex; flex-wrap: wrap; align-items: center; gap: .4rem .9rem; margin-top: .55rem; max-width: none; }
+.doc .sec .files .dl a {
+  display: inline-flex; align-items: baseline; gap: .45rem; padding: .28rem .6rem; border-radius: .3125rem;
+  border: 1px solid #cfe4d8; background: #f4f9f6; font: 700 .8rem/1.3 var(--sans); color: #14402b; text-decoration: none;
+}
+.doc .sec .files .dl a span { font: 500 .74rem/1.3 var(--mono); color: #23684a; }
+.doc .sec .files .dl a:hover, .doc .sec .files .dl a:focus-visible { border-color: #4f9c6f; background: #fff; }
+.files .f-part {
+  position: absolute; z-index: 0; right: -20px; bottom: -24px; width: 158px; height: 124px;
+  object-fit: contain; object-position: right bottom; pointer-events: none; user-select: none; opacity: .92;
+  -webkit-mask-image: radial-gradient(130% 130% at 100% 100%, #000 45%, rgba(0,0,0,.6) 64%, transparent 86%);
+          mask-image: radial-gradient(130% 130% at 100% 100%, #000 45%, rgba(0,0,0,.6) 64%, transparent 86%);
+  transition: transform .45s cubic-bezier(.2,.8,.2,1), opacity .3s ease;
+}
+.doc .sec ol.files > li:hover .f-part, .doc .sec ol.files > li:focus-within .f-part { transform: translate(-6px, -6px); opacity: 1; }
+@media (max-width: 700px) {
+  .doc .sec ol.files { grid-template-columns: 1fr; }
+  .files .f-part { width: 132px; height: 108px; right: -18px; bottom: -20px; }
+}
+@media (prefers-reduced-motion: reduce) { .files .f-part { transition: none; } }
+@media print { .files .f-part { display: none; } }
+.doc .sec .files .fb p code { white-space: nowrap; }
+.doc .sec .files .dl a, .doc .sec .files .dl a:hover { text-decoration: none; border-bottom: 1px solid #cfe4d8; }
+.doc .sec .files .dl a:hover, .doc .sec .files .dl a:focus-visible { border-color: #4f9c6f; }
+.doc .sec .files .fb p.pt { max-width: none; }
+body.doc-light .doc-wrap .sec ol.files .dl a:not(.xref):not(.pick-link) { text-decoration: none; color: #14402b; }
+
+
+/* ==========================================================================
+   Polish round (3 Oct 2026, afternoon)
+   --------------------------------------------------------------------------
+   The owner asked for the record to be easier to follow and to show more of
+   the season's work, with the DBTL cycles as its backbone. Each block says what
+   it adds and where its content comes from. Same load-order rule as the block
+   above: this sheet loads before polish.css and wiki-align.css, so each rule
+   out-specifies the shared rule it adjusts.
+   ========================================================================== */
+
+/* ---- §2: three cycles at a glance ----------------------------------------
+   Four panels in build order, each the doc's own photo of that build. The
+   arrows sit in the gaps at the photos' middle; each panel's title is its link
+   and is stretched over the whole panel, so the photo and text click through
+   without making the link's spoken name the whole panel. */
+.doc figure.glance { margin: 2rem 0 2.4rem; }
+.doc .sec ol.glance-list {
+  list-style: none; margin: 0; padding: 0; max-width: none;
+  display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 1.5rem;
+}
+.doc .sec ol.glance-list > li {
+  position: relative; margin: 0; padding: 0; display: flex; flex-direction: column;
+  border: 1px solid var(--line); border-radius: .5rem;
+  transition: border-color .2s ease, transform .2s ease, box-shadow .2s ease;
+}
+body.doc-light .doc .sec ol.glance-list > li { border-color: var(--w-line); background: #fff; }
+.gl-img { position: relative; display: block; }
+.gl-img img {
+  display: block; width: 100%; height: auto; aspect-ratio: 3 / 4; object-fit: cover;
+  border-radius: calc(.5rem - 1px) calc(.5rem - 1px) 0 0; background: #eceff3;
+}
+.gl-c1 .gl-img img { object-position: 40% 50%; }
+/* one build to the next */
+.doc .sec ol.glance-list > li + li .gl-img::before {
+  content: ""; position: absolute; z-index: 2; top: 50%; left: calc(-.75rem - 1px);
+  width: 10px; height: 10px; margin: -6px 0 0 -8px;
+  border-top: 2px solid var(--w-leaf-500, #4f9c6f); border-right: 2px solid var(--w-leaf-500, #4f9c6f);
+  transform: rotate(45deg);
+}
+.gl-tx { display: flex; flex-direction: column; gap: .45rem; padding: .75rem .8rem .9rem; }
+.gl-k {
+  display: inline-flex; align-items: center; gap: .42rem;
+  font: 700 11px/1.2 var(--sans); letter-spacing: .1em; text-transform: uppercase; color: var(--w-leaf-700, #3ddc8b);
+}
+/* the DBTL ring of the cycle headers, at the size of a bullet */
+.gl-k i {
+  flex: none; width: 13px; height: 13px; border-radius: 50%;
+  background: conic-gradient(from -45deg, #14402b 0 25%, #23684a 0 50%, #4f9c6f 0 75%, #2f8a5f 0 100%);
+  -webkit-mask: radial-gradient(circle, transparent 3.2px, #000 3.7px); mask: radial-gradient(circle, transparent 3.2px, #000 3.7px);
+}
+.gl-fin .gl-k i { border-radius: 3px; background: #14402b; -webkit-mask: none; mask: none; }
+.doc .sec a.gl-t { font-size: .98rem; line-height: 1.3; font-weight: 750; color: var(--fg); text-decoration: none; text-wrap: balance; }
+/* out-specifies the record's link rule, (0,5,3): a panel title is a heading that happens to be a link */
+body.doc-light .doc-wrap .sec ol.glance-list li a.gl-t:not(.xref),
+body.doc-light .doc-wrap .sec ol.glance-list li a.gl-t:not(.xref):hover { color: var(--w-leaf-900); text-decoration: none; }
+a.gl-t::after { content: ""; position: absolute; inset: -1px; z-index: 3; border-radius: .5rem; }
+a.gl-t:focus-visible { outline: none; }
+a.gl-t:focus-visible::after { outline: 2px solid var(--w-leaf-500, #4f9c6f); outline-offset: 2px; }
+.gl-row { display: block; font-size: .8125rem; line-height: 1.45; color: var(--muted); text-wrap: pretty; }
+.gl-row em {
+  display: block; margin-bottom: .1rem; font: 700 11px/1.3 var(--sans); font-style: normal;
+  letter-spacing: .08em; text-transform: uppercase; color: var(--dim);
+}
+body.doc-light .gl-row { color: #4a5560; }
+body.doc-light .gl-row em { color: #5f6b78; }
+/* the one stage not on record, in the record's orange */
+.gl-row.gap {
+  margin-top: auto; padding: .4rem .5rem; border-radius: .3rem;
+  background: rgba(194, 65, 12, .14); border: 1px solid rgba(253, 186, 140, .45); color: #fdba8c;
+}
+.gl-row.gap em { color: #fdba8c; }
+body.doc-light .gl-row.gap { background: #fff7f2; border-color: #fdba8c; color: #9a3412; }
+body.doc-light .gl-row.gap em { color: #c2410c; }
+.gl-tx { flex: 1 1 auto; }
+body.doc-light .doc .sec ol.glance-list > li:hover,
+body.doc-light .doc .sec ol.glance-list > li:focus-within {
+  border-color: var(--w-leaf-500); transform: translateY(-2px); box-shadow: 0 12px 24px -18px rgba(20, 64, 43, .5);
+}
+body.doc-light .doc .sec > figure.glance > figcaption { margin-top: 1rem; }
+@media (max-width: 700px) {
+  .doc figure.glance { margin: 1.6rem 0 2rem; }
+  .doc .sec ol.glance-list { grid-template-columns: minmax(0, 1fr); gap: 18px; }
+  .doc .sec ol.glance-list > li { flex-direction: row; align-items: flex-start; }
+  .gl-img { flex: none; width: 92px; margin: 10px 0 10px 10px; }
+  .gl-img img { border-radius: .3rem; }
+  .gl-tx { padding: .6rem .8rem .75rem; gap: .35rem; }
+  .doc .sec ol.glance-list > li + li .gl-img::before { top: -20px; left: 46px; margin: -6px 0 0 -5px; transform: rotate(135deg); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .doc .sec ol.glance-list > li { transition: none; }
+  body.doc-light .doc .sec ol.glance-list > li:hover, body.doc-light .doc .sec ol.glance-list > li:focus-within { transform: none; }
+}
+
+/* ---- 5.1: each change card shows the part it is tagged with ---------------
+   The renders are the 9.3 file cards' own (photos/parts/), each drawn from its
+   part's STL in the colour it was printed; the tube holder is the one extra,
+   rendered white because cycle 3's holder was white (5.3). Floated, so the
+   card's text runs beside the part and then under it. */
+.filter-steps.changes.with-parts > div { position: relative; overflow: hidden; }
+.filter-steps.changes.with-parts p { text-wrap: pretty; }   /* judge pass: no one-word last line beside the float */
+.filter-steps.changes .chg-part {
+  float: right; display: block; width: 124px; height: auto; margin: -.25rem -.35rem .35rem .8rem;
+  pointer-events: none; user-select: none;
+}
+.filter-steps.changes .chg-pair { position: relative; width: 132px; height: 92px; }
+.filter-steps.changes .chg-pair img { position: absolute; width: 96px; height: auto; }
+.filter-steps.changes .chg-pair img:first-child { left: 0; top: 0; }
+.filter-steps.changes .chg-pair img:last-child { right: 0; bottom: 0; }
+/* the code card's pictogram: a plain pulse-width square wave, no duty cycle implied */
+.filter-steps.changes .chg-pwm { width: 104px; margin: .5rem .2rem .6rem .9rem; overflow: visible; }
+.chg-pwm path { fill: none; stroke: var(--w-leaf-700, #3ddc8b); stroke-width: 2.4; stroke-linejoin: round; stroke-linecap: round; }
+.chg-pwm path.ax { stroke: var(--w-leaf-200, rgba(61,220,139,.3)); stroke-width: 1.5; }
+@media (max-width: 700px) {
+  .filter-steps.changes.with-parts { grid-template-columns: minmax(0, 1fr); }
+  .filter-steps.changes .chg-part { width: 104px; }
+  .filter-steps.changes .chg-pair { width: 112px; height: 80px; }
+  .filter-steps.changes .chg-pair img { width: 82px; }
+  .filter-steps.changes .chg-pwm { width: 88px; }
+}
+
+/* ---- 5.2: the drive chain as built, cycle 2 beside cycle 3 -----------------
+   One figure, two photos, an arrow between: a before and after reads as one
+   comparison with one caption, not as two unrelated pictures. Each photo still
+   opens in the lightbox. */
+.doc .sec > figure.frame.pair { max-width: 640px; margin-left: auto; margin-right: auto; }
+.frame.pair .pair-row {
+  display: grid; grid-template-columns: minmax(0, 1fr) 30px minmax(0, 1fr); align-items: start;
+}
+.frame.pair .frame-img { aspect-ratio: 4 / 5; }
+.frame.pair .frame-img img.c3-inside { object-position: center 28%; }
+.pair-cell { min-width: 0; }
+.pair-arrow {
+  align-self: center; justify-self: center; margin-bottom: 2.6rem;
+  width: 11px; height: 11px; margin-left: -5px;
+  border-top: 2px solid var(--w-leaf-500, #4f9c6f); border-right: 2px solid var(--w-leaf-500, #4f9c6f);
+  transform: rotate(45deg);
+}
+.pair-tag { display: block; margin: .55rem 0 0; font-size: .8125rem; line-height: 1.45; color: var(--muted); }
+.pair-tag b {
+  display: block; margin-bottom: .1rem; font: 700 11px/1.3 var(--sans); letter-spacing: .08em;
+  text-transform: uppercase; color: var(--w-leaf-700, #3ddc8b);
+}
+body.doc-light .pair-tag { color: #4a5560; }
+/* the two assembled photos that follow: square crops, as wide as the pair */
+.doc .sec > .frames.duo { max-width: 640px; margin-left: auto; margin-right: auto; }
+#fig-enclosed .frame-img img { object-position: center 60%; }
+@media (max-width: 700px) {
+  .frame.pair .pair-row { grid-template-columns: minmax(0, 1fr) 20px minmax(0, 1fr); }
+  .pair-arrow { width: 9px; height: 9px; margin-left: -4px; margin-bottom: 3.4rem; }
+}
+
+/* ---- 5.3: the shaker and the break, side by side -------------------------- */
+.doc .sec > .frames.duo.land { max-width: none; }
+.frames.duo.land .frame-img { aspect-ratio: 6 / 5; }
+@media (max-width: 700px) {
+  .doc .sec > .frames.duo.land { grid-template-columns: minmax(0, 1fr); }
+  .frames.duo.land .frame-img { aspect-ratio: 6 / 5; }
+}
+
+/* ---- 9.1 printed parts: each part beside its name --------------------------
+   The same renders as the 9.3 file cards, so a reader can match a name in the
+   table to a shape without leaving it. */
+table.mat.prints td:first-child .v { display: inline-flex; align-items: center; gap: .75rem; }
+table.mat.prints td { vertical-align: middle; }
+table.mat.prints img.tp { flex: none; width: 58px; height: 40px; object-fit: contain; object-position: center; }
+@media (max-width: 700px) {
+  table.mat.prints img.tp { width: 52px; height: 36px; }
+}
+@media print { table.mat.prints img.tp { display: none; } }
+
+/* ---- 4.4 Figure 6: the two numbers each panel is about, read first --------- */
+.sp-head { align-items: flex-end; margin-bottom: .35rem; }
+.sp-sum { display: inline-flex; flex-wrap: wrap; align-items: flex-end; gap: .2rem .7rem; }
+.sp-sum > i { align-self: center; margin: 0; font-style: normal; color: var(--faint); font-size: 1rem; }
+.sp-stat { display: inline-flex; flex-direction: column; line-height: 1.2; font-size: .75rem; color: var(--dim); }
+.doc .sp-stat b {
+  font-size: 1.3rem; line-height: 1.15; font-weight: 750; letter-spacing: -.01em; white-space: nowrap;
+  font-variant-numeric: tabular-nums;
+}
+.sp-panel.green .sp-stat b { color: var(--g-ink); }
+.sp-panel.red .sp-stat b { color: var(--r-ink); }
+.sp-panel .sp-stat:first-child b { color: var(--fg); }
+@media (max-width: 700px) {
+  .sp-stat { font-size: 11px; }
+  .doc .sp-stat b { font-size: 1.12rem; }
+}
+
+/* ---- 6.2: the LPA in section ----------------------------------------------
+   Outlines cut from the STLs at the second row of bores; fills are the print
+   colours of the final build (black housing and holders, grey plate and
+   sliders, green perf board), as in the parts plate. Balloons and dimension
+   figures are HTML over the drawing, so they keep their size on a phone. */
+.fig.plate.sect { padding-top: 22px; }
+.sect-box { position: relative; max-width: 620px; margin: 0 auto; }
+.sect-box svg { display: block; width: 100%; height: auto; overflow: visible; }
+.sx { stroke-width: .45; stroke-linejoin: round; fill-rule: evenodd; }
+.sx.p-box, .sx.p-led, .sx.p-tube { fill: #3a3f46; stroke: #1b1d21; }
+.sx.p-plate, .sx.p-slide { fill: #8d959e; stroke: #4f5862; }
+.sx.p-pcb { fill: #2f7a4f; stroke: #1d5a37; }
+.sx-cl { fill: none; stroke: var(--w-leaf-500, #4f9c6f); stroke-width: .5; stroke-dasharray: 3 2.2; opacity: .8; }
+.sx-dim { fill: none; stroke: #6b7580; stroke-width: .4; }
+.sx-tick { fill: none; stroke: #39424c; stroke-width: .7; }
+.sect-box .balloon { z-index: 3; }
+.sx-lbl {
+  position: absolute; z-index: 2; transform: translate(-50%, -50%); white-space: nowrap;
+  font: 600 11.5px/1 var(--mono); letter-spacing: .02em; color: #39424c;
+  background: #fff; padding: 2px 4px; border-radius: 2px;
+}
+.sx-lbl.sx-v { transform: translate(-50%, -50%) rotate(-90deg); }
+@media (max-width: 700px) {
+  .fig.plate.sect { padding: 14px 10px 6px; }
+  .sx-lbl { font-size: 11px; padding: 1px 3px; }
+}
+
+/* ---- Figures 14 and 16: a part's balloon and its name light up together ---- */
+.doc .frame.cad .balloon, .doc .sect-box .balloon { pointer-events: auto; cursor: default; transition: transform .15s ease, background-color .15s ease; }
+.doc .balloon.hot { transform: translate(-50%, -50%) scale(1.3); background: var(--w-leaf-900, #14402b); z-index: 4; }
+.doc .pk { border-radius: 3px; transition: background-color .15s ease, box-shadow .15s ease; }
+.doc .pk.hot { background: var(--w-leaf-100, rgba(61, 220, 139, .18)); box-shadow: 0 0 0 2px var(--w-leaf-100, rgba(61, 220, 139, .18)); }
+@media (prefers-reduced-motion: reduce) { .doc .balloon, .doc .pk { transition: none; } }
+body.doc-light .doc .sec > figure.sect > figcaption { margin-top: 1.4rem; }
