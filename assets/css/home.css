@@ -448,18 +448,19 @@ h2.band__title {
 }
 
 /* ========================================================= 8  EXPLORE ===== */
-/* Five pages as picture cards, rebuilt 7 Oct (owner: no captions, the names
-   set much larger, and nothing written over the photograph). The menu
-   reaches every page, so this only names where to start: two wide cards on
-   the first row (Description, Results), then the three pages the team is
-   nominated for (Hardware, Measurement, Integrated Human Practices).
+/* Five pages as picture cards. The menu reaches every page, so this only
+   names where to start: two wide cards on the first row (Description,
+   Results), then the three pages the team is nominated for (Hardware,
+   Measurement, Integrated Human Practices).
 
-   A CARD IS A PHOTOGRAPH WITH ITS NAME UNDER IT, both inside one rounded
-   ink card. The name used to sit on the photograph and covered the thing
-   the photograph was there to show; it now has its own band, so the picture
-   is whole and the name is free to be large. The band fills whatever height
-   the row leaves, so a name that takes two lines does not make its card
-   taller than the others beside it.
+   NO CAPTIONS, AND THE NAME SITS ON THE PICTURE (owner, 7 Oct). The band
+   under the photograph that this section had for an afternoon is gone. What
+   carries the white type instead is a shade in the bottom third of the card
+   only: it is written as seven stops of a smoothstep rather than two of a
+   linear ramp, so it has no visible edge and no band of grey across the
+   middle of the photograph, and it stops well short of the top, where the
+   subject of every one of these five pictures is. Nothing is drawn into the
+   image files themselves.
 
    Hover and focus move the photograph and the arrow, never the name.
    ========================================================================== */
@@ -472,41 +473,65 @@ h2.band__title {
 .xp-card { grid-column: span 2; }
 .xp-card--big { grid-column: span 3; }
 .xp-card a {
-  display: flex; flex-direction: column; height: 100%;
+  position: relative; display: block; height: 100%;
   border-radius: 1rem; overflow: hidden;
   background: var(--ink);
   color: var(--white); text-decoration: none;
-  transition: box-shadow .25s ease, transform .25s ease;
+  transition: box-shadow .3s ease, transform .3s ease;
 }
-.xp-card picture { display: block; overflow: hidden; flex: none; }
 .xp-card img {
   display: block; width: 100%; aspect-ratio: 16 / 9; height: auto; object-fit: cover;
-  transition: transform .5s cubic-bezier(.2, .7, .2, 1);
+  transition: transform .6s cubic-bezier(.2, .7, .2, 1);
 }
 .xp-card--big img { aspect-ratio: 21 / 9; }
 
-/* the band: the name, and the arrow at the far end of it */
+/* the shade: the bottom third, eased, so it has no edge anywhere */
+.xp-card a::before {
+  content: ""; position: absolute; inset: 0; z-index: 1; pointer-events: none;
+  background: linear-gradient(to top,
+    rgb(7 11 9 / .78) 0%,
+    rgb(7 11 9 / .74) 5%,
+    rgb(7 11 9 / .62) 11%,
+    rgb(7 11 9 / .44) 18%,
+    rgb(7 11 9 / .26) 25%,
+    rgb(7 11 9 / .12) 32%,
+    rgb(7 11 9 / .03) 39%,
+    transparent 46%);
+  transition: opacity .3s ease;
+}
+/* a hairline inside the corner radius, so a pale photograph still reads as
+   a card on the band's pale ground */
+.xp-card a::after {
+  content: ""; position: absolute; inset: 0; z-index: 3; pointer-events: none;
+  border-radius: inherit;
+  box-shadow: inset 0 0 0 1px rgb(7 11 9 / .08);
+}
 .xp-card__name {
-  flex: 1; display: flex; align-items: center; justify-content: space-between; gap: .5em;
-  margin: 0; padding: clamp(.9rem, .6rem + .7vw, 1.4rem) clamp(1rem, .7rem + .8vw, 1.5rem);
+  position: absolute; z-index: 2; left: 0; right: 0; bottom: 0;
+  margin: 0; padding: clamp(1rem, .6rem + 1vw, 1.6rem) clamp(1.1rem, .7rem + 1vw, 1.75rem);
   font-family: var(--font-display);
-  font-size: clamp(1.375rem, .9rem + 1.35vw, 2.125rem);
-  font-weight: 750; line-height: 1.08; letter-spacing: -.028em;
+  font-size: clamp(1.375rem, .95rem + 1.2vw, 2rem);
+  font-weight: 750; line-height: 1.1; letter-spacing: -.028em;
   color: var(--white);
+  text-shadow: 0 1px 2px rgb(7 11 9 / .45), 0 2px 22px rgb(7 11 9 / .55);
   text-wrap: balance;
 }
-.xp-card--big .xp-card__name { font-size: clamp(1.625rem, 1rem + 1.75vw, 2.625rem); }
+.xp-card--big .xp-card__name { font-size: clamp(1.625rem, 1.05rem + 1.6vw, 2.5rem); }
+/* the arrow stays in the text flow, so on a name that takes two lines it
+   follows the last word; the no-break space keeps it off a line of its own */
 .xp-card__name::after {
-  content: "\2192";
-  flex: none; font-weight: 600; color: var(--sig-green);
-  transition: transform .25s cubic-bezier(.2, .7, .2, 1);
+  content: "\00a0\2192";
+  display: inline-block; font-weight: 600; color: var(--sig-green);
+  text-shadow: 0 1px 10px rgb(7 11 9 / .5);
+  transition: transform .3s cubic-bezier(.2, .7, .2, 1);
 }
-.xp-card a:hover { box-shadow: 0 14px 40px rgb(7 11 9 / .22); transform: translateY(-2px); }
-.xp-card a:hover img { transform: scale(1.045); }
-.xp-card a:hover .xp-card__name::after { transform: translateX(.3em); }
+.xp-card a:hover { box-shadow: 0 16px 44px rgb(7 11 9 / .2); transform: translateY(-3px); }
+.xp-card a:hover img { transform: scale(1.04); }
+.xp-card a:hover::before { opacity: .88; }
+.xp-card a:hover .xp-card__name::after { transform: translateX(.32em); }
 .xp-card a:focus-visible { outline: 2px solid var(--leaf-700); outline-offset: 3px; }
 @media (prefers-reduced-motion: reduce) {
-  .xp-card a, .xp-card img, .xp-card__name::after { transition: none; }
+  .xp-card a, .xp-card img, .xp-card__name::after, .xp-card a::before { transition: none; }
   .xp-card a:hover { transform: none; }
   .xp-card a:hover img { transform: none; }
   .xp-card a:hover .xp-card__name::after { transform: none; }
@@ -517,7 +542,7 @@ h2.band__title {
   .xp-cards { grid-template-columns: repeat(2, minmax(0, 1fr)); }
   .xp-card, .xp-card--big { grid-column: span 1; }
   .xp-card--big img { aspect-ratio: 16 / 9; }
-  .xp-card__name, .xp-card--big .xp-card__name { font-size: clamp(1.125rem, .8rem + 1.1vw, 1.625rem); }
+  .xp-card__name, .xp-card--big .xp-card__name { font-size: clamp(1.1875rem, .85rem + 1.1vw, 1.625rem); }
 }
 @media (max-width: 559px) {
   .xp-cards { grid-template-columns: 1fr; }

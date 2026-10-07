@@ -15,8 +15,8 @@ and loses the disc, inpainted from the sky's own rows.
 
 WHAT IS ADDED, by code, in her manner (flat shapes in two or three tones,
 dry-brush edges, no outlines; build/vision_details.py's Painter):
-  the dish     a culture seen from above in the near field: a pale broth in a
-               glass wall. The wall is a ring of short segments with pores
+  the dish     a culture seen from above in the MIDDLE of the near field: a
+               pale broth in a glass wall. The wall is a ring of short segments with pores
                between them, smaller than a cell.
   the cells    engineered rods in blue-slate, a colour nothing in the valley
                uses, so they never read as crop. Some are dividing. They crowd
@@ -28,6 +28,11 @@ dry-brush edges, no outlines; build/vision_details.py's Painter):
                under a rust ring and bar. The product may leave; a cell may
                not. Nothing else on the page says this in a picture.
   the fields   where the product settles, the crop takes a fresher green.
+  the crops    young plants in the near foreground: to the LEFT of the
+               culture, out of the product's way, they are bent over and
+               yellowed; to the RIGHT, where the product goes, they stand
+               upright and full. The pair is the whole argument of the
+               figure in one glance.
 
 These additions are AI-assisted drawing, not hers, and the page says so in
 its HTML comment; her painting underneath is untouched.
@@ -126,7 +131,7 @@ def field(x, y, tol=26):
     return ndimage.binary_dilation(r, iterations=2)
 
 
-TARGETS = [(880, 580), (960, 520), (1250, 610), (1180, 700), (1480, 780), (800, 560)]
+TARGETS = [(960, 520), (1250, 610), (1180, 700), (1480, 780), (1050, 860), (1420, 640)]
 FRESH = [np.array(c, float) for c in ((112, 160, 56), (96, 146, 58), (124, 168, 62))]
 reached = np.zeros((H, W))
 for i, (fx, fy) in enumerate(TARGETS):
@@ -141,10 +146,62 @@ C = C + (255 - C) * (.07 * soft(reached, 2)[..., None])
 P.c = C
 G1 = C.copy()                       # the valley as it now stands, for the lens's shadow
 
+# ----------------------------------------------------------- the crops -----
+# Young plants in the near foreground, flanking the culture: bent and
+# yellowed on the left, upright and full on the right. Flat shapes with
+# jittered edges, as everything else here.
+GREEN = (np.array((56, 102, 46), float), np.array((92, 146, 62), float), np.array((128, 178, 80), float))
+DRY = (np.array((136, 114, 50), float), np.array((174, 154, 76), float), np.array((200, 182, 108), float))
+
+
+def crop_plant(x, y, h, wilt=0.0):
+    """A crop standing on (x, y), h tall. wilt 0 = upright and green,
+    1 = bent over, drooping and dry."""
+    rng = np.random.default_rng(int(abs(x) * 31 + abs(y) * 7) % 100000)
+    dark, mid, lite = (g * (1 - wilt) + d * wilt for g, d in zip(GREEN, DRY))
+    P.ellipse(x - .1 * h, y + .01 * h, .44 * h, .10 * h, (112, 122, 104), mul=True, alpha=.5, rough=.35, n=16)
+    lean = wilt * (.26 + .14 * rng.random()) * h
+    tipy = y - h * (1 - .2 * wilt)
+
+    def leaf(sx, sy, ux, uy, L, wd, col):
+        n = np.hypot(ux, uy)
+        ux, uy = ux / n, uy / n
+        nx, ny = -uy * wd, ux * wd
+        P.poly([(sx, sy), (sx + ux * L * .45 + nx, sy + uy * L * .45 + ny),
+                (sx + ux * L, sy + uy * L),
+                (sx + ux * L * .45 - nx, sy + uy * L * .45 - ny)], col, rough=.3)
+
+    for i, t in enumerate((.22, .45, .66, .86)):
+        sx = x + lean * (t ** 1.8)
+        sy = y - h * t * (1 - .2 * wilt)
+        L = (.54 - .07 * i) * h * (.9 + .2 * rng.random())
+        for k, side in enumerate((-1, 1)):
+            uy = (.62 + .25 * rng.random()) if wilt > .5 else -(.5 + .25 * rng.random())
+            leaf(sx, sy, side * (1 + .25 * rng.random()), uy, L, .17 * L, mid if (i + k) % 2 else dark)
+    # the stem over the leaves, and the lit side of it
+    P.stroke([(x, y), (x + lean * .25, y - h * .55), (x + lean, tipy)], max(.07 * h, 1.6), dark, rough=.12)
+    P.stroke([(x - .012 * h, y - .1 * h), (x + lean * .3, tipy + .1 * h)], max(.022 * h, .8), lite, alpha=.75, rough=.1)
+    if wilt > .5:                                   # a leaf or two already down
+        for _ in range(2):
+            fx, fy = x + rng.uniform(-.55, .55) * h, y + rng.uniform(.01, .07) * h
+            P.ellipse(fx, fy, .17 * h, .05 * h, DRY[0], rot=rng.uniform(-.5, .5), rough=.25, n=12)
+
+
+# Hand-placed, in the canvas's own pixels, and all standing clear of the
+# bottom edge of the 2:1 crop (which is y 972). Six bent on the left, seven
+# full on the right.
+for x, y, h, w in ((96, 902, 158, 1), (212, 938, 176, 1), (330, 906, 162, 1),
+                   (44, 856, 132, 1), (154, 866, 142, 1), (272, 870, 146, 1)):
+    crop_plant(float(x), float(y), float(h), w)
+for x, y, h, w in ((982, 912, 162, 0), (1104, 944, 180, 0), (1232, 910, 166, 0),
+                   (1360, 940, 176, 0), (1486, 904, 158, 0), (1046, 866, 140, 0),
+                   (1300, 862, 144, 0)):
+    crop_plant(float(x), float(y), float(h), w)
+
 # ---------------------------------------------------------------- the lens --
 # A culture seen close, lifted off the valley: it casts a soft shadow on the
 # fields, so it reads as a view onto something kept apart from them.
-CX, CY, R = 400.0, 676.0, 262.0
+CX, CY, R = 616.0, 668.0, 242.0
 WALL = 22.0
 dist = np.hypot(xx - CX, yy - CY)
 
@@ -292,12 +349,12 @@ def leave(ang):
 
 
 ROUTES = [  # (angle it leaves the wall at, control points, the field it reaches)
-    (-.62, (640, 470), (760, 470), (800, 560)),
-    (-.42, (720, 520), (850, 520), (880, 580)),
-    (-.28, (760, 470), (900, 440), (960, 520)),
-    (-.05, (820, 640), (1080, 600), (1180, 700)),
-    (-.16, (860, 520), (1150, 520), (1250, 610)),
-    (.14, (900, 760), (1300, 720), (1480, 780)),
+    (-.78, (820, 420), (920, 440), (960, 520)),
+    (-.46, (900, 520), (1140, 540), (1250, 610)),
+    (-.60, (880, 460), (1300, 510), (1420, 640)),
+    (-.12, (960, 660), (1100, 670), (1180, 700)),
+    (.22, (980, 790), (1340, 745), (1480, 780)),
+    (.50, (900, 880), (980, 872), (1050, 860)),
 ]
 mist = np.zeros((H, W))
 for k, (ang, c1, c2, end) in enumerate(ROUTES):
@@ -308,7 +365,7 @@ for k, (ang, c1, c2, end) in enumerate(ROUTES):
         ix, iy = int(x), int(y)
         if 0 <= ix < W and 0 <= iy < H:
             mist[iy, ix] += (1 - .5 * tt)
-    n = 15
+    n = 10
     for j in range(1, n + 1):
         tt = (j - .5 + rng.uniform(-.2, .2)) / n
         x, y = bez(p0, p1, p2, p3, tt)
@@ -319,7 +376,7 @@ for k, (ang, c1, c2, end) in enumerate(ROUTES):
     # where it settles
     light[int(p3[1]), int(p3[0])] += 6
 # in the pores, half through
-for a in (-.62, -.42, -.28, -.16, -.05, .14, .32):
+for a in (-.78, -.60, -.46, -.26, -.12, .08, .22, .36, .50):
     x, y = leave(a)
     chain(x, y, 5.6, a + np.pi / 2, n=2, halo=.6)
 
@@ -339,12 +396,12 @@ P.stroke([(bx - .66 * br, by + .66 * br), (bx + .66 * br, by - .66 * br)], 7.0, 
 
 # the trail of each route, a faint warm haze, and the glow round the product
 mist = ndimage.gaussian_filter(mist, 9)
-mist = np.clip(mist / max(mist.max(), 1e-6) * 2.2, 0, 1)[..., None]
+mist = np.clip(mist / max(mist.max(), 1e-6) * 1.7, 0, 1)[..., None]
 glow = ndimage.gaussian_filter(light, 9)
 glow = np.clip(glow / max(np.percentile(glow[glow > 0], 99.5), 1e-6), 0, 1)[..., None]
 WARM = np.array((255, 214, 130), float)
-P.c = P.c + (WARM - P.c) * (.34 * mist * (~inside)[..., None])
-P.c = P.c + (WARM - P.c) * (.45 * glow * (~inside)[..., None])
+P.c = P.c + (WARM - P.c) * (.26 * mist * (~inside)[..., None])
+P.c = P.c + (WARM - P.c) * (.36 * glow * (~inside)[..., None])
 
 # ------------------------------------------------------------------ output --
 # 2:1, the empty top of her sky cut away, so the figure can run the width of
