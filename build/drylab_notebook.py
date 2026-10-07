@@ -366,6 +366,11 @@ SEPT_PHOTOS = {
     '247-t.webp': dict(p=None, s=0, team='HP', k='photo', m=0),
     '248-t.webp': dict(p=None, s=0, team='HP', k='photo', m=0),
     '242-t.webp': dict(p='protect', s=0, team='Drylab', k='figure', m=0),
+    # October, from the team gallery.
+    '223-t.webp': dict(p='chamber', s=1, team='Drylab', k='photo', m=1),
+    '224-t.webp': dict(p='chamber', s=0, team='Drylab', k='photo', m=1),
+    '225-t.webp': dict(p='chamber', s=0, team='Drylab', k='photo', m=0),
+    '226-t.webp': dict(p=None, s=0, team='Drylab', k='photo', m=0),
 }
 
 # What came back later, added to Felix's own account of a handoff.
