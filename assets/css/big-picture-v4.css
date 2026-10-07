@@ -114,12 +114,15 @@
   height: calc(560 * var(--k));
 
   display: grid;
+  /* 7 Oct: the joints give 12 design px each to the steps, so a step name
+     and the longest component label each hold one line (see the note at the
+     foot of this file). 5 x 241.6 + 4 x 28 = 1320, the canvas exactly. */
   grid-template-columns:
-    calc(232 * var(--k)) calc(40 * var(--k))
-    calc(232 * var(--k)) calc(40 * var(--k))
-    calc(232 * var(--k)) calc(40 * var(--k))
-    calc(232 * var(--k)) calc(40 * var(--k))
-    calc(232 * var(--k));
+    calc(241.6 * var(--k)) calc(28 * var(--k))
+    calc(241.6 * var(--k)) calc(28 * var(--k))
+    calc(241.6 * var(--k)) calc(28 * var(--k))
+    calc(241.6 * var(--k)) calc(28 * var(--k))
+    calc(241.6 * var(--k));
   grid-template-rows: calc(112 * var(--k)) calc(448 * var(--k));
   align-content: start;
 }
@@ -343,21 +346,25 @@
 .bp4-part__i { background: none; width: auto; height: auto; }
 
 /* ------------------------------------------------ 7 Oct (owner) ---------- */
-/* The five step names a size up. "Bioreactor system" no longer fits the
-   232-pixel column on one line at this size, so every name is given the
-   height of two lines and breaks evenly: the five parts lists still start
-   on one row, which rule 6 (five equal steps) asks for. The tightest step
-   had 75 design pixels of slack, and the second line costs 34 of them. */
+/* The five step names a size up, and EVERY NAME ON ONE LINE (owner): the
+   step columns were widened to 241.6 design px for it, which is what the
+   longest of them, "Bioreactor system", needs at 24. The component labels
+   hold one line at the same width; "Pressure, pH, flow sensors" is the
+   longest and sets it. If a name or a label grows, measure before trusting
+   it: the test is .bp4-step__name and .bp4-part__t at scrollWidth <=
+   clientWidth, not the eye. */
 .bp4-step__name {
-  font-size: calc(26 * var(--k));
+  font-size: calc(24 * var(--k));
   line-height: 1.12;
-  min-height: calc(2 * 1.12 * 26 * var(--k));
-  text-wrap: balance;
+  white-space: nowrap;
 }
 @media (max-width: 1180px), (max-height: 520px) {
   /* the column layouts set the name from the page's own scale, and there
-     the width is not the constraint: one line is enough */
-  .bp4-step__name { min-height: 0; }
+     the width is not the constraint */
+  .bp4-step__name { white-space: normal; }
 }
 @media (max-width: 1180px) { .bp4-step__name { font-size: clamp(1.375rem, 1.1rem + .9vw, 1.75rem); } }
 @media (max-height: 520px) { .bp4-step__name { font-size: 1.375rem; } }
+/* the component labels hold one line too, at the widened column */
+.bp4-part__t { white-space: nowrap; }
+@media (max-width: 1180px), (max-height: 520px) { .bp4-part__t { white-space: normal; } }

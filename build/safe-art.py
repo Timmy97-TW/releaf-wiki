@@ -8,8 +8,10 @@ safe-art-1200.jpg (the fallback), all 2:1. Needs numpy, Pillow and scipy.
 
 THE GROUND is the design team's valley ("Zoomed out w_o green dots.PNG", the
 same painting the vision section lights; see assets/img/home/vision/README.md),
-cropped on the river and the sun and left as she painted it. No
-reactor is drawn: the problem arc never shows the answer.
+otherwise left as she painted it. No reactor is drawn: the problem arc never
+shows the answer. HER SUN IS PAINTED OUT (7 Oct, owner): the sunrise belongs
+to the vision section at the foot of the page, so this figure keeps her sky
+and loses the disc, inpainted from the sky's own rows.
 
 WHAT IS ADDED, by code, in her manner (flat shapes in two or three tones,
 dry-brush edges, no outlines; build/vision_details.py's Painter):
@@ -22,6 +24,9 @@ dry-brush edges, no outlines; build/vision_details.py's Painter):
   the product  small amber chains (the biostimulant), made beside the cells,
                passing the pores and carried on a wide arc over the fields,
                smaller and fainter with distance.
+  the mark     a prohibition badge outside the wall on the field side: a rod
+               under a rust ring and bar. The product may leave; a cell may
+               not. Nothing else on the page says this in a picture.
   the fields   where the product settles, the crop takes a fresher green.
 
 These additions are AI-assisted drawing, not hers, and the page says so in
@@ -51,6 +56,50 @@ x0 = sw - cw                                        # keep the right: river and 
 ground = src.crop((x0, 0, sw, sh)).resize((W, H), Image.LANCZOS)
 C = np.asarray(ground, dtype=np.float64).copy()
 K = W / cw                                          # her px -> ours
+
+# ---- her sun, painted out (7 Oct) ---------------------------------------
+# The disc is the brightest thing in the top half of her sky. Its own rows
+# are a near-flat gradient, so the patch is filled from the median of each
+# row taken outside the disc and its glow, then feathered back in. The
+# sunrise is the vision section's, not this figure's.
+def desun(img):
+    h, w = img.shape[:2]
+    lum = img.mean(-1)
+
+    # where her sky stops: scanning down each column, the first row that is
+    # much darker than the top of that column is the ridge line
+    top = lum[:60].mean(0)
+    below = lum < (top - 28)[None, :]
+    first = np.where(below.any(0), below.argmax(0), h)
+    yy_, xx_ = np.mgrid[0:h, 0:w]
+    sky = yy_ < first[None, :]
+
+    # the disc: the one big patch of near-white in the sky
+    hot = (lum >= 250) & sky
+    lab, n = ndimage.label(hot)
+    if not n:
+        return img
+    k = 1 + int(np.argmax(ndimage.sum(hot, lab, range(1, n + 1))))
+    ys, xs = np.where(lab == k)
+    cx, cy = xs.mean(), ys.mean()
+    r = max(np.ptp(xs), np.ptp(ys)) / 2
+
+    d = np.hypot(xx_ - cx, yy_ - cy)
+    glow = (d < r * 5.0) & sky                     # the disc and the light round it
+    keep = (d > r * 6.2) & sky
+    out = img.copy()
+    for y in range(h):
+        if not glow[y].any():
+            continue
+        src = img[y][keep[y]]
+        if len(src) < 24:
+            continue
+        out[y][glow[y]] = np.median(src, axis=0)
+    a = ndimage.gaussian_filter(np.clip((r * 5.0 - d) / (r * 1.3), 0, 1) * sky, 11)[..., None]
+    return img * (1 - a) + out * a
+
+
+C = desun(C)
 
 P = Painter(C, 0, 0, 1)
 
@@ -273,6 +322,20 @@ for k, (ang, c1, c2, end) in enumerate(ROUTES):
 for a in (-.62, -.42, -.28, -.16, -.05, .14, .32):
     x, y = leave(a)
     chain(x, y, 5.6, a + np.pi / 2, n=2, halo=.6)
+
+# ------------------------------------------------- no cell may leave -------
+# A prohibition badge just outside the wall, on the field side and clear of
+# the product's routes: a rod, a rust ring and a rust bar across it. Drawn
+# last of the objects so nothing sits on top of it.
+RUST = np.array((154, 61, 34), float)
+bx, by = CX + (R + WALL + 54) * np.cos(.62), CY + (R + WALL + 54) * np.sin(.62)
+br = 37.0
+P.ellipse(bx + 3, by + 5, br, br, (120, 128, 112), mul=True, alpha=.5, rough=.3, n=26)
+P.ellipse(bx, by, br, br, (250, 250, 246), rough=.25, n=26)
+rod(bx, by, 40, -.38, wd=15.0, tone=.1)
+ring = [(bx + (br - 3.4) * np.cos(t), by + (br - 3.4) * np.sin(t)) for t in np.linspace(0, 2 * np.pi, 72)]
+P.stroke(ring + [ring[0]], 7.0, RUST, rough=.12)
+P.stroke([(bx - .66 * br, by + .66 * br), (bx + .66 * br, by - .66 * br)], 7.0, RUST, rough=.1)
 
 # the trail of each route, a faint warm haze, and the glow round the product
 mist = ndimage.gaussian_filter(mist, 9)

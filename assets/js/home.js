@@ -789,8 +789,8 @@
     var paper = dx.querySelector(".dx__paper");
     var row = dmd.querySelector(".dmd__chips");
     var title = dmd.querySelector(".dmd__head");
+    var kick = dmd.querySelector(".dmd__k");
     var chips = [].slice.call(dmd.querySelectorAll(".dmd__chip"));
-    var says = [].slice.call(dmd.querySelectorAll(".dmd__say"));
     var stage = sol.querySelector(".rxs__stage");
     var head = sol.querySelector(".rxs__head");
     var lede = sol.querySelector(".rxs__lede");
@@ -826,7 +826,7 @@
     var RUN = 3.1;
     var fits = window.matchMedia("(min-width: 980px) and (min-height: 640px)");
     var live = false, geo = null, navH = 68, parked = null, printing = false;
-    var moved = [title, head, lede, model, sol, paper].concat(chips, says);
+    var moved = [title, kick, head, lede, model, sol, paper].concat(chips);
     var cache = new Map();
 
     // write only what changed since the last frame
@@ -925,11 +925,13 @@
         var x = (s1.x - s0.x) * f, y = (s1.y - s0.y) * f + (1 - a) * 22;
         put(c, "transform", "translate(" + px(x) + "," + px(y) + ") scale(" + f3(sc * (0.9 + 0.1 * a)) + ")");
         put(c, "opacity", f3(handed ? 0 : a));
-        if (says[k]) {
-          put(says[k], "opacity", f3(a * (1 - tOut)));
-          put(says[k], "transform", a >= 1 ? "none" : "translateY(" + px((1 - a) * 22) + ")");
-        }
       });
+      // the kicker counts the chips, so it comes in with the first of them
+      if (kick) {
+        var kv = easeOut(span(s, 0.14, 0.62));
+        put(kick, "opacity", f3(kv));
+        put(kick, "transform", kv >= 1 ? "none" : "translateY(" + px((1 - kv) * 10) + ")");
+      }
       put(grid, "--dx-tag", handed ? "1" : "0");
 
       // the reactor comes up from the middle of the five
