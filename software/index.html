@@ -4,7 +4,7 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>Digital Twin | ReLeaf &middot; iGEM 2026</title>
-  <meta name="description" content="A digital twin of the BR-01 perfusion bioreactor: seven live channels, six automated actuators, five measured results, and a forecast registered before the batch that tests it." />
+  <meta name="description" content="A digital twin of the BR-01 perfusion bioreactor: seven live channels, six automated actuators, five measured results, a forecast registered before the batch that tests it, and a leaf-wetness rule for rice blast on the field side." />
   <link rel="icon" href="../assets/img/logo.png" />
   <link rel="stylesheet" href="../assets/css/tokens.css" />
   <link rel="stylesheet" href="../assets/css/nav.css" />
@@ -16,7 +16,11 @@
 <!--
   DIGITAL TWIN (slug stays /software).
   Restructured 1 October 2026 around Best Measurement, with the Best Software
-  Tool criteria answered in a folded block. Shorter than the 28 September
+  Tool criteria answered in a folded block. 7 October 2026: the students'
+  1005 rewrite (introduction, three-scale channel tables, why each result
+  matters) is in; their own text carries no .ai class, text kept verbatim
+  from the AI draft keeps it. Adds the local leaf sensor and the BLASTAM
+  rice blast rule, and embeds 1007UI. Shorter than the 28 September
   version by design: results first, method second, gaps in red.
   Every number resolves to a file in the Digital Twin project folder:
     04_Results/lpa_growth_fit_20260919.{md,json}   (R5)
@@ -54,8 +58,8 @@
       <ul class="pagehead__meta">
         <li><b>Section</b><span>Dry Lab</span></li>
         <li><b>Written by</b><span>Dry lab, bioreactor and software</span></li>
-        <li><b>Last updated</b><span>2 October 2026</span></li>
-        <li><b>Status</b><span>Seven channels live; forecast registered, batch running 2 October</span></li>
+        <li><b>Last updated</b><span>7 October 2026</span></li>
+        <li><b>Status</b><span>Seven reactor channels live; leaf sensor on the bench; forecast registered for the 3 October batch</span></li>
       </ul>
     </div>
   </header>
@@ -86,46 +90,96 @@
             <li><b>Validated by experimental work?</b> Five measured results in <a href="#results">Results</a>; two of them (R3, R4) were scored under rules fixed in advance, and R5 on held-out arms. A forecast for the next batch is <a href="#prereg">registered with a hash</a> before the batch runs.</li>
             <li><b>Useful to other projects?</b> <a href="#contribution">Four things</a> another team can lift without our reactor, including the serial protocol and the trust layer.</li>
             <li><b>Standards and data formats?</b> Partly. The channel table, units and provenance travel with every export, which reaches the syntactic level of the interoperability framework of Satwekar et&nbsp;al.&nbsp;[5]; a published JSON schema would reach the semantic level and is <span class="tag tag--must">must have</span>. No SBOL or RFC is used: nothing on this page describes a genetic part.</li>
-            <li><b>Integration with external tools?</b> One documented serial protocol in, one CSV and XLSX export out, and an Open-Meteo forecast pulled in. No package or public API is offered.</li>
+            <li><b>Integration with external tools?</b> One documented serial protocol in, one CSV and XLSX export out, an Open-Meteo forecast pulled in, and the leaf-sensor logger's CSV read as it is written. No package or public API is offered.</li>
             <li><b>User-friendly?</b> <a href="#ui">The interface</a>, six tabs, bilingual, one file, no install. No usability session with an operator outside the build team has been recorded.</li>
             <li><b>Documented for future groups?</b> <a href="#contribution">Contribution</a> and <a href="#limits">Limits</a>; the firmware ships with a desktop test harness that replays a run through the page's own parser with no board attached.</li>
           </ul>
         </details>
       </aside>
 
-      <!-- ================================================= 1 · THE RIG ===== -->
-      <section class="sec ai" id="rig">
-        <h2>What the reactor measures now</h2>
-        <p>Every value is tagged by its route from the process, following the process analytical technology idea that a number is only as good as how it was obtained&nbsp;[4,&nbsp;5]. <span class="tag tag--meas">in-line</span> is an instrument on the loop. <span class="tag tag--der">soft</span> is computed from measured values through a model. <span class="tag tag--abs">planned</span> has no instrument behind it yet, and is drawn dashed on the interface for the same reason.</p>
+      <!-- ============================================ 0 · INTRODUCTION ===== -->
+      <section class="sec" id="intro">
+        <h2>Introduction</h2>
+        <h3 id="what">What is a digital twin?</h3>
+        <p>There is not always a clear boundary between a digital model, a digital shadow and a digital twin.</p>
+        <p>A digital model represents a physical system but is updated manually. A digital shadow automatically receives real-time data from the physical system, but any changes back to the system still require human input. A digital twin closes the loop: information can flow automatically from the physical system to the model and back again, allowing the model to directly influence how the system operates. Because these terms are often used interchangeably, a simulation, a live sensor dashboard and an automatic controller may all be described as a digital twin. The key distinction is how information moves between the physical system and its digital model, and whether that flow happens automatically.</p>
+        <p>Our bioreactor is meant to run for weeks beside farmland, far from laboratories where results can be analysed precisely. Because no one will always be there to take samples or interpret every reading, the digital twin acts as the decision-making &ldquo;mind&rdquo; of the system.</p>
+        <p>The first challenge of this remote workflow is the lack of manual sampling. In a lab, someone draws culture and checks it by hand. In the field, the reactor's own instruments are the only record of the batch, so they have to be checked continuously. Furthermore, machines wear down, with sensors drifting over days. On the 434-hour run, the OD channel eventually failed. The trust layer of the digital twin flagged the reference beam 26.7 hours before the OD readings became completely unusable.</p>
+        <p>Additionally, the digital twin makes the decision of whether to switch on the green light to activate protectant production, and more specifically, which protectant to release and produce, in what concentration and amount. Drawing from a system of local-scale sensing and regional-scale data, the digital twin weighs what the field needs against what the reactor can deliver. The regional side is the field weather forecast and the crop-stress risk on the Weather tab, together with the maps from <a href="../geospatial-analysis/">Geospatial Analysis</a>. They show when and where plants are likely to come under stress. The local side is BR-01's own instruments. They report how much biomass is in the loop, whether it is still growing, whether the membrane is still passing permeate, and whether those readings can be trusted at all (<a href="#r3">R3</a>). Induction makes sense when the field is heading into stress and the culture is in a state to respond. The forecast (<a href="#r4">R4</a>) and the growth prior (<a href="#r5">R5</a>) then say whether the batch will be ready in time. Once the ACC deaminase activity assay puts a number on the product, the same framework can estimate how long induction must run to reach a target amount.</p>
+      </section>
 
+      <!-- ================================================= 1 · THE RIG ===== -->
+      <section class="sec" id="rig">
+        <h2>What the reactor measures now</h2>
+        <p>Every value is tagged by how it was obtained:</p>
+        <ul>
+          <li><span class="tag tag--meas">in-line</span> A sensor on the looped tubing of the culture that is pumped around in the bioreactor.</li>
+          <li><span class="tag tag--cmd">commanded</span> Values from the input of the bioreactor operator (farmers).</li>
+          <li><span class="tag tag--der">soft</span> Values calculated and modelled from in-line readings.</li>
+          <li><span class="tag tag--abs">planned</span> Planned values for data collection.</li>
+          <li class="ai"><span class="tag tag--lit">external</span> Data the twin pulls in from outside the rig.</li>
+        </ul>
+
+        <h3 id="rig-reactor">Within the bioreactor</h3>
         <div class="tablewrap">
           <table class="data chan">
             <caption class="visually-hidden">Measured channels and actuators of BR-01</caption>
-            <thead><tr><th scope="col">Channel</th><th scope="col">Instrument</th><th scope="col">What it is for</th><th scope="col">Provenance</th></tr></thead>
+            <thead><tr><th scope="col">Channel</th><th scope="col">Instrument</th><th scope="col">Purpose</th><th scope="col">Provenance</th></tr></thead>
             <tbody>
-              <tr><td><b>OD600</b></td><td>In-line dual-beam photometer, amber LED, 2&nbsp;mm flow cuvette, sample and reference lux sensors</td><td>Biomass, and the reference beam is what makes the trust layer possible (R3)</td><td><span class="tag tag--meas">in-line</span></td></tr>
-              <tr><td><b>pH</b></td><td>Probe on the Uno&nbsp;Q, newly integrated</td><td>Growth and secretion conditions; an alarm channel until a base pump exists</td><td><span class="tag tag--meas">in-line</span></td></tr>
+              <tr><td><b>OD600</b></td><td>Photometer, amber LED, 2&nbsp;mm flow cuvette, sample and reference lux sensors</td><td>Biomass</td><td><span class="tag tag--meas">in-line</span></td></tr>
+              <tr><td><b>pH</b></td><td>Arduino pH probe</td><td>Growth and secretion conditions, and an alarm</td><td><span class="tag tag--meas">in-line</span></td></tr>
               <tr><td><b>Pressure &times;&nbsp;4</b></td><td>Four transducers, one on each side of the hollow-fibre module</td><td>Lumen &Delta;P, trans-membrane pressure, fouling</td><td><span class="tag tag--meas">in-line</span></td></tr>
-              <tr><td><b>Loop flow</b></td><td>Turbine flow meter, pulses on an interrupt pin</td><td>Cross-flow, wall shear, the hydraulic model (R1)</td><td><span class="tag tag--meas">in-line</span></td></tr>
-              <tr><td><b>Pinch valves &times;&nbsp;2</b></td><td>Motor-driven from the Uno&nbsp;Q</td><td>Lumen isolation. The first actuator the software can move on its own</td><td><span class="tag tag--cmd">commanded</span></td></tr>
-              <tr><td><b>Luer valves &times;&nbsp;4</b></td><td>Motor-driven from the Uno&nbsp;Q</td><td>Routing between reservoir, module and permeate</td><td><span class="tag tag--cmd">commanded</span></td></tr>
+              <tr><td><b>Loop flow</b></td><td>Turbine flow meter</td><td>Cross-flow, wall shear, the hydraulic model (R1)</td><td><span class="tag tag--meas">in-line</span></td></tr>
+              <tr><td><b>Pinch valves &times;&nbsp;2</b></td><td>Uno&nbsp;Q and motors</td><td>Lumen isolation</td><td><span class="tag tag--cmd">commanded</span></td></tr>
+              <tr><td><b>Luer valves &times;&nbsp;4</b></td><td>Uno&nbsp;Q and motors</td><td>Routing between reservoir, module and permeate</td><td><span class="tag tag--cmd">commanded</span></td></tr>
               <tr><td><b>Lumen &Delta;P, TMP, fouling ratio</b></td><td>From pressure and flow through the hydraulic model</td><td>Membrane state and the cleaning decision</td><td><span class="tag tag--der">soft</span></td></tr>
-              <tr><td><b>Green light</b></td><td>Not on the reactor yet; characterised on the DiOPAL plate apparatus</td><td>Induction of the CcaS/CcaR strain. Goes in on the final build</td><td><span class="tag tag--abs">planned</span></td></tr>
-              <tr><td><b>Temperature, dissolved oxygen, permeate mass</b></td><td>None fitted</td><td>See <a href="#gaps">Must have, yet to have</a></td><td><span class="tag tag--abs">planned</span></td></tr>
+              <tr><td><b>Green light</b></td><td>Characterised on the DiOPAL plate apparatus</td><td>Induction of the CcaS/CcaR strain, leading to protectant production</td><td><span class="tag tag--abs">planned</span></td></tr>
+              <tr><td><b>Temperature, dissolved oxygen, permeate mass</b></td><td class="ai">None fitted</td><td class="ai">See <a href="#gaps">Must have, yet to have</a></td><td><span class="tag tag--abs">planned</span></td></tr>
             </tbody>
           </table>
         </div>
 
-        <p>The interlocks run on the microcontroller, not in the browser, so no fault in a model or a page can drive the loop past a limit: trans-membrane pressure above 0.50&nbsp;bar opens the pinch valve, and five seconds with no command from the interface opens it and turns the light off.</p>
+        <h3 id="rig-local">Local-scale data</h3>
+        <div class="tablewrap">
+          <table class="data chan">
+            <caption class="visually-hidden">Field sensors beside the crop</caption>
+            <thead><tr><th scope="col">Channel</th><th scope="col">Instrument</th><th scope="col">Purpose</th><th scope="col">Provenance</th></tr></thead>
+            <tbody>
+              <tr><td><b>Leaf wetness and leaf temperature</b></td><td class="ai">RS485 leaf sensor (a capacitive dummy leaf) read over Modbus by an ESP32</td><td>Biotic stress detection and decision-making</td><td><span class="tag tag--abs">planned</span></td></tr>
+              <tr class="ai"><td><b>Air temperature and humidity</b></td><td>SHT31 reference beside the leaf sensor</td><td>The 5-day mean temperature in the blast rule, and a check on the forecast temperature</td><td><span class="tag tag--abs">planned</span></td></tr>
+            </tbody>
+          </table>
+        </div>
+        <div class="ai">
+          <p>Leaf wetness on its own is not a stress for rice: the leaf sheds water as beads. It matters because it is the condition a fungus needs to infect. The interface reads the leaf sensor and applies the BLASTAM rule for leaf blast&nbsp;[7]. A wet period counts as an infection condition when the leaf stays wet for at least 10&nbsp;hours at a mean of 22&ndash;25&nbsp;&deg;C, or 11&nbsp;hours at 20&ndash;21&nbsp;&deg;C. The requirement rises to 17&nbsp;hours at 15&nbsp;&deg;C&nbsp;[8], and there is no infection below 15&nbsp;&deg;C or above 25&nbsp;&deg;C. The five days before the wet period must also average 20&ndash;25&nbsp;&deg;C. A dry hour ends the period, and hours of rain at 4&nbsp;mm/h or more are not counted, because heavy rain washes the spores off. Past hours come from the sensor; hours ahead are estimated from the forecast, as wet when relative humidity reaches 90%&nbsp;[9]. When a period meets the rule, the interface tells the grower to look for lesions five to ten days later.</p>
+          <p>The sensor is on the bench, not yet in a field. Its wet threshold is a default until the dry-down test sets it, and the rule itself has not been checked against disease records from a Taiwanese field. A met period means the weather allowed infection. Whether lesions appear also depends on spores being present and on the variety and growth stage. ACC deaminase has not been tested against blast, so blast risk is shown to the grower and does not switch the green light unless the operator chooses that.</p>
+        </div>
 
-        <p class="microlabel">Strains on this page</p>
-        <p>Everything measured before 19 September is <i>B.&nbsp;subtilis</i>&nbsp;168, the chassis the method was built on. The production strain is WB800N, in two versions: constitutive ACCD secretion, and ACCD under CcaS/CcaR green-light control. R5 and the registered forecast are WB800N.</p>
+        <h3 id="rig-regional">Regional-scale data</h3>
+        <div class="tablewrap">
+          <table class="data chan">
+            <caption class="visually-hidden">Regional data the twin uses</caption>
+            <thead><tr><th scope="col">Channel</th><th scope="col">Source</th><th scope="col">Purpose</th><th scope="col">Provenance</th></tr></thead>
+            <tbody>
+              <tr><td><b>Geospatial analysis</b></td><td class="ai">Maps on the <a href="../geospatial-analysis/">Geospatial Analysis</a> page</td><td class="ai">Where in the region crops are likely to come under stress</td><td><span class="tag tag--lit">external</span></td></tr>
+              <tr><td><b>Weather forecast</b></td><td class="ai">Open-Meteo, hourly, five days back and three ahead</td><td class="ai">Temperature, humidity, rain, wind and evapotranspiration at the field</td><td><span class="tag tag--lit">external</span></td></tr>
+              <tr><td><b>Crop stress risk</b></td><td class="ai">Computed from the forecast on the Weather tab</td><td class="ai">When protectant is needed</td><td><span class="tag tag--der">soft</span></td></tr>
+              <tr><td><b>Time</b></td><td class="ai">The crop calendar</td><td>Tracking the period of farming cycles</td><td><span class="tag tag--abs">planned</span></td></tr>
+            </tbody>
+          </table>
+        </div>
+
+        <div class="ai">
+          <p>The interlocks run on the microcontroller, not in the browser, so no fault in a model or a page can drive the loop past a limit: trans-membrane pressure above 0.50&nbsp;bar opens the pinch valve, and five seconds with no command from the interface opens it and turns the light off.</p>
+          <p class="microlabel">Strains on this page</p>
+          <p>Everything measured before 19 September is <i>B.&nbsp;subtilis</i>&nbsp;168, the chassis the method was built on. The production strain is WB800N, in two versions: constitutive ACCD secretion, and ACCD under CcaS/CcaR green-light control. R5 and the registered forecast are WB800N.</p>
+        </div>
       </section>
 
       <!-- ================================================= 2 · RESULTS ===== -->
-      <section class="sec ai" id="results">
+      <section class="sec" id="results">
         <h2>Results</h2>
-        <ul class="keyfacts">
+        <ul class="keyfacts ai">
           <li><b>26.7&nbsp;h</b><span>Warning before the OD channel failed (R3)</span></li>
           <li><b>41%</b><span>Forecast error cut against persistence, 2&nbsp;h ahead (R4)</span></li>
           <li><b>&le;&nbsp;7%</b><span>Plate-to-reactor prior error on held-out arms (R5)</span></li>
@@ -133,45 +187,51 @@
         </ul>
 
         <!-- R1 -->
+        <div class="ai">
         <h3 id="r1">R1 &middot; Module pressure drop <span class="tag tag--part">calibrated</span></h3>
         <p>16 August 2026, water at 22&nbsp;&deg;C, eight pump settings, one point each, measured with the module fitted and with a jumper in its place. Both fit \(\Delta P = aQ + bQ^2\) through the origin: module R&sup2;&nbsp;0.9954, residual SD 10.1&nbsp;mbar; jumper R&sup2;&nbsp;0.9950, SD 5.7&nbsp;mbar. At 263&nbsp;mL/min the net module drop is 0.096&nbsp;bar, 1.03 times the Hagen&ndash;Poiseuille prediction for 11 open fibres &mdash; the agreement is what justifies using the model as a soft sensor for flow. No point was held out.</p>
         <figure class="fig">
           <img src="../assets/img/software/fig-r1-hydraulics.svg" alt="Pressure drop against flow, with the module fitted and with a jumper only, each fitted through the origin, and the net-module difference curve." loading="lazy" />
           <figcaption><b>Figure 1.</b> Pressure drop with the module fitted (filled) and with a jumper only (open). The dashed curve is the difference of the two fits. Source: <code>260816 pressure to flow rate.xlsx</code>.</figcaption>
         </figure>
+        </div>
 
         <!-- R2 -->
-        <h3 id="r2">R2 &middot; Photometer calibrated against a known dose <span class="tag tag--part">calibrated</span></h3>
-        <p>23 August 2026, 45 paired points from cumulative TiO&#8322; additions. The method matters more than the number: <b>both instruments were scored against the known dose rather than against each other</b>, which is what revealed that above 30&nbsp;mg it is the benchtop BioDrop that loses linearity (R&sup2;&nbsp;0.8501, SD 0.116), not the in-line photometer (R&sup2;&nbsp;0.9901, SD 0.021). Below OD&nbsp;1.2 the two agree: \(y = 1.018x - 0.031\), R&sup2;&nbsp;0.995, residual SD 0.024&nbsp;OD.</p>
-        <p>The calibration was then fitted a second way, as a Gaussian process, to check its intervals. The linear fit wins inside its own range (RMSE 0.0235 against 0.0254) and is kept. Extrapolated past OD&nbsp;1.2, which is what happens in a batch nobody is watching, the linear error rises to 0.1715 while the GP holds 0.067, and the GP found its own validity ceiling at OD&nbsp;1.55 without being told where the hand-drawn limit was. Its 95% band covered 88.9% of held-out points, short of the 95% it claims, so its intervals are too narrow and are reported as such. TiO&#8322; establishes linearity, not cell number.</p>
-        <figure class="fig">
+        <h3 id="r2">R2 &middot; Photometer and BioDrop calibration against TiO&#8322; doses <span class="tag tag--part">calibrated</span></h3>
+        <p>On 23 August 2026, the experiment gave 45 paired points between our in-line photometer and the BioDrop spectrophotometer from cumulative TiO&#8322; additions (Figure&nbsp;2).</p>
+        <p>Both instruments were scored against the known dose of TiO&#8322; rather than against each other, which revealed that above 30&nbsp;mg both instruments degrade, in separate ways. The BioDrop keeps its slope but its readings scatter (R&sup2;&nbsp;0.85, SD&nbsp;0.12). The in-line photometer stays precise (R&sup2;&nbsp;0.99, SD&nbsp;0.022), but its response per milligram falls, so it bends away from its low-dose line.</p>
+        <p class="ai">The calibration was then fitted a second way, as a Gaussian process, to check its intervals. The linear fit wins inside its own range (RMSE 0.0235 against 0.0254) and is kept. Extrapolated past OD&nbsp;1.2, which is what happens in a batch nobody is watching, the linear error rises to 0.1715 while the GP holds 0.067, and the GP found its own validity ceiling at OD&nbsp;1.55 without being told where the hand-drawn limit was. Its 95% band covered 88.9% of held-out points, short of the 95% it claims, so its intervals are too narrow and are reported as such. In summary, TiO&#8322; in the experiment establishes linearity, not cell number.</p>
+        <figure class="fig ai">
           <img src="../assets/img/software/fig-r2-photometer.svg" alt="In-line photometer and BioDrop readings against known TiO2 dose, showing the BioDrop losing linearity above 30 mg." loading="lazy" />
           <figcaption><b>Figure 2.</b> Both instruments against the known dose. Source: <code>Inline photometer to biodrop.xlsx</code>.</figcaption>
         </figure>
 
         <!-- R3 -->
-        <h3 id="r3">R3 &middot; Telling a sensor fault from a process event <span class="tag tag--done">scored on unseen data</span></h3>
-        <p>21 July to 8 August 2026, 434&nbsp;hours of <i>B.&nbsp;subtilis</i>&nbsp;168 at 22&nbsp;&deg;C, 2,671 valid rows, no sample drawn. Two axes are scored every 10 minutes from separate features: a <b>sensor axis</b> on the reference beam, which never passes through the culture, and a <b>process axis</b> on the specific growth rate. Both were trained on the first 120&nbsp;h only, with the alarm limit fixed in advance at the 99.5th percentile of the training score, then scored on everything after.</p>
+        <h3 id="r3">R3 &middot; <i>B.&nbsp;subtilis</i> 168 growth log with the photometer <span class="tag tag--done">scored on unseen data</span></h3>
+        <p class="ai">21 July to 8 August 2026, 434&nbsp;hours of <i>B.&nbsp;subtilis</i>&nbsp;168 at 22&nbsp;&deg;C, 2,671 valid rows, no sample drawn. Two axes are scored from separate features: a <b>sensor axis</b> on the reference beam, which never passes through the culture, and a <b>process axis</b> on the specific growth rate.</p>
+        <p>Each axis is scored every 10 minutes. Every check gets one number, and if that number is above the limit (the 99.5th percentile of the healthy first 120 hours), that check counts as an alarm. The percentage is the share of checks in the window that were alarms.</p>
         <div class="tablewrap">
           <table class="data">
-            <thead><tr><th scope="col">Window</th><th scope="col">What happened</th><th scope="col">Sensor axis</th><th scope="col">Process axis</th><th scope="col">Call</th></tr></thead>
+            <thead><tr><th scope="col">Window</th><th scope="col">What happened</th><th scope="col">Sensor axis</th><th scope="col">Process axis</th><th scope="col">Interpretation</th></tr></thead>
             <tbody>
-              <tr><td>120&ndash;160&nbsp;h</td><td>OD falls 0.93 to 0.72; reference steady</td><td>0%</td><td>73%</td><td>Process event &mdash; the OD is real</td></tr>
-              <tr><td>220&ndash;240&nbsp;h</td><td>Reference steps 26.67 to 25.83&nbsp;lux; OD still clean</td><td>100%</td><td>0%</td><td>Sensor fault &mdash; do not act on OD</td></tr>
-              <tr><td>240&ndash;434&nbsp;h</td><td>Reference collapses; OD scatter 5 to 10&times; higher</td><td>100%</td><td>35&ndash;36%</td><td>State unknowable</td></tr>
+              <tr><td>120&ndash;160&nbsp;h</td><td>OD falls 0.93 to 0.72; reference is normal</td><td>0%</td><td>73%</td><td>A process event occurred</td></tr>
+              <tr><td>220&ndash;240&nbsp;h</td><td>Reference steps 26.67 to 25.83&nbsp;lux; OD still clean</td><td>100%</td><td>0%</td><td>The photometer has become inaccurate while the OD values still look fine</td></tr>
+              <tr><td>240&ndash;434&nbsp;h</td><td>Reference collapses; OD scatter 5 to 10&times; higher</td><td>100%</td><td>35&ndash;36%</td><td>Both the photometer and the OD values have become inaccurate</td></tr>
             </tbody>
           </table>
         </div>
-        <p>The sensor alarm came at 216.3&nbsp;h and the OD channel became unusable at 243.0&nbsp;h: <b>26.7&nbsp;hours of warning</b> in which a controller would have known to stop trusting the channel. The rule most monitoring software uses, an alarm on any jump above 0.05&nbsp;OD, fired on 23% of the instrument event and on 0.8% of the process event and could not say which was which.</p>
-        <p><b>What this is not.</b> One run, one process event, one instrument event. It is a worked counterexample and a demonstration of the method, not a detection rate. A rate needs faults made on purpose, several of each kind, on batches the layer has not seen.</p>
-        <figure class="fig">
+        <p>At 216.3 hours, the trust layer flagged the sensor, 26.7 hours before the OD channel degraded completely at 243.0 hours &mdash; a sufficient buffer for an automated controller to disregard the faulty feed. Standard monitoring algorithms, typically triggered by any sudden step exceeding 0.05&nbsp;OD, flagged 23% of sensor anomalies alongside 0.8% of biological shifts, unable to distinguish instrument failure from true cellular dynamics.</p>
+        <p>Every other part of the twin works from the OD reading. The forecast (R4) projects it forward, the growth prior (R5) is checked against it, and the decision to switch on green light depends on what it says about the culture. Thus, if that reading is wrong, all of them inherit the error. They also have no way to detect it, because a drifting sensor can produce numbers that look like ordinary growth.</p>
+        <p>R3 gives the twin a check that sits upstream of everything else. Before a reading reaches the forecast or the operator, the sensor axis says whether the instrument can be trusted, and the process axis says whether the culture has changed. On the 434-hour run, this would have given the twin 26.7 hours to mark OD as unreliable, pause forecasts built on it and flag the photometer for service. In that whole period, the readings themselves still looked normal.</p>
+        <p>For a reactor beside a field, this is how the twin can treat its own readings as uncertain. It can't sample the culture to confirm a reading, but it can know when that reading has stopped describing the culture. The method has been shown on one run, with one event of each kind. A detection rate will need faults made on purpose, on batches the layer has not seen.</p>
+        <figure class="fig ai">
           <img src="../assets/img/software/fig-r3-run434.svg" alt="OD600 and the photometer reference channel over the 434-hour batch, with the process event and instrument event shaded and the sensor alarm marked." loading="lazy" />
           <figcaption><b>Figure 3.</b> OD600 (top) and the reference channel (bottom) over 434&nbsp;h. Shaded: the process event and the instrument event. Dashed: sensor alarm at 216.3&nbsp;h. Source: <code>out/sentinel.json</code>.</figcaption>
         </figure>
 
         <!-- R4 -->
-        <h3 id="r4">R4 &middot; Forecasting the batch forward <span class="tag tag--done">rules fixed in advance</span></h3>
-        <p>102&nbsp;hours of perfusion, 2 to 6 September 2026, <i>B.&nbsp;subtilis</i>&nbsp;168, OD600 0.83 to 3.77. The protocol was written before the numbers were looked at: forecast origins every hour from 12&nbsp;h, each forecast may use only data up to its origin, and every model is scored against the same observation. Persistence is the baseline a model has to beat to be worth its complexity.</p>
+        <h3 id="r4">R4 &middot; Batch forecasting <span class="tag tag--done">rules fixed in advance</span></h3>
+        <p>We ran 102 hours of perfusion from 2 to 6 September 2026 with <i>B.&nbsp;subtilis</i>&nbsp;168, with OD600 values ranging from 0.83 to 3.77. We compared Kalman filter, local linear, global linear and exponential forecasting with a persistence model (which forecasts no change), generating forecast origins every hour from 12&nbsp;h, with each forecast only using data up to its origin, and every model scored against the same OD600 observation. Persistence is the baseline a model has to beat to be worth its complexity.</p>
         <div class="tablewrap">
           <table class="data">
             <thead><tr><th scope="col">Horizon</th><th scope="col">Persistence RMSE</th><th scope="col">Kalman RMSE</th><th scope="col">Improvement</th></tr></thead>
@@ -183,61 +243,66 @@
             </tbody>
           </table>
         </div>
-        <p>A two-state Kalman filter on level and slope beats persistence at every horizon, and the margin narrows as the horizon lengthens, which is the expected shape. Two of the three simpler alternatives (a global linear fit, an exponential fit) were worse than persistence at short horizons, so the comparison is not a straw man.</p>
-        <figure class="fig">
+        <p class="ai">A two-state Kalman filter on level and slope beats persistence at every horizon, and the margin narrows as the horizon lengthens, which is the expected shape. Two of the three simpler alternatives (a global linear fit, an exponential fit) were worse than persistence at short horizons, so the comparison is not a straw man.</p>
+        <p>On the other hand, global linear gives early data as much weight as recent data. If growth speeds up or slows down partway through the run, its line points the wrong way. Exponential assumes growth keeps accelerating. Over a 102-hour perfusion run the culture doesn't keep doing that, so the curve overshoots. While local linear follows recent level and slope, the Kalman filter also weighs each new reading against how noisy the data is, so it reacts to real changes without chasing random scatter.</p>
+        <p>Forecasting is what lets the twin look ahead instead of only reporting the present. The Kalman filter suits this role because it updates with each new reading as it arrives, so the forecast stays current throughout a batch without being refitted from scratch. It also tracks its own uncertainty, which the Growth twin tab shows as a band around the forecast. With a forecast of where OD will be in the next 2 to 12 hours, the twin can tell whether a batch will be ready when the field needs protectant, and can act before the culture gets there. Its forecasts are only as reliable as the readings fed into it, which is why they sit downstream of the trust layer in R3.</p>
+        <figure class="fig ai">
           <img src="../assets/img/software/fig-r4-run0902.svg" alt="Forecast error against horizon for persistence, local linear, global linear, exponential and Kalman models on the 102-hour run." loading="lazy" />
           <figcaption><b>Figure 4.</b> Walk-forward error by horizon. Source: <code>walkforward_0902_results.csv</code>.</figcaption>
         </figure>
 
         <!-- R5 -->
         <h3 id="r5">R5 &middot; Carrying a growth prior from plate to reactor <span class="tag tag--done">held-out arms</span></h3>
-        <p>19 September 2026, WB800N on the light-programmable array, six light arms, five time points to 24&nbsp;h. A logistic model was chosen over logistic-with-lag by AICc and fits at <b>NRMSE 1.9%</b> (R&sup2;&nbsp;0.997), against the 15% acceptance criterion used for bioprocess models&nbsp;[3]: \(r = 0.299 \pm 0.017\;\mathrm{h^{-1}}\) (doubling time 139&nbsp;min), \(K = 1.005\), \(X_0 = 0.0235\).</p>
-        <p>Two things come out of it. First, <b>green induction costs no growth</b>: <i>r</i> spans 0.279 to 0.317&nbsp;h&#8315;&sup1; across all six arms, within one standard error of each other, and the highest-green arm reaches the highest plateau. Second, and this is the measurement claim, the fit becomes a <b>prior</b> that can be handed to another vessel. Holding out one arm at a time and forecasting its 24&nbsp;h biomass from data up to 8&nbsp;h only:</p>
+        <p>On 19 September 2026, <i>B.&nbsp;subtilis</i> WB800N was tested in the light-programmable array wells with six light arms, with OD read on a plate reader at five time points to 24&nbsp;h. A logistic model was chosen over logistic-with-lag by AICc and fits at <b>NRMSE 1.9%</b> (R&sup2;&nbsp;0.997), against the 15% acceptance criterion used for bioprocess models&nbsp;[3]: \(r = 0.299 \pm 0.017\;\mathrm{h^{-1}}\) (doubling time 139&nbsp;min), \(K = 1.005\), \(X_0 = 0.0235\). We then tested whether this fit could predict growth it had not seen, comparing forecasts of 24&nbsp;h OD made from the first 8 hours of data with the fitted curve as a prior and without it.</p>
+        <p>Two things come out of it. First, green induction costs no growth: <i>r</i> spans 0.279 to 0.317&nbsp;h&#8315;&sup1; across all six arms, within one standard error of each other, and the highest-green arm reaches the highest plateau. Second, the fit can be reused as a prior to predict growth in another vessel. We tested this on each arm in turn: fit on the other five, then predict its 24&nbsp;h OD from its first 8 hours.</p>
         <div class="tablewrap">
           <table class="data">
-            <thead><tr><th scope="col">Held-out arm</th><th scope="col">Observed OD at 24&nbsp;h</th><th scope="col">With the prior</th><th scope="col">Without the prior</th></tr></thead>
+            <thead><tr><th scope="col">Arm</th><th scope="col">Observed OD at 24&nbsp;h</th><th scope="col">With the prior</th><th scope="col">Without the prior</th></tr></thead>
             <tbody>
-              <tr><td>R1 weak red</td><td>0.967</td><td>0.972 <small>+0%</small></td><td>0.306 <small>&minus;68%</small></td></tr>
-              <tr><td>R2 medium red</td><td>0.910</td><td>0.973 <small>+7%</small></td><td>0.296 <small>&minus;67%</small></td></tr>
-              <tr><td>R3 high red</td><td>0.967</td><td>0.969 <small>+0%</small></td><td>0.355 <small>&minus;63%</small></td></tr>
-              <tr><td>G1 weak green</td><td>0.958</td><td>0.986 <small>+3%</small></td><td>0.502 <small>&minus;48%</small></td></tr>
-              <tr><td>G2 medium green</td><td>0.975</td><td>0.977 <small>+0%</small></td><td>0.695 <small>&minus;29%</small></td></tr>
-              <tr><td>G3 high green</td><td>1.014</td><td>0.958 <small>&minus;6%</small></td><td>0.666 <small>&minus;34%</small></td></tr>
+              <tr><td>R1 weak red</td><td>0.967</td><td>0.972</td><td>0.306</td></tr>
+              <tr><td>R2 medium red</td><td>0.910</td><td>0.973</td><td>0.296</td></tr>
+              <tr><td>R3 high red</td><td>0.967</td><td>0.969</td><td>0.355</td></tr>
+              <tr><td>G1 weak green</td><td>0.958</td><td>0.986</td><td>0.502</td></tr>
+              <tr><td>G2 medium green</td><td>0.975</td><td>0.977</td><td>0.695</td></tr>
+              <tr><td>G3 high green</td><td>1.014</td><td>0.958</td><td>0.666</td></tr>
             </tbody>
           </table>
         </div>
-        <p>Error at most 7% with the prior, 29 to 68% without it, from the same eight hours of data. This is the plate acting as a <b>scale-down model</b> for the reactor, which is how process transfer is done in biomanufacturing&nbsp;[3], and it is the reason the next batch can be predicted before it is run.</p>
-        <p><b>What this is not.</b> The six arms are biologically near-identical, so this measures reproducibility across wells, not prediction under a new condition. It is the right shape of test and not yet a strong one. The run has no sample between 8 and 24&nbsp;h, where the inflection falls, so <i>K</i> is pinned by one time point.</p>
-        <figure class="fig">
+        <p>We observed an error of at most 7% with the prior, and 29 to 68% without it, from the same eight hours of data. This is the plate acting as a scale-down model for the reactor, which is how process transfer is done in biomanufacturing&nbsp;[3], and it is the reason the next batch can be predicted before it is run.</p>
+        <p>It is important to note that the six arms are biologically near-identical, so this measures reproducibility across wells, not prediction under a new condition. It is the right shape of test and not yet a strong one. The run has no sample between 8 and 24&nbsp;h, where the inflection falls, so <i>K</i> is pinned by one time point.</p>
+        <p>A twin needs a model of the organism before it can say anything useful about a batch, and a reactor run takes days to provide one. A plate run takes 24 hours and tests six conditions side by side. R5 shows that a fit from the plate can carry that knowledge into a new batch, so the twin can forecast from the first few hours of data instead of waiting until most of the curve has appeared. This is the early-batch situation where R4's Kalman filter has the least to work with. The Growth twin tab builds on the same idea: finished runs are kept in a run library, and each one is tested against the others and pooled into the prior for the next batch. For now, only the growth rate carries over from plate to reactor. The ceiling and starting amount need the plate-reader and in-line OD scales cross-calibrated first, which is why the registered forecast below predicts <i>r</i> alone.</p>
+        <figure class="fig ai">
           <img src="../assets/img/software/fig-r5-lpa-fit.svg" alt="Logistic growth fit to the 19 September LPA run, with the six light arms and the pooled curve." loading="lazy" />
           <figcaption><b>Figure 5.</b> The logistic fit and the six light arms. Source: <code>lpa_growth_fit_20260919.json</code>.</figcaption>
         </figure>
-        <figure class="fig">
+        <figure class="fig ai">
           <img src="../assets/img/software/fig-r5-heldout.svg" alt="Leave-one-arm-out forecast of 24-hour OD with and without the prior, against the observed values." loading="lazy" />
           <figcaption><b>Figure 6.</b> Held-out forecasts of 24&nbsp;h biomass from data up to 8&nbsp;h, with and without the prior.</figcaption>
         </figure>
       </section>
 
       <!-- =============================================== 3 · PREREG ======== -->
-      <section class="sec ai" id="prereg">
-        <h2>The forecast that tests it, registered before the batch</h2>
-        <p>Every result above is a calibration or a retrospective analysis of data already in hand. The honest test of a twin is a prospective one, so the first reactor run of WB800N with constitutive ACCD secretion is being used as exactly that. The forecast file is <code>prereg_forecast_20261002.json</code>, SHA-256 <code>bceda7c0&hellip;6e0388fc</code>, and it may not be edited after the run.</p>
+      <section class="sec" id="prereg">
+        <h2>Registered forecast</h2>
+        <p>To test our digital twin's forecasting abilities, we ran the forecast alongside a reactor run of <i>B.&nbsp;subtilis</i> WB800N with constitutive ACC deaminase secretion. <span class="ai">The forecast file is <code>prereg_forecast_20261002.json</code>, SHA-256 <code>bceda7c0&hellip;6e0388fc</code>, and it may not be edited after the run.</span></p>
 
         <div class="tablewrap">
           <table class="data">
             <caption class="visually-hidden">The registered prediction and its acceptance criteria</caption>
-            <thead><tr><th scope="col">Registered prediction</th><th scope="col">Value</th><th scope="col">Passes if</th></tr></thead>
+            <thead><tr><th scope="col">Registered prediction</th><th scope="col">Value</th><th scope="col">Criterion for passing</th></tr></thead>
             <tbody>
-              <tr><td><b>Primary</b> &mdash; specific growth rate <i>r</i></td><td>0.2986&nbsp;h&#8315;&sup1;, 90% interval 0.2705 to 0.3300 (doubling time 139&nbsp;min, 126 to 154)</td><td>The fitted <i>r</i> falls inside the interval</td></tr>
-              <tr><td><b>Primary</b> &mdash; curve shape</td><td>Logistic, prior-predicted trace</td><td>NRMSE below 15%&nbsp;[3]</td></tr>
-              <tr><td><b>Secondary</b> &mdash; time to OD&nbsp;0.5</td><td>Conditional on the measured inoculum: 7.3&nbsp;h from OD&nbsp;0.10, 9.8&nbsp;h from 0.05, 13.0&nbsp;h from 0.02</td><td>Observed time inside the 5&ndash;95% band</td></tr>
+              <tr><td>Specific growth rate <i>r</i></td><td>0.2986&nbsp;h&#8315;&sup1;, 90% interval 0.2705 to 0.3300 (doubling time 139&nbsp;min, 126 to 154)</td><td>The fitted <i>r</i> falls inside the interval</td></tr>
+              <tr><td>Growth curve shape</td><td>Logistic, prior-predicted trace</td><td>NRMSE below 15%&nbsp;[3]</td></tr>
+              <tr><td>Time to reach OD&nbsp;0.5</td><td>Conditional on the measured inoculum: 7.3&nbsp;h from OD&nbsp;0.10, 9.8&nbsp;h from 0.05, 13.0&nbsp;h from 0.02</td><td>Observed time inside the 5&ndash;95% band</td></tr>
             </tbody>
           </table>
         </div>
 
-        <p><b>What is deliberately not predicted.</b> Only <i>r</i> transfers. \(K\) and \(X_0\) were fitted on the plate-reader scale in a 150&nbsp;&micro;L well, and the reactor reads a 2&nbsp;mm in-line flow cuvette with no cross-calibration between them yet, so they are excluded from the primary endpoint rather than quietly rescaled. The LPA run's temperature was not recorded, and the team's 37&nbsp;&deg;C shake-flask fit is about four times faster, so a reactor batch run at 37&nbsp;&deg;C falls outside this prior and the primary criterion does not apply to it.</p>
-        <p>A failure of the rate with a pass of the shape means the curve is right and the rate is not, and temperature is the first place to look. A failure of both means the prior does not cross from plate to reactor &mdash; which is itself a result, and will be reported as one.</p>
-        <p>The same batch carries the first <b>ACC deaminase activity assay</b>, which turns the product from an unmeasurable quantity into a critical quality attribute with a number against it. Quantification by ELISA follows on the CcaS/CcaR version once the western blot band is strong enough.</p>
+        <div class="ai">
+          <p>\(K\) and \(X_0\) were fitted on the plate-reader scale in a 150&nbsp;&micro;L well, and the reactor reads a 2&nbsp;mm in-line flow cuvette with no cross-calibration between them yet, so they are excluded from the primary endpoint rather than quietly rescaled. The LPA run's temperature was not recorded, and the team's 37&nbsp;&deg;C shake-flask fit is about four times faster, so a reactor batch run at 37&nbsp;&deg;C falls outside this prior and the primary criterion does not apply to it.</p>
+          <p>A failure of the rate with a pass of the shape means the curve is right and the rate is not, and temperature is the first place to look. A failure of both means the prior does not cross from plate to reactor &mdash; which is itself a result, and will be reported as one.</p>
+          <p>The same batch carries the first <b>ACC deaminase activity assay</b>, which turns the product from an unmeasurable quantity into a critical quality attribute with a number against it. Quantification by ELISA follows on the CcaS/CcaR version once the western blot band is strong enough.</p>
+        </div>
       </section>
 
       <!-- ================================================== 4 · GAPS ======= -->
@@ -253,60 +318,64 @@
               <tr><td><b>Dissolved oxygen</b></td><td>Separates &ldquo;ran out of oxygen&rdquo; from &ldquo;entering stationary phase&rdquo;. Without it \(k_La\) stays modelled, and the 45.7 against 60&nbsp;h&#8315;&sup1; question stays open.</td><td><span class="tag tag--must">must have</span></td></tr>
               <tr><td><b>Permeate flow or mass</b></td><td>Real productivity in mg per day, a closed mass balance across the membrane, and a fouling signal independent of pressure. A load cell under the permeate vessel is enough.</td><td><span class="tag tag--must">must have</span></td></tr>
               <tr><td><b>Two more reactor growth runs</b></td><td>Retires the <i>n</i>&nbsp;=&nbsp;1 on the prior. The twin already scores itself against new runs; it has had only one to score.</td><td><span class="tag tag--must">must have</span></td></tr>
+              <tr><td><b>Leaf sensor bench calibration</b></td><td>The dry-down test sets the wet threshold the blast rule switches on; the humidity-box test shows whether damp air alone reads as wet.</td><td><span class="tag tag--none">bench, next</span></td></tr>
+              <tr><td><b>The blast rule against field disease records</b></td><td>Turns BLASTAM from a published rule into one scored on Taiwanese fields. Needs the sensor in a paddy and lesion counts from the same plots.</td><td><span class="tag tag--none">open</span></td></tr>
               <tr><td><b>Green light on the reactor</b></td><td>Turns induction from a policy into a controlled variable, and closes the loop. This is the final build.</td><td><span class="tag tag--none">next build</span></td></tr>
               <tr><td><b>Flow meter verified by timed collection</b></td><td>Lets the measured flow replace the pump-curve soft sensor, and gives two independent routes to one quantity.</td><td><span class="tag tag--none">open</span></td></tr>
               <tr><td><b>A fouling run to the cleaning threshold</b></td><td>Turns the fouling law from assumed to fitted. It drives the only maintenance decision the product makes.</td><td><span class="tag tag--none">one run</span></td></tr>
             </tbody>
           </table>
         </div>
-
       </section>
 
       <!-- ==================================================== 5 · UI ======= -->
-      <section class="sec ai" id="ui">
+      <section class="sec" id="ui">
         <h2>The interface</h2>
-        <figure class="embed">
+        <figure class="embed ai">
           <div class="embed__frame">
-            <iframe src="ui/1002UI.html" loading="lazy"
-                    title="ReLeaf BR-01 operator interface, 2 October 2026 build, running on demo data"></iframe>
+            <iframe src="ui/1007UI.html" loading="lazy"
+                    title="ReLeaf BR-01 operator interface, 7 October 2026 build, running on demo data"></iframe>
           </div>
           <div class="embed__bar">
-            <span><code>1002UI.html</code> &middot; MIT licence</span>
-            <a href="ui/1002UI.html" target="_blank" rel="noopener">Open full screen &rarr;</a>
+            <span><code>1007UI.html</code> &middot; MIT licence</span>
+            <a href="ui/1007UI.html" target="_blank" rel="noopener">Open full screen &rarr;</a>
           </div>
-          <figcaption><b>Figure 7.</b> The interface running here on simulated data. No board is attached, so every process value comes from the model inside the file, and the title bar says so.</figcaption>
+          <figcaption><b>Figure 7.</b> The interface running here on simulated data. No board or leaf sensor is attached, so every process value comes from the model inside the file and the leaf is simulated from the live forecast, and the interface says so on every screen.</figcaption>
         </figure>
 
-        <p>Six tabs, each answering one question an operator actually has:</p>
         <div class="tablewrap">
           <table class="data">
             <tbody>
-              <tr><td><b>Today</b></td><td>What to do right now, in one sentence, with the four headline channels and the switches under them</td></tr>
+              <tr><td><b>Today</b></td><td>What to do now</td></tr>
               <tr><td><b>System map</b></td><td>The rig as a live P&amp;ID: every tag reads its own value, and valves and light are tapped here</td></tr>
               <tr><td><b>Growth twin</b></td><td>Measured biomass against the forecast and its band, the model parameters, and the run library the prior is pooled from: finished runs typed in, pasted, imported as CSV or saved from a live run, each fitted on its own and tested against the others</td></tr>
-              <tr><td><b>Weather</b></td><td>Field forecast and crop-stress risk &mdash; the demand side that decides when protectant is needed</td></tr>
+              <tr><td><b>Weather</b></td><td>Field forecast and crop-stress risk, which determine when protectant is needed<span class="ai">; the local leaf sensor, and the rice blast rule applied to it</span></td></tr>
               <tr><td><b>Data</b></td><td>Trends, the batch record, the action log, and CSV and XLSX export with units and provenance in every header</td></tr>
               <tr><td><b>Setup</b></td><td>Connection, calibration, safety rules and twin settings</td></tr>
             </tbody>
           </table>
         </div>
 
-        <p>The link is Web Serial over USB at 115&nbsp;200&nbsp;baud, so it needs Chrome or Edge and a page served over HTTP. The board sends process values once a second; the page sends its command frame every two seconds as a heartbeat, and the firmware opens the valve and kills the light if that heartbeat stops. Firmware and page are versioned together, and the firmware ships with a desktop harness that compiles the sketch, replays its output through the page's own parser and checks the result &mdash; no board and no browser needed.</p>
-        <p class="microlabel">On the rig today</p>
-        <p>The 2 October batch is being recorded by the team's own Arduino App Lab rig application, which is the build the hardware sub-team has been running all season. This interface takes over on the following batch, when the firmware is flashed to the matching protocol.</p>
+        <div class="ai">
+          <p>The link is Web Serial over USB at 115&nbsp;200&nbsp;baud, so it needs Chrome or Edge and a page served over HTTP. The board sends process values once a second; the page sends its command frame every two seconds as a heartbeat, and the firmware opens the valve and kills the light if that heartbeat stops. Firmware and page are versioned together, and the firmware ships with a desktop harness that compiles the sketch, replays its output through the page's own parser and checks the result &mdash; no board and no browser needed.</p>
+          <p>The leaf sensor's ESP32 connects on a second USB port and sends the bench logger's own lines, so the same file that calibrates the sensor feeds the twin. A logged CSV from the bench can also be imported. Every hour the twin keeps is exported with its source, sensor or forecast, so a reader can see which hours the blast verdict rested on.</p>
+          <p class="microlabel">On the rig today</p>
+          <p>The 3 October batch is being recorded by the team's own Arduino App Lab rig application, which is the build the hardware sub-team has been running all season. This interface takes over on the following batch, when the firmware is flashed to the matching protocol.</p>
+        </div>
       </section>
 
       <!-- ================================================ 6 · LIMITS ======= -->
       <section class="sec ai" id="limits">
-        <h2>Limits</h2>
+        <h2>Current limits</h2>
         <ul class="limits">
           <li><b>The loop is not closed.</b> Valves move under software control; every decision about the culture still goes through a person. In the maturity terms of the literature this is a digital shadow with actuation available, not yet a closed-loop twin&nbsp;[1,&nbsp;2].</li>
           <li><b><i>n</i>&nbsp;=&nbsp;1 almost everywhere.</b> One long run behind R3, one perfusion run behind R4, one plate behind R5.</li>
-          <li><b>Two chassis.</b> R1 to R4 are <i>B.&nbsp;subtilis</i>&nbsp;168; the production strain is WB800N. Whether the method transfers with the strain is the point of the 2 October batch.</li>
+          <li><b>Two chassis.</b> R1 to R4 are <i>B.&nbsp;subtilis</i>&nbsp;168; the production strain is WB800N. Whether the method transfers with the strain is the point of the 3 October batch.</li>
           <li><b>37&nbsp;&deg;C fits, 22&nbsp;&deg;C operation.</b> The fast growth parameters come from 37&nbsp;&deg;C; the field unit runs near ambient. Transfer is a test, not an assumption.</li>
           <li><b>Beer&ndash;Lambert at scale.</b> The photometer is linear only to about OD&nbsp;1.2 in a 2&nbsp;mm cell, and induction light will be attenuated by a dense culture in a way nothing on the rig measures.</li>
           <li><b>Trans-membrane pressure is below the resolution of the transducers</b> at the operating point, so lumen &Delta;P is used as the hydraulic observable instead.</li>
           <li><b>The 120 to 160&nbsp;h event is unexplained.</b> The trust layer called it biological and was right to; nobody knows what the culture did.</li>
+          <li><b>One leaf sensor, on a bench.</b> It reads a dummy leaf, not a rice leaf, and it cannot tell guttation from dew. Hours ahead are estimated from forecast humidity, and the blast rule comes from Japanese fields.</li>
         </ul>
       </section>
 
@@ -319,7 +388,7 @@
           <li><b>A plate assay as a scale-down model.</b> Fit growth on a light-programmable array, hand the posterior to the reactor as a prior, and register the prediction before the batch. The method is the contribution; the parameters are ours.</li>
           <li><b>The serial protocol and its test harness.</b> A documented two-line ASCII protocol with a heartbeat watchdog, interlocks on the microcontroller rather than in the browser, and a desktop harness that tests firmware and page together with no hardware attached.</li>
         </ol>
-        <p>Code and data are in the team repository; the mirror to <code>gitlab.igem.org/2026/software-tools/</code> is made before the wiki freeze. The reactor itself is on <a href="../hardware/">Hardware</a>, the growth and transport models on <a href="../model/">Math Model</a>, and the assays on <a href="../measurement/">Measurement</a>.</p>
+        <p>The code and data are in the team repository; the mirror to <code>gitlab.igem.org/2026/software-tools/</code> is made before the wiki freeze. The reactor itself is on <a href="../hardware/">Hardware</a>, the growth and transport models on <a href="../model/">Math Model</a>, and the assays on <a href="../measurement/">Measurement</a>.</p>
       </section>
 
       <section class="refs" id="references">
@@ -331,6 +400,9 @@
           <li>Cabaneros Lopez, P., Udugama, I. A., Thomsen, S. T., Roslander, C., Junicke, H., Mauricio-Iglesias, M., &amp; Gernaey, K. V. (2020). Towards a digital twin: a hybrid data-driven and mechanistic digital shadow to forecast the evolution of lignocellulosic fermentation. <i>Biofuels, Bioproducts and Biorefining</i> 14, 1046&ndash;1060. doi:10.1002/bbb.2108</li>
           <li>Satwekar, A., Gracieux-Singleton, M. C., Cummings, C., <i>et al.</i> (2026). Operationalizing digital twins in biomanufacturing through interoperable process analytical technology. <i>Bioprocess and Biosystems Engineering</i> 49, 2061&ndash;2083. doi:10.1007/s00449-026-03369-9</li>
           <li>Zhao, L., Jiao, T., Adade, S. Y.-S. S., Wang, Z., Ouyang, Q., &amp; Chen, Q. (2025). Digital twin for predicting and controlling food fermentation: a case study of kombucha fermentation. <i>Journal of Food Engineering</i> 393, 112467. doi:10.1016/j.jfoodeng.2025.112467</li>
+          <li>Koshimizu, Y. (1988). [BLASTAM, leaf blast forecasting from AMeDAS weather data; in Japanese.] <i>Bulletin of the Tohoku National Agricultural Experiment Station</i> 78, 67&ndash;121. Cited from secondary sources; the original was not read.</li>
+          <li>Yoshino, R. (1979). [Leaf wetness duration and temperature required for rice blast infection; in Japanese.] <i>Bulletin of the Hokuriku National Agricultural Experiment Station</i> 22, 163. Cited from secondary sources; the original was not read.</li>
+          <li>Sentelhas, P. C., Dalla Marta, A., Orlandini, S., Santos, E. A., Gillespie, T. J., &amp; Gleason, M. L. (2008). Suitability of relative humidity as an estimator of leaf wetness duration. <i>Agricultural and Forest Meteorology</i> 148, 392&ndash;400. doi:10.1016/j.agrformet.2007.09.011</li>
         </ol>
       </section>
 
