@@ -28,11 +28,11 @@ dry-brush edges, no outlines; build/vision_details.py's Painter):
                under a rust ring and bar. The product may leave; a cell may
                not. Nothing else on the page says this in a picture.
   the fields   where the product settles, the crop takes a fresher green.
-  the crops    young plants in the near foreground: to the LEFT of the
-               culture, out of the product's way, they are bent over and
-               yellowed; to the RIGHT, where the product goes, they stand
-               upright and full. The pair is the whole argument of the
-               figure in one glance.
+  the crops    five young plants in the near foreground, kept few and small
+               so they read at a glance and never pile on each other: TWO to
+               the LEFT of the culture, out of the product's way, bent over
+               and yellowed, and THREE to the RIGHT, where the product goes,
+               upright and full. The pair is the figure's whole argument.
 
 These additions are AI-assisted drawing, not hers, and the page says so in
 its HTML comment; her painting underneath is untouched.
@@ -188,14 +188,12 @@ def crop_plant(x, y, h, wilt=0.0):
 
 
 # Hand-placed, in the canvas's own pixels, and all standing clear of the
-# bottom edge of the 2:1 crop (which is y 972). Six bent on the left, seven
-# full on the right.
-for x, y, h, w in ((96, 902, 158, 1), (212, 938, 176, 1), (330, 906, 162, 1),
-                   (44, 856, 132, 1), (154, 866, 142, 1), (272, 870, 146, 1)):
+# bottom edge of the 2:1 crop (which is y 972). Two bent on the left, three
+# full on the right, well apart: more than this, or larger, and they pile on
+# one another and on her fields (owner, 7 Oct).
+for x, y, h, w in ((118, 912, 112, 1), (268, 946, 124, 1)):
     crop_plant(float(x), float(y), float(h), w)
-for x, y, h, w in ((982, 912, 162, 0), (1104, 944, 180, 0), (1232, 910, 166, 0),
-                   (1360, 940, 176, 0), (1486, 904, 158, 0), (1046, 866, 140, 0),
-                   (1300, 862, 144, 0)):
+for x, y, h, w in ((1010, 924, 118, 0), (1218, 952, 128, 0), (1430, 918, 120, 0)):
     crop_plant(float(x), float(y), float(h), w)
 
 # ---------------------------------------------------------------- the lens --

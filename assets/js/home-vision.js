@@ -63,6 +63,7 @@
   var art = sec.querySelector(".vl-art");
   var words = sec.querySelector(".vl-sky");
   var line = sec.querySelector(".vl-line"), gloss = sec.querySelector(".vl-gloss");
+  var intro = sec.querySelector(".vl-intro");
   if (!run || !stage || !art || !words || !line || !gloss) return;
   var mq = window.matchMedia ? window.matchMedia("(prefers-reduced-motion: reduce)") : { matches: false };
 
@@ -309,6 +310,14 @@
 
       for (var i = 0; i < farms.length; i++) farms[i].a = farms[i].hero ? 1 : clamp01((e - farms[i].at) / 0.07);
 
+      // the line that opened the section holds the top of the screen while
+      // the camera is still close, and leaves as the pull-back starts
+      if (intro) {
+        var ia = 1 - smooth((p - 0.14) / 0.22);
+        intro.style.opacity = ia.toFixed(3);
+        intro.style.transform = "translateY(" + ((1 - ia) * -12).toFixed(1) + "px)";
+      }
+
       var a1 = smooth((p - 0.72) / 0.14), a2 = smooth((p - 0.8) / 0.14);
       line.style.opacity = a1.toFixed(3);
       line.style.transform = "translateY(" + ((1 - a1) * 14).toFixed(1) + "px)";
@@ -429,6 +438,7 @@
     if (dead) return;
     dead = true;
     sec.classList.remove("is-live", "is-lit", "is-still", "is-ready");
+    if (intro) { intro.style.removeProperty("opacity"); intro.style.removeProperty("transform"); }
     [lm, halo, cv, grain, vig].forEach(function (e) { if (e.parentNode) e.parentNode.removeChild(e); });
     art.removeAttribute("style");
     imgs.forEach(function (e) { e.style.cssText = e.getAttribute("data-static") || ""; });
