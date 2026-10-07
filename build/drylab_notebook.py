@@ -271,7 +271,7 @@ BRANCHES = [
 # the orange drafting mark like the late-August ones. What follows is what
 # the record alone cannot say: the kind and weight of each September node,
 # the handoffs after Felix's six, and the plan to the wiki freeze.
-TODAY = '2026-09-30'
+TODAY = '2026-10-07'
 FREEZE = '2026-10-21'
 LAST_PLAN_WEEK = '2026-10-17'   # the last weekend before the freeze
 
@@ -293,6 +293,15 @@ NODES = {
     ('twin', '2026-09-26'): dict(k='work', h=2),
     ('gis', '2026-09-26'): dict(k='work', h=2),
     ('protect', '2026-09-26'): dict(k='work', h=2),
+    # 7 October: lanes the Discord record adds to September.
+    ('photo', '2026-09-05'): dict(k='work', h=2),
+    ('photo', '2026-09-12'): dict(k='work', h=2),
+    ('chamber', '2026-09-26'): dict(k='work', h=2),
+    # 7 October: the week of 3 October, from the Discord record.
+    ('protect', '2026-10-03'): dict(k='work', h=2),
+    ('lpa', '2026-10-03'): dict(k='work', h=2),
+    ('chamber', '2026-10-03'): dict(k='milestone', h=3),
+    ('wiki', '2026-10-03'): dict(k='work', h=1),
 }
 
 # Handoffs after Felix's board, in his shape.
@@ -382,8 +391,9 @@ PLAN = [
      'Prof. Chang\'s first two asks from 4 September, before the reactor is shown again.'),
     ('2026-10-03', 'math', 'Close the six open questions in the model\'s section 12',
      'Publish the yield fit, record the nine unrecorded constants and the salt-ladder to index conversion, and settle the two disputed Hill constants.'),
-    ('2026-10-03', 'lpa', 'Measure photon flux and well-to-well uniformity',
-     'Lux readings do not give the dose the circuit sees; the next culture run needs flux per well.'),
+    ('2026-10-10', 'lpa', 'Measure photon flux and well-to-well uniformity',
+     'Lux readings do not give the dose the circuit sees; the next culture run needs flux per well. '
+     'Pencilled in for 3 October and still open on 7 October.'),
     ('2026-10-10', 'lpa', 'Green against dark on the Level 2 strain, reading the output',
      'The run the Engineering page waits on: the first time the apparatus would test whether the switch switches.'),
     ('2026-10-10', 'photo', 'Write up cycles 7 and 8 and upload the STEP files',
