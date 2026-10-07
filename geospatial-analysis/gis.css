@@ -1,5 +1,5 @@
 /* =============================================================================
-   Geospatial Analysis: what page.css does not already do.
+   Geospatial Analysis: what page.css and engage.css do not already do.
    ========================================================================== */
 
 /* The three live tools (routing, soil map, farm calculator) are applications,
@@ -8,8 +8,9 @@
 .fig--live { position: relative; }
 .fig--live iframe {
   display: block; width: 100%; height: 36rem;
-  border: 1px solid var(--gray-200); border-radius: var(--radius-sm);
+  border: 0; border-radius: 20px;
   background: var(--white);
+  box-shadow: 0 0 0 1px rgb(0 0 0 / .07);
 }
 .fig--live.fig--dark iframe { background: #0f1418; }
 @media (max-width: 700px) { .fig--live iframe { height: 30rem; } }
@@ -17,62 +18,102 @@
 .fig__load {
   display: grid; place-content: center; gap: var(--sp-4); text-align: center;
   min-height: 20rem; padding: var(--sp-5);
-  border: 1px solid var(--gray-200); border-radius: var(--radius-sm);
-  background: var(--gray-50) center / cover no-repeat;
+  border-radius: 20px;
+  background: var(--well, #f5f5f7) center / cover no-repeat;
   position: relative; overflow: hidden;
 }
 /* a still of the tool sits behind the button, washed out so the text reads */
 .fig__load::before {
   content: ""; position: absolute; inset: 0;
-  background: rgba(255, 255, 255, .7);
+  background: rgb(255 255 255 / .72);
+  -webkit-backdrop-filter: saturate(160%) blur(2px);
+          backdrop-filter: saturate(160%) blur(2px);
 }
 .fig__load > * { position: relative; }
-.fig__load p { max-width: 36ch; margin: 0 auto; font-size: var(--text-sm); color: var(--gray-700); line-height: 1.5; }
+.fig__load p { max-width: 36ch; margin: 0 auto; font-size: var(--text-sm); color: var(--ink-2, #424245); line-height: 1.5; }
 .fig__load button {
-  justify-self: center; padding: .6em 1.2em; font: inherit; font-size: var(--text-sm); font-weight: 650;
-  color: #fff; background: var(--leaf-700); border: 0; border-radius: var(--radius-sm); cursor: pointer;
+  justify-self: center; padding: .65rem 1.25rem; font: inherit; font-size: .9375rem; font-weight: 600;
+  color: #fff; background: var(--leaf-700); border: 0; border-radius: 999px; cursor: pointer;
+  transition: background-color .2s ease;
 }
-.fig__load button:hover { filter: brightness(1.08); }
+.fig__load button:hover { background: var(--leaf-900); }
 .fig__load button:focus-visible { outline: 2px solid var(--leaf-900); outline-offset: 3px; }
+.gis .rail--seg .fig--live { margin: var(--sp-6) 0 0; }
 
-/* A row of two national maps is unreadable at half of 68ch, so the pair grows
-   into the gutter once a gutter exists (same bargain as .fig--wide).       */
-@media (min-width: 1240px) {
-  .figs--wide { width: min(54rem, calc(100vw - 24rem)); max-width: none; }
-}
 /* portrait maps would otherwise run a full screen tall */
 .gis .fig--tall img { max-width: 28rem; display: block; margin: 0 auto; }
+.engage .fig video { border: 0; border-radius: 14px; }
 
-/* the county-farmer quote */
-.gis .pull {
-  margin: var(--sp-5) 0;
-  padding: var(--sp-3) var(--sp-5);
-  border-left: 3px solid var(--leaf-500);
-  background: var(--leaf-50);
-  font-size: 1.05rem;
+/* -- figures beside prose (.ev) ------------------------------------------- */
+.gis .ev > .fig { margin: 0; min-width: 0; }
+.gis .ev .fig img, .gis .ev .fig video { border: 0; background: #fff; }
+.gis .ev .fig--tall img { max-width: min(100%, 26rem); }
+.gis .ev .fig figcaption { border-left-color: color-mix(in srgb, var(--pl) 30%, transparent); }
+@media (min-width: 62rem) {
+  .gis .ev { align-items: center; }
+  /* a landscape map or a pair of animated maps needs the wider column */
+  .gis .ev--media { grid-template-columns: minmax(0, .85fr) minmax(0, 1.15fr); }
 }
-.gis .pull cite { display: block; margin-top: var(--sp-2); font-size: var(--text-sm); font-style: normal; color: var(--gray-600); }
+
+/* the quotations carry their own quotation marks in the text */
+.gis .quote { padding-left: 0; }
+.gis .quote::before { content: none; }
+.gis .quote cite { display: block; margin-top: .6rem; font-size: .8125rem; font-style: normal; font-weight: 500; color: var(--ink-3); }
+.gis .ev__text .quote p, .gis .blk .quote p { max-width: 38ch; font-size: clamp(1.125rem, 1rem + .5vw, 1.375rem); }
+
+/* the pages these chapters lean on, as a pill under the card name */
+.engage p.golink-row { margin: .75rem 0 1.25rem; }
+.gis .card__name + .golink-row { margin-top: .9rem; }
+
+/* cards in a chapter follow one another with the IHP gap */
+.gis .chain > .node + .node { margin-top: 1.25rem; }
+.gis .card .card__cols > :is(div, figure, aside) { min-width: 0; }
+.gis .card__cols > .fig, .gis .card__cols > .callout { margin: 0; }
+.gis .card .callout { background: #fff; }
+.gis .card .callout ul { margin-bottom: 0; }
+.engage .card__cols h4:first-child { margin-top: 0; }
+.engage .card__cols ul, .engage .card__cols ol { padding-left: 1.2rem; margin: 0 0 .85rem; }
+.engage .card__cols li + li { margin-top: .35rem; }
+.gis .card .voices { margin-top: 1rem; }
+.gis .card--fig .fig img { border: 0; }
+.gis .card--fig .card__cols { margin-top: 0; align-items: center; }
+
+/* a bridging paragraph inside a chapter, and the section's own close */
+.gis .chap > .lede-c { margin-top: var(--sp-7); }
+.gis .chap > .folds { margin-top: 1.25rem; }
+.gis .sec > .end { margin-top: var(--sp-6); }
+
+/* the chapter eyebrow on a heading keeps the eyebrow's size */
+.engage .chap__end h3.chap__eyebrow, .engage .chap__end h4.chap__eyebrow { margin: 0; font-size: .875rem; font-weight: 600; letter-spacing: -.005em; text-transform: none; color: var(--pl); }
+.engage .chap__end .chap__eyebrow .sec__no { color: inherit; }
+
+/* the two break-even charts: a small switch above one chart */
+.gis .rail--charts { margin-top: var(--sp-5); }
+.gis .rail--charts .seg { margin-bottom: var(--sp-4); }
+.gis .rail--charts .chartbox { margin: 0; background: var(--well); }
+
+/* blocks that hold a table or a list */
+.engage .blk .tablewrap { margin: 1rem 0 0; }
+.engage .blk .blk__h .sec__no { margin-right: .35rem; color: var(--ink-3); font-weight: 600; }
 
 /* the reusable prompt, shown as text people can copy */
 .gis .prompt {
-  margin: var(--sp-4) 0;
+  margin: 0;
   padding: var(--sp-4);
   max-height: 32rem; overflow: auto;
-  border: 1px solid var(--gray-200); border-radius: var(--radius-sm);
-  background: var(--gray-50);
+  border: 0; border-radius: 14px;
+  background: #fff;
   font-family: var(--font-mono); font-size: .8125rem; line-height: 1.55;
   white-space: pre-wrap; word-break: break-word;
 }
 
-.gis .disclose {
-  margin: var(--sp-5) 0;
-  border: 1px solid var(--gray-200);
-  border-radius: var(--radius-sm);
-  padding: 0 var(--sp-4);
-}
-.gis .disclose > summary {
-  cursor: pointer; padding: var(--sp-3) 0;
-  font-weight: 600; color: var(--leaf-700);
-}
-.gis .disclose[open] > summary { border-bottom: 1px solid var(--gray-200); margin-bottom: var(--sp-3); }
 .gis .katex-display { overflow-x: auto; overflow-y: hidden; padding: 2px 0; }
+
+/* a wide table must not push a block grid past the column */
+.gis .blks--2 > .blk { min-width: 0; }
+@media (min-width: 52rem) { .gis .blks--2 { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); } }
+/* tall portrait maps are held to a height beside their prose */
+.gis .ev .fig--tall img { width: auto; max-width: 100%; max-height: 34rem; }
+/* the chlorophyll formula fits its half of the card */
+.gis .card__cols .katex-display > .katex { font-size: 1em; }
+.gis .cards + .card { margin-top: 1.25rem; }
