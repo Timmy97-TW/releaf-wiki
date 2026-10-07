@@ -1,0 +1,665 @@
+/* =============================================================================
+   ReLeaf: the Engagement pages
+   -----------------------------------------------------------------------------
+   The soft language of the Integrated Human Practices page, written out once
+   so the other six pages under the Engagement tab speak it too: a frosted
+   segmented control pinned under the site nav that switches between
+   chapters, a centred hero to open each chapter, pale rounded cards instead
+   of ruled boxes, photographs as a small rounded mosaic, and a tinted card
+   to close.
+
+   Values are copied from human-practices/ihp.css so the pages match to the
+   pixel. ihp.css keeps its own copy (plus the river map, the pipelines'
+   faces and the conversation threads, which only IHP has); change a shared
+   component in both.
+
+   A page joins by linking this file after page.css, adding `engage` to its
+   <body> class, and loading assets/js/engage.js after page.js.
+   ========================================================================== */
+
+/* ------------------------------------------------------------------ SHELL -- */
+
+.engage {
+  --max: 1440px;
+  --measure: 76ch;
+  --ink: #1d1d1f; --ink-2: #424245; --ink-3: #6e6e73;
+  --well: #f5f5f7;
+  --leaf: var(--leaf-700);
+  --lwell: color-mix(in srgb, var(--leaf-700) 5.5%, #fff);
+  --ease: cubic-bezier(.25, .8, .25, 1);
+  --pl: var(--leaf-700);
+  /* chapter colours, the same six the IHP pipelines use */
+  --c1: #3f5468; --c2: #23684a; --c3: #8a5a0b; --c4: #7a3b67; --c5: #1f5f8b; --c6: #5a4c9c;
+}
+.pl-1 { --pl: var(--c1); } .pl-2 { --pl: var(--c2); } .pl-3 { --pl: var(--c3); }
+.pl-4 { --pl: var(--c4); } .pl-5 { --pl: var(--c5); } .pl-6 { --pl: var(--c6); }
+
+.engage .pagebody { max-width: none; }
+.engage .pagebody .sec > p,
+.engage .pagebody .sec > ul:not([class]),
+.engage .pagebody .sec > ol:not([class]),
+.engage .pagebody .sec > h3,
+.engage .pagebody .sec > h4,
+.engage .pagebody .sec > blockquote,
+.engage .pagebody .sec > .callout { max-width: var(--measure); }
+
+.engage .sec + .sec { margin-top: var(--sp-8); }
+.engage .sec > h3 { margin-top: var(--sp-7); }
+
+@media (min-width: 1040px) {
+  .engage .toc { top: calc(var(--nav-h) + var(--sp-4)); }
+  .engage .toc__title { margin-bottom: var(--sp-2); }
+  .engage .toc__list a { padding-top: .2rem; padding-bottom: .2rem; line-height: 1.3; }
+  .engage .toc__list .is-sub a { padding-left: 1.55rem; font-size: .8125rem; }
+}
+
+/* the rephrased framing keeps the page's orange: it is Claude's wording */
+html:not(.ai-off) .engage p.ai, html:not(.ai-off) .engage li.ai { color: var(--ai-ink); }
+
+/* ---------------------------------------------------------- SECTION LEDE -- */
+
+.lede-c { margin: var(--sp-5) auto 0; max-width: 42rem; text-align: center; }
+.engage .lede-c p {
+  margin: 0 auto var(--sp-3);
+  max-width: none;
+  font-size: clamp(1.0625rem, 1rem + .3vw, 1.1875rem);
+  line-height: 1.6; letter-spacing: -.008em;
+  color: var(--ink-2);
+}
+.engage .lede-c p:last-child { margin-bottom: 0; }
+.engage .eyebrow { margin: 0 0 .55rem; font-size: .875rem; font-weight: 600; letter-spacing: -.005em; color: var(--pl); text-transform: none; }
+
+/* ------------------------------------------------- SEGMENTED CONTROL RAIL -- */
+/* N chapters of the same kind (three age bands, three jurisdictions, four
+   goals). The frosted pill track stays pinned under the site nav while the
+   reader is inside the rail; a white thumb slides under the chosen one.
+
+   <div class="rail rail--seg" data-rail data-rail-top>
+     <div class="seg"><div class="rail__strip seg__track" role="tablist" aria-label="…">
+       <button class="rail__btn seg__btn pl-1" role="tab" type="button" id="t-a"
+               aria-controls="p-a" aria-selected="true">[svg.seg__ico]Label</button> …
+     </div></div>
+     <div class="rail__panel chap pl-1" role="tabpanel" id="p-a" aria-labelledby="t-a"> … </div> …
+   </div>                                                                    */
+
+.rail--seg { margin: var(--sp-5) 0 0; }
+.rail--seg > .rail__panel[hidden] { display: none; }
+
+.seg {
+  position: sticky;
+  top: calc(var(--nav-h) + .75rem);
+  z-index: 6;
+  display: flex;
+  justify-content: center;
+  margin: 0 0 var(--sp-7);
+  pointer-events: none;
+}
+.seg__track {
+  position: relative;
+  display: flex;
+  flex: 0 1 auto;
+  gap: 2px;
+  max-width: 100%;
+  margin: 0;
+  padding: 5px;
+  overflow-x: auto;
+  scrollbar-width: none;
+  border-radius: 999px;
+  background: rgb(232 232 237 / .72);
+  -webkit-backdrop-filter: saturate(180%) blur(20px);
+          backdrop-filter: saturate(180%) blur(20px);
+  box-shadow: inset 0 0 0 .5px rgb(0 0 0 / .06), 0 8px 24px -14px rgb(0 0 0 / .3);
+  pointer-events: auto;
+}
+.seg__track::-webkit-scrollbar { display: none; }
+.seg__thumb {
+  position: absolute;
+  top: 5px; bottom: 5px; left: 0;
+  width: 0;
+  border-radius: 999px;
+  background: #fff;
+  box-shadow: 0 3px 8px rgb(0 0 0 / .12), 0 3px 1px rgb(0 0 0 / .04), 0 0 0 .5px rgb(0 0 0 / .04);
+  transition: transform .45s var(--ease), width .45s var(--ease);
+}
+.engage .seg__btn {
+  position: relative;
+  z-index: 1;
+  display: inline-flex;
+  flex: 1 0 auto;
+  align-items: center;
+  justify-content: center;
+  gap: .5rem;
+  padding: .75rem 1.15rem;
+  border: 0;
+  border-radius: 999px;
+  background: none;
+  font: inherit;
+  font-size: .9688rem;
+  font-weight: 500;
+  line-height: 1.2;
+  letter-spacing: -.01em;
+  color: var(--ink-2);
+  white-space: nowrap;
+  cursor: pointer;
+  transition: color .25s ease;
+}
+.seg__ico { flex: none; width: 1.125rem; height: 1.125rem; color: var(--pl); opacity: .7; transition: opacity .25s ease, transform .3s var(--ease); }
+.engage .seg__btn:hover { color: var(--ink); background: none; }
+.engage .seg__btn[aria-selected="true"] { color: var(--ink); font-weight: 600; }
+.seg__btn[aria-selected="true"] .seg__ico { opacity: 1; transform: scale(1.08); }
+.seg__btn:focus-visible { outline: 2px solid var(--pl); outline-offset: 1px; }
+/* without the script the active button carries its own white */
+.seg__track:not(.has-thumb) .seg__btn[aria-selected="true"] { background: #fff; box-shadow: 0 2px 6px rgb(0 0 0 / .1); }
+/* with the script off, every chapter shows and the switch has nothing to do */
+html:not(.js) .seg { display: none; }
+
+/* -- a chapter -- */
+.rail--seg > .rail__panel.chap { padding: 0; background: none; scroll-margin-top: calc(var(--nav-h) + 5rem); }
+.rail--seg > .rail__panel.is-entering { animation: chap-in .6s var(--ease) both; }
+@keyframes chap-in { from { opacity: 0; transform: translateY(14px); } to { opacity: 1; transform: none; } }
+html:not(.js) .rail--seg > .rail__panel + .rail__panel { margin-top: var(--sp-8); }
+
+.chap__hero { margin: 0 0 var(--sp-7); text-align: center; }
+.chap__eyebrow { margin: 0; font-size: .875rem; font-weight: 600; letter-spacing: -.005em; color: var(--pl); }
+.engage .chap__title {
+  margin: .35rem 0 0;
+  font-size: clamp(2rem, 1.4rem + 2.2vw, 3rem);
+  font-weight: 700;
+  line-height: 1.08;
+  letter-spacing: -.028em;
+  color: var(--ink);
+}
+.chap__intro { margin: var(--sp-5) 0 0; }
+.engage .chap__intro p {
+  margin: 0 auto var(--sp-3);
+  max-width: 40rem;
+  font-size: clamp(1.0625rem, 1rem + .3vw, 1.1875rem);
+  line-height: 1.6;
+  letter-spacing: -.008em;
+  color: var(--ink-2);
+}
+.chap__count { margin: var(--sp-6) 0 var(--sp-3); font-size: .8125rem; font-weight: 500; color: var(--ink-3); font-variant-numeric: tabular-nums; }
+
+/* the chapter's close */
+.chap__end {
+  margin: var(--sp-7) 0 0;
+  padding: clamp(1.75rem, 1.2rem + 2.4vw, 3.5rem);
+  border-radius: 28px;
+  background: linear-gradient(160deg, color-mix(in srgb, var(--pl) 13%, #fff), color-mix(in srgb, var(--pl) 5%, #fff));
+}
+.engage .chap__end p:not(.chap__eyebrow):not(.eyebrow) {
+  margin: .75rem 0 0;
+  max-width: 44rem;
+  font-size: clamp(1.1875rem, 1.05rem + .55vw, 1.4375rem);
+  font-weight: 500;
+  line-height: 1.45;
+  letter-spacing: -.016em;
+  color: var(--ink);
+}
+
+/* ------------------------------------------------------------------ CARDS -- */
+/* the pale grey card of IHP 3.1: one per lesson, meeting, market or case  */
+
+.engage .chain { list-style: none; margin: 0; padding: 0; }
+.engage .chain > li, .engage .chain > li + li { margin: 0; }
+.node { margin: 0; scroll-margin-top: calc(var(--nav-h) + 5.5rem); }
+.card {
+  padding: clamp(1.5rem, 1rem + 2vw, 2.75rem);
+  border-radius: 28px;
+  background: var(--well);
+  color: var(--ink);
+}
+.card + .card, .cards > .card + .card { margin-top: 1.25rem; }
+.cards { display: grid; gap: 1.25rem; margin: var(--sp-5) 0 0; }
+.cards > .card + .card { margin-top: 0; }
+@media (min-width: 52rem) { .cards--2 { grid-template-columns: 1fr 1fr; } .cards--3 { grid-template-columns: repeat(3, minmax(0, 1fr)); } }
+.card--leaf { background: var(--lwell); }
+.card--white { background: #fff; box-shadow: 0 0 0 1px rgb(0 0 0 / .06), 0 24px 44px -34px rgb(0 0 0 / .35); }
+.card__head { display: flex; align-items: center; gap: 1rem; }
+.card__face { width: 3.5rem; height: 3.5rem; flex: none; border-radius: 50%; object-fit: cover; box-shadow: 0 0 0 3px #fff; }
+.engage .card .card__name, .engage .card__name { margin: 0; font-size: 1.3125rem; font-weight: 650; line-height: 1.2; letter-spacing: -.018em; color: var(--ink); text-transform: none; }
+.card__name span { font-weight: 500; color: var(--ink-3); }
+.card__meta { display: flex; flex-wrap: wrap; align-items: center; gap: .35rem; margin: .4rem 0 0; }
+.card__date { margin-right: .3rem; font-size: .875rem; font-weight: 500; color: var(--ink-3); font-variant-numeric: tabular-nums; }
+.engage .card p, .engage .card li { max-width: 68ch; font-size: .96875rem; line-height: 1.65; color: var(--ink-2); }
+.engage .card p { margin: 0 0 .85rem; }
+.engage .card > :last-child, .engage .card p:last-child { margin-bottom: 0; }
+.engage .card h4, .engage .card h5 { margin: var(--sp-5) 0 .5rem; font-size: 1.0625rem; font-weight: 650; letter-spacing: -.012em; text-transform: none; color: var(--ink); }
+.engage .card > h4:first-child, .engage .card > h5:first-child { margin-top: 0; }
+.engage .card h6 { margin: 0 0 .5rem; font-size: .8125rem; font-weight: 600; letter-spacing: -.005em; color: var(--ink-3); text-transform: none; }
+.engage .card__bio { margin: var(--sp-4) 0 0; max-width: 62ch; font-size: .9375rem; line-height: 1.6; color: var(--ink-3); }
+
+.card__key { position: relative; margin: var(--sp-6) 0; padding: 0 0 0 2.75rem; }
+.card__key::before {
+  content: "\201C";
+  position: absolute; left: 0; top: -.35em;
+  font-size: 4rem; font-weight: 700; line-height: 1;
+  color: var(--pl);
+}
+.engage .card__key p {
+  margin: 0;
+  max-width: 34ch;
+  font-size: clamp(1.375rem, 1.1rem + 1vw, 1.875rem);
+  font-weight: 600;
+  line-height: 1.25;
+  letter-spacing: -.022em;
+  color: var(--ink);
+  text-wrap: balance;
+}
+
+.card__cols { display: grid; gap: var(--sp-5) var(--sp-6); margin: var(--sp-5) 0 0; }
+@media (min-width: 52rem) { .card__cols { grid-template-columns: 1fr 1fr; } }
+.engage .card__cols p { margin: 0 0 .65rem; max-width: none; font-size: .9375rem; line-height: 1.62; }
+
+.pill {
+  display: inline-block;
+  padding: .2rem .6rem;
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--c, var(--pl)) 11%, #fff);
+  font-size: .75rem;
+  font-weight: 550;
+  line-height: 1.3;
+  color: var(--c, var(--pl));
+  white-space: nowrap;
+}
+.pill--1 { --c: var(--c1); } .pill--2 { --c: var(--c2); } .pill--3 { --c: var(--c3); }
+.pill--4 { --c: var(--c4); } .pill--5 { --c: var(--c5); } .pill--6 { --c: var(--c6); }
+
+/* before and after: two soft panels and an arrow, the after in colour */
+.shift { display: grid; gap: .75rem; align-items: stretch; margin: var(--sp-6) 0 0; }
+@media (min-width: 52rem) { .shift { grid-template-columns: minmax(0, 1fr) 2rem minmax(0, 1fr); } .shift--one { grid-template-columns: minmax(0, 1fr); } }
+.shift__col { padding: 1.15rem 1.35rem 1.25rem; border-radius: 18px; background: #fff; }
+.shift__col--to { background: color-mix(in srgb, var(--pl) 9%, #fff); }
+.shift__col--to h6 { color: var(--pl); }
+.shift ul { margin: 0; padding: 0; list-style: none; font-size: .9375rem; line-height: 1.5; }
+.shift li { position: relative; padding-left: 1rem; }
+.shift li + li { margin-top: .5rem; }
+.shift li::before { content: ""; position: absolute; left: 0; top: .6em; width: .35rem; height: .35rem; border-radius: 50%; background: var(--ink-3); opacity: .45; }
+.shift__col--to li::before { background: var(--pl); opacity: .8; }
+.shift__col--from ul { color: var(--ink-3); }
+.shift__col--to ul { color: var(--ink); }
+.shift__arrow { align-self: center; justify-self: center; width: 2rem; height: 2rem; border-radius: 50%; background: #fff;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Cpath d='M3 8h9.5M8.5 4l4 4-4 4' fill='none' stroke='%236e6e73' stroke-width='1.6' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
+  background-position: center; background-size: .9rem; background-repeat: no-repeat; }
+@media (max-width: 51.99rem) { .shift__arrow { transform: rotate(90deg); } }
+
+/* between two cards: what led from one to the next */
+.bridge {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  margin: 0;
+  padding: 4.5rem 0;
+  text-align: center;
+}
+.bridge::before, .bridge::after {
+  content: "";
+  position: absolute;
+  left: 50%;
+  width: 1px;
+  height: 3.25rem;
+  background: linear-gradient(transparent, color-mix(in srgb, var(--pl) 55%, transparent));
+}
+.bridge::before { top: .5rem; }
+.bridge::after { bottom: .5rem; transform: scaleY(-1); }
+.engage .bridge p { margin: 0; max-width: 34rem; font-size: 1.0625rem; line-height: 1.6; letter-spacing: -.008em; color: var(--ink-2); text-wrap: pretty; }
+.bridge--short { padding: 2.25rem 0; }
+.bridge--short::before, .bridge--short::after { height: 1.5rem; }
+
+/* arriving: each card eases in once, the first time it is reached */
+.e-anim .node, .e-anim .bridge p, .e-anim .chap__end {
+  opacity: 0;
+  transform: translateY(24px);
+  transition: opacity .8s var(--ease), transform .9s var(--ease);
+}
+.e-anim .node.is-seen, .e-anim .bridge.is-seen p, .e-anim .chap__end.is-seen { opacity: 1; transform: none; }
+
+/* a link landing on a card marks it for a moment */
+.node.is-flash > .card, .card.is-flash { animation: card-flash 2.2s var(--ease); }
+@keyframes card-flash { 0%, 30% { box-shadow: 0 0 0 3px var(--pl); } 100% { box-shadow: 0 0 0 3px transparent; } }
+
+/* ------------------------------------------------------ LEAF-GREEN BLOCKS -- */
+/* IHP sections 4 to 6: the same softness on a pale leaf ground           */
+
+.blk {
+  margin: 1.25rem 0 0;
+  padding: clamp(1.5rem, 1rem + 2vw, 2.75rem);
+  border-radius: 28px;
+  background: var(--lwell);
+}
+.engage .blk .blk__h, .engage .blk__h { margin: 0 0 .9rem; font-size: clamp(1.25rem, 1.1rem + .5vw, 1.5rem); font-weight: 700; line-height: 1.2; letter-spacing: -.02em; color: var(--ink); text-transform: none; }
+.engage .blk p, .engage .blk li { max-width: 68ch; font-size: .96875rem; line-height: 1.65; color: var(--ink-2); }
+.engage .blk p { margin: 0 0 .85rem; }
+.engage .blk > :last-child, .engage .blk p:last-child { margin-bottom: 0; }
+.engage .blk h4 { margin: var(--sp-5) 0 .5rem; font-size: 1.0625rem; font-weight: 650; letter-spacing: -.012em; color: var(--ink); text-transform: none; }
+.engage .blk > h4:first-child { margin-top: 0; }
+.blk > .bento { margin-top: 1.25rem; }
+.engage .blk--head { margin-top: var(--sp-7); padding: 0; background: none; }
+.blks { display: grid; gap: 1.25rem; margin: 1.25rem 0 0; }
+.blks > .blk { margin: 0; }
+@media (min-width: 52rem) { .blks--2 { grid-template-columns: 1fr 1fr; } .blks--3 { grid-template-columns: repeat(3, minmax(0, 1fr)); } }
+
+/* an account on one side, its photographs on the other */
+.evs { display: grid; gap: 1.25rem; margin: var(--sp-6) 0 0; }
+.ev {
+  display: grid; gap: 1.5rem 2.5rem; align-items: start;
+  padding: clamp(1.5rem, 1rem + 2vw, 2.5rem);
+  border-radius: 28px;
+  background: var(--lwell);
+  scroll-margin-top: calc(var(--nav-h) + var(--sp-4));
+}
+@media (min-width: 62rem) { .ev { grid-template-columns: minmax(0, 1.1fr) minmax(0, 1fr); } .ev--flip { grid-template-columns: minmax(0, 1fr) minmax(0, 1.1fr); } }
+.engage .ev__date { margin: 0 0 .3rem; font-size: .875rem; font-weight: 600; color: var(--leaf); font-variant-numeric: tabular-nums; }
+.engage .ev__title { margin: 0 0 1rem; font-size: clamp(1.375rem, 1.15rem + .8vw, 1.75rem); font-weight: 700; line-height: 1.15; letter-spacing: -.024em; color: var(--ink); text-transform: none; }
+.engage .ev__text p, .engage .ev__text li { margin: 0 0 .85rem; max-width: 68ch; font-size: .96875rem; line-height: 1.65; color: var(--ink-2); }
+.engage .ev__text p:last-child { margin-bottom: 0; }
+.engage .ev .fig, .engage .ev .tablewrap { margin: 0; }
+@media (min-width: 62rem) { .ev > .bento { position: sticky; top: calc(var(--nav-h) + 1.5rem); } }
+
+/* -- photo mosaic: the first photograph leads, the rest follow small -- */
+.bento { display: grid; gap: .5rem; margin: 0; }
+.engage .bento .fig { position: relative; margin: 0; min-width: 0; }
+.engage .bento .fig img {
+  display: block; width: 100%; height: auto;
+  aspect-ratio: 4 / 3; object-fit: cover;
+  border-radius: 12px;
+  background: var(--well);
+  cursor: zoom-in;
+  transition: filter .3s ease;
+}
+.engage .bento .fig img:hover { filter: brightness(1.05); }
+.engage .bento .fig:first-child img { aspect-ratio: 3 / 2; border-radius: 18px; }
+.engage .bento figcaption,
+.engage .heroshot figcaption,
+.engage .tiles figcaption {
+  position: absolute !important;
+  width: 1px; height: 1px; margin: -1px; padding: 0;
+  overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; border: 0;
+}
+.bento--1 { grid-template-columns: minmax(0, 1fr); }
+.bento--2 { grid-template-columns: 1fr 1fr; }
+.engage .bento--2 .fig:first-child img { aspect-ratio: 4 / 3; border-radius: 12px; }
+.bento--3, .bento--5 { grid-template-columns: 1fr 1fr; }
+.bento--3 .fig:first-child, .bento--5 .fig:first-child { grid-column: 1 / -1; }
+.bento--4, .bento--7 { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+.bento--4 .fig:first-child, .bento--7 .fig:first-child { grid-column: 1 / -1; }
+.bento--6 { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+.bento--6 .fig:first-child { grid-column: span 2; grid-row: span 2; }
+.engage .bento--6 .fig:first-child img { position: absolute; inset: 0; height: 100%; aspect-ratio: auto; }
+
+/* inside a block the photographs run as one row: the first wider, the rest small */
+.engage .blk > .bento, .engage .card > .bento { display: flex; gap: .5rem; height: clamp(8.5rem, 4rem + 11vw, 12.5rem); margin-top: 1.25rem; }
+.engage .blk > .bento .fig, .engage .card > .bento .fig { flex: 1 1 0; }
+.engage .blk > .bento .fig:first-child, .engage .card > .bento .fig:first-child { flex-grow: 1.9; }
+.engage .blk > .bento .fig img, .engage .blk > .bento .fig:first-child img,
+.engage .card > .bento .fig img, .engage .card > .bento .fig:first-child img { width: 100%; height: 100%; aspect-ratio: auto; border-radius: 14px; }
+.engage .blk > .bento--1, .engage .card > .bento--1 { height: clamp(11rem, 6rem + 14vw, 17rem); }
+@media (max-width: 40rem) {
+  .engage .blk > .bento, .engage .card > .bento { display: grid; grid-template-columns: 1fr 1fr; height: auto; }
+  .engage .blk > .bento .fig img, .engage .blk > .bento .fig:first-child img,
+  .engage .card > .bento .fig img, .engage .card > .bento .fig:first-child img { aspect-ratio: 4 / 3; height: auto; }
+  .engage .blk > .bento .fig:first-child, .engage .card > .bento .fig:first-child { grid-column: 1 / -1; }
+}
+
+/* one large photograph with a second set on its corner */
+.heroshot { position: relative; margin: var(--sp-6) 0 calc(var(--sp-6) + 1.5rem); }
+.engage .heroshot .fig { margin: 0; }
+.engage .heroshot .fig img { display: block; width: 100%; height: auto; aspect-ratio: 16 / 9; object-fit: cover; border-radius: 28px; cursor: zoom-in; }
+.engage .heroshot .fig + .fig { position: absolute; right: clamp(1rem, 3vw, 2rem); bottom: -1.75rem; width: 30%; }
+.engage .heroshot .fig + .fig img { aspect-ratio: 4 / 3; border: 6px solid #fff; border-radius: 20px; box-shadow: 0 20px 40px -22px rgb(0 0 0 / .5); }
+.heroshot--one { margin-bottom: var(--sp-6); }
+@media (max-width: 51.99rem) { .engage .heroshot .fig + .fig { width: 40%; bottom: -1.25rem; } }
+
+/* a quotation set large */
+.engage .quote { position: relative; margin: var(--sp-5) 0; padding: 0 0 0 2.6rem; border: 0; }
+.quote::before { content: "\201C"; position: absolute; left: 0; top: -.3em; font-size: 3.75rem; font-weight: 700; line-height: 1; color: var(--pl); }
+.engage .quote p { margin: 0; max-width: 34ch; font-size: clamp(1.1875rem, 1rem + .7vw, 1.5rem); font-weight: 600; line-height: 1.3; letter-spacing: -.02em; color: var(--ink); text-wrap: balance; }
+.engage .quote footer { margin-top: .6rem; font-size: .8125rem; font-weight: 500; color: var(--ink-3); }
+
+/* voices: short white cards inside a block */
+.voices { display: grid; gap: .75rem; margin: 1.25rem 0 0; }
+@media (min-width: 52rem) {
+  .voices { grid-template-columns: 1fr 1fr; }
+  .voices--3 { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+  .voices--4 { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+}
+.voice--wide { grid-column: 1 / -1; }
+.voice { padding: 1.3rem 1.45rem 1.4rem; border-radius: 20px; background: #fff; }
+.engage p.voice__who, .engage .voice__who { margin: 0 0 .5rem; font-size: .8125rem; font-weight: 650; color: var(--pl); text-transform: none; letter-spacing: 0; }
+.engage .voice p:not(.voice__who), .engage .voice li { margin: 0 0 .6rem; max-width: none; font-size: .9375rem; line-height: 1.6; color: var(--ink-2); }
+.engage .voice > :last-child { margin-bottom: 0; }
+.engage .voice ul, .engage .voice ol { margin: 0; padding-left: 1.1rem; }
+.engage .voice .quote { margin: 1.25rem 0; }
+.engage .voice .quote p { font-size: clamp(1.125rem, 1rem + .5vw, 1.375rem); max-width: 40ch; }
+.voice__big { display: block; margin: 0 0 .35rem; font-size: clamp(1.75rem, 1.4rem + 1.2vw, 2.5rem); font-weight: 700; line-height: 1; letter-spacing: -.03em; color: var(--ink); font-variant-numeric: tabular-nums; }
+
+.engage .golink {
+  display: inline-flex; align-items: center; gap: .5rem;
+  margin-top: .35rem; padding: .6rem 1.1rem;
+  border-radius: 999px;
+  background: var(--leaf); color: #fff;
+  font-size: .9375rem; font-weight: 600; text-decoration: none;
+  transition: background-color .2s ease;
+}
+.golink::after { content: "\2197"; font-weight: 500; }
+.engage .golink:hover { background: var(--leaf-900); color: #fff; }
+
+/* charts in a white box */
+.chartbox { margin: 1.25rem 0; padding: .75rem; border-radius: 22px; background: #fff; }
+.blk .chartbox, .card .chartbox { background: #fff; }
+.sec > .chartbox { background: var(--well); }
+.engage .chartbox .charts { display: grid; gap: .75rem; margin: 0; grid-template-columns: minmax(0, 1fr); }
+@media (min-width: 40rem) {
+  .engage .chartbox .charts--2 { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .engage .chartbox .charts--3 { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+}
+.engage .chartbox .charts--1 { max-width: 44rem; margin: 0 auto; }
+.engage .chartbox .fig { margin: 0; }
+.engage .chartbox .fig img { display: block; width: 100%; height: auto; border: 0; border-radius: 12px; background: #fff; cursor: zoom-in; }
+.engage .chartbox figcaption { margin: .5rem .25rem .25rem; font-size: .8125rem; line-height: 1.45; color: var(--ink-3); }
+
+.engage p.kap { display: inline-block; margin: 0 0 .25rem; padding: .35rem .95rem; border-radius: 999px; background: var(--pl); color: #fff; font-size: .8125rem; font-weight: 600; }
+.engage .findings { display: grid; gap: .5rem; margin: 1rem 0 1.25rem; padding: 0; max-width: none; list-style: none; }
+.engage .findings li { position: relative; margin: 0; padding: .9rem 1.15rem .9rem 2.75rem; border-radius: 16px; background: #fff; font-size: .9375rem; line-height: 1.55; color: var(--ink-2); }
+.engage .findings li::before {
+  content: ""; position: absolute; left: 1.1rem; top: 1.18rem;
+  width: .8rem; height: .8rem; border-radius: 50%;
+  background: color-mix(in srgb, var(--pl) 18%, #fff);
+  box-shadow: inset 0 0 0 3px var(--pl);
+}
+.sec > .findings li, .chap > .findings li { background: var(--well); }
+.findings b, .lead-in b { color: var(--ink); font-weight: 650; }
+
+/* the close of a block or section */
+.end {
+  margin: 1.25rem 0 0;
+  padding: clamp(1.75rem, 1.2rem + 2.4vw, 3.25rem);
+  border-radius: 28px;
+  background: linear-gradient(160deg, color-mix(in srgb, var(--pl) 15%, #fff), color-mix(in srgb, var(--pl) 5%, #fff));
+}
+.engage p.end__label { margin: 0 0 .75rem; font-size: .875rem; font-weight: 600; color: var(--pl); }
+.engage .end p:not(.end__label) { margin: 0 0 .9rem; max-width: 46rem; font-size: clamp(1.0625rem, 1rem + .35vw, 1.25rem); font-weight: 500; line-height: 1.5; letter-spacing: -.012em; color: var(--ink); }
+.engage .end p:last-child { margin-bottom: 0; }
+.blk .end { background: #fff; }
+
+/* cards in a grid, each with a picture on top */
+.booths { display: grid; gap: 1rem; margin: 0; }
+@media (min-width: 52rem) { .booths { grid-template-columns: 1fr 1fr; } .booths--3 { grid-template-columns: repeat(3, minmax(0, 1fr)); } }
+.bcard { display: flex; flex-direction: column; padding: .6rem .6rem 1.5rem; border-radius: 28px; background: var(--lwell); }
+.engage .bcard .bento .fig:first-child img { border-radius: 22px; }
+.bcard__text { padding: 1.15rem 1rem 0; }
+.engage .bcard h5, .engage .bcard h4 { margin: 0 0 .55rem; font-size: 1.1875rem; font-weight: 700; letter-spacing: -.018em; text-transform: none; color: var(--ink); }
+.engage .bcard p { margin: 0 0 .6rem; font-size: .9375rem; line-height: 1.6; color: var(--ink-2); max-width: none; }
+
+/* the closing grid of cards, with an icon each and one dark final card */
+.concl { display: grid; gap: 1rem; margin: var(--sp-5) 0 0; }
+@media (min-width: 52rem) { .concl { grid-template-columns: 1fr 1fr; } .concl__card:first-child, .concl__card--final, .concl__card--wide { grid-column: 1 / -1; } }
+.concl__card { padding: clamp(1.5rem, 1rem + 2vw, 2.5rem); border-radius: 28px; background: var(--lwell); }
+.concl__ico {
+  display: block; width: 2.75rem; height: 2.75rem; padding: .6rem; margin: 0 0 1.1rem;
+  border-radius: 14px; background: #fff; color: var(--leaf);
+  box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--leaf) 16%, transparent);
+}
+.engage .concl__card h3, .engage .concl__card h4 { margin: 0 0 .6rem; font-size: clamp(1.1875rem, 1.05rem + .45vw, 1.375rem); font-weight: 700; line-height: 1.2; letter-spacing: -.02em; color: var(--ink); text-transform: none; }
+.engage .concl__card p { margin: 0 0 .75rem; max-width: 68ch; font-size: .96875rem; line-height: 1.65; color: var(--ink-2); }
+.engage .concl__card p:last-child { margin-bottom: 0; }
+.engage .concl__card:first-child:not(.concl__card--final) p { font-size: 1.0625rem; color: var(--ink); max-width: 60ch; }
+.concl__card--final { background: linear-gradient(150deg, #23684a, #14402b 75%); }
+.engage .concl__card--final h3, .engage .concl__card--final h4 { color: #fff; font-size: clamp(1.5rem, 1.2rem + 1vw, 2rem); }
+.engage .concl__card--final .sec__no { color: rgb(255 255 255 / .55); }
+.engage .concl__card--final .anchor { color: rgb(255 255 255 / .5); }
+.engage .concl__card--final p { max-width: 52ch; font-size: clamp(1.0625rem, 1rem + .35vw, 1.25rem); line-height: 1.55; color: rgb(255 255 255 / .86); }
+.concl__card--final .concl__ico { background: rgb(255 255 255 / .12); color: #cfe4d8; box-shadow: none; }
+
+/* ----------------------------------------------------- SIDE-LIST SWITCH -- */
+/* IHP 4.2: a list of items on the left that stays in view, one white panel
+   on the right. For six to twelve parallel items with a sentence each.
+
+   <div class="rail rail--app" data-rail>
+     <div class="rail__strip app__list" role="tablist" aria-label="…">
+       <button class="rail__btn app__btn" role="tab" …>[svg.app__ico]<span class="app__txt"><b>Name</b><small>note</small></span></button> …
+     </div>
+     <div class="rail__panel app__panel" role="tabpanel" …> … </div> …
+   </div>                                                                    */
+
+.rail--app { display: grid; gap: 1rem 1.25rem; align-items: start; margin: var(--sp-6) 0 0; border: 0; }
+.rail--app > .rail__panel[hidden] { display: none; }
+@media (min-width: 52rem) {
+  .rail--app { grid-template-columns: 16rem minmax(0, 1fr); }
+  .js .rail--app > .rail__panel { grid-column: 2; grid-row: 1; }
+  .app__list { position: sticky; top: calc(var(--nav-h) + 1rem); }
+}
+.engage .rail--app .app__list {
+  display: flex; flex-direction: column; gap: 2px;
+  margin: 0; padding: .45rem;
+  border-radius: 24px;
+  background: var(--lwell);
+}
+.engage .rail--app .app__btn {
+  display: flex; flex-direction: row; align-items: center; gap: .75rem;
+  padding: .55rem .7rem;
+  border: 0; border-radius: 16px;
+  background: none;
+  color: var(--ink-2);
+  font: inherit; text-align: left; cursor: pointer;
+  transition: background-color .25s ease, box-shadow .25s ease;
+}
+.engage .rail--app .app__btn:hover { background: rgb(255 255 255 / .6); color: var(--ink); }
+.engage .rail--app .app__btn[aria-selected="true"] { background: #fff; color: var(--ink); box-shadow: 0 3px 10px rgb(0 0 0 / .07), 0 0 0 .5px rgb(0 0 0 / .04); }
+.app__btn:focus-visible { outline: 2px solid var(--leaf); outline-offset: -2px; }
+.app__ico {
+  flex: none; width: 2.25rem; height: 2.25rem; padding: .5rem;
+  border-radius: 11px;
+  background: #fff; color: var(--leaf);
+  box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--leaf) 16%, transparent);
+  transition: background-color .25s ease, color .25s ease;
+}
+.app__btn[aria-selected="true"] .app__ico { background: var(--leaf); color: #fff; box-shadow: none; }
+.app__num { display: grid; place-items: center; font-size: .8125rem; font-weight: 700; font-variant-numeric: tabular-nums; padding: 0; }
+.app__txt { display: flex; flex-direction: column; gap: .1rem; min-width: 0; }
+.app__txt b { font-size: .9375rem; font-weight: 600; line-height: 1.25; color: var(--ink); }
+.app__txt small { font-size: .75rem; line-height: 1.25; color: var(--ink-3); }
+.engage .rail--app .app__panel {
+  padding: clamp(1.5rem, 1rem + 2vw, 2.5rem);
+  border-radius: 28px;
+  background: #fff;
+  box-shadow: 0 0 0 1px rgb(0 0 0 / .06), 0 24px 44px -34px rgb(0 0 0 / .35);
+}
+.rail--app > .rail__panel.is-entering { animation: chap-in .5s var(--ease) both; }
+.engage .rail--app .app__panel h4 { margin: 0 0 1rem; font-size: clamp(1.375rem, 1.2rem + .6vw, 1.625rem); font-weight: 700; line-height: 1.2; letter-spacing: -.022em; color: var(--ink); text-transform: none; }
+.engage .rail--app .app__panel h5 { margin: var(--sp-5) 0 .5rem; font-size: 1.0625rem; font-weight: 650; text-transform: none; letter-spacing: -.012em; color: var(--ink); }
+.app__panel h4 span { font-weight: 500; color: var(--ink-3); }
+.engage .app__panel p, .engage .app__panel li { margin: 0 0 .85rem; max-width: 68ch; font-size: .96875rem; line-height: 1.65; color: var(--ink-2); }
+.app__shots { display: grid; grid-template-columns: repeat(auto-fill, minmax(8.25rem, 1fr)); gap: .6rem; margin: 1.25rem 0 0; }
+.engage .app__shots .fig { margin: 0; }
+.engage .app__shots .fig img { display: block; width: 100%; height: auto; aspect-ratio: 4 / 5; object-fit: cover; object-position: top; border-radius: 14px; background: var(--lwell); box-shadow: 0 0 0 1px rgb(0 0 0 / .06); cursor: zoom-in; }
+@media (max-width: 51.99rem) {
+  .engage .rail--app .app__list { flex-direction: row; overflow-x: auto; scrollbar-width: none; }
+  .app__list::-webkit-scrollbar { display: none; }
+  .engage .rail--app .app__btn { flex: none; }
+}
+
+/* ------------------------------------------------------------------- FOLDS -- */
+/* For what stays behind a click (a protocol, a full transcript, a long
+   table): one soft row that opens in place.                              */
+
+.folds { display: grid; gap: .5rem; margin: 1.25rem 0 0; }
+.fold { border-radius: 20px; background: var(--well); scroll-margin-top: calc(var(--nav-h) + var(--sp-4)); }
+.blk .fold, .card .fold, .chap__end .fold { background: #fff; }
+.fold > summary {
+  position: relative;
+  display: flex; align-items: center; gap: .75rem;
+  padding: 1rem 3rem 1rem 1.35rem;
+  list-style: none;
+  font-size: 1rem; font-weight: 600; letter-spacing: -.01em; line-height: 1.35;
+  color: var(--ink);
+  cursor: pointer;
+}
+.fold > summary::-webkit-details-marker { display: none; }
+.fold > summary::marker { content: ""; }
+.fold > summary::after {
+  content: "";
+  position: absolute; right: 1.35rem; top: 50%;
+  width: .5rem; height: .5rem;
+  margin-top: -.35rem;
+  border-right: 1.75px solid var(--ink-3);
+  border-bottom: 1.75px solid var(--ink-3);
+  transform: rotate(45deg);
+  transition: transform .3s var(--ease), margin .3s var(--ease);
+}
+.fold[open] > summary::after { transform: rotate(-135deg); margin-top: -.1rem; }
+.fold > summary:hover { color: var(--pl); }
+.fold > summary:focus-visible { outline: 2px solid var(--pl); outline-offset: 2px; border-radius: 20px; }
+.fold__sub { margin-left: auto; font-size: .8125rem; font-weight: 500; color: var(--ink-3); white-space: nowrap; }
+.fold__body { padding: 0 1.35rem 1.35rem; }
+.engage .fold__body p, .engage .fold__body li { max-width: 72ch; font-size: .9375rem; line-height: 1.62; color: var(--ink-2); }
+.engage .fold__body p { margin: 0 0 .75rem; }
+.engage .fold__body > :last-child { margin-bottom: 0; }
+.engage .fold__body h4, .engage .fold__body h5 { margin: var(--sp-4) 0 .4rem; font-size: .9375rem; font-weight: 650; color: var(--ink); text-transform: none; letter-spacing: -.005em; }
+.engage .fold__body > h4:first-child, .engage .fold__body > h5:first-child { margin-top: 0; }
+.fold.is-flash { animation: card-flash 2.2s var(--ease); }
+
+/* ------------------------------------------------------- TABLES, CALLOUTS -- */
+
+.engage .tablewrap {
+  margin: 1.25rem 0;
+  border: 0;
+  border-radius: 20px;
+  background: #fff;
+  box-shadow: 0 0 0 1px rgb(0 0 0 / .07);
+}
+.engage table.data thead th { background: var(--well); border-bottom: 0; color: var(--ink-3); letter-spacing: .02em; }
+.engage table.data td { color: var(--ink-2); }
+.engage .card .tablewrap, .engage .blk .tablewrap, .engage .fold .tablewrap { box-shadow: none; }
+
+.engage .callout { border: 0; border-radius: 20px; background: var(--well); padding: 1.15rem 1.35rem; }
+.engage .callout__label { color: var(--pl); }
+.engage .callout--medal { background: color-mix(in srgb, var(--amber-700) 8%, #fff); }
+.engage .callout--medal .callout__label { color: var(--amber-700); }
+
+/* figures outside the soft components keep the page's frame, rounded */
+.engage .fig img { border-radius: 14px; }
+.engage .fig--chart img, .engage .figs .fig img { border-radius: 14px; }
+
+/* ---------------------------------------------------------- AI DISCLOSURE -- */
+/* The orange is the iGEM AI-use disclosure (nav.css). Several soft rules
+   above colour p, td, th and figcaption at the same weight as nav.css and
+   load later, so without this they would turn Claude's wording grey. This
+   wins over every rule in this file.                                     */
+
+html:not(.ai-off) body.engage .ai,
+html:not(.ai-off) body.engage .ai :is(p, li, dt, dd, td, th, h2, h3, h4, h5, h6, strong, b, em, i, span, figcaption, small, blockquote, cite, label, summary, div) { color: var(--ai-ink); }
+html:not(.ai-off) body.engage .ai a { color: var(--ai-ink); text-decoration-color: currentColor; }
+html:not(.ai-off) body.engage .concl__card--final .ai,
+html:not(.ai-off) body.engage .concl__card--final .ai :is(p, li, span, b, strong) { color: #fdba74; }
+
+.engage .chartbox figcaption { border: 0; padding-left: 0; }
+
+/* ----------------------------------------------------------------- PRINT -- */
+
+@media print {
+  .rail__panel[hidden] { display: block !important; }
+  .seg, .app__list { display: none; }
+  .e-anim .node, .e-anim .bridge p, .e-anim .chap__end { opacity: 1; transform: none; }
+}
