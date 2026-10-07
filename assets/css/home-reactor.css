@@ -373,3 +373,53 @@
 @media (scripting: enabled) {
   .rxs__model:not(.no-gl) .rxs__poster { opacity: 0; visibility: hidden; transition: none; }
 }
+
+/* ---------------------------------------- the wordmark, 7 Oct (owner) ----- */
+/* "Make it more impressive, powerful, futuristic, but not messy." Four
+   things, and nothing else:
+
+   1  THE LETTERS ARE LIT FROM ABOVE. One gradient clipped to the text, white
+      at the cap line falling to a cool pale green at the baseline, so the
+      word has a light on it instead of a flat fill. `color` stays set, so a
+      browser without background-clip gets the plain white word.
+   2  ONE BLOOM BEHIND IT, in --sig-green, the 520 nm the reactor runs on. It
+      is a single wide radial at low opacity on a pseudo-element, sized in em
+      so it scales with the type. One soft light, not a stack of shadows.
+   3  "Re" IS THE QUIET HALF, as before: the pale leaf at a lighter weight,
+      so LEAF carries the line and the lockup reads as one word, not two.
+   There is no rule under the name: in the scene the lede sits straight
+   beneath it with no gap, and a hairline there crossed the words.
+
+   What this does NOT do, on purpose: no outline, no second shadow, no
+   letter-by-letter animation, no chrome or bevel. The scene already brings
+   the name in (home.js piece 7); anything that moves on its own would
+   compete with the model turning beside it. */
+.rxs__head { position: relative; }
+.rxs__title {
+  position: relative;
+  background-image: linear-gradient(177deg, #fff 8%, #f2fbf5 44%, #cbe9d6 96%);
+  -webkit-background-clip: text; background-clip: text;
+  /* the gradient only paints the glyphs where the browser supports it; the
+     colour under it is what everything else sees */
+  -webkit-text-fill-color: transparent;
+}
+@supports not ((background-clip: text) or (-webkit-background-clip: text)) {
+  .rxs__title { background-image: none; -webkit-text-fill-color: currentColor; }
+}
+.rxs__title::before {
+  content: ""; position: absolute; z-index: -1;
+  left: 50%; top: 50%;
+  width: 11em; height: 4.4em;
+  transform: translate(-50%, -50%);
+  background: radial-gradient(closest-side,
+    rgb(53 224 138 / .20), rgb(53 224 138 / .11) 42%, rgb(53 224 138 / .04) 68%, transparent);
+  pointer-events: none;
+}
+/* "Re" keeps its own colour, which means its own fill over the gradient */
+/* against a gradient that is nearly white, leaf-200 was no longer a step
+   down: "Re" takes a cooler, softer fill so LEAF still carries the line */
+.rxs__re { -webkit-text-fill-color: rgb(168 214 185 / .92); color: rgb(168 214 185 / .92); }
+@media print {
+  .rxs__title { background-image: none; -webkit-text-fill-color: currentColor; color: var(--black); }
+  .rxs__title::before { display: none; }
+}
