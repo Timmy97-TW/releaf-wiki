@@ -12,6 +12,7 @@
      5  ihp tabs    the five demands and the objection as tabs over one panel
      6  chapters    marks the chapter the reader is in on the right-hand rail
      7  scene       the five demands become the labels round the reactor
+     8  threat      the map's three frames, walked by the scroll
      (4 doors was retired on 28 September 2026 with the section it drove;
      the numbers of the others were kept.)
 
@@ -1015,6 +1016,94 @@
 
     decide();
     if (live) { if (armed) dmd.classList.add("in"); fromHash("instant"); }
+  })();
+
+  /* ══════════════════════════════════════════════════ 8  THE THREAT MAP ══ */
+  /* 7 Oct (owner). Where the whole of 01 fits one screen, .is-scrolly
+     (home-threat.css) turns .th-run into a runway and holds .th-pin on the
+     screen, and the scroll walks the map's three frames in order:
+     Volatility, Farmland (small-scale farms), Convergence. Each frame is
+     shown by ticking its radio, so the words, the map and the key change
+     through the same :has() rules the switch uses.
+
+     The switch is hidden while the sequence runs. Reaching the last frame
+     adds .is-explore, which brings it in for good (remembered in
+     localStorage, so a later visit has it from the start). From then on the
+     scroll still moves the frames as it crosses each third of the runway,
+     and a pick on the switch holds until the scroll crosses the next one.
+
+     THE RESTING STATE IS THE FINISHED STATE: no runway and the switch in
+     view without script, with reduced motion, while printing, or where the
+     frame does not fit the screen (decide()). */
+
+  (function threat() {
+    var th = document.getElementById("threat");
+    if (!th) return;
+    var run = th.querySelector(".th-run");
+    var pin = th.querySelector(".th-pin");
+    var grid = pin && pin.querySelector(".th__grid");
+    var plate = th.querySelector(".th-map__plate");
+    var radios = [].slice.call(th.querySelectorAll(".th-views input"));
+    var bars = [].slice.call(th.querySelectorAll(".th-prog i"));
+    var ORDER = ["vol", "small", "conv"];
+    if (!run || !pin || !grid || !plate || radios.length !== ORDER.length || !window.matchMedia) return;
+    // with reduced motion the section is the ordinary one: no pinned screen,
+    // and the switch in view from the start, as with scripting off
+    if (reduced) return;
+    var KEY = "releaf-threat-seen";
+    try { if (window.localStorage.getItem(KEY) === "1") th.classList.add("is-explore"); } catch (e) { /* private window */ }
+
+    var live = false, step = -1, navH = 68, printing = false;
+
+    function show(k) {
+      radios.forEach(function (r) { r.checked = r.value === ORDER[k]; });
+      bars.forEach(function (b, i) { b.classList.toggle("is-on", i <= k); });
+      if (k === ORDER.length - 1 && !th.classList.contains("is-explore")) {
+        th.classList.add("is-explore");
+        try { window.localStorage.setItem(KEY, "1"); } catch (e) { /* private window */ }
+      }
+    }
+
+    function decide() {
+      var on = !printing;
+      if (on) {
+        th.classList.add("is-scrolly");
+        // the frame has to fit the held screen, and the map stay readable
+        on = grid.offsetHeight <= pin.clientHeight + 1 && plate.getBoundingClientRect().height >= 220;
+      }
+      if (!on) th.classList.remove("is-scrolly");
+      live = on;
+      var v = parseFloat(window.getComputedStyle(document.documentElement).getPropertyValue("--nav-h"));
+      navH = v > 0 ? v : 68;
+      if (live) write(read());
+    }
+
+    // progress through the runway, 0 when the pin takes hold, 1 when it lets go
+    function read() {
+      if (!live) return;
+      var r = run.getBoundingClientRect();
+      return clamp01((navH - r.top) / Math.max(1, r.height - pin.offsetHeight));
+    }
+    function write(p) {
+      if (p === undefined) return;
+      var k = p < 0.3 ? 0 : p < 0.64 ? 1 : 2;
+      if (k === step) return;
+      step = k;
+      show(k);
+    }
+    function fail() { live = false; th.classList.remove("is-scrolly"); }
+
+    homeFrame.add(read, write, fail);
+    window.addEventListener("scroll", homeFrame.request, { passive: true });
+    var sized = 0;
+    window.addEventListener("resize", function () {
+      window.clearTimeout(sized);
+      sized = window.setTimeout(decide, 120);
+    });
+    window.addEventListener("beforeprint", function () { printing = true; decide(); });
+    window.addEventListener("afterprint", function () { printing = false; decide(); });
+    if (document.fonts && document.fonts.ready) document.fonts.ready.then(decide);
+    decide();
   })();
 
 })();
