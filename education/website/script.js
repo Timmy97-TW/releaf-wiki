@@ -29,7 +29,7 @@ function showSection(sectionId) {
 const outreachMapData = {
   luzhou: {
     title: isChinesePage ? "蘆洲國小" : "Luzhou Elementary School",
-    image: getAssetPath("images/outreach/luzhou.jpg"),
+    image: getAssetPath("images/outreach/luzhou.webp"),
     alt: "Luzhou Elementary School outreach"
   },
 
@@ -41,61 +41,61 @@ const outreachMapData = {
 
   yucheng: {
     title: isChinesePage ? "臺北市立育成高中" : "Taipei Municipal Yucheng Senior High School",
-    image: getAssetPath("images/outreach/yucheng.jpg"),
+    image: getAssetPath("images/outreach/yucheng.webp"),
     alt: "Taipei Municipal Yucheng Senior High School outreach"
   },
 
   xingya: {
     title: isChinesePage ? "興雅國小" : "Xing Ya Elementary School",
-    image: getAssetPath("images/outreach/xingya.jpg"),
+    image: getAssetPath("images/outreach/xingya.webp"),
     alt: "Xing Ya Elementary School outreach"
   },
 
   fude: {
     title: isChinesePage ? "福德國小" : "Fude Elementary School",
-    image: getAssetPath("images/outreach/fude.jpg"),
+    image: getAssetPath("images/outreach/fude.webp"),
     alt: "Fude Elementary School outreach"
   },
 
   evergreen: {
     title: isChinesePage ? "長青幼兒園" : "Evergreen Kindergarten",
-    image: getAssetPath("images/outreach/evergreen.jpg"),
+    image: getAssetPath("images/outreach/evergreen.webp"),
     alt: "Evergreen Kindergarten outreach"
   },
 
   yonghe: {
     title: isChinesePage ? "新北市立永和國中" : "New Taipei Municipal Yonghe Junior High School",
-    image: getAssetPath("images/outreach/yonghe.jpg"),
+    image: getAssetPath("images/outreach/yonghe.webp"),
     alt: "New Taipei Municipal Yonghe Junior High School outreach"
   },
 
   yifang: {
     title: isChinesePage ? "義方國小" : "Yifang Elementary School",
-    image: getAssetPath("images/outreach/yifang.jpg"),
+    image: getAssetPath("images/outreach/yifang.webp"),
     alt: "Yifang Elementary School outreach"
   },
 
   huaxing: {
     title: isChinesePage ? "華興育幼院" : "Huaxing Children’s Home",
-    image: getAssetPath("images/outreach/huaxing.jpg"),
+    image: getAssetPath("images/outreach/huaxing.webp"),
     alt: "Huaxing Children’s Home outreach"
   },
 
   daan: {
     title: isChinesePage ? "大安國小" : "Da’an Elementary School",
-    image: getAssetPath("images/outreach/daan.jpg"),
+    image: getAssetPath("images/outreach/daan.webp"),
     alt: "Da’an Elementary School outreach"
   },
 
   visual: {
     title: isChinesePage ? "臺北市立啟明學校" : "Taipei School for the Visually Impaired",
-    image: getAssetPath("images/outreach/visual.jpg"),
+    image: getAssetPath("images/outreach/visual.webp"),
     alt: "Taipei School for the Visually Impaired outreach"
   },
 
   xisong: {
     title: isChinesePage ? "西松高中" : "Xisong High School",
-    image: getAssetPath("images/outreach/xisong.jpg"),
+    image: getAssetPath("images/outreach/xisong.webp"),
     alt: "Xisong High School outreach"
   },
 
@@ -107,19 +107,19 @@ const outreachMapData = {
 
   dingxi: {
     title: isChinesePage ? "新北市頂溪國小" : "Dingxi Elementary School",
-    image: getAssetPath("images/outreach/2.jpg"),
+    image: getAssetPath("images/outreach/2.webp"),
     alt: "Dingxi Elementary School outreach"
   },
 
   yongping: {
     title: isChinesePage ? "永平國小" : "Yongping Elementary School",
-    image: getAssetPath("images/outreach/4.jpg"),
+    image: getAssetPath("images/outreach/4.webp"),
     alt: "Yongping Elementary School outreach"
   },
 
   fuhsing: {
     title: isChinesePage ? "臺北市私立復興實驗高級中學" : "Taipei Fuhsing Private School",
-    image: getAssetPath("images/outreach/5.jpg"),
+    image: getAssetPath("images/outreach/5.webp"),
     alt: "Taipei Fuhsing Private School outreach"
   }
 };

@@ -293,7 +293,8 @@
        Enter and Space, or a keyboard user can never open a figure. */
     const open = (img) => {
         opener = img;
-        big.src = img.currentSrc || img.src;
+        /* with a srcset the page may hold the small copy; src is always the full file */
+        big.src = img.srcset ? img.src : (img.currentSrc || img.src);
         big.alt = img.alt;
         const c = img.closest("figure") && img.closest("figure").querySelector("figcaption");
         cap.textContent = c ? c.textContent.replace(/¶$/, "") : "";
