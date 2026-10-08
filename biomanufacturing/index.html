@@ -4,14 +4,37 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>Biomanufacturing | ReLeaf &middot; iGEM 2026</title>
-  <meta name="description" content="ReLeaf as a way of making things with biology: engineered B. subtilis, a light-triggered promoter and a contained perfusion reactor that makes a plant protectant at the edge of the field." />
+  <meta name="description" content="ReLeaf as a way of making things with biology: engineered B. subtilis, a light-triggered promoter, a contained perfusion reactor that makes a plant protectant at the edge of the field, and the perfusion arithmetic behind the claim that it scales out." />
   <link rel="icon" href="../assets/img/logo.png" />
   <link rel="stylesheet" href="../assets/css/tokens.css" />
   <link rel="stylesheet" href="../assets/css/nav.css" />
   <link rel="stylesheet" href="../assets/css/page.css" />
+  <link rel="stylesheet" href="../assets/vendor/katex/katex.min.css" />
   <link rel="stylesheet" href="../assets/css/bannerhead.css?v=20261008i" />
   <script src="../assets/js/bannerhead.js?v=20261008i" defer></script>
 </head>
+<!--
+  SOURCE. Rebuilt 9 October 2026 from "1008 Biomanufacturing Content.docx"
+  (Jacquelyn Inocencio and Sophie Liu, with their 4 October comment thread),
+  which gives the page its seven-part order: synthetic biology for agricultural
+  biomanufacturing, optogenetics, protein engineering, the bioreactor system,
+  regulation and biosafety, market, scaling. Two changes to that order were
+  asked for by the project lead: protein engineering becomes its own section,
+  and scaling is split out of "Market & Scaling" and carries the engineering
+  numbers rather than adjectives.
+
+  THE SCALING SECTION. Its arithmetic comes from the dry lab's reactor
+  calculation sheet (23 September 2026) - wall shear, Reynolds, critical flux,
+  oxygen transfer, cell-specific perfusion rate and the solar balance - of
+  which only the headline invariants are reproduced here. Measured values come
+  from Results and from Digital Twin R1; the provenance box at the end of the
+  section says which is which and names the four quantities nobody has
+  measured. Every figure on this page is one the wiki already hosts.
+
+  ORANGE. Everything written in this pass carries class="ai" and is for
+  Jacquelyn to rewrite in her own words. Student black text already on the page
+  was kept wherever the new order had a place for it.
+-->
 <body>
 
   <div id="site-nav" data-base="../" data-tab="project" data-page="biomanufacturing"></div>
@@ -32,16 +55,17 @@
     <div class="abstract__inner">
       <div class="abstract__story">
         <h2 class="abs-kicker">Abstract</h2>
-        <p class="abstract__lead ai">This page is the biomanufacturing view of ReLeaf: a 400&nbsp;mL perfusion reactor that grows a secreted protein protectant beside the plants that need it.</p>
-        <p class="abstract__body ai">One hollow-fibre cartridge does two unit operations at once. The culture circulates on the lumen side, the protein crosses to the shell side, and the process has no downstream train. <strong>The loop ran 102.4 hours</strong> at OD600 0.8 to 3.8 with transmembrane pressure within about &plusmn;0.1&nbsp;bar. <strong>No titre has been measured</strong> in the permeate, and no experiment shows P<em>cpcG2</em> output changing with green light, so the light control on this page is design intent.</p>
+        <p class="abstract__lead ai">This page is the biomanufacturing view of ReLeaf: a 400&nbsp;mL perfusion reactor that grows a secreted protein protectant beside the plants that need it, and the arithmetic that says what happens when you want a hundred of them.</p>
+        <p class="abstract__body ai">One hollow-fibre cartridge does two unit operations at once. The culture circulates on the lumen side, the protein crosses to the shell side, and the process has no downstream train. <strong>The loop ran 102.4 hours</strong> at OD600 0.8 to 3.8 with transmembrane pressure within about &plusmn;0.1&nbsp;bar. <strong>No titre has been measured</strong> in the permeate, and no experiment shows P<em>cpcG2</em> output changing with green light, so the light control on this page is design intent. The scaling case is made on invariants rather than ambition: hold wall shear and permeate flux per module and add modules, and the membrane is the last thing that breaks.</p>
       </div>
       <div class="abstract__outcomes">
         <h2 class="abs-kicker">Key results</h2>
         <ul class="abs-ledger">
           <li><a class="st-worked" href="#bioreactor"><i></i><span class="abs-ledger__name">Longest reactor run</span><span class="abs-st">Measured</span><span class="abs-ledger__text ai">102.4&nbsp;h, OD600 0.8 to 3.8, growth model R&sup2; = 0.991</span></a></li>
-          <li><a class="st-partial" href="#synthetic-biology-in-biomanufacturing"><i></i><span class="abs-ledger__name">Secretion blot</span><span class="abs-st">Partial</span><span class="abs-ledger__text ai">ACC deaminase in the supernatant, both pellets blank</span></a></li>
+          <li><a class="st-partial" href="#protein-engineering"><i></i><span class="abs-ledger__name">Secretion blot</span><span class="abs-st">Partial</span><span class="abs-ledger__text ai">ACC deaminase in the supernatant, both pellets blank</span></a></li>
           <li><a class="st-open" href="#optogenetics-for-bioproduction"><i></i><span class="abs-ledger__name">Induction curve</span><span class="abs-st">Open</span><span class="abs-ledger__text ai">No run shows P<em>cpcG2</em> output changing under green</span></a></li>
-          <li><a class="st-worked" href="#digital-twin"><i></i><span class="abs-ledger__name">In-line photometer</span><span class="abs-st">Validated</span><span class="abs-ledger__text ai">R&sup2; 0.9901 on a TiO2 dose, BioDrop 0.8501</span></a></li>
+          <li><a class="st-worked" href="#process-analytics"><i></i><span class="abs-ledger__name">In-line photometer</span><span class="abs-st">Validated</span><span class="abs-ledger__text ai">R&sup2; 0.9901 on a TiO2 dose, BioDrop 0.8501</span></a></li>
+          <li><a class="st-worked" href="#scaling"><i></i><span class="abs-ledger__name">Fouling headroom</span><span class="abs-st">Derived</span><span class="abs-ledger__text ai">J/J<sub>crit</sub> = 0.09; flux has threefold room before fouling binds</span></a></li>
           <li><a class="st-partial" href="#regulation-and-biosafety"><i></i><span class="abs-ledger__name">Shell-side plating</span><span class="abs-st">Partial</span><span class="abs-ledger__text ai">Lumen grows, shell side clear; no retention figure</span></a></li>
         </ul>
       </div>
@@ -63,13 +87,13 @@
 
       <!-- ================================= 1 · SYNTHETIC BIOLOGY ===== -->
       <section class="sec" id="synthetic-biology-in-biomanufacturing">
-        <h2>Synthetic biology in biomanufacturing</h2>
+        <h2>Synthetic biology for agricultural biomanufacturing</h2>
 
         <p>Biomanufacturing is an industrial process that uses living systems, such as microorganisms, plant cells, or animal cells, to produce commercial products and materials.</p>
 
-        <p>At its core, synthetic biology combines engineering principles with biological systems. DNA sequences can be designed, built, and inserted into organisms to reprogramme their function. The result is a highly flexible platform where microbes, yeast, or mammalian cells can be harnessed to produce complex molecules, therapeutic proteins, or entirely new biomaterials.</p>
+        <p class="ai">Agriculture increasingly depends on biological solutions that help a crop survive an environmental stress it cannot escape. Green biotechnology applies biological systems and engineering principles to crop production and resilience; within it, ReLeaf works on agricultural biologicals, the plant-protective molecules that support a crop under heat, drought and salinity.</p>
 
-        <p>Unlike traditional chemical synthesis, which can be limited by complexity and cost, synthetic biology enables the sustainable production of compounds that are otherwise difficult to manufacture. This includes biologics, cell and gene therapy components, vaccines, and speciality chemicals. For the pharmaceutical and biotechnology industries, this means access to scalable processes that can reduce costs, shorten timelines, and expand the range of viable products.</p>
+        <p class="ai">Finding a molecule that protects a plant is the smaller half of the problem. Biomanufacturing decides whether that molecule can be made reliably and delivered where it is needed, and the four constraints it brings &mdash; production cost, process control, scale-up and technical complexity &mdash; are what usually stop a protective protein from reaching a field. ReLeaf answers them with a localised, responsive production model: the molecule is made at the point of use, on the day it is needed, by a machine small enough to stand beside the crop.</p>
 
         <p>ReLeaf detects environmental stress through electronic sensors and activates engineered <i>B. subtilis</i> using green light. The bacteria produce plant-protective molecules inside a hollow-fiber bioreactor, which releases the protectants while retaining the engineered cells.</p>
 
@@ -83,11 +107,13 @@
         </figure>
 
         <div class="grid">
-          <div class="card2 ai"><h4>Product</h4><p>A secreted protein protectant. ACC deaminase is the one every bench result on this wiki was produced with; LEA14 and BoPep4 are designed, not yet made in quantity. <a href="../protein-design/">Protein Design</a></p></div>
+          <div class="card2 ai"><h4>Product</h4><p>A secreted protein protectant. ACC deaminase is the one every bench result on this wiki was produced with; LEA14 and BoPEP4 are designed, not yet made in quantity. <a href="../protein-design/">Protein Design</a></p></div>
           <div class="card2 ai"><h4>Chassis</h4><p><i>Bacillus subtilis</i>, non-pathogenic and a natural secretor. Work to 19 September is strain 168; the production strain is WB800. <a href="../parts/">Parts</a></p></div>
           <div class="card2 ai"><h4>Parts</h4><p>Nine Level&#8209;1 modules confirmed by colony PCR, amplicon check and sequencing; a Level&#8209;2 device junction-checked on three clones at 375, 632 and 661&nbsp;bp. <a href="../results/">Results</a></p></div>
-          <div class="card2 ai"><h4>Secretion</h4><p>One fractionation blot, 2&nbsp;August: ACC deaminase in the supernatant lanes, both pellet lanes blank. That blot is what the cell-free design rests on. <a href="../results/">Results</a></p></div>
+          <div class="card2 ai"><h4>Vessel</h4><p>A hollow-fibre perfusion loop, 0.2&nbsp;&micro;m rating, about 400&nbsp;mL working volume. Retention and recovery in one cartridge, so there is no downstream train. <a href="../hardware/bioreactor/">Hardware</a></p></div>
         </div>
+
+        <p class="ai">The scope rule for the rest of this page: every claim here is about how the thing is made. What the protein does once it reaches a root is on <a href="../plant/">Plants</a> and <a href="../model/">Math Model</a>.</p>
 
       </section>
 
@@ -97,7 +123,11 @@
 
         <p>Green light activates the CcaSR optogenetic system in engineered <i>Bacillus subtilis</i>, triggering the production of ACC deaminase, LEA14, or BoPep4.</p>
 
+        <p class="ai">Rather than engineer a cell to make one output forever, we wanted production that could be commanded. Four of the collection's five modules build that command chain: a <i>ho1</i>:<i>pcyA</i> operon that supplies the chromophore without which the photoreceptor is apoprotein, CcaS&#8209;m3 as the sensor, CcaR as the response regulator, and P<i>cpcG2-veg</i> driving a secretion tag fused to whichever protectant sits in the cargo slot. The fifth module carries the same cargoes behind a constitutive promoter, so a negative protectant result has one fewer explanation to rule out.</p>
+
         <p class="ai">For a process, light is an actuator with no mass. A chemical inducer has to be bought, stored, metered into a sterile vessel and then accounted for in the product stream; IPTG and its relatives are also a running cost that scales with every batch. Light adds no line into the loop, leaves no residue in the permeate, and can be re-dosed from software without anyone opening the vessel. That is what makes a forecast able to drive production at all: the command path ends at an LED, not at a pump full of inducer.</p>
+
+        <p class="ai">Optogenetic control is also the project's answer to the growth&ndash;production tradeoff. Resources a cell spends on a recombinant protein are resources it cannot spend on growing, so continuous expression taxes the chassis for the whole run. A light-responsive design lets the culture build biomass first and shift to protectant only when the forecast says the stress is coming, which is the operating pattern the <a href="../software/">Digital Twin</a> is built to drive.</p>
 
         <figure class="fig fig--chart">
           <div class="fig__frame">
@@ -114,15 +144,44 @@
           <b class="callout__label">The induction curve is still missing</b>
           <p>No experiment in this project shows P<sub>cpcG2</sub> output changing with green light. Every ACC deaminase result on this wiki was produced with the constitutive cassette, the array's wavelengths are taken from the CcaS/CcaR literature&nbsp;[2], not measured on our parts, and the kinetics on <a href="../model/">Math Model</a> are model output. One dose series with an expression readout, green against dark, closes it; it is the single experiment that unblocks the most of this page. Ledger on <a href="../results/">Results</a>.</p>
         </aside>
+
+        <p class="ai">Full record: the thirty-five parts in five modules on <a href="../parts/">Parts</a>, the builds and the gels on <a href="../experiments/">Experiments</a> and <a href="../results/">Results</a>.</p>
       </section>
 
-      <!-- ================================= 3 · INSTRUMENT ===== -->
-      <section class="sec" id="instrument">
-        <h2>Instrument</h2>
+      <!-- ================================= 3 · PROTEIN ENGINEERING ===== -->
+      <section class="sec" id="protein-engineering">
+        <h2>Protein engineering, secretion and recovery</h2>
 
-        <h3 id="bioreactor">Bioreactor</h3>
+        <p class="ai">The product of this process is one of three plant-protective proteins: ACC deaminase, which lowers stress-induced ethylene; LEA14, a late embryogenesis abundant protein that stabilises other proteins under osmotic stress; and BoPEP4, a twenty-three residue elicitor peptide that signals drought through the PEPR1 receptor. Sequence analysis, structural modelling and targeted substitutions were used to compare candidate variants before any DNA was ordered, and the decisions were taken against two constraints at once: the receptor has to recognise the molecule, and <i>B. subtilis</i> has to translate it, push it through the Sec pathway and leave it whole in a protease-rich supernatant.</p>
 
-        <p class="ai">The vessel is a perfusion loop, not a batch fermenter. Cells circulate on the lumen side of a hollow-fibre cartridge, the protein crosses to the shell side, and the shell-side liquid is what leaves the machine. One cartridge therefore does two unit operations at once, retention and recovery, and that is the whole reason the process has no downstream train.</p>
+        <p class="ai">Two of those results changed a construct rather than a slide. BoPEP4 opens with an uncharged GILIGS segment that makes no receptor contact and is conserved nowhere; removing residues 1 to 6 leaves the docking score flat, so the peptide gets shorter at no cost. And the six-histidine purification tag was ordered on the wrong end: fused after Asn23 it spends the free carboxylate that salt-bridges Arg487, and under an atom-resolved criterion that bond is present in no frame of the tagged trajectory against every frame of the wild type.</p>
+
+        <p class="ai">Biomanufacturing then asks what happens after the protein exists. ReLeaf puts secretion and recovery into the design rather than bolting a purification train onto the end: the protectant is exported by the cell, crosses the membrane, and leaves the machine on the shell side, separated from the producer by the same component that contains it. One fractionation blot is the whole evidence base for the first of those two steps.</p>
+
+        <figure class="fig">
+          <div class="fig__frame">
+            <img src="../assets/img/results/wb-260802-accd-fractionation.webp"
+                 alt="Western blot membrane with two ladder strips and four sample lanes labelled P1, P2, S and S, with bands visible only in the two S lanes between the 35 and 48 kilodalton marks."
+                 width="1120" height="880" loading="lazy" decoding="async" />
+          </div>
+          <figcaption class="ai"><b>Figure 3.</b> ACC deaminase fractionation, 2&nbsp;August 2026. P1 total pellet, P2 soluble pellet, S supernatant, six-minute exposure, dual ladders from 28 to 180&nbsp;kDa. Signal is in the supernatant only. One blot, no loading control, no molecular weight called on the original, and both S lanes are labelled S with nothing on record to say what separates them. Full record on <a href="../results/">Results</a>.</figcaption>
+        </figure>
+
+        <aside class="callout callout--unproven ai">
+          <b class="callout__label">No product specification exists yet</b>
+          <p>A manufactured product needs identity, recovery, concentration and biological efficacy, and ReLeaf has none of the four as measured quantities. There is no titre in the permeate, no standard curve on the same blot as a sample, and no activity assay on recovered material. Densitometry against a purified standard is the experiment that starts the specification; until it runs, every production figure on this wiki is a model output and is labelled as one. On <a href="../results/">Results</a>.</p>
+        </aside>
+
+        <p class="ai">Full record: selection, alignments, docking and the molecular dynamics on <a href="../protein-design/">Protein Design</a>.</p>
+      </section>
+
+      <!-- ================================= 4 · THE BIOREACTOR SYSTEM ===== -->
+      <section class="sec" id="bioreactor-system">
+        <h2>The bioreactor system</h2>
+
+        <h3 id="bioreactor">A perfusion loop, not a batch fermenter</h3>
+
+        <p class="ai">Cells circulate on the lumen side of a hollow-fibre cartridge rated at 0.2&nbsp;&micro;m, the protein crosses to the shell side, and the shell-side liquid is what leaves the machine. One cartridge therefore does two unit operations at once, retention and recovery, and that is the whole reason the process has no downstream train. It is also what makes continuous operation possible: cells are never harvested, so the culture is a standing asset rather than a batch to be consumed.</p>
 
         <figure class="fig fig--chart">
           <div class="fig__frame">
@@ -130,7 +189,7 @@
                  alt="System diagram of the perfusion bioreactor: culture vessel under a green LED, peristaltic pump, sampler, spectrophotometer, pressure sensor, hollow-fibre membrane, pinch valve, permeate reservoir with pH regulator, feeding a hydroponics system and a soil sprinkler line."
                  width="1600" height="976" loading="lazy" decoding="async" />
           </div>
-          <figcaption class="ai"><b>Figure 3.</b> The loop as built: engineered <i>B. subtilis</i> under green light, a peristaltic pump driving crossflow through the module, the inline photometer in the loop, the pinch valve that builds outward pressure, and the permeate path to hydroponics or a sprinkler line. Build history on <a href="../hardware/bioreactor/">Hardware: Bioreactor</a>.</figcaption>
+          <figcaption class="ai"><b>Figure 4.</b> The loop as built: engineered <i>B. subtilis</i> under green light, a peristaltic pump driving crossflow through the module, the inline photometer in the loop, the pinch valve that builds outward pressure, and the permeate path to hydroponics or a sprinkler line. Build history on <a href="../hardware/bioreactor/">Hardware: Bioreactor</a>.</figcaption>
         </figure>
 
         <div class="tablewrap">
@@ -142,7 +201,7 @@
               <tr><td class="ai">Longest uninterrupted run</td><td class="ai">102.4 h, OD600 0.8 to 3.8, perfusion growth model R&sup2;&nbsp;=&nbsp;0.991</td><td class="ai">Measured, one run</td></tr>
               <tr><td class="ai">Crossflow and pressure through that run</td><td class="ai">about 371 mL/min, transmembrane pressure within about &plusmn;0.1 bar</td><td class="ai">Measured, one run</td></tr>
               <tr><td class="ai">Growth in the loop against a flask</td><td class="ai">OD600 0.8 to 0.9 in about 2 h at 37&nbsp;&deg;C, flask 0.6 to 0.8 in about 4.5 h</td><td class="ai">One run each; stirring, sampling point and temperature all changed between cycles, so the comparison is confounded</td></tr>
-              <tr><td class="ai">Module</td><td class="ai">PES hollow fibre, 0.2&nbsp;&micro;m rating, about 400 mL working volume</td><td class="ai">Vendor specification&nbsp;[1]. Our own pages give the area as both 150&nbsp;cm&sup2;/8 fibres and 200&nbsp;cm&sup2;/11 fibres; settle it against the vendor sheet before this table is quoted</td></tr>
+              <tr><td class="ai">Module</td><td class="ai">PES hollow fibre, 0.2&nbsp;&micro;m rating, about 400 mL working volume</td><td class="ai">Vendor specification&nbsp;[1]. Our own pages give the area as both 150&nbsp;cm&sup2;/8 fibres and 200&nbsp;cm&sup2;/11 fibres; the hydraulic fit in <a href="#scaling">Scaling</a> agrees with eleven</td></tr>
             </tbody>
           </table>
         </div>
@@ -153,7 +212,7 @@
                  alt="Time series over 102 hours: optical density rising from 0.8 to 3.8 with a dashed fitted curve, crossflow held near 371 millilitres per minute on the right axis, and two insets for the model retention term and transmembrane pressure."
                  width="1600" height="579" loading="lazy" decoding="async" />
           </div>
-          <figcaption class="ai"><b>Figure 4.</b> The 102.4&nbsp;h run, with the fitted perfusion growth model and insets for the retention term and transmembrane pressure. Numbers and limits on <a href="../results/">Results</a>; the model on <a href="../model/">Math Model</a>.</figcaption>
+          <figcaption class="ai"><b>Figure 5.</b> The 102.4&nbsp;h run, with the fitted perfusion growth model and insets for the retention term and transmembrane pressure. Numbers and limits on <a href="../results/">Results</a>; the model on <a href="../model/">Math Model</a>.</figcaption>
         </figure>
 
         <p class="ai">What the run demonstrates in manufacturing terms is a contained vessel that held its hydraulics for four days while the culture grew twenty-fold, which is the operating window a farm unit needs. What it does not demonstrate is product: no titre has been measured in the permeate, and the reactor blot is read two opposite ways by two of our own drafts, so this page reports no release figure. Both are recorded on <a href="../results/">Results</a>.</p>
@@ -164,33 +223,13 @@
             <p>Excessive foaming was identified as a major concern, particularly because it can damage the hollow fiber membrane. Professor Chang pointed us toward two possible solutions: mutating the gene responsible for surfactant production or using chemical defoamers.</p>
             <p>One of the most significant gaps Professor Chang identified was that our design lacked a pressure or driving force to push the protectant from the lumen side to the shell side. He explained that increasing flow rate would not solve this problem, since it only recirculates the fluid rather than generating outward pressure. He recommended adding a valve to build pressure while reducing tube diameter to concentrate the outward force.</p>
             <p>Professor Chang advised that our current membrane may be oversized, increasing the risk of cells adhering to or clogging the fiber walls, and stressed that monitoring flow rate and transmembrane pressure is essential, as these indicate membrane fouling.</p>
-            <p class="ai">The pinch valve in Figure 3 answers the driving-force point and the pressure trace from the 102.4&nbsp;h run answers the monitoring point. Foaming is still open: no defoamer was used and no surfactant-deficient strain was built. Both meetings are recorded on <a href="../human-practices/">Integrated Human Practices</a>.</p>
+            <p class="ai">The pinch valve in Figure 4 answers the driving-force point and the pressure trace from the 102.4&nbsp;h run answers the monitoring point. The oversizing is now quantified rather than suspected: the fouling margin in <a href="#scaling">Scaling</a> puts the module about an order of magnitude larger than the duty needs. Foaming is still open, with no defoamer used and no surfactant-deficient strain built. Both meetings are recorded on <a href="../human-practices/">Integrated Human Practices</a>.</p>
           </div>
         </details>
 
-        <h3 id="light-plate-apparatus">Light plate apparatus</h3>
+        <h3 id="process-analytics">Process analytics: measuring a loop nobody can visit</h3>
 
-        <p class="ai">DiOPAL is the characterisation rig, not part of the control loop. It holds twenty-four cultures over twenty-four LEDs in a light-tight box, two wavelengths at three intensity tiers with four replicates each, so one run compares all six conditions under identical surroundings. A process that intends to dose light has to know what a dose is, and this is the fixture that defines it.</p>
-
-        <figure class="fig">
-          <div class="fig__frame">
-            <img src="../assets/img/results/light-plate-assembled.webp"
-                 alt="The assembled DiOPAL array: an enclosed box holding a printed rack of test tubes over a grid of LEDs, with the driver electronics covered."
-                 width="900" height="1200" loading="lazy" decoding="async" />
-          </div>
-          <figcaption class="ai"><b>Figure 5.</b> DiOPAL, third iteration, 17 July: enclosed electronics, printed tube holder, light shielding. Three build cycles on <a href="../hardware/diopal/">Hardware: DiOPAL</a>.</figcaption>
-        </figure>
-
-        <p class="ai">The result worth carrying into any other team's optogenetic rig is about the parts, not the biology. Forty single-bulb LEDs were measured individually at 5&nbsp;V in a fixed geometry: the green units spanned 2.01 to 2.54&nbsp;kLux, a 26% spread, and the red units 360 to 438&nbsp;lux, a 22% spread, across parts sold as identical. Sorting by measured output gives groups of four that agree to within about 1%, but the gap between the sorted tiers is only 7% green and 10% red, so intensity has to come from the pulse-width duty cycle and matching only makes a column internally consistent. Anyone building light-controlled expression on cheap LEDs inherits that problem; the measurement tables are on <a href="../hardware/diopal/">Hardware: DiOPAL</a>.</p>
-
-        <aside class="callout callout--unproven ai">
-          <b class="callout__label">Not claimed for the array</b>
-          <p>That the tiers are calibrated intensity tiers, and that the twenty-four positions receive an even dose. Evenness was never measured. Closed by a lux map across the positions with the duty cycles recorded. On <a href="../results/">Results</a>.</p>
-        </aside>
-
-        <h3 id="digital-twin">Digital twin</h3>
-
-        <p class="ai">A reactor beside a field has nobody to sample it, so measurement is the part of this process that had to be invented, not bought. The twin reads seven channels live, moves six valves, tags every value by how it was obtained, and runs its interlocks on the microcontroller, not in the browser so no model can drive the loop past a limit.</p>
+        <p class="ai">A reactor beside a field has nobody to sample it, so measurement is the part of this process that had to be invented rather than bought. The inline photometer is the project's Process Analytical Technology tool: it reads culture turbidity continuously, in the loop, without drawing a sample, and a reference beam lets the system tell an instrument fault from a process event. The light plate apparatus is the characterisation rig that defines what a light dose is, and the digital twin is what turns all of it into a control action.</p>
 
         <figure class="fig fig--chart">
           <div class="fig__frame">
@@ -216,9 +255,12 @@
           </table>
         </div>
 
+        <p class="ai">The light plate apparatus carries one result worth taking to any other team's optogenetic rig, and it is about the parts rather than the biology. Forty single-bulb LEDs measured individually at 5&nbsp;V in a fixed geometry spanned 2.01 to 2.54&nbsp;kLux green, a 26% spread, and 360 to 438&nbsp;lux red, a 22% spread, across units sold as identical. Sorting by measured output gives groups of four that agree to within about 1%, but the gap between sorted tiers is only 7% green and 10% red, so intensity has to come from the pulse-width duty cycle and matching only makes a column internally consistent. Evenness across the twenty-four positions was never measured, so the tiers are not calibrated intensity tiers and are not described as such.</p>
+
+        <p class="ai">Full record: the three build cycles and the measurement tables on <a href="../hardware/">Hardware</a>; the channel table, the forecasts and the interlocks on <a href="../software/">Digital Twin</a>.</p>
       </section>
 
-      <!-- ================================= 4 · REGULATION & BIOSAFETY ===== -->
+      <!-- ================================= 5 · REGULATION & BIOSAFETY ===== -->
       <section class="sec" id="regulation-and-biosafety">
         <h2>Regulation and biosafety</h2>
 
@@ -235,23 +277,50 @@
           <figcaption class="ai"><b>Figure 7.</b> Lumen side against shell side, plated from a running reactor and read after 24&nbsp;h at 37&nbsp;&deg;C. The lumen sample grows; the shell-side medium is clear. One plating per run, no replicate, and no log reduction value was measured, so none is quoted anywhere on this wiki. Full argument on <a href="../safety-and-security/#bioreactor-safety">Safety</a>.</figcaption>
         </figure>
 
-        <p class="ai">Regulation shaped the design in the same direction, because ReLeaf is three regulatory objects rather than one. The bioreactor is equipment. The engineered culture is a contained GMO, supplied as a vial. The cell-free permeate is the agricultural product, and in the EU its intended function, tolerance to abiotic stress, falls under the PFC&nbsp;6(B) plant-biostimulant category, which is the clearest pathway we found and the reason we avoid pesticidal claims. Keeping the organism inside the machine is what allows that separation to hold. The three-market comparison is on <a href="../laws-and-regulations/#where-releaf-sits">Laws and Regulations</a>.</p>
+        <p class="ai">Regulation shaped the design in the same direction, because ReLeaf is three regulatory objects rather than one, each on a different route.</p>
+
+        <div class="grid">
+          <div class="card2 ai"><h4>The bioreactor is equipment</h4><p>It has to meet the ordinary obligations of a machine that holds a pressurised liquid: pressure integrity, leak prevention, material compatibility, electrical safety, cleanability and routine maintenance of fluid-contact parts. No jurisdiction we looked at has an obvious device law that claims it.</p></div>
+          <div class="card2 ai"><h4>The culture is a contained GMO</h4><p>The engineered <i>B. subtilis</i> is supplied in a replaceable cartridge and regulated as a genetically modified microorganism for contained use, which brings controls on handling, containment, contamination, transport, storage and cartridge replacement. In the EU that is Directive 2009/41/EC.</p></div>
+          <div class="card2 ai"><h4>The permeate is the product</h4><p>Cell-free, so it is classified by composition, function and claim rather than by how it was made. In the EU a non-microbial product claiming improved tolerance to abiotic stress falls under Regulation 2019/1009, PFC&nbsp;6(B) plant biostimulant. Taiwan and the United States are less settled.</p></div>
+        </div>
+
+        <figure class="fig fig--chart">
+          <div class="fig__frame">
+            <img src="../assets/img/laws-and-regulations/venn-three-markets.webp"
+                 alt="A three-circle Venn diagram for the United States, the European Union and Taiwan. Each circle lists the rules for the bioreactor, the culture and the output; the overlaps list shared concepts such as engineered-microorganism biosafety and plant-biostimulant or fertilizer regulation. The centre reads: core claim, improves plant tolerance to abiotic stress; agricultural input rather than pesticide."
+                 width="2400" height="1680" loading="lazy" decoding="async" />
+          </div>
+          <figcaption class="ai"><b>Figure 8.</b> Overlapping regulatory themes across the European Union, Taiwan and the United States, read separately for the equipment, the culture and the output. Two themes hold in all three markets: engineered-microorganism biosafety and containment, and a plant-biostimulant or fertilizer route for the output. The core claim, improving tolerance to abiotic stress, is what keeps ReLeaf out of the pesticide frame. Market by market on <a href="../laws-and-regulations/#where-releaf-sits">Laws and Regulations</a>.</figcaption>
+        </figure>
+
+        <p class="ai">Because classification outside the EU turns on whether a product is read as supporting nutrient use, altering plant physiology or acting as a plant regulator, ReLeaf evaluates the biostimulant, biofertiliser and biopesticide routes separately for each protectant rather than assuming one answer carries across jurisdictions. Keeping the organism inside the machine is what allows that separation to hold at all: it is the design decision that gives the production strain and the agricultural product two clean regulatory paths instead of one tangled one.</p>
 
         <aside class="callout callout--unproven ai">
           <b class="callout__label">Not claimed for containment</b>
-          <p>A retention figure. The record is one plating per run with no replicate and no stated detection limit, and the cell dimension the geometric argument uses is quoted two different ways in our own pages. A poster figure filed under a log reduction value of 7.5 has no measurement behind it and must not be quoted. Closed by plating the shell side at every sampling point of a run. On <a href="../results/">Results</a>.</p>
+          <p>A retention figure. The record is one plating per run with no replicate and no stated detection limit, and the cell dimension the geometric argument uses is quoted two different ways in our own pages. A poster figure filed under a log reduction value of 7.5 has no measurement behind it and must not be quoted. A 0.2&nbsp;&micro;m membrane also retains whole cells while passing vesicles of 20 to 200&nbsp;nm and cell debris, so the barrier is cellular, not molecular. Closed by plating the shell side at every sampling point of a run. On <a href="../results/">Results</a>.</p>
         </aside>
+
+        <p class="ai">Full record: the three-market comparison on <a href="../laws-and-regulations/">Laws and Regulations</a>, the risk assessment and the interlocks on <a href="../safety-and-security/">Safety</a>.</p>
       </section>
 
-      <!-- ================================= 5 · MARKET & SCALING ===== -->
-      <section class="sec" id="market-and-scaling">
-        <h2>Market and scaling</h2>
+      <!-- ================================= 6 · MARKET ===== -->
+      <section class="sec" id="market">
+        <h2>Market</h2>
 
         <p>Instead of shipping a protectant to the field, we grow it there. There is no cold chain, no shelf life to manage, and no shipment to pay for since the protectant is produced metres from the plants it protects on the day they need it.</p>
 
         <p class="ai">Vaccine distribution is the nearest measured analogue for what a temperature-controlled biological supply chain costs. In one field logistics study, cold-chain infrastructure accounted for 43% of logistics cost at the national store and transport a further 34%, 77% together&nbsp;[3]. A protectant made on the farm never enters that chain. In exchange every farm needs its own machine, and the case for ReLeaf rests on that trade.</p>
 
-        <p class="ai">We scale out, not up. That came from the same bioprocess advice: heat transfer behaves differently in large vessels and <i>B. subtilis</i> favours higher temperatures for faster growth, which gets harder to control as the vessel grows, so a unit that stays at 400&nbsp;mL avoids the problem that a bigger tank would create. What it inherits instead is unit count, and the design answers that with a swappable biological cartridge so a farm never opens a culture. That one is an intention, with no prototype built.</p>
+        <p class="ai">Commercial feasibility therefore turns on whether the usable protectant a unit produces justifies what it costs to run. The prototype build is the only cost figure we have, and it is a build cost rather than a unit cost at volume: about NT$52,578 for the bacterial kit and NT$30,450 for the bioreactor, NT$83,028 together, roughly US$2,800. A techno-economic analysis would put ReLeaf's production performance and operating costs against that number to give a cost per unit of protectant, a break-even yield, and a comparison with what a farmer buys today. It cannot be written yet, because the quantity it needs most is the one nobody has measured.</p>
+
+        <div class="grid">
+          <div class="card2 ai"><span class="num">NT$83,028</span><h4>Prototype build</h4><p>Bacterial kit NT$52,578 and bioreactor NT$30,450, about US$2,800 together. Draft figures from the business plan, one unit, hand-built.</p></div>
+          <div class="card2 ai"><span class="num">5&ndash;10</span><h4>Pilot units</h4><p>One growing season with agricultural cooperatives, research farms and extension offices, before any purchasing or service agreement is offered.</p></div>
+          <div class="card2 ai"><span class="num">&mdash;</span><h4>Cost per dose</h4><p>Not calculable. It needs a permeate titre, and no titre has been measured. The break-even yield follows from the same number.</p></div>
+        </div>
+
+        <p class="ai">Rather than selling to individual farmers first, ReLeaf would test the system through pilot partnerships: five to ten units deployed for a single growing season, long enough to measure operating cost, reliability, maintenance burden, farmer usability and field performance under somebody else's conditions. If individual ownership stays too expensive after that, the cost can be spread rather than reduced &mdash; cooperative purchasing, seasonal rental, a cartridge subscription, or subsidised deployment through an extension programme&nbsp;[13]. Which of those fits is a question for the pilot, not for a spreadsheet.</p>
 
         <figure class="fig fig--chart">
           <div class="fig__frame">
@@ -259,14 +328,124 @@
                  alt="Chart positioning candidate markets against yield opportunity and regulatory difficulty."
                  width="864" height="720" loading="lazy" decoding="async" />
           </div>
-          <figcaption class="ai"><b>Figure 8.</b> Where a unit-based product is worth placing first, read against yield opportunity and regulatory difficulty. The market work, the social-enterprise model and the draft figures are on <a href="../entrepreneurship/#market-analysis">Entrepreneurship</a>.</figcaption>
+          <figcaption class="ai"><b>Figure 9.</b> Where a unit-based product is worth placing first, read against yield opportunity and regulatory difficulty. The market work, the social-enterprise model and the draft figures are on <a href="../entrepreneurship/#market-analysis">Entrepreneurship</a>.</figcaption>
         </figure>
 
         <aside class="callout callout--unproven ai">
-          <b class="callout__label">No yield and no unit cost are published here</b>
-          <p>The team estimate that one reactor could cover roughly a 30&nbsp;m diameter of land has no measured titre behind it and is not a specification. The business plan has working figures for a bacterial kit and for the reactor, but they are drafts, so this page gives no unit cost and no saving until the bill of materials is settled. Both on <a href="../entrepreneurship/">Entrepreneurship</a>.</p>
+          <b class="callout__label">No yield figure is published here</b>
+          <p>The team estimate that one reactor could cover roughly a 30&nbsp;m diameter of land has no measured titre behind it and is not a specification. The build costs above are drafts from the business plan for a single hand-made unit; they are not a bill of materials, not a cost at volume and not a price. Both on <a href="../entrepreneurship/">Entrepreneurship</a>.</p>
         </aside>
 
+        <p class="ai">Full record: market sizing, the business model canvas and the social-enterprise structure on <a href="../entrepreneurship/">Entrepreneurship</a>.</p>
+      </section>
+
+      <!-- ================================= 7 · SCALING ===== -->
+      <section class="sec" id="scaling">
+        <h2>Scaling</h2>
+
+        <p class="ai">A process scales along one of two routes. <b>Scale-up</b> grows the vessel, and everything that depends on a length scale &mdash; mass transfer, oxygen supply, heat removal, mixing time, membrane area per unit volume &mdash; has to be re-established at the new size. <b>Scale-out</b> replicates a fixed unit and changes nothing about the physics, trading a re-engineering problem for a logistics one. ReLeaf scales out, and the rest of this section is the arithmetic that says so, including the four places where it stops working.</p>
+
+        <h3 id="scaling-invariants">The invariants a replicated unit has to hold</h3>
+
+        <p class="ai">Tangential-flow filtration has a formal scale-up method, and it is the reason hollow fibre was chosen over a stirred tank with a filter on the side. Van Reis's linear scale-up holds every scale-independent hydrodynamic quantity constant and increases only channel count: filtrate volume per unit area, membrane material and pore size, channel geometry, and retentate and filtrate pressures all stay fixed, with transmembrane pressure controlled so the wall concentration does not move&nbsp;[5]. Applied without an intermediate pilot stage, that method carried a 400-fold increase in scale. Hollow fibre is the easiest format to do it in, because a scale-down module can be built with the same fibre length as the industrial one &mdash; our fixed-length module is already the replicable unit cell rather than a prototype of a bigger vessel.</p>
+
+        <p class="ai">Wall shear rate is the master variable. It sweeps the membrane, it sets the critical flux, and holding it constant is what makes the scale-up linear. For laminar flow in a round lumen it falls out of the flow per fibre and nothing else:</p>
+
+        \[ Q_1 = \frac{Q_{xf}}{N} \qquad \dot\gamma_w = \frac{32\,Q_1}{\pi d_i^{3}} \qquad \tau_w = \mu\,\dot\gamma_w \qquad \mathrm{Re} = \frac{4\rho Q_1}{\pi \mu d_i} \]
+
+        <p class="ai">Dividing by fibre count first is the step that matters. Feeding the pump total into the single-fibre expression overstates shear by a factor of <i>N</i>, and that error has appeared in more than one reactor write-up. With the division done, and taking the module as eight fibres of 1.0&nbsp;mm bore, the operating envelope is this.</p>
+
+        <div class="tablewrap">
+          <table class="data" style="min-width: 40rem">
+            <thead>
+              <tr><th>Cross-flow</th><th class="num">Lumen velocity</th><th class="num">Wall shear</th><th class="num">Shear stress</th><th class="num">Re</th><th class="num">Axial drop</th><th class="num">Single pass</th></tr>
+            </thead>
+            <tbody>
+              <tr><td class="ai">230 mL/min <span style="color:var(--gray-500)">(vendor floor)</span></td><td class="num ai">61 cm/s</td><td class="num ai">4,881 s<sup>&minus;1</sup></td><td class="num ai">4.9 Pa</td><td class="num ai">610</td><td class="num ai">11.6 kPa</td><td class="num ai">0.98 s</td></tr>
+              <tr><td class="ai">377 mL/min <span style="color:var(--gray-500)">(band closes)</span></td><td class="num ai">100 cm/s</td><td class="num ai">8,000 s<sup>&minus;1</sup></td><td class="num ai">8.0 Pa</td><td class="num ai">1,000</td><td class="num ai">19.0 kPa</td><td class="num ai">0.60 s</td></tr>
+              <tr><td class="ai">792 mL/min <span style="color:var(--gray-500)">(Re 2,100)</span></td><td class="num ai">210 cm/s</td><td class="num ai">16,806 s<sup>&minus;1</sup></td><td class="num ai">16.8 Pa</td><td class="num ai">2,100</td><td class="num ai">40.0 kPa</td><td class="num ai">0.28 s</td></tr>
+              <tr><td class="ai">2,600 mL/min <span style="color:var(--gray-500)">(wide open)</span></td><td class="num ai">690 cm/s</td><td class="num ai">55,174 s<sup>&minus;1</sup></td><td class="num ai">55.2 Pa</td><td class="num ai">6,897</td><td class="num ai">131.5 kPa</td><td class="num ai">0.09 s</td></tr>
+            </tbody>
+          </table>
+        </div>
+
+        <p class="ai">Conventional hollow-fibre microfiltration of bacterial cultures runs at 2,000 to 8,000&nbsp;s<sup>&minus;1</sup>, and Maiorella's crossflow work puts the balance between sweeping the membrane and damaging the cells nearer 1,500 to 3,000&nbsp;s<sup>&minus;1</sup>&nbsp;[10]. The pump's vendor floor of 230&nbsp;mL/min already sits at 4,881&nbsp;s<sup>&minus;1</sup>, in the upper half of the band and past Maiorella's balance point; the band runs out at 377&nbsp;mL/min, which is 6% of a dial that goes to 2,600. The usable setting is the stop at the bottom of the range, and that is a design constraint rather than a preference.</p>
+
+        <p class="ai">Whether the shear matters at all depends on the organism. A walled bacterium is not a CHO cell, so the 3 to 5&nbsp;Pa ceiling quoted in mammalian perfusion does not apply; gross damage to <i>B. subtilis</i> is reported only around 2,770&nbsp;Pa, which is 560 times our operating stress. Single-pass exposure is safe by a wide margin. Cumulative exposure is the open question: at 230&nbsp;mL/min a 100&nbsp;mL loop passes through the fibres about 138 times an hour, so a twelve-hour run is sixteen hundred passes through a peristaltic head, and van Reis attributes protein aggregation to pump passages and air entrainment rather than to shear itself&nbsp;[5].</p>
+
+        <h3 id="scaling-fouling">The fouling margin, and the headroom it buys</h3>
+
+        <p class="ai">Below a critical permeate flux, deposition is negligible and transmembrane pressure does not drift; above it, cells build a cake and the membrane fouls&nbsp;[7]. For a particulate suspension in laminar cross-flow the shear-induced diffusion model gives the threshold&nbsp;[8][9]:</p>
+
+        \[ J_{crit} = 0.072 \left( \frac{a^{4}}{L} \right)^{1/3} \dot\gamma_w \ln\!\left( \frac{\phi_w}{\phi_b} \right) \]
+
+        <p class="ai">With <i>a</i>&nbsp;=&nbsp;0.71&nbsp;&micro;m as the equivalent-sphere radius of a 0.8&nbsp;&times;&nbsp;3&nbsp;&micro;m rod, the wall fraction pinned at random close packing (0.60) and the bulk fraction computed from cell density, the threshold at the bench operating point is 55&nbsp;LMH against an operating flux of 5. The ratio J/J<sub>crit</sub> is 0.09.</p>
+
+        <p class="ai">That is not a close call and it should not be dressed up as one: the membrane is oversized for the duty by roughly an order of magnitude, which follows from a module chosen for its fibre geometry with the area coming along with it. The consequence is permissive. Flux can be raised more than threefold before fouling becomes the binding constraint, which is exactly the room needed to bring cell-specific perfusion into its conventional band. What stops that is the medium bill, not the membrane.</p>
+
+        <aside class="callout callout--borrowed ai">
+          <b class="callout__label">Two caveats that belong with that number</b>
+          <p>Local flux is not uniform across the surface, so low-level fouling can occur below the nominal threshold and no operating point should ever be quoted as sitting exactly at J<sub>crit</sub>&nbsp;[6]. And the model treats the feed as cells in water: secreted protein, media components and cell debris all add resistance the expression does not carry.</p>
+        </aside>
+
+        <h3 id="scaling-perfusion">Why the chemostat criterion does not apply</h3>
+
+        <p class="ai">An earlier design dossier carried the washout inequality <i>D</i>&nbsp;&lt;&nbsp;&micro;<sub>max</sub> as the check on dilution rate. For this reactor it is the wrong invariant and it has been dropped. A 0.2&nbsp;&micro;m membrane against 1 to 2&nbsp;&micro;m rods retains the cells: permeate leaves, biomass does not, so the dilution rate can exceed the growth rate without washing anything out. That is the defining property of perfusion, and quoting a chemostat criterion for it signals the distinction has not been made.</p>
+
+        <p class="ai">What replaces it is cell-specific perfusion rate, the medium delivered per cell per day. Modern perfusion practice sits between 0.02 and 0.5&nbsp;nL; at 5&nbsp;LMH and OD600&nbsp;1.54 ours is 0.015, just under the band, so the culture is being fed slightly lean per cell. Reaching 0.05 needs about 17&nbsp;LMH, which the membrane passes easily and the fouling margin has room for. Then the arithmetic turns: at 5&nbsp;LMH the module draws 1.25&nbsp;mL/min, which is 1.8&nbsp;L of medium a day and eighteen turnovers of the working volume; at 17&nbsp;LMH it is 6.1&nbsp;L a day. For a bench run over a shift that is unremarkable. For a device meant to sit unattended in a field for a week it is the binding constraint, and no membrane calculation touches it.</p>
+
+        <h3 id="scaling-breaks">What breaks first when you add modules</h3>
+
+        <p class="ai">The scale-out claim is cheap to state and expensive to test, so the honest version is a table of what each quantity does at eight units. The membrane is the last thing on the list, which is the whole point &mdash; and also the warning, because everything above it is a deployment problem the reactor arithmetic cannot solve.</p>
+
+        <div class="tablewrap">
+          <table class="data" style="min-width: 38rem">
+            <thead>
+              <tr><th>Quantity</th><th>One module</th><th>Eight modules</th><th>Binding?</th></tr>
+            </thead>
+            <tbody>
+              <tr><td class="ai">Membrane area</td><td class="ai">150 cm&sup2;</td><td class="ai">1,200 cm&sup2;</td><td class="ai">No. Shear, flux and fouling margin are unchanged by construction</td></tr>
+              <tr><td class="ai">Permeate</td><td class="ai">1.25 mL/min at 5 LMH</td><td class="ai">10 mL/min</td><td class="ai">No</td></tr>
+              <tr><td class="ai">Medium draw</td><td class="ai">1.8 L/day</td><td class="ai">14.4 L/day</td><td class="ai"><b>Yes</b>, for an unattended week in a field</td></tr>
+              <tr><td class="ai">Cross-flow pumping</td><td class="ai">one pump, continuous</td><td class="ai">eight pumps, continuous</td><td class="ai"><b>Yes</b>. Pumping is per module, so the power balance fails long before the membrane does</td></tr>
+              <tr><td class="ai">Oxygen transfer</td><td class="ai">k<sub>L</sub>a of 13.2 h<sup>&minus;1</sup> required at OD 1.54</td><td class="ai">per module, unchanged</td><td class="ai"><b>Yes</b>, per unit. Deliverable k<sub>L</sub>a has never been measured</td></tr>
+              <tr><td class="ai">Energy</td><td class="ai">3 to 8 W continuous, unmetered</td><td class="ai">24 to 64 W</td><td class="ai"><b>Yes</b>. A 45 W panel harvests 101 Wh/day at Taiwan winter sun</td></tr>
+              <tr><td class="ai">Control bandwidth</td><td class="ai">&theta;/&tau; of 1.3 to 5.3</td><td class="ai">per module, unchanged</td><td class="ai">No, but it fixes what the device is for</td></tr>
+            </tbody>
+          </table>
+        </div>
+
+        <p class="ai"><b>Oxygen caps the density before anything else does.</b> At the carrying capacity of OD600&nbsp;1.54, taking 0.4&nbsp;g dry cell weight per litre per OD unit and a conservative 3&nbsp;mmol&nbsp;g<sup>&minus;1</sup>h<sup>&minus;1</sup> uptake, the culture consumes 1.85&nbsp;mmol&nbsp;L<sup>&minus;1</sup>h<sup>&minus;1</sup> and needs a k<sub>L</sub>a of 13.2&nbsp;h<sup>&minus;1</sup>. That is modest for a sparged fermenter and demanding for a closed loop with no gas port. The rate understates the problem; the inventory shows it. A 100&nbsp;mL loop held at 30% of saturation contains 0.006&nbsp;mmol of dissolved oxygen against a consumption of 0.185&nbsp;mmol per hour, so cutting the supply empties it in under two minutes, and six and a half from full saturation. Oxygen here is a throughput, not a reservoir. The defensible move when the requirement might exceed the supply is to cap cell density at what the reactor can breathe and publish the cap, because a defended ceiling reads better than an undefended headline figure.</p>
+
+        <p class="ai"><b>Energy decides whether a unit can stand in a field at all.</b> Taiwan's worst-case winter peak-sun-hours is about three per day, which is the figure to design against rather than the annual average. At 75% harvest from panel to battery to load, a 45&nbsp;W panel returns 101&nbsp;Wh per day. The draw is 72&nbsp;Wh at the bottom of the estimate and 192&nbsp;Wh at the top; at a mid-point of 5&nbsp;W the balance comes to 0.84 of what it needs and closing it takes a 53&nbsp;W panel. The entire spread comes from one unmeasured quantity, the recirculation pump running continuously, and a clamp meter settles it in five minutes.</p>
+
+        <p class="ai"><b>Dead time fixes what the device can respond to.</b> Loop dead time sums sensor sampling, controller cycle, LED ramp, the CcaSR activation half-time, secretion lag and pump transit, and the 105.1&nbsp;&plusmn;&nbsp;1.5&nbsp;min activation half-time&nbsp;[2] dominates everything else by an order of magnitude. The system time constant is the shell exchange time, eighty minutes at 5&nbsp;LMH and twenty at 20&nbsp;LMH, so &theta;/&tau; lands between 1.3 and 5.3: dead-time dominated in every case. A dead-time-dominated loop still works, slowly, and the framing has to match. ReLeaf is tuned for drought and salinisation developing over hours to days. It cannot answer an acute shock, and any claim that it can is contradicted by a literature parameter we cite ourselves. Raising the flux shortens &tau; and makes the ratio worse, which is why the delivery rate cannot be tuned on plant grounds alone.</p>
+
+        <p class="ai"><b>Instrumentation is the quiet constraint.</b> The transmembrane pressure that the whole scale-up method is supposed to hold constant is read by a sensor spanning 0 to 1&nbsp;MPa at 1.0% of full scale&nbsp;[12], which is &plusmn;10&nbsp;kPa wherever the needle sits. The axial drop at the pump floor is 11.6&nbsp;kPa, so the error bar is about as wide as the signal, and the analog error dominates the 14-bit converter behind it by a long way. Two things follow for a fleet: any transmembrane pressure from this build has to be published as a value against &plusmn;10&nbsp;kPa rather than as a bare number, and fouling has to be read off a trend across repeated readings, because a drift of 30&nbsp;kPa over an hour is real where a single reading of 30&nbsp;kPa is not. A 0 to 100&nbsp;kPa sensor resolves &plusmn;1&nbsp;kPa and is the cheapest upgrade available to this reactor.</p>
+
+        <aside class="callout callout--medal ai">
+          <b class="callout__label">One change answers three of the four</b>
+          <p>Running the recirculation pump on a duty cycle rather than continuously cuts the dominant electrical load, the cumulative shear exposure behind the June lumen result, and the medium draw, all at once &mdash; and the reactor can afford it, because it already delivers more medium per day than a field deployment can carry and the biology responds over hours rather than seconds. The cost is settling in the fibres during the off phase, which is why it has not simply been adopted. It is the single highest-value experiment left on the hardware side.</p>
+        </aside>
+
+        <figure class="fig fig--chart">
+          <div class="fig__frame">
+            <img src="../assets/img/software/fig-r1-hydraulics.svg"
+                 alt="Pressure drop against flow, with the module fitted and with a jumper only, each fitted through the origin, and the net-module difference curve."
+                 width="900" height="380" loading="lazy" decoding="async" />
+          </div>
+          <figcaption class="ai"><b>Figure 10.</b> The one place the scaling arithmetic has been checked against the bench. 16&nbsp;August 2026, water at 22&nbsp;&deg;C, eight pump settings with the module fitted and with a jumper in its place; both fit &Delta;P&nbsp;=&nbsp;aQ&nbsp;+&nbsp;bQ&sup2; through the origin, module R&sup2;&nbsp;0.9954. At 263&nbsp;mL/min the net module drop is 0.096&nbsp;bar, 1.03 times the Hagen&ndash;Poiseuille prediction for eleven open fibres. No point was held out. On <a href="../software/#results">Digital Twin R1</a>.</figcaption>
+        </figure>
+
+        <aside class="callout callout--unproven ai">
+          <b class="callout__label">What is measured, what is computed, and what nobody has measured</b>
+          <p><b>Measured.</b> The 102.4&nbsp;h run, its crossflow and its transmembrane pressure. The module pressure drop on 16&nbsp;August. 434&nbsp;h of in-line optical density. The photometer calibration against a TiO<sub>2</sub> dose.</p>
+          <p><b>Computed from the module geometry.</b> Every shear, Reynolds, critical-flux, oxygen-transfer, cell-specific-perfusion and energy number above. They are arithmetic, not results, and they inherit whatever the geometry gets wrong.</p>
+          <p><b>Assumed.</b> The geometry itself. Our own records give the module as both 150&nbsp;cm&sup2; with eight fibres and 200&nbsp;cm&sup2; with eleven; the hydraulic fit in Figure 10 agrees with eleven, and a lumen weighed on 13&nbsp;August gave 7.0 to 7.2&nbsp;mL of holdup against a computed 3.74&nbsp;mL. The table above uses eight fibres, so its shear values are the conservative, higher ones. The pump is quoted at its vendor floor of 230&nbsp;mL/min&nbsp;[11]; bench calibration of the same unit puts setting 10 at about 100&nbsp;mL/min, and three calibrations across three days span 100 to 140, which widens the usable shear window rather than closing it. The 2,770&nbsp;Pa damage threshold is carried from the dry lab's calculation sheet without a pinned citation.</p>
+          <p><b>Never measured.</b> Deliverable k<sub>L</sub>a, the log reduction value behind containment, the system's power draw, and the permeate titre. The first three are each an afternoon of work; the fourth is the one that unblocks the business case.</p>
+        </aside>
+
+        <p class="ai">Full record: the growth and transport models on <a href="../model/">Math Model</a>, the build and the teardown on <a href="../hardware/bioreactor/">Hardware: Bioreactor</a>, the measured runs on <a href="../results/">Results</a>, and the deployment economics on <a href="../entrepreneurship/">Entrepreneurship</a>. The scale-out case against conventional scale-up is argued the same way in biopharmaceutical manufacturing&nbsp;[14].</p>
       </section>
 
       <section class="refs" id="references">
@@ -288,6 +467,40 @@
               <i>Bacillus subtilis</i> and Gram-positive bacteria.
               <i>Trends in Biotechnology</i>, 43(6), 1446 to 1469.
               <a href="https://doi.org/10.1016/j.tibtech.2025.02.004" target="_blank" rel="noopener">doi:10.1016/j.tibtech.2025.02.004</a></li>
+          <li>van Reis, R., Goodrich, E. M., Yson, C. L., Frautschy, L. N., Dzengeleski, S.,
+              &amp; Lutz, H. (1997). Linear scale ultrafiltration.
+              <i>Biotechnology and Bioengineering</i>, 55(5), 737 to 746.
+              Source of the linear scale-up method used in Scaling, and of the 400-fold
+              scale-up carried without a pilot stage.</li>
+          <li>van Reis, R., &amp; Zydney, A. (2007). Bioprocess membrane technology.
+              <i>Journal of Membrane Science</i>, 297(1&ndash;2), 16 to 50.
+              <a href="https://doi.org/10.1016/j.memsci.2007.02.045" target="_blank" rel="noopener">doi:10.1016/j.memsci.2007.02.045</a></li>
+          <li>Field, R. W., Wu, D., Howell, J. A., &amp; Gupta, B. B. (1995). Critical flux
+              concept for microfiltration fouling. <i>Journal of Membrane Science</i>,
+              100(3), 259 to 272.
+              <a href="https://doi.org/10.1016/0376-7388(94)00265-Z" target="_blank" rel="noopener">doi:10.1016/0376-7388(94)00265-Z</a></li>
+          <li>Zydney, A. L., &amp; Colton, C. K. (1986). A concentration polarization model
+              for the filtrate flux in cross-flow microfiltration of particulate suspensions.
+              <i>Chemical Engineering Communications</i>, 47(1&ndash;3), 1 to 21.</li>
+          <li>Belfort, G., Davis, R. H., &amp; Zydney, A. L. (1994). The behavior of
+              suspensions and macromolecular solutions in crossflow microfiltration.
+              <i>Journal of Membrane Science</i>, 96(1&ndash;2), 1 to 58.</li>
+          <li>Maiorella, B., Dorin, G., Carion, A., &amp; Harano, D. (1991). Crossflow
+              microfiltration of animal cells. <i>Biotechnology and Bioengineering</i>,
+              37(2), 121 to 126. Source of the 1,500 to 3,000&nbsp;s<sup>&minus;1</sup>
+              balance point.</li>
+          <li>ZP4000-N79H peristaltic pump, N-tube head. Vendor specification:
+              230 to 2,600&nbsp;mL/min. Bench calibration of the same unit disagrees with
+              the floor and is recorded in the wet lab experiment archive; see the
+              provenance box in Scaling.</li>
+          <li>BP8G-AGA pressure transmitter. Vendor specification: 0 to 1&nbsp;MPa,
+              0 to 5&nbsp;V output, 1.0% full-scale accuracy, 24&nbsp;VDC supply.</li>
+          <li>How India's new cooperative grain network could help farmers avoid distress
+              sales. <i>Organiser</i>, 6 September 2026.
+              <a href="https://organiser.org/2026/09/06/378928/bharat/how-indias-new-cooperative-grain-network-could-help-farmers-avoid-distress-sales/" target="_blank" rel="noopener">organiser.org</a>
+              Source for the cooperative purchasing and flexible cost models in Market.</li>
+          <li>Scale-out manufacturing: a faster path to commercial launch. AGC Biologics.
+              <a href="https://www.agcbio.com/biopharma-blog/scale-out-manufacturing-a-faster-path-to-commercial-launch" target="_blank" rel="noopener">agcbio.com</a></li>
         </ol>
       </section>
     </main>
@@ -296,7 +509,6 @@
     <a class="is-prev" href="../description/"><b>Previous</b><span>Description</span></a>
     <a class="is-next" href="../engineering/"><b>Next</b><span>Engineering</span></a>
   </nav>
-
   <footer class="footer2">
     <div class="footer2__inner">
         <div>
@@ -363,5 +575,7 @@
   <script src="../assets/data/site-nav.js" fetchpriority="high"></script>
   <script src="../assets/js/nav.js" fetchpriority="high"></script>
   <script src="../assets/js/page.js" fetchpriority="high"></script>
+  <script defer src="../assets/vendor/katex/katex.min.js"></script>
+  <script defer src="../assets/js/math.js"></script>
 </body>
 </html>
