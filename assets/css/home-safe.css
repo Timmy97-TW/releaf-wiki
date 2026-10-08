@@ -1,223 +1,48 @@
 /* =============================================================================
-   ReLeaf homepage: PROTECTION OUT OF REACH (#safe)
+   ReLeaf homepage: PROTECTANTS, AND THE CELLS KEPT OUT OF THE FIELD (#safe)
    -----------------------------------------------------------------------------
-   03 in the problem arc, between the hour and the question. Rebuilt 8 Oct
-   (Jacquelyn): the header runs the width of the column and breaks only at
-   the margin, her two paragraphs sit under it in two columns, and the
-   figure takes the rest of the screen. White ground, as the hour.
+   Between the hour and the gap. Rebuilt 7 Oct: the two paragraphs on the
+   left and the title on the right (the markup keeps title first, so the
+   reading order and the narrow layout are unchanged; only the wide grid
+   swaps the two), then the figure the full width of the column under them.
+   Below 900px the head is one column, title first. Same white ground
+   as the hour. Static.
 
-   THE FIGURE (.sf-route) is one grid: the lab, five gates, the field.
-   Every piece of it is laid out by that grid and nothing is positioned by
-   hand.
-
-     .sf-band   the amber stream. ONE element, a clip-path polygon that
-                steps down at the centre of each gate column (10, 30, 50,
-                70, 90 per cent of its own width). It is decorative and
-                aria-hidden; what it says in words is in the paragraphs
-                above and in the visually-hidden line inside the figure.
-     .sf-gate   one stage. --o is the stream's height on the far side of
-                it, as a fraction of the drawing's height; the gate's own
-                opening is calculated from the same number, so the stream
-                always fits its gate exactly. Change --o in the markup and
-                the polygon below, together, or they part company.
-
-   The taper is a drawing of loss, not a measurement: no number is printed.
-
-   Below 760px the stream is not drawn at all (a vertical taper would be a
-   second drawing to keep in step) and the gates stand as a plain column
-   between the lab and the field.
+   THE FIGURE is one picture, assets/img/home/safe-art-* (2:1), built by
+   build/safe-art.py on the design team's valley painting. Blue is kept for
+   the engineered cells only, so they never read as the crop; amber is the
+   protectant, as in the reactor. No caption.
    ========================================================================== */
 
 .sf {
   background: var(--white);
   padding: clamp(3rem, 8vh, 5.5rem) 0;
 }
-.sf__inner { display: grid; row-gap: clamp(1.75rem, 4.5vh, 3rem); }
+.sf__inner { display: grid; row-gap: clamp(1.75rem, 4vh, 2.75rem); }
 .sf__head { display: grid; row-gap: var(--sp-5); }
-
-/* her header: the full width of the column, and it lines only at the margin */
-.sf__title { max-width: none; margin: 0; text-wrap: balance; }
-
-.sf__lede { display: grid; row-gap: var(--sp-3); }
-.sf__lede .pb-lede { margin: 0; max-width: 46rem; text-wrap: pretty; }
 @media (min-width: 900px) {
-  .sf__lede {
-    /* the second paragraph is half as long again as the first, so it takes
-       the wider column and both end on a full line */
-    grid-template-columns: minmax(0, .88fr) minmax(0, 1.12fr);
-    column-gap: clamp(2.5rem, 5vw, 4.5rem);
-    row-gap: 0;
+  .sf__head {
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+    column-gap: clamp(2.5rem, 5vw, 5rem);
+    align-items: start;
   }
-  .sf__lede .pb-lede { max-width: 38rem; }
+  /* 7 Oct (owner): the title reads on the right, its paragraphs on the left */
+  .sf__head .pb-title { grid-column: 2; grid-row: 1; }
+  .sf__lede { grid-column: 1; grid-row: 1; }
 }
+.sf__head .pb-title { margin: 0; max-width: 24ch; }
+.sf__head .pb-lede { margin: 0; max-width: 36rem; text-wrap: pretty; }
+.sf__head .pb-lede + .pb-lede { margin-top: var(--sp-3); }
 
-/* ------------------------------------------------------------- the route --- */
-
-.sf-route {
-  --sf-h: clamp(8.5rem, 25vh, 15rem);
-  margin: 0;
+.sf-art { margin: 0; }
+.sf-art img {
+  display: block; width: 100%; height: auto;
+  aspect-ratio: 2 / 1;
+  border-radius: 1.25rem;
+  background: #c9dceb;                /* her sky, while the picture loads */
 }
-
-.sf-route__grid {
-  display: grid;
-  grid-template-columns:
-    minmax(0, 1.25fr) repeat(5, minmax(0, 1fr)) minmax(0, 1.25fr);
-  align-items: start;
-}
-
-/* the two ends: the drawing on the row the stream runs on, then the name */
-.sf-stop { grid-row: 1; display: grid; grid-template-rows: var(--sf-h) auto; row-gap: .7rem; }
-.sf-stop--lab   { grid-column: 1; }
-.sf-stop--field { grid-column: 7; }
-.sf-stop__art { height: var(--sf-h); }
-.sf-stop__art svg { display: block; width: 100%; height: 100%; }
-.sf-stop__k {
-  margin: 0;
-  font-size: .72rem; font-weight: 700; letter-spacing: .11em; text-transform: uppercase;
-  color: var(--leaf-700);
-}
-.sf-stop__t {
-  margin: .3rem 0 0;
-  font-size: .8125rem; line-height: 1.4; color: var(--gray-500);
-  max-width: 17rem;
-}
-.sf-stop--field .sf-stop__t { max-width: 15rem; }
-
-/* the stream. The polygon steps at 10 / 30 / 50 / 70 / 90 per cent, the
-   centres of the five gate columns; each pair of y values is (1 ± --o) / 2
-   for that gate, so the band is exactly the width of the opening it has
-   just passed through. */
-.sf-band {
-  grid-column: 2 / 7; grid-row: 1;
-  height: var(--sf-h);
-  /* the wrapper is the reveal; .sf-band__in is the stream itself, so the
-     taper is never squeezed while it runs */
-  clip-path: inset(0 0 0 0);
-}
-.sf-band__in {
-  display: block; width: 100%; height: 100%;
-  /* threads, so the stream reads as flow and not as a block, over the
-     amber that pales as the stream thins */
-  background:
-    repeating-linear-gradient(180deg, rgb(255 255 255 / .26) 0 1.5px, rgb(255 255 255 / 0) 1.5px 9px),
-    linear-gradient(90deg, #dfa33a 0%, #e7b961 55%, #f0d39a 100%);
-  /* the first pair is the chamfer where the stream leaves the lab; every
-     pair after it is a gate, at 10 / 30 / 50 / 70 / 90 per cent */
-  clip-path: polygon(
-    0% 24%, 2.5% 12%, 10% 12%, 10% 16%, 30% 16%, 30% 23%, 50% 23%,
-    50% 29%, 70% 29%, 70% 34%, 90% 34%, 90% 39%, 100% 39%,
-    100% 61%, 90% 61%, 90% 66%, 70% 66%, 70% 71%, 50% 71%,
-    50% 77%, 30% 77%, 30% 84%, 10% 84%, 10% 88%, 2.5% 88%, 0% 76%
-  );
-}
-
-/* one stage. The slab is two blocks with the stream's own height between
-   them, so the opening narrows down the row. */
-.sf-gate {
-  grid-row: 1;
-  display: grid; grid-template-rows: var(--sf-h) auto; row-gap: .7rem;
-  justify-items: center;
-}
-/* --i is the gate's column (2 to 6), set in the markup beside --o. On a
-   narrow screen the same number is its row, which is why it is one value. */
-.sf-gate { grid-column: var(--i); }
-
-.sf-gate__slab {
-  position: relative;
-  width: .625rem; height: var(--sf-h);
-  justify-self: center;
-}
-.sf-gate__slab::before,
-.sf-gate__slab::after {
-  content: ""; position: absolute; left: 0; right: 0;
-  height: calc((1 - var(--o)) / 2 * 100%);
-  background: var(--rust-700);
-  border-radius: .3125rem;
-  /* a hair of the page's own white between the wall and the stream, so the
-     gate reads as something the stream has to get past */
-  box-shadow: 0 0 0 2.5px var(--white);
-}
-.sf-gate__slab::before { top: 0; }
-.sf-gate__slab::after  { bottom: 0; }
-
-.sf-gate__t {
-  margin: 0; padding: 0 .25rem;
-  font-size: .8125rem; font-weight: 600; line-height: 1.25;
-  color: var(--gray-700); text-align: center;
-}
-
-/* the sixth column of the grid ends at the field: the last gate's opening
-   is what reaches it, so nothing is drawn between gate five and the crop
-   beyond the stream itself */
-
-/* ----------------------------------------------------------- narrow ------ */
-/* Below 760px the stream is not drawn: a vertical taper would be a second
-   drawing to keep in step with --o, and the gates say the same thing in
-   order on their own. */
-@media (max-width: 759px) {
-  .sf-route { --sf-h: 7.5rem; }
-  .sf-route__grid { grid-template-columns: minmax(0, 1fr); row-gap: 1.5rem; }
-  .sf-band { display: none; }
-  .sf-stop--lab   { grid-column: 1; grid-row: 1; }
-  .sf-stop--field { grid-column: 1; grid-row: 7; }
-  .sf-stop__t { max-width: none; }
-
-  .sf-gate {
-    grid-column: 1; grid-row: var(--i);
-    grid-template-rows: auto; row-gap: 0;
-    grid-template-columns: 1.75rem minmax(0, 1fr);
-    align-items: center; column-gap: .9rem; justify-items: start;
-  }
-  /* on end, the gate becomes a bar: the rust is the stage, and the amber in
-     the middle of it is how much of the stream is still getting through */
-  .sf-gate__slab {
-    width: 1.75rem; height: .5rem; justify-self: start;
-    border-radius: .25rem; overflow: hidden;
-    background: var(--rust-700);
-  }
-  .sf-gate__slab::after { content: none; }
-  .sf-gate__slab::before {
-    top: 0; bottom: 0; left: 50%; right: auto; height: auto;
-    width: calc(var(--o) * 100%); translate: -50% 0;
-    background: #dfa33a; border-radius: 0; box-shadow: none;
-  }
-  .sf-gate__t { padding: 0; text-align: left; font-size: .9375rem; }
-}
-
-/* ----------------------------------------------------- the stream runs --- */
-/* As the figure comes into view the stream sets out from the lab and each
-   gate shuts on it in turn, which is the sentence above said in order. It
-   runs only where animation-timeline is supported and motion is allowed, it
-   only ever moves a transform, and the state it ends in is the state the
-   figure has without it. The stagger is --i again, the gate's own column. */
-@supports (animation-timeline: view()) {
-  @media (prefers-reduced-motion: no-preference) and (min-width: 760px) {
-    .sf-route__grid { view-timeline: --sf block; }
-    .sf-band,
-    .sf-gate__slab::before,
-    .sf-gate__slab::after {
-      animation-fill-mode: both; animation-duration: auto;
-      animation-timing-function: linear; animation-timeline: --sf;
-    }
-    .sf-band {
-      animation-name: sf-flow;
-      animation-range: entry 8% entry 62%;
-      animation-timing-function: cubic-bezier(.25, .6, .3, 1);
-    }
-    .sf-gate__slab::before,
-    .sf-gate__slab::after {
-      animation-name: sf-shut;
-      animation-range: entry calc(10% + var(--i) * 7%) entry calc(28% + var(--i) * 7%);
-      animation-timing-function: cubic-bezier(.2, .7, .2, 1);
-    }
-    .sf-gate__slab::before { transform-origin: center top; }
-    .sf-gate__slab::after  { transform-origin: center bottom; }
-  }
-}
-@keyframes sf-flow { from { clip-path: inset(0 100% 0 0); } to { clip-path: inset(0 0 0 0); } }
-@keyframes sf-shut { from { transform: scaleY(0); } to { transform: none; } }
-
-/* print: the stream carries no information the words do not */
-@media print {
-  .sf-band { display: none; }
+@media (max-width: 639px) {
+  /* a phone keeps the culture and the near fields: the right of the
+     valley is cropped rather than the whole made tiny */
+  .sf-art img { aspect-ratio: 4 / 3; object-fit: cover; object-position: 18% 50%; border-radius: .875rem; }
 }
