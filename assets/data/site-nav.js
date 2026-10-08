@@ -107,9 +107,7 @@ const NAV = [
       { title: "Attribution", slug: "attributions", icon: "attribution",
         caption: "Who did what" },
       { title: "Milestone",   slug: "milestone",    icon: "milestone",
-        caption: "Our season, month by month" },
-      { title: "Gallery",     slug: "gallery",      icon: "gallery",
-        caption: "Photos from lab and field" }
+        caption: "Our season, month by month" }
     ]
   }
 ];

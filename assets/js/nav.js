@@ -49,7 +49,6 @@
     members: '<circle cx="9" cy="8.4" r="3.1"/><path d="M3.2 19.4c0-3.1 2.6-5.2 5.8-5.2s5.8 2.1 5.8 5.2"/><circle cx="17.2" cy="9.6" r="2.3"/><path d="M16.2 14.6c2.7 0 4.6 1.9 4.6 4.8"/>',
     attribution: '<circle cx="12" cy="9.4" r="5"/><path d="M8.6 13.5 7.2 20.8 12 18.4l4.8 2.4-1.4-7.3"/>',
     milestone: '<path d="M6 21V3.6"/><path d="M6 4.4h11.4l-2.2 3.6 2.2 3.6H6"/><circle cx="6" cy="18" r="1.1"/>',
-    gallery: '<rect x="3.6" y="5" width="16.8" height="14" rx="2"/><circle cx="8.6" cy="10" r="1.5"/><path d="M4.6 17.2 9.3 12.6l3.4 3.2 2.6-2.3 4.1 3.9"/>'
   };
 
   const svg = (key) =>

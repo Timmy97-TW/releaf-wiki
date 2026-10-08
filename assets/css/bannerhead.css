@@ -1,0 +1,240 @@
+/* =============================================================================
+   ReLeaf: student banner header and page abstract
+   -----------------------------------------------------------------------------
+   The banner is a drawing the students made for each page: the page name, a
+   photograph in a rounded frame, and the colour of the nav tab the page hangs
+   under. The <h1> is still on the page for screen readers and the contents
+   rail; it is hidden because the drawing already says the name.
+
+   Under it, the abstract: what a judge needs from the page before the first
+   scroll. Markup is written by the build script (build_abs.py in the session
+   that made this), one JSON per page.
+
+   Colours come from the banners themselves, one set per nav tab, selected by
+   data-tab. --bh-label is the deep colour darkened until small capitals on
+   the paper pass 4.5:1.
+   ========================================================================== */
+
+.bannerhead {
+  --bh-max:   1400px;    /* one frame on every page, whatever the page's own --max */
+  --bh-fill:  #c8d5ba;   /* the banner's pale ground */
+  --bh-deep:  #4a7c59;   /* the offset shape behind the banner */
+  --bh-label: #3d6a4b;   /* small capitals and numbers on the paper */
+  background: var(--white);
+}
+.bannerhead[data-tab="project"]    { --bh-fill: #fae1e5; --bh-deep: #d65a86; --bh-label: #a3375f; }
+.bannerhead[data-tab="drylab"]     { --bh-fill: #c0d6df; --bh-deep: #516c77; --bh-label: #3f5a66; }
+.bannerhead[data-tab="engagement"] { --bh-fill: #fef3e2; --bh-deep: #aa6f4e; --bh-label: #85502f; }
+.bannerhead[data-tab="team"]       { --bh-fill: #ffecaf; --bh-deep: #d99a1e; --bh-label: #845c0f; }
+
+/* The drawing's outside is transparent, so the sheet below can slide up under
+   its bottom edge; z-index keeps the drawing on top.                         */
+.bannerhead__art {
+  position: relative; z-index: 1;
+  max-width: var(--bh-max);
+  margin: 0 auto;
+  padding: var(--sp-3) var(--sp-3) 0;
+}
+@media (min-width: 640px) { .bannerhead__art { padding: var(--sp-4) var(--sp-5) 0; } }
+.bannerhead__art img { display: block; width: 100%; height: auto; }
+
+.abstract { font-size: var(--text-base); line-height: 1.6; color: var(--gray-700); }
+.abstract p { margin: 0; }
+.abstract a { color: inherit; }
+.abstract strong { font-weight: 650; color: var(--black); }
+
+/* ---- the sheet -------------------------------------------------------------
+   The banner and its abstract fit one laptop window together (1440 × 800 of
+   page, after the browser's own bars), so a judge has the page's argument
+   before the first scroll.
+
+   The drawing's width is set by the window's height: what is left after the
+   nav and the abstract (--abs-h), times the drawing's aspect ratio (--ar).
+   It is centred on a sheet of paper the full width of the page, and its
+   bottom edge overlaps the sheet so the two read as one object.
+
+   The abstract is three columns: the page's message, its outcomes, and a map
+   of its sections numbered as the page numbers them.
+
+   The serif is whatever book face the reader already has (Iowan Old Style on
+   a Mac, Palatino on Windows). Nothing is fetched, so the iGEM rule on
+   outside requests holds.                                                   */
+
+.bannerhead {
+  --serif: "Iowan Old Style", "Palatino Linotype", Palatino, "Book Antiqua", Georgia, serif;
+  --paper: #f3f6ee;
+  --paper-2: #fafbf8;
+  --ink-1: #1d2620;
+  --ink-2: #4b534d;
+  --ink-3: #6b726c;
+  --ar: 3.012;                     /* 2253 / 748; description's drawing is 2.734 */
+  --abs-h: 27rem;                  /* the abstract's height on a laptop */
+  --bw: max(32rem, calc((100svh - var(--nav-h, 68px) - var(--abs-h)) * var(--ar)));
+}
+/* narrower laptops wrap the abstract onto more lines, so the drawing gives way */
+@media (max-width: 1360px) { .bannerhead { --abs-h: 29.5rem; } }
+.bannerhead[data-tab="project"]    { --paper: #fbf1f3; --paper-2: #fdf9fa; --ink-1: #2a1d22; }
+.bannerhead[data-tab="drylab"]     { --paper: #eef4f6; --paper-2: #f9fbfc; --ink-1: #1b252a; }
+.bannerhead[data-tab="engagement"] { --paper: #fbf5ec; --paper-2: #fdfaf5; --ink-1: #2a211c; }
+.bannerhead[data-tab="team"]       { --paper: #fdf6dc; --paper-2: #fefcf2; --ink-1: #2a2416; }
+
+.bannerhead--rest .bannerhead__art { padding-top: var(--sp-2); }
+.bannerhead--rest .bannerhead__art img {
+  width: min(100%, var(--bw));
+  margin: 0 auto;
+  filter: drop-shadow(0 16px 20px rgb(29 38 32 / .10)) drop-shadow(0 2px 3px rgb(29 38 32 / .06));
+}
+
+/* same box as .bannerhead__art, so a percentage here is of the same width */
+.abstract--sheet { max-width: var(--bh-max); margin: 0 auto; padding: 0 var(--sp-3); }
+@media (min-width: 640px) { .abstract--sheet { padding: 0 var(--sp-5); } }
+
+.abstract--sheet .abstract__inner {
+  --overlap: calc(min(100%, var(--bw)) * .07);
+  margin-top: calc(-1 * var(--overlap));
+  padding: calc(var(--overlap) + clamp(1rem, .6rem + .8vw, 1.5rem)) clamp(1.25rem, .4rem + 3vw, 3.5rem) clamp(1.25rem, .8rem + 1vw, 2rem);
+  background: linear-gradient(180deg, var(--paper) 0%, var(--paper) 45%, var(--paper-2) 100%);
+  border-radius: 28px;
+  box-shadow:
+    inset 0 1px 0 rgb(255 255 255 / .8),
+    0 1px 2px rgb(29 38 32 / .04),
+    0 36px 70px -46px rgb(29 38 32 / .26);
+  display: grid;
+  gap: 2rem;
+  grid-template-columns: minmax(0, 1fr);
+}
+@media (min-width: 760px) {
+  .abstract--sheet .abstract__inner { grid-template-columns: repeat(2, minmax(0, 1fr)); column-gap: 2.5rem; }
+  .abstract--sheet .abstract__story { grid-column: 1 / -1; }
+}
+@media (min-width: 1120px) {
+  .abstract--sheet .abstract__inner { grid-template-columns: minmax(0, 5fr) minmax(0, 4fr) minmax(0, 3fr); column-gap: clamp(2rem, .5rem + 2.6vw, 3.5rem); }
+  .abstract--sheet .abstract__story { grid-column: auto; }
+  /* a page with no sections to map (Attribution): two columns */
+  .abstract--sheet .abstract__inner--nomap { grid-template-columns: minmax(0, 6fr) minmax(0, 5fr); }
+}
+@media (min-width: 760px) and (max-width: 1119px) {
+  .abstract--sheet .abstract__inner--nomap .abstract__story { grid-column: 1 / -1; }
+}
+
+/* small capitals that name each column */
+.abs-kicker {
+  margin: 0 0 .85rem;
+  font-size: .6875rem;
+  font-weight: 650;
+  letter-spacing: .2em;
+  text-transform: uppercase;
+  color: var(--bh-label);
+}
+
+/* the message: one sentence in the serif, one short paragraph under it */
+.abstract--sheet .abstract__lead {
+  margin: 0;
+  max-width: 40ch;
+  font-family: var(--serif);
+  font-size: clamp(1.22rem, .95rem + .7vw, 1.5rem);
+  font-weight: 400;
+  line-height: 1.27;
+  letter-spacing: -.008em;
+  color: var(--ink-1);
+  text-wrap: balance;
+}
+.abstract--sheet .abstract__lead em { font-style: italic; }
+.abstract--sheet .abstract__body {
+  margin: .8rem 0 0;
+  max-width: 66ch;
+  font-size: .9375rem;
+  line-height: 1.62;
+  color: var(--ink-2);
+  text-wrap: pretty;
+}
+.abstract--sheet .abstract__body strong { font-weight: 620; color: var(--ink-1); }
+
+/* outcomes: one white card, one row each, a mark for how it went */
+.abs-ledger {
+  list-style: none; margin: 0;
+  padding: .35rem;
+  background: rgb(255 255 255 / .85);
+  border-radius: 20px;
+  box-shadow: 0 1px 2px rgb(29 38 32 / .05), 0 16px 36px -26px rgb(29 38 32 / .22);
+}
+.abs-ledger a {
+  display: grid;
+  grid-template-columns: 1rem minmax(0, 1fr) auto;
+  align-items: baseline;
+  gap: .05rem .55rem;
+  padding: .6rem .8rem .65rem;
+  border-radius: 14px;
+  text-decoration: none; color: inherit;
+  transition: background-color .25s ease;
+}
+.abs-ledger a:hover, .abs-ledger a:focus-visible { background: var(--paper); }
+.abs-ledger__name { font-size: .9375rem; font-weight: 620; letter-spacing: -.006em; color: var(--ink-1); }
+.abs-ledger__text { grid-column: 2 / -1; font-size: .8125rem; line-height: 1.45; color: var(--ink-3); }
+
+/* status: a glyph that still reads in greyscale, and the word at the right */
+.abs-st {
+  font-size: .5625rem; font-weight: 700;
+  letter-spacing: .14em;
+  text-transform: uppercase;
+  color: var(--st);
+  white-space: nowrap;
+}
+.abs-ledger a > i {
+  position: relative; align-self: start;
+  width: .6rem; height: .6rem; margin-top: .42rem;
+  border-radius: 50%;
+  border: 1.5px solid var(--st);
+}
+.st-worked  { --st: #2f6b4a; } .st-worked  > i { background: var(--st); }
+.st-partial { --st: #9c6b1f; } .st-partial > i { background: linear-gradient(90deg, var(--st) 50%, transparent 50%); }
+.st-none    { --st: #767c77; }
+.st-void    { --st: #a3452c; } .st-void > i::after { content: ""; position: absolute; left: 50%; top: -2px; bottom: -2px; width: 1.5px; margin-left: -.75px; background: var(--st); transform: rotate(45deg); }
+.st-open    { --st: #47627a; } .st-open > i { border-style: dotted; border-width: 2px; }
+/* an item that is not a test result: a small diamond in the tab's colour */
+.st-key     { --st: var(--bh-label); } .st-key > i { border-radius: 1.5px; background: var(--st); transform: rotate(45deg) scale(.82); }
+
+/* the page's own sections, numbered as the page numbers them */
+.abs-map ol { list-style: none; margin: 0; padding: 0; display: grid; gap: .1rem; }
+.abs-map a {
+  display: grid;
+  grid-template-columns: 3.6rem minmax(0, 1fr);
+  padding: .5rem .7rem .55rem .55rem;
+  margin-left: -.55rem;
+  border-radius: 12px;
+  text-decoration: none; color: inherit;
+  transition: background-color .25s ease;
+}
+.abs-map a:hover, .abs-map a:focus-visible { background: rgb(255 255 255 / .75); }
+.abs-map__no {
+  grid-row: span 2;
+  font-family: var(--serif);
+  font-size: 1.15rem; line-height: 1.1;
+  color: var(--bh-label);
+  white-space: nowrap;
+  font-variant-numeric: lining-nums;
+}
+.abs-map__name { font-size: .9375rem; font-weight: 620; letter-spacing: -.006em; color: var(--ink-1); }
+.abs-map__text { font-size: .8125rem; line-height: 1.45; color: var(--ink-3); }
+
+/* short laptop windows (about 1280 x 720 of page): the drawing is already at
+   its smallest, so the abstract gives up some air instead                    */
+@media (min-width: 760px) and (max-height: 780px) {
+  .abstract--sheet .abstract__inner { padding-top: calc(var(--overlap) + .8rem); padding-bottom: 1.1rem; row-gap: 1.25rem; }
+  .abs-kicker { margin-bottom: .55rem; }
+  .abstract--sheet .abstract__lead { font-size: 1.2rem; }
+  .abstract--sheet .abstract__body { margin-top: .6rem; font-size: .90625rem; line-height: 1.56; }
+  .abs-ledger { padding: .25rem; }
+  .abs-ledger a { padding: .42rem .75rem .48rem; }
+  .abs-ledger__text, .abs-map__text { font-size: .78125rem; }
+  .abs-map a { padding-top: .38rem; padding-bottom: .4rem; }
+}
+
+/* arrival: the three columns settle in once, after the drawing */
+@media (prefers-reduced-motion: no-preference) {
+  .abstract--sheet .abstract__inner > * { animation: settle .9s cubic-bezier(.2, .7, .2, 1) both; }
+  .abstract--sheet .abstract__inner > :nth-child(2) { animation-delay: .08s; }
+  .abstract--sheet .abstract__inner > :nth-child(3) { animation-delay: .16s; }
+  @keyframes settle { from { opacity: 0; transform: translateY(8px); } }
+}
+
