@@ -56,10 +56,18 @@ WINDOW = 31.0        # angstrom across the box; the C-terminal site, not the who
 MIN_RUN = 3          # receptor fragments shorter than this read as lint, not backbone
 
 
-def payload(name):
+def report_text(name):
+    """A report's data as text: data/<report>.json since md_split_data.py moved
+    it out of the page, or the inline block of a report not split yet."""
+    split = os.path.join(DIR, "data", os.path.splitext(name)[0] + ".json")
+    if os.path.exists(split):
+        return io.open(split, encoding="utf-8").read()
     src = io.open(os.path.join(DIR, name), encoding="utf-8").read()
-    m = re.search(r'<script id="D" type="application/json">(.*?)</script>', src, re.S)
-    return json.loads(m.group(1))
+    return re.search(r'<script id="D" type="application/json">(.*?)</script>', src, re.S).group(1)
+
+
+def payload(name):
+    return json.loads(report_text(name))
 
 
 def frames(anim):

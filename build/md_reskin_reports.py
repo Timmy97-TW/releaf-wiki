@@ -17,7 +17,8 @@ Five changes, all mechanical, none of them touching the science:
      wiki footer of their own.
 
 Run it once per copy. It is idempotent: every replacement is a no-op the
-second time.
+second time. Then run md_split_data.py, which moves each report's data out of
+the page into md-simulations/data/<report>.json.
 """
 import io
 import os

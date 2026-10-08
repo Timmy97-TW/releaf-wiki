@@ -29,6 +29,16 @@ OUT = os.path.join(DIR, "data", "traces.js")
 CUT = 3.5     # angstrom, the same cutoff the reports use for the salt bridge
 
 
+def report_text(name):
+    """A report's data as text: data/<report>.json since md_split_data.py moved
+    it out of the page, or the inline block of a report not split yet."""
+    split = os.path.join(DIR, "data", os.path.splitext(name)[0] + ".json")
+    if os.path.exists(split):
+        return io.open(split, encoding="utf-8").read()
+    src = io.open(os.path.join(DIR, name), encoding="utf-8").read()
+    return re.search(r'<script id="D" type="application/json">(.*?)</script>', src, re.S).group(1)
+
+
 def payload(name):
     """The one JSON block each report carries, unwrapped.
 
@@ -36,9 +46,7 @@ def payload(name):
     comparison and nests them under A and B, and only the one with coordinates
     is of any use here.
     """
-    src = io.open(os.path.join(DIR, name), encoding="utf-8").read()
-    m = re.search(r'<script id="D" type="application/json">(.*?)</script>', src, re.S)
-    d = json.loads(m.group(1))
+    d = json.loads(report_text(name))
     if "anim" in d:
         return d
     for v in d.values():
