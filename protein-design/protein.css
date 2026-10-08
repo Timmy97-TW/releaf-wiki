@@ -578,3 +578,191 @@
    sits inside a chapter end, which is already tinted.                      */
 .pd .chap__end > .runs { margin-bottom: 0; }
 .pd .chap__end > .runs .run { background: #fff; }
+
+/* ======================================================= MD FIGURES, INLINE ==
+   9 October 2026. Timmy asked for the molecular dynamics analysis and its
+   plots to live on the Molecular Dynamics page rather than only inside the
+   nine reports under /md-simulations/. The plots are inline SVG written by
+   build/md_page_figs.py out of the same JSON the reports draw, so they stay
+   sharp, they print, and a student editing the page can read the labels.
+
+   They are not photographs, so they do not take the lightbox: everything in
+   them is legible at the width they are given.                             */
+
+.pd .mdfig {
+  display: block;
+  width: 100%; height: auto;
+  margin: 0;
+  border-radius: 14px;
+  background: var(--white);
+}
+.pd .figwrap {
+  max-width: 100%; min-width: 0;
+  margin: var(--sp-5) 0;
+  padding: var(--sp-4) var(--sp-4) var(--sp-3);
+  border-radius: 20px;
+  background: var(--white);
+  box-shadow: 0 0 0 1px rgb(0 0 0 / .07);
+}
+/* a grid or flex child is `min-width: auto` by default, so a wide figure
+   would push the whole page sideways instead of scrolling inside its own
+   frame. These three are the ancestors a figure can land in.              */
+.pd .rail--seg > .rail__panel, .engage.pd .card, .engage.pd .blk { min-width: 0; }
+.pd .figwrap__pan { max-width: 100%; overflow-x: auto; overscroll-behavior-x: contain; }
+.engage.pd .blk .figwrap, .engage.pd .card .figwrap { box-shadow: 0 0 0 1px rgb(0 0 0 / .06); }
+.pd .figwrap > figcaption {
+  margin: var(--sp-3) var(--sp-1) 0;
+  font-size: var(--text-xs); line-height: 1.5; color: var(--gray-600);
+}
+@media (max-width: 46rem) {
+  /* a wide plot stops being a plot on a phone, so it keeps its own width and
+     scrolls inside the frame rather than shrinking its type to nothing */
+  .pd .figwrap { padding: var(--sp-3); }
+  .pd .figwrap__pan .mdfig { min-width: 32rem; }
+  .pd .figwrap__pan { cursor: grab; }
+}
+
+/* ===================================================== THE TRAJECTORY VIEWER =
+   assets/js/md-viewer.js, against the compact payloads build/md_page_anim.py
+   writes. One figure per chapter that has an animation worth showing; the
+   nine full viewers stay on the reports.                                    */
+
+.pd .mdv { margin: var(--sp-5) 0; }
+.pd .mdv__box {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  border-radius: 20px 20px 0 0;
+  background: var(--white);
+  box-shadow: 0 0 0 1px rgb(0 0 0 / .07);
+  overflow: hidden;
+}
+@media (min-width: 56rem) { .pd .mdv__box { grid-template-columns: minmax(0, 1fr) 16rem; } }
+
+.pd .mdv__stage {
+  position: relative;
+  aspect-ratio: 16 / 10;
+  background: radial-gradient(120% 120% at 30% 15%, #fbfbfc, #eef0f2);
+  cursor: grab; touch-action: pan-y;
+}
+.pd .mdv__stage.is-drag { cursor: grabbing; }
+.pd .mdv__cv { position: absolute; inset: 0; width: 100%; height: 100%; }
+
+.pd .mdv__badge, .pd .mdv__hint, .pd .mdv__wait {
+  position: absolute; margin: 0;
+  font-size: var(--text-xs); color: var(--gray-500);
+}
+.pd .mdv__badge {
+  top: var(--sp-3); left: var(--sp-4);
+  font-family: var(--font-mono); font-weight: 650; color: var(--gray-600);
+}
+.pd .mdv__hint { bottom: var(--sp-3); left: var(--sp-4); color: var(--gray-400); }
+.pd .mdv__wait { bottom: var(--sp-3); right: var(--sp-4); }
+
+.pd .mdv__start {
+  position: absolute; inset: 0; margin: auto;
+  width: max-content; height: max-content;
+  padding: .7rem 1.25rem;
+  border: 0; border-radius: 999px;
+  background: var(--leaf-700); color: #fff;
+  font: inherit; font-size: var(--text-sm); font-weight: 650;
+  cursor: pointer;
+}
+.pd .mdv__start:hover { background: var(--leaf-900); }
+
+.pd .mdv__rail {
+  display: grid; align-content: start; gap: var(--sp-4);
+  padding: var(--sp-4);
+  border-top: 1px solid var(--gray-200);
+  background: var(--gray-50);
+}
+@media (min-width: 56rem) {
+  .pd .mdv__rail { border-top: 0; border-left: 1px solid var(--gray-200); }
+}
+.pd .mdv__runs { display: flex; flex-wrap: wrap; gap: var(--sp-2); }
+.pd .mdv__run {
+  padding: .3rem .7rem;
+  border: 1px solid var(--gray-300); border-radius: 999px;
+  background: var(--white); color: var(--gray-600);
+  font: inherit; font-size: var(--text-xs); font-weight: 650;
+  cursor: pointer;
+}
+.pd .mdv__run[aria-pressed="true"] {
+  border-color: var(--leaf-700); background: var(--leaf-700); color: #fff;
+}
+.pd .mdv__only {
+  margin: 0; font-family: var(--font-mono);
+  font-size: var(--text-xs); font-weight: 650; color: var(--gray-600);
+}
+
+.pd .mdv__read { display: grid; gap: var(--sp-3); margin: 0; }
+.pd .mdv__read > div { display: grid; gap: .15rem; }
+.pd .mdv__read dt {
+  font-size: .6875rem; font-weight: 650;
+  letter-spacing: .08em; text-transform: uppercase; color: var(--gray-400);
+}
+.pd .mdv__read dd {
+  margin: 0;
+  font-family: var(--font-mono); font-size: 1.375rem; font-weight: 700;
+  line-height: 1.1; color: var(--leaf-900);
+}
+.pd .mdv__read dd small { font-size: .75rem; font-weight: 500; color: var(--gray-500); }
+.pd .mdv__d.is-on  { color: var(--leaf-700); }
+.pd .mdv__d.is-off { color: var(--rust-700); }
+.pd .mdv__say {
+  margin: 0; padding-top: var(--sp-3);
+  border-top: 1px solid var(--gray-200);
+  font-size: var(--text-xs); line-height: 1.5; color: var(--gray-600);
+}
+
+.pd .mdv__bar {
+  display: flex; flex-wrap: wrap; align-items: center; gap: var(--sp-3);
+  padding: var(--sp-3) var(--sp-4);
+  border-radius: 0 0 20px 20px;
+  background: var(--white);
+  box-shadow: 0 0 0 1px rgb(0 0 0 / .07);
+}
+.pd .mdv__bar button {
+  padding: .3rem .75rem;
+  border: 1px solid var(--gray-300); border-radius: 999px;
+  background: var(--white); color: var(--gray-600);
+  font: inherit; font-size: var(--text-xs); font-weight: 650; cursor: pointer;
+}
+.pd .mdv__bar button:hover { border-color: var(--leaf-500); color: var(--leaf-700); }
+.pd .mdv__bar button[aria-pressed="true"] { border-color: var(--leaf-700); color: var(--leaf-700); }
+.pd .mdv__play { min-width: 4.5rem; }
+.pd .mdv__scrub { flex: 1 1 10rem; min-width: 8rem; accent-color: var(--leaf-700); }
+.pd .mdv__fr { font-family: var(--font-mono); font-size: var(--text-xs); color: var(--gray-400); }
+.pd .mdv__modes { display: inline-flex; gap: var(--sp-2); }
+.pd .mdv > figcaption {
+  margin: var(--sp-3) var(--sp-1) 0;
+  font-size: var(--text-xs); line-height: 1.5; color: var(--gray-600);
+}
+
+/* ========================================================= THE SCOPE TABLE ==
+   What the section did to each of the three protectants. The point of the
+   table is the empty cells, so they are marked rather than left blank.     */
+
+.pd .scope { width: 100%; border-collapse: collapse; font-size: var(--text-sm); }
+.pd .scope th, .pd .scope td {
+  padding: var(--sp-3) var(--sp-3);
+  border-bottom: 1px solid var(--gray-200);
+  text-align: left; vertical-align: top;
+}
+.pd .scope thead th {
+  font-size: .6875rem; font-weight: 700;
+  letter-spacing: .08em; text-transform: uppercase; color: var(--gray-500);
+}
+.pd .scope tbody th { font-weight: 650; color: var(--leaf-900); white-space: nowrap; }
+.pd .scope tbody th small { display: block; font-weight: 400; color: var(--gray-500); }
+.pd .scope td { color: var(--gray-600); }
+.pd .scope .is-yes { color: var(--leaf-700); font-weight: 650; }
+.pd .scope .is-no  { color: var(--gray-400); }
+.pd .scope .is-only { background: color-mix(in srgb, var(--leaf-700) 6%, #fff); }
+.pd .scope tr:last-child th, .pd .scope tr:last-child td { border-bottom: 0; }
+@media (max-width: 46rem) { .pd .scope { font-size: var(--text-xs); } }
+
+/* The run-card blurbs are drafted, not student writing, so they take the
+   page's orange like every other .ai line. `.pd .run p` set a grey that
+   outranked the engage.css rule, which left Claude's wording unmarked on
+   three pages of this section.                                             */
+html:not(.ai-off) .pd .run p.ai { color: var(--ai-ink); }
