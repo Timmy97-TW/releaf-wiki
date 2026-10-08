@@ -1,291 +1,444 @@
 /* =============================================================================
    ENGINEERING · page-local styles
    -----------------------------------------------------------------------------
-   The page is built from the shared components in assets/css/page.css: the
-   photo head, the contents rail, .sec, .tabs, .disclose, .fig, .tablewrap.
-   What is local is the cycle itself and the two objects that introduce it.
+   Rewritten 9 October 2026. The page is one unit of work repeated twenty-three
+   times: the DBTL cycle. It is laid out in the soft idiom the Integrated Human
+   Practices page uses for its pipelines, because the two pages do the same
+   thing to a reader: a segmented control picks a chapter, the chapter opens on
+   a hero, and the body of it is rounded cards on a light ground with one
+   shadow and no rules.
 
-     .loop     the four steps, named once at the top of the page
-     .map      the cycles of every subsystem, at a glance
-     .cyc      one cycle: kicker, title, result and what changed next
-     .dbtl     the four steps inside a cycle, one sentence each
-     .stamp    closed, named failure, open
+     .track    one subsystem: a segmented control over one cycle at a time
+     .seg      the frosted control itself, pinned under the site nav
+     .cyc      one cycle, opening on its hero
+     .dbtl     design, build, test and learn as four soft cards
+     .ledger   the outcome of a cycle, and what it changed next
+     .loop     the four steps named once, in the overview
+     .map      every cycle in the project, at a glance
 
-   One accent, the ReLeaf leaf green. State is the only thing allowed another
-   colour, and it carries it on a small pill rather than on a tinted block.
-   Nothing here draws a decorative rule, a dash or a bar.
+   Everything else (.sec, .fig, .disclose, .callout, .tablewrap, .toc) comes
+   from assets/css/page.css. With scripts off every panel is visible and the
+   record reads top to bottom.
    ========================================================================== */
 
-/* ------------------------------------------------- the loop, named once --- */
+.eng {
+  --ink:   #1d1d1f;
+  --ink-2: #424245;
+  --ink-3: #6e6e73;
+  --well:  #f5f5f7;
+  --ease:  cubic-bezier(.25, .8, .25, 1);
 
+  --tr-clone:  #7a3b67;
+  --tr-react:  #1f5f8b;
+  --tr-phot:   #8a5a0b;
+  --tr-lpa:    #a0392b;
+  --tr-hydro:  #23684a;
+
+  --max: 1440px;
+  --measure: 76ch;
+}
+
+/* The tracks want the whole column; running prose keeps its measure. */
+.eng .pagebody { max-width: none; }
+.eng .pagebody .sec > p,
+.eng .pagebody .sec > ul,
+.eng .pagebody .sec > ol,
+.eng .pagebody .sec > h3,
+.eng .pagebody .sec > h4,
+.eng .pagebody .sec > .callout { max-width: var(--measure); }
+
+.eng .sec + .sec { margin-top: var(--sp-8); }
+.eng .fig img, .eng .callout, .eng .tablewrap { border-radius: 0; }
+
+@media (min-width: 1040px) {
+  .eng .toc { top: calc(var(--nav-h) + var(--sp-4)); }
+  .eng .toc__list a { padding-top: .22rem; padding-bottom: .22rem; line-height: 1.3; }
+}
+
+/* ============================================================ OVERVIEW == */
+
+/* the four steps, named once */
 .loop {
   list-style: none;
+  display: grid;
+  gap: .75rem;
+  grid-template-columns: 1fr;
   margin: var(--sp-6) 0;
   padding: 0;
-  display: grid;
-  gap: var(--sp-3);
-  grid-template-columns: 1fr;
+  max-width: none;
 }
-@media (min-width: 720px) { .loop { grid-template-columns: repeat(4, 1fr); } }
+@media (min-width: 46rem) { .loop { grid-template-columns: repeat(2, 1fr); } }
+@media (min-width: 72rem) { .loop { grid-template-columns: repeat(4, 1fr); } }
 
 .loop__step {
   margin: 0;
-  padding: var(--sp-4);
-  border: 1px solid var(--gray-200);
-  border-radius: var(--radius-sm);
-  background: var(--white);
+  padding: 1.35rem 1.45rem 1.5rem;
+  border-radius: 20px;
+  background: var(--well);
 }
 .loop__step b {
   display: inline-grid;
   place-items: center;
-  width: 1.6rem; height: 1.6rem;
+  width: 2rem; height: 2rem;
   border-radius: 50%;
-  background: var(--leaf-100);
-  color: var(--leaf-900);
-  font-size: .8125rem; font-weight: 700;
+  background: #fff;
+  box-shadow: 0 1px 3px rgb(0 0 0 / .08);
+  color: var(--ink);
+  font-size: .875rem; font-weight: 700;
 }
 .loop__step span {
   display: block;
-  margin-top: var(--sp-2);
-  font-weight: 650;
-  color: var(--leaf-900);
+  margin-top: .8rem;
+  font-size: 1.0625rem; font-weight: 600;
+  letter-spacing: -.012em;
+  color: var(--ink);
 }
-.loop__step i {
+.eng .loop__step i {
   display: block;
-  margin-top: .15rem;
+  margin-top: .3rem;
   font-style: normal;
-  font-size: var(--text-sm);
-  color: var(--gray-600);
-  line-height: 1.45;
+  font-size: .9375rem;
+  line-height: 1.55;
+  color: var(--ink-3);
 }
 
-/* -------------------------------------------------- the map of subsystems -- */
-
+/* every cycle in the project, at a glance */
 .map {
+  list-style: none;
   display: grid;
-  gap: var(--sp-3);
+  gap: .75rem;
   grid-template-columns: 1fr;
-  margin: var(--sp-5) 0 var(--sp-6);
+  margin: var(--sp-6) 0;
+  padding: 0;
+  max-width: none;
 }
-@media (min-width: 560px) { .map { grid-template-columns: 1fr 1fr; } }
-@media (min-width: 1040px) { .map { grid-template-columns: repeat(3, 1fr); } }
+@media (min-width: 46rem) { .map { grid-template-columns: repeat(2, 1fr); } }
+@media (min-width: 72rem) { .map { grid-template-columns: repeat(3, 1fr); } }
 
+.eng .map > li { margin: 0; }
 .map__card {
   display: block;
-  padding: var(--sp-4);
-  border: 1px solid var(--gray-200);
-  border-radius: var(--radius-sm);
-  background: var(--white);
-  text-decoration: none;
+  height: 100%;
+  padding: 1.5rem 1.5rem 1.35rem;
+  border-radius: 22px;
+  background: var(--well);
   color: inherit;
-  transition: border-color .15s ease, background .15s ease;
+  text-decoration: none;
+  transition: background .25s ease, transform .3s var(--ease);
 }
-.map__card:hover { border-color: var(--leaf-500); background: var(--leaf-50); }
-.map__card:focus-visible { outline: 2px solid var(--leaf-700); outline-offset: 2px; }
+.map__card:hover { background: color-mix(in srgb, var(--pl) 8%, var(--well)); transform: translateY(-2px); }
+.map__card:focus-visible { outline: 2px solid var(--pl); outline-offset: 3px; }
 
-.map__name {
+.map__eyebrow { display: block; margin: 0; font-size: .8125rem; font-weight: 600; letter-spacing: -.005em; color: var(--pl); }
+.eng .map__name {
   display: block;
-  font-weight: 650;
-  color: var(--leaf-900);
+  margin: .25rem 0 0;
+  font-size: 1.375rem; font-weight: 650;
+  letter-spacing: -.02em; line-height: 1.15;
+  color: var(--ink);
 }
-.map__n {
+.eng .map__out {
   display: block;
-  margin-top: .1rem;
-  font-size: .6875rem; font-weight: 700; letter-spacing: .09em;
-  text-transform: uppercase;
-  color: var(--leaf-700);
+  margin: .6rem 0 0;
+  font-size: .9375rem; line-height: 1.55;
+  color: var(--ink-3);
 }
-.map__out {
-  display: block;
-  margin-top: var(--sp-2);
-  font-size: var(--text-sm);
-  line-height: 1.5;
-  color: var(--gray-600);
+.map__cycles {
+  display: flex; flex-wrap: wrap; gap: .3rem;
+  margin: 1rem 0 0; padding: 0; list-style: none;
 }
+.eng .map__cycles > li { margin: 0; }
+.map__cycles span {
+  display: inline-grid; place-items: center;
+  min-width: 1.6rem; height: 1.6rem;
+  padding: 0 .45rem;
+  border-radius: 999px;
+  background: #fff;
+  box-shadow: inset 0 0 0 .5px rgb(0 0 0 / .08);
+  font-size: .75rem; font-weight: 600;
+  font-variant-numeric: tabular-nums;
+  color: var(--ink-2);
+}
+.map__cycles span.is-fail { background: var(--rust-100); color: var(--rust-700); box-shadow: none; }
+.map__cycles span.is-open { background: var(--amber-100); color: var(--amber-700); box-shadow: none; }
 
-/* ------------------------------------------------------------- the tabs --- */
-/* A subsystem can have six cycles, and on a phone six labels do not fit on one
-   line. The strip scrolls sideways inside itself; the page never does.        */
+/* ============================================================== TRACKS == */
 
-.cycles .tabs__strip {
-  flex-wrap: nowrap;
+.track { margin: var(--sp-5) 0 0; }
+
+/* -- the segmented control -- */
+.seg {
+  position: sticky;
+  top: calc(var(--nav-h) + .75rem);
+  z-index: 6;
+  display: flex;
+  justify-content: center;
+  margin: 0 0 var(--sp-7);
+  pointer-events: none;
+}
+.seg__track {
+  position: relative;
+  display: flex;
+  flex: 1 1 auto;
+  gap: 2px;
+  max-width: 100%;
+  margin: 0;
+  padding: 5px;
   overflow-x: auto;
   scrollbar-width: none;
-  -webkit-overflow-scrolling: touch;
+  border-radius: 999px;
+  background: rgb(232 232 237 / .72);
+  -webkit-backdrop-filter: saturate(180%) blur(20px);
+          backdrop-filter: saturate(180%) blur(20px);
+  box-shadow: inset 0 0 0 .5px rgb(0 0 0 / .06), 0 8px 24px -14px rgb(0 0 0 / .3);
+  pointer-events: auto;
 }
-.cycles .tabs__strip::-webkit-scrollbar { display: none; }
-/* On a phone the strip is wider than the screen and the cut is invisible, so a
-   judge can miss cycle 4 onwards. These two gradients ride the scroll (the
-   local/scroll background trick) and show a soft edge only on the side that
-   still has tabs behind it.                                                   */
-@media (max-width: 720px) {
-  .cycles .tabs__strip {
-    background:
-      linear-gradient(to right, var(--white), rgba(255,255,255,0)) 0 0 / 1.5rem 100% no-repeat local,
-      linear-gradient(to left,  var(--white), rgba(255,255,255,0)) 100% 0 / 1.5rem 100% no-repeat local,
-      radial-gradient(farthest-side at 0 50%, rgba(23,32,26,.14), rgba(23,32,26,0)) 0 0 / .7rem 100% no-repeat scroll,
-      radial-gradient(farthest-side at 100% 50%, rgba(23,32,26,.14), rgba(23,32,26,0)) 100% 0 / .7rem 100% no-repeat scroll;
-  }
+.seg__track::-webkit-scrollbar { display: none; }
+.seg__thumb {
+  position: absolute;
+  top: 5px; bottom: 5px; left: 0;
+  width: 0;
+  border-radius: 999px;
+  background: #fff;
+  box-shadow: 0 3px 8px rgb(0 0 0 / .12), 0 3px 1px rgb(0 0 0 / .04), 0 0 0 .5px rgb(0 0 0 / .04);
+  transition: transform .45s var(--ease), width .45s var(--ease);
 }
-.cycles .tabs__btn {
-  flex: none;
-  text-align: left;
-  line-height: 1.25;
-  white-space: nowrap;
-  border-radius: var(--radius-sm) var(--radius-sm) 0 0;
-}
-.cycles .tabs__btn i {
-  display: block;
-  margin-top: .15rem;
-  font-style: normal;
-  font-size: var(--text-xs);
-  font-weight: 500;
-  color: var(--gray-500);
-}
-.cycles .tabs__btn[aria-selected="true"] i { color: var(--leaf-700); }
-.cycles .tabs__btn:focus-visible { outline: 2px solid var(--leaf-700); outline-offset: -2px; }
-
-/* --------------------------------------------------------------- a cycle -- */
-
-.cyc { margin: 0; }
-.cyc + .cyc { margin-top: var(--sp-7); }
-
-.cyc__kicker {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
+.eng .seg__btn {
+  position: relative;
+  z-index: 1;
+  display: inline-flex;
+  flex: 1 0 auto;
+  align-items: baseline;
+  justify-content: center;
   gap: .45rem;
-  margin: 0 0 var(--sp-2);
-  font-size: .6875rem; font-weight: 700; letter-spacing: .09em;
-  text-transform: uppercase;
-  color: var(--gray-500);
+  padding: .72rem 1rem;
+  border: 0;
+  border-radius: 999px;
+  background: none;
+  font: inherit;
+  font-size: .9688rem;
+  font-weight: 500;
+  line-height: 1.2;
+  letter-spacing: -.01em;
+  color: var(--ink-2);
+  white-space: nowrap;
+  cursor: pointer;
+  transition: color .25s ease;
 }
-.cyc__kicker i { font-style: normal; color: var(--gray-300); }
+.seg__no {
+  font-size: .75rem; font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  color: var(--ink-3);
+  transition: color .25s ease;
+}
+.eng .seg__btn:hover { color: var(--ink); background: none; }
+.eng .seg__btn[aria-selected="true"] { color: var(--ink); font-weight: 600; }
+.eng .seg__btn[aria-selected="true"] .seg__no { color: var(--pl); }
+.seg__btn:focus-visible { outline: 2px solid var(--pl); outline-offset: 1px; }
+.seg__track:not(.has-thumb) .seg__btn[aria-selected="true"] { background: #fff; box-shadow: 0 2px 6px rgb(0 0 0 / .1); }
 
-.cyc__title {
-  margin: 0 0 var(--sp-4);
+/* ============================================================== A CYCLE == */
+
+.track > .cyc { padding: 0; background: none; scroll-margin-top: calc(var(--nav-h) + 5rem); }
+.track > .cyc[hidden] { display: none; }
+.track > .cyc.is-entering { animation: cyc-in .6s var(--ease) both; }
+@keyframes cyc-in { from { opacity: 0; transform: translateY(14px); } to { opacity: 1; transform: none; } }
+
+.cyc__hero { margin: 0 0 var(--sp-7); text-align: center; }
+.cyc__eyebrow {
+  display: flex; flex-wrap: wrap; justify-content: center; align-items: center;
+  gap: .5rem;
+  margin: 0;
+  font-size: .875rem; font-weight: 600; letter-spacing: -.005em;
+  color: var(--pl);
+}
+.cyc__eyebrow i { font-style: normal; opacity: .4; }
+.eng .cyc__title {
+  margin: .4rem auto 0;
+  max-width: 24ch;
   font-family: var(--font-display);
-  font-size: var(--text-h3);
-  font-weight: 650;
-  line-height: 1.3;
-  color: var(--leaf-900);
+  font-size: clamp(1.75rem, 1.25rem + 1.9vw, 2.625rem);
+  font-weight: 700;
+  line-height: 1.1;
+  letter-spacing: -.026em;
+  color: var(--ink);
+  text-wrap: balance;
+}
+.eng .cyc__intro {
+  margin: var(--sp-5) auto 0;
+  max-width: 42rem;
+  font-size: clamp(1.0625rem, 1rem + .3vw, 1.1875rem);
+  line-height: 1.6;
+  letter-spacing: -.008em;
+  color: var(--ink-2);
 }
 
-/* result and what changed next: the two things a reader needs before the
-   four steps, side by side where there is room */
-.cyc__facts {
+/* the outcome strip: what the cycle produced, and what it changed */
+.ledger {
   display: grid;
-  gap: var(--sp-3);
-  margin: 0 0 var(--sp-5);
-  padding: var(--sp-4);
-  border: 1px solid var(--gray-200);
-  border-radius: var(--radius-sm);
-  background: var(--leaf-50);
+  gap: .75rem;
+  margin: var(--sp-6) 0 var(--sp-7);
 }
-@media (min-width: 720px) { .cyc__facts { grid-template-columns: 1fr 1fr; gap: var(--sp-5); } }
-.cyc__facts dt {
-  font-size: .6875rem; font-weight: 700; letter-spacing: .09em;
-  text-transform: uppercase;
-  color: var(--leaf-700);
+@media (min-width: 52rem) { .ledger { grid-template-columns: 1fr 1fr; } }
+.ledger > div {
+  padding: 1.25rem 1.4rem 1.35rem;
+  border-radius: 20px;
+  background: var(--well);
 }
-.cyc__facts dd {
-  margin: .25rem 0 0;
-  font-size: var(--text-sm);
-  line-height: 1.55;
-  color: var(--gray-700);
+.ledger > div.ledger--to { background: color-mix(in srgb, var(--pl) 9%, #fff); }
+.eng .ledger dt {
+  margin: 0;
+  font-size: .8125rem; font-weight: 600; letter-spacing: -.005em;
+  color: var(--ink-3);
+}
+.ledger--to dt { color: var(--pl); }
+.eng .ledger dd {
+  margin: .4rem 0 0;
+  font-size: .9375rem; line-height: 1.62;
+  color: var(--ink-2);
 }
 
-/* ---------------------------------------------- the four steps, in a row -- */
-
+/* -- design, build, test, learn -- */
 .dbtl {
   list-style: none;
-  margin: 0 0 var(--sp-5);
-  padding: 0;
   display: grid;
-  gap: var(--sp-4);
+  gap: .75rem;
   grid-template-columns: 1fr;
+  margin: 0 0 var(--sp-6);
+  padding: 0;
+  max-width: none;
 }
-@media (min-width: 640px)  { .dbtl { grid-template-columns: 1fr 1fr; gap: var(--sp-5); } }
-@media (min-width: 1040px) { .dbtl { grid-template-columns: repeat(4, 1fr); } }
+@media (min-width: 52rem) { .dbtl { grid-template-columns: 1fr 1fr; } }
 
-.dbtl__step { margin: 0; min-width: 0; }
-.dbtl__step h4 {
+.eng .dbtl__step {
+  margin: 0;
+  min-width: 0;
+  padding: 1.5rem 1.6rem 1.6rem;
+  border-radius: 22px;
+  background: #fff;
+  box-shadow: 0 1px 2px rgb(0 0 0 / .04), 0 8px 28px -18px rgb(0 0 0 / .35);
+}
+.eng .dbtl__step h4 {
   display: flex;
   align-items: center;
-  gap: .5rem;
-  margin: 0 0 var(--sp-2);
-  font-size: var(--text-sm);
-  font-weight: 700;
-  letter-spacing: .02em;
-  color: var(--leaf-900);
+  gap: .6rem;
+  margin: 0 0 .9rem;
+  font-size: .9375rem; font-weight: 600;
+  letter-spacing: -.008em;
+  color: var(--ink);
 }
 .dbtl__badge {
   display: inline-grid;
   place-items: center;
   flex: none;
-  width: 1.5rem; height: 1.5rem;
+  width: 1.75rem; height: 1.75rem;
   border-radius: 50%;
-  background: var(--leaf-100);
-  color: var(--leaf-900);
-  font-size: .75rem; font-weight: 700;
+  background: color-mix(in srgb, var(--pl) 12%, #fff);
+  color: var(--pl);
+  font-size: .8125rem; font-weight: 700;
 }
-.dbtl__step p {
-  margin: 0;
-  font-size: var(--text-sm);
-  line-height: 1.6;
-  color: var(--gray-700);
+.dbtl__step:last-child .dbtl__badge { background: var(--pl); color: #fff; }
+.eng .dbtl__step p {
+  margin: 0 0 .7rem;
+  max-width: none;
+  font-size: .9375rem;
+  line-height: 1.62;
+  color: var(--ink-2);
 }
-/* the fourth step is the one that creates the next cycle, so it reads as the
-   conclusion rather than as a fourth item of four */
-.dbtl__step:last-child .dbtl__badge { background: var(--leaf-700); color: var(--white); }
+.eng .dbtl__step p:last-child { margin-bottom: 0; }
+.eng .dbtl__step .fig { margin: 1rem 0 0; }
 
-/* ------------------------------------------------------- state and notes -- */
-
+/* a state pill on the hero */
 .stamp {
   display: inline-block;
-  padding: .15em .55em;
+  padding: .2em .65em;
   border-radius: 999px;
-  font-size: .625rem; font-weight: 700; letter-spacing: .08em;
+  background: var(--well);
+  color: var(--ink-3);
+  font-size: .6875rem; font-weight: 700; letter-spacing: .06em;
   text-transform: uppercase;
-  background: var(--gray-100);
-  color: var(--gray-600);
 }
-.stamp--closed { background: var(--leaf-100); color: var(--leaf-900); }
-.stamp--fail   { background: var(--rust-100); color: var(--rust-700); }
+.stamp--closed { background: color-mix(in srgb, var(--tr-hydro) 12%, #fff); color: var(--leaf-900); }
+.stamp--fail   { background: var(--rust-100);  color: var(--rust-700); }
 .stamp--open   { background: var(--amber-100); color: var(--amber-700); }
 
-.statekey {
-  list-style: none;
-  margin: 0 0 var(--sp-5);
-  padding: 0;
+/* the quiet line between two cycles: why the next one happened */
+.handoff {
   display: grid;
-  gap: var(--sp-2);
-  font-size: var(--text-sm);
-  color: var(--gray-600);
+  place-items: center;
+  margin: var(--sp-7) 0 0;
+  padding: 2.5rem .5rem 0;
+  text-align: center;
 }
-.statekey li { margin: 0; display: flex; gap: .5rem; align-items: baseline; flex-wrap: wrap; }
+.eng .handoff p {
+  margin: 0;
+  max-width: 36rem;
+  font-size: 1.0625rem;
+  line-height: 1.6;
+  letter-spacing: -.008em;
+  color: var(--ink-3);
+  text-wrap: pretty;
+}
+
+/* arriving: each cycle's cards ease in the first time they are reached */
+.cyc-anim .dbtl__step, .cyc-anim .ledger > div {
+  opacity: 0;
+  transform: translateY(16px);
+  transition: opacity .6s var(--ease), transform .6s var(--ease);
+}
+.cyc-anim .dbtl__step.is-seen, .cyc-anim .ledger > div.is-seen { opacity: 1; transform: none; }
+
+/* ==================================================== FIGURES AND NOTES == */
+
+.eng .figs { display: grid; gap: var(--sp-4); margin: var(--sp-6) 0; }
+@media (min-width: 52rem) {
+  .eng .figs--2 { grid-template-columns: 1fr 1fr; }
+  .eng .figs--3 { grid-template-columns: repeat(3, 1fr); }
+}
+.eng .figs .fig { margin: 0; }
+.eng .fig img { border-radius: 16px; }
+.eng .figs--3 .fig img, .eng .dbtl__step .fig img { border-radius: 12px; }
+
+.eng .disclose {
+  margin: var(--sp-6) 0 0;
+  border-radius: 18px;
+  background: var(--well);
+  overflow: hidden;
+}
+.eng .disclose > summary { background: none; }
+.eng .disclose > summary:hover,
+.eng .disclose[open] > summary { background: color-mix(in srgb, var(--pl) 6%, var(--well)); }
+.eng .disclose__body { padding-top: 0; }
 
 /* the one sentence in a cycle that is the finding itself */
 .finding {
-  margin: 0 0 var(--sp-4);
-  padding-left: var(--sp-4);
-  border-left: 2px solid var(--leaf-500);
-  font-size: var(--text-base);
-  font-weight: 600;
-  color: var(--leaf-900);
+  margin: var(--sp-5) 0;
+  padding: 0 0 0 2.75rem;
+  position: relative;
+}
+.finding::before {
+  content: "";
+  position: absolute; left: 1rem; top: .35em; bottom: .35em;
+  width: 2px; border-radius: 1px;
+  background: var(--pl);
+}
+.eng .finding p {
+  margin: 0;
+  font-size: 1.0625rem; font-weight: 500;
+  line-height: 1.55; letter-spacing: -.01em;
+  color: var(--ink);
 }
 
-/* a block note where prose has not been written yet. page.css styles .todo as
-   an inline chip; on this page it is a paragraph with an owner. */
+/* a block note where prose has not been written yet */
 .eng .todo {
   display: block;
   margin: var(--sp-4) 0;
-  padding: var(--sp-4);
-  border: 1px solid #e8cf95;
-  border-radius: var(--radius-sm);
+  padding: 1.1rem 1.25rem;
+  border: 0;
+  border-radius: 16px;
   background: var(--amber-100);
   color: var(--amber-700);
-  font-size: var(--text-sm);
+  font-size: .9375rem;
   font-weight: 400;
   letter-spacing: 0;
   line-height: 1.55;
@@ -297,63 +450,41 @@
   text-transform: uppercase;
 }
 
-/* ---------------------------------------------------- lessons and tables -- */
-
-.lessons {
-  margin: var(--sp-5) 0;
-  padding-left: 1.4em;
-}
-.lessons li { margin-bottom: var(--sp-3); line-height: 1.6; }
-.lessons li::marker { color: var(--leaf-500); }
-.lessons b { color: var(--leaf-900); }
-
-.key { display: grid; gap: var(--sp-4); margin: var(--sp-5) 0; }
-.key > div {
-  padding: var(--sp-4);
-  border: 1px solid var(--gray-200);
-  border-radius: var(--radius-sm);
-  background: var(--white);
-}
-.key dt { font-weight: 650; color: var(--leaf-900); }
-.key dd {
-  margin: .3rem 0 0;
-  font-size: var(--text-sm);
-  line-height: 1.6;
-  color: var(--gray-700);
-}
-
 table.data caption {
   caption-side: top;
   padding: .6rem .85rem;
   text-align: left;
   font-size: var(--text-xs);
-  color: var(--gray-600);
-  background: var(--gray-50);
+  color: var(--ink-3);
+  background: var(--well);
 }
 table.seq code { font-size: .8125rem; word-break: break-all; }
-table.data td.chg { background: var(--leaf-50); }
+table.data td.chg { background: color-mix(in srgb, var(--tr-hydro) 8%, #fff); }
 table.data td.no  { background: var(--rust-100); color: var(--rust-700); }
 
-/* the two wavelengths the circuit answers to, used only where the page is
-   talking about the light itself */
+/* the two wavelengths the circuit answers to */
 .nm { font-weight: 600; }
 .nm--g { color: #2f7d32; }
 .nm--r { color: #a23a2a; }
 
-/* ------------------------------------------------------------- printing -- */
+/* ============================================================== NARROW == */
 
-@media print {
-  .tabs__panel[hidden] { display: block !important; }
-  .disclose__body { display: block !important; }
-  .map { break-inside: avoid; }
+@media (max-width: 47.99rem) {
+  .seg { top: calc(var(--nav-h) + .5rem); margin-bottom: var(--sp-6); }
+  .seg__track { justify-content: flex-start; }
+  .eng .dbtl__step, .ledger > div, .map__card { border-radius: 18px; }
+  .handoff { padding-top: 1.75rem; }
 }
 
-/* ------------------------------------------------ room for four columns --- */
-/* A cycle is four steps side by side, and four columns do not fit in 68ch of
-   body text. Where the window has a gutter to give, the cycles take it, the
-   way .fig--wide does in the shared sheet. Below that width the steps stack
-   and nothing moves.                                                        */
+@media (prefers-reduced-motion: reduce) {
+  .seg__thumb, .track > .cyc.is-entering { transition: none; animation: none; }
+  .cyc-anim .dbtl__step, .cyc-anim .ledger > div { opacity: 1; transform: none; transition: none; }
+  .map__card:hover { transform: none; }
+}
 
-@media (min-width: 1240px) {
-  .cycles { width: min(58rem, calc(100vw - 22rem)); }
+@media print {
+  .track > .cyc[hidden] { display: block !important; }
+  .disclose__body { display: block !important; }
+  .seg { display: none; }
+  .map, .loop { break-inside: avoid; }
 }
