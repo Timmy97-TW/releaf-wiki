@@ -4,31 +4,51 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>Molecular Dynamics | Protein Design | ReLeaf &middot; iGEM 2026</title>
-  <meta name="description" content="Nine all-atom trajectories of BoPEP4 on the PEPR1 ectodomain: what each run was for, what the set says that no single run can, and where the full report for each one lives." />
+  <meta name="description" content="Nine all-atom molecular dynamics trajectories of the BoPEP4 and PEPR1 complex: the wild type, the truncation ladder, a C-terminal histidine tag that passed every check it should have failed, the apoplast at pH 5.5, and the receptor on its own." />
   <link rel="icon" href="../../assets/img/logo.png" />
   <link rel="stylesheet" href="../../assets/css/tokens.css" />
   <link rel="stylesheet" href="../../assets/css/nav.css" />
   <link rel="stylesheet" href="../../assets/css/page.css" />
-  <link rel="stylesheet" href="../../assets/vendor/katex/katex.min.css" />
-  <link rel="stylesheet" href="../protein.css?v=202609281" />
+  <link rel="stylesheet" href="../../assets/css/engage.css?v=1007s" />
+  <link rel="stylesheet" href="../protein.css?v=202610081" />
 </head>
-<body class="pd">
+<body class="engage pd">
 <!--
-  SOURCE. Built 28 September 2026. The writing document for this subpage
-  ("3. Molecular Dynamics Subpage/Untitled document.docx") is empty, so the
-  page is assembled from three things the team did produce:
+  SOURCE. Rebuilt 8 October 2026 from "3. Molecular Dynamics Subpage/MD
+  Writing.docx", which the students wrote after this page was first built and
+  which did not exist on 28 September. Timmy asked for the MD work to live on
+  one page, with the nine per-run reports under /md-simulations/ optional for
+  a judge rather than required reading, so everything the document says is on
+  this page and the reports are offered beside the chapter that uses them.
 
-    1. the run roster in "Layout - Protein Design Page.docx" section 3, which
-       lists WT, 7-23, 9-23, 15-23, CHis, WT pH 5.5, 9-23 pH 5.5, a future
-       ternary run, and ACC D and LEA14 as not yet started;
-    2. the paragraph defining molecular dynamics in "Methodology
-       Writing.docx", quoted whole under "What the method is";
-    3. /md-simulations/, which holds the analysis of all nine trajectories
-       and a full report for each.
+  The document has two tabs. Tab 2 is the later and fuller draft and covers
+  all nine runs; it is the text used here. Tab 1 contributes three things Tab
+  2 has no equivalent of: its Introduction, its framing paragraph on the four
+  Asn23 contacts, and the paragraph stating the expectation before the tagged
+  run, which is quoted as a quotation because the run only bore out half of
+  it. Where the two tabs disagree the later one wins: Tab 1 states flatly
+  that a tagged peptide "cannot engage PEPR1 as designed", and Tab 2
+  withdraws that to "we cannot say that the His tag ablates receptor
+  interaction ... our simulations do show that the tag ablates the native
+  Asn23-Arg487 salt bridge". The narrower claim is the one on the page, and
+  Tab 1's steric claim is printed only inside the pre-run quotation that Tab
+  2 then corrects.
 
-  The layout document names bopep4-chis-vs-wt as the current basis for this
-  subpage, so that run is given its own section. Everything written here that
-  is not from source 2 carries class="ai". /md-simulations/ keeps its URL.
+  Tab 2 carries a "*revise from here" marker before "Reassessing Arg18
+  Contact Network". That is the students' note to themselves, so it is not
+  printed; the sections after it are on the page as written and will be
+  replaced when they revise them.
+
+  Student prose is set plain. Anything carrying class="ai" is drafted: the
+  hero caption and lede, the chapter intros, the run cards that link out to
+  the reports, the protocol fold, and the figure captions. Two mechanical
+  fixes run through the student text: the peptide names are normalised to the
+  spelling the rest of the wiki uses (BoPEP4, AtPEP1), and "±", "×" and the
+  angstrom sign are written as entities.
+
+  The page uses assets/css/engage.css, the soft layout the Engagement pages
+  and Integrated Human Practices share, so a judge meets six short chapters
+  behind a segmented control instead of one very long scroll.
 -->
 
   <div id="site-nav" data-base="../../" data-tab="drylab" data-page="protein-design"></div>
@@ -49,11 +69,11 @@
 
     <div class="pagehead__inner">
       <p class="pagehead__herocap ai"><b>The contact everything is measured against.</b> Asn23, the last residue of BoPEP4, buried at the closed end of the PEPR1 groove where its free carboxylate reaches Arg487. Seven of the nine runs are, in the end, a question about whether that one bond holds.</p>
-      <p class="pagehead__lede ai">Docking scores a pose. Molecular dynamics asks whether the pose survives being shaken. Nine all-atom trajectories were run on the PEPR1 ectodomain, eight of them carrying a peptide, and the set answers questions that no single run can: how much receptor motion would have happened anyway, what the acceptance criteria measure, and what the acidity outside a plant cell does to the interface.</p>
+      <p class="pagehead__lede ai">Docking scores a pose. Molecular dynamics asks whether the pose survives being shaken. Nine all-atom trajectories were run on the PEPR1 ectodomain, eight of them carrying a peptide. Each chapter below is one question the set answers, and each links to the full report for the runs it rests on.</p>
       <ul class="pagehead__meta">
         <li><b>Section</b><span>Dry Lab</span></li>
         <li><b>Written by</b><span>Dry lab, protein design</span></li>
-        <li><b>Last updated</b><span>2 October 2026</span></li>
+        <li><b>Last updated</b><span>8 October 2026</span></li>
         <li><b>Status</b><span>Nine runs complete, ternary and other protectants outstanding</span></li>
       </ul>
     </div>
@@ -78,119 +98,288 @@
 
     <main class="pagebody">
 
-      <!-- ===================================================== 1 · METHOD --->
-      <section class="sec" id="what-the-method-is">
-        <h2>What the method is</h2>
+      <!-- ================================================ 1 · INTRODUCTION -->
+      <section class="sec" id="introduction">
+        <h2>Introduction</h2>
 
-        <p>With HADDOCK detailing how our protectants bind to specific molecules, its static nature led to results which were hard to observe.</p>
-
-        <p>Molecular Dynamics (MD) simulation is a fundamental computational methodology that uses statistical mechanics to evaluate the physical properties, structural stability, and mechanism of action of engineered proteins and peptides. By integrating Newtonian equations of motion, MD tracks the velocities, positions, and interactions between molecules over time. We applied this to our project to understand the translation and secretion efficiency of our protectants by analyzing the interactions between different receptors.</p>
-
-        <div class="finds">
-          <div class="find">
-            <span class="find__n">9</span>
-            <span class="find__t">trajectories</span>
-            <p class="ai">Eight carrying a peptide, one with the receptor alone.</p>
-          </div>
-          <div class="find">
-            <span class="find__n">30 ns</span>
-            <span class="find__t">production each</span>
-            <p class="ai">270&nbsp;ns in total, 13,500 saved frames, one random seed per system.</p>
-          </div>
-          <div class="find">
-            <span class="find__n">127,600</span>
-            <span class="find__t">atoms per system</span>
-            <p class="ai">The PEPR1 ectodomain, residues 29 to 738, solvated in explicit water.</p>
-          </div>
-          <div class="find">
-            <span class="find__n">25.9</span>
-            <span class="find__t">GPU-hours</span>
-            <p class="ai">One A100, about 250&nbsp;ns per day, one analysis pass over all nine runs.</p>
-          </div>
+        <div class="lede-c">
+          <p>Molecular Dynamics (MD) simulation is a fundamental computational methodology that uses statistical mechanics to evaluate the physical properties, structural stability, and mechanism of action of engineered proteins and peptides. By integrating Newtonian equations of motion, MD tracks the velocities, positions, and interactions between molecules over time. We applied this to our project to understand the translation and secretion efficiency of our protectants by analyzing the interactions between different receptors.</p>
+          <p>With HADDOCK providing a structural framework for how our protectants bind to specific molecules, Molecular Dynamics (MD) simulations offer a glimpse into whether these predicted bound poses remain stable over time. Rather than treating a single docking pose as a definitive representation of the binding interaction, MD subjects the complex to a simulated dynamic environment, allowing the protein and protectant to move and interact as they would under molecular conditions. While MD runs can answer crucial hypotheses, they can also serve as trigger points for unique, project-altering strategies.</p>
         </div>
 
-        <p class="ai">Every system was built on the PEPR1 ectodomain from PDB&nbsp;5GR8 and solvated in OPC water with AMBER ff19SB&nbsp;[1][2]. Hydrogen mass repartitioning allows a \( 4\,\mathrm{fs} \) time step. Because the numbers on every run come from one analysis codebase applied to all nine trajectories, the columns mean the same thing from row to row, which is what makes the cross-run reading in section 3 possible at all. The protocol in full, with the equilibration schedule, is on <a href="../../md-simulations/#how">MD Simulations</a>.</p>
+        <div class="folds">
+          <details class="fold">
+            <summary>How the nine runs were set up<span class="fold__sub ai">Force field, water model, time step, what was held identical</span></summary>
+            <div class="fold__body">
+              <p class="ai">Every system was built on the PEPR1 ectodomain, residues 29 to 738, taken from PDB&nbsp;5GR8 and solvated in explicit OPC water with AMBER&nbsp;ff19SB&nbsp;[1][2], about 127,600 atoms per system. Hydrogen mass repartitioning allows a 4&nbsp;fs time step. Each run is 30&nbsp;ns of production with one random seed, 1,500 saved frames, 270&nbsp;ns and 25.9 GPU-hours over the set.</p>
+              <p class="ai">Four things change across the nine runs and nothing else does: which ligand is in the groove, which residues of it are present, whether the C-terminus is free, and whether three histidines are protonated. The numbers on every run come from one analysis codebase applied to all nine trajectories, so a column means the same thing from row to row, which is what makes the cross-run reading in the last chapter possible at all. The protocol in full, with the equilibration schedule, is on <a href="../../md-simulations/#how">MD Simulations</a>.</p>
+            </div>
+          </details>
+        </div>
       </section>
 
-      <!-- ====================================================== 2 · THE SET -->
-      <section class="sec" id="the-nine-runs">
-        <h2>The nine runs</h2>
+      <!-- =================================================== 2 · THE RUNS -->
+      <section class="sec" id="the-runs">
+        <h2>The runs</h2>
 
-        <p class="ai">Four things change across the set and nothing else does: which ligand is in the groove, which residues of it are present, whether the C-terminus is free, and whether three histidines are protonated. Each run below links to its own report, which carries the trajectory, the per-residue occupancies and the plots.</p>
+        <p class="ai">Six chapters. The first is the reference every other run is read against; the last is what only the whole set can say.</p>
 
-        <h3 id="the-controls">The two controls</h3>
+        <div class="rail rail--seg" data-rail data-rail-top>
+          <div class="seg"><div class="rail__strip seg__track" role="tablist" aria-label="Molecular dynamics runs">
+            <button class="rail__btn seg__btn pl-2" role="tab" type="button" id="t-wt" aria-controls="wild-type" aria-selected="true"><svg class="seg__ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="M3 15c3-7 5 7 8 0s5 7 8 0"/></svg>Wild type</button>
+            <button class="rail__btn seg__btn pl-3" role="tab" type="button" id="t-trunc" aria-controls="truncation-ladder" aria-selected="false"><svg class="seg__ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="M4 6h16M7 12h13M11 18h9"/></svg>Truncation ladder</button>
+            <button class="rail__btn seg__btn pl-4" role="tab" type="button" id="t-tag" aria-controls="the-histidine-tag" aria-selected="false"><svg class="seg__ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="M12.5 3.5H20v7.5l-9 9L3.5 12.5z"/><circle cx="16.5" cy="7.5" r="1.3"/></svg>The histidine tag</button>
+            <button class="rail__btn seg__btn pl-5" role="tab" type="button" id="t-ph" aria-controls="ph-5-5" aria-selected="false"><svg class="seg__ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="M12 3.5c3.2 3.7 5.5 6.5 5.5 9.3A5.5 5.5 0 0 1 12 18.5a5.5 5.5 0 0 1-5.5-5.7c0-2.8 2.3-5.6 5.5-9.3z"/></svg>pH 5.5</button>
+            <button class="rail__btn seg__btn pl-1" role="tab" type="button" id="t-apo" aria-controls="the-apo-receptor" aria-selected="false"><svg class="seg__ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="M5 19c0-6 2-11 7-14"/><path d="M19 19c0-6-2-11-7-14"/><path d="M4 19h16"/></svg>The apo receptor</button>
+            <button class="rail__btn seg__btn pl-6" role="tab" type="button" id="t-set" aria-controls="across-the-set" aria-selected="false"><svg class="seg__ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="M4 19V9M9.3 19V5M14.7 19v-7M20 19v-4"/></svg>Across the set</button>
+          </div></div>
 
-        <p class="ai">These are the runs that can falsify the rest. One has an experimental structure to check against; the other has no peptide at all, which puts a measured floor under every receptor-side number in the set.</p>
+          <!-- ------------------------------------------------- 2.1 WILD TYPE -->
+          <div class="rail__panel chap pl-2" role="tabpanel" id="wild-type" aria-labelledby="t-wt">
+            <header class="chap__hero">
+              <p class="chap__eyebrow">Run 1 of 9</p>
+              <h3 class="chap__title" data-no-toc>Wild type</h3>
+              <div class="chap__intro"><p class="ai">Full-length BoPEP4, residues 1 to 23, with a free C-terminus, docked in the PEPR1 groove. Nothing is being tested here. This is the run every other number on the page is read against, and it is also where two earlier claims were checked and one of them was withdrawn.</p></div>
+            </header>
 
-        <ul class="runs">
-          <li class="run" data-state="good">
-            <div class="run__top"><span class="run__name"><a href="../../md-simulations/atpep1-benchmark-vs-bopep4.html">AtPEP1 7 to 23 benchmark</a></span><span class="run__seq">KQRGKEKVSSGRPGQHN</span><span class="run__role">Benchmark</span></div>
-            <p class="ai">The peptide as resolved in the 5GR8 crystal structure, run under settings identical to the other eight. It is the only system with an experimental structure to check against, so it sets the scale the rest are read on.</p>
-          </li>
-          <li class="run" data-state="good">
-            <div class="run__top"><span class="run__name"><a href="../../md-simulations/apo-PEPR1.html">Receptor alone</a></span><span class="run__role">Negative control</span></div>
-            <p class="ai">The peptide removed entirely. The receptor is no looser, the groove does not collapse, and the per-residue flexibility profile barely moves. That is what makes a receptor-side difference on any other run readable as a real difference.</p>
-          </li>
-        </ul>
+            <article class="card">
+              <h4 class="card__name">Wild-type</h4>
+              <p>The wild-type run served as a comparison and analysis benchmark for the other mutations. We found that the eight N-terminal residues had an average fluctuation above 2&nbsp;&Aring;. This was consistent with the alanine scan results, which found that mutations to the first six residues had the least penalty in the peptide-receptor docking, indicating a lower contribution to peptide-receptor interaction. All residues past Pro10 had over 75% contact with the receptor, except for Pro19. All residues past Arg11 had under 1&nbsp;&Aring; fluctuation, except for Lys18. Our conserved window 15-23, defined by aligning sequences from the PEP receptor family, had near 100% contact with mostly sub-&Aring;ngstr&ouml;m movements. This evidence supports that the N- and C-termini have different behaviours and roles as the N-terminus has greater conformational freedom, while the conserved C-terminus region remains stabilized in contact with the receptor. The conserved residues also form the primary region of the peptide that interacts with the binding pocket, highlighting their importance.</p>
+              <p>The run also supported our decision to use truncations instead of point mutations. Arg9 has a fluctuation of 1.32&nbsp;&Aring; and a mean closest approach of 2.79&nbsp;&Aring; and 100% contact, which explains the sharp jump in the HADDOCK score when removing Arg9. Although Ile2 and Ile4 have contact with the receptor, they have a fluctuation of over 1.5&nbsp;&Aring; and switch between different locations on the PEPR1 instead of maintaining contact. Adding these residues also necessitates preserving the surrounding disordered residues, which have only about 25% contact with the receptor. The improved binding from adding these residues was not worth the extra sequence length, so we did not pursue the &Delta;1 and &Delta;1-3 designs and instead opted for the truncation designs with residues 7 and 9.</p>
+            </article>
 
-        <h3 id="the-ladder">The truncation ladder, in motion</h3>
+            <div class="chartbox"><div class="charts charts--1"><figure class="fig fig--chart">
+              <img src="../../assets/img/peptide-design/pep-anchor-belt.webp"
+                   alt="Ribbon rendering of the peptide lying along the concave face of the receptor solenoid, with three basic side chains reaching down to receptor carboxylates and the distances labelled."
+                   width="1300" height="950" loading="lazy" decoding="async" />
+              <figcaption class="ai">The architecture the wild-type run measures. The peptide runs the concave face of the leucine-rich-repeat solenoid, and the basic side chains at positions 7, 9 and 18 reach down onto fixed receptor carboxylates. Two of those three, Lys7 and Arg9, turn out to be the ones the ladder in the next chapter is cutting into.</figcaption>
+            </figure></div></div>
 
-        <p class="ai">The same four constructs the <a href="../sprints/#the-truncation-ladder">docking ladder</a> produced, taken into simulation to see whether the plateau it found survives. It does not survive uniformly.</p>
+            <article class="card">
+              <h4 class="card__name">Reassessing Arg18 contact network</h4>
+              <p>A second correction emerged from the same analysis. Although smaller in scope, it affects the rationale behind one of our engineering decisions and is therefore important to document. The literature assigns two receptor contacts to Arg18 in AtPEP1: one with Asp348 and another with Phe371. BoPEP4 contains lysine at the corresponding position, and our initial docking poses suggested that Lys18 could already reproduce both interactions at approximately crystal-like distances. This observation contributed to our rationale for K18R, which we initially described as restoring an interaction that was already largely established.</p>
+              <p>The MD trajectory does not support that interpretation based on distance and occupancy. Asp348 is clearly the primary receptor partner of Lys18, with the next-closest peptide residue remaining 7.87&nbsp;&Aring; away. However, the Lys18-Asp348 interaction is substantially less stable than our static docking pose suggested. The contact is present in 53.7% of frames and spans distances from 2.55 to 9.37&nbsp;&Aring;. By comparison, the Asn23-Arg487 interaction is maintained at 100% occupancy within a 0.54&nbsp;&Aring; distance window. Thus, while Lys18 does interact with Asp348, this interaction behaves as a transient contact rather than a persistent anchor.</p>
+              <p>The Phe371 assignment requires a clearer correction. In the MD trajectory, Phe371 most frequently contacts Gly20, which remains within 3.69&nbsp;&Aring; for 84.4% of frames. Lys18, by contrast, has an average distance of 5.12&nbsp;&Aring; from Phe371 and approaches within 4&nbsp;&Aring; in only 18.1% of frames. The residue we had assigned to the Phe371 contact in the static model is therefore not the residue that predominantly maintains that interaction during the simulation.</p>
+              <p>These results do not invalidate the chemical rationale for K18R. Lysine has a shorter side chain than arginine and cannot reproduce the bidentate interaction expected from the longer guanidinium group of arginine. What the MD analysis removes is the supporting claim that the native contact was already largely established before substitution. The K18R design therefore remains plausible, but its rationale is narrower: the substitution is intended to introduce an arginine side chain capable of forming the proposed bidentate interaction, rather than simply completing an interaction that is already present in BoPEP4.</p>
+              <p>Whether K18R actually establishes this bidentate geometry remains untested and requires a dedicated simulation. Interestingly, the effect is context-dependent: in the nine-residue construct, the Lys18-Asp348 interaction increases in occupancy from 53.7% to 90.1%. This indicates that the interaction itself is sensitive to the surrounding peptide sequence. Shortening the peptide appears to stabilize the Lys18-Asp348 contact, providing additional support for the importance of considering the full peptide context when interpreting individual docking interactions.</p>
+              <p>Overall, the MD analysis refines the K18R design because the substitution remains justified by the distinct interaction geometry available to arginine. However, we no longer characterize it as simply restoring a contact that is already nearly formed in the wild-type BoPEP4 sequence.</p>
+            </article>
 
-        <ul class="runs">
-          <li class="run" data-state="good">
-            <div class="run__top"><span class="run__name"><a href="../../md-simulations/bopep4-wt-round1.html">BoPEP4 wild type, 1 to 23</a></span><span class="run__role">Reference state</span></div>
-            <p class="ai">The complete mature sequence with a free C-terminus. The other seven BoPEP4 trajectories are all read against this one.</p>
-          </li>
-          <li class="run" data-state="good">
-            <div class="run__top"><span class="run__name"><a href="../../md-simulations/bopep4-7-23.html">BoPEP4 7 to 23</a></span><span class="run__role">Hypothesis falsified</span></div>
-            <p class="ai">Putting Lys7 and Lys8 back onto 9 to 23 restores the clamp, and not because a free-terminus artefact went away: Lys7 grips Asp129, a salt bridge that is not on Tang's list of eight. This is also the first construct that is like for like with the benchmark.</p>
-          </li>
-          <li class="run" data-state="warn">
-            <div class="run__top"><span class="run__name"><a href="../../md-simulations/bopep4-9-23-vs-wt.html">BoPEP4 9 to 23</a></span><span class="run__role">The construct that was ordered</span></div>
-            <p class="ai">Deleting residues 1 to 8 loosens the anchor at the far end of the peptide. The clamp flickers open 94 times in 30&nbsp;ns, none of the gaps longer than 0.68&nbsp;ns.</p>
-          </li>
-          <li class="run" data-state="warn">
-            <div class="run__top"><span class="run__name"><a href="../../md-simulations/bopep4-15-23-vs-wt.html">BoPEP4 15 to 23</a></span><span class="run__role">Control that did not fail</span></div>
-            <p class="ai">Planned as a negative control that would fall off and supply a leaving time. It did not fall off, and it could not have: unbinding runs on microseconds to milliseconds, three to six orders of magnitude past 30&nbsp;ns.</p>
-          </li>
-        </ul>
+            <div class="chap__end">
+              <p class="chap__eyebrow">Reports</p>
+              <ul class="runs">
+                <li class="run" data-state="good">
+                  <div class="run__top"><span class="run__name"><a href="../../md-simulations/bopep4-wt-round1.html">BoPEP4 wild type, 1 to 23</a></span><span class="run__role">Reference state</span></div>
+                  <p class="ai">The per-residue fluctuation and occupancy traces behind both cards above, with the trajectory viewer.</p>
+                </li>
+                <li class="run" data-state="good">
+                  <div class="run__top"><span class="run__name"><a href="../../md-simulations/atpep1-benchmark-vs-bopep4.html">AtPEP1 7 to 23 benchmark</a></span><span class="run__seq">KQRGKEKVSSGRPGQHN</span><span class="run__role">Benchmark</span></div>
+                  <p class="ai">The peptide as resolved in the 5GR8 crystal, run under identical settings. It is the only system with an experimental structure to check against, so it sets the scale the rest are read on.</p>
+                </li>
+              </ul>
+            </div>
+          </div>
 
-        <h3 id="the-tag">The histidine tag</h3>
+          <!-- --------------------------------------- 2.2 TRUNCATION LADDER -->
+          <div class="rail__panel chap pl-3" role="tabpanel" id="truncation-ladder" aria-labelledby="t-trunc">
+            <header class="chap__hero">
+              <p class="chap__eyebrow">Runs 3, 4 and 5</p>
+              <h3 class="chap__title" data-no-toc>Truncation ladder</h3>
+              <div class="chap__intro"><p class="ai">Three cuts from the docking ladder, taken into simulation: 7-23, 9-23 and 15-23. The construct that was ordered is the one that came back worst, and the explanation is a salt bridge that was on nobody's list.</p></div>
+            </header>
 
-        <ul class="runs">
-          <li class="run" data-state="bad">
-            <div class="run__top"><span class="run__name"><a href="../../md-simulations/bopep4-chis-vs-wt.html">BoPEP4 with a C-terminal 6xHis</a></span><span class="run__role">False pass</span></div>
-            <p class="ai">Six histidines fused after Asn23. All four acceptance criteria pass and the C-terminus scores as steadier than wild type. But Asn23 is no longer a C-terminus: its carboxylate was spent forming the amide bond to His24, so the criterion is measuring a neutral carbonyl rather than a salt bridge.</p>
-          </li>
-        </ul>
+            <article class="card">
+              <h4 class="card__name">Unidentified salt bridge</h4>
+              <p>We modeled the 9-23 construct as part of the truncation series, and it proved to be the least stable untagged construct. Clamp integrity was 77.1%, the bidentate salt bridge was present in 46.9% of frames, and the Asn23-Arg487 interaction remained within the defined distance in 81.1% of frames. The conserved window formed 68.5 contacts compared with 96.5 in wild type, while backbone RMSD reached 2.28&nbsp;&Aring;, the highest among the BoPEP4 trajectories. Although 9-23 passed the acceptance gate, every contact-based measure was the lowest among the untagged constructs simulated at pH&nbsp;7. Moreover, the bidentate salt bridge did not dissociate as a single event but instead underwent repeated transient dissociation, comprising 94 separate break events that collectively accounted for 22.9% of the trajectory, none exceeding 0.68&nbsp;ns in duration. Contacts involving Asp348 and Phe371 also transferred repeatedly between peptide residues. Together these observations indicate that the interface remained engaged but was substantially more dynamic than in wild type.</p>
+              <p>We initially attributed this instability to the new N terminus created by removing residues 1-8, which makes Arg9 terminal and introduces a positively charged &alpha;-ammonium group. To test this explanation, we modeled 7-23, shifting the free terminus to Lys7 while retaining Arg9 as an internal residue. The stability of the interface was substantially restored: clamp integrity increased from 77.1% to 98.5%, Asn23-Arg487 occupancy from 81.1% to 99.9%, and bidentate salt-bridge occupancy from 46.9% to 87.7%, while the shared 9-23 window, which comprises the same fifteen residues in both constructs, gained 23 contacts, increasing from 128.7 to 151.3. However, the trajectories did not support the proposed &alpha;-ammonium interaction as the cause. The Lys7 &alpha;-amino group in 7-23 was 7.11&nbsp;&Aring; from its nearest receptor carboxylate and within 4&nbsp;&Aring; in 0.0% of frames; similarly, the Arg9 terminus in 9-23 was within 4&nbsp;&Aring; in only 18.5% of frames. Full-length BoPEP4 and the AtPEP1 benchmark showed similarly weak terminal interactions.</p>
+              <p>Instead, the truncation ladder revealed a previously unlisted N-terminal anchor: the Lys7 side chain formed a salt bridge with Asp129 at 2.81&nbsp;&Aring; in 98.7% of frames, even when Lys7 was the terminal residue. Lys8 contributed to this interaction network in only 4.1% of frames, while Arg9 maintained its interaction with Asp179 in 100% of frames. Thus, BoPEP4 contains two N-terminal salt bridges absent from the published hotspot list, and the instability of 9-23 is better explained by removal of the Lys7-Asp129 anchor while retaining residues 9-14 than by formation of a new terminal salt bridge. This also explains why the truncation ladder is not simply a case of shorter peptides being less stable: full-length, 7-23, and 15-23 showed clamp integrity of 100.0%, 98.5%, and 99.9%, respectively, whereas only the intermediate 9-23 construct dropped to 77.1%. A direct test of this interpretation would therefore be a K7A full-length mutant, which should disrupt the same anchor without altering the peptide termini.</p>
+            </article>
 
-        <aside class="callout callout--unproven ai">
-          <b class="callout__label">Why this run is the one the layout document points at</b>
-          <p>Here a check passes for the wrong reason. Ranked on backbone RMSD, the tagged construct comes first in the whole set, and it is the one construct whose salt bridge does not exist. A criterion written before a construct existed can measure atoms that construct does not have, and nothing in the score says so. That is the argument for putting the tag at the N-terminus, and why <a href="../sprints/#the-runs">N-His against C-His</a> stopped being an arbitrary choice.</p>
-        </aside>
+            <div class="bridge"><p class="ai">The 7-23 construct was built to test a hypothesis that failed. What it gave instead was the one peptide in the set that can be compared with the crystal structure residue for residue.</p></div>
 
-        <h3 id="protonation">Protonation: the apoplast at pH 5.5</h3>
+            <article class="card">
+              <h4 class="card__name">7-23 as a benchmark comparison</h4>
+              <p>The 7-23 construct also removes an important ambiguity in comparison with the AtPEP1 crystal structure, which spans residues 7-23 and therefore has the same terminal configuration as BoPEP4 7-23. Across the two peptides, 15 of 17 positions showed closely matching contact occupancies, while the main sequence-level difference among the published hotspots was Arg18 in AtPEP1 versus Lys18 in BoPEP4, providing the structural basis for the proposed K18R substitution. The N-terminal comparison also revealed a positional difference, in that each peptide anchors this end through a single residue, but at positions one apart. AtPEP1 employs Gln8-Tyr153 at 3.41&nbsp;&Aring; with 95.8% occupancy, with Lys7 contributing only 19.0%, whereas BoPEP4 employs Lys7-Asp129 at 2.81&nbsp;&Aring; with 98.7% occupancy, with Lys8 contributing only 4.1%. Because both peptides now carry a free terminus at position 7, this difference can be attributed to differences in the interaction network rather than to the confounding effect of one peptide presenting an internal residue where the other presents a chain end. The same comparison applies directly to Lys7, which reaches 99.9% occupancy in BoPEP4 compared with 23.5% in AtPEP1. Although 7-23 closely reproduced the full-length binding architecture, it was not identical, with the Asn465 hydrogen bond occurring in 62.9% rather than 99.8% of frames and the bidentate salt bridge in 87.7% rather than 100%.</p>
+            </article>
 
-        <p class="ai">The peptide does its work outside the plant cell, where the pH is nearer 5.5 than 7. Two runs test what that changes, by switching three histidines to their protonated form and touching nothing else.</p>
+            <article class="card">
+              <h4 class="card__name">Negative control</h4>
+              <p>The 15-23 construct was intended to provide a negative control by removing the upstream sequence required for stable receptor engagement; however, it remained highly organized rather than dissociating. Clamp integrity was 99.9%, bidentate salt-bridge occupancy was 97.2%, and backbone RMSD was 1.81&nbsp;&Aring;, while the remaining nine residues formed 89.6 contacts compared with 96.5 contacts made by those same residues in wild type, retaining approximately 93% of the original contact network despite removal of 14 residues. Because peptide dissociation from an LRR ectodomain can occur on microsecond-to-millisecond timescales, substantially beyond the 30&nbsp;ns equilibrium trajectories used here, failure to observe dissociation cannot establish that the peptide would remain bound indefinitely; nevertheless, the trajectory demonstrates that the conserved C-terminal region can independently maintain the binding register for the duration of the simulation.</p>
+              <p>Therefore, the truncation series supports a model in which the conserved C-terminal region functions as the core structural anchor, while the upstream sequence contributes additional interactions that modulate overall stability. The 9-23 construct is specifically destabilized because it removes the Lys7-Asp129 anchor while retaining an upstream segment that still participates in the binding interface, whereas the 15-23 construct removes that segment entirely and remains organized through the conserved C-terminal interactions. Rather than indicating a simple dependence of binding stability on peptide length, the ladder therefore identifies a specific N-terminal interaction network and provides a testable prediction for the role of Lys7.</p>
+            </article>
 
-        <ul class="runs">
-          <li class="run" data-state="good">
-            <div class="run__top"><span class="run__name"><a href="../../md-simulations/bopep4-lowph-vs-wt.html">BoPEP4 1 to 23 at pH 5.5</a></span><span class="run__role">Positive result</span></div>
-            <p class="ai">A Glu12 and His227 pair appears at once and holds, and the AtPEP1 benchmark already makes that same pair at neutral pH. The C-terminal anchor is untouched.</p>
-          </li>
-          <li class="run" data-state="bad">
-            <div class="run__top"><span class="run__name"><a href="../../md-simulations/bopep4-9-23-lowph.html">BoPEP4 9 to 23 at pH 5.5</a></span><span class="run__role">Failed the gate</span></div>
-            <p class="ai">Truncation crossed with protonation. Every metric except the anchor improved and the anchor collapsed: the now-positive His22 folds back onto the peptide's own C-terminal carboxylate and displaces Arg487.</p>
-          </li>
-        </ul>
+            <div class="chap__end">
+              <p class="chap__eyebrow">Reports</p>
+              <ul class="runs">
+                <li class="run" data-state="good">
+                  <div class="run__top"><span class="run__name"><a href="../../md-simulations/bopep4-7-23.html">BoPEP4 7 to 23</a></span><span class="run__role">Hypothesis falsified</span></div>
+                  <p class="ai">The run that put Lys7 and Lys8 back and restored the clamp, and the per-residue comparison with the crystal benchmark.</p>
+                </li>
+                <li class="run" data-state="warn">
+                  <div class="run__top"><span class="run__name"><a href="../../md-simulations/bopep4-9-23-vs-wt.html">BoPEP4 9 to 23</a></span><span class="run__role">The construct that was ordered</span></div>
+                  <p class="ai">The 94 break events, with the trace that shows them, against wild type.</p>
+                </li>
+                <li class="run" data-state="good">
+                  <div class="run__top"><span class="run__name"><a href="../../md-simulations/bopep4-15-23-vs-wt.html">BoPEP4 15 to 23</a></span><span class="run__role">Control that did not fail</span></div>
+                  <p class="ai">The conserved core on its own, holding its register for the whole trajectory.</p>
+                </li>
+              </ul>
+            </div>
+          </div>
 
-        <aside class="callout ai">
-          <b class="callout__label">What &ldquo;pH 5.5&rdquo; means here</b>
-          <p>Molecular dynamics has no pH. The label names a protonation state held fixed for the whole 30&nbsp;ns: His14 and His22 on the peptide and His227 on the receptor carry a positive charge, every other histidine is neutral, and all aspartates and glutamates are deprotonated. The assignment comes from model p<i>K</i><sub>a</sub> values, not from a constant-pH simulation.</p>
-        </aside>
+          <!-- ----------------------------------------- 2.3 THE HISTIDINE TAG -->
+          <div class="rail__panel chap pl-4" role="tabpanel" id="the-histidine-tag" aria-labelledby="t-tag">
+            <header class="chap__hero">
+              <p class="chap__eyebrow">Run 6 of 9</p>
+              <h3 class="chap__title" data-no-toc>The histidine tag</h3>
+              <div class="chap__intro"><p class="ai">The construct that was already ordered, simulated to check an assumption nobody had checked. It passed every acceptance criterion the project had written, and it should not have.</p></div>
+            </header>
 
-        <h3 id="not-yet-run">Not yet run</h3>
+            <article class="card card--white">
+              <h4 class="card__name">Why Asn23</h4>
+              <p>In 5GR8, AtPEP1's C-terminal Asn23 makes four contacts with PEPR1: a salt bridge from its free carboxylate to Arg487, hydrogen bonds to Asn465 and Asp441, and a van der Waals contact with Ile443. BoPEP4 shares that residue, and our threaded model placed it in the same pocket. The run was pre-registered to test whether it stays, with a tolerance of &plusmn;1.5&nbsp;&Aring; on each crystal distance set before the trajectory started.</p>
+              <p>This finding is important, as it defines an amino acid with four contacts that future runs should look out for to better display docking, acting as a benchmark for binding strength. Furthermore, Tang et al. (2015) showed that removing Asn23 nearly abolished PEPR1 binding, making the terminal Asn particularly important. The identification of four contacts allows us to see for ourselves how much the binding of a peptide is disturbed through mutations by observing the clamp integrity of the four contacts.</p>
+              <p class="ai">The expectation going in, in the team&rsquo;s own words, was this:</p>
+              <blockquote><p>Asn23 anchors the complex mainly through its free C-terminal carboxylate, and that group exists only at the end of a chain. Appending any residue consumes it into a neutral peptide bond, so the anionic charge Arg487 pairs with disappears. This follows from the chemistry rather than from the length or flexibility of the tag. The contact is held at 100% occupancy inside a 0.54&nbsp;&Aring; window, which is the behaviour of a specificity determinant with no geometric slack to absorb a perturbation. Asn23 sits buried at the end of the groove against Arg487, Asn465, Asp441 and Ile443, with no channel for extra residues to thread out through, making the tag a steric problem alongside an electrostatic one.</p></blockquote>
+              <p class="ai">Half of that survived the run. The electrostatic half did; the steric half did not, and the cards below are where the team says so.</p>
+            </article>
+
+            <div class="chartbox"><div class="charts charts--1"><figure class="fig fig--chart">
+              <img src="../../assets/img/peptide-design/pep-asn23-clamp.webp"
+                   alt="Surface rendering showing the peptide C-terminus buried inside a pocket of the receptor, with the terminal asparagine drawn as sticks."
+                   width="1150" height="950" loading="lazy" decoding="async" />
+              <figcaption class="ai">The clamp the tag sits on. Asn23 is not on the surface of the interface, it is inside a pocket at the closed end of the groove, and the group that holds it there is the free carboxylate at the very end of the chain. Fusing six histidines after it consumes that carboxylate into an amide bond.</figcaption>
+            </figure></div></div>
+
+            <article class="card">
+              <h4 class="card__name">Asn23-Arg487 salt bridge</h4>
+              <p>Our expression constructs place a 6&times;His tag on Asn23, which lies in the middle of our proposed PEPR1 binding model. Since the behaviour of Asn23 is so important for its interaction with the receptor, we first investigated whether adding the tag disturbed its local binding interaction. In the crystal structure, Asn23 has four interactions with PEPR1: a salt bridge between its terminal carboxylate and Arg487, hydrogen bonds with Asn465 and Asp441, and a van der Waals interaction with Ile443. Tang et al. had previously shown that deleting Asn23 reduced PEPR1 binding almost to zero, confirming its importance. We thus expected the His tag to perturb this interaction and set a pre-registered tolerance of &plusmn;1.5&nbsp;&Aring; for each of the distances in the crystal structure.</p>
+              <p>Interestingly, the tagged construct appeared to pass our criteria: the distance between Asn23 and Arg487 was under 4&nbsp;&Aring; 99.8% of the time in the 1,500 frame trajectory and the clamp was maintained 99.7% of the frames. We also checked that the RMSD criteria were passed: we found an RMSD of 1.12&nbsp;&Aring; for the conserved window backbone, which was the lowest RMSD of any of our runs and even lower than the 1.17&nbsp;&Aring; RMSD of the AtPEP1 crystal control. By our criteria alone, there was no difference between the tagged and wild-type constructs.</p>
+              <p>This was, however, an artefact of our original analysis, not preservation of the native interaction. Adding six histidines to Asn23 changes it from a terminal to an internal residue. Its terminal carboxylate is now used in the peptide bond with His24 and the tagged construct only has one carbonyl oxygen compared to the two oxygens of the wild-type carboxylate. Our original criteria had measured the distance of either oxygen to Arg487, without considering the chemical environment. Thus, in the tagged trajectory it was able to count the approach of a neutral amide carbonyl as equivalent to the charged carboxylate of wild-type.</p>
+              <p>We thus repeated the analysis with atom-resolved and angle-aware criteria that specifically identified the native salt bridge geometry. The runs were now very different. With the definition of a bidentate salt bridge as the peptide having both oxygens interacting with the Arg487 guanidinium group simultaneously under angle-aware criteria, the salt bridge was present in 100.0% of wild-type frames and 0.0% of tagged frames. Using a distance-only definition of the same interaction, the tagged construct has only 2.4% occupancy. This difference indicates how much the results depend on the definition of our criterion. Similarly, the runs have 99.8% and 0% frames with two or more hydrogen bonds to Arg487. The peptide carboxylate was in the first solvation shell of the Arg487 guanidinium group 100% of the time in wild-type frames compared to 0% of the tagged frames. The closest the carboxylate came in the tagged trajectory was 11.65&nbsp;&Aring; and the distance between the charge centres increased from 3.98&nbsp;&Aring; to 20.07&nbsp;&Aring;. The AtPEP1 control also showed the same behaviour as the wild-type in these measures. Importantly, Arg487 did not form an equivalent salt bridge with another receptor carboxylate. The negative charge of the peptide was effectively removed from the interaction site instead of being replaced.</p>
+              <p>The tagged peptide still had good structural ordering. The six histidines assumed conformations against the receptor surface and made roughly 50 more heavy atom contacts. These non-native contacts can compensate for the loss of the native salt bridge in geometric and contact-based metrics such as RMSD. In other words, a new surface adsorption interaction can maintain overall structural integrity without replacing the chemical interaction that was native to binding.</p>
+              <p>An independent apo control also helped to confirm that the tag affected the local receptor environment. In seven out of eight runs, Phe510 was the closest receptor neighbour to Arg487. In the tagged run, this changed to Ile463 72.1% of the time, and the Arg487 site was the least dense of the eight trajectories. This indicates that the tag does not simply replace the native peptide in the binding environment, but causes a local change to the pocket.</p>
+              <p>These runs demonstrate the difference between whether the peptide is physically interacting with the receptor and whether it has the native chemistry to do so. The tagged peptide does not get ejected from the binding groove in the 30&nbsp;ns trajectory and the eight hotspots all have the same closest peptide residue. However, the chemical interaction that holds the peptide in place is greatly changed. Our original concern about the tag had two parts: first, that the pocket would not accommodate the extra residues, and second, that we would lose the Asn23 carboxylate. The simulations supported the second concern but not the proposed steric mechanism. Clearly, the histidines found space on the receptor surface, and the loss of the negatively charged terminal group was seen in our atom-resolved criterion. This also highlights the need for caution when using geometric metrics such as distance and contacts in molecular dynamics, as two interactions with the same geometry do not necessarily make the same chemical and energetic contribution. The neutral amide carbonyl can have a distance trace like the charged carboxylate without having the electrostatic interaction that stabilises the native complex.</p>
+            </article>
+
+            <div class="card__key">
+              <p>Our conclusion is thus more restricted than our original hypothesis. We cannot say that the His tag ablates receptor interaction, and thus a negative experimental assay with the tagged construct could not necessarily be attributed to steric clash with the tag. However, our simulations do show that the tag ablates the native Asn23-Arg487 salt bridge. We cannot, however, characterise the energetic cost of removing this formal negative charge from a residue proven to be so close to essential in binding; 30&nbsp;ns of preserved geometry is not the same as preserved binding affinity.</p>
+            </div>
+
+            <article class="card">
+              <h4 class="card__name">What follows for the construct</h4>
+              <p>The design consequence is thus clear: the N-terminus is not only the more flexible end of the peptide, but also the end that our truncation series shows can be removed. Thus, placing a tag on this end gives extra sequence space while not altering the Asn23 binding terminus. Alternatively, synthetic peptides can be made without a tag. Both strategies keep Asn23 a true chain terminus and avoid the ambiguity of the original construct.</p>
+              <p>One caveat unproved is that our simulations ran the six histidines in their neutral form at pH&nbsp;7. The plant apoplast is closer to pH&nbsp;5.5 where histidine would be mostly protonated. Thus, we have not characterised the effect that the protonation state of the tag has on its interactions with PEPR1 and the rest of the binding pocket.</p>
+            </article>
+
+            <div class="chap__end">
+              <p class="chap__eyebrow">Report</p>
+              <ul class="runs">
+                <li class="run" data-state="bad">
+                  <div class="run__top"><span class="run__name"><a href="../../md-simulations/bopep4-chis-vs-wt.html">BoPEP4 with a C-terminal 6xHis</a></span><span class="run__role">False pass</span></div>
+                  <p class="ai">Both analyses side by side: the distance-only criterion that passed, and the atom-resolved, angle-aware one that did not.</p>
+                </li>
+              </ul>
+            </div>
+          </div>
+
+          <!-- --------------------------------------------------- 2.4 pH 5.5 -->
+          <div class="rail__panel chap pl-5" role="tabpanel" id="ph-5-5" aria-labelledby="t-ph">
+            <header class="chap__hero">
+              <p class="chap__eyebrow">Runs 7 and 8</p>
+              <h3 class="chap__title" data-no-toc>pH 5.5</h3>
+              <div class="chap__intro"><p class="ai">The peptide does its work outside the plant cell, where the pH is nearer 5.5 than 7. Two runs test what that changes. On the full-length peptide it recovers a contact; on the truncated one it breaks the anchor.</p></div>
+            </header>
+
+            <article class="card">
+              <h4 class="card__name">pH run</h4>
+              <p>Because conventional molecular dynamics does not dynamically simulate pH, our pH&nbsp;5.5 condition represents a fixed protonation state intended to approximate the apoplast rather than a constant-pH simulation. Histidine protonation was assigned using model pKa values, with His14 and His22 on BoPEP4 and His227 on PEPR1 carrying positive charges, while all other histidines remained neutral and all Asp and Glu residues remained deprotonated throughout the 30&nbsp;ns trajectory. No other simulation parameter was changed relative to the wild-type pH&nbsp;7 run, making the three protonation changes the sole variable in this comparison.</p>
+              <p>Under this condition, the interaction between peptide Glu12 and receptor His227 was substantially strengthened, with the pair separated by 2.75&nbsp;&plusmn;&nbsp;0.11&nbsp;&Aring; in 99.9% of frames compared with 5.33&nbsp;&Aring; and only 0.8% occupancy at pH&nbsp;7. This interaction is already present in the AtPEP1 benchmark at neutral pH, where the corresponding pair occurs at 3.36&nbsp;&Aring; with 76.9% occupancy, indicating that protonation allows BoPEP4 to recover a contact present in its structural benchmark rather than introducing an entirely new interaction. Importantly, this improvement did not compromise the primary C-terminal anchor: clamp integrity remained at 100.0%, the bidentate salt bridge at 99.9%, and the conserved window formed 95.7 contacts with a backbone RMSD of 1.34&nbsp;&Aring;, the lowest value observed among the untagged constructs that satisfied their acceptance criteria.</p>
+              <p>This result therefore changes the interpretation of the original sequence difference at Glu12-His227. The lower contact occupancy observed at pH&nbsp;7 had initially appeared to reflect a sequence-level deficiency in BoPEP4, but the pH-controlled comparison indicates that it was instead a consequence of the protonation state used in the simulation. Because the apoplast is the environment in which the engineered protectant is expected to function, pH&nbsp;5.5 is therefore a more physiologically relevant default for full-length BoPEP4, with pH&nbsp;7 retained as the control. At the same time, the trajectory does not support the proposed His14 pH-switch mechanism: His14 remained approximately 6.1&nbsp;&Aring; from the nearest receptor carboxylate and formed a sub-4&nbsp;&Aring; contact in 0.0% of frames at either condition. The pH-responsive interaction identified here is instead the Glu12-His227 pair.</p>
+            </article>
+
+            <div class="bridge"><p class="ai">Protonation helped the full-length peptide. The obvious next question was whether it could rescue the construct that had come back worst.</p></div>
+
+            <article class="card">
+              <h4 class="card__name">Truncation crossed with protonation</h4>
+              <p>Because pH&nbsp;5.5 substantially improved the full-length BoPEP4 interaction network while 9-23 was the least stable untagged construct, we next asked whether protonation could restore the instability observed in that truncation. We therefore repeated the 9-23 simulation from the same starting coordinates while protonating the same three histidines and changing no other simulation parameters.</p>
+              <p>Contrary to the full-length result, protonation further destabilized the 9-23 construct. Asn23-Arg487 remained within 4&nbsp;&Aring; in only 23.6% of frames, well below the 60% acceptance threshold, while clamp integrity fell to 19.3% and bidentate salt-bridge occupancy to 6.9%, making this the only BoPEP4 trajectory that failed its pre-registered acceptance criteria. The underlying mechanism was a new intramolecular interaction between protonated His22 and the C-terminal carboxylate: this contact occurred at 2.84&nbsp;&Aring; in 96.9% of frames in 9-23 at pH&nbsp;5.5, compared with 17.4% at pH&nbsp;7. For comparison, the corresponding interaction occurred in only 1.1% of full-length frames at pH&nbsp;7 and increased to 64.7% at pH&nbsp;5.5 while the full-length clamp remained intact.</p>
+              <p>The combined effect of truncation and protonation is therefore important. Neither condition alone was sufficient to produce the strong self-contact observed in the failed trajectory: truncation increased occupancy from 1.1% to 17.4% at neutral pH, while protonation increased full-length occupancy to 64.7%; only their combination produced the 96.9% occupancy that coincided with collapse of the C-terminal anchor. At the same time, the stabilizing Arg9-Asp179 interaction remained highly occupied in full-length trajectories but decreased to 75.0% in 9-23 at pH&nbsp;5.5, leaving the shortened peptide sufficiently unconstrained for its C terminus to fold back toward His22. Thus, protonation should not be treated as a universal stabilizing condition across constructs; instead, its effect depends on the interaction network remaining in each peptide.</p>
+              <p>Two additional observations support this interpretation. First, the newly exposed Arg9 &alpha;-amino group remained 6.90&nbsp;&Aring; from its nearest receptor carboxylate and formed a sub-4&nbsp;&Aring; contact in only 5.8% of frames, providing further evidence against the proposed terminal salt bridge. Second, although protonation restored the Glu12-His227 interaction to 99.9% occupancy in full length, the same pair reached only 26.4% in 9-23, indicating that protonation alone cannot stabilize an interaction when the upstream peptide sequence required to position it has been removed.</p>
+            </article>
+
+            <div class="card__key">
+              <p>The trajectory also provides a methodological warning because several conventional structural metrics would have classified this failed construct as improved. Relative to 9-23 at pH&nbsp;7, backbone RMSD decreased from 2.28 to 1.33&nbsp;&Aring;, conserved-window contacts increased from 68.5 to 92.2, and the Asp348 and Phe371 interactions returned to their wild-type-associated peptide residues. Nevertheless, the atom-resolved acceptance criteria showed that the principal Asn23-Arg487 anchor had largely collapsed. Consequently, RMSD and aggregate contact counts cannot substitute for monitoring the specific interactions that define the binding model.</p>
+            </div>
+
+            <div class="chap__end">
+              <p class="chap__eyebrow">Reports</p>
+              <ul class="runs">
+                <li class="run" data-state="good">
+                  <div class="run__top"><span class="run__name"><a href="../../md-simulations/bopep4-lowph-vs-wt.html">BoPEP4 1 to 23 at pH 5.5</a></span><span class="run__role">Positive result</span></div>
+                  <p class="ai">The Glu12 and His227 pair appearing and holding, against the same peptide at pH&nbsp;7.</p>
+                </li>
+                <li class="run" data-state="bad">
+                  <div class="run__top"><span class="run__name"><a href="../../md-simulations/bopep4-9-23-lowph.html">BoPEP4 9 to 23 at pH 5.5</a></span><span class="run__role">Failed the gate</span></div>
+                  <p class="ai">The only run in the set that failed its pre-registered criteria, and the self-contact that caused it.</p>
+                </li>
+              </ul>
+            </div>
+          </div>
+
+          <!-- --------------------------------------------- 2.5 APO RECEPTOR -->
+          <div class="rail__panel chap pl-1" role="tabpanel" id="the-apo-receptor" aria-labelledby="t-apo">
+            <header class="chap__hero">
+              <p class="chap__eyebrow">Run 9 of 9</p>
+              <h3 class="chap__title" data-no-toc>The apo receptor</h3>
+              <div class="chap__intro"><p class="ai">The receptor with no peptide at all. It is the run that says how much of the motion in the other eight would have happened anyway.</p></div>
+            </header>
+
+            <article class="card">
+              <h4 class="card__name">Apo receptor</h4>
+              <p>To determine whether peptide binding itself produced measurable conformational changes in PEPR1, we also simulated the receptor without peptide using chain A from the wild-type complex and otherwise identical conditions. Contrary to the expectation that the unbound receptor would become substantially more flexible or that its binding groove would partially collapse, the apo receptor remained structurally comparable to the peptide-bound trajectories.</p>
+              <p>The apo receptor had the lowest mean C&alpha; RMSD of all nine simulations at 1.57&nbsp;&Aring;, compared with 1.58-2.16&nbsp;&Aring; across the peptide-bound runs, while its groove span was 35.91&nbsp;&Aring; compared with 35.65-36.42&nbsp;&Aring; for the bound structures. Its per-residue flexibility profile also correlated strongly with the wild-type profile at r&nbsp;=&nbsp;0.94-0.97. Moreover, the 54 interface residues shifted by only +0.125&nbsp;&Aring; relative to wild type, compared with +0.156&nbsp;&Aring; for the remaining 656 residues, with the largest differences occurring at residues 41-55, which constitute the N-terminal cap of the ectodomain, and with residue 738, the final residue, being the most rigid in the structure. Both observations reflect chain-end effects distant from the binding groove. Thus, within the 30&nbsp;ns simulation window, we found no evidence for a substantial peptide-induced conformational change in the receptor.</p>
+              <p>This provides both a structural and methodological control. The pre-formed groove supports representing the binding surface using a mean receptor structure rather than assuming that ligand binding creates the pocket. More importantly, the apo trajectory establishes a noise floor against which receptor-side differences can be interpreted: the seven peptide-bound runs differed from one another by 0.59&nbsp;&Aring; in receptor C&alpha; RMSD, while the apo trajectory was only 0.01&nbsp;&Aring; below the steadiest bound trajectory. Because changing the peptide produced more receptor-side variation than removing it entirely, we do not interpret small receptor RMSD or flexibility differences as evidence that BoPEP4 stabilizes PEPR1. Instead, our comparisons remain centered on peptide-side contact geometry.</p>
+            </article>
+
+            <div class="chap__end">
+              <p class="chap__eyebrow">Report</p>
+              <ul class="runs">
+                <li class="run" data-state="good">
+                  <div class="run__top"><span class="run__name"><a href="../../md-simulations/apo-PEPR1.html">Receptor alone</a></span><span class="run__role">Negative control</span></div>
+                  <p class="ai">The groove span, the flexibility profile and the per-residue comparison with the bound runs.</p>
+                </li>
+              </ul>
+            </div>
+          </div>
+
+          <!-- -------------------------------------------- 2.6 ACROSS THE SET -->
+          <div class="rail__panel chap pl-6" role="tabpanel" id="across-the-set" aria-labelledby="t-set">
+            <header class="chap__hero">
+              <p class="chap__eyebrow">All nine</p>
+              <h3 class="chap__title" data-no-toc>Across the set</h3>
+              <div class="chap__intro"><p class="ai">One result needs every run to exist: the number a construct would normally be ranked on does not track the bond the ranking is standing in for.</p></div>
+            </header>
+
+            <article class="card">
+              <h4 class="card__name">Aggregate metrics and ranking constructs</h4>
+              <p>The combined trajectories further demonstrate why RMSD and aggregate structural measures are insufficient for ranking these constructs. Across the eight peptide-containing runs, backbone RMSD over the conserved window correlated only weakly with the bidentate Arg487 salt bridge, with Pearson and Spearman coefficients of +0.13 and +0.29, respectively, while correlations with clamp integrity were &minus;0.03 and &minus;0.07. In other words, overall structural stability was largely independent of whether the key binding interaction remained chemically intact.</p>
+              <p>The individual trajectories illustrate this more clearly: the tagged construct and 9-23 at pH&nbsp;5.5 had the two lowest RMSDs, at 1.12&nbsp;&Aring; and 1.33&nbsp;&Aring;, yet their bidentate salt bridges were occupied in only 2.4% and 6.9% of frames, whereas 15-23 had a higher RMSD of 1.81&nbsp;&Aring; but retained the salt bridge in 97.2% of frames. Contact count performed relatively better, with a Spearman correlation of +0.71 across the seven untagged runs, but this comparison is based on only seven trajectories and is strongly influenced by individual constructs. Together with the earlier docking-score analysis, these results support using named atom-pair criteria rather than aggregate scores to determine whether a construct retains the intended binding chemistry.</p>
+            </article>
+
+            <div class="chap__end">
+              <p class="chap__eyebrow">The cross-run table</p>
+              <p class="ai"><a class="golink" href="../../md-simulations/#reading-the-set">All nine runs in one table on MD Simulations</a></p>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ================================================= 3 · NOT YET RUN -->
+      <section class="sec" id="not-yet-run">
+        <h2>Not yet run</h2>
+
+        <p class="ai">Three systems are scoped and have no trajectory. Nothing on this page speaks for them.</p>
 
         <ul class="runs">
           <li class="run" data-state="pending">
@@ -208,47 +397,39 @@
         </ul>
       </section>
 
-      <!-- ==================================================== 3 · READINGS -->
-      <section class="sec" id="what-the-set-says">
-        <h2>What the set says</h2>
-
-        <p class="ai">Four results need all nine runs to exist. The full working on each is on <a href="../../md-simulations/#reading-the-set">MD Simulations</a>.</p>
-
-        <h3>A stability score does not track the bond it is standing in for</h3>
-        <p class="ai">Backbone RMSD over the shared 15 to 23 window, the kind of number constructs usually get ranked on, correlates with the Asn23 and Arg487 salt bridge at Spearman \( +0.29 \), and against the four-contact clamp it runs \( +0.03 \) the wrong way. The practical consequence appears twice in this set: ranked on RMSD, the tagged construct comes first and the failed run comes second.</p>
-
-        <h3>Ten receptor residues hold in every run</h3>
-        <p class="ai">Pool the per-residue contact occupancies across all eight peptide-bearing runs and ten receptor residues stay above 50% in every one, whatever the peptide is doing at the other end. Five of the ten are on the list of eight hotspots Tang and colleagues read off the AtPEP1 complex&nbsp;[3], and five are not.</p>
-
-        <h3>The apo run sets the floor</h3>
-        <p class="ai">With no peptide at all, the receptor C&alpha; RMSD is \( 1.57\,\text{Å} \), below all seven peptide-bearing runs it can be compared with, and the binding groove holds at \( 35.91 \pm 0.55\,\text{Å} \). Any receptor-side difference smaller than about half an &aring;ngstr&ouml;m elsewhere in the set is inside that floor and should not be read as a result.</p>
-
-        <h3>Acidity recovers a contact the benchmark already has</h3>
-        <p class="ai">At pH&nbsp;5.5 the Glu12 carboxylate locks onto the His227 ring at \( 2.75 \pm 0.11\,\text{Å} \) in 99.9% of frames; at pH&nbsp;7 the same pair sits \( 5.33\,\text{Å} \) apart and appears in 0.8%. The AtPEP1 benchmark makes that contact natively at neutral pH. The recommendation that follows is that future BoPEP4 simulations default to pH&nbsp;5.5 with pH&nbsp;7 as the control.</p>
-      </section>
-
-      <!-- ====================================================== 4 · LIMITS -->
+      <!-- ======================================================= 4 · LIMITS -->
       <section class="sec" id="limits">
         <h2>Limits</h2>
 
-        <p class="ai">Thirty nanoseconds is three to six orders of magnitude short of a dissociation event, so nothing on this page is a binding affinity, a leaving time or a free energy. Each system has one random seed, so a difference between two runs may be a difference between two relaxation paths rather than between two constructs. The acceptance gate was written before the tagged construct existed and, on that construct, measures atoms it does not have. And none of it has been checked at the bench: no binding assay, no thermal shift, no plant.</p>
+        <ul class="findings">
+          <li class="ai"><b>Thirty nanoseconds is not a binding measurement.</b> It is three to six orders of magnitude short of a dissociation event, so nothing on this page is a binding affinity, a leaving time or a free energy. The 15-23 control says so in the students' own words: failing to see a peptide leave in 30&nbsp;ns cannot establish that it would stay.</li>
+          <li class="ai"><b>One seed per system.</b> A difference between two runs may be a difference between two relaxation paths rather than between two constructs.</li>
+          <li class="ai"><b>The acceptance gate was written before the tagged construct existed</b> and, on that construct, measures atoms it does not have. That is the finding of the tag chapter and it applies backwards to every number the gate produced.</li>
+          <li class="ai"><b>None of it has been checked at the bench.</b> No binding assay, no thermal shift, no plant.</li>
+        </ul>
 
-        <p class="ai">The set is the reason the tag moved to the N-terminus, and the reason pH is now a parameter rather than an assumption.</p>
-
-        <aside class="callout callout--borrowed ai">
-          <b class="callout__label">The full analysis</b>
-          <p><a href="../../md-simulations/">MD Simulations</a> carries the cross-run table, the run map, the trace plots and the nine reports, in English and Traditional Chinese. This page is the way into it from the Protein Design section; nothing has moved.</p>
+        <aside class="callout ai">
+          <b class="callout__label">What the set changed</b>
+          <p>The tag moved to the N-terminus, pH became a parameter rather than an assumption, the K18R rationale narrowed, and a salt bridge that was on no published hotspot list, Lys7 to Asp129, became the explanation for why the construct in hand is the unstable one. Each of those is a design decision, and each is argued in the chapter above it.</p>
         </aside>
       </section>
 
-      <!-- ================================================== 5 · REFERENCES -->
+      <!-- ================================================= 5 · THE REPORTS -->
+      <section class="sec" id="the-reports">
+        <h2>The full reports</h2>
+
+        <p class="ai">Everything the team concluded is on this page. The nine reports behind it are optional: each one carries the trajectory viewer, the per-residue occupancy and fluctuation tables, and the plots for one run, in English and Traditional Chinese.</p>
+
+        <p class="ai"><a class="golink" href="../../md-simulations/">MD Simulations: the nine reports, the run map and the cross-run table</a></p>
+      </section>
+
+      <!-- =================================================== 6 · REFERENCES -->
       <section class="refs" id="references">
         <h2 data-no-toc>References</h2>
         <ol>
           <li>Tian, C. et al. ff19SB: amino-acid-specific protein backbone parameters trained against quantum mechanics energy surfaces in solution. <i>Journal of Chemical Theory and Computation</i> 16, 528 to 552 (2020).</li>
           <li>Izadi, S., Anandakrishnan, R. &amp; Onufriev, A. V. Building water models: a different approach. <i>Journal of Physical Chemistry Letters</i> 5, 3863 to 3871 (2014). OPC.</li>
           <li>Tang, J., Han, Z., Sun, Y., Zhang, H., Gong, X. &amp; Chai, J. Structural basis for recognition of an endogenous peptide by the plant receptor kinase PEPR1. <i>Cell Research</i> 25, 110 to 120 (2015). PDB&nbsp;5GR8.</li>
-          <li>Eastman, P. et al. OpenMM 7: rapid development of high performance algorithms for molecular dynamics. <i>PLoS Computational Biology</i> 13, e1005659 (2017).</li>
         </ol>
       </section>
     </main>
@@ -325,8 +506,6 @@
   <script src="../../assets/data/site-nav.js" fetchpriority="high"></script>
   <script src="../../assets/js/nav.js" fetchpriority="high"></script>
   <script src="../../assets/js/page.js" fetchpriority="high"></script>
-  <script defer src="../../assets/vendor/katex/katex.min.js"></script>
-  <script defer src="../../assets/vendor/katex/contrib/mhchem.min.js"></script>
-  <script defer src="../../assets/js/math.js"></script>
+  <script src="../../assets/js/engage.js?v=1007s"></script>
 </body>
 </html>
