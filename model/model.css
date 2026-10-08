@@ -35,6 +35,40 @@
   border-left-width: 3px;
 }
 
+/* ============================================================== RHYTHM ====
+   Block 3 runs to seven results, fourteen tables and six boxes, so the page
+   needs a step between "new result" and "new paragraph" that a reader can see
+   without reading. A Result heading gets the same air a section gets, an h4
+   inside one gets the step below that, and the headings are allowed to
+   balance their lines because most of them are sentences and the last line of
+   an unbalanced one was coming out as a single word.                       */
+
+.mm .sec h3 { margin-top: var(--sp-7); }
+.mm .sec h4 { margin-top: var(--sp-6); }
+.mm .sec h2, .mm .sec h3, .mm .sec h4 { text-wrap: balance; }
+.mm .sec p, .mm .fig figcaption, .mm .ledger p { text-wrap: pretty; }
+
+/* ================================================================== TOC ====
+   This page has 29 entries and its headings are sentences, so the rail page.js
+   builds is taller than a laptop window. A sticky rail taller than the window
+   can never be scrolled to its end, which puts the Conclusion and the
+   reconcile list out of reach. Cap it at the window and let it scroll itself.
+   The line and the padding are tightened a little as well, because most
+   entries run to three or four lines at 15rem and the default rhythm was
+   written for one-line labels.                                             */
+
+@media (min-width: 1040px) {
+  .mm .toc {
+    max-height: calc(100vh - var(--nav-h) - var(--sp-6) - var(--sp-5));
+    overflow-y: auto;
+    overscroll-behavior: contain;
+    scrollbar-width: thin;
+    scrollbar-color: var(--gray-300) transparent;
+    padding-right: var(--sp-2);
+  }
+  .mm .toc__list a { line-height: 1.3; padding-top: .25rem; padding-bottom: .25rem; }
+}
+
 /* ================================================================ CHAIN ====
    The three models as three linked cards under the overview, because the
    whole argument of the page is that one model's output is the next one's
@@ -136,6 +170,15 @@
   margin-top: var(--sp-2);
   font-size: var(--text-sm); font-style: normal; line-height: 1.6;
   color: var(--gray-600);
+}
+/* the label rule above is for the block's own title. A bold run inside the
+   note under an equation is emphasis in a sentence, so it stays inline. */
+.mm .eqn em b {
+  display: inline;
+  margin: 0;
+  font-size: inherit; font-weight: 700;
+  letter-spacing: inherit; text-transform: none;
+  color: var(--gray-700);
 }
 /* the maths itself. KaTeX sets its own metrics; these rules only keep a long
    display line scrollable on a phone instead of widening the page, and stop
@@ -302,22 +345,41 @@
   }
 }
 
-/* ============================================================== TABLES ===== */
+/* ============================================================== TABLES =====
+   Block 3 is table-heavy and the body column is one measure wide, so a table
+   has to fit that measure or it scrolls sideways and hides a column. Two
+   rules do all the work: a head cell wraps like any other cell (page.css
+   keeps heads on one line, which is what pushed seven-column tables 440px
+   past the column), and the gutter between columns is one step tighter than
+   the row rhythm, with the outer edge kept at the full step so the table
+   still sits on the same left edge as the prose. With both, every table on
+   this page fits the measure at desktop width without a scrollbar. A head
+   that wraps sits on the bottom of its row, so a one-word label stays next
+   to the numbers under it instead of floating three lines above them.      */
 
 .mm table.data { border-collapse: collapse; width: 100%; font-size: var(--text-sm); }
 .mm table.data th, .mm table.data td {
-  padding: var(--sp-3) var(--sp-4);
+  padding: var(--sp-3);
   border-bottom: 1px solid var(--gray-200);
   text-align: left; vertical-align: top;
 }
+.mm table.data th:first-child, .mm table.data td:first-child { padding-left: var(--sp-4); }
+.mm table.data th:last-child,  .mm table.data td:last-child  { padding-right: var(--sp-4); }
 .mm table.data thead th {
   border-bottom: 1px solid var(--gray-400);
   font-size: var(--text-xs); font-weight: 700;
   letter-spacing: .07em; text-transform: uppercase;
   color: var(--gray-600);
+  white-space: normal;
+  vertical-align: bottom;
 }
 .mm table.data tbody tr:last-child td { border-bottom: 1px solid var(--gray-400); }
 .mm table.data td.num { text-align: right; font-variant-numeric: tabular-nums; white-space: nowrap; }
+/* a head over a column of numbers sits on the same edge the numbers do, so a
+   wrapped two-line label still reads as belonging to the column under it.
+   The class is on the head cell only where every body cell in that column is
+   a number, so it never moves a word column. The head still wraps. */
+.mm table.data thead th.num { text-align: right; }
 .mm table.data .sym { font-style: italic; white-space: nowrap; }
 
 /* =============================================================== PRINT ===== */
@@ -362,4 +424,121 @@
 @media (max-width: 640px) {
   .katex-display > .katex > .katex-html { white-space: nowrap; }
   .katex-display > .katex > .katex-html > .tag { position: static; display: inline-block; margin-left: 1.2em; }
+}
+
+/* ================================================================ CHARTS ===
+   Block 3 draws its own figures as inline SVG instead of shipping webp, for
+   two reasons: the numbers in them are printed in the tables beside them, so
+   a reader can check the drawing against the data, and nothing in this block
+   came from the draft's figure set. The component is the Plants one, with the
+   provenance palette of this page substituted for its two-series one.
+
+   SERIES COLOUR. Grey is the buffer control. Leaf is a protectant arm, dark
+   for the timing that worked (before the salt) and mid for the two that
+   worked less well. Rust is a case that does not pay back. No other hues. */
+
+.mm .chart { margin: 0; }
+.mm .chart svg { display: block; width: 100%; height: auto; font-family: var(--font-body); }
+
+.mm .chart .ax line { stroke: var(--gray-200); stroke-width: 1; }
+.mm .chart .ax .ax--base { stroke: var(--gray-400); }
+.mm .chart .ax .ax--zero { stroke: var(--gray-500); stroke-width: 1.4; }
+.mm .chart .divide { stroke: var(--gray-200); stroke-width: 1; stroke-dasharray: 3 4; }
+
+.mm .chart .tick text { fill: var(--gray-500); font-size: 12px; font-variant-numeric: tabular-nums; }
+.mm .chart .cat, .mm .chart text.cat { fill: var(--gray-700); font-size: 12.5px; font-weight: 650; }
+.mm .chart .sub, .mm .chart text.sub { fill: var(--gray-500); font-size: 11px; }
+.mm .chart .val, .mm .chart text.val {
+  fill: var(--gray-600); font-size: 11.5px; font-weight: 650; font-variant-numeric: tabular-nums;
+}
+.mm .chart .axtitle {
+  fill: var(--gray-500); font-size: 11px; font-weight: 700;
+  letter-spacing: .1em; text-transform: uppercase;
+}
+
+/* bars: hover one, the rest fade, same affordance Plants uses */
+.mm .chart .bar rect { transition: opacity .12s ease; }
+.mm .chart:hover .bar rect { opacity: .45; }
+.mm .chart .bar rect:hover { opacity: 1; }
+.mm .chart .bar--ctl  rect { fill: var(--gray-400); }
+.mm .chart .bar--pre  rect { fill: var(--leaf-700); }
+.mm .chart .bar--accd rect { fill: var(--leaf-500); }
+.mm .chart rect.miss {
+  fill: none; stroke: var(--gray-300); stroke-width: 1.4; stroke-dasharray: 4 3;
+}
+
+/* lines */
+.mm .chart .ln polyline { fill: none; stroke-width: 2.4; stroke-linejoin: round; stroke-linecap: round; }
+.mm .chart .ln circle { stroke: var(--white); stroke-width: 1.6; }
+.mm .chart .lbl { font-size: 12px; font-weight: 650; }
+.mm .chart .ln--ctl polyline, .mm .chart .ln--ctl circle { stroke: var(--gray-400); }
+.mm .chart .ln--ctl circle { fill: var(--gray-400); }
+.mm .chart text.ln--ctl, .mm .chart .lbl.ln--ctl { fill: var(--gray-500); }
+.mm .chart .ln--pre polyline, .mm .chart .ln--pre circle { stroke: var(--leaf-700); }
+.mm .chart .ln--pre circle { fill: var(--leaf-700); }
+.mm .chart .lbl.ln--pre { fill: var(--leaf-700); }
+.mm .chart .ln--co polyline, .mm .chart .ln--co circle { stroke: var(--leaf-500); }
+.mm .chart .ln--co circle { fill: var(--leaf-500); }
+.mm .chart .lbl.ln--co { fill: var(--leaf-500); }
+.mm .chart .ln--af polyline, .mm .chart .ln--af circle { stroke: var(--slate-700); }
+.mm .chart .ln--af circle { fill: var(--slate-700); }
+.mm .chart .lbl.ln--af { fill: var(--slate-700); }
+
+/* the three dosing routes: one bar per route on a log axis */
+.mm .chart--routes .rt__name { fill: var(--gray-700); font-size: 12.5px; font-weight: 650; }
+.mm .chart .rt--ok  rect, .mm .chart .rt--ok  circle { fill: var(--leaf-700); }
+.mm .chart .rt--mid rect, .mm .chart .rt--mid circle { fill: var(--amber-700); }
+.mm .chart .rt--bad rect, .mm .chart .rt--bad circle { fill: var(--rust-700); }
+.mm .chart .rt__mark line { stroke: var(--gray-500); stroke-width: 1.2; stroke-dasharray: 3 3; }
+.mm .chart .rt__mark text { fill: var(--gray-500); font-size: 10.5px; font-weight: 650; }
+
+/* cumulative cash flow */
+.mm .chart--cash .cf--a polyline, .mm .chart--cash .cf--a circle { stroke: var(--leaf-700); }
+.mm .chart--cash .cf--a circle { fill: var(--leaf-700); }
+.mm .chart--cash .lbl.cf--a { fill: var(--leaf-700); }
+.mm .chart--cash .cf--b polyline, .mm .chart--cash .cf--b circle { stroke: var(--amber-700); }
+.mm .chart--cash .cf--b circle { fill: var(--amber-700); }
+.mm .chart--cash .lbl.cf--b { fill: var(--amber-700); }
+.mm .chart--cash .cf--c polyline, .mm .chart--cash .cf--c circle { stroke: var(--rust-700); }
+.mm .chart--cash .cf--c circle { fill: var(--rust-700); }
+.mm .chart--cash .lbl.cf--c { fill: var(--rust-700); }
+.mm .chart .be circle { fill: none; stroke: var(--gray-500); stroke-width: 1.4; }
+.mm .chart .be text { fill: var(--gray-600); font-size: 11px; font-weight: 700; }
+
+/* a key under a chart, for the one figure whose series are not labelled in place */
+.mm .chart__key {
+  display: flex; flex-wrap: wrap; gap: var(--sp-4);
+  margin-top: var(--sp-3);
+  font-size: var(--text-sm); color: var(--gray-600);
+}
+.mm .chart__key i {
+  display: inline-block; width: .85rem; height: .85rem;
+  margin-right: .4rem; vertical-align: -.1rem; border-radius: 2px;
+}
+.mm .chart__key .k--ctl  { background: var(--gray-400); }
+.mm .chart__key .k--pre  { background: var(--leaf-700); }
+.mm .chart__key .k--accd { background: var(--leaf-500); }
+
+/* an inline-SVG figure still sits in the page's figure component, but it needs
+   no fixed frame: the viewBox already fixes its ratio.
+
+   On a phone the frame is about 300 px wide, and a 720-unit viewBox squeezed
+   into it renders its 12 px labels at 5 px, which is a picture of a chart and
+   not a chart. So the drawing stops shrinking at 34rem and the box scrolls
+   sideways instead, which is what the tables beside it already do and what
+   Measurement's charts already do. Nothing is hidden: every number in these
+   four figures is also printed in a table in the same section.             */
+.mm .fig > .chart {
+  padding: var(--sp-3);
+  border: 1px solid var(--gray-200);
+  border-radius: var(--radius-sm);
+  background: var(--white);
+  overflow-x: auto;
+}
+.mm .fig > .chart > svg { min-width: 34rem; }
+
+/* a small note under a table, smaller than body and not a caption */
+.mm .pagebody p.small {
+  margin-top: calc(var(--sp-2) * -1);
+  font-size: var(--text-sm); line-height: 1.6; color: var(--gray-600);
 }
