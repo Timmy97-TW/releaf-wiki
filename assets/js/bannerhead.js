@@ -9,7 +9,7 @@
 
    The sheet's top tucks under the drawing by 7% of its width, so lowering the
    drawing by dH raises the abstract's bottom by dH * (1 - 0.07 * aspect).
-   Below 760 px the columns stack and the page scrolls anyway: no fitting.
+   Below 900 px the columns stack and the page scrolls anyway: no fitting.
    ========================================================================== */
 (function () {
   "use strict";
@@ -23,7 +23,7 @@
   function fit() {
     head.style.removeProperty("--bw");
     sheet.style.removeProperty("--bw");
-    if (window.innerWidth < 760) return;
+    if (window.innerWidth < 900) return;
     var ar = img.naturalWidth && img.naturalHeight ? img.naturalWidth / img.naturalHeight
            : parseFloat(getComputedStyle(head).getPropertyValue("--ar")) || 3.012;
     var over = inner.getBoundingClientRect().bottom + window.scrollY - (window.innerHeight - GAP);
