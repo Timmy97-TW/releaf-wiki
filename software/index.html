@@ -4,7 +4,7 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>Digital Twin | ReLeaf &middot; iGEM 2026</title>
-  <meta name="description" content="A digital twin of the BR-01 perfusion bioreactor: seven live channels, six automated actuators, five measured results, a forecast registered before the batch that tests it, and a leaf-wetness rule for rice blast on the field side." />
+  <meta name="description" content="A digital twin of the BR-01 perfusion bioreactor: five measured results, a forecast registered before the batch that tests it, a leaf-wetness rule for rice blast on the field side, and the App Lab application &mdash; firmware v3.10.9, interface v4.13 &mdash; that measures, protects and records every batch the rig runs." />
   <link rel="icon" href="../assets/img/logo.png" />
   <link rel="stylesheet" href="../assets/css/tokens.css" />
   <link rel="stylesheet" href="../assets/css/nav.css" />
@@ -34,6 +34,24 @@
   Rule kept from the previous version: nothing is called validated unless it was
   scored on data it was not fitted to, and every gap is named rather than left
   for a judge to find.
+
+  9 October 2026: the page now documents TWO pieces of software, and the order
+  matters. Section 6 is the Arduino App Lab rig application (Chars's), firmware
+  v3.10.9 / backend v4.12 / interface v4.13, which is what actually recorded
+  every batch this season including the constitutive codon-optimised ACCD run
+  of 8 October; Figure 7 is a photograph of it mid-run. Section 7 is Timmy's
+  rewrite (1007UI), which adds the weather forecast and the leaf sensor and has
+  measured nothing yet, so it is framed as future work. The previous version had
+  these the other way round. Sources for section 6, all verifiable against the
+  app zip bioreactor_app_v4.13_be4.12_fw3.10.9.zip:
+    README.md sections 7, 8, 9, 10, 15      (interface, maths, interlocks, CSV)
+    python/constants.json                   (module geometry, thresholds)
+    python/main.py CSV_HEADER               (the 73 columns, counted)
+    the Figure 7 photograph                 (every run value quoted)
+  The OD600, flow, wall-shear and dP-ratio numbers quoted from Figure 7 were
+  each recomputed from the documented formula before being printed. The 20%
+  disagreement between the dP ratio and the gamma ratio was found that way;
+  it is real, and it is flagged rather than smoothed over.
 -->
 
   <div id="site-nav" data-base="../" data-tab="drylab" data-page="software"></div>
@@ -55,7 +73,7 @@
       <div class="abstract__story">
         <h2 class="abs-kicker">Abstract</h2>
         <p class="abstract__lead ai">The digital twin reads BR-01 continuously, says when a reading can no longer be trusted, forecasts where a batch is going, and carries a growth prior from plate to reactor.</p>
-        <p class="abstract__body ai">BR-01 runs for days beside a field with nobody drawing samples, so the rig's own instruments are the only record of a batch. The trust layer gave <strong>26.7 hours of warning</strong> before the OD channel became unusable, a Kalman forecast cut two-hour error by 41% against persistence, and a plate-fitted growth prior predicted 24&nbsp;h biomass to within 7% on held-out arms. <strong>The loop is not closed</strong>, and almost every result rests on a single run.</p>
+        <p class="abstract__body ai">BR-01 runs for days beside a field with nobody drawing samples, so the rig's own instruments are the only record of a batch. The trust layer gave <strong>26.7 hours of warning</strong> before the OD channel became unusable, a Kalman forecast cut two-hour error by 41% against persistence, and a plate-fitted growth prior predicted 24&nbsp;h biomass to within 7% on held-out arms. <strong>The loop is not closed</strong>, and almost every result rests on a single run. <span class="ai">The batch running now is recorded by <a href="#rigapp">the rig application</a>, which is also the instrument chain and the safety interlocks.</span></p>
       </div>
       <div class="abstract__outcomes">
         <h2 class="abs-kicker">Key results</h2>
@@ -97,7 +115,7 @@
             <li><b>Useful to other projects?</b> <a href="#contribution">Four things</a> another team can lift without our reactor, including the serial protocol and the trust layer.</li>
             <li><b>Standards and data formats?</b> Partly. The channel table, units and provenance travel with every export, which reaches the syntactic level of the interoperability framework of Satwekar et&nbsp;al.&nbsp;[5]; a published JSON schema would reach the semantic level and is <span class="tag tag--must">must have</span>. No SBOL or RFC is used: nothing on this page describes a genetic part.</li>
             <li><b>Integration with external tools?</b> One documented serial protocol in, one CSV and XLSX export out, an Open-Meteo forecast pulled in, and the leaf-sensor logger's CSV read as it is written. No package or public API is offered.</li>
-            <li><b>User-friendly?</b> <a href="#ui">The interface</a>, six tabs, bilingual, one file, no install. No usability session with an operator outside the build team has been recorded.</li>
+            <li><b>User-friendly?</b> <a href="#ui">The interface the rig runs on</a> is one file, bilingual, no install, and it refuses to let a stale calibration pass unremarked. <a href="#ui-next">The rewrite</a> adds the field side in six tabs. No usability session with an operator outside the build team has been recorded.</li>
             <li><b>Documented for future groups?</b> <a href="#contribution">Contribution</a> and <a href="#limits">Limits</a>; the firmware ships with a desktop test harness that replays a run through the page's own parser with no board attached.</li>
           </ul>
         </details>
@@ -134,16 +152,19 @@
             <tbody>
               <tr><td><b>OD600</b></td><td>Photometer, amber LED, 2&nbsp;mm flow cuvette, sample and reference lux sensors</td><td>Biomass</td><td><span class="tag tag--meas">in-line</span></td></tr>
               <tr><td><b>pH</b></td><td>Arduino pH probe</td><td>Growth and secretion conditions, and an alarm</td><td><span class="tag tag--meas">in-line</span></td></tr>
-              <tr><td><b>Pressure &times;&nbsp;4</b></td><td>Four transducers, one on each side of the hollow-fibre module</td><td>Lumen &Delta;P, trans-membrane pressure, fouling</td><td><span class="tag tag--meas">in-line</span></td></tr>
+              <tr><td><b>Pressure &times;&nbsp;3</b></td><td class="ai">Transducers on lumen in, lumen out and the shell, divided down to the board's logic level</td><td>Lumen &Delta;P, trans-membrane pressure, fouling</td><td><span class="tag tag--meas">in-line</span></td></tr>
               <tr><td><b>Loop flow</b></td><td>Turbine flow meter</td><td>Cross-flow, wall shear, the hydraulic model (R1)</td><td><span class="tag tag--meas">in-line</span></td></tr>
-              <tr><td><b>Pinch valves &times;&nbsp;2</b></td><td>Uno&nbsp;Q and motors</td><td>Lumen isolation</td><td><span class="tag tag--cmd">commanded</span></td></tr>
-              <tr><td><b>Luer valves &times;&nbsp;4</b></td><td>Uno&nbsp;Q and motors</td><td>Routing between reservoir, module and permeate</td><td><span class="tag tag--cmd">commanded</span></td></tr>
+              <tr><td><b>Pinch valve</b></td><td class="ai">One STS3215 serial servo on the Uno&nbsp;Q</td><td>Lumen isolation</td><td><span class="tag tag--cmd">commanded</span></td></tr>
+              <tr><td><b>Luer valves &times;&nbsp;4</b></td><td class="ai">Turned by hand; no actuator on the board yet</td><td>Routing between reservoir, module and permeate</td><td><span class="tag tag--abs">planned</span></td></tr>
               <tr><td><b>Lumen &Delta;P, TMP, fouling ratio</b></td><td>From pressure and flow through the hydraulic model</td><td>Membrane state and the cleaning decision</td><td><span class="tag tag--der">soft</span></td></tr>
               <tr><td><b>Green light</b></td><td>Characterised on the DiOPAL plate apparatus</td><td>Induction of the CcaS/CcaR strain, leading to protectant production</td><td><span class="tag tag--abs">planned</span></td></tr>
-              <tr><td><b>Temperature, dissolved oxygen, permeate mass</b></td><td class="ai">None fitted</td><td class="ai">See <a href="#gaps">Must have, yet to have</a></td><td><span class="tag tag--abs">planned</span></td></tr>
+              <tr class="ai"><td><b>Loop temperature</b></td><td>DS18B20 in the loop, read by the firmware; the operator can enter a value instead, and the record says which was used</td><td>pH compensation, viscosity, and the largest unexplained term in growth</td><td><span class="tag tag--meas">in-line</span></td></tr>
+              <tr><td><b>Dissolved oxygen, permeate mass</b></td><td class="ai">None fitted</td><td class="ai">See <a href="#gaps">Must have, yet to have</a></td><td><span class="tag tag--abs">planned</span></td></tr>
             </tbody>
           </table>
         </div>
+
+        <p class="ai">The table is the rig as designed. The firmware running it reads a subset: three of the four pressure transducers the parts list carries, one pinch valve, and no Luer valve or light output at all. <a href="#rigapp">The software that runs the reactor</a> sets out what is wired and what is still on paper.</p>
 
         <h3 id="rig-local">Local-scale data</h3>
         <div class="tablewrap">
@@ -290,7 +311,7 @@
       <!-- =============================================== 3 · PREREG ======== -->
       <section class="sec" id="prereg">
         <h2>Registered forecast</h2>
-        <p>To test our digital twin's forecasting abilities, we ran the forecast alongside a reactor run of <i>B.&nbsp;subtilis</i> WB800 with constitutive ACC deaminase secretion. <span class="ai">The forecast file is <code>prereg_forecast_20261002.json</code>, SHA-256 <code>bceda7c0&hellip;6e0388fc</code>, and it may not be edited after the run.</span></p>
+        <p>To test our digital twin's forecasting abilities, we ran the forecast alongside a reactor run of <i>B.&nbsp;subtilis</i> WB800 with constitutive ACC deaminase secretion. <span class="ai">That strain carries a codon-optimised ACC deaminase, and the run is the one recorded in <a href="#rigapp-run">the 8 October batch</a>. The forecast file is <code>prereg_forecast_20261002.json</code>, SHA-256 <code>bceda7c0&hellip;6e0388fc</code>, and it may not be edited after the run.</span></p>
 
         <div class="tablewrap">
           <table class="data">
@@ -319,7 +340,7 @@
             <caption class="visually-hidden">Missing measurements and experiments, with what each unlocks</caption>
             <thead><tr><th scope="col">Missing</th><th scope="col">What it unlocks</th><th scope="col">Status</th></tr></thead>
             <tbody>
-              <tr><td><b>Temperature in the lumen loop</b></td><td>The largest unexplained term in growth. Today <i>r</i> cannot be compared between runs at all, which is why the registered forecast has to carry a temperature caveat.</td><td><span class="tag tag--must">must have</span> one 1-Wire pin</td></tr>
+              <tr><td><b>Temperature in the lumen loop, actually reading</b></td><td>The largest unexplained term in growth. The probe is fitted and the firmware reads it, but it was not answering on 8 October and the run carries a hand-entered 37&nbsp;&deg;C. Until it reads, <i>r</i> cannot be compared between runs and wall shear carries a typed viscosity.</td><td><span class="tag tag--must">must have</span> wiring, not code</td></tr>
               <tr><td><b>In-line versus plate OD cross-calibration</b></td><td>Lets \(K\) and \(X_0\) transfer from the plate prior, not just \(r\). Half a day of dilution series on both instruments.</td><td><span class="tag tag--must">must have</span></td></tr>
               <tr><td><b>Dissolved oxygen</b></td><td>Separates &ldquo;ran out of oxygen&rdquo; from &ldquo;entering stationary phase&rdquo;. Without it \(k_La\) stays modelled, and the 45.7 against 60&nbsp;h&#8315;&sup1; question stays open.</td><td><span class="tag tag--must">must have</span></td></tr>
               <tr><td><b>Permeate flow or mass</b></td><td>Real productivity in mg per day, a closed mass balance across the membrane, and a fouling signal independent of pressure. A load cell under the permeate vessel is enough.</td><td><span class="tag tag--must">must have</span></td></tr>
@@ -334,64 +355,280 @@
         </div>
       </section>
 
-      <!-- ==================================================== 5 · UI ======= -->
-      <section class="sec" id="ui">
-        <h2>The interface</h2>
-        <figure class="embed ai">
-          <div class="embed__frame">
-            <iframe src="ui/1007UI.html" loading="lazy"
-                    title="ReLeaf BR-01 operator interface, 7 October 2026 build, running on demo data"></iframe>
-          </div>
-          <div class="embed__bar">
-            <span><code>1007UI.html</code> &middot; MIT licence</span>
-            <a href="ui/1007UI.html" target="_blank" rel="noopener">Open full screen &rarr;</a>
-          </div>
-          <figcaption><b>Figure 7.</b> The interface running here on simulated data. No board or leaf sensor is attached, so every process value comes from the model inside the file and the leaf is simulated from the live forecast, and the interface says so on every screen.</figcaption>
-        </figure>
+      <!-- ========================================= 5 · RIG SOFTWARE ======= -->
+      <section class="sec ai" id="rigapp">
+        <h2>The software that runs the reactor</h2>
+
+        <p>Every number BR-01 has recorded this season came through one program: the Arduino App&nbsp;Lab application our instructor Chars wrote for the Uno&nbsp;Q board on the rig. It is not a dashboard bolted onto a reactor. It is the reactor's instrument chain, its safety interlocks and its data logger, and the version documented below is the one that recorded the batch running now &mdash; <i>B.&nbsp;subtilis</i>&nbsp;WB800 secreting codon-optimised ACC deaminase from a constitutive promoter.</p>
 
         <div class="tablewrap">
           <table class="data">
+            <caption class="visually-hidden">The four files of the rig application and their versions</caption>
+            <thead><tr><th scope="col">Part</th><th scope="col">Version</th><th scope="col">Where it runs</th></tr></thead>
+            <tbody>
+              <tr><td>MCU firmware, <code>sketch.ino</code></td><td>v3.10.9</td><td>STM32U585 under Zephyr</td></tr>
+              <tr><td>Backend, <code>main.py</code></td><td>v4.12</td><td>Debian in Docker, same board</td></tr>
+              <tr><td>Web interface, <code>index.html</code></td><td>v4.13</td><td>Any browser on the network</td></tr>
+              <tr><td>Constants, <code>constants.json</code></td><td>2026-10-08, profile <code>rig-v2-integrated</code></td><td>Read by the backend at start</td></tr>
+            </tbody>
+          </table>
+        </div>
+
+        <h3 id="rigapp-stack">Three programs on one board</h3>
+        <p>The Uno&nbsp;Q carries a microcontroller and a Linux computer in one package, and the application uses both. The split matters, because it decides what survives a failure.</p>
+        <div class="tablewrap">
+          <table class="data">
+            <caption class="visually-hidden">What each layer of the application is responsible for</caption>
+            <thead><tr><th scope="col">Layer</th><th scope="col">Responsible for</th></tr></thead>
+            <tbody>
+              <tr><td><b>Microcontroller</b></td><td>100&nbsp;Hz pressure sampling and its statistics, the OD600 measurement state machine, flow-meter pulse counting, pH and temperature, pump PWM, and every safety interlock</td></tr>
+              <tr><td><b>Linux</b></td><td>Aggregating samples into windows, the derived membrane parameters, alarms, writing the CSV to the board's own disk, saving and restoring calibration, the &Delta;P&ndash;Q sweep</td></tr>
+              <tr><td><b>Browser</b></td><td>Display and operator commands, and nothing else</td></tr>
+            </tbody>
+          </table>
+        </div>
+        <p>Sensor data moves one way, from the microcontroller outward: pressure every 200&nbsp;ms, flow, pH and temperature every second, OD600 at the end of each measurement, valve state on every change. Commands move the other way, from Linux to the microcontroller, one at a time through a queue with a five-second timeout.</p>
+        <p>Because the two directions are independent, a run keeps its record even when control is lost. If the command channel jams, the interface raises a red banner and the pump and valve stop answering, while pressure, flow, pH, temperature, OD600 and valve state keep arriving and keep being written. Recording is equally insulated from the operator: each sampling window is written and <code>fsync</code>ed to the board's own <code>recordings/</code> folder as soon as it closes, so closing the browser, sleeping the laptop or restarting the application does not interrupt it. After a restart the application appends to the same file and marks the interruption in a <code>gap_s</code> column. Readings that could not be obtained are left blank rather than written as zero.</p>
+
+        <h3 id="ui">The interface</h3>
+        <figure class="fig">
+          <img src="../assets/img/software/app-v413-run-20261008.webp"
+               srcset="../assets/img/software/app-v413-run-20261008-w1200.webp 1200w, ../assets/img/software/app-v413-run-20261008.webp 1860w"
+               sizes="(max-width: 1100px) 100vw, 1100px"
+               alt="The v4.13 web interface on the rig laptop during the 8 October batch: a growth column with OD600 and pH traces, a pressure column with the three transducer readings and the derived membrane parameters, and a control column with recording state and the peristaltic pump."
+               width="1860" height="1000" loading="lazy" />
+          <figcaption><b>Figure 7.</b> The interface at 23:34 on 8 October 2026, one and a half hours into the constitutive ACC deaminase batch, photographed on the rig laptop. Three columns: growth parameters, pressure and the parameters derived from it, and control. The status line reports the firmware it is talking to (v3.10.9), the backend (v4.12) and itself (v4.13), and whether the microcontroller is keeping up &mdash; here a 12.8&nbsp;ms worst-case loop and 95 of the intended 100 pressure samples per second. The amber banner is the application refusing to let a restored calibration pass as a fresh one.</figcaption>
+        </figure>
+        <p>The page is one file with no build step and no install, served by the board at port&nbsp;7000, in English or Traditional Chinese. Any value carrying an information mark opens its own explanation of what it means and what range is normal. Panels that are not needed during a run fold away: sampling settings, pH calibration, calibration management, module specifications, algorithm choices and an engineering mode that exposes the OD600 blank, a lamp-alignment view and the microcontroller link tests.</p>
+        <p>Two details in the figure are the application arguing with its operator, and both are deliberate. The amber banner says the active OD600 blank and pressure zero offsets were restored after a reboot rather than measured on the spot, and will not clear until someone recalibrates. The red strip below the derived parameters says <code>TMP_out</code> has gone negative, which means the permeate side is pushing back against the membrane, and names the two things to check. Neither warning can be dismissed; both go away only when the condition does.</p>
+        <p class="microlabel">The file itself</p>
+        <p><a href="ui/1008AppLab.html" target="_blank" rel="noopener">Open the v4.13 page full screen &rarr;</a> &mdash; the real file, served here without a board. It opens on its own notice that the App&nbsp;Lab communication libraries are absent, so every reading stays blank and no button does anything. The layout, the explanations behind each information mark and the bilingual text are all live.</p>
+
+        <h3 id="rigapp-measure">How each reading is made</h3>
+        <p>None of the four instruments gives a number directly. Each is a short measurement procedure in firmware, and it is worth saying what they are, because the honesty of everything downstream rests on them.</p>
+        <div class="tablewrap">
+          <table class="data">
+            <caption class="visually-hidden">How each instrument reading is produced</caption>
+            <thead><tr><th scope="col">Instrument</th><th scope="col">How the reading is made</th></tr></thead>
+            <tbody>
+              <tr><td><b>OD600</b></td><td>An amber LED and two BH1750 lux sensors, one looking through the 2&nbsp;mm flow cuvette and one looking at the lamp. A measurement is four dark readings, then the LED on for 60&nbsp;ms, then sixteen readings in a burst; outliers from bubbles are rejected by median absolute deviation, and if more than half the burst is rejected the measurement is retried once. The result is \(\mathrm{OD}_{600} = \log_{10}(R_{\text{blank}}/R)\times f\), where \(R\) is the sample-to-reference lux ratio and \(f\) is a path-length factor, 5.0 by default. In Figure&nbsp;7 the blank ratio is 13.567 and the live ratio 12.51, which gives 0.176&nbsp;AU against the 0.1758 displayed. The reference channel is what makes the trust layer of <a href="#r3">R3</a> possible at all: it sees the lamp but never the culture, so lamp drift and culture growth separate.</td></tr>
+              <tr><td><b>Pressure</b></td><td>Three transducers, 0&ndash;5&nbsp;V for 0&ndash;10&nbsp;bar, divided down to the board's 3.3&nbsp;V logic by a measured 15&nbsp;k/22&nbsp;k pair. The firmware reads 14-bit with sixteen-fold oversampling, discards the first sample after each channel change, samples at 100&nbsp;Hz, keeps a one-second sliding window, and every 200&nbsp;ms pushes the peak, trough, mean and pulsation frequency. The trough matters: a peristaltic pump makes pressure a waveform, not a level, and a membrane can be driven backwards on the trough of a cycle whose mean looks safe.</td></tr>
+              <tr><td><b>Loop flow</b></td><td>A turbine meter on an interrupt pin, 2580&nbsp;pulses per litre, with pulses closer than 500&nbsp;&micro;s treated as contact bounce. Flow is \(f\times 60/2580\times 1000\) mL/min; the 16.64&nbsp;Hz in Figure&nbsp;7 gives 387&nbsp;mL/min against the 386.9 displayed.</td></tr>
+              <tr><td><b>pH and temperature</b></td><td>The pH probe is read every 500&nbsp;ms with 256-fold oversampling, converted on a Nernst slope compensated for temperature, filtered, and required to repeat a jump three times before it is believed; a reading outside pH&nbsp;2&ndash;12 is marked as a probe error and written as blank rather than as a number. Temperature comes from a DS18B20 in the loop when it answers and from a manual entry when it does not, and the CSV records which of the two was used in a <code>temp_src</code> column.</td></tr>
+            </tbody>
+          </table>
+        </div>
+
+        <h3 id="rigapp-derived">What it computes from them</h3>
+        <p>The membrane block is where the application stops reporting sensors and starts reporting the state of the module. All of it comes from three pressures and one flow, against the module geometry held in <code>constants.json</code>.</p>
+        <div class="tablewrap">
+          <table class="data">
+            <caption class="visually-hidden">Module constants the derived parameters are computed against</caption>
+            <thead><tr><th scope="col">Constant</th><th scope="col">Value</th></tr></thead>
+            <tbody>
+              <tr><td>Fibres, inner diameter, length</td><td>11, 1.0&nbsp;mm, 0.6&nbsp;m</td></tr>
+              <tr><td>Membrane area, pore size</td><td>0.02&nbsp;m&sup2; (200&nbsp;cm&sup2;), 0.2&nbsp;&micro;m</td></tr>
+              <tr><td>Lumen, shell and culture volume</td><td>5.2&nbsp;mL, 36&nbsp;mL, 1.0&nbsp;L (2.0&nbsp;L maximum working)</td></tr>
+              <tr><td>Operating temperature and viscosity</td><td>22&nbsp;&deg;C, 0.7&nbsp;cP</td></tr>
+              <tr><td>Shear rate, target and limit</td><td>2000&nbsp;s&#8315;&sup1;, 6000&nbsp;s&#8315;&sup1;</td></tr>
+              <tr><td>Design flux and dilution rate</td><td>2.0&nbsp;LMH, 0.04&nbsp;h&#8315;&sup1;</td></tr>
+              <tr><td>&Delta;P&ndash;Q baseline</td><td>\(a=0.02615\) kPa per mL/min, \(b=0\)</td></tr>
+            </tbody>
+          </table>
+        </div>
+        <div class="tablewrap">
+          <table class="data">
+            <caption class="visually-hidden">Derived membrane parameters and their definitions</caption>
+            <thead><tr><th scope="col">Parameter</th><th scope="col">Definition</th><th scope="col">What it is for</th></tr></thead>
+            <tbody>
+              <tr><td><code>TMP_out</code></td><td>\(P_{\text{out}}-P_s\), and a strict form using the trough of \(P_{\text{out}}\) over the last few seconds</td><td>Whether filtration is still going the right way</td></tr>
+              <tr><td>&Delta;P<sub>friction</sub></td><td>\((P_{\text{in}}-P_{\text{out}})-\rho gh\)</td><td>Lumen pressure drop with the module's water column taken out</td></tr>
+              <tr><td>&Delta;P ratio</td><td>\(\Delta P_{\text{friction}}/(aQ+bQ^2)\)</td><td>Lumen drop against a clean-module baseline</td></tr>
+              <tr><td>&tau;<sub>w</sub>, &gamma;<sub>pressure</sub></td><td>\(\Delta P_{\text{friction}}\,d/4L\), divided by viscosity</td><td>Wall shear from the pressure side</td></tr>
+              <tr><td>&gamma;<sub>flow</sub></td><td>\(8v/d\), about \(15.4\,Q\) for this module</td><td>Wall shear from the flow side</td></tr>
+              <tr><td>&gamma; ratio</td><td>\(\gamma_{\text{pressure}}/\gamma_{\text{flow}}\)</td><td>The headline clogging indicator</td></tr>
+              <tr><td>J, L<sub>p</sub>, D</td><td>Flux from permeate flow and area; \(L_p=J/\mathrm{TMP}_{\text{mean}}\); \(D=Q_{\text{perm}}\times0.06/V\)</td><td>Permeability over days, and dilution rate</td></tr>
+              <tr><td>Re, TMP<sub>in</sub>, TMP spread, R<sub>t</sub>, &tau;<sub>shell</sub></td><td>Standard forms</td><td>Context for the above</td></tr>
+            </tbody>
+          </table>
+        </div>
+        <p>Ratios are not computed below 10&nbsp;mL/min, where the flow meter's pulse counting is too coarse to divide by. An alarm is raised when <code>TMP_out</code> reaches zero or below, when the &Delta;P ratio or the &gamma; ratio passes 1.3, when permeability falls below 70% of its value at the start of the run, or when shell pressure rises more than 2&nbsp;kPa for no reason. Alarms that the pinch valve itself would cause are suspended while it is closed. The whole block is labelled <i>provisional constants</i> on screen, because the baseline it divides by has not yet been re-fitted on this plumbing.</p>
+
+        <h3 id="rigapp-safety">Interlocks that run without the browser</h3>
+        <p>Every protective action is in firmware, so no fault in the backend, the browser or a model can drive the loop past a limit. Two boards were destroyed in early October by external voltage reaching the Uno&nbsp;Q, which is a hardware-side failure, but it is the reason the software side was audited line by line and the interlocks were pushed down to the microcontroller.</p>
+        <div class="tablewrap">
+          <table class="data">
+            <caption class="visually-hidden">Interlock triggers and what the firmware does</caption>
+            <thead><tr><th scope="col">While the valve is closed</th><th scope="col">Action</th></tr></thead>
+            <tbody>
+              <tr><td>Lumen-in pressure above 0.5&nbsp;bar for two consecutive 200&nbsp;ms windows</td><td>Open the valve, latch a fault</td></tr>
+              <tr><td>Trans-membrane pressure peak above 0.5&nbsp;bar for two windows</td><td>Open the valve, latch a fault</td></tr>
+              <tr><td>Closed for longer than 900&nbsp;s</td><td>Open the valve, latch a fault</td></tr>
+              <tr><td>Servo temperature at or above 60&nbsp;&deg;C</td><td>Open the valve, latch a fault</td></tr>
+              <tr><td>Servo fails to answer three times</td><td>Latch a fault, and open on reconnection</td></tr>
+              <tr><td>Pump emergency stop, or microcontroller boot</td><td>Open the valve</td></tr>
+            </tbody>
+          </table>
+        </div>
+        <p>A latched fault refuses to close again until an operator clears it, and the reason for every release is written to a separate valve-event log with the duration and the pressures that caused it. The lumen-in test can be run on the peak of the pump cycle, which is the conservative default, or on a one-second mean, which is less likely to trip on pulsation. When an earlier saved configuration still carried the old 1.0&nbsp;bar limit, the application lowered it to 0.5&nbsp;bar once on upgrade and then left the operator's own value alone.</p>
+
+        <h3 id="rigapp-setup">Setting up before a run</h3>
+        <p>New plumbing, a new membrane or a new board means the sequence below, in order, and the application tracks which steps are stale.</p>
+        <ol>
+          <li><b>Zero the pressure transducers</b> with the loop open to atmosphere.</li>
+          <li><b>Measure &rho;gh</b> with the pump stopped: ten seconds for flow to decay, thirty seconds of recording, and the reading has to be flat to within 0.15&nbsp;kPa/min before it is accepted. On the current plumbing this came out at 0.04&nbsp;kPa against a 5.9&nbsp;kPa default, so the module is sitting close to level and &Delta;P<sub>friction</sub> is very nearly the whole lumen drop.</li>
+          <li><b>Sweep &Delta;P against Q</b> on a clean membrane, two to ten pump settings, highest first so that no point has to start from rest, twenty seconds to settle and thirty to record at each. Both \(aQ+bQ^2\) and \(aQ\) are fitted through the origin and reported with R&sup2; and residuals; a negative \(b\) is taken as a signal to use the linear fit. Nothing is written until the operator applies it, the sweep restores the previous pump setting when it ends, and touching the pump during it aborts it without restarting the pump.</li>
+          <li><b>Calibrate pH</b> at 7.00 then 4.01, with the temperature probe in the buffer alongside.</li>
+          <li><b>Teach the valve</b> its closed and open positions by moving the servo and storing each.</li>
+          <li><b>Set the operating parameters</b>: where loop flow comes from, permeate flow, culture volume.</li>
+          <li><b>Export the calibration</b> as a backup. It comes back in sections, so a new rig can take the membrane and pH calibration without inheriting the previous machine's valve positions.</li>
+        </ol>
+
+        <h3 id="rigapp-record">What a run leaves behind</h3>
+        <p>One row per sampling window, thirty seconds by default, median-aggregated, 73&nbsp;columns wide. The point of the width is that a row can be audited later without the page that produced it: the provenance of every reading travels with it.</p>
+        <div class="tablewrap">
+          <table class="data">
+            <caption class="visually-hidden">The groups of columns in a recording</caption>
+            <thead><tr><th scope="col">Group</th><th scope="col">Columns</th><th scope="col">Why they are there</th></tr></thead>
+            <tbody>
+              <tr><td>Window</td><td>10</td><td>Index, elapsed and wall-clock time, window length, the gap left by any interruption, how the window was aggregated, how many samples it held, whether it was cut short</td></tr>
+              <tr><td>OD600</td><td>8</td><td>The value, both lux channels, the share of the burst rejected as bubbles, whether it is valid, whether a blank was set, how old the measurement is</td></tr>
+              <tr><td>Flow</td><td>3</td><td>Rate, pulse frequency, cumulative volume</td></tr>
+              <tr><td>Pressure</td><td>7</td><td>Three transducers, trans-membrane pressure with its peak and trough, pump cycle frequency</td></tr>
+              <tr><td>Pump, pH, valve</td><td>9</td><td>PWM and direction, pH with its compensation temperature and source and probe state, valve state and position and the fraction of the window it was closed</td></tr>
+              <tr><td>Derived</td><td>21</td><td>Everything in the membrane table above</td></tr>
+              <tr><td>Trend and steadiness</td><td>3</td><td>First and second derivative of trans-membrane pressure, and whether the window counts as steady</td></tr>
+              <tr><td>Spread within the window</td><td>9</td><td>Standard deviation, interquartile range, minimum and maximum for pressure and flow</td></tr>
+              <tr><td>Traceability</td><td>3</td><td>Which algorithm profile, configuration and constants produced the row</td></tr>
+            </tbody>
+          </table>
+        </div>
+        <p>Those last three columns are the ones that make old runs comparable. Algorithm choices on this rig are switchable &mdash; flow estimator, OD600 outlier rejection, whether derived parameters run on filtered or raw pressure, how aggregation and steadiness are judged &mdash; and a row that does not say which were in force cannot be pooled with another. A checkpoint can be taken mid-run without interrupting recording, and valve events go to their own file.</p>
+        <p>One practical note for anyone opening these files: the filename carries the board's clock in UTC while the interface shows local time, so <code>record_20261008_140517.csv</code> is the run that the screen in Figure&nbsp;7 says began at 22:04.</p>
+
+        <h3 id="rigapp-run">The 8 October batch</h3>
+        <p>Figure&nbsp;7 is a frame from the run this page's registered forecast was written against. It is worth reading closely, because it shows both what the rig now measures well and what it does not yet measure at all.</p>
+        <div class="tablewrap">
+          <table class="data">
+            <caption class="visually-hidden">Readings in Figure 7, with how each was obtained</caption>
+            <thead><tr><th scope="col">Reading</th><th scope="col">Value</th><th scope="col">Provenance</th></tr></thead>
+            <tbody>
+              <tr><td>OD600</td><td>0.1758&nbsp;AU, rising from near zero over 89&nbsp;min</td><td><span class="tag tag--meas">in-line</span> 29% of the burst rejected as bubbles</td></tr>
+              <tr><td>pH</td><td>6.500, drifting down from 6.53</td><td><span class="tag tag--meas">in-line</span></td></tr>
+              <tr><td>Temperature</td><td>37.0&nbsp;&deg;C</td><td><span class="tag tag--cmd">commanded</span> entered by hand; the probe was not answering</td></tr>
+              <tr><td>Feed, retentate, permeate</td><td>0.0953, 0.0047, 0.0133&nbsp;bar</td><td><span class="tag tag--meas">in-line</span></td></tr>
+              <tr><td>Loop flow</td><td>386.9&nbsp;mL/min at PWM&nbsp;145, 33.0&nbsp;L cumulative</td><td><span class="tag tag--meas">in-line</span></td></tr>
+              <tr><td>Wall shear, &Delta;P ratio, &gamma; ratio</td><td>4996&nbsp;s&#8315;&sup1;, 0.83, 1.01</td><td><span class="tag tag--der">soft</span> against a provisional baseline</td></tr>
+              <tr><td>Flux, permeability</td><td>72.0&nbsp;LMH, 2107&nbsp;LMH/bar</td><td><span class="tag tag--cmd">commanded</span> both scale with a hand-entered permeate flow</td></tr>
+            </tbody>
+          </table>
+        </div>
+        <p>Three things in that table are not measurements, and the page would be dishonest to present them as any.</p>
+        <ul>
+          <li><b>Flux and permeability are hand-entered.</b> No scale sits under the permeate vessel, so permeate flow is whatever the operator typed, here 24.00&nbsp;mL/min. The 72&nbsp;LMH that follows is 36 times the design flux, and the 92%-of-initial permeability trend is a trend in a typed number. This is the same missing load cell that <a href="#gaps">Must have, yet to have</a> lists, and it is the single cheapest thing that would turn three derived parameters into measurements.</li>
+          <li><b>The calibration was restored, not taken.</b> The amber banner says so. The OD600 blank and the pressure zeros came back from a file after a reboot, at an unknown temperature and plumbing state.</li>
+          <li><b>Temperature was typed in at 37&nbsp;&deg;C</b> while the module constants assume 22&nbsp;&deg;C operation. Viscosity enters wall shear directly, so the shear figures carry whichever temperature was entered, not the one the culture was at.</li>
+        </ul>
+        <p>Two readings also disagree with each other in a way worth chasing. With \(b=0\), the &Delta;P ratio and the &gamma; ratio are the same quantity up to a constant, and for this module's numbers that constant is 1.009 &mdash; they should read almost identically. In Figure&nbsp;7 they read 0.83 and 1.01. The gap is exactly a flow mismatch: the &Delta;P baseline of 10.08&nbsp;kPa implies 385&nbsp;mL/min, while \(\gamma_{\text{flow}}=4939\,\mathrm{s^{-1}}\) implies 320&nbsp;mL/min, a ratio of 1.205 against the 1.206 needed to explain the difference. The two halves of the clogging indicator are being computed from different flow windows. Since the &gamma; ratio is the parameter the cleaning decision is supposed to hang on, and 1.01 against 0.83 is the difference between an indicator sitting at its baseline and one sitting comfortably below it, the recording will settle which window each used.</p>
+        <p>What the frame does show working: a culture growing, measured continuously with no sample drawn and with bubbles rejected rather than averaged in; a pressure chain delivering 95 of its intended 100 samples a second with a worst-case firmware loop of 12.8&nbsp;ms; one hour and twenty-nine minutes of recording already on the board's disk in 145 rows; and an interface that tells the operator its calibration is stale and that its membrane is being pushed backwards instead of quietly reporting numbers.</p>
+
+        <h3 id="rigapp-notdo">What this build does not do</h3>
+        <ul>
+          <li>No permeate mass, no dissolved oxygen, and no working loop temperature on this run, so flux, permeability, dilution rate and \(k_La\) all stay modelled.</li>
+          <li>No green light output. Induction is still a decision taken by a person, which is the gap between this rig and a closed loop.</li>
+          <li>No weather, no field data, no induction policy. This application is the instrument layer; everything regional belongs to <a href="#ui-next">the next interface</a>.</li>
+          <li>The external-power relay planned for pin&nbsp;D7 is not built, so the power-up order is still a rule a human has to follow rather than one the board enforces.</li>
+          <li>The clean-module &Delta;P&ndash;Q baseline has not been re-fitted on this plumbing, which is why the derived block labels itself provisional.</li>
+          <li>Backend error messages are Traditional Chinese only, and the flow meter's counting is quantised at low flow.</li>
+        </ul>
+        <details class="disclose disclose--solo">
+          <summary><span class="disclose__title">Version history of the rig application</span><span class="disclose__hint">Thirteen releases between early September and 8 October, firmware, backend and interface moving together.</span></summary>
+          <div class="disclose__body">
+          <div class="tablewrap">
+            <table class="data">
+              <caption class="visually-hidden">Firmware, backend and interface versions by date</caption>
+              <thead><tr><th scope="col">Firmware / backend / interface</th><th scope="col">Date</th><th scope="col">What changed</th></tr></thead>
+              <tbody>
+                <tr><td>v3.10.9 / v4.12 / v4.13</td><td>8 Oct</td><td>Flow pushed by the microcontroller, so it keeps recording when the command channel jams; missing readings left blank instead of zero</td></tr>
+                <tr><td>v3.10.8 / v4.11 / v4.12</td><td>8 Oct</td><td>Lumen-in interlock at 0.5&nbsp;bar, on peak or mean; old 1.0&nbsp;bar limits migrated once</td></tr>
+                <tr><td>v3.10.7 / v4.10 / v4.11</td><td>8 Oct</td><td>Mid-run checkpoints; per-section version comparison</td></tr>
+                <tr><td>v3.10.7 / v4.9.1 / v4.10.1</td><td>8 Oct</td><td>Automatic microcontroller restart removed after it proved unreliable on hardware</td></tr>
+                <tr><td>v3.10.5 / v4.8</td><td>8 Oct</td><td>Command queue, disconnection detection, every firmware call made failure-safe</td></tr>
+                <tr><td>v3.10.4</td><td>7 Oct</td><td>Register the firmware's functions before probing sensors, so a slow I2C scan no longer looks like a dead board</td></tr>
+                <tr><td>v3.10.1&ndash;v3.10.3</td><td>6 Oct</td><td>Temperature-probe fallback, 1-Wire electrical diagnostics, retry every 10&nbsp;s</td></tr>
+                <tr><td>v4.6&ndash;v4.9.2</td><td>6 Oct</td><td>&Delta;P&ndash;Q sweep, probe temperature by default, operating-parameter entry</td></tr>
+                <tr><td>v3.10.0 / v4.4</td><td>6 Oct</td><td>Pump kick-start, for settings too low to break static friction</td></tr>
+                <tr><td>v4.0&ndash;v4.5</td><td>6 Oct</td><td>Derived membrane parameters redesigned; calibration export and import, specification management, per-parameter explanations</td></tr>
+                <tr><td>v3.8&ndash;v3.9.0</td><td>5&ndash;6 Oct</td><td>Measured voltage divider, loop temperature probe, full-history charts, the three-column layout</td></tr>
+                <tr><td>v3&ndash;v3.7</td><td>2&ndash;4 Oct</td><td>pH and the pinch valve merged in, 14-bit sampling, switchable algorithms</td></tr>
+                <tr><td>v1&ndash;v2.3</td><td>September</td><td>Three separate projects &mdash; OD600, flow with pressure, and the pump &mdash; merged into one; non-blocking OD600; windowed aggregation, writing to disk, and resuming after an interruption</td></tr>
+              </tbody>
+            </table>
+          </div>
+          </div>
+        </details>
+      </section>
+
+      <!-- ====================================== 6 · NEXT INTERFACE ======== -->
+      <section class="sec ai" id="ui-next">
+        <h2>The next interface</h2>
+        <p>The application in <a href="#rigapp">the previous section</a> knows everything about the reactor and nothing about the field it will stand in. It has no forecast, no leaf sensor and no way to decide that a crop is heading into stress. That decision is the whole point of the twin, so the interface is being rewritten around it. The rewrite is Timmy's, it keeps the rig application's split between a browser that displays and firmware that protects, and it adds the two inputs the rig has never had: the regional weather forecast, and the local leaf-wetness and leaf-temperature sensor beside the crop.</p>
+        <div class="tablewrap">
+          <table class="data">
+            <caption class="visually-hidden">Tabs of the rewritten interface</caption>
             <tbody>
               <tr><td><b>Today</b></td><td>What to do now</td></tr>
               <tr><td><b>System map</b></td><td>The rig as a live P&amp;ID: every tag reads its own value, and valves and light are tapped here</td></tr>
               <tr><td><b>Growth twin</b></td><td>Measured biomass against the forecast and its band, the model parameters, and the run library the prior is pooled from: finished runs typed in, pasted, imported as CSV or saved from a live run, each fitted on its own and tested against the others</td></tr>
-              <tr><td><b>Weather</b></td><td>Field forecast and crop-stress risk, which determine when protectant is needed<span class="ai">; the local leaf sensor, and the rice blast rule applied to it</span></td></tr>
+              <tr><td><b>Weather</b></td><td>Field forecast and crop-stress risk, which determine when protectant is needed; the local leaf sensor, and the rice blast rule applied to it</td></tr>
               <tr><td><b>Data</b></td><td>Trends, the batch record, the action log, and CSV and XLSX export with units and provenance in every header</td></tr>
               <tr><td><b>Setup</b></td><td>Connection, calibration, safety rules and twin settings</td></tr>
             </tbody>
           </table>
         </div>
-
-        <div class="ai">
-          <p>The link is Web Serial over USB at 115&nbsp;200&nbsp;baud, so it needs Chrome or Edge and a page served over HTTP. The board sends process values once a second; the page sends its command frame every two seconds as a heartbeat, and the firmware opens the valve and kills the light if that heartbeat stops. Firmware and page are versioned together, and the firmware ships with a desktop harness that compiles the sketch, replays its output through the page's own parser and checks the result &mdash; no board and no browser needed.</p>
-          <p>The leaf sensor's ESP32 connects on a second USB port and sends the bench logger's own lines, so the same file that calibrates the sensor feeds the twin. A logged CSV from the bench can also be imported. Every hour the twin keeps is exported with its source, sensor or forecast, so a reader can see which hours the blast verdict rested on.</p>
-          <p class="microlabel">On the rig today</p>
-          <p>The 3 October batch is being recorded by the team's own Arduino App Lab rig application, which is the build the hardware sub-team has been running all season. This interface takes over on the following batch, when the firmware is flashed to the matching protocol.</p>
-        </div>
+        <figure class="embed">
+          <div class="embed__frame">
+            <iframe src="ui/1007UI.html" loading="lazy"
+                    title="The rewritten ReLeaf BR-01 operator interface, 7 October 2026 build, running on demo data"></iframe>
+          </div>
+          <div class="embed__bar">
+            <span><code>1007UI.html</code> &middot; MIT licence</span>
+            <a href="ui/1007UI.html" target="_blank" rel="noopener">Open full screen &rarr;</a>
+          </div>
+          <figcaption><b>Figure 8.</b> The rewritten interface, running here on simulated data. No board or leaf sensor is attached, so every process value comes from the model inside the file and the leaf is simulated from the live forecast, and the interface says so on every screen.</figcaption>
+        </figure>
+        <p>Its link to the board is Web Serial over USB at 115&nbsp;200&nbsp;baud, so it needs Chrome or Edge and a page served over HTTP. The board sends process values once a second; the page sends its command frame every two seconds as a heartbeat, and the firmware opens the valve and kills the light if that heartbeat stops. Firmware and page are versioned together, and the firmware ships with a desktop harness that compiles the sketch, replays its output through the page's own parser and checks the result, with no board and no browser needed.</p>
+        <p>The leaf sensor's ESP32 connects on a second USB port and sends the bench logger's own lines, so the same file that calibrates the sensor feeds the twin. A logged CSV from the bench can also be imported. Every hour the twin keeps is exported with its source, sensor or forecast, so a reader can see which hours the blast verdict rested on.</p>
+        <p class="microlabel">What has to happen for it to take over</p>
+        <p>The rig application is three months of hardware debugging ahead of this one, and that debt is the real work of replacing it: the interlocks, the board-side recording that survives a sleeping laptop, the bubble rejection, the queued command channel and the calibration bookkeeping all exist because a run failed without them. The rewrite has to carry all of it across and be flashed with matching firmware before it touches a batch, and until then the rig application records and the rewrite is tested against the recordings it produces. Nothing on this page was measured by the rewrite.</p>
       </section>
 
-      <!-- ================================================ 6 · LIMITS ======= -->
+      <!-- ================================================ 7 · LIMITS ======= -->
       <section class="sec ai" id="limits">
         <h2>Current limits</h2>
         <ul class="limits">
           <li><b>The loop is not closed.</b> Valves move under software control; every decision about the culture still goes through a person. In the maturity terms of the literature this is a digital shadow with actuation available, not yet a closed-loop twin&nbsp;[1,&nbsp;2].</li>
           <li><b><i>n</i>&nbsp;=&nbsp;1 almost everywhere.</b> One long run behind R3, one perfusion run behind R4, one plate behind R5.</li>
-          <li><b>Two chassis.</b> R1 to R4 are <i>B.&nbsp;subtilis</i>&nbsp;168; the production strain is WB800. Whether the method transfers with the strain is the point of the 3 October batch.</li>
+          <li><b>Two chassis.</b> R1 to R4 are <i>B.&nbsp;subtilis</i>&nbsp;168; the production strain is WB800. Whether the method transfers with the strain is the point of the batch running now.</li>
           <li><b>37&nbsp;&deg;C fits, 22&nbsp;&deg;C operation.</b> The fast growth parameters come from 37&nbsp;&deg;C; the field unit runs near ambient. Transfer is a test, not an assumption.</li>
           <li><b>Beer&ndash;Lambert at scale.</b> The photometer is linear only to about OD&nbsp;1.2 in a 2&nbsp;mm cell, and induction light will be attenuated by a dense culture in a way nothing on the rig measures.</li>
           <li><b>Trans-membrane pressure is below the resolution of the transducers</b> at the operating point, so lumen &Delta;P is used as the hydraulic observable instead.</li>
           <li><b>The 120 to 160&nbsp;h event is unexplained.</b> The trust layer called it biological and was right to; nobody knows what the culture did.</li>
+          <li><b>Flux and permeability are not measured.</b> Nothing weighs the permeate, so J, L<sub>p</sub> and the dilution rate all scale with a number the operator types. Every trend in them is a trend in that number.</li>
+          <li><b>The clean-module baseline is provisional.</b> The &Delta;P&ndash;Q fit the fouling ratios divide by has not been re-measured on the current plumbing, and the two halves of the clogging indicator disagree by about 20% (<a href="#rigapp-run">the 8 October batch</a>).</li>
+          <li><b>Calibration can outlive its conditions.</b> Blanks and pressure zeros survive a reboot from file. The application says so on screen rather than hiding it, but a restored zero is not a measured one.</li>
           <li><b>One leaf sensor, on a bench.</b> It reads a dummy leaf, not a rice leaf, and it cannot tell guttation from dew. Hours ahead are estimated from forecast humidity, and the blast rule comes from Japanese fields.</li>
         </ul>
       </section>
 
-      <!-- ========================================== 7 · CONTRIBUTION ======= -->
+      <!-- ========================================== 8 · CONTRIBUTION ======= -->
       <section class="sec ai" id="contribution">
         <h2>For other teams</h2>
         <ol class="contrib">
           <li><b>The two-axis trust layer.</b> A reference channel that never sees the sample, scored separately from the process, trained on the healthy start of a run with its threshold fixed before scoring. Any team with an optical sensor can run it, and the 434&nbsp;h batch is included as a test case.</li>
           <li><b>Calibrate against a known dose, not against another instrument.</b> Cumulative TiO&#8322; additions score both instruments against truth. It cost us one afternoon and told us our in-line photometer was the more linear of the two &mdash; the opposite of what we assumed.</li>
           <li><b>A plate assay as a scale-down model.</b> Fit growth on a light-programmable array, hand the posterior to the reactor as a prior, and register the prediction before the batch. The method is the contribution; the parameters are ours.</li>
+          <li><b>A logger that outlives its operator.</b> The rig application writes each window to the board's own disk as it closes, resumes into the same file after a restart and marks the gap, leaves unavailable readings blank instead of zero, and stamps every row with the algorithm, configuration and constants that produced it. Any team whose run is longer than their attention span can copy the pattern.</li>
           <li><b>The serial protocol and its test harness.</b> A documented two-line ASCII protocol with a heartbeat watchdog, interlocks on the microcontroller rather than in the browser, and a desktop harness that tests firmware and page together with no hardware attached.</li>
         </ol>
         <p>The code and data are in the team repository; the mirror to <code>gitlab.igem.org/2026/software-tools/</code> is made before the wiki freeze. The reactor itself is on <a href="../hardware/">Hardware</a>, the growth and transport models on <a href="../model/">Math Model</a>, and the assays on <a href="../measurement/">Measurement</a>.</p>
