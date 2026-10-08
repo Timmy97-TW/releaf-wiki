@@ -41,12 +41,14 @@
     list.className = "toc__list";
 
     let major = 0, minor = 0;
+    /* data-no-subnum on .pagebody keeps "2." but drops "2.1" (Description) */
+    const subnum = !("noSubnum" in body.dataset);
 
     heads.forEach((h) => {
       const isSub = h.tagName === "H3";
       if (isSub) { minor += 1; } else { major += 1; minor = 0; }
       /* an h3 before any h2 has nothing to hang off, so it stays unnumbered */
-      const no = isSub ? (major ? major + "." + minor : "") : major + ".";
+      const no = isSub ? (major && subnum ? major + "." + minor : "") : major + ".";
 
       /* Two headings with the same words ("The problem" under three goals)
          would share an id, and every contents link after the first would jump
