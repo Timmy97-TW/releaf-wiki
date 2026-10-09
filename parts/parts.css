@@ -1,36 +1,36 @@
 /* =============================================================================
-   Parts: a collection index, and the few things page.css does not already do.
+   Parts: one table, and the few things page.css does not already do.
 
    WHAT THE PAGE IS. A judge lands here to find a part and leave for the
-   Registry. So the shape of the page is five module sections, each one a short
-   paragraph, one schematic and a grid of identical cards, and everything
-   longer than that, the build sheets, the protectant series, the references
-   and the seventeen open fixes, sits behind a <details> with a summary line
-   that says what is inside. page.css already owns the disclosure (.disclose),
-   the contents rail and the callouts; this file owns the card, the module
-   band, the status key and the figure frames.
+   Registry. Since 10 October 2026 the whole collection is a single table of
+   thirty-two rows in five module groups, with a frosted toolbar pinned over
+   it, and everything longer, the build sheets, the protectant series and the
+   references, sits behind a <details> with a summary line that says what is
+   inside. page.css already owns the disclosure (.disclose), the contents rail
+   and the callouts; this file owns the toolbar, the table, the key and the
+   figure frames that the folds still use.
 
    HOUSE RULES THIS FILE OBEYS
-   1. One white ground. Every section is white. A boxed note is white with a
-      hairline and a 3px left edge in the colour of what it is.
+   1. One white ground. The table sits on white; the only tints are the module
+      group headers and the function rows, both --well, and the status pills.
+      A boxed note is white with a hairline and a 3px left edge.
    2. Figures are one component with a fixed set of frames, and every one opens
-      full-window (page.js wires the lightbox; the frames are set here).
-   3. Nothing a reader needs in order to use a part is behind a click: the
-      name, the function, the status and the Registry link are all on the card.
-   4. Numbers in the status box agree with the fix numbers in the fold.
+      full-window (page.js wires the lightbox; the frames are set here). Only
+      the folds carry figures now.
+   3. Argument flat, evidence folded. The table and the key are flat. What a
+      row does not need in order to be found and followed to the Registry, the
+      colony numbers and the dates behind its evidence word, is in a fold.
+   4. No usage hints. The toolbar has a search field, chips and a chevron, and
+      not one sentence telling anyone to use them. The line under the toolbar
+      reports a count, which is a result and not an instruction.
 
-   WIDTH. The body column opens to 60rem so three cards sit across it, and the
-   prose is capped back to the normal measure, the way entrepreneurship.css
-   does it. No sentence on this page is any longer than a sentence anywhere
-   else on the wiki; the cards, the tables and the figures get the extra width
-   and nothing else does.
-
-   TABLES. The old four-column part tables are gone: every row of them is a
-   card now. What is left are the build-record tables, eight and nine columns
-   wide, and they live inside folds. They are given a min-width and allowed to
-   scroll sideways inside their own .tablewrap. Nothing on this page is ever
-   laid out wider than the box it sits in, which is what used to push the page
-   to 167,000px on a phone.
+   WIDTH. The body column opens to 70rem, which is what the table's seven
+   columns need before anything starts wrapping; the prose is capped back to
+   the normal measure, the way entrepreneurship.css does it. The table is
+   still wider than a phone and cannot be made narrower without losing a
+   column, so it scrolls sideways inside .ptable__scroll. Nothing is ever laid out wider
+   than the box it sits in, which is what used to push the page to 167,000px
+   on a phone.
 
    FRAMES. The house strip is 7:2, and it is right for a linear transcription
    unit. It is wrong for a SnapGene circular map, which arrives about square:
@@ -40,13 +40,14 @@
    So circular maps get their own 1:1 frame, contained, and .fig--strip stays
    7:2 for the linear unit diagrams borrowed from Engineering.
 
-   COLOUR. One ladder of five status words plus a failure word, and those six
-   pills are the only colours on the page besides the ReLeaf green and the
-   neutrals. Amber means in progress, slate means checked but not read, green
-   means read, rust means it failed. A status colour is never a background.
+   COLOUR. Two status pills are earned by rows in the new table, green for
+   read and grey for designed; the other four stay defined because the
+   build-record tables in the folds still use them. Beside them the table
+   carries five module colours, the same five the IHP pipelines use, as a dot
+   and an eyebrow only. A status colour is never a background.
    ========================================================================== */
 
-.parts .pagebody { max-width: 60rem; }
+.parts .pagebody { max-width: 70rem; }
 
 /* A fold can be the target of a link, from the contents rail or from a URL
    somebody shared, so it needs the same clearance under the sticky nav that
@@ -54,8 +55,8 @@
 .parts .pagebody details[id] { scroll-margin-top: calc(var(--nav-h) + 1.5rem); }
 
 .parts .pagebody .sec > p,
-.parts .pagebody .sec > ul:not(.keyrow),
-.parts .pagebody .sec > ol:not(.modbar),
+.parts .pagebody .sec > ul:not([class]),
+.parts .pagebody .sec > ol:not([class]),
 .parts .pagebody .sec > dl,
 .parts .pagebody .sec > blockquote,
 .parts .pagebody .sec > .callout,
@@ -78,193 +79,345 @@
   border-left-width: 3px;
 }
 
-/* ============================================================ MODULE BAND ===
-   Five tiles under the lede, one per module, so a judge can see the shape of
-   the collection and jump into the layer they care about without reading the
-   paragraph first. The whole tile is the link: the anchor covers it with a
-   pseudo-element, which keeps the orange drafting mark on the sentence and the
-   green on the name instead of dragging one colour over both.              */
+/* ========================================================== THE TOOLBAR ====
+   The page is one table, so the controls over it are the page's furniture and
+   they are built in the IHP soft language: a frosted pill track pinned under
+   the site nav, a search field at its head and chips after it. The track is
+   the only sticky thing on the page, so the header row of the table parks
+   directly beneath it (see .ptable thead below) and a judge who has scrolled
+   to module 5 can still cut the collection down without scrolling back.
 
-.parts .modbar {
-  list-style: none;
-  margin: var(--sp-6) 0;
-  padding: 0;
-  display: grid;
-  gap: var(--sp-4);
-  grid-template-columns: repeat(auto-fit, minmax(15rem, 1fr));
+   There is no microcopy here telling anyone to type or to click. The count
+   under the track reports a result, which is a different thing: it says how
+   many rows are showing out of how many there are.                        */
+
+.parts {
+  /* the table needs more than the 1280px house frame before a column wraps,
+     so Parts runs at the Engagement pages' width and caps its prose instead */
+  --max: 1400px;
+  --ink: #1d1d1f; --ink-2: #424245; --ink-3: #6e6e73;
+  --well: #f5f5f7;
+  --ease: cubic-bezier(.25, .8, .25, 1);
+  --pl: var(--leaf-700);
+  --c1: #3f5468; --c2: #23684a; --c3: #8a5a0b; --c4: #7a3b67; --c5: #1f5f8b;
 }
-.parts .modbar > li {
-  position: relative;
-  margin: 0;
-  min-width: 0;
-  padding: var(--sp-4);
-  border: 1px solid var(--gray-200);
-  border-radius: var(--radius);
-  background: var(--leaf-50);
-  transition: border-color .15s, background .15s;
-}
-.parts .modbar > li:hover { border-color: var(--leaf-500); background: var(--leaf-100); }
-.parts .modbar__link { display: block; text-decoration: none; color: inherit; }
-.parts .modbar__link::after { content: ""; position: absolute; inset: 0; border-radius: var(--radius); }
-.parts .modbar__link:focus-visible::after { outline: 2px solid var(--leaf-500); outline-offset: 2px; }
-.parts .modbar__no {
-  display: block;
-  font-size: .625rem; font-weight: 700; letter-spacing: .1em; text-transform: uppercase;
-  color: var(--leaf-500);
-}
-.parts .modbar__name {
-  display: block;
-  margin-top: .25rem;
-  font-family: var(--font-display);
-  font-size: var(--text-base); font-weight: 700; line-height: 1.25;
-  color: var(--leaf-900);
-}
-.parts .modbar__n {
-  display: inline-block;
-  margin-top: var(--sp-2);
-  padding: .1rem .45rem;
-  border: 1px solid var(--leaf-200);
-  border-radius: 100px;
-  background: var(--white);
-  font-size: var(--text-xs); font-weight: 650;
-  font-variant-numeric: tabular-nums;
-  color: var(--leaf-700);
-}
-.parts .modbar p {
-  margin: var(--sp-3) 0 0;
-  font-size: var(--text-sm); line-height: 1.5;
+.parts .pl-1 { --pl: var(--c1); } .parts .pl-2 { --pl: var(--c2); }
+.parts .pl-3 { --pl: var(--c3); } .parts .pl-4 { --pl: var(--c4); }
+.parts .pl-5 { --pl: var(--c5); }
+
+.parts .ptools { position: sticky; top: calc(var(--nav-h) + .5rem); z-index: 7; margin: 0 0 var(--sp-5); }
+
+.parts .ptools__track {
+  display: flex; flex-wrap: wrap; align-items: center; gap: var(--sp-2) var(--sp-3);
+  padding: .5rem .6rem;
+  border-radius: 22px;
+  background: rgb(240 240 244 / .82);
+  -webkit-backdrop-filter: saturate(180%) blur(20px);
+          backdrop-filter: saturate(180%) blur(20px);
+  box-shadow: inset 0 0 0 .5px rgb(0 0 0 / .07), 0 8px 24px -16px rgb(0 0 0 / .35);
 }
 
-/* ============================================================== STATUS KEY ==
-   The six words as a legend, set once above the cards so no card needs a key
-   beside it. The full definitions are one fold below this.                 */
-
-.parts .keyrow {
-  list-style: none;
-  margin: var(--sp-5) 0;
-  padding: 0;
-  display: grid;
-  gap: var(--sp-3) var(--sp-5);
-  grid-template-columns: repeat(auto-fit, minmax(16rem, 1fr));
+/* -- the search field -- */
+.parts .ptools__search { position: relative; flex: 1 1 13rem; min-width: 11rem; }
+.parts .ptools__mag {
+  position: absolute; left: .7rem; top: 50%; transform: translateY(-50%);
+  width: 1rem; height: 1rem; color: var(--ink-3); pointer-events: none;
 }
-.parts .keyrow > li {
-  display: flex; flex-direction: column; align-items: flex-start; gap: .35rem;
-  margin: 0; min-width: 0;
-  font-size: var(--text-sm); line-height: 1.45;
+.parts .ptools__search input {
+  width: 100%;
+  padding: .55rem .7rem .55rem 2.1rem;
+  border: 0; border-radius: 999px;
+  background: #fff;
+  box-shadow: inset 0 0 0 .5px rgb(0 0 0 / .08);
+  font: inherit; font-size: var(--text-sm); color: var(--ink);
+  -webkit-appearance: none; appearance: none;
 }
+.parts .ptools__search input::placeholder { color: var(--ink-3); }
+.parts .ptools__search input:focus-visible { outline: 2px solid var(--leaf-700); outline-offset: 1px; }
+.parts .ptools__search input::-webkit-search-cancel-button { cursor: pointer; }
 
-/* ================================================================ CARDS ====
-   One card per part, all the same shape, because the point of the page is
-   that a judge can scan thirty-five of them and leave for the Registry. Top
-   to bottom: what kind of part it is, its name, the status word it earned,
-   two or three sentences of function, and the accession as the card's one
-   call to action. A part with no number says so in the same slot, so the gap
-   is visible rather than hidden by an empty cell.                          */
+/* -- the chips -- */
+.parts .ptools__chips { display: flex; flex-wrap: wrap; align-items: center; gap: 3px; }
+.parts .ptools__div { width: 1px; height: 1.1rem; margin: 0 .35rem; background: rgb(0 0 0 / .1); }
 
-.parts .pgrid {
-  display: grid;
-  gap: var(--sp-4);
-  grid-template-columns: repeat(auto-fill, minmax(16.5rem, 1fr));
-  margin: var(--sp-5) 0;
+.parts .pchip {
+  display: inline-flex; align-items: center; gap: .4rem;
+  padding: .5rem .8rem;
+  border: 0; border-radius: 999px;
+  background: none;
+  font: inherit; font-size: var(--text-xs); font-weight: 500; letter-spacing: -.005em;
+  color: var(--ink-2); white-space: nowrap; cursor: pointer;
+  transition: background .2s ease, color .2s ease, box-shadow .2s ease;
 }
-
-.parts .pcard {
-  display: flex; flex-direction: column;
-  min-width: 0;
-  padding: var(--sp-4) var(--sp-4) var(--sp-3);
-  border: 1px solid var(--gray-200);
-  border-radius: var(--radius);
-  background: var(--white);
-  box-shadow: var(--shadow-sm);
+.parts .pchip > i {
+  flex: none; width: .5rem; height: .5rem; border-radius: 50%;
+  background: var(--pl); opacity: .5; transition: opacity .2s ease;
 }
-
-.parts .pcard__tag {
-  margin: 0 0 var(--sp-3);
-  font-size: .625rem; font-weight: 700; letter-spacing: .08em;
-  text-transform: uppercase; line-height: 1.5;
-  color: var(--gray-500);
+.parts .pchip:hover { color: var(--ink); background: rgb(255 255 255 / .6); }
+.parts .pchip.is-on {
+  background: #fff; color: var(--ink); font-weight: 600;
+  box-shadow: 0 2px 6px rgb(0 0 0 / .1), 0 0 0 .5px rgb(0 0 0 / .05);
 }
-.parts .pcard__tag i {
-  display: inline-block;
-  margin-left: .5em;
-  padding: .1em .4em;
-  border-radius: 3px;
-  background: var(--leaf-100);
-  color: var(--leaf-700);
-  font-style: normal; letter-spacing: .07em;
-}
+.parts .pchip.is-on > i { opacity: 1; }
+.parts .pchip:focus-visible { outline: 2px solid var(--leaf-700); outline-offset: 1px; }
 
-.parts .pcard__name {
-  margin: 0 0 var(--sp-3);
-  font-family: var(--font-display);
-  font-size: 1.0625rem; font-weight: 700; line-height: 1.25;
-  letter-spacing: -.01em;
-  color: var(--leaf-900);
-  overflow-wrap: anywhere;
-}
-
-.parts .pcard__st { margin: 0 0 var(--sp-3); }
-.parts .pcard .st { white-space: normal; }
-
-.parts .pcard__fn {
-  flex: 1 1 auto;
-  margin: 0 0 var(--sp-4);
-  font-size: var(--text-sm); line-height: 1.55;
-  color: var(--gray-600);
-}
-
-.parts .pcard__foot {
-  margin: 0;
-  padding-top: var(--sp-3);
-  border-top: 1px solid var(--gray-200);
-}
-
-/* the link out. It is the only thing on the card that leaves the wiki, and it
-   is meant to look like it. */
-.parts .pcard__reg {
-  display: inline-flex; align-items: baseline; gap: .45em;
-  font-family: var(--font-mono);
-  font-size: var(--text-sm); font-weight: 650;
-  letter-spacing: -.01em;
-  color: var(--leaf-700);
-  text-decoration: none;
-  overflow-wrap: anywhere;
-}
-.parts .pcard__reg span { transition: transform .15s; }
-.parts .pcard__reg:hover { color: var(--leaf-900); text-decoration: underline; }
-.parts .pcard__reg:hover span { transform: translateX(.15rem); }
-/* No number yet, written out. A blank slot would read as an oversight; this
-   is a fact about the part, and it is one of the things the team still has to
-   settle (P10), so it is set at the same size as a real accession.         */
-.parts .pcard__reg--none {
-  font-family: var(--font-body);
-  font-size: var(--text-sm); font-weight: 400; font-style: italic;
+/* The count sits outside the sticky block on purpose. Inside it, it had no
+   background of its own and slid over the rows underneath. */
+.parts .ptools__count {
+  margin: var(--sp-2) 0 var(--sp-3); padding-left: .35rem;
+  font-size: var(--text-xs); font-variant-numeric: tabular-nums;
   color: var(--gray-500);
 }
 
-/* ================================================================= FIX =====
-   An editorial marker: something the team still has to settle before the
-   wiki freeze. Numbered P1, P2... so the list in the status box matches.   */
+/* On a narrow screen the chips would wrap to four rows and the pinned toolbar
+   would eat half the window, taking the table's header row down with it,
+   since that header parks under whatever height the toolbar reports. So below
+   60rem the track stops wrapping and scrolls sideways instead, the way the
+   IHP segmented control does, and the toolbar stays one row tall. */
+@media (max-width: 60rem) {
+  .parts .ptools__track { flex-wrap: nowrap; overflow-x: auto; scrollbar-width: none; }
+  .parts .ptools__track::-webkit-scrollbar { display: none; }
+  .parts .ptools__chips { flex-wrap: nowrap; }
+  .parts .ptools__search { flex: 0 0 9.5rem; min-width: 9.5rem; }
+  .parts .pchip { flex: 0 0 auto; }
+}
 
-.parts .fix {
-  margin: var(--sp-5) 0;
-  padding: var(--sp-3) var(--sp-5);
-  border: 1px solid var(--gray-200);
-  border-left: 3px solid var(--amber-700);
-  border-radius: var(--radius-sm);
-  background: var(--white);
+/* ======================================================= THE COLLECTION ====
+   One table, thirty-two rows, five module groups. Each group opens with a
+   <tr> whose single cell carries the module number, name, row count and the
+   module's lead-in from the docx; when a sort is applied those group headers
+   are hidden by the script and the Module column carries the information
+   instead, which is why that column exists at all.
+
+   Every row has a second row behind it holding the function sentence. It is
+   hidden until the chevron is pressed, so the table stays scannable; the
+   chevron is the only affordance and it does not need a sentence to explain
+   it. Widths are set once here in percentages so the five groups line up as
+   one table and not as five.                                              */
+
+.parts .ptable__scroll {
+  margin: 0;
+  border-radius: 18px;
+  background: #fff;
+  box-shadow: 0 0 0 1px var(--gray-200), 0 1px 2px rgb(0 0 0 / .03);
+  overflow-x: auto;
+  overscroll-behavior-x: contain;
+}
+/* Above this width the table fits and the box must stop being a scroll
+   container, because a sticky <th> sticks to its nearest scrolling ancestor:
+   with overflow-x:auto here the header row pinned to this box instead of the
+   window and sat 221px down, over the first part of module 01. Below it the
+   box scrolls again and the header row is static (see the rule further down),
+   so the two never apply at once. */
+@media (min-width: 60.0625rem) {
+  .parts .ptable__scroll { overflow-x: visible; }
+}
+
+.parts .ptable {
+  width: 100%; min-width: 46rem;
+  /* fixed, so the percentages below are the widths and not merely hints: with
+     auto layout a long category like "chromophore biosynthesis operon" pulls
+     width off the module column and the five groups stop lining up */
+  table-layout: fixed;
+  /* separate, not collapse: a sticky <th> inside a collapsed table has its
+     offset mis-measured and the header row sits 24px down over the first part
+     in the group. Spacing is zeroed and every rule on this table is a
+     border-top, so nothing doubles up. */
+  border-collapse: separate; border-spacing: 0;
   font-size: var(--text-sm);
-  color: var(--gray-700);
 }
-.parts .fix > :first-child { margin-top: 0; }
-.parts .fix > :last-child  { margin-bottom: 0; }
-.parts .fix__label {
-  display: block; margin-bottom: var(--sp-1);
-  font-size: .6875rem; font-weight: 700; letter-spacing: .09em;
-  text-transform: uppercase; color: var(--amber-700);
+
+/* -- the header row -- */
+.parts .ptable thead th {
+  position: sticky; top: var(--pthead, calc(var(--nav-h) + 9rem)); z-index: 3;
+  padding: 0;
+  background: #fff;
+  box-shadow: inset 0 -1px 0 var(--gray-300);
+  text-align: left; vertical-align: bottom;
 }
-.parts .fix ul { margin: var(--sp-2) 0 0; padding-left: 1.2em; }
-.parts .fix p + p { margin-top: var(--sp-2); }
+.parts .ptable thead th button {
+  display: flex; align-items: center; gap: .3rem;
+  width: 100%; padding: var(--sp-3) var(--sp-4);
+  border: 0; background: none;
+  font: inherit; font-size: var(--text-xs); font-weight: 700;
+  letter-spacing: .07em; text-transform: uppercase;
+  color: var(--gray-600); white-space: nowrap; text-align: left;
+  cursor: pointer;
+}
+.parts .ptable thead th button:hover { color: var(--ink); }
+.parts .ptable thead th button:focus-visible { outline: 2px solid var(--leaf-700); outline-offset: -2px; }
+/* the sort arrow is drawn in, so no glyph font is involved and it can sit on
+   the baseline of a 13px uppercase label without shifting it */
+.parts .ptable thead th button::after {
+  content: ""; width: .5rem; height: .5rem; flex: none;
+  background: currentColor; opacity: 0;
+  clip-path: polygon(50% 100%, 0 25%, 100% 25%);
+  transition: opacity .2s ease, transform .2s ease;
+}
+.parts .ptable thead th[aria-sort] button::after { opacity: .75; }
+.parts .ptable thead th[aria-sort="descending"] button::after { transform: rotate(180deg); }
+/* Widths are the balance that keeps "Sequence-confirmed L1" and "Constitutive
+   promoter" each on one line at the frame's full width; below that the table
+   hits its min-width and scrolls rather than wrapping them. */
+.parts .ptable__c-part { width: 19%; } .parts .ptable__c-cat  { width: 17%; }
+.parts .ptable__c-type { width: 10%; } .parts .ptable__c-mod  { width: 17%; }
+.parts .ptable__c-st   { width: 22%; } .parts .ptable__c-reg  { width: 13%; }
+.parts .ptable__c-x    { width: 2.75rem; }
+
+/* -- a module group header -- */
+.parts .ptable__head th {
+  padding: var(--sp-5) var(--sp-4) var(--sp-4);
+  border-top: 1px solid var(--gray-200);
+  background: var(--well);
+  font-weight: 400; text-align: left;
+}
+.parts .ptable__grp:first-of-type .ptable__head th { border-top: 0; }
+.parts .ptable__gno {
+  display: inline-block; margin-right: .6rem;
+  font-size: var(--text-xs); font-weight: 700; letter-spacing: .08em;
+  text-transform: uppercase; color: var(--pl);
+}
+.parts .ptable__gname {
+  font-size: var(--text-base); font-weight: 650; letter-spacing: -.01em; color: var(--ink);
+}
+.parts .ptable__gn {
+  margin-left: .6rem;
+  font-size: var(--text-xs); font-variant-numeric: tabular-nums; color: var(--gray-500);
+}
+.parts .ptable__gtext {
+  display: block; max-width: min(62ch, calc(100vw - 4.5rem)); margin-top: var(--sp-2);
+  font-size: var(--text-sm); line-height: 1.6; color: var(--ink-2);
+}
+
+/* -- a part row -- */
+.parts .ptable__row > th, .parts .ptable__row > td {
+  padding: var(--sp-3) var(--sp-4);
+  border-top: 1px solid var(--gray-200);
+  text-align: left; vertical-align: middle;
+}
+.parts .ptable__grp .ptable__head + .ptable__row > th,
+.parts .ptable__grp .ptable__head + .ptable__row > td { border-top: 0; }
+.parts .ptable__row { transition: background .15s ease; cursor: pointer; }
+.parts .ptable__row:hover { background: var(--leaf-50); }
+.parts .ptable__row.is-open { background: var(--leaf-50); }
+
+.parts .ptable__part { font-weight: 400; }
+.parts .ptable__nm {
+  font-family: var(--font-mono); font-size: .9em; font-weight: 600;
+  color: var(--leaf-900); overflow-wrap: anywhere;
+}
+.parts .ptable__cat { color: var(--gray-600); overflow-wrap: break-word; }
+.parts .ptable__st .st { white-space: nowrap; }
+.parts .ptable__mod { color: var(--gray-600); }
+.parts .mdot {
+  display: inline-block; width: .45rem; height: .45rem; margin-right: .45rem;
+  border-radius: 50%; background: var(--pl); vertical-align: .05em;
+}
+
+/* Basic or composite. The letter is what fits a narrow column; the word is
+   spelled out next to it whenever there is room for it. */
+.parts .ty { display: inline-flex; align-items: center; gap: .4rem; white-space: nowrap; }
+.parts .ty i {
+  display: grid; place-items: center;
+  width: 1.3rem; height: 1.3rem; flex: none;
+  border-radius: 6px;
+  font-style: normal; font-size: .6875rem; font-weight: 700;
+}
+.parts .ty em { font-style: normal; font-size: var(--text-xs); color: var(--gray-600); }
+.parts .ty--b i { background: var(--slate-100); color: var(--slate-700); }
+.parts .ty--c i { background: var(--leaf-100);  color: var(--leaf-900); }
+@media (max-width: 70rem) { .parts .ty em { display: none; } }
+
+/* The registry column. A row either leaves the wiki or says, in one word, why
+   it cannot: Kit for a SubtiToolKit entry, New for something built this year.
+   A blank cell would read as an oversight. */
+.parts .ptable__reg a {
+  display: inline-flex; align-items: baseline; gap: .25rem;
+  font-family: var(--font-mono); font-size: .8125rem; font-weight: 600;
+  color: var(--leaf-700); text-decoration: none;
+}
+.parts .ptable__reg a span { transition: transform .15s ease; }
+.parts .ptable__reg a:hover { color: var(--leaf-900); text-decoration: underline; }
+.parts .ptable__reg a:hover span { transform: translate(.1rem, -.1rem); }
+.parts .noreg {
+  display: inline-block; padding: .15rem .5rem;
+  border-radius: 999px;
+  font-size: .6875rem; font-weight: 600; letter-spacing: .02em;
+}
+.parts .noreg--new { background: var(--amber-100); color: var(--amber-700); }
+.parts .noreg--kit { background: var(--gray-100); color: var(--gray-600); }
+.parts .noreg--reglegend {
+  background: none; padding: 0;
+  font-family: var(--font-mono); font-size: .8125rem; color: var(--leaf-700);
+}
+
+/* -- the chevron, and the function row behind it -- */
+.parts .ptable__x { text-align: right; }
+.parts .pfx {
+  display: grid; place-items: center;
+  width: 1.75rem; height: 1.75rem; margin-left: auto;
+  border: 0; border-radius: 50%;
+  background: none; color: var(--gray-500);
+  cursor: pointer; transition: background .2s ease, color .2s ease;
+}
+.parts .pfx svg { width: 1.25rem; height: 1.25rem; transition: transform .3s var(--ease); }
+.parts .pfx:hover { background: #fff; color: var(--ink); box-shadow: 0 0 0 1px var(--gray-200); }
+.parts .pfx:focus-visible { outline: 2px solid var(--leaf-700); outline-offset: 1px; }
+.parts .pfx[aria-expanded="true"] svg { transform: rotate(180deg); }
+.parts .pfx[aria-expanded="true"] { color: var(--leaf-700); }
+
+/* Shipped visible, folded away only once the js class is on <html>: with
+   scripting off there is no chevron to press, so the sentences have to stay
+   on the page. */
+html.js .parts .ptable__fn { display: none; }
+html.js .parts .ptable__fn.is-open { display: table-row; }
+.parts .ptable__fn > td { padding: 0; border-top: 1px solid var(--gray-200); background: var(--well); }
+.parts .ptable__fnin { padding: var(--sp-4) var(--sp-4) var(--sp-5); }
+.parts .ptable__fnin p {
+  margin: 0; max-width: 78ch;
+  font-size: var(--text-sm); line-height: 1.65; color: var(--ink-2);
+}
+
+.parts .ptable__none {
+  margin: var(--sp-5) 0 0; padding: var(--sp-5);
+  border-radius: 18px; background: var(--well);
+  font-size: var(--text-sm); color: var(--gray-600); text-align: center;
+}
+
+/* A row hidden by a filter, and a group left with nothing in it, are both
+   taken out of the table rather than faded: a greyed row still costs a judge
+   a read. [hidden] on a <tr> needs the !important because the UA sheet's
+   display:table-row wins against it. */
+.parts .ptable tr[hidden], .parts .ptable tbody[hidden] { display: none !important; }
+
+/* A pinned header row showing three of seven columns is worth less than the
+   line of the module lead-in it would cover, so on a phone it scrolls away.
+   This has to sit after the sticky rule above, not with the other narrow-screen
+   overrides, which come before it and lose on source order. */
+@media (max-width: 60rem) {
+  .parts .ptable thead th { position: static; }
+}
+
+/* ============================================================== THE KEY ====
+   Six rows saying what every mark in the table means. It is a table too, so
+   the page keeps its promise of being nothing but tables.                  */
+
+.parts .ktable {
+  width: 100%; max-width: 54rem; margin: 0;
+  border-collapse: collapse; font-size: var(--text-sm);
+}
+.parts .ktable th, .parts .ktable td {
+  padding: var(--sp-3) var(--sp-4);
+  border-top: 1px solid var(--gray-200);
+  text-align: left; vertical-align: top;
+}
+.parts .ktable tr:first-child th, .parts .ktable tr:first-child td { border-top: 0; }
+.parts .ktable th { width: 14rem; font-weight: 400; white-space: nowrap; }
+.parts .ktable td { line-height: 1.6; color: var(--gray-700); }
+@media (max-width: 40rem) {
+  .parts .ktable th, .parts .ktable td { display: block; width: auto; white-space: normal; }
+  .parts .ktable td { border-top: 0; padding-top: 0; }
+}
 
 /* ============================================================== STATUS =====
    The one vocabulary. Every part in every table on this page carries exactly
@@ -293,24 +446,6 @@
 .parts .st--pcr      { border-color: var(--slate-700); color: var(--slate-700); }
 .parts .st--seq      { border-color: var(--leaf-700);  color: var(--leaf-700); }
 .parts .st--failed   { border-color: var(--rust-700);  color: var(--rust-700); }
-
-/* The ladder itself, set out once under the overview so every later table can
-   be read without a key beside it. */
-
-.parts .ladder { list-style: none; margin: var(--sp-5) 0; padding: 0; max-width: var(--measure); }
-.parts .ladder > li {
-  display: grid; gap: var(--sp-1) var(--sp-4);
-  grid-template-columns: 1fr;
-  padding: var(--sp-3) 0;
-  border-top: 1px solid var(--gray-200);
-  font-size: var(--text-sm); line-height: 1.6;
-}
-.parts .ladder > li:last-child { border-bottom: 1px solid var(--gray-200); }
-@media (min-width: 42rem) {
-  .parts .ladder > li { grid-template-columns: 12.5rem 1fr; align-items: baseline; }
-}
-.parts .ladder p { margin: 0; color: var(--gray-700); }
-.parts .ladder .st { justify-self: start; }
 
 /* ============================================================== TABLES =====
    The only tables left are the build-record ones, and they all live inside
