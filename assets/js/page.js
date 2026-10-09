@@ -37,12 +37,24 @@
     const heads = $$("h2, h3", body).filter((h) => !h.closest(".refs") && !("noToc" in h.dataset));
     if (!heads.length) { if (toc) toc.remove(); return; }
 
+    /* The rail is two levels. Each h2 is a numbered row, 1, 2 …, the same
+       number its heading carries. The h3s under it sit in a nested list that
+       stays folded until the reader reaches that section (see spy below). */
     const list = document.createElement("ol");
     list.className = "toc__list";
+    list.dataset.short = "";        /* labels take a heading's data-toc here */
 
-    let major = 0, minor = 0;
+    let major = 0, minor = 0, subs = null;
     /* data-no-subnum on .pagebody keeps "2." but drops "2.1" (Description) */
     const subnum = !("noSubnum" in body.dataset);
+
+    const label = (h) => {
+      const span = document.createElement("span");
+      span.className = "toc__label";
+      span.textContent = h.dataset.toc ||
+        h.textContent.replace(/¶$/, "").replace(/^[\d.]+\s*/, "").trim();
+      return span;
+    };
 
     heads.forEach((h) => {
       const isSub = h.tagName === "H3";
@@ -62,6 +74,10 @@
         h.id = id;
       }
 
+      const link = document.createElement("a");
+      link.href = "#" + h.id;
+      if (h.dataset.toc) link.title = h.textContent.replace(/^[\d.]+\s*/, "").trim();
+
       if (no) {
         const tag = document.createElement("span");
         tag.className = "sec__no";
@@ -78,13 +94,35 @@
       h.append(a);
 
       const li = document.createElement("li");
-      if (isSub) li.className = "is-sub";
-      const link = document.createElement("a");
-      link.href = "#" + h.id;
-      link.textContent = (no ? no + " " : "") + h.textContent.replace(/¶$/, "").replace(/^[\d.]+\s*/, "").trim();
+      if (isSub && major) {
+        li.className = "toc__sub";
+        link.appendChild(label(h));
+        li.appendChild(link);
+        if (!subs) {
+          subs = document.createElement("ol");
+          subs.className = "toc__subs";
+          list.lastElementChild.appendChild(subs);
+          list.lastElementChild.classList.add("has-subs");
+        }
+        li.style.setProperty("--i", subs.children.length);   /* stagger as it unfolds */
+        subs.appendChild(li);
+        return;
+      }
+      li.className = "toc__sec";
+      link.className = "toc__h";
+      const n = document.createElement("span");
+      n.className = "toc__no";
+      n.textContent = isSub ? "" : String(major);
+      link.appendChild(n);
+      link.appendChild(label(h));
       li.appendChild(link);
       list.appendChild(li);
+      subs = null;
     });
+
+    /* the rail takes the colour of the page's banner: the tab it sits under */
+    const nav = document.getElementById("site-nav");
+    if (toc && nav && nav.dataset.tab) toc.dataset.tab = nav.dataset.tab;
 
     if (!toc) return;
     const inner = $(".toc__inner", toc) || toc;
@@ -127,6 +165,10 @@
       if (id === current) return;
       current = id;
       links.forEach((a, k) => a.classList.toggle("is-active", k === id));
+      /* the section row lights, and its sub-sections unfold, while the reader
+         is anywhere inside it, sub-sections included */
+      const here = id && links.get(id) && links.get(id).closest(".toc__sec");
+      $$(".toc__sec", list).forEach((li) => li.classList.toggle("is-here", li === here));
     };
     const queue = () => { if (!queued) { queued = true; requestAnimationFrame(update); } };
     window.addEventListener("scroll", queue, { passive: true });

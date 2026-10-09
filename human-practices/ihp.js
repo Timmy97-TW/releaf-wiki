@@ -277,8 +277,12 @@
       if (!label) return;
 
       /* keep the "3.2" page.js put at the front of the link text */
-      var no = (a.textContent.match(/^\s*([\d.]+)\s/) || [])[1];
-      a.textContent = (no ? no + " " : "") + label;
+      var span = a.querySelector(".toc__label");
+      if (span) span.textContent = label;
+      else {
+        var no = (a.textContent.match(/^\s*([\d.]+)\s/) || [])[1];
+        a.textContent = (no ? no + " " : "") + label;
+      }
       a.title = h.textContent.replace(/¶$/, "").replace(/^[\d.]+\s*/, "").trim();
     });
     return true;

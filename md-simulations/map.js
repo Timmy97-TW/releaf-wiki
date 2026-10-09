@@ -973,6 +973,8 @@
       if (!h) return;
       const src = $("[data-en]", h);
       if (!src) return;
+      const span = $(".toc__label", a);
+      if (span) { span.textContent = src.textContent.trim(); return; }
       const no = (a.textContent.match(/^[\d.]+/) || [""])[0];
       a.textContent = (no ? no + " " : "") + src.textContent.trim();
     });

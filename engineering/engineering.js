@@ -175,8 +175,12 @@
       var h;
       try { h = document.getElementById(a.getAttribute("href").slice(1)); } catch (e) { return; }
       if (!h || !h.dataset.toc) return;
-      var no = (a.textContent.match(/^\s*([\d.]+)\s/) || [])[1];
-      a.textContent = (no ? no + " " : "") + h.dataset.toc;
+      var span = a.querySelector(".toc__label");
+      if (span) span.textContent = h.dataset.toc;
+      else {
+        var no = (a.textContent.match(/^\s*([\d.]+)\s/) || [])[1];
+        a.textContent = (no ? no + " " : "") + h.dataset.toc;
+      }
       a.title = h.textContent.replace(/¶$/, "").replace(/^[\d.]+\s*/, "").trim();
     });
     return true;
