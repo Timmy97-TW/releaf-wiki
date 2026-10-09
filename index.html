@@ -89,7 +89,9 @@
        the light waits for this to end (window.__introDone).
 
        At least 1.3 s, so six letters read as a word and not a flicker; at
-       most 6 s from the click, whatever is still loading. Cut by build/loader-letters.py
+       most 6 s from the click, whatever is still loading. If the drawing itself
+       has not arrived 1.2 s in, it steps aside rather than hold up a blank
+       white screen, and plays on a later visit instead. Cut by build/loader-letters.py
        from the drawing in iGEM2026_Images; the left/right numbers are its
        output. Only the white ground was removed and the mascot lifted off. -->
   <div id="ld" aria-hidden="true">
@@ -112,7 +114,7 @@
       var done;
       w.__introDone = new Promise(function (ok) { done = ok; });
       var letters = [].slice.call(L.querySelectorAll(".ld__l")), mascot = L.querySelector(".ld__m");
-      var MIN = 1300, MAX = 6000, t0 = performance.now(), shown = 0, lit = 0, ended = false;
+      var MIN = 1300, MAX = 6000, GRACE = 1200, t0 = performance.now(), shown = 0, lit = 0, ended = false;
       var reduced = w.matchMedia && w.matchMedia("(prefers-reduced-motion: reduce)").matches;
       w.scrollTo(0, 0);
 
@@ -144,7 +146,10 @@
         // click, since the stylesheets may already have taken a while
         var el = now - t0, all = n === keys.length || now > MAX;
         var goal = Math.min(el / MIN, all ? 1 : Math.max(n / keys.length * .84, .84 * (1 - Math.exp(-el / 2200))));
-        if (!need.word && now < MAX) goal = 0;          // nothing to show until the drawing is in
+        // a white screen with nothing on it is worse than no opening: if the
+        // drawing is not in soon, step aside and let the page load as it is
+        if (!need.word && el > GRACE) { leave(true); return; }
+        if (!need.word) goal = 0;
         shown += (goal - shown) * .09;
         if (all && el >= MIN && 1 - shown < .01) shown = 1;
         while (lit < letters.length && shown >= (lit + 1) / letters.length - .02) {
@@ -156,9 +161,14 @@
         w.requestAnimationFrame(tick);
       }
 
-      function leave() {
+      function leave(skip) {
         if (ended) return;
         ended = true;
+        if (skip === true) {                             // not seen, so a later visit still gets it
+          L.classList.add("out");
+          w.setTimeout(function () { root.classList.remove("ld"); L.remove(); done(); }, 300);
+          return;
+        }
         try { sessionStorage.setItem("releaf-intro", "1"); } catch (e) { /* fine */ }
         var badge = d.querySelector(".sitenav__logo"), b = badge && badge.getBoundingClientRect();
         if (!reduced && b && b.width) {
