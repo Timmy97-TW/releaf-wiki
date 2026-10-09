@@ -366,7 +366,7 @@
         if (!img) return Promise.resolve();
         if (img.complete && img.naturalWidth) return Promise.resolve();
         return new Promise(function (ok) { img.addEventListener("load", ok, { once: true }); img.addEventListener("error", ok, { once: true }); });
-      })).then(function wait() {
+      }).concat(window.__introDone || [])).then(function wait() {
         // a page opened in a background tab gets its pass when it is shown
         if (document.hidden) {
           document.addEventListener("visibilitychange", function shown() {
