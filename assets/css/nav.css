@@ -1,21 +1,20 @@
 /* =============================================================================
    ReLeaf: site navigation
    -----------------------------------------------------------------------------
-   A full-width drop panel, redrawn in September 2026 after apple.com's global
-   nav, and still ReLeaf:
+   A floating card under the bar, redrawn on 9 October 2026 from a mock the
+   team drew:
 
-   · The bar and the panel are frosted glass, not a white card with a shadow
-     under it, and the page behind softens while a panel is open. One surface
-     over the page, rather than a second page dropped on top of it.
-   · The panel has no section title and no paragraph: the tab the reader just
-     opened is already lit in the bar. What is left is one full-width grid of
-     pages, lined up with the logo, each with a caption of three to five words
-     on a single line.
-   · The panel is revealed downwards rather than faded in, and the entries rise
-     one after another, 25ms apart.
-   · What stays ReLeaf: line art in a leaf-green tile, the green bar that grows
-     down the left edge of an entry, the thread of green across the top of the
-     panel, Inter, and one accent family of four greens.
+   · The open tab turns into a pale green pill; the card drops just under the
+     bar, lined up with the logo on the left and the last tab on the right.
+   · One row of pages, split by hairlines. Each page is a large leaf-green
+     circle with its icon and the title under it. No captions: the titles carry
+     the panel on their own.
+   · Solid glyphs (Material Design Icons) instead of the old line art.
+   · The page behind still softens while a card is open.
+   · The three special-prize pages (Measurement, Hardware, Integrated Human
+     Practices) carry a faint wash of colour in their circle. It is meant to be
+     noticed on a second look, not announced.
+   · The phone drawer keeps the old list rows, without captions.
    ========================================================================== */
 
 /* Colours that exist in tokens.css point at the token. The hardware pages load
@@ -58,7 +57,6 @@
 }
 .sitenav.has-panel .sitenav__bar {
   background: rgb(251 252 251 / .94);
-  border-bottom-color: transparent;
 }
 
 .sitenav__inner {
@@ -94,31 +92,22 @@
 .sitenav__tab {
   position: relative;
   display: flex; align-items: center; gap: .4rem;
-  height: var(--nv-h);
-  padding: 0 1.15rem;
+  height: 42px;
+  margin: auto .1rem;
+  padding: 0 1.05rem;
+  border-radius: 12px;
   font: inherit;
   font-size: .95rem; font-weight: 600;
   color: var(--gray-700, #404040);
   background: none; border: 0;
   cursor: pointer;
-  transition: color .25s;
+  transition: color .25s, background .25s;
 }
-.sitenav__tab:hover, .sitenav__tab.is-open { color: var(--nv-900); }
+.sitenav__tab:hover { color: var(--nv-900); background: var(--nv-50); }
+.sitenav__tab.is-open { color: var(--nv-900); background: var(--nv-100); }
 
-/* the tab you are currently inside keeps a permanent mark */
+/* the tab you are currently inside keeps its green, without the pill */
 .sitenav__tab.is-section { color: var(--nv-700); }
-.sitenav__tab.is-section::before {
-  content: "";
-  position: absolute; left: 1.15rem; right: 1.15rem; bottom: 0;
-  height: 2px; background: var(--nv-500);
-  border-radius: 2px 2px 0 0;
-}
-.sitenav__tab.is-open::after {
-  content: "";
-  position: absolute; left: .8rem; right: .8rem; bottom: 0;
-  height: 3px; background: var(--nv-700);
-  border-radius: 3px 3px 0 0;
-}
 
 /* chevron drawn in CSS, no icon font */
 .sitenav__chev {
@@ -139,56 +128,42 @@
 
 .sitenav__panels { position: relative; }
 
-/* Frosted, the same recipe as the bar, and no border or drop shadow: the panel
-   is the bar growing downwards, not a card landing on the page. The only edge
-   is a hairline to part it from whatever it covers. */
+/* A white card that floats a little under the bar, as wide as the bar's
+   content: its left edge sits under the logo, its right under the last tab. */
 .sitenav__panel {
-  position: absolute; top: 0; left: 0; right: 0;
+  position: absolute; top: 12px; left: 0; right: 0;
+  width: min(calc(var(--nv-max) - 4rem), calc(100% - 2.5rem));
+  margin-inline: auto;
   display: none;
-  background: rgb(251 252 251 / .94);
-  -webkit-backdrop-filter: var(--nv-frost); backdrop-filter: var(--nv-frost);
-  box-shadow: 0 1px 0 rgb(20 64 43 / .06);
+  background: #fff;
+  border-radius: 18px;
+  box-shadow: 0 0 0 1px rgb(20 64 43 / .06), 0 18px 48px -12px rgb(20 40 30 / .28);
 }
-/* revealed downwards rather than faded in: the panel is uncovered, the way a
-   blind is drawn, so nothing about it appears to move */
-.sitenav__panel.is-open { display: block; animation: nv-drop .32s cubic-bezier(.4, 0, .2, 1); }
+@media (min-width: 640px) { .sitenav__panel { width: min(calc(var(--nv-max) - 4rem), calc(100% - 4rem)); } }
+.sitenav__panel.is-open { display: block; animation: nv-drop .26s cubic-bezier(.2, .7, .3, 1); }
 @keyframes nv-drop {
-  from { clip-path: inset(0 0 100% 0); }
-  to   { clip-path: inset(0 0 0 0); }
+  from { opacity: 0; transform: translateY(-6px); }
+  to   { opacity: 1; transform: none; }
 }
 
-/* a thread of green across the top of the open panel, the page's signature */
+.sitenav__panelinner { padding: 1.75rem 1rem; }
+
+/* an invisible bridge over the gap above the card, so the pointer can travel
+   from the tab down into the card without the card closing */
 .sitenav__panel::before {
   content: "";
-  position: absolute; inset: 0 0 auto 0;
-  height: 2px;
-  background: linear-gradient(90deg, var(--nv-900), var(--nv-500) 55%, var(--nv-100));
-}
-
-.sitenav__panelinner {
-  max-width: var(--nv-max);
-  margin: 0 auto;
-  padding: 1.75rem 1.25rem 2.25rem;
-}
-@media (min-width: 640px) {
-  .sitenav__panelinner { padding: 1.75rem 2rem 2.25rem; }
-}
-@media (min-width: 1040px) {
-  .sitenav__panelinner { padding: 2rem 2rem 2.5rem; }
+  position: absolute; left: 0; right: 0; bottom: 100%;
+  height: 14px;
 }
 
 /* ---- entries ------------------------------------------------------------- */
 
-/* One grid across the whole panel. `auto-fill` gives four columns on a laptop
-   and folds to three and two on the way down, without a breakpoint per page
-   count. The negative inset is the entry's own padding given back, so the icon
-   tiles start exactly on the logo's left edge. */
+/* One row, the pages sharing the width evenly, split by hairlines. Seven
+   Engagement pages fit a laptop; a long title wraps to a second line under
+   its circle. */
 .sitenav__list {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(17rem, 1fr));
-  gap: .35rem 1.5rem;
-  align-content: start;
-  margin-inline: -.75rem;
+  display: flex;
+  align-items: stretch;
 }
 
 .sitenav__entry {
@@ -232,11 +207,7 @@
 }
 .sitenav__tile svg {
   width: 20px; height: 20px;
-  fill: none;
-  stroke: currentColor;
-  stroke-width: 1.7;
-  stroke-linecap: round;
-  stroke-linejoin: round;
+  fill: currentColor;
 }
 .sitenav__entry:hover .sitenav__tile { background: var(--nv-700); color: #fff; }
 
@@ -246,21 +217,51 @@
   color: var(--nv-ink);
   letter-spacing: -.01em; line-height: 1.25;
 }
-/* Captions are written to three to five words so that the longest of them,
-   "Approval routes, Taiwan and beyond", fits one column of the four-column
-   grid on a laptop. (At .8rem it was three pixels too wide and lost its last
-   word.) If a caption ever does grow past its column it is clipped rather
-   than allowed to wrap: a second line would push its whole row out of step. */
-.sitenav__entrycap {
-  font-size: .775rem; line-height: 1.35;
-  color: var(--nv-muted);
-  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
-}
 
 .sitenav__entry:hover .sitenav__entrytitle { color: var(--nv-900); }
 .sitenav__entry.is-current { background: var(--nv-50); }
 .sitenav__entry.is-current .sitenav__tile { background: var(--nv-700); color: #fff; }
 .sitenav__entry.is-current .sitenav__entrytitle { color: var(--nv-900); }
+
+/* ---- the card's entries: circle over title ---- */
+.sitenav__panel .sitenav__entry {
+  flex: 1 1 0;
+  min-width: 0;
+  grid-template-columns: none;
+  justify-items: center;
+  align-content: start;
+  gap: .9rem;
+  padding: .4rem .75rem .6rem;
+  border-radius: 0;
+  text-align: center;
+  background: none;
+}
+.sitenav__panel .sitenav__entry + .sitenav__entry { border-left: 1px solid var(--nv-line); }
+.sitenav__panel .sitenav__entry::before { display: none; }
+.sitenav__panel .sitenav__tile {
+  width: 64px; height: 64px;
+  border-radius: 50%;
+  transition: background .22s, color .22s, transform .22s;
+}
+.sitenav__panel .sitenav__tile svg { width: 30px; height: 30px; }
+.sitenav__panel .sitenav__entry:hover .sitenav__tile { transform: translateY(-2px); }
+.sitenav__panel .sitenav__entrytitle {
+  font-size: 1.05rem; font-weight: 700;
+  text-wrap: balance;
+}
+
+/* ---- special-prize pages ------------------------------------------------
+   `prize: true` in site-nav.js. The circle's flat green becomes a soft pastel
+   wash, leaf to sky to apricot, and on hover or when current the dark green
+   picks up the same turn of hue. Kept pale on purpose. */
+.sitenav__entry.is-prize .sitenav__tile {
+  background:
+    linear-gradient(135deg, #dff0e5 0%, #dcebf6 52%, #f8e9d8 100%);
+}
+.sitenav__entry.is-prize:hover .sitenav__tile,
+.sitenav__entry.is-prize.is-current .sitenav__tile {
+  background: linear-gradient(135deg, #23684a 0%, #2a6a78 55%, #8a6a3a 100%);
+}
 
 /* ---- the page behind ------------------------------------------------------
    While a panel is open the page under it is blurred and dimmed a little, so
@@ -321,8 +322,7 @@
 .sitenav__groupbody { display: none; padding: .5rem 0 1rem; }
 .sitenav__group.is-open .sitenav__groupbody { display: grid; gap: .2rem; }
 
-/* every page keeps its caption here too, and the entries rise as the section
-   unfolds. A closed drawer never runs the animation, so they rest visible. */
+/* the entries rise as the section unfolds. A closed drawer never runs the animation, so they rest visible. */
 .sitenav__groupbody .sitenav__entry { opacity: 1; transform: none; }
 .sitenav__group.is-open .sitenav__groupbody .sitenav__entry {
   animation: nv-rise .32s cubic-bezier(.2, .7, .3, 1) both;

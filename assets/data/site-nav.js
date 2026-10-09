@@ -21,6 +21,8 @@
                    page's own `data-base`, so the same file works at any depth.
                    Keep `caption` to three to five words: the panel gives each
                    one a single line and clips anything longer.
+   `prize: true` marks the special-prize pages with a faint wash of colour in
+                   their circle (Measurement, Hardware, Human Practices).
    To add an icon: add a key to ICONS in nav.js (inner SVG markup, stroked,
                    24x24 viewBox) and reference it with `icon:`.
    ========================================================================== */
@@ -54,7 +56,7 @@ const NAV = [
         caption: "Our BioBricks and constructs" },
       { title: "Plants",       slug: "plant",               icon: "plants",
         caption: "Salt and heat stress trials" },
-      { title: "Measurement",  slug: "measurement",         icon: "measurement",
+      { title: "Measurement",  slug: "measurement",         icon: "measurement", prize: true,
         caption: "Calibrated, repeatable readouts" },
       { title: "Safety",       slug: "safety-and-security", icon: "safety",
         caption: "Containment and lab safety" },
@@ -68,7 +70,7 @@ const NAV = [
     pages: [
       { title: "Math Model",              slug: "model",                   icon: "model",
         caption: "From plant stress to light" },
-      { title: "Hardware",                slug: "hardware",                icon: "hardware",
+      { title: "Hardware",                slug: "hardware",                icon: "hardware", prize: true,
         caption: "Photometer, LEDs and bioreactor" },
       { title: "Digital Twin",            slug: "software",                icon: "twin",
         caption: "Software that watches each batch" },
@@ -82,7 +84,7 @@ const NAV = [
     id: "engagement",
     name: "Engagement",
     pages: [
-      { title: "Integrated Human Practices", slug: "human-practices",      icon: "ihp",
+      { title: "Integrated Human Practices", slug: "human-practices",      icon: "ihp", prize: true,
         caption: "Voices that reshaped ReLeaf" },
       { title: "Education",                  slug: "education",            icon: "education",
         caption: "Lessons across three school levels" },
