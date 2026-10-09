@@ -145,24 +145,7 @@
     $$(".dbtl__step, .ledger > div", root).forEach(function (n) { io.observe(n); });
   }
 
-  /* ---- 3. a card in the overview opens its track --------------------------- */
-  /* Following a map card should put that track's first cycle on screen and
-     move focus to its control, so the keyboard lands where the eye does.     */
-
-  function mapFocus() {
-    $$(".map__card").forEach(function (card) {
-      card.addEventListener("click", function () {
-        var id = card.getAttribute("href");
-        if (!id || id.charAt(0) !== "#") return;
-        var sec = document.getElementById(id.slice(1));
-        if (!sec) return;
-        var first = $(".seg__btn[aria-selected='true']", sec) || $(".seg__btn", sec);
-        if (first) window.setTimeout(function () { first.focus({ preventScroll: true }); }, 0);
-      });
-    });
-  }
-
-  /* ---- 4. short labels in the contents rail -------------------------------- */
+  /* ---- 3. short labels in the contents rail -------------------------------- */
   /* page.js builds the rail from the heading text; a heading carrying data-toc
      gets that shorter label instead, with the number page.js rendered kept.   */
 
@@ -188,7 +171,6 @@
 
   function init() {
     $$("[data-track]").forEach(track);
-    mapFocus();
 
     document.addEventListener("click", function (e) {
       var a = e.target.closest && e.target.closest('a[href^="#"]');
