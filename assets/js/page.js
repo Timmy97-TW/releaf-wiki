@@ -137,9 +137,19 @@
 
     /* The markup ships the contents open, so a reader with JavaScript off
        still gets it. On a narrow screen it is a wall between the header and
-       the first paragraph, so fold it away once we know we can.             */
-    if (window.matchMedia && window.matchMedia("(max-width: 1039px)").matches) {
-      toc.open = false;
+       the first paragraph, so fold it away once we know we can.
+
+       It has to follow the viewport, not just the width at load. Above
+       1040px page.css hides the summary and shows .toc__inner whatever the
+       details says, so a <details> left shut up there collapses to no height
+       while its own contents still paint, and they land on top of whatever
+       sits below it in the rail. Re-open it whenever we cross back.         */
+    if (window.matchMedia) {
+      var narrow = window.matchMedia("(max-width: 1039px)");
+      var fold = function () { toc.open = !narrow.matches; };
+      fold();
+      if (narrow.addEventListener) narrow.addEventListener("change", fold);
+      else if (narrow.addListener) narrow.addListener(fold);
     }
 
     spy(heads, list);

@@ -926,3 +926,90 @@ html:not(.ai-off) .pd .run p.ai { color: var(--ai-ink); }
   .pd .rchip { transition: none; }
   .pd a.rchip:hover, .pd a.rchip:focus-visible { transform: none; }
 }
+
+/* ============================================================ SECTION NAV ===
+   The three subpages dropped the step nav across the top on 10 October, and
+   with it the only way back to the section homepage. It returns in the rail
+   instead, where a reader already looks for navigation and where it costs the
+   page no vertical space: the section name as a back row, then the three
+   subpages with the current one marked, pinned together with the contents.
+
+   The rail is one sticky column now, .railcol, holding the section nav and
+   the contents list. On a narrow screen it is simply the first thing in the
+   page, above the folded contents, so the way back is still one tap.        */
+
+.pd .railcol { display: grid; gap: var(--sp-4); order: -1; min-width: 0; }
+/* page.css gives .toc order:-1 so it leads the grid; inside the column the
+   way back has to come first instead */
+.pd .railcol .toc { order: 0; }
+
+@media (min-width: 1040px) {
+  .pd .railcol {
+    position: sticky;
+    top: calc(var(--nav-h) + var(--sp-5));
+    align-self: start;
+  }
+  /* the contents no longer sticks on its own: the column does it for both */
+  .pd .railcol .toc { position: static; top: auto; }
+}
+
+.pd .secnav {
+  --pl: var(--leaf-700);
+  padding: var(--sp-3);
+  border-radius: 20px;
+  background: var(--well, #f5f5f7);
+  font-size: var(--text-sm);
+  line-height: 1.35;
+}
+
+.pd .secnav__home {
+  display: flex; align-items: center; gap: .45rem;
+  padding: .45rem .5rem;
+  border-radius: 13px;
+  font-weight: 700; letter-spacing: -.012em;
+  color: var(--ink, var(--leaf-900));
+  text-decoration: none;
+  transition: background .2s var(--ease, ease), color .2s;
+}
+.pd .secnav__home svg {
+  width: 1.1em; height: 1.1em; flex: none;
+  transition: transform .2s var(--ease, ease);
+}
+.pd .secnav__home:hover,
+.pd .secnav__home:focus-visible { background: #fff; color: var(--pl); }
+.pd .secnav__home:hover svg { transform: translateX(-2px); }
+
+.pd .secnav__list { list-style: none; margin: .15rem 0 0; padding: 0; }
+.pd .secnav__list a {
+  display: flex; align-items: baseline; gap: .55rem;
+  padding: .38rem .5rem;
+  border-radius: 13px;
+  color: var(--ink-2, var(--gray-600));
+  text-decoration: none;
+  transition: background .2s var(--ease, ease), color .2s;
+}
+.pd .secnav__list a::before {
+  content: "";
+  flex: none;
+  width: .42em; height: .42em; margin-left: .62em;
+  border-radius: 50%;
+  box-shadow: inset 0 0 0 1.5px currentColor;
+  opacity: .5;
+  transform: translateY(-.1em);
+}
+.pd .secnav__list a:hover { background: #fff; color: var(--ink, var(--leaf-900)); }
+.pd .secnav__list a[aria-current="page"] {
+  background: #fff;
+  font-weight: 650;
+  color: var(--pl);
+}
+.pd .secnav__list a[aria-current="page"]::before {
+  background: currentColor;
+  box-shadow: none;
+  opacity: 1;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .pd .secnav__home, .pd .secnav__home svg, .pd .secnav__list a { transition: none; }
+  .pd .secnav__home:hover svg { transform: none; }
+}

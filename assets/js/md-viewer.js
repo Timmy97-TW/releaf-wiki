@@ -115,7 +115,7 @@
             '<div><dt>Asn23 to Arg487</dt><dd class="mdv__d">&#8212;</dd></div>' +
             '<div><dt>clamp, 4 contacts</dt><dd class="mdv__c">&#8212;</dd></div>' +
           "</dl>" +
-          '<p class="mdv__say"></p>' +
+
         "</aside>" +
       "</div>" +
       '<div class="mdv__bar">' +
@@ -331,7 +331,10 @@
         q(".mdv__wait").hidden = true;
         q(".mdv__scrub").max = D.nframes - 1;
         q(".mdv__badge").textContent = D.label;
-        q(".mdv__say").textContent = D.reading;
+        /* D.reading is a one-line gloss written into the payload by
+           build/md_page_anim.py, not by the team. The Protein Design pages
+           carry the students' writing and nothing else, so it is no longer
+           printed; the live numbers above it say the same thing. */
         var only = q(".mdv__only"); if (only) only.textContent = D.label;
         resize(); readout();
         if (!raf) raf = requestAnimationFrame(tick);
