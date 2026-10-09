@@ -33,8 +33,10 @@
     { x: 45, hue: "red", tier: "High", nm: 660, lux: 428, unit: "lx" },
   ];
   // Tier is a PWM duty cycle in the instrument, not a different LED: the six
-  // channels are matched to within a few percent at full drive.
-  const DUTY = { Low: 0.16, Mid: 0.52, High: 1.0 };
+  // channels are matched to within a few percent at full drive. js/hero.js holds it
+  // (the duty-cycle traces, live in both modes, draw it too).
+  const HP = window.HERO;
+  const DUTY = HP.DUTY;
   // Everything procedural is built in CAD millimetres, where +z is up: the roll
   // to Y-up happens once, on the parent. Placing tubes as if the roll had
   // already happened is what had them leaning in a heap beside the instrument.
@@ -50,40 +52,46 @@
   // act sit where they did: alpha scales the emissive too.
   const CULTURE_OPACITY = 0.32;
 
+  // The tube rack is BLACK: the final build reprinted it in black PLA with four
+  // wall loops after the white cycle-3 holder leaked light between bores
+  // (record 5.4, and the owner's settled answer). Every printed part of the
+  // final instrument is black or grey.
   const PARTS = [
     { file: "base-plate.stl", mat: "grey", tag: "base", key: "plate" },
     { file: "perf-board.stl", mat: "pcb", tag: "board", key: "board" },
     { file: "housing.stl", mat: "black", tag: "case", key: "housing" },
     { file: "led-holder.stl", mat: "black", tag: "case", key: "holder" },
-    { file: "tube-holder.stl", mat: "white", tag: "rack", key: "rack" },
+    { file: "tube-holder.stl", mat: "rack", tag: "rack", key: "rack" },
     { file: "left-c.stl", mat: "grey", tag: "slider" },
     { file: "right-c.stl", mat: "grey", tag: "slider" },
   ];
 
   const srgb = RQ.srgb;
+  // Printed parts: the original satin gloss with about 10% taken off it, at
+  // the owner's call ("not matte is better, just add 10% matte"). Roughness
+  // is the original x1.1 and clearcoat x0.9; colour, metalness, environment
+  // and clearcoat roughness are as they were. A fully matte pass (0.74 rough,
+  // 0.06 coat) killed the streaks but read as chalk.
   function MAT(name) {
     switch (name) {
-      case "white":
-        // Printed PLA, not paper. At 0xd8d5cd with a 0.28 clearcoat the rack was
-        // the brightest thing in every frame and its big faces shaded almost
-        // flat — a white brick sitting on a black instrument. A deeper albedo
-        // and a true matte give the faces a falloff across them and let the
-        // rim and the bores read. Measured at the close: face luma 132 -> 117.
-        // And a sheen: at roughness 0.74 with almost no clearcoat the rack had
-        // no highlight anywhere on it and read as chalk. The environment is
-        // kept low so the bores go genuinely dark inside instead of filling
-        // with ambient, which is most of what made this look unfinished.
-        return new THREE.MeshPhysicalMaterial({ color: srgb(0xb8b3a6), metalness: 0.02, roughness: 0.55,
-          envMapIntensity: 0.26, clearcoat: 0.34, clearcoatRoughness: 0.42 });
+      case "rack":
+        // The same black filament as the housing, its own instance: the bore
+        // liner clones it and darkens its own copy down the shaft.
+        return new THREE.MeshPhysicalMaterial({ color: srgb(0x121418), metalness: 0.12, roughness: 0.506,
+          envMapIntensity: 0.8, clearcoat: 0.45, clearcoatRoughness: 0.2 });
       case "grey":
-        return new THREE.MeshPhysicalMaterial({ color: srgb(0x2a2e34), metalness: 0.1, roughness: 0.52,
-          envMapIntensity: 0.85, clearcoat: 0.4, clearcoatRoughness: 0.3 });
+        return new THREE.MeshPhysicalMaterial({ color: srgb(0x2a2e34), metalness: 0.1, roughness: 0.572,
+          envMapIntensity: 0.85, clearcoat: 0.36, clearcoatRoughness: 0.3 });
       case "pcb":
-        return new THREE.MeshPhysicalMaterial({ color: srgb(0x123a24), metalness: 0.15, roughness: 0.42,
-          envMapIntensity: 1.0, clearcoat: 0.6, clearcoatRoughness: 0.2 });
+        // Satin, not a mirror. Seen low across its face in the drive act the
+        // board took the environment at a grazing angle and came out pale mint
+        // edge to edge: the lit traces on it had little to stand out from, and
+        // it was the brightest thing behind the act's caption (p90 146).
+        return new THREE.MeshPhysicalMaterial({ color: srgb(0x123a24), metalness: 0.1, roughness: 0.6,
+          envMapIntensity: 0.6, clearcoat: 0.25, clearcoatRoughness: 0.4 });
       default:   // black printed case
-        return new THREE.MeshPhysicalMaterial({ color: srgb(0x121418), metalness: 0.12, roughness: 0.46,
-          envMapIntensity: 0.8, clearcoat: 0.5, clearcoatRoughness: 0.2 });
+        return new THREE.MeshPhysicalMaterial({ color: srgb(0x121418), metalness: 0.12, roughness: 0.506,
+          envMapIntensity: 0.8, clearcoat: 0.45, clearcoatRoughness: 0.2 });
     }
   }
 
@@ -96,12 +104,13 @@
   scene.environment = LOOK.env(renderer, { top: "#4a5461", floor: "#0e1115" });
   const camera = new THREE.PerspectiveCamera(30, 16 / 9, 0.5, 9000);
 
-  // A near-white rack needs far less key than the photometer's black body — the
-  // render notes measured 0.90 against 2.40 for exactly this reason.
-  // 1.55, not 0.95. A near-white rack needs less key than the photometer's
-  // black body, but not this little: at 0.95, with the environment doing
-  // most of the work, there was no form in the print at all.
-  const key = new THREE.DirectionalLight(0xfff4e8, 1.55); key.position.set(180, 260, 200);
+  // 1.8. It was 1.55 while the rack was near-white, which needs far less key
+  // than black plastic does (the render notes measured 0.90 against the
+  // photometer's 2.40 for exactly that reason). With the rack reprinted in
+  // black the whole instrument is dark filament. A fully matte pass needed
+  // 2.0 to keep any form; with the satin finish back the clearcoat carries
+  // part of that, and 2.0 put a hot sheen on the rack top in the overhead.
+  const key = new THREE.DirectionalLight(0xfff4e8, 1.8); key.position.set(180, 260, 200);
   const rimCool = new THREE.DirectionalLight(0xbcd2ee, 0.55); rimCool.position.set(-240, 120, -190);
   const rimWarm = new THREE.DirectionalLight(0xffd9ae, 0.26); rimWarm.position.set(210, -80, -200);
   const fill = new THREE.DirectionalLight(0x93a6bc, 0.16); fill.position.set(-80, -160, 240);
@@ -118,9 +127,6 @@
   const byKey = {}, byTag = {};
   let loaded = 0, ready = false, story = null;
   const ui = { loader: document.getElementById("loader"), pct: document.getElementById("load-pct") };
-  const statsEl = document.getElementById("stats");
-  const heroFrame = document.querySelector(".hero-frame");
-  const titleEl = document.getElementById("title");
 
   // The rack's raw bore walls are thrown away and rebuilt (see the liner in
   // buildArray). They have to GO, not just be covered: measured round three
@@ -397,6 +403,21 @@
         m.castShadow = m.receiveShadow = true;
         byKey.holder.add(m);
       });
+      // The two END walls are broken the same way. Raycast in along x at a
+      // 4 x 2 mm grid, the wall at |x| 65.1-66.2 is there for about two thirds
+      // of the rays and the rest land on the cavity behind it at 55.2, so the
+      // drive act, which looks at the lifted holder from the front-left, showed
+      // its left end as a row of torn flaps. The surviving wall reaches 66.24,
+      // so the plate's face stands at 66.45, proud of it by 0.2 mm as the
+      // front and back plates are; it runs the full 90.8 mm between their
+      // outer faces so the corners close.
+      const endGeo = new THREE.BoxGeometry(1.8, 90.8, 20.1);
+      [-65.55, 65.55].forEach(function (x) {
+        const m = new THREE.Mesh(endGeo, byKey.holder.material);
+        m.position.set(x, 0, 56.45);
+        m.castShadow = m.receiveShadow = true;
+        byKey.holder.add(m);
+      });
     }
     // No liner here any more. Four solid blocks used to fill the cavities
     // behind the rack's outer walls, because tubes were showing through them —
@@ -515,7 +536,7 @@
       m.castShadow = false; m.receiveShadow = true;
       return m;
     }
-    const rackMat = byKey.rack ? byKey.rack.material : MAT("white");
+    const rackMat = byKey.rack ? byKey.rack.material : MAT("rack");
     // The plate IS the block's top now, edge for edge: at 54.7 it was smaller
     // than the block and left a ragged rim of the original showing all round it.
     carrier.add(facePlate(TOP_HX, TOP_HY, TOP_CR, 8.42, rackMat, BORE_TOP + 0.02));
@@ -581,9 +602,14 @@
     // black discs. A lit culture glows up through a cap like this, so the cap
     // carries the LED's colour exactly as the broth does.
     function capMaterial(hue) {
+      // A mid grey, not 0xc6cbd0. Seen from straight above in the grid act a
+      // near-white cap took the key head-on, and 24 of them came out as the
+      // same blown white disc: low, mid and high were one brightness and the
+      // two colours were pastel. Darker and less glossy, the light coming up
+      // through the cap is most of what it shows, so the six conditions read.
       const m = new THREE.MeshPhysicalMaterial({
-        color: srgb(0xc6cbd0), metalness: 0.03, roughness: 0.46,
-        envMapIntensity: 0.8, clearcoat: 0.45, clearcoatRoughness: 0.28,
+        color: srgb(0x6a7076), metalness: 0, roughness: 0.6,
+        envMapIntensity: 0.8, clearcoat: 0.1, clearcoatRoughness: 0.4,
       });
       m.onBeforeCompile = function (sh) {
         sh.uniforms.uSeat = { value: 0 };
@@ -801,13 +827,36 @@
   }
 
   // The drive chain: a glow that runs along the board under each column.
+  // 96 long, not 108: the board is 100 mm deep, and at 108 every strip hung
+  // 4 mm off both edges of it as a little coloured tab in the air. And soft
+  // across its width and at its ends, the way the well glows are: a flat
+  // additive rectangle read as a stripe of paint on the board, not as current.
+  function stripTexture() {
+    const c = document.createElement("canvas"); c.width = 64; c.height = 64;
+    const g = c.getContext("2d");
+    const img = g.createImageData(64, 64);
+    for (let y = 0; y < 64; y++) {
+      const v = (y + 0.5) / 64;
+      const along = Math.min(1, Math.min(v, 1 - v) / 0.07);
+      for (let x = 0; x < 64; x++) {
+        const u = Math.abs((x + 0.5) / 64 - 0.5) * 2;
+        const across = Math.pow(Math.max(0, 1 - u * u), 1.6);
+        const a = Math.round(255 * across * along * along * (3 - 2 * along));
+        const o = (y * 64 + x) * 4;
+        img.data[o] = img.data[o + 1] = img.data[o + 2] = a; img.data[o + 3] = 255;
+      }
+    }
+    g.putImageData(img, 0, 0);
+    return new THREE.CanvasTexture(c);
+  }
   function buildTraces() {
     traceGlow = new THREE.Group();
+    const strip = stripTexture();
     CHANNELS.forEach(function (ch, ci) {
       const g = new THREE.Mesh(
-        new THREE.PlaneGeometry(14, 108),
+        new THREE.PlaneGeometry(15, 96),
         new THREE.MeshBasicMaterial({
-          color: srgb(HUE[ch.hue]), transparent: true, opacity: 0,
+          color: srgb(HUE[ch.hue]), transparent: true, opacity: 0, alphaMap: strip,
           blending: THREE.AdditiveBlending, depthWrite: false, toneMapped: false,
         })
       );
@@ -899,7 +948,14 @@
     const floor = new THREE.Mesh(
       new THREE.CircleGeometry(R, 64),
       new THREE.MeshStandardMaterial({
-        color: srgb(0x0b0d11), roughness: 0.5, metalness: 0.05,
+        // 0.75, not 0.5. At 0.5 the key laid a broad white specular pool on
+        // the bench whenever the camera came round to the key's side, and at
+        // the close that pool sat directly under the end line: pale type on a
+        // pale floor. Measured behind the end line (p90 luma, type hidden):
+        // 0.55 -> 87, 0.65 -> 71, 0.75 -> 55, 0.85 -> 42. 0.75 is the least
+        // roughness that takes the pool out from under the type; what is left
+        // is a soft falloff that still reads as a lit bench.
+        color: srgb(0x0b0d11), roughness: 0.75, metalness: 0.05,
         alphaMap: new THREE.CanvasTexture(cnv), transparent: true, envMapIntensity: 0.5,
         // The bench gets a grid -- see the photometer's floor for why. Cooler
         // and a touch dimmer here: the array throws green and red across this
@@ -943,26 +999,8 @@
   }
 
   /* ------------------------------------------------------------------ acts */
-  // B0 is a little later than the photometer's: act 0 has the longest move in
-  // the story (whole instrument to a close-up of the wells) and needs the room.
-  const B0 = 0.098, B1 = 0.180, B2 = 0.300, B3 = 0.420, B4 = 0.560, B5 = 0.680, B6 = 0.790, B7 = 0.920;
-
-  const CAPS = [
-    { win: [B0, B1], n: "01", role: "The switch", name: "Green on, red off",
-      body: "In these cells a green photon and a red photon mean opposite things: green switches protectant production on through the <b>CcaS/CcaR</b> pair, red switches it off. The instrument exists to hold that one variable still." },
-    { win: [B1, B2], n: "02", role: "The tube", name: "Lit from underneath",
-      body: "Each tube drops into the rack over an emitter that fires up through its floor. Nothing goes into a culture and nothing is drawn out of it for the whole run &mdash; the only thing that reaches it is <em>light</em>." },
-    { win: [B2, B3], n: "03", role: "Shielding", name: "One tube sees one LED",
-      body: "Every tube sits in its own bore over its own LED, and the housing closes the array in. A tube in a red column never sees green light from the column beside it." },
-    { win: [B3, B4], n: "04", role: "The grid", name: "Six conditions, four tubes each",
-      body: "Two wavelengths at three intensities is six conditions, and every condition gets <b>four</b> tubes. One run answers all six at once, under the same temperature, shaking and medium." },
-    { win: [B4, B5], n: "05", role: "Dose", name: "Intensity is a duty cycle",
-      body: "The tier is set by how long each LED is on, fixed before the run starts. Nothing in the light path is adjusted while a run is going, so the dose is <em>a number you can state</em>." },
-    { win: [B5, B6], n: "06", role: "Drive", name: "One MOSFET per intensity",
-      body: "The green and the red column at one intensity share a MOSFET and a single PWM pin, so a tier switches as a pair &mdash; three gates across the whole array." },
-    { win: [B6, B7], n: "07", role: "Assembly", name: "It goes back the same way",
-      body: "Base plate, perf board, LED holder, housing, tube rack. Nothing is aligned by hand: the geometry between an LED and its tube is set by the print, so the array is the same instrument every time it is put together." },
-  ];
+  // The acts and their captions live in js/hero.js, shared with the video mode.
+  const B0 = HP.B0, B1 = HP.B1, B2 = HP.B2, B3 = HP.B3, B4 = HP.B4, B5 = HP.B5, B6 = HP.B6, B7 = HP.B7;
 
   function smoothp(p, a, b) { const x = (p - a) / (b - a); return x <= 0 ? 0 : x >= 1 ? 1 : x * x * x * (x * (x * 6 - 15) + 10); }
   function ramp(p, a, b) { const t = (p - a) / (b - a); return t < 0 ? 0 : t > 1 ? 1 : t * t * (3 - 2 * t); }
@@ -1009,7 +1047,9 @@
       // 4 the grid, overhead
       // straight down. The act is the 6 x 4 pattern and its labels line up
       // with the columns only from directly overhead
-      { at: new THREE.Vector3(0, 6, 140), r: A.r.rack, fill: 0.86, yaw: 0.0, pit: 1.45, fov: 26, ox: 0, oy: 0 },
+      // ox 70: centred, the rack's left edge ran under the end of the caption's
+      // title ("…four tubes each") at 1440.
+      { at: new THREE.Vector3(0, 6, 140), r: A.r.rack, fill: 0.86, yaw: 0.0, pit: 1.45, fov: 26, ox: 70, oy: 0 },
       // 5 the dose — three tiers of one colour
       // along the emitter row on a long lens: domes in the foreground, beams
       // rising like pipes, the three duty-cycle traces stacked behind them.
@@ -1026,7 +1066,9 @@
       // removal order, the shell going furthest because it has to clear the
       // holder inside it. That also leaves the board-to-emitter axis clear,
       // which is what this close-up needs.
-      { at: new THREE.Vector3(0, -6, 92), r: 88, fill: 0.88, yaw: -0.48, pit: 0.08, fov: 26, ox: 20, oy: -6 },
+      // ox 130, not 20: the board runs from the bottom left of this frame to
+      // the upper right, and its near corner sat under the caption's title.
+      { at: new THREE.Vector3(0, -6, 92), r: 88, fill: 0.88, yaw: -0.48, pit: 0.08, fov: 26, ox: 130, oy: -6 },
       // 7 assembly — the same stack coming back together, from the other side
       // and lower, so the two acts are not one shot played twice
       { at: new THREE.Vector3(0, 0, 205), r: 256, fill: 0.90, yaw: 0.42, pit: 0.16, fov: 28, ox: 30, oy: -4 },
@@ -1156,8 +1198,7 @@
     labelWrap.appendChild(el);
     return el;
   });
-  const duty = document.getElementById("duty");
-  const dctx = duty.getContext("2d");
+  // The duty-cycle traces (#duty) are drawn by js/hero.js, live in both modes.
 
   const _v = new THREE.Vector3();
   function place(el, point, dx, dy, alpha) {
@@ -1174,70 +1215,6 @@
     el.style.transform = "translate(" + x.toFixed(1) + "px," + y.toFixed(1) + "px)";
   }
 
-  // The three duty cycles, drawn as the square waves they are.
-  function drawDuty(alpha, clock) {
-    const w = duty.clientWidth, h = duty.clientHeight;
-    const dpr = Math.min(window.devicePixelRatio || 1, 2);
-    if (duty.width !== w * dpr || duty.height !== h * dpr) { duty.width = w * dpr; duty.height = h * dpr; }
-    dctx.setTransform(dpr, 0, 0, dpr, 0, 0);
-    dctx.clearRect(0, 0, w, h);
-    duty.style.opacity = alpha.toFixed(3);
-    if (alpha <= 0.004) return;
-
-    const tiers = [["Low", DUTY.Low], ["Mid", DUTY.Mid], ["High", DUTY.High]];
-    const L = w * 0.66, R = w * 0.96;   // clear of the three lifted tubes, labels included
-    dctx.font = "600 11px ui-monospace, SFMono-Regular, Menlo, monospace";
-    tiers.forEach(function (tr, i) {
-      const y = h * (0.18 + i * 0.16);
-      const amp = 30;
-      dctx.strokeStyle = "rgba(255,255,255,.18)"; dctx.lineWidth = 1;
-      dctx.beginPath(); dctx.moveTo(L, y); dctx.lineTo(R, y); dctx.stroke();
-
-      // The filled area under each train IS the duty cycle — the proportion of
-      // the strip that is green is the proportion of the time the LED is on.
-      // The outline alone made the three tiers a set of similar-looking square
-      // waves you had to count; filled, the difference is the first thing you
-      // see and it does not depend on lining up with the tubes.
-      dctx.fillStyle = "rgba(63,224,127,.20)";
-      (function () {
-        const cyc = 5, sp = (R - L) / cyc;
-        const sh2 = ((clock * 0.22) % 1) * sp;
-        for (let xx = L - sh2; xx < R + sp; xx += sp) {
-          const a = Math.max(L, xx), b2 = Math.min(R, xx + sp * tr[1]);
-          if (b2 > a) dctx.fillRect(a, y - amp, b2 - a, amp);
-        }
-      })();
-
-      dctx.strokeStyle = "rgba(90,240,150,1)"; dctx.lineWidth = 2.4;
-      dctx.beginPath();
-      const cycles = 5, span = (R - L) / cycles;
-      const shift = ((clock * 0.22) % 1) * span;
-      // Clamped at BOTH ends. Only the right end was, so with the scroll offset
-      // the first pulse was drawn up to a whole span to the left of L and ran
-      // back over the tier labels sitting there.
-      const cl = function (v) { return Math.max(L, Math.min(v, R)); };
-      let x = L - shift;
-      dctx.moveTo(L, y);
-      while (x < R + span) {
-        const on = span * tr[1];
-        dctx.lineTo(cl(x), y);
-        dctx.lineTo(cl(x), y - amp);
-        dctx.lineTo(cl(x + on), y - amp);
-        dctx.lineTo(cl(x + on), y);
-        x += span;
-      }
-      dctx.lineTo(R, y); dctx.stroke();
-
-      dctx.textAlign = "right";
-      dctx.font = "600 12px ui-monospace, SFMono-Regular, Menlo, monospace";
-      dctx.fillStyle = "rgba(214,224,236,.95)";
-      dctx.fillText(tr[0].toUpperCase(), L - 62, y + 3);
-      dctx.fillStyle = "rgba(120,244,178,1)";
-      dctx.font = "600 15px ui-monospace, SFMono-Regular, Menlo, monospace";
-      dctx.fillText(Math.round(tr[1] * 100) + "%", L - 20, y + 4);
-      dctx.font = "600 11px ui-monospace, SFMono-Regular, Menlo, monospace";
-    });
-  }
 
   /* -------------------------------------------------------------- the frame */
   const _m = new THREE.Matrix4(), _q = new THREE.Quaternion(), _s = new THREE.Vector3(1, 1, 1);
@@ -1283,7 +1260,12 @@
     //
     // The rim has none of those problems: it lights the part wherever the part
     // actually is, and it makes no claim.
-    add(B1 + 0.028, B2 - 0.004, byKey.rack, null);
+    //
+    // Act 02 no longer rims the rack at all. On the white rack the rim barely
+    // showed; on the black one the fresnel term lit the whole shaded side and
+    // the flange mint, which read as green light leaking out of the case,
+    // in the act about light reaching nothing but the tube. The tubes coming
+    // down are the subject and need no help.
     add(B2 + 0.028, B3 - 0.004, byKey.holder, null);
     add(B5 + 0.028, B6 - 0.004, byKey.board, null);
     // The assembly act, named while the five are still apart. Measured across
@@ -1390,11 +1372,14 @@
       // of the array the act is looking at. 215 clears the widest part of the
       // instrument by 65 mm, so the shell and its shadow are both out of the
       // shot the act actually wants.
-      m.position.set(open * 215, open * 34, open * 30 + boom * 230);
+      // 300, not 215, and no longer ghosted. At 215 the far end of the shell
+      // still stood in the right edge of the shielding act's wide lens, and the
+      // ghost (down to 15% when the camera was close) turned it into a pale
+      // glassy wedge there for the whole act, and into a see-through case on
+      // the way in and out. At 300 it is out of the frame for the act, so it
+      // stays a solid black part everywhere it is seen.
+      m.position.set(open * 300, open * 34, open * 30 + boom * 230);
       m.rotation.set(0, open * 0.16, open * 0.05);
-      const a2 = 1 - 0.85 * open * (1 - ramp(curD, 150, 330));
-      m.material.transparent = a2 < 0.995; m.material.opacity = a2;
-      m.material.depthWrite = a2 > 0.5; m.visible = a2 > 0.02;
     }
     if (byKey.holder) {
       const m = byKey.holder;
@@ -1602,28 +1587,9 @@
     }
 
 
-    /* --- the opening's right-hand numbers --- */
-    // The same treatment the photometer's column gets: it rides the title's own
-    // fade, and it is levelled on the title's measured rect rather than on the
-    // 37% line both are nominally centred on — story-core's title fade writes a
-    // pixel translateY over the title's transform every frame, which drops the
-    // -50% and leaves the two a block-height apart if you trust the stylesheet.
-    if (heroFrame) {
-      const out = B0 - 0.012;
-      let a = 1 - clamp01((p - out * 0.35) / (out * 0.65));
-      heroFrame.style.opacity = (a * a).toFixed(3);
-      heroFrame.style.visibility = a < 0.05 ? "hidden" : "visible";
-    }
-    if (statsEl && titleEl) {
-      const out = B0 - 0.012;
-      let a = 1 - clamp01((p - out * 0.35) / (out * 0.65));
-      a = a * a;
-      statsEl.style.opacity = a.toFixed(3);
-      statsEl.style.visibility = a < 0.003 ? "hidden" : "visible";
-      const tr = titleEl.getBoundingClientRect(), sr = stage.getBoundingClientRect();
-      statsEl.style.top = (tr.top - sr.top + tr.height / 2).toFixed(1) + "px";
-      statsEl.style.transform = "translateY(-50%)";
-    }
+    /* --- the opening's numbers, the duty-cycle traces, the closing line --- */
+    // p-only (and clock-driven) DOM, shared with the video mode: js/hero.js.
+    HP.dom(p, clock);
 
     /* --- act 4: the grid, with a label under each column --- */
     const gridAct = ramp(p, B3 - 0.02, B3 + 0.03) * (1 - ramp(p, B4 - 0.03, B4 + 0.01));
@@ -1642,8 +1608,6 @@
       place(colLabels[ci], _p, 0, -14, a2);
     });
 
-    /* --- act 5: the duty cycles --- */
-    drawDuty(dutyAct, clock);
 
     /* --- nothing is ghosted for the drive act any more: it is exploded --- */
 
@@ -1656,14 +1620,6 @@
       });
     }
 
-    /* --- the closing line --- */
-    const endEl = document.getElementById("endline");
-    if (endEl) {
-      const a2 = ramp(p, B7 + 0.02, B7 + 0.055);
-      endEl.style.opacity = a2.toFixed(3);
-      endEl.style.visibility = a2 < 0.004 ? "hidden" : "visible";
-      endEl.style.transform = "translateY(" + ((1 - a2) * 16).toFixed(1) + "px)";
-    }
 
     // A green curtain behind the instrument, all the way through. It eases off
     // a little for the acts shot from inside the array, where at full strength
@@ -1686,7 +1642,10 @@
     for (let i = 0; i < RIMMED.length; i++) RIMMED[i].userData._rim.uniforms.uAmt.value = 0;
     for (let i = 0; i < coItems.length; i++) {
       const r = coItems[i].mesh.userData._rim;
-      if (r) r.uniforms.uAmt.value = 0.78 * coItems[i].a;
+      // 0.62, not 0.78: on black filament the rim is the brightest thing on
+      // a part, and at 0.78 the assembly act's housing went mint along every
+      // upper face rather than along its edges.
+      if (r) r.uniforms.uAmt.value = 0.62 * coItems[i].a;
     }
     composer.render(scene, camera, p * 151.0);
     // After the render: the camera matrices are settled, and the layer is its
@@ -1713,7 +1672,7 @@
 
   window.__dp = {
     tune: TUNE, composer: composer, renderer: renderer, key: key, aurora: AURORA,
-    parts: function () { return { leds: leds, tubes: tubes, cones: cones, traceGlow: traceGlow }; },
+    parts: function () { return { leds: leds, tubes: tubes, cones: cones, traceGlow: traceGlow, air: air }; },
     scene: scene, camera: camera, anchors: A,
     // Screen-space box of an object (or of the whole model), in fractions of the
     // frame. Framing is judged from these numbers, not by eye.
@@ -1735,13 +1694,6 @@
     rig: rig,
   };
 
-  story = Story({
-    canvas: canvas, stage: stage, track: track, hud: hud, caps: CAPS, rail: true,
-    title: document.getElementById("title"),
-    cue: document.getElementById("cue"),
-    loader: ui.loader, pct: ui.pct,
-    titleOut: B0 - 0.012,
-    draw: draw,
-  });
+  story = Story(HP.storyConfig(draw));
   resize();
 })();

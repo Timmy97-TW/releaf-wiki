@@ -1270,7 +1270,15 @@ body.doc-light .od-event text { fill: #c1392a; }
 
 
 /* ------------------------------------------------------------------- stage */
-.story { position: relative; }
+/* z-index 3, above the record. The record's blueprint ghost (polish.css,
+   .doc-wrap::after) is position: fixed inside .doc-wrap's z 2 context, so it
+   was painted over this stage as well: the faint orange line drawing the owner
+   saw "showing through" the optical head in the measurement act, and on the
+   right of every act. The 3D canvas sat below it and only the captions (z 4/5)
+   above. Lifting the whole story over the record keeps the ghost behind the
+   record, where it belongs, and off the hero. The topbar (z 50), grain and
+   vignette are root-level and still sit on top. */
+.story { position: relative; z-index: 3; }
 
 .story .story-stage {
   position: sticky; top: 0;
@@ -1537,6 +1545,15 @@ body.doc-light .od-event text { fill: #c1392a; }
     /* four numbers down the side of a 390 px frame collide with the mast */
     .story .title-stats { display: none; }
 }
+
+  /* A portrait phone has no left column to give the title: at 37% it was
+     laid across the mast and the head. The frame stacks instead — the scene
+     lifts the instrument into the top half (story.js, shot 0's poy) and the
+     title hangs from just under it, clear of the scroll cue. story-core
+     writes the title's transform every frame, so it hangs from `top`. */
+  @media (max-width: 760px) and (max-aspect-ratio: 4/5) {
+    .story .story-title { top: 57%; }
+  }
 
 
   /* the closing line */
@@ -2693,3 +2710,8 @@ body.doc-light .doc .sec > figure.ledclip > figcaption {
 
 /* cycles 7 and 8: the "Not written yet" tag stays inside its striped thumbnail in the narrow row cards */
 .pm-cycles .cyc-c.gap .cyc-img span { max-width: calc(100% - 1rem); box-sizing: border-box; text-align: center; }
+
+/* 9 Oct 2026 polish: a section heading that wraps (phones) keeps its number on the first line, as on the
+   bioreactor page, instead of centred against the two lines (../css/polish.css sets align-items: center).
+   Delete to revert. */
+body.doc-light[data-instrument="photometer"] .doc-wrap section.sec > h3 { align-items: first baseline; }

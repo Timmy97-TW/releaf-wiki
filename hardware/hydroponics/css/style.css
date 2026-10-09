@@ -130,8 +130,9 @@ h1, h2 { font-weight: 600; letter-spacing: -0.035em; margin: 0; }
 @keyframes titleRise { from { opacity: 0; transform: translateY(14px); } }
 @keyframes cueIn { from { opacity: 0; } }
 .story-stage:has(.loader.hide) .story-title > * { animation: titleRise .95s var(--ease) backwards; }
-.story-stage:has(.loader.hide) .story-title > h1 { animation-delay: .07s; }
-.story-stage:has(.loader.hide) .story-title > .title-rule { animation-delay: .16s; }
+/* `.story-h`, not `h1`: the headline became a <p> when the record took the
+   page's one h1, and the stagger had silently stopped applying to it. */
+.story-stage:has(.loader.hide) .story-title > .story-h { animation-delay: .07s; }
 .story-stage:has(.loader.hide) .scroll-cue > span { animation: titleRise .8s var(--ease) .34s backwards; }
 /* The cue's line keeps its pulse; the fade-in is listed after it so it wins
    while it runs, and its open end hands over to whatever the pulse is doing. */
@@ -146,42 +147,49 @@ h1, h2 { font-weight: 600; letter-spacing: -0.035em; margin: 0; }
   .story-stage:has(.loader.hide) .scroll-cue > i { animation: cuedrop 2.4s var(--ease) infinite; }
 }
 
-/* ---- title card ---- */
+/* ---- title card ----
+   Set in the photometer's and LPA's type (their css/style.css, "title card"):
+   a mono eyebrow in the accent, then the line in Oxanium at 600. Only the
+   position is this page's own: centred over the plate, not a left column. The
+   "Final build" rule that sat under the line is gone (owner, 7 Oct 2026). */
+@font-face {
+  font-family: "Oxanium Title";
+  src: url("../../fonts/oxanium-600-latin.woff") format("woff");
+  font-weight: 600; font-style: normal; font-display: block;
+  unicode-range: U+0020-007E, U+00B7, U+2013-2014, U+2018-2019, U+201C-201D, U+2026;
+}
 .story-title {
   position: absolute; left: 50%; top: clamp(84px, 11%, 130px); transform: translateX(-50%);
   text-align: center; z-index: 4; pointer-events: none; width: min(90vw, 900px);
 }
 .story-title .eyebrow {
-  font-family: var(--mono); font-size: .64rem; letter-spacing: .42em;
-  text-transform: uppercase; color: var(--amber); margin-bottom: calc(.8rem * var(--ck, 1));
+  font-family: var(--mono); font-size: .62rem; letter-spacing: .42em;
+  text-transform: uppercase; color: var(--amber); margin-bottom: calc(1.1rem * var(--ck, 1));
   /* tracking leaves .42em after the last letter; this re-centres the caps */
   padding-left: .42em;
 }
-/* Scaled with the stage height like the captions (--ck, written on #story by
-   story.js; 1 without it). The plate scales with height, so a fixed-px card
-   overlapped it by 18 px at 720 tall and 25 at 680. The top is clamped so the
-   eyebrow stays 9 px clear of the 75 px topbar on short windows. */
+/* The other two heroes' size, clamp(2.1rem, 6.2vw, 4.4rem), with its ends
+   scaled by the stage height (--ck, written on #story by story.js; 1 without
+   it, and 1 at every window 810 px tall or more, so 1440x900 and a 390x844
+   phone get exactly their size). The plate scales with height, so a fixed-px
+   card overlapped it by 18 px at 720 tall and 25 at 680. The top is clamped
+   so the eyebrow stays 9 px clear of the 75 px topbar on short windows. */
 .story-title :is(h1, .story-h) {
-  font-size: clamp(calc(2.2rem * var(--ck, 1)), 6.4vw, calc(4.6rem * var(--ck, 1))); line-height: 1.02;
-  letter-spacing: -.028em; margin: 0 0 calc(.9rem * var(--ck, 1));
+  margin: 0;
+  font-family: "Oxanium Title", var(--sans);
+  font-weight: 600; letter-spacing: -.02em; line-height: 1.02;
+  font-size: clamp(calc(2.1rem * var(--ck, 1)), 6.2vw, calc(4.4rem * var(--ck, 1)));
+  text-shadow: 0 0 64px rgba(0, 0, 0, .85);
 }
-.title-rule {
-  display: flex; align-items: center; justify-content: center; gap: 1rem;
-  font-family: var(--mono); font-size: .58rem; letter-spacing: .34em;
-  text-transform: uppercase; color: var(--amber);
-}
-.title-rule i {
-  display: block; width: clamp(28px, 6vw, 74px); height: 1px;
-  background: linear-gradient(90deg, transparent, var(--amber));
-}
-.title-rule i:last-child { background: linear-gradient(90deg, var(--amber), transparent); }
 
-/* ---- scroll cue ---- */
+/* ---- scroll cue ----
+   The word in the other heroes' grey (.56rem, .38em, --faint); the pulse
+   under it keeps the accent, as theirs does. */
 .scroll-cue {
   position: absolute; left: 50%; bottom: 22px; transform: translateX(-50%);
   z-index: 4; pointer-events: none; text-align: center;
-  font-family: var(--mono); font-size: .58rem; letter-spacing: .34em;
-  text-transform: uppercase; color: var(--amber);
+  font-family: var(--mono); font-size: .56rem; letter-spacing: .38em;
+  text-transform: uppercase; color: var(--faint);
 }
 .scroll-cue i {
   display: block; width: 1px; height: 30px; margin: 9px auto 0;
@@ -195,19 +203,22 @@ h1, h2 { font-weight: 600; letter-spacing: -0.035em; margin: 0; }
 /* A phone on its side (~390 px tall). --ck bottoms out at .78 and the headline
    runs on 6.4vw, so the title card was 99 px of a 390 px frame (47% with the
    topbar) and the hero band left the part 130 px wide, 15% of the frame. On
-   short landscape windows the headline also stops at 9.2vh (its 1440x810
+   short landscape windows the headline also stops at 8.8vh (its 1440x810
    proportion) and the cue's pulse line is shorter; every taller window is
-   untouched (9.2vh is above the clamp's own max from 632 px tall up). */
+   untouched (8.8vh is above the clamp's own max from 632 px tall up). */
 @media (orientation: landscape) and (max-height: 540px) {
   .story-title :is(h1, .story-h) {
-    font-size: min(clamp(calc(2.2rem * var(--ck, 1)), 6.4vw, calc(4.6rem * var(--ck, 1))), 9.2vh);
+    font-size: min(clamp(calc(2.1rem * var(--ck, 1)), 6.2vw, calc(4.4rem * var(--ck, 1))), 8.8vh);
   }
   .scroll-cue i { height: 14px; margin-top: 6px; }
 }
 
 /* ---- captions ----
-   The same side-panel treatment the photometer and DiOPAL pages use: an
-   outlined tag number, a name, a mono role line in the accent, then the copy.
+   The photometer's and LPA's caption type (story-core.js builds theirs as
+   .cap-tag / .cap-name / .cap-rule / p): one mono eyebrow in the accent,
+   "01 —— BORE PATTERN", the name in Oxanium at 600, a short hairline, then
+   the copy in the neutral body grey. Only the seat is this page's own: a
+   centred band at the top of the frame instead of their lower-left column.
    No boxes and no leader lines — the type sits on the frame. */
 .hud { position: absolute; inset: 0; z-index: 3; pointer-events: none; }
 /* Centred at the TOP of the frame, with the model dropped out from under it.
@@ -237,45 +248,54 @@ h1, h2 { font-weight: 600; letter-spacing: -0.035em; margin: 0; }
 }
 .panel.right { text-align: center; }
 .panel .tag {
-  /* The number is the eyebrow's first word, solid. It was a hollow 1px stroke
-     of --amber-deep on near-black (2.3:1), and the record's bare .tag rule
-     below drew a full-width outlined bar around it. Every property that rule
-     sets is restated here, so it cannot leak back in. */
+  /* The number is the eyebrow's first word, in the accent like the rest of
+     the line (theirs: .cap-tag). The record's bare .tag rule below would draw
+     a full-width outlined bar around it; every property that rule sets is
+     restated here, so it cannot leak back in. */
   order: 0; flex: none;
-  display: inline-flex; align-items: center; gap: .8em;
-  font-family: var(--mono); font-size: .66rem; font-weight: 600;
-  letter-spacing: .2em; line-height: 1; text-transform: none;
-  color: var(--fg); -webkit-text-stroke: 0;
+  display: inline-flex; align-items: center; gap: .7rem;
+  font-family: var(--mono); font-size: .6rem; font-weight: 400;
+  letter-spacing: .26em; line-height: normal; text-transform: uppercase;
+  color: var(--amber); -webkit-text-stroke: 0;
   border: 0; border-radius: 0; padding: 0; max-width: none;
-  margin: 0 .8em .8rem 0;
+  margin: 0 .7rem .75rem 0;
 }
+/* the hairline between number and role (theirs: .cap-tag i) */
 .panel .tag::after {
-  content: ""; width: 26px; height: 1px;
-  background: linear-gradient(90deg, var(--amber), color-mix(in srgb, var(--amber) 25%, transparent));
+  content: ""; width: 1.9rem; height: 1px;
+  background: var(--amber); opacity: .6;
 }
 .panel .pname {
   order: 2; flex: 0 0 100%;
-  font-size: clamp(1.25rem, 1.95vw, 1.7rem); line-height: 1.12; font-weight: 500;
-  letter-spacing: -.022em; margin-bottom: .55rem; color: var(--fg);
+  font-family: "Oxanium Title", var(--sans); font-weight: 600;
+  font-size: clamp(1.35rem, 2.5vw, 2.05rem); letter-spacing: -.015em; line-height: 1.1;
+  margin: 0; color: var(--fg);
 }
 .panel .prole {
   order: 1; flex: none;
-  font-family: var(--mono); font-size: .66rem; line-height: 1;
-  letter-spacing: .2em; text-transform: uppercase;
+  font-family: var(--mono); font-size: .6rem; line-height: normal;
+  letter-spacing: .26em; text-transform: uppercase;
   /* the tracking trails the last letter; pulled back so the line centres */
-  color: var(--amber); margin: 0 -.2em .8rem 0;
+  color: var(--amber); margin: 0 -.26em .75rem 0;
+}
+/* The short hairline under the name (theirs: .cap-rule). Drawn by the name
+   itself, not by the empty .rule div: as a flex item that div shared a line
+   with the copy (54ch wide, so both fit) and sat beside it, not under the name. */
+.panel .rule { display: none; }
+.panel .pname::after {
+  content: ""; display: block;
+  width: 3.4rem; height: 1px; background: var(--line);
+  margin: .85rem auto .8rem;
 }
 .panel p {
   order: 4; flex: 0 0 100%;
-  margin: 0 auto; font-size: .84rem; line-height: 1.66;
-  max-width: 54ch; color: #cbb9f2;
+  margin: 0 auto; font-size: clamp(.86rem, 1.05vw, .98rem); line-height: 1.62;
+  max-width: 54ch; color: #c3cbd6;
   text-wrap: pretty; text-align: left;
 }
+.panel p b, .panel p strong { color: var(--fg); font-weight: 600; }
+.panel p em { color: var(--amber); font-style: normal; }
 .panel .nw { white-space: nowrap; }
-/* the eyebrow's hairline does this job now; a second rule under the name
-   cost a line of height in a band that is always short of it */
-.panel .rule { display: none; }
-.panel.right .rule { margin: 0 auto 1rem; background: linear-gradient(90deg, transparent, var(--amber), transparent); }
 
 /* the ring that marks a bore in act 2 */
 .mark-ring {
@@ -300,9 +320,7 @@ h1, h2 { font-weight: 600; letter-spacing: -0.035em; margin: 0; }
   .panel, .panel.right {
     width: calc(100% - 40px);
   }
-  .panel .tag, .panel .prole { font-size: .62rem; margin-bottom: .7rem; }
-  .panel .pname { font-size: 1.2rem; }
-  .panel p { font-size: .8rem; line-height: 1.6; max-width: none; }
+  .panel p { max-width: none; }
   .story-title { top: 15%; }
 }
 /* ---- caption scale ----
@@ -314,29 +332,38 @@ h1, h2 { font-weight: 600; letter-spacing: -0.035em; margin: 0; }
    The width is in ch of the scaled font, so lines break in the same places.
    Floors keep it legible: body copy 12 px, the mono eyebrow 9 px. This block
    replaces the old max-height: 720px tightening, which it makes redundant. It
-   comes after the mobile block on purpose and restates its sizes with --ck. */
+   comes after the mobile block on purpose and restates its sizes with --ck.
+   At --ck 1 (any window 810 px tall, and every phone) every size here is
+   exactly the photometer's and LPA's, including their 860 px phone step. */
 .panel { font-size: calc(1rem * var(--ck, 1)); }
 .panel .tag {
-  font-size: max(9px, calc(.66rem * var(--ck, 1)));
-  margin: 0 .8em calc(.8rem * var(--ck, 1)) 0;
+  font-size: max(9px, calc(.6rem * var(--ck, 1)));
+  gap: calc(.7rem * var(--ck, 1));
+  margin: 0 calc(.7rem * var(--ck, 1)) calc(.75rem * var(--ck, 1)) 0;
 }
-.panel .tag::after { width: calc(26px * var(--ck, 1)); }
+.panel .tag::after { width: calc(1.9rem * var(--ck, 1)); }
 .panel .prole {
-  font-size: max(9px, calc(.66rem * var(--ck, 1)));
-  margin: 0 -.2em calc(.8rem * var(--ck, 1)) 0;
+  font-size: max(9px, calc(.6rem * var(--ck, 1)));
+  margin: 0 -.26em calc(.75rem * var(--ck, 1)) 0;
 }
 .panel .pname {
-  font-size: clamp(calc(1.25rem * var(--ck, 1)), 1.95vw, calc(1.7rem * var(--ck, 1)));
-  margin-bottom: calc(.55rem * var(--ck, 1));
+  font-size: clamp(calc(1.35rem * var(--ck, 1)), 2.5vw, calc(2.05rem * var(--ck, 1)));
 }
-.panel p { font-size: max(12px, calc(.84rem * var(--ck, 1))); }
-@media (max-width: 720px) {
-  .panel .tag, .panel .prole {
-    font-size: max(9px, calc(.62rem * var(--ck, 1)));
-    margin-bottom: calc(.7rem * var(--ck, 1));
-  }
-  .panel .pname { font-size: calc(1.2rem * var(--ck, 1)); }
-  .panel p { font-size: max(12px, calc(.8rem * var(--ck, 1))); }
+.panel .pname::after {
+  width: calc(3.4rem * var(--ck, 1));
+  margin: calc(.85rem * var(--ck, 1)) auto calc(.8rem * var(--ck, 1));
+}
+.panel p { font-size: max(12px, clamp(calc(.86rem * var(--ck, 1)), 1.05vw, calc(.98rem * var(--ck, 1)))); }
+@media (max-width: 860px) {
+  .panel .pname { font-size: calc(1.3rem * var(--ck, 1)); }
+  .panel p { font-size: max(12px, calc(.9rem * var(--ck, 1))); }
+}
+/* Phone floor. ../css/wiki-align.css lifts this eyebrow to 11 px with .16em
+   tracking; the other heroes' eyebrow (.story .cap-tag) gets 11 px at .2em
+   there, so this takes the same .2em and re-centres the role on it. */
+@media (max-width: 700px) {
+  body .story .panel .tag, body .story .panel .prole { font-size: 11px; letter-spacing: .2em; }
+  body .story .panel .prole { margin-right: -.2em; }
 }
 
 @media (prefers-reduced-motion: reduce) {
@@ -1079,8 +1106,8 @@ a.xref-broken::after { content: "[missing figure]"; }
 .legal a:hover { color: var(--amber); }
 
 /* The opening line is display type, not the document's heading: the instrument's name in the
-   record below is the page's one h1. This keeps the line looking exactly as it did. */
-.story-title .story-h { margin: 0; font-weight: 600; letter-spacing: -.045em; }
+   record below is the page's one h1. Its type is set with the title card above (Oxanium, as on
+   the photometer and LPA); this rule used to pin the old Inter tracking (-.045em) over it. */
 
 /* ═══ record, rebuilt 2 Oct 2026 (night) ══════════════════════════════════
    The document half now follows the team's writing doc (sections 1-10) and is
@@ -1611,3 +1638,11 @@ body.doc-light .doc-head .status-label a:hover { text-decoration-color: currentC
 .hp-v-h > h4 { margin: 0 !important; }
 .hp-v-h > .hp-v-tag { margin-left: 0; }
 @media (max-width: 760px) { .hp-v-h { margin-top: .15rem; } }
+
+/* 9 Oct 2026 polish: section numbers sit next to their titles, as on the photometer page
+   (photometer/css/style.css, "section numbers sit next to their titles, not in a 59px column").
+   ../css/polish.css gives `.sec h3 i` a 2.6em min-width, which left a wide gap ("3.1      Design")
+   on this page only. A heading that wraps keeps its number on the first line, as on the bioreactor page
+   (`align-items: first baseline`; polish.css centres it). Delete this block to revert. */
+body.doc-light[data-instrument="hydroponics"] .doc-wrap section.sec > h3 { gap: 0; align-items: first baseline; }
+body.doc-light[data-instrument="hydroponics"] .doc-wrap section.sec > h3 > i { min-width: 0; }

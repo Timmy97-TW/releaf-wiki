@@ -1349,7 +1349,15 @@ body.doc-light .mx-c.picked { background: rgba(18,112,63,.09); box-shadow: inset
 
 
 /* ------------------------------------------------------------------- stage */
-.story { position: relative; }
+/* z-index 3: the stage paints above the page's own fixed layers. Without it
+   two of them were drawn over the 3D: the record's blueprint ghost (a fixed
+   line drawing of the LPA inside .doc-wrap, whose z-index 2 lifts it above a
+   z-auto story), which showed as a faint wireframe of the instrument through
+   the right of every frame, and the horizon grid (body::after), a second
+   perspective grid laid across the bench's own. Both are for the record and
+   still show there. The header, the grain, the vignette and the scanline sit
+   higher (41-50) and are unchanged. */
+.story { position: relative; z-index: 3; }
 
 .story .story-stage {
   position: sticky; top: 0;
@@ -2373,3 +2381,11 @@ table.mat.prints img.tp { flex: none; width: 58px; height: 40px; object-fit: con
 .doc .pk.hot { background: var(--w-leaf-100, rgba(61, 220, 139, .18)); box-shadow: 0 0 0 2px var(--w-leaf-100, rgba(61, 220, 139, .18)); }
 @media (prefers-reduced-motion: reduce) { .doc .balloon, .doc .pk { transition: none; } }
 body.doc-light .doc .sec > figure.sect > figcaption { margin-top: 1.4rem; }
+
+/* 9 Oct 2026 polish: section numbers sit next to their titles, as on the photometer page
+   (photometer/css/style.css, "section numbers sit next to their titles, not in a 59px column").
+   ../css/polish.css gives `.sec h3 i` a 2.6em min-width, which left a wide gap ("3.1      Design")
+   on this page only. A heading that wraps keeps its number on the first line, as on the bioreactor page
+   (`align-items: first baseline`; polish.css centres it). Delete this block to revert. */
+body.doc-light[data-instrument="diopal"] .doc-wrap section.sec > h3 { gap: 0; align-items: first baseline; }
+body.doc-light[data-instrument="diopal"] .doc-wrap section.sec > h3 > i { min-width: 0; }

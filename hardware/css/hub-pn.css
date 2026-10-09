@@ -1,0 +1,300 @@
+/* ==========================================================================
+   v10: the notebook (pdfnb.html, written by notebook_pdf.py; pn.js).
+
+   Owner, 7 Oct 2026: "For the notebook, I want you to just attach a PDF instead of having a button that goes to a
+   separate page. The pdf should have a sort of table of contents vertical column on the side that jumps to the right
+   page when clicked on." Then, late 7 Oct (round 28): "the pdf screen right now has too much info, and the button
+   'scroll' is not good just have it so that if you are in the window it scrolls".
+
+   Round 28, after the judges' rounds 1 and 2 (coordinator's D1-D4, R2-1-R2-4):
+   1. One page with the bench: the section sits on the hub's column (--hub-col) under a heading at the hub's section
+      size (--hub-h2), kicker and heading on one line across the top; one screen tall, dark. A little more dark above
+      it than the bench keeps above its own heading (item 8: --pn-air).
+   2. Three layouts (pn.js sets the class): the contents in a column beside the pages; the pages full width under a
+      strip of week chips (.pn-strip: chosen where a column would draw the pages under 0.88 of their size on a window
+      760 px tall or more); under 900 px wide, and without script, the cover, the PDF button and the contents in a
+      <details> (.pn-noview).
+   3. The pages fit the box's width up to 1.4 times their size (vector pages, pn.js, wherever they are drawn larger
+      than their PNG); side by side only where each can be 0.95 of its size.
+   4. The contents always fit their column, and no word in them is cut: every entry (on up to two lines), or a row per
+      week (its entries as dots), or a grid of week chips with the title of the entry on screen (pn.js picks).
+   5. The pages' box turns its pages under the wheel only once the reader has arrived (.pn-in, pn.js); a thin rail in
+      the entry's colour shows that it has.
+
+   Contrast, against #0b0e13 and #05060a: every text colour here is 4.5:1 or more (v10/check.py measures it).
+   ========================================================================== */
+
+.pn {
+  --pn-bg: #05060a;
+  --pn-panel: #0b0e13;
+  --pn-line: rgba(255, 255, 255, .085);
+  --pn-ink: #eef2f6;
+  --pn-ink-2: #c5cdd7;
+  --pn-ink-3: #9aa5b1;
+  --pn-acc: #3ddc8b;
+  --pn-focus: #9ccfff;
+  --pn-paper: #f8f5ec;                                   /* the notebook's own paper, before a page has loaded */
+  --pn-k: var(--hub-k, 1);                               /* the hub's scale: 1 up to a 900 px tall screen, to 1.4 */
+  /* the type of the contents grows with the hub, but half as fast as its headings */
+  --pn-tk: calc(1 + (var(--pn-k) - 1) * .5);
+  /* the heading where the bench's sits, under the wiki's fixed navbar (56 px) ... */
+  --pn-top: clamp(64px, 8svh, 90px);
+  /* ... and some more dark over it: more after the bench than before it (item 8, R2-3) */
+  --pn-air: clamp(46px, 4.2svh, 50px);
+  --pn-bot: clamp(16px, 3svh, 32px);
+  --pn-row: clamp(22px, 3.2svh, calc(26px * var(--pn-tk)));          /* a contents row */
+  --pn-side: clamp(240px, 23vw, 400px);                             /* the contents' column (25vw from 1400 px) */
+  position: relative; isolation: isolate; box-sizing: border-box;
+  height: 100vh; height: 100svh; min-height: 540px;
+  padding: calc(var(--pn-top) + var(--pn-air)) 0 var(--pn-bot);
+  background: var(--pn-bg); color: var(--pn-ink);
+}
+/* hub.css gives #notebook a 4rem scroll margin, polish.css every section 76px: this section carries its own room, so
+   a jump to #notebook puts the whole of it on screen */
+body.hub section#notebook.pn, section#notebook.pn { scroll-margin-top: 0; }
+/* a wider contents column on wide windows: fewer titles wrap, none to a lone last word (design #6, r2) */
+@media (min-width: 1400px) { .pn { --pn-side: clamp(240px, 25vw, 400px); } }
+/* ... unless that would draw the pages under 0.88 of their size (pn.js) */
+.pn.pn-slim { --pn-side: clamp(240px, 23vw, 400px); }
+
+.pn-wrap {
+  height: 100%; box-sizing: border-box;
+  width: var(--hub-col, min(1280px, calc(100vw - 2 * clamp(20px, 5.5vw, 80px))));
+  margin-inline: auto;
+  display: grid;
+  grid-template-columns: var(--pn-side) minmax(0, 1fr);
+  grid-template-rows: auto minmax(0, 1fr);
+  grid-template-areas: "head head" "side view";
+  column-gap: clamp(20px, 2.6vw, 44px);
+}
+
+/* ---- 1. the heading: the hub's section size, kicker and heading on one line ------------------------------------- */
+.pn .pn-head {
+  grid-area: head; display: flex; flex-wrap: wrap; align-items: center; gap: .4rem 1rem;
+  margin: 0 0 clamp(12px, 2.2svh, 24px); max-width: none;
+}
+.pn .pn-head .sh-k { margin: 0; font-size: var(--hub-kick, .6875rem); }
+.pn .pn-head .sh-t { font-size: var(--hub-h2, clamp(1.9rem, 1rem + 2vw, 2.85rem)); line-height: 1.06; }
+
+.pn-cover { display: none; }                              /* the list layout's (2) */
+
+/* ---- 4. the contents ------------------------------------------------------------------------------------------- */
+.pn-side { grid-area: side; display: flex; flex-direction: column; min-height: 0; min-width: 0; }
+/* the rows run edge to edge of the column (the current row's tint starts on the column's line, design #7, r2) */
+.pn-toc { position: relative; flex: 0 1 auto; min-height: 0; margin: 0 0 12px; overflow: hidden; }
+.pn-sum { display: none; }
+.pn-weeks, .pn-list { list-style: none; margin: 0; padding: 0; }
+.pn-list { display: none; }
+.pn-toc.pn-full .pn-weeks { display: none; }
+.pn-toc.pn-full .pn-list { display: block; }
+/* a window under ~560 px tall, where even the chips do not fit: the column scrolls its own list, and only when the
+   pages' box has the wheel (R2-1.4); never `contain`, so its ends hand on to the hub */
+.pn.pn-in .pn-toc.pn-tight { overflow-y: auto; scrollbar-width: thin; scrollbar-color: rgba(255, 255, 255, .2) transparent; }
+
+.pn-wa, .pn-e {
+  position: relative; box-sizing: border-box;
+  /* week · dots (room for a week's three, so every title starts at one edge) · title */
+  display: grid; grid-template-columns: calc(1.45rem * var(--pn-tk)) 31px minmax(0, 1fr); align-items: center; column-gap: .5rem;
+  min-height: var(--pn-row); padding: 2px 8px; border-radius: 7px;
+  text-decoration: none; color: var(--pn-ink-2); font-size: calc(.875rem * var(--pn-tk));
+  transition: background-color .16s ease, color .16s ease;
+}
+.pn-wk {
+  font-family: var(--mono); font-size: calc(.6875rem * var(--pn-tk)); font-weight: 600; letter-spacing: .02em; line-height: 1;
+  font-variant-numeric: tabular-nums; color: var(--pn-ink-3);
+}
+.pn-dots { display: inline-flex; align-items: center; }
+/* a week's dots: each one its own pick (QA #9, r2), a 7 px dot drawn in a 10 x 20 px target */
+.pn-dots i {
+  display: block; width: 10px; height: 20px; cursor: pointer;
+  background: radial-gradient(circle, var(--mk, transparent) 0 3.5px, transparent 4px);
+}
+.pn-dot { display: block; width: 8px; height: 8px; border-radius: 50%; box-sizing: border-box; background: var(--mk, transparent); }
+.pn-wa-front .pn-dots i { background: radial-gradient(circle, transparent 0 2px, var(--pn-ink-3) 2.5px 3.5px, transparent 4px); }
+.pn-e-front .pn-dot { border: 1.5px solid var(--pn-ink-3); background: none; }
+/* a title is never cut (R2-4): it wraps, and pn.js only keeps a form in which every title fits; a lone last word is
+   pulled back to the line before where it can be (design #6, r2) */
+.pn-t { min-width: 0; line-height: 1.22; text-wrap: pretty; overflow-wrap: anywhere; }
+.pn-toc.pn-two .pn-t { line-height: 1.15; }
+/* owner, 8 Oct: the contents stay a vertical list on short windows too: a week a line, the title kept on one line
+   (its full text in the link's title and accessible name), rows packed to fit the column */
+.pn-toc.pn-one .pn-wa { min-height: 0; padding-block: 0; }
+.pn-toc.pn-one .pn-t { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; line-height: 1.5; }
+.pn-toc.pn-one .pn-dots i { height: 16px; }
+
+.pn-wa:hover, .pn-e:hover { background: rgba(255, 255, 255, .05); color: var(--pn-ink); }
+.pn-wa:focus:not(:focus-visible), .pn-e:focus:not(:focus-visible) { outline: none; }
+.pn-dots i:hover { background: radial-gradient(circle, var(--mk, #9ccfff) 0 3.5px, color-mix(in srgb, var(--mk, #9ccfff) 45%, transparent) 4px 5.5px, transparent 6px); }
+/* the entry (and week) on screen in the notebook: a tint in its colour, white text, its dot ringed */
+.pn-wa[aria-current="true"], .pn-e[aria-current="true"] { color: #fff; background: color-mix(in srgb, var(--mk, #9ccfff) 15%, transparent); }
+.pn-wa[aria-current="true"] .pn-wk, .pn-e[aria-current="true"] .pn-wk { color: var(--pn-ink); }
+.pn-dots i.on { background: radial-gradient(circle, var(--mk, #9ccfff) 0 3px, #fff 3.5px 5px, transparent 5.5px); }
+.pn-wa-front .pn-dots i.on { background: radial-gradient(circle, #fff 0 2px, var(--pn-ink) 2.5px 3.5px, transparent 4px); }
+.pn-e[aria-current="true"] .pn-dot { box-shadow: 0 0 0 2.5px color-mix(in srgb, var(--mk, #9ccfff) 40%, transparent); }
+
+.pn-skip { position: absolute; left: -9999px; }
+.pn-skip:focus {
+  position: static; display: block; margin: 0 0 6px; padding: .5rem .7rem; border-radius: 8px;
+  font-family: var(--mono); font-size: .6875rem; letter-spacing: .1em; text-transform: uppercase;
+  color: var(--pn-ink); background: rgba(156, 207, 255, .12);
+}
+
+/* the week chips: the strip's (2), and the column's last form (4) */
+.pn.pn-strip .pn-weeks, .pn-toc.pn-chips .pn-weeks { display: flex; flex-wrap: wrap; gap: 5px; }
+.pn.pn-strip .pn-wa, .pn-toc.pn-chips .pn-wa {
+  display: inline-flex; align-items: center; gap: 4px; min-height: 30px; padding: 0 7px 0 9px;
+  border: 1px solid var(--pn-line); border-radius: 8px; background: rgba(255, 255, 255, .02);
+}
+.pn.pn-strip .pn-wa .pn-t, .pn-toc.pn-chips .pn-wa .pn-t { display: none; }
+.pn.pn-strip .pn-wa-front .pn-t, .pn-toc.pn-chips .pn-wa-front .pn-t { display: inline; font-size: .8125rem; padding-right: 2px; }
+.pn.pn-strip .pn-wa-front .pn-wk, .pn-toc.pn-chips .pn-wa-front .pn-wk { display: none; }
+.pn.pn-strip .pn-wa[aria-current="true"], .pn-toc.pn-chips .pn-wa[aria-current="true"] {
+  border-color: color-mix(in srgb, var(--mk, #9ccfff) 55%, transparent);
+}
+/* the entry on screen, by name: under the strip's chips, and under the column's chips */
+.pn-now { display: none; margin: 0; min-width: 0; color: var(--pn-ink); }
+.pn-now-w { font-family: var(--mono); font-size: .75rem; font-weight: 600; letter-spacing: .06em; color: var(--pn-ink-3); }
+.pn-side:has(.pn-toc.pn-chips) .pn-now { display: block; margin: 0 0 12px; font-size: calc(.9375rem * var(--pn-tk)); line-height: 1.3; text-wrap: pretty; }
+
+/* the one way to the PDF itself: at the page on screen */
+.pn-open {
+  align-self: flex-start; flex: none; margin-top: auto;
+  display: inline-flex; align-items: baseline; gap: .45rem;
+  padding: .58rem 1rem .6rem; border-radius: 999px; text-decoration: none;
+  font-size: calc(.875rem * var(--pn-tk)); font-weight: 600; color: var(--pn-ink);
+  background: rgba(61, 220, 139, .08); border: 1px solid rgba(61, 220, 139, .38);
+  transition: background-color .18s ease, border-color .18s ease;
+}
+.pn-open-p { font-weight: 500; color: var(--pn-ink-2); font-variant-numeric: tabular-nums; }
+.pn-open-n { display: none; font-size: .8125rem; font-weight: 500; color: var(--pn-ink-3); }   /* its size: phones only */
+.pn-open i { font-style: normal; color: var(--pn-acc); }
+.pn-open:hover { background: rgba(61, 220, 139, .16); border-color: rgba(61, 220, 139, .6); }
+
+/* focus rings drawn inside, where the column's edge cannot cut them (round 1, QA judge #3) */
+body.hub .pn .pn-wa:focus-visible, body.hub .pn .pn-e:focus-visible, body.hub .pn .pn-frame:focus-visible,
+body.hub .pn .pn-cover:focus-visible, body.hub .pn .pn-sum:focus-visible {
+  outline: 2px solid var(--pn-focus); outline-offset: -2px;
+}
+body.hub .pn .pn-open:focus-visible, body.hub .pn .pn-skip:focus { outline: 2px solid var(--pn-focus); outline-offset: 2px; }
+
+/* ---- the pages' box ------------------------------------------------------------------------------------------------ */
+.pn-view { grid-area: view; position: relative; min-width: 0; min-height: 0; container-type: inline-size; }
+.pn-view:focus { outline: none; }
+.pn-frame {
+  position: absolute; inset: 0; box-sizing: border-box;
+  overflow-x: hidden; overflow-y: hidden; overscroll-behavior: auto;
+  scrollbar-width: none;                                   /* the rail shows where the box is (5) */
+  background: var(--pn-panel); border: 1px solid var(--pn-line); border-radius: 16px;
+  box-shadow: 0 30px 60px -40px rgba(0, 0, 0, .9);
+}
+.pn-frame::-webkit-scrollbar { display: none; }
+.pn.pn-in .pn-frame { overflow-y: auto; }
+
+.pn-pages {
+  list-style: none; margin: 0; padding: clamp(10px, 1.3vw, 18px);
+  display: grid; grid-template-columns: minmax(0, 1fr); gap: clamp(10px, 1.1vw, 16px); justify-items: center;
+}
+/* 3. the page fills the box's width, up to 1.4 times its size (R2-2) */
+.pn-pg {
+  position: relative; width: 100%; max-width: calc(935px * 1.4); aspect-ratio: 935 / 1210;
+  background: var(--pn-paper); border-radius: 3px; overflow: hidden;
+  box-shadow: 0 16px 36px -22px rgba(0, 0, 0, .95);
+}
+/* two side by side only where each can be 0.95 of its size (R2-2; the hub's widest column does not get there) */
+@container (min-width: 1832px) { .pn-pages { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); } }
+.pn-pg img { display: block; width: 100%; height: 100%; -webkit-user-drag: none; }
+
+/* 5. the box has the wheel: a thin rail on its right edge, in the colour of the entry on screen, its length and place
+   the part of the notebook in view. Absent otherwise (D4: no half-transparent states; it comes and goes on a class). */
+.pn-rail {
+  position: absolute; z-index: 2; top: 0; right: 5px; width: 3px; height: 40px; border-radius: 2px; pointer-events: none;
+  background: var(--pn-cur, var(--pn-focus)); opacity: 0; transition: opacity .25s ease;
+}
+.pn.pn-in .pn-rail { opacity: 1; }
+
+/* ?viewer=native: the browser's own PDF viewer in the same box */
+.pn-native .pn-frame { overflow: hidden; background: #17191d; }
+.pn-native .pn-rail { display: none; }
+.pn-pdf {
+  position: absolute; inset: 0; width: 100%; height: 100%; border: 0; display: block; background: transparent;
+  color-scheme: dark;
+}
+.pn-native:not(.pn-in) .pn-pdf { pointer-events: none; }
+.pn-pdf.pn-out { opacity: 0; pointer-events: none; transition: opacity .22s ease; }
+
+/* ---- 2. the strip: the pages full width, the contents a strip of week chips above them -------------------------- */
+.pn.pn-strip .pn-wrap {
+  grid-template-columns: minmax(0, 1fr); grid-template-rows: auto auto minmax(0, 1fr);
+  grid-template-areas: "head" "side" "view";
+}
+.pn.pn-strip .pn-side {
+  display: grid; grid-template-columns: minmax(0, 1fr) auto; grid-template-areas: "toc toc" "now open";
+  align-items: center; gap: 8px 16px; margin: 0 0 12px;
+}
+.pn.pn-strip .pn-toc { grid-area: toc; margin: 0; overflow: visible; }
+.pn.pn-strip .pn-list { display: none !important; }
+.pn.pn-strip .pn-now { grid-area: now; display: block; font-size: .9375rem; line-height: 1.3; text-wrap: pretty; }
+.pn.pn-strip .pn-open { grid-area: open; margin: 0; }
+
+/* ---- 2. under 900 px, and without script: the cover, the button, the contents in a <details> (round 1) ------------ */
+.pn.pn-noview, html:not(.js) .pn { height: auto; min-height: 0; padding: clamp(2.6rem, 7svh, 4.5rem) 0 clamp(3rem, 8svh, 4.5rem); }
+/* a phone on its side: the bench is one screen there, so the dark after it is the notebook's (item 8, R2-3) */
+@media (max-height: 500px) and (orientation: landscape) {
+  .pn.pn-noview, html:not(.js) .pn { padding-top: calc(clamp(2.6rem, 7svh, 4.5rem) + 54px); }
+}
+.pn.pn-noview .pn-wrap, html:not(.js) .pn-wrap {
+  display: block; height: auto; width: auto; max-width: 560px; padding-inline: clamp(20px, 5.5vw, 32px);
+}
+.pn.pn-noview .pn-view, html:not(.js) .pn-view,
+.pn.pn-noview .pn-skip, html:not(.js) .pn-skip,
+.pn.pn-noview .pn-weeks, html:not(.js) .pn-weeks,
+.pn.pn-noview .pn-now, html:not(.js) .pn-now,
+.pn.pn-noview .pn-open-p, html:not(.js) .pn-open-p { display: none; }
+.pn.pn-noview .pn-head, html:not(.js) .pn-head { margin-bottom: 18px; }
+.pn.pn-noview .pn-cover, html:not(.js) .pn-cover {
+  display: block; margin: 0 0 14px; border-radius: 6px; overflow: hidden; background: var(--pn-paper);
+  box-shadow: 0 0 0 1px rgba(255, 255, 255, .08), 0 22px 44px -26px rgba(0, 0, 0, .95);
+}
+.pn-cover img { display: block; width: 100%; height: auto; }
+.pn.pn-noview .pn-side, html:not(.js) .pn-side { display: flex; flex-direction: column; }
+.pn.pn-noview .pn-open, html:not(.js) .pn-open {
+  order: -1; align-self: stretch; justify-content: center; align-items: center; min-height: 48px; box-sizing: border-box;
+  margin: 0 0 10px; padding: .75rem 1rem; font-size: .9375rem; border-radius: 14px;
+}
+.pn.pn-noview .pn-open-n, html:not(.js) .pn-open-n { display: inline; }
+.pn.pn-noview .pn-toc, html:not(.js) .pn-toc { overflow: visible; margin: 0; }
+.pn.pn-noview .pn-sum, html:not(.js) .pn-sum {
+  display: flex; align-items: center; justify-content: space-between; min-height: 48px; box-sizing: border-box;
+  padding: 0 14px; border-radius: 14px; cursor: pointer; list-style: none;
+  font-size: .9375rem; font-weight: 600; color: var(--pn-ink); background: rgba(255, 255, 255, .03);
+  border: 1px solid var(--pn-line);
+}
+.pn-sum::-webkit-details-marker { display: none; }
+.pn.pn-noview .pn-sum::after, html:not(.js) .pn-sum::after {
+  content: ""; width: 8px; height: 8px; margin-right: 4px; border: solid var(--pn-ink-3); border-width: 0 2px 2px 0;
+  rotate: 45deg; translate: 0 -2px; transition: rotate .2s ease;
+}
+.pn-det[open] > .pn-sum::after { rotate: 225deg; translate: 0 2px; }
+.pn.pn-noview .pn-list, html:not(.js) .pn-list { display: block; margin-top: 6px; }
+.pn.pn-noview .pn-e, html:not(.js) .pn-e {
+  min-height: 44px; padding: .55rem 8px; grid-template-columns: 1.6rem auto minmax(0, 1fr); font-size: .9375rem;
+}
+.pn.pn-noview .pn-t, html:not(.js) .pn-t { line-height: 1.35; }
+.pn.pn-noview .pn-wk, html:not(.js) .pn-wk { font-size: 11px; }
+.pn.pn-noview .pn-e[aria-current], html:not(.js) .pn-e[aria-current] { background: none; color: var(--pn-ink-2); }
+.pn.pn-noview .pn-e[aria-current] .pn-dot { box-shadow: none; }
+
+/* touch: every target at least 44 px tall (QA #11, r2); pn.js picks a contents form that still fits */
+@media (pointer: coarse) {
+  .pn-wa, .pn-e, .pn-open { min-height: 44px; }
+  .pn.pn-strip .pn-wa, .pn-toc.pn-chips .pn-wa { min-height: 44px; padding-inline: 11px; }
+  .pn-open { align-items: center; }
+}
+
+/* Back to Hardware steps aside while it would sit on the notebook in this layout (round 1, QA judge #7; pn.js) */
+html.pn-list-back .hw-back.on:not(:focus-visible) { opacity: 0; translate: 0 12px; pointer-events: none; }
+
+@media (prefers-reduced-motion: reduce) {
+  .pn-wa, .pn-e, .pn-open, .pn-rail, .pn-sum::after { transition: none; }
+  .pn-pdf.pn-out { transition: none; }
+}

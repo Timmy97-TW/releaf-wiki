@@ -338,6 +338,9 @@
     render();
   });
   canvas.addEventListener("wheel", function (e) {
+    // In the record (embedded) a plain wheel scrolls the page: swallowing it here stopped a reader
+    // whose pointer crossed the figure dead at 7.4. Pinch (ctrlKey) or ctrl/cmd-wheel still zooms.
+    if (embedded && !(e.ctrlKey || e.metaKey)) return;
     e.preventDefault();
     dist = Math.max(60, Math.min(6000, dist + e.deltaY * 1.4));
     render();

@@ -34,7 +34,9 @@ window.Callouts = function (host, cfg) {
 
   function size() {
     const r = gl.getBoundingClientRect();
-    const d = Math.min(window.devicePixelRatio || 1, 2);
+    // window.__heroDpr: the hero-video renderer (dev/hero-video) draws this layer at the
+    // clip's own pixel density, which on the phone clip is above the cap. Unset in normal use.
+    const d = window.__heroDpr || Math.min(window.devicePixelRatio || 1, 2);
     if (r.width === W && r.height === H && d === dpr) return;
     W = r.width; H = r.height; dpr = d;
     cv.width = Math.max(2, Math.round(W * d));

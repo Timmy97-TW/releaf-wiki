@@ -4,8 +4,11 @@
 // culture, and the difference between them is the measurement. See
 // ../STORYBOARD.md for the act list and the honesty ledger.
 //
-// Everything drawn is a pure function of p in [0,1]. The only clock-driven
-// things are dust, flow and the LED's flicker, none of which carry state.
+// Everything drawn is a pure function of p in [0,1]. The clock-driven things
+// (7 Oct 2026, for the video pass) carry no state: the camera's breath
+// (camera_), the room air and the beam motes, the culture's shimmer, the
+// cells drifting along the cell, the flow streaks in the silicone line, and
+// the composite's aurora bands. There is no LED flicker any more.
 (function () {
   "use strict";
 
@@ -97,8 +100,10 @@
   function MAT(name) {
     switch (name) {
       case "black":
-        return new THREE.MeshPhysicalMaterial({ color: srgb(0x0f1114), metalness: 0.14, roughness: 0.50,
-          envMapIntensity: 0.72, clearcoat: 0.40, clearcoatRoughness: 0.26 });
+        // The LED collar is a print too: the same +10% matte as the body
+        // (7 Oct; was roughness 0.50, coat 0.40 at 0.26).
+        return new THREE.MeshPhysicalMaterial({ color: srgb(0x0f1114), metalness: 0.14, roughness: 0.55,
+          envMapIntensity: 0.72, clearcoat: 0.36, clearcoatRoughness: 0.29 });
       case "pcb":
         // A full mirror clearcoat on a flat board is a mirror: measured, the
         // sample board threw the key straight down the lens mid-pan.
@@ -137,8 +142,14 @@
         // between luma 40 and 120, which is grey, not a black print. The albedo
         // and the environment response are both the material's own claim about
         // what it is; the light was not the thing that was wrong.
-        return new THREE.MeshPhysicalMaterial({ color: srgb(0x090b0e), metalness: 0.06, roughness: 0.54,
-          envMapIntensity: 0.16, clearcoat: 0.30, clearcoatRoughness: 0.38 });
+        // 10% more matte, 7 Oct 2026, by the owner's own measure: "not matte
+        // is better, just add 10% matte". Roughness and the coat's roughness
+        // x1.1, the coat x0.9 (0.54/0.30/0.38 before). A full matte pass was
+        // tried and read as flat grey plastic; the optical head's creases are
+        // dealt with on that part alone (smoothed normals, gentler light), not
+        // by taking the finish off everything.
+        return new THREE.MeshPhysicalMaterial({ color: srgb(0x090b0e), metalness: 0.06, roughness: 0.60,
+          envMapIntensity: 0.16, clearcoat: 0.27, clearcoatRoughness: 0.42 });
     }
   }
 
@@ -219,9 +230,12 @@
       // why this had been sitting at 22. That was the old averaging: vertex
       // normals are area-weighted now and clamped so one cannot end up further
       // from its own face than the smoothing angle, and the flat faces hold.
-      RQ.smoothNormals(geo, 42);
+      // The optical head gets its own shading pass; see headNormals.
+      if (spec.tag === "head") headNormals(geo, HEAD_SHADE);
+      else RQ.smoothNormals(geo, 42);
       geo.computeBoundingBox();
       const mat = MAT(spec.mat);
+      if (spec.tag === "head") calmHead(mat);
       // The two flat plates lie face up under the key and their whole top
       // surface sits in its specular lobe: at the opening framing that clipped
       // to two hard white wedges on the plate. A printed plate is the roughest
@@ -249,6 +263,163 @@
       if (loaded === PARTS.length) assemble();
     }, undefined, function (e) { console.error("STL failed", spec.file, e); });
   });
+
+  /* ------------------------------------------------------- the optical head */
+  // The owner's note on the measurement act (7 Oct 2026): "make that creasy
+  // part less creasy or shine less light on that part". The part is the
+  // optical head (part3), the cuvette holder, and it stays — seated and
+  // opaque in every act. What was wrong with it is two things, fixed here and
+  // on this part only.
+  //
+  // 1. Its normals. part3 is the coarsest export in the set: the wall in the
+  //    owner's photo is a warped, funnel-like face built from long thin
+  //    triangles at different angles, and smoothed at 42 degrees each angle
+  //    change is interpolated across a triangle that spans the whole wall —
+  //    a diagonal line of shading from one corner of the face to the other.
+  //    Three steps, all on the shading normals (the geometry is untouched):
+  //    a bilateral filter denoises the face normals (each becomes the
+  //    area-weighted mean of its neighbours', weighted down by how different
+  //    they are: at sigma 0.22 a neighbour 5 degrees off weighs 0.92, one 30
+  //    degrees off 0.06, so noise goes and real edges stay); a gated
+  //    diffusion then pools the big wall triangles' normals across the
+  //    funnel's shallow folds (see below); and the corner normals are the
+  //    area-weighted mean of the result within the crease angle.
+  // 2. The light on it. calmHead() lets draw() turn the direct highlight and
+  //    the environment reflection down on this material alone, for the acts
+  //    where the head fills a third of the frame. Nothing else in the scene
+  //    sees a different light.
+  // HEAD_SHADE is tunable from the frame rig (window.__headShade, read once
+  // at load); nothing sets it in normal use.
+  // Swept on the owner's crop at p 0.65, DSF 2: what the creases ARE is the
+  // direct highlight — with the head's direct specular at 0 the wall is one
+  // even surface; shadows and the environment barely change it. The normal
+  // pass softens the facets and folds; keeping 22% of the direct highlight
+  // (and 80% of the environment) makes what is left of them disappear while
+  // the head's edges and form still read. Below 0.2 the round lug goes black.
+  const HEAD_SHADE = Object.assign({ sigma: 0.22, iters: 12, angle: 38,
+      difIters: 25, difDeg: 40, difFace: 3,
+      spec: 0.22, env: 0.80, diff: 1.0 },
+    window.__headShade || {});
+
+  function headNormals(geo, o) {
+    const pos = geo.attributes.position;
+    if (!pos || geo.index) { RQ.smoothNormals(geo, o.angle); return; }
+    const p = pos.array, T = p.length / 9;
+    const fn = new Float64Array(T * 3), fa = new Float64Array(T);
+    for (let i = 0; i < T; i++) {
+      const q = i * 9;
+      const ax = p[q + 3] - p[q], ay = p[q + 4] - p[q + 1], az = p[q + 5] - p[q + 2];
+      const bx = p[q + 6] - p[q], by = p[q + 7] - p[q + 1], bz = p[q + 8] - p[q + 2];
+      const x = ay * bz - az * by, y = az * bx - ax * bz, z = ax * by - ay * bx;
+      const L = Math.hypot(x, y, z) || 1e-12;
+      fn[i * 3] = x / L; fn[i * 3 + 1] = y / L; fn[i * 3 + 2] = z / L; fa[i] = L * 0.5;
+    }
+    // weld corners, then each face's neighbours are the faces sharing a corner
+    const vid = new Int32Array(T * 3), map = new Map();
+    let nv = 0;
+    for (let v = 0; v < T * 3; v++) {
+      const k = Math.round(p[v * 3] * 1e3) + "," + Math.round(p[v * 3 + 1] * 1e3) + "," + Math.round(p[v * 3 + 2] * 1e3);
+      let id = map.get(k);
+      if (id === undefined) { id = nv++; map.set(k, id); }
+      vid[v] = id;
+    }
+    const vf = new Array(nv);
+    for (let i = 0; i < nv; i++) vf[i] = [];
+    for (let v = 0; v < T * 3; v++) vf[vid[v]].push((v / 3) | 0);
+    const nb = new Array(T);
+    for (let i = 0; i < T; i++) {
+      const set = new Set();
+      for (let k = 0; k < 3; k++) { const l = vf[vid[i * 3 + k]]; for (let j = 0; j < l.length; j++) set.add(l[j]); }
+      nb[i] = Int32Array.from(set);
+    }
+    // bilateral filter on the face normals
+    let cur = fn, nxt = new Float64Array(T * 3);
+    const k2 = 1 / (2 * o.sigma * o.sigma);
+    for (let it = 0; it < o.iters; it++) {
+      for (let i = 0; i < T; i++) {
+        const n = nb[i], cx = cur[i * 3], cy = cur[i * 3 + 1], cz = cur[i * 3 + 2];
+        let x = 0, y = 0, z = 0;
+        for (let k = 0; k < n.length; k++) {
+          const j = n[k], jx = cur[j * 3], jy = cur[j * 3 + 1], jz = cur[j * 3 + 2];
+          const dx = cx - jx, dy = cy - jy, dz = cz - jz;
+          const w = fa[j] * Math.exp(-(dx * dx + dy * dy + dz * dz) * k2);
+          x += w * jx; y += w * jy; z += w * jz;
+        }
+        const L = Math.hypot(x, y, z) || 1;
+        nxt[i * 3] = x / L; nxt[i * 3 + 1] = y / L; nxt[i * 3 + 2] = z / L;
+      }
+      const t = cur === fn ? new Float64Array(T * 3) : cur;
+      cur = nxt; nxt = t;
+    }
+    // Folds. The edge-preserving filter above keeps anything over ~15 degrees
+    // as a feature, and the head's wall is a warped funnel whose triangles
+    // meet at 15-35 degree folds: those were still lines. Here the big
+    // triangles (difFace mm2 and up: the walls, 85% of the part's area) pool
+    // their normals with big neighbours across any fold shallower than difDeg
+    // in the ORIGINAL mesh, for difIters rounds. Real corners (80-90 degrees
+    // on this part) block it, and the small facets of the bosses and bores
+    // never take part, so they stay round.
+    if (o.difIters > 0) {
+      const cosD = Math.cos(o.difDeg * Math.PI / 180);
+      let a0 = cur, a1 = new Float64Array(T * 3);
+      for (let it = 0; it < o.difIters; it++) {
+        for (let i = 0; i < T; i++) {
+          let x = fa[i] * a0[i * 3], y = fa[i] * a0[i * 3 + 1], z = fa[i] * a0[i * 3 + 2];
+          if (fa[i] >= o.difFace) {
+            const n = nb[i];
+            for (let k = 0; k < n.length; k++) {
+              const j = n[k];
+              if (j === i || fa[j] < o.difFace) continue;
+              if (fn[i * 3] * fn[j * 3] + fn[i * 3 + 1] * fn[j * 3 + 1] + fn[i * 3 + 2] * fn[j * 3 + 2] < cosD) continue;
+              x += fa[j] * a0[j * 3]; y += fa[j] * a0[j * 3 + 1]; z += fa[j] * a0[j * 3 + 2];
+            }
+          }
+          const L = Math.hypot(x, y, z) || 1;
+          a1[i * 3] = x / L; a1[i * 3 + 1] = y / L; a1[i * 3 + 2] = z / L;
+        }
+        const t = a0 === cur ? new Float64Array(T * 3) : a0;
+        a0 = a1; a1 = t;
+      }
+      cur = a0;
+    }
+
+    // corner normals: the area-weighted mean of the treated face normals
+    // round each corner, within the crease angle
+    const cosA = Math.cos(o.angle * Math.PI / 180);
+    const out = new Float32Array(T * 9);
+    for (let v = 0; v < T * 3; v++) {
+      const f = (v / 3) | 0, l = vf[vid[v]];
+      const fx = cur[f * 3], fy = cur[f * 3 + 1], fz = cur[f * 3 + 2];
+      let x = 0, y = 0, z = 0;
+      for (let k = 0; k < l.length; k++) {
+        const g = l[k], gx = cur[g * 3], gy = cur[g * 3 + 1], gz = cur[g * 3 + 2];
+        if (fx * gx + fy * gy + fz * gz >= cosA) { const w = fa[g]; x += w * gx; y += w * gy; z += w * gz; }
+      }
+      const L = Math.hypot(x, y, z) || 1;
+      out[v * 3] = x / L; out[v * 3 + 1] = y / L; out[v * 3 + 2] = z / L;
+    }
+    geo.setAttribute("normal", new THREE.BufferAttribute(out, 3));
+  }
+
+  // Three uniforms on the head's own material: how much of the direct
+  // highlight (base and clearcoat — r128 sums both into directSpecular), the
+  // direct diffuse and the environment reflection it keeps. 1 = untouched.
+  function calmHead(m) {
+    m.userData.calm = { spec: { value: 1 }, diff: { value: 1 }, env: { value: 1 } };
+    m.onBeforeCompile = function (sh) {
+      sh.uniforms.uCalmSpec = m.userData.calm.spec;
+      sh.uniforms.uCalmDiff = m.userData.calm.diff;
+      sh.uniforms.uCalmEnv = m.userData.calm.env;
+      sh.fragmentShader = sh.fragmentShader
+        .replace("#include <common>", "#include <common>\nuniform float uCalmSpec, uCalmDiff, uCalmEnv;")
+        .replace("#include <lights_fragment_end>",
+          "#include <lights_fragment_end>\n" +
+          "reflectedLight.directSpecular *= uCalmSpec;\n" +
+          "reflectedLight.directDiffuse *= uCalmDiff;\n" +
+          "reflectedLight.indirectSpecular *= uCalmEnv;");
+    };
+    m.customProgramCacheKey = function () { return "head-calm"; };
+  }
 
   /* ----------------------------------------------------- anchors and extras */
   // Covers come OFF rather than turning to glass: a light-tight shell that
@@ -403,7 +574,14 @@
     const floor = new THREE.Mesh(
       new THREE.CircleGeometry(R, 64),
       new THREE.MeshStandardMaterial({
-        color: srgb(0x0a0c11), roughness: 0.52, metalness: 0.05,
+        // 0.76, not 0.52 (7 Oct 2026). At 0.52 the key's specular lobe on
+        // this plane was a white disc under the instrument on the retreat from
+        // the measurement: measured, 15% of a desktop frame and 39% of a phone
+        // frame over luma 150 at p 0.73. The owner asked for the original
+        // finish plus a little, so this is the least roughness that keeps it
+        // away, swept 0.57 / 0.64 / 0.70 / 0.76: 15/33 (desktop/phone, %),
+        // 11/24, 4/15, then 2/5 at 0.76. The wide acts barely move.
+        color: srgb(0x0a0c11), roughness: 0.76, metalness: 0.05,
         alphaMap: alpha, transparent: true, envMapIntensity: 0.55,
         // The bench gets a grid. Every act before this stood the instrument on
         // an unmarked black disc, and with no marking on it the floor gave the
@@ -765,61 +943,14 @@
   }
 
   /* -------------------------------------------------------------- overlays */
-  const readouts = {
-    sample: document.getElementById("ro-sample"),
-    ref: document.getElementById("ro-ref"),
-    ratio: document.getElementById("ro-ratio"),
-  };
-  const endLine = document.getElementById("endline");
+  // The readouts and the closing line are DOM driven by p alone: js/hero.js.
   const curveCanvas = document.getElementById("curve");
   const cctx = curveCanvas.getContext("2d");
 
-  const _v = new THREE.Vector3();
-  // Anchored to the part it belongs to, then clamped into the frame: a readout
-  // that projects off the right edge is worse than one that has drifted a
-  // little from its sensor.
-  function place(el, point, dx, dy, alpha) {
-    if (alpha <= 0.002) { el.style.opacity = "0"; el.style.visibility = "hidden"; return; }
-    _v.copy(point); rig.localToWorld(_v); _v.project(camera);
-    const w = stage.clientWidth, h = stage.clientHeight;
-    const bw = el.offsetWidth || 120, bh = el.offsetHeight || 40;
-    let x = (_v.x * 0.5 + 0.5) * w + (dx || 0);
-    let y = (-_v.y * 0.5 + 0.5) * h + (dy || 0);
-    const padL = 24, padR = 24, padT = 20, padB = 24;
-    x = Math.max(padL, Math.min(w - bw - padR, x));
-    y = Math.max(padT, Math.min(h - bh - padB, y));
-    el.style.visibility = "visible";
-    el.style.opacity = alpha.toFixed(3);
-    el.style.transform = "translate(" + x.toFixed(1) + "px," + y.toFixed(1) + "px)";
-  }
-
   /* ------------------------------------------------------------------- acts */
-  // Eight acts. A focus-lens beat was added between the LED and the splitter —
-  // the cone leaving the emitter is wider than the cuvette, and the lens is what
-  // makes it a beam — and the culture, the ratio and the bubble are one act now:
-  // an opening film does not need the rejection filter.
-  const A0 = 0.085,   // title
-        A1 = 0.215,   // in the line
-        A2 = 0.345,   // one source
-        A3 = 0.470,   // the focus lens
-        A4 = 0.605,   // two paths
-        A5 = 0.775,   // through the culture, and the ratio
-        A6 = 0.905;   // the record, then the close
-
-  const CAPS = [
-    { win: [A0, A1], n: "01", role: "Sampling", name: "In the line",
-      body: "The culture never leaves the loop: it flows through a cuvette <b>0.2&nbsp;mm</b> thick and straight back to the reactor. Every reading is taken through the glass, on culture that is still moving." },
-    { win: [A1, A2], n: "02", role: "Amber LED", name: "One source",
-      body: "A single amber LED at <b>600&nbsp;nm</b>, the wavelength optical density is defined at, fires down the optical axis. Everything below is what happens to that one beam." },
-    { win: [A2, A3], n: "03", role: "Beam conditioning", name: "Gathered into a column",
-      body: "The cone leaving the emitter is wider than the cuvette it has to cross. A focusing lens gathers it, and from here down the light is one tight column." },
-    { win: [A3, A4], n: "04", role: "Beamsplitter", name: "Two paths",
-      body: "A 45° beamsplitter turns one beam into two. One crosses the culture. The other never meets it — it goes straight to a second sensor as a <em>reference</em>." },
-    { win: [A4, A5], n: "05", role: "The measurement", name: "The ratio, not the reading",
-      body: "The sample beam crosses <b>0.2&nbsp;mm</b> of flowing culture and lands on one sensor; the reference has already gone straight to the other. The instrument records the <em>ratio</em>, so anything that changes the lamp divides out of it." },
-    { win: [A5, A6], n: "06", role: "The record", name: "400 hours, unattended",
-      body: "<b>2,132</b> points across the run, no samples withdrawn. The dip is a recirculation pump that failed overnight — the instrument caught it because it was still reading when nobody was watching." },
-  ];
+  // The acts and their captions live in js/hero.js, shared with the video mode.
+  const HP = window.HERO;
+  const A0 = HP.A0, A1 = HP.A1, A2 = HP.A2, A3 = HP.A3, A4 = HP.A4, A5 = HP.A5, A6 = HP.A6;
 
   /* ------------------------------------------------------------ camera work */
   function smoothp(p, a, b) { const x = (p - a) / (b - a); return x <= 0 ? 0 : x >= 1 ? 1 : x * x * x * (x * (x * 6 - 15) + 10); }
@@ -846,7 +977,10 @@
     return [
       // holdIn 0.22: the camera leaves the title framing as soon as the page is
       // scrolled, which is the same window the first cover comes away in.
-      { at: A.center, r: A.radius,   fill: 0.88, yaw: -0.52, pit: 0.15, fov: 30, ox: 40, oy: 16, holdIn: 0.22 },  // 0 hero
+      // poy -0.18 (portrait only): on a phone the title now sits under the
+      // instrument instead of across it (css: .story-title at 57%), so the
+      // instrument rides a little higher to leave it the room.
+      { at: A.center, r: A.radius,   fill: 0.88, yaw: -0.52, pit: 0.15, fov: 30, ox: 40, oy: 16, holdIn: 0.22, poy: -0.18 },  // 0 hero
       // A small step back, not a retreat: far enough that the two bench inserts
       // come into frame, which is the whole point of this act, and no further.
       { at: A.center.clone().add(new THREE.Vector3(6, -26, 0)), r: 195, fill: 0.86, yaw: -0.70, pit: 0.12, fov: 30, ox: 10, oy: 0 }, // 1 in the line
@@ -862,7 +996,14 @@
       // holdIn 0.30: held while the caption lands, then panning for the rest.
       { at: splitView, r: A.r.split, fill: 0.44, yaw: -0.40, pit: 0.12, fov: 28, ox: 140, oy: -26, holdIn: 0.30, pitArc: 0.38 },  // 4 two paths
       { at: ratioView, r: A.r.optics, fill: 0.72, yaw: 0.94, pit: 0.21, fov: 28, ox: -70, oy: -22 },  // 5 the measurement, from the right
-      { at: A.center, r: A.radius,   fill: 0.46, yaw: -0.74, pit: 0.17, fov: 30, ox: -300, oy: 20 },// 6 the record
+      // poy: on a phone the record's plot fills the top 14-42% of the frame,
+      // and the default portrait lift (-0.13) stood the instrument in the
+      // middle of it, over the decline and the recovery. +0.07 puts it in the
+      // empty band between the plot's labels and the caption.
+      // oy -40, not +20: on a desktop the base plate sat behind "400 hours,
+      // unattended". 60 px up, the instrument stands in the plot's own band
+      // (26-70% of the height) and the caption has the floor to itself.
+      { at: A.center, r: A.radius,   fill: 0.46, yaw: -0.74, pit: 0.17, fov: 30, ox: -300, oy: -40, poy: 0.07 },// 6 the record
       // The close: low, on a long lens, the instrument tall in the frame with
       // its seams lit and the line sweeping toward the camera — then a slow
       // glide (holdIn 0.25) toward the ninth entry, which is not an act but
@@ -989,7 +1130,10 @@
     const sx = Math.min(1, vw / 1280);
     const portrait = vh > vw * 1.05;
     const oxS = ox * sx * (portrait ? 0.22 : 1);
-    const oyS = oy * sx + (portrait ? -vh * 0.13 : 0);
+    // A shot can name its own portrait lift (poy, a fraction of the height);
+    // the rest keep the -0.13 every act was framed with.
+    const pyA = a.poy === undefined ? -0.13 : a.poy, pyB = b.poy === undefined ? -0.13 : b.poy;
+    const oyS = oy * sx + (portrait ? vh * lerp(pyA, pyB, t) : 0);
 
     // A real lens has a minimum focus distance; here it also stops the camera
     // drawing the inside of whatever it is passing through on its way between
@@ -1036,7 +1180,9 @@
 
   function drawCurve(p, alpha, furn) {
     const w = curveCanvas.clientWidth, h = curveCanvas.clientHeight;
-    const dpr = Math.min(window.devicePixelRatio || 1, 2);
+    // window.__heroDpr: the hero-video renderer (dev/hero-video) draws this layer at the
+    // clip's own pixel density, which on the phone clip is above the cap. Unset in normal use.
+    const dpr = window.__heroDpr || Math.min(window.devicePixelRatio || 1, 2);
     if (curveCanvas.width !== w * dpr || curveCanvas.height !== h * dpr) {
       curveCanvas.width = w * dpr; curveCanvas.height = h * dpr;
     }
@@ -1190,6 +1336,76 @@
       else { cctx.textAlign = "right"; cctx.fillText("PUMP FAILURE, H 282", ex - 7, T + 12); }
     }
     cctx.globalAlpha = 1;
+    maskInstrument(w, h);
+  }
+
+  /* --- the instrument stands in front of the record ---------------------- */
+  // The record is its own 2D canvas over the 3D one, so wherever the
+  // instrument and the plot share the frame the trace was printed ACROSS the
+  // instrument: from p 0.86 the camera glides toward the close while the line
+  // is still being written, and the curve ran over the mast and the head as a
+  // bright orange line on the part. Each printed part's projected outline is
+  // cut out of the plot instead, so the line passes behind the instrument.
+  // The outline is the convex hull of a few hundred of the part's own
+  // vertices, projected with this frame's camera; a part is convex enough for
+  // that, and the 2.5 px stroke covers what the sampling misses at the edge.
+  let SIL = null;
+  const _sv = new THREE.Vector3();
+  function silhouettes() {
+    if (SIL) return SIL;
+    SIL = [];
+    rig.children.forEach(function (m) {
+      const s = m.userData.spec;
+      if (!s || !(s.mat === "printed" || s.mat === "black")) return;
+      const pos = m.geometry.attributes.position, n = pos.count;
+      const step = Math.max(1, Math.floor(n / 420));
+      const pts = [];
+      for (let i = 0; i < n; i += step) pts.push(new THREE.Vector3().fromBufferAttribute(pos, i));
+      SIL.push({ mesh: m, pts: pts });
+    });
+    return SIL;
+  }
+  function hull2(P) {
+    // Andrew's monotone chain
+    if (P.length < 3) return P;
+    P.sort(function (a, b) { return a[0] - b[0] || a[1] - b[1]; });
+    const cross = function (o, a, b) { return (a[0] - o[0]) * (b[1] - o[1]) - (a[1] - o[1]) * (b[0] - o[0]); };
+    const lo = [], up = [];
+    for (let i = 0; i < P.length; i++) {
+      while (lo.length >= 2 && cross(lo[lo.length - 2], lo[lo.length - 1], P[i]) <= 0) lo.pop();
+      lo.push(P[i]);
+    }
+    for (let i = P.length - 1; i >= 0; i--) {
+      while (up.length >= 2 && cross(up[up.length - 2], up[up.length - 1], P[i]) <= 0) up.pop();
+      up.push(P[i]);
+    }
+    lo.pop(); up.pop();
+    return lo.concat(up);
+  }
+  function maskInstrument(w, h) {
+    rig.updateMatrixWorld(true);
+    cctx.save();
+    cctx.globalCompositeOperation = "destination-out";
+    cctx.globalAlpha = 1;
+    cctx.fillStyle = "#000"; cctx.strokeStyle = "#000";
+    cctx.lineWidth = 5; cctx.lineJoin = "round";
+    silhouettes().forEach(function (s) {
+      const m = s.mesh;
+      if (!m.visible || (m.material.transparent && m.material.opacity < 0.5)) return;
+      const P = [];
+      for (let i = 0; i < s.pts.length; i++) {
+        _sv.copy(s.pts[i]).applyMatrix4(m.matrixWorld).project(camera);
+        if (_sv.z > 1) continue;
+        P.push([(_sv.x * 0.5 + 0.5) * w, (-_sv.y * 0.5 + 0.5) * h]);
+      }
+      const H = hull2(P);
+      if (H.length < 3) return;
+      cctx.beginPath();
+      cctx.moveTo(H[0][0], H[0][1]);
+      for (let i = 1; i < H.length; i++) cctx.lineTo(H[i][0], H[i][1]);
+      cctx.closePath(); cctx.fill(); cctx.stroke();
+    });
+    cctx.restore();
   }
 
   /* ----------------------------------------------------------- the callouts */
@@ -1239,9 +1455,6 @@
 
   /* -------------------------------------------------------------- the frame */
   const _m = new THREE.Matrix4(), _q = new THREE.Quaternion(), _s = new THREE.Vector3(1, 1, 1);
-  const statsEl = document.getElementById("stats");
-  const heroFrame = document.querySelector(".hero-frame");
-  const titleEl = document.getElementById("title");
   const _p = new THREE.Vector3();
 
   function draw(p, clock) {
@@ -1265,50 +1478,21 @@
     const turn = smoothp(p, 0.020, 0.082);
     world.rotation.y = turn * 0.62;
 
-    // The right-hand stats column rides the title's own fade. Same curve as
-    // story-core's title(), written once here rather than threading a second
-    // element through the shared engine.
-    if (heroFrame) {
-      const out = A0 - 0.012;
-      let a = 1 - Math.max(0, Math.min(1, (p - out * 0.35) / (out * 0.65)));
-      heroFrame.style.opacity = (a * a).toFixed(3);
-      heroFrame.style.visibility = a < 0.05 ? "hidden" : "visible";
-    }
-    if (statsEl) {
-      const out = A0 - 0.012;
-      let a = 1 - Math.max(0, Math.min(1, (p - out * 0.35) / (out * 0.65)));
-      a = a * a;
-      statsEl.style.opacity = a.toFixed(3);
-      statsEl.style.visibility = a < 0.003 ? "hidden" : "visible";
-      // Level with the title, measured, not assumed. The stylesheet centres
-      // both blocks on the same 37% line, but story-core's title fade writes a
-      // pixel translateY over the title's transform each frame — which drops
-      // the -50% shift, so the title hangs from that line while the stats sat
-      // centred on it, a full block-height apart. The title's rect already
-      // includes its fade shift by the time draw() runs, so centring on the
-      // rect keeps the two level through the fade as well.
-      const tr = titleEl.getBoundingClientRect(), sr = stage.getBoundingClientRect();
-      statsEl.style.top = (tr.top - sr.top + tr.height / 2).toFixed(1) + "px";
-      statsEl.style.transform = "translateY(-50%)";
-    }
+    // The stats column, the landing chrome, the readouts and the closing line
+    // are p-only DOM, shared with the video mode: js/hero.js.
+    HP.dom(p);
 
     camera_(p, clock);
 
-    /* --- density of the culture: clear at the start, milky by the record --- */
-    const dens = ramp(p, A4 + 0.01, A5 - 0.02) * 0.92 + ramp(p, A5, A6) * 0.08;
+    /* --- density of the culture, the lamp and its dip: js/hero.js state(p) --- */
+    const S = HP.state(p);
+    const dens = S.dens;
 
     // the covers go back on between the record and the close
     const backOn = smoothp(p, A5 + 0.030, A6 - 0.010);
 
-    /* --- the lamp, and the staged disturbance in act 5 --- */
-    // The instrument is already running when the page opens: the seams are lit
-    // in the title frame, not after a scroll. There is nothing to 'switch on'
-    // in this story — it has been reading a culture for 400 hours.
-    const lit = 1;
-    // one dip, entirely inside act 5, ~1.4% of the track wide
-    const dipC = A4 + (A5 - A4) * 0.62, dipW = 0.017;
-    const dip = Math.exp(-Math.pow((p - dipC) / dipW, 2)) * ramp(p, A4 + 0.03, A4 + 0.08);
-    const lamp = lit * (1 - 0.38 * dip);
+    /* --- the lamp, and the staged disturbance in act 5 (js/hero.js) --- */
+    const lamp = S.lamp;
 
     // The emitter arrives with the scroll rather than being there from the
     // start: it fades up through act 2, sitting on top of its bezel.
@@ -1385,7 +1569,7 @@
 
 
     // the sample arm dims as the culture thickens: this is the measurement
-    const through = 1 - 0.72 * dens;
+    const through = S.through;
     // both arms leave the splitter, so they grow from their own source end too
     beamSample.material.uniforms.uGrow.value = splitGrow;
     beamRef.material.uniforms.uGrow.value = splitGrow;
@@ -1502,6 +1686,20 @@
 
     // The optical head stays opaque for the whole story, by instruction: what
     // opens the act is its cover coming off, not the print turning to glass.
+    // Less light on it while it fills the frame: acts 4 and 5 and the retreat
+    // between them and the record. It comes on at p 0.30-0.34, while the camera
+    // is up at the LED and the lens and the head is 0% of the frame (measured:
+    // 0.195-0.44 on a desktop, 0.205-0.42 on a phone), and goes off at
+    // 0.755-0.78, when the head is down to 0.5% of the frame. The wide acts
+    // keep the lighting they were tuned with.
+    const head = byTag.head && byTag.head[0];
+    if (head && head.material.userData.calm) {
+      const calm = ramp(p, A2 - 0.045, A2 - 0.005) * (1 - ramp(p, A5 - 0.020, A5 + 0.005));
+      const c = head.material.userData.calm;
+      c.spec.value = 1 - (1 - HEAD_SHADE.spec) * calm;
+      c.diff.value = 1 - (1 - HEAD_SHADE.diff) * calm;
+      c.env.value = 1 - (1 - HEAD_SHADE.env) * calm;
+    }
 
     /* --- the cell's wall gets out of the way for the two macro acts --- */
     const macro = ramp(p, A4 - 0.015, A4 + 0.03) * (1 - ramp(p, A5 - 0.02, A5 + 0.02));
@@ -1540,7 +1738,15 @@
     }
 
     /* --- the line is background once the camera is inside the optics --- */
-    const lineDim = ramp(p, A3 + 0.02, A3 + 0.07) * (1 - ramp(p, A5 + 0.02, A6));
+    // Down by the time act 4's caption lands, not 0.05 after it. In act 4 the
+    // inlet line runs from the cell straight down behind the caption: amber
+    // silicone under "04 — Beamsplitter", which is amber type. The line is
+    // off screen for the whole of act 3, so dimming it on the way in is free.
+    // And it stays down through the record, back only for the close. It used
+    // to return across the record act, and with the instrument standing at
+    // the plot's left edge both lines lay across the axis, over LAG and
+    // GROWTH, under the trace being written.
+    const lineDim = ramp(p, A3 - 0.035, A3 + 0.010) * (1 - ramp(p, A6 - 0.030, A6 + 0.020));
     tube.visible = lineDim < 0.985;
     // Scale each mesh's OWN opacity. Writing a flat `1 - 0.9 * lineDim` drove
     // the silicone wall to fully opaque for the whole opening — which is why
@@ -1575,52 +1781,6 @@
 
     bubble.visible = false;   // the rejection filter is not part of the opening
 
-    const inBeam = 0;
-
-    /* --- readouts --- */
-    // Anchored on the dashboard's own numbers at hour 30: sample 195.54 lx,
-    // reference 26.67 lx, ratio 7.33x.
-    // The readouts belong to act 5 (the ratio) and act 6 (the rejection).
-    const roA = ramp(p, A4 + 0.020, A4 + 0.075) * (1 - ramp(p, A5 - 0.025, A5 + 0.010));
-    const refLux = 26.67 * lamp / Math.max(lit, 1e-3);
-    // a bubble in the path is a clear window: the sample channel jumps
-    const sampLux = 195.54 * through * lamp / Math.max(lit, 1e-3) * (1 + 1.05 * inBeam);
-    if (roA > 0.002) {
-      readouts.sample.querySelector("b").textContent = sampLux.toFixed(2);
-      readouts.ref.querySelector("b").textContent = refLux.toFixed(2);
-      readouts.ratio.querySelector("b").textContent = (sampLux / Math.max(refLux, 1e-3)).toFixed(2) + "×";
-      const ratioA = roA * Math.max(ramp(p, dipC - 0.030, dipC - 0.008), ramp(p, A5, A5 + 0.02));
-      readouts.ratio.classList.toggle("hot", dip > 0.25);
-      readouts.ratio.classList.toggle("reject", inBeam > 0.35);
-      readouts.ratio.querySelector(".k").textContent =
-        inBeam > 0.35 ? "Rejected · not logged" : "Sample ÷ reference";
-      readouts.sample.classList.toggle("reject", inBeam > 0.35);
-      const w = stage.clientWidth, h = stage.clientHeight, narrow = w < 760;
-      function park(el, x, y, a2) {
-        if (a2 <= 0.002) { el.style.opacity = "0"; el.style.visibility = "hidden"; return; }
-        el.style.visibility = "visible";
-        el.style.opacity = a2.toFixed(3);
-        el.style.transform = "translate(" + Math.round(x) + "px," + Math.round(y) + "px)";
-      }
-      // reference top right, sample under it, the ratio on its own below —
-      // projecting all three put them on top of each other at every framing
-      park(readouts.ref, w - (narrow ? 140 : 250), narrow ? 26 : 96, roA);
-      park(readouts.sample, w - (narrow ? 140 : 250), narrow ? 92 : 168, roA);
-      park(readouts.ratio, w - (narrow ? 165 : 292), narrow ? 168 : 262, ratioA);
-    } else {
-      [readouts.sample, readouts.ref, readouts.ratio].forEach(function (el) {
-        el.style.opacity = "0"; el.style.visibility = "hidden";
-        el.classList.remove("reject", "hot");
-      });
-    }
-
-    /* --- the closing line --- */
-    if (endLine) {
-      const a2 = ramp(p, A6 + 0.020, A6 + 0.055);
-      endLine.style.opacity = a2.toFixed(3);
-      endLine.style.visibility = a2 < 0.004 ? "hidden" : "visible";
-      endLine.style.transform = "translateY(" + ((1 - a2) * 16).toFixed(1) + "px)";
-    }
 
     /* --- the record --- */
     // Two fades, not one. The camera starts back toward the hero at about 0.847
@@ -1629,8 +1789,12 @@
     // plate. The grid, the labels and the readout are gone before it gets there;
     // the trace itself stays a little longer and dims behind the instrument,
     // which is what the act was always meant to hand over to the close.
+    // All the way out by the close, not to a floor of 8%. The record is a 2D
+    // canvas laid OVER the 3D frame, so it cannot dim "behind" the instrument:
+    // at 8% the trace ran across the mast of the closing hero as a faint
+    // orange line printed on the part, for the last tenth of the story.
     drawCurve(p,
-      ramp(p, A5 + 0.005, A5 + 0.045) * (1 - 0.92 * ramp(p, A6 - 0.030, A6 + 0.020)),
+      ramp(p, A5 + 0.005, A5 + 0.045) * (1 - ramp(p, A6 - 0.030, A6 + 0.030)),
       1 - ramp(p, A6 - 0.053, A6 - 0.023));
 
     // Orange aurora behind the opening. It fades out as the story goes inside
@@ -1716,13 +1880,6 @@
     rig: rig, keys: byKey, tags: byTag,
   };
 
-  story = Story({
-    canvas: canvas, stage: stage, track: track, hud: hud, caps: CAPS, rail: true,
-    title: document.getElementById("title"),
-    cue: document.getElementById("cue"),
-    loader: ui.loader, pct: ui.pct,
-    titleOut: A0 - 0.012,
-    draw: draw,
-  });
+  story = Story(HP.storyConfig(draw));
   resize();
 })();

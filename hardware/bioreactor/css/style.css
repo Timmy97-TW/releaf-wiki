@@ -2182,3 +2182,204 @@ body.doc-light .bc .bc-key.s-reactor i { color: var(--bc-reactor); }
   .legend-row .lg { font-size: 11px; letter-spacing: .1em; }
   .pick-list-head { font-size: 11px; letter-spacing: .14em; }
 }
+
+
+/* ═══════════ 8 Oct 2026: Figure 1 "The system, stage by stage", redrawn in the record's DBTL style ═══════════
+   Owner: "make this diagram much better for bioreactor and change its style to match the dbtl cycles from other
+   pages". The walk keeps its behaviour (../js/syswalk.js, unchanged: stages light up, passed ones stay dimly on). The
+   stage is a DBTL band (leaf hairline, 4px leaf rule, leaf-50 wash, the kicker), the narration DBTL step chips with
+   round numbered badges, and the drawing has real parts. Culture (lumen side) takes the bioreactor's deep blue, the
+   harvest (shell side) leaf green; orange stays "not on record". Everything is scoped to #syswalk, which outranks
+   polish.css and wiki-align.css (both load after this file). On a phone and a tablet the drawing pins under the back
+   button and the narration scrolls beneath it. Delete this block (and restore the markup) to revert. */
+#syswalk {
+  --sw-c: #1d5a9e; --sw-c0: #f3f7fc; --sw-c1: #dbe7f6; --sw-c2: #a9c6e9;
+  --sw-h: #23684a; --sw-h0: #f3f9f5; --sw-h1: #d6ebde;
+  --sw-ink: #26323d; --sw-tx: #14402b; --sw-sub: #4a5560;
+}
+/* the stage: a DBTL band */
+#syswalk .syswalk-stage {
+  height: auto; top: 76px; justify-content: flex-start; padding: 1rem 1.1rem 1.15rem;
+  background: linear-gradient(180deg, #f4f9f6, #fff 64%);
+  border: 1px solid #cfe4d8; border-top: 4px solid #23684a; border-radius: .5rem; box-shadow: none;
+}
+#syswalk .syswalk-stage::before, #syswalk .syswalk-stage::after { content: none; }
+#syswalk .syswalk-fig { margin: .75rem 0 0; padding: 0; border: 0; border-radius: 0; background: none; box-shadow: none; overflow: visible; }
+#syswalk .syswalk-fig svg { min-width: 0; width: 100%; height: auto; overflow: visible; }
+/* the kicker: "STAGE 03 OF 08", then the stage's name in the heading face */
+#syswalk .sw-kick, #syswalk .syswalk-readout {
+  position: static; display: block; margin: 0; padding: 0; border: 0;
+  font: 700 .8125rem/1.25 var(--sans); letter-spacing: .1em; text-transform: uppercase; color: #23684a;
+}
+#syswalk .syswalk-rn { font: inherit; letter-spacing: inherit; color: inherit; }
+#syswalk .syswalk-rt { font-size: inherit; letter-spacing: inherit; font-weight: 600; color: #5f6b78; }
+#syswalk .syswalk-rname, #syswalk .sw-static span {
+  display: block; margin: .3rem 0 0; font: 800 1.25rem/1.2 var(--sans); letter-spacing: -.015em;
+  text-transform: none; color: #14402b;
+}
+#syswalk[data-active] .sw-static, #syswalk:not([data-active]) .syswalk-readout, #syswalk:not([data-active]) .syswalk-rail { display: none; }
+/* progress: eight segments, filled to the live stage */
+#syswalk .syswalk-rail {
+  position: relative; inset: auto; width: auto; height: 5px; margin: .65rem 0 0; border-radius: 0; overflow: hidden;
+  background: #e3f0e8;
+  -webkit-mask: repeating-linear-gradient(90deg, #000 0 calc(12.5% - 3px), transparent calc(12.5% - 3px) 12.5%);
+          mask: repeating-linear-gradient(90deg, #000 0 calc(12.5% - 3px), transparent calc(12.5% - 3px) 12.5%);
+}
+#syswalk .syswalk-rail::after { inset: 0 auto 0 0; height: auto; width: max(0px, calc(var(--sw-progress, 0%) - 2px)); background: #23684a; transition: width .35s var(--ease-out); }
+
+/* ---- the drawing ---- */
+#syswalk .sw-svg text { font-family: var(--sans); font-size: 14.5px; font-weight: 650; letter-spacing: 0; text-transform: none; fill: var(--sw-tx); }
+#syswalk .sw-svg .sw-s { font-size: 13.2px; font-weight: 450; fill: var(--sw-sub); }
+#syswalk .sw-svg .sw-k { font-size: 13.2px; font-weight: 700; font-style: italic; fill: var(--sw-h); }
+#syswalk .sw-svg .sw-out { font-weight: 800; fill: var(--sw-h); }
+#syswalk .sw-svg .sw-todo { font-weight: 650; fill: #c2410c; paint-order: stroke; stroke: #fff3eb; stroke-width: 5px; stroke-linejoin: round; }
+#syswalk .sw-svg .sw-zt { font-size: 12px; font-weight: 800; letter-spacing: .1em; }
+#syswalk .sw-svg .sw-zt.c { fill: var(--sw-c); }
+#syswalk .sw-svg .sw-zt.h { fill: var(--sw-h); }
+#syswalk .sw-svg .sw-zs { font-size: 13.2px; font-weight: 500; letter-spacing: 0; fill: var(--sw-sub); }
+#syswalk .sw-svg .sh { display: none; }
+#syswalk .sw-zone.c { fill: var(--sw-c0); }
+#syswalk .sw-zone.h { fill: var(--sw-h0); }
+#syswalk .sw-pt { fill: #fff; stroke: var(--sw-ink); stroke-width: 1.5; }
+#syswalk .sw-wh { fill: #fff; }
+#syswalk .sw-glass, #syswalk .sw-col { fill: none; stroke: var(--sw-ink); stroke-width: 1.6; }
+#syswalk .sw-ink { fill: var(--sw-ink); }
+#syswalk .sw-ln { fill: none; stroke-width: 5; stroke-linecap: round; stroke-linejoin: round; }
+#syswalk .sw-ln.c, #syswalk .sw-tube.c { stroke: var(--sw-c); }
+#syswalk .sw-ln.h, #syswalk .sw-tube.h { stroke: var(--sw-h); }
+#syswalk .sw-tube { fill: none; stroke-width: 4.5; }
+#syswalk .sw-pinch { stroke-width: 2.4; }
+#syswalk .sw-ar.c { fill: var(--sw-c); }
+#syswalk .sw-ar.h { fill: var(--sw-h); }
+#syswalk .sw-fl { fill: none; stroke: #fff; stroke-width: 2.2; stroke-linecap: round; stroke-dasharray: 0 11; opacity: 0; }
+#syswalk .sw-liq { fill: var(--sw-c1); }
+#syswalk .sw-cell { fill: none; stroke: var(--sw-c); stroke-width: 2.2; stroke-linecap: round; }
+#syswalk .sw-dip { fill: none; stroke: var(--sw-c); stroke-width: 2.4; }
+#syswalk .sw-cuv { fill: var(--sw-c1); stroke: var(--sw-c); stroke-width: 1.2; }
+#syswalk .sw-cuv.h { fill: var(--sw-h1); stroke: var(--sw-h); }
+#syswalk .sw-beam { fill: none; stroke: var(--sw-ink); stroke-width: 1.2; stroke-dasharray: 2 2; }
+#syswalk .sw-arm { fill: none; stroke: var(--sw-ink); stroke-width: 1.4; stroke-linecap: round; }
+#syswalk .sw-rl { stroke-width: 1.2; }
+#syswalk .sw-rot { transform-box: view-box; }
+#syswalk .sw-shell { fill: var(--sw-h1); }
+#syswalk .sw-hdr { fill: var(--sw-c1); }
+#syswalk .sw-fib { fill: var(--sw-c2); stroke: var(--sw-c); stroke-width: .8; }
+#syswalk .sw-prot { fill: none; stroke: var(--sw-h); stroke-width: 2.6; stroke-linecap: round; }
+#syswalk .sw-sheet { fill: none; stroke: var(--sw-ink); stroke-width: 1.1; }
+/* the stage badges: the narration's numbers, in each circuit's colour (3, the membrane, belongs to both) */
+#syswalk .sw-b { transform-box: fill-box; transform-origin: center; }
+#syswalk .sw-b circle { fill: var(--sw-c); }
+#syswalk .sw-b.h circle { fill: var(--sw-h); }
+#syswalk .sw-b.m circle { fill: #14402b; }
+#syswalk .sw-svg .sw-b text { font-size: 13px; font-weight: 700; fill: #fff; text-anchor: middle; }
+
+/* ---- the walk: not yet reached, passed (dimly on), live (lit and flowing) ---- */
+#syswalk[data-active] .syswalk-fig [data-stage] { opacity: .14; transition: opacity .5s var(--ease-out); }
+#syswalk[data-active] .syswalk-fig [data-stage].sw-past { opacity: .46; }
+#syswalk[data-active] .syswalk-fig [data-stage].sw-live { opacity: 1; }
+#syswalk[data-active] .sw-live .sw-fl { opacity: .95; animation: sw-run 1.1s linear infinite; }
+#syswalk[data-active] .sw-live .sw-rot { animation: sw-spin 2.8s linear infinite; }
+#syswalk[data-active] .sw-live .sw-b circle { paint-order: stroke; stroke: rgba(29, 90, 158, .22); stroke-width: 9; }
+#syswalk[data-active] .sw-live .sw-b.h circle { stroke: rgba(35, 104, 74, .24); }
+#syswalk[data-active] .sw-live .sw-b.m circle { stroke: rgba(20, 64, 43, .2); }
+/* stage 8 is the whole system at once: everything lit, everything flowing */
+#syswalk[data-active]:has(.syswalk-step.sw-live[data-stage="8"]) .syswalk-fig [data-stage] { opacity: 1; }
+#syswalk[data-active]:has(.syswalk-step.sw-live[data-stage="8"]) .sw-fl { opacity: .95; animation: sw-run 1.1s linear infinite; }
+#syswalk[data-active]:has(.syswalk-step.sw-live[data-stage="8"]) .sw-rot { animation: sw-spin 2.8s linear infinite; }
+@keyframes sw-run { to { stroke-dashoffset: -22; } }
+@keyframes sw-spin { to { transform: rotate(360deg); } }
+
+/* ---- the narration: DBTL step chips ---- */
+#syswalk .syswalk-step { border-left: 0; padding: 1rem 0; transition: opacity .4s var(--ease-out); }
+#syswalk[data-active] .syswalk-step { opacity: .4; }
+#syswalk[data-active] .syswalk-step.sw-live { opacity: 1; }
+#syswalk .sw-card {
+  display: grid; grid-template-columns: auto minmax(0, 1fr); align-items: center; column-gap: .7rem; row-gap: .5rem;
+  padding: .95rem 1.05rem 1.05rem; background: #fff; border: 1px solid var(--w-line, #e5e5e5); border-radius: .5rem;
+  transition: border-color .35s var(--ease-out), background-color .35s var(--ease-out);
+}
+#syswalk[data-active] .syswalk-step.sw-live .sw-card { border-color: #4f9c6f; background: linear-gradient(180deg, #f4f9f6, #fff 70%); }
+#syswalk .syswalk-step-n {
+  display: grid; place-items: center; width: 1.75rem; height: 1.75rem; margin: 0; border-radius: 50%;
+  font: 700 .8125rem/1 var(--sans); letter-spacing: 0; color: #fff; background: var(--sw-c);
+}
+#syswalk .syswalk-step.h .syswalk-step-n { background: var(--sw-h); }
+#syswalk .syswalk-step.m .syswalk-step-n, #syswalk .syswalk-step.all .syswalk-step-n { background: #14402b; }
+#syswalk .syswalk-step h4 { margin: 0; font-size: 1.06rem; line-height: 1.3; font-weight: 700; letter-spacing: -.01em; color: #14402b; }
+#syswalk .syswalk-step p { grid-column: 1 / -1; margin: 0; max-width: none; font-size: .97rem; line-height: 1.66; color: #262626; }
+
+/* ---- phones and tablets: the drawing pins under the back button, the narration scrolls beneath it ----
+   syswalk.js lights the step nearest mid-screen. With the drawing pinned over the top of the screen, mid-screen is
+   just under it, so each step carries the drawing's height above its card (--sw-pad): the card is then centred in the
+   space left below the drawing when its step goes live. Only while the walk runs ([data-active]). */
+@media (max-width: 900px) {
+  #syswalk .syswalk-grid { gap: .4rem; }
+  #syswalk .syswalk-stage {
+    position: sticky; top: 56px; z-index: 4; width: 100%; max-width: 540px; margin: 0 auto; box-sizing: border-box;
+    padding: .6rem .7rem .55rem; box-shadow: 0 14px 22px -20px rgba(20, 64, 43, .6);
+  }
+  #syswalk { --sw-pad: calc(56px + 66px + min(100vw - 72px, 518px) * .7333); }
+  #syswalk .syswalk-step { min-height: 0; padding: .7rem 0; }
+  #syswalk[data-active] .syswalk-step { padding-top: var(--sw-pad); opacity: .4; }
+  #syswalk[data-active] .syswalk-step.sw-live { opacity: 1; }
+  #syswalk .syswalk-fig { margin-top: .5rem; }
+  /* a white strip above the pinned drawing, under the back button, so the narration does not show through above
+     it; the walk's top margin is taller than the strip, so before it pins nothing is covered */
+  #syswalk { margin-top: 4.2rem; }
+  #syswalk .syswalk-stage::before {
+    content: ""; position: absolute; top: auto; right: auto; bottom: 100%; left: 50%; width: 100vw; height: 58px;
+    margin: 0 0 4px -50vw; border: 0; border-radius: 0; background: #fff; pointer-events: none;
+  }
+}
+@media (max-width: 700px) {
+  #syswalk .syswalk-stage { width: auto; max-width: none; margin: 0 -12px; padding: .55rem .5rem .45rem; }
+  #syswalk { --sw-pad: calc(56px + 46px + (100vw - 28px) * .7333); }
+  #syswalk .syswalk-rname { display: none; }
+  #syswalk .syswalk-rt { font-size: inherit !important; }
+  #syswalk .syswalk-rail { margin-top: .45rem; }
+  #syswalk .syswalk-fig { margin-top: .4rem; }
+  #syswalk .sw-svg text, #syswalk .sw-svg .sw-s, #syswalk .sw-svg .sw-k, #syswalk .sw-svg .sw-zs { font-size: 19px; }
+  #syswalk .sw-svg .sw-zt { font-size: 19px; letter-spacing: .04em; }
+  #syswalk .sw-svg .sw-b text { font-size: 14.5px; }
+  #syswalk .sw-svg .lo { display: none; }
+  #syswalk .sw-svg .sh { display: inline; }
+  #syswalk .sw-b { transform: scale(1.35); }
+  #syswalk .syswalk-step-n { font-size: 12px !important; }
+  #syswalk .sw-card { padding: .85rem .9rem .95rem; }
+  #syswalk .syswalk-step p { font-size: 1rem; }
+}
+/* 2.5's two circuit cards, just above the drawing, take its colours (lumen blue, shell leaf), so the section codes
+   its circuits one way. Their orange stripe was the record's last orange that did not mean "not on record". */
+body.doc-light #sec25 .circuit.lumen::before { background: linear-gradient(#1d5a9e, rgba(29, 90, 158, 0)); }
+body.doc-light #sec25 .circuit.shell::before { background: linear-gradient(#23684a, rgba(35, 104, 74, 0)); }
+body.doc-light #sec25 .circuit.lumen .circuit-tag { color: #1d5a9e; }
+body.doc-light #sec25 .circuit.shell .circuit-tag { color: #23684a; }
+/* tablets: the narration takes the drawing's width, so nothing scrolls out beside the pinned drawing; and between a
+   phone and a wide desktop the drawing renders at about 0.8-0.95, so its small type is set larger to stay at 11 px */
+@media (min-width: 701px) and (max-width: 900px) { #syswalk .syswalk-steps { max-width: 540px; margin: 0 auto; } }
+@media (min-width: 701px) and (max-width: 1200px) {
+  #syswalk .sw-svg .sw-zt { font-size: 13.5px; }
+  #syswalk .sw-svg .sw-s, #syswalk .sw-svg .sw-k, #syswalk .sw-svg .sw-zs { font-size: 13.6px; }
+  #syswalk .sw-svg .sw-b text { font-size: 13.6px; }
+}
+/* the narrowest phones (360 px): the pinned drawing runs edge to edge, so its labels stay at 11 px or more */
+@media (max-width: 374px) {
+  #syswalk .syswalk-stage { margin: 0 -18px; border-left: 0; border-right: 0; border-radius: 0; padding: .55rem .35rem .45rem; }
+  #syswalk { --sw-pad: calc(56px + 46px + (100vw - 8px) * .7333); }
+}
+@media (prefers-reduced-motion: reduce) {
+  #syswalk .sw-fl, #syswalk .sw-rot { animation: none !important; }
+  #syswalk .syswalk-rail::after, #syswalk .syswalk-step, #syswalk .sw-card, #syswalk .syswalk-fig [data-stage] { transition: none; }
+}
+
+/* 9 Oct 2026 polish: section numbers sit next to their titles, as on the photometer page
+   (photometer/css/style.css, "section numbers sit next to their titles, not in a 59px column").
+   ../css/polish.css gives `.sec h3 i` a 2.6em min-width, which left a wide gap ("3.1      Design")
+   on this page only. Delete this block to revert. */
+body.doc-light[data-instrument="bioreactor"] .doc-wrap section.sec > h3 { gap: 0; }
+body.doc-light[data-instrument="bioreactor"] .doc-wrap section.sec > h3 > i { min-width: 0; }
+
+/* 9 Oct 2026 polish: the hero lede's one link ("(5.1)", to the containment section) took the
+   record's dark link colour and all but vanished on the dark hero. Same blue as the title's
+   "what they secrete". Delete to revert. */
+.intro .lede a { color: var(--amber); text-decoration-color: color-mix(in srgb, var(--amber) 55%, transparent); }
