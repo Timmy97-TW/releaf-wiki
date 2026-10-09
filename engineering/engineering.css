@@ -14,7 +14,7 @@
      .dbtl     design, build, test and learn as four soft cards
      .ledger   the outcome of a cycle, and what it changed next
 
-   Everything else (.sec, .fig, .disclose, .callout, .tablewrap, .toc) comes
+   Everything else (.sec, .fig, .fold, .callout, .tablewrap, .toc) comes
    from assets/css/page.css. With scripts off every panel is visible and the
    record reads top to bottom.
    ========================================================================== */
@@ -46,93 +46,30 @@
 .eng .pagebody .sec > .callout { max-width: var(--measure); }
 
 .eng .sec + .sec { margin-top: var(--sp-8); }
-.eng .fig img, .eng .callout, .eng .tablewrap { border-radius: 0; }
 
 @media (min-width: 1040px) {
   .eng .toc { top: calc(var(--nav-h) + var(--sp-4)); }
 }
 
 /* ============================================================== TRACKS == */
+/* Since 10 October 2026 the control is the shared Integrated Human Practices
+   rail (assets/css/engage.css + engage.js), which this page's own copy was
+   taken from in the first place. What stays here is the cycle number inside a
+   button and the baseline alignment that number needs.                     */
 
 .track { margin: var(--sp-5) 0 0; }
-
-/* -- the segmented control -- */
-.seg {
-  position: sticky;
-  top: calc(var(--nav-h) + .75rem);
-  z-index: 6;
-  display: flex;
-  justify-content: center;
-  margin: 0 0 var(--sp-7);
-  pointer-events: none;
-}
-.seg__track {
-  position: relative;
-  display: flex;
-  flex: 1 1 auto;
-  gap: 2px;
-  max-width: 100%;
-  margin: 0;
-  padding: 5px;
-  overflow-x: auto;
-  scrollbar-width: none;
-  border-radius: 999px;
-  background: rgb(232 232 237 / .72);
-  -webkit-backdrop-filter: saturate(180%) blur(20px);
-          backdrop-filter: saturate(180%) blur(20px);
-  box-shadow: inset 0 0 0 .5px rgb(0 0 0 / .06), 0 8px 24px -14px rgb(0 0 0 / .3);
-  pointer-events: auto;
-}
-.seg__track::-webkit-scrollbar { display: none; }
-.seg__thumb {
-  position: absolute;
-  top: 5px; bottom: 5px; left: 0;
-  width: 0;
-  border-radius: 999px;
-  background: #fff;
-  box-shadow: 0 3px 8px rgb(0 0 0 / .12), 0 3px 1px rgb(0 0 0 / .04), 0 0 0 .5px rgb(0 0 0 / .04);
-  transition: transform .45s var(--ease), width .45s var(--ease);
-}
-.eng .seg__btn {
-  position: relative;
-  z-index: 1;
-  display: inline-flex;
-  flex: 1 0 auto;
-  align-items: baseline;
-  justify-content: center;
-  gap: .45rem;
-  padding: .72rem 1rem;
-  border: 0;
-  border-radius: 999px;
-  background: none;
-  font: inherit;
-  font-size: .9688rem;
-  font-weight: 500;
-  line-height: 1.2;
-  letter-spacing: -.01em;
-  color: var(--ink-2);
-  white-space: nowrap;
-  cursor: pointer;
-  transition: color .25s ease;
-}
+.eng .seg__btn { align-items: baseline; gap: .45rem; padding: .72rem 1rem; }
 .seg__no {
   font-size: .75rem; font-weight: 700;
   font-variant-numeric: tabular-nums;
   color: var(--ink-3);
   transition: color .25s ease;
 }
-.eng .seg__btn:hover { color: var(--ink); background: none; }
-.eng .seg__btn[aria-selected="true"] { color: var(--ink); font-weight: 600; }
 .eng .seg__btn[aria-selected="true"] .seg__no { color: var(--pl); }
-.seg__btn:focus-visible { outline: 2px solid var(--pl); outline-offset: 1px; }
-.seg__track:not(.has-thumb) .seg__btn[aria-selected="true"] { background: #fff; box-shadow: 0 2px 6px rgb(0 0 0 / .1); }
 
 /* ============================================================== A CYCLE == */
 
 .track > .cyc { padding: 0; background: none; scroll-margin-top: calc(var(--nav-h) + 5rem); }
-.track > .cyc[hidden] { display: none; }
-.track > .cyc.is-entering { animation: cyc-in .6s var(--ease) both; }
-@keyframes cyc-in { from { opacity: 0; transform: translateY(14px); } to { opacity: 1; transform: none; } }
 
 .cyc__hero { margin: 0 0 var(--sp-7); text-align: center; }
 .cyc__eyebrow {
@@ -291,16 +228,10 @@
 .eng .fig img { border-radius: 16px; }
 .eng .figs--3 .fig img, .eng .dbtl__step .fig img { border-radius: 12px; }
 
-.eng .disclose {
-  margin: var(--sp-6) 0 0;
-  border-radius: 18px;
-  background: var(--well);
-  overflow: hidden;
-}
-.eng .disclose > summary { background: none; }
-.eng .disclose > summary:hover,
-.eng .disclose[open] > summary { background: color-mix(in srgb, var(--pl) 6%, var(--well)); }
-.eng .disclose__body { padding-top: 0; }
+/* the "Show details" toggles are the shared fold (engage.css); on this page
+   one stands alone at the foot of a cycle, so it keeps its own top margin. */
+.eng .fold { margin: var(--sp-6) 0 0; }
+.eng .fold > summary:hover { color: var(--pl); }
 
 /* the one sentence in a cycle that is the finding itself */
 .finding {
@@ -369,12 +300,9 @@ table.data td.no  { background: var(--rust-100); color: var(--rust-700); }
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .seg__thumb, .track > .cyc.is-entering { transition: none; animation: none; }
   .cyc-anim .dbtl__step, .cyc-anim .ledger > div { opacity: 1; transform: none; transition: none; }
 }
 
 @media print {
-  .track > .cyc[hidden] { display: block !important; }
-  .disclose__body { display: block !important; }
-  .seg { display: none; }
+  .eng .fold__body { display: block !important; }
 }
