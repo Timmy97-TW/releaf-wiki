@@ -351,7 +351,7 @@ function __reportUiError(where, err) {
         <span id="mcu-link" style="margin-left:14px;"></span>
         <span id="mcu-diag" style="margin-left:14px;"></span><span id="ui-version" style="margin-left:14px;color:#f87171;">UI v4.13（JS 未完成載入）</span></div>
     </div>
-    <div class="lang-toggle" id="lang-toggle" style="display:none">
+    <div class="lang-toggle" id="lang-toggle">
       <button data-lang="en" class="active">EN</button>
       <button data-lang="zh">正體中文</button>
     </div>
@@ -1193,6 +1193,7 @@ if (window.__offlinePreview || typeof io === 'undefined') {
   document.addEventListener('DOMContentLoaded', () => {
     const d = document.createElement('div');
     d.style.cssText = 'background:#1e293b;color:#cbd5e1;border:1px solid #334155;border-radius:8px;padding:10px 14px;margin:0 0 16px;line-height:1.6;font-size:13px;';
+    d.setAttribute('data-i18n', 'offlineNote');
     d.innerHTML = 'Preview without a board. Readings stay blank and the controls send nothing. On the rig, the Uno Q serves this page at port 7000.';
     const page = document.querySelector('.page');
     page.insertBefore(d, page.firstChild);
@@ -1365,6 +1366,7 @@ const I18N = {
     mcuLinkOk: (fw) => `MCU：● 正常（${fw}）`, mcuLinkDown: 'MCU：● 沒有回應', mcuLinkUnknown: 'MCU：確認中…',
     mcuLinkDownBanner: (e) => `⛔ 板子的 MCU 沒有回應，感測器不會更新、幫浦與夾閥也無法操作。請看 App Lab 下方 MCU 的 Serial Monitor 有沒有 [boot] 訊息、sketch 是否編譯/上傳成功，必要時重新上電。<br>⚠️ 最常見原因是<b>上電順序</b>：請先<b>關閉 12 V 外部電源</b> → 在 App Lab 重新啟動 App → 看到「MCU：● 正常」後再打開外部電源。（${e}）`,
     mcuFwMismatch: (fw, exp) => `⚠️ MCU 上跑的韌體是 ${fw}，但 Python 預期 ${exp}：sketch 可能沒有成功重新上傳。`,
+    offlineNote: '沒有連接板子的預覽：讀值留白，按鈕不會送出指令。在反應器上由 Uno Q 於 port 7000 提供這個網頁。', connOffline: '未連接板子（預覽）',
     connLabel: '連線狀態：', connConnecting: '連線中...', connConnected: '已連線',
     connDisconnected: '連線中斷，重連中...',
 
@@ -1757,6 +1759,7 @@ const I18N = {
     mcuLinkOk: (fw) => `MCU: ● OK (${fw})`, mcuLinkDown: 'MCU: ● not responding', mcuLinkUnknown: 'MCU: checking…',
     mcuLinkDownBanner: (e) => `⛔ The board's MCU is not responding: sensors will not update and the pump/valve cannot be controlled. Check the MCU Serial Monitor in App Lab for [boot] messages and whether the sketch compiled/uploaded; power-cycle the board if needed.<br>⚠️ Most common cause is <b>power sequencing</b>: <b>switch off the 12 V external supply</b> → restart the App in App Lab → switch the external supply back on once "MCU: ● OK" appears. (${e})`,
     mcuFwMismatch: (fw, exp) => `⚠️ The MCU is running firmware ${fw} but Python expects ${exp}: the sketch may not have been re-uploaded.`,
+    offlineNote: 'Preview without a board. Readings stay blank and the controls send nothing. On the rig, the Uno Q serves this page at port 7000.', connOffline: 'No board (preview)',
     connLabel: 'Connection: ', connConnecting: 'Connecting...', connConnected: 'Connected',
     connDisconnected: 'Disconnected, reconnecting...',
 
@@ -2002,8 +2005,8 @@ function t(key, ...args) {
 function setConnectionStatus(state) {
   const el = document.getElementById('connectionText');
   const map = { connecting: 'connConnecting', connected: 'connConnected', disconnected: 'connDisconnected' };
-  el.textContent = t(map[state]);
-  el.style.color = (state === 'connected') ? '#4ade80' : (state === 'connecting') ? '#94a3b8' : '#f87171';
+  el.textContent = window.__offlinePreview ? t('connOffline') : t(map[state]);
+  el.style.color = window.__offlinePreview ? '#94a3b8' : (state === 'connected') ? '#4ade80' : (state === 'connecting') ? '#94a3b8' : '#f87171';
 }
 
 /* ============================================================
@@ -4631,7 +4634,6 @@ document.addEventListener('keydown', (e) => {
 window.onload = function () {
   applyLanguage(currentLang);      // v3.10: 預設英文(靜態 HTML 是中文, 這裡一次翻成目前語言)
   setConnectionStatus('connecting');
-  if (window.__offlinePreview) { const c = document.getElementById('connectionText'); c.textContent = 'No board (preview)'; c.style.color = '#94a3b8'; }
   applyPumpStatus(lastPumpStatus);
   applyOd600Blank(null);
   renderValveEvents();
