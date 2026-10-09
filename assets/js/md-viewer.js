@@ -98,7 +98,7 @@
       '<div class="mdv__box">' +
         '<div class="mdv__stage"><canvas class="mdv__cv"></canvas>' +
           '<p class="mdv__badge"></p>' +
-          '<p class="mdv__hint">drag to turn &#183; scroll to zoom</p>' +
+          '<p class="mdv__hint"></p>' +
           '<button class="mdv__start" type="button">Play the trajectory</button>' +
           '<p class="mdv__wait" hidden>loading&#8230;</p></div>' +
         '<aside class="mdv__rail">' +
@@ -360,9 +360,13 @@
         fig.querySelectorAll(".mdv__modes button").forEach(function (o) {
           o.setAttribute("aria-pressed", String(o === btn));
         });
+        /* This line is a legend, not an instruction: it says what the
+           surface the reader is looking at actually is. In the atom mode
+           there is nothing to explain, so it stays empty. The wiki does
+           not tell a reader to drag, scroll, hover or click. */
         q(".mdv__hint").textContent = mode === "surface"
           ? "the pocket surface is the mean receptor, so it does not move"
-          : "drag to turn · scroll to zoom";
+          : "";
         draw();
       });
     });
