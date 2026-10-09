@@ -176,6 +176,7 @@
     if (here) a.setAttribute("aria-current", "page");
     const tile = el("span", "sitenav__tile");
     tile.innerHTML = svg(p.icon);
+    tile.dataset.icon = p.icon;           /* per-icon touches in nav.css */
     a.appendChild(tile);
     const text = el("span", "sitenav__entrytext");
     text.appendChild(el("span", "sitenav__entrytitle", p.title));
