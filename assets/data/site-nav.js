@@ -137,7 +137,7 @@ const NAV_UNLISTED = [
    would break an iGEM 2026 wiki rule, with a panel listing them. It is a
    teaching aid for this demo copy. Set to false in the copy that goes to
    gitlab.igem.org, or delete the line and the file.                        */
-window.RULECHECK = true;
+window.RULECHECK = false;
 
 /* Drafting marks: text an AI assistant drafted to fill a page, not yet
    rewritten by a student, carries class="ai" and shows in orange. Set to false
