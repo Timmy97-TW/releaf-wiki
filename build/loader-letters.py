@@ -113,7 +113,7 @@ def main():
     mas = mas.resize((round(mas.width * s), round(mas.height * s)), Image.LANCZOS)
 
     os.makedirs(OUT, exist_ok=True)
-    word.save(os.path.join(OUT, "word.webp"), quality=72, method=6)
+    word.save(os.path.join(OUT, "word.webp"), quality=60, alpha_quality=70, method=6)
     mas.save(os.path.join(OUT, "mascot.webp"), quality=86, method=6)
 
     # letter columns from the ground mask (gaps of pure ground between them)

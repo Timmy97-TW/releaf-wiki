@@ -8,22 +8,44 @@
   <title>ReLEAF &middot; Every farmer a biomanufacturer &middot; GEMS Taiwan, iGEM 2026</title>
   <meta name="description" content="Every farmer a biomanufacturer. ReLEAF is a stress-responsive optogenetic bioreactor for precision plant protection: from stress prediction to protectant delivery in one integrated system, with the engineered cells kept inside it. GEMS Taiwan, iGEM 2026, Biomanufacturing Village." />
   <link rel="icon" href="assets/img/logo.png" />
-  <link rel="preload" href="assets/fonts/inter-variable.woff2" as="font" type="font/woff2" crossorigin />
-  <!-- The opening (#ld, first thing in <body>): once per visit, before any
-       stylesheet file has to arrive. Not with a #link into the page, not
-       again in the same tab, never without script. -->
+  <!-- The opening (#ld, first thing in <body>): once per visit, not with a
+       #link into the page, not again in the same tab, never without script.
+       This runs before anything is requested. When the opening plays, its
+       drawing (33 kB) is fetched ALONE first, and the font and the farm
+       photograph start only once it is in (or after 4 s): on a slow line
+       they would otherwise split the bandwidth and the screen would hold a
+       blank white for seconds. Without the opening they start at once.
+       "hl" (any visit with script) lets the farm photograph fade in over
+       its blurred stand-in, home.css. -->
   <script>
-    (function (d) {
+    (function (d, w) {
+      var root = d.documentElement;
+      root.classList.add("hl");
+      function pre(href, as, more) {
+        var l = d.createElement("link");
+        l.rel = "preload"; l.as = as; l.href = href;
+        for (var k in more) l.setAttribute(k, more[k]);
+        d.head.appendChild(l);
+      }
+      var went = false;
+      w.__heroGo = function () {
+        if (went) return;
+        went = true;
+        pre("assets/fonts/inter-variable.woff2", "font", { type: "font/woff2", crossorigin: "" });
+        pre("assets/img/home/hero-team-portrait.webp", "image", { type: "image/webp", media: "(max-aspect-ratio: 2/3)", fetchpriority: "high" });
+        pre("assets/img/home/hero-team-1400.webp", "image", { type: "image/webp", media: "not all and (max-aspect-ratio: 2/3)", fetchpriority: "high",
+          imagesrcset: "assets/img/home/hero-team-1400.webp 1400w, assets/img/home/hero-team-1600.webp 1600w, assets/img/home/hero-team-1900.webp 1900w, assets/img/home/hero-team-2200.webp 2200w, assets/img/home/hero-team-2600.webp 2600w",
+          imagesizes: "100vw" });
+      };
       var go = !location.hash;
       try { if (sessionStorage.getItem("releaf-intro") === "1") go = false; } catch (e) { /* storage blocked: play it */ }
-      if (!go) return;
-      d.documentElement.classList.add("ld");
-      var l = d.createElement("link");
-      l.rel = "preload"; l.as = "image"; l.href = "assets/img/home/loader/word.webp";
-      l.setAttribute("fetchpriority", "high");
-      d.head.appendChild(l);
-    })(document);
+      if (!go) { w.__heroGo(); return; }
+      root.classList.add("ld");
+      pre("assets/img/home/loader/word.webp", "image", { fetchpriority: "high" });
+      w.setTimeout(w.__heroGo, 4000);                   // the drawing failed or crawls: do not wait on it
+    })(document, window);
   </script>
+  <noscript><link rel="preload" href="assets/fonts/inter-variable.woff2" as="font" type="font/woff2" crossorigin /></noscript>
   <style>
     #ld { display: none; }
     html.ld, html.ld body { overflow: hidden; }
@@ -51,51 +73,51 @@
       transition: opacity .3s ease, transform .62s cubic-bezier(.3, 1.45, .55, 1);
     }
     .ld__l.on, .ld__m.on { opacity: 1; transform: none; }
+    /* until the drawing is in: one point of green light where the word will be */
+    .ld__dot {
+      position: absolute; left: 50%; top: 50%; width: 14px; height: 14px; margin: -7px 0 0 -7px;
+      border-radius: 50%; background: #35e08a; box-shadow: 0 0 18px 4px rgb(53 224 138 / .45);
+      animation: ld-breathe 1.6s ease-in-out infinite; transition: opacity .3s ease;
+    }
+    .ld__box.has-word .ld__dot { opacity: 0; animation: none; }
+    @keyframes ld-breathe { 50% { transform: scale(.6); opacity: .55; } }
     .ld__m.fly { transition: transform .95s cubic-bezier(.6, 0, .25, 1), opacity .25s ease .75s; }
     .ld__m.fly.gone { opacity: 0; }
     @media (prefers-reduced-motion: reduce) {
       .ld__l, .ld__m { transform: none; transition: opacity .2s ease; }
+      .ld__dot { animation: none; }
       html.ld #ld, .ld__w { transition-duration: .3s; }
     }
   </style>
-  <link rel="stylesheet" href="assets/css/tokens.css" />
-  <link rel="stylesheet" href="assets/css/nav.css" />
-  <link rel="stylesheet" href="assets/css/page.css" />
-  <!-- ?v= on the homepage's own sheets and scripts: see the note above the scripts -->
-  <link rel="stylesheet" href="assets/css/home.css?v=20261009-home13" />
-  <link rel="stylesheet" href="assets/css/home-problem.css?v=20261009-home13" />
-  <link rel="stylesheet" href="assets/css/home-threat.css?v=20261009-home13" />
-  <link rel="stylesheet" href="assets/css/home-safe.css?v=20261009-home13" />
-  <link rel="stylesheet" href="assets/css/home-hour.css?v=20261009-home13" />
-  <link rel="stylesheet" href="assets/css/home-reactor.css?v=20261009-home13" />
-  <link rel="stylesheet" href="assets/css/home-vision.css?v=20261009-home13" />
-  <link rel="stylesheet" href="assets/css/big-picture-v4.css?v=20261009-home13" />
-  <link rel="stylesheet" href="assets/css/home-voices.css?v=20261009-home13" />
-  <!-- one sheet per section team, added 29 Sep; each is owned by one section -->
-  <link rel="stylesheet" href="assets/css/home-hero.css?v=20261009-home13" />
-  <link rel="stylesheet" href="assets/css/home-demands.css?v=20261009-home13" />
-  <link rel="stylesheet" href="assets/css/home-sponsors.css?v=20261009-home13" />
-  <link rel="stylesheet" href="assets/css/home-explore.css?v=20261009-home13" />
 </head>
 <body>
   <!-- ═══════════════════════════════════════════════════ 0  THE OPENING ══ -->
   <!-- The team's student-drawn ReLEAF wordmark (20 July 2026): a test tube,
        pathogens, wheat and a crate of tomatoes, leaves, and the mascot on
        the F. Its letters come in one by one as the first screen arrives
-       (the font, the farm photograph, the machine under the light, and the
-       page's own scripts), so how far along it is shows without a bar or
-       a number. Then the mascot leaves the F for the badge in the nav, the
-       word fades, and the white lifts off the farm. The hero's own pass with
-       the light waits for this to end (window.__introDone).
+       (the drawing, the font, the farm photograph and the page's scripts and
+       sheets), so how far along it is shows without a bar or a number. Then
+       the mascot leaves the F for the badge in the nav, the word fades, and
+       the white lifts off the farm. The hero's own pass with the light waits
+       for this to end (window.__introDone).
 
-       At least 1.3 s, so six letters read as a word and not a flicker; at
-       most 6 s from the click, whatever is still loading. If the drawing itself
-       has not arrived 1.2 s in, it steps aside rather than hold up a blank
-       white screen, and plays on a later visit instead. Cut by build/loader-letters.py
-       from the drawing in iGEM2026_Images; the left/right numbers are its
-       output. Only the white ground was removed and the mascot lifted off. -->
+       WHY THE SHEETS ARE BELOW IT. A stylesheet in <head> holds back every
+       pixel of the page until it arrives, sixteen of them on this page. In
+       <body> it holds back only what follows it, so the opening paints from
+       the HTML alone and covers the page while the sheets load.
+
+       Until the drawing is in, a point of green light holds the screen. At
+       least 1.3 s, so six letters read as a word and not a flicker; at most
+       5.5 s from the click, except that it never lifts before the sheets are
+       in (else the white would lift off a page that cannot be drawn yet).
+       Whatever is still loading then (on a slow line, the photograph) arrives on a hero built to receive it: the farm shows
+       blurred and sharpens as the photograph comes in (home.css, "hl").
+       Cut by build/loader-letters.py from the drawing in iGEM2026_Images; the
+       left/right numbers are its output. Only the white ground was removed
+       and the mascot lifted off. -->
   <div id="ld" aria-hidden="true">
     <div class="ld__box">
+      <span class="ld__dot"></span>
       <div class="ld__w">
         <i class="ld__l" style="--l:.0032;--r:.2024"></i>
         <i class="ld__l" style="--l:.2069;--r:.3306"></i>
@@ -104,7 +126,7 @@
         <i class="ld__l" style="--l:.6564;--r:.8292"></i>
         <i class="ld__l" style="--l:.8414;--r:.9594"></i>
       </div>
-      <img class="ld__m" src="assets/img/home/loader/mascot.webp" width="137" height="161" alt="" />
+      <img class="ld__m" data-src="assets/img/home/loader/mascot.webp" width="137" height="161" alt="" />
     </div>
   </div>
   <script>
@@ -113,65 +135,64 @@
       if (!root.classList.contains("ld")) { L.remove(); return; }
       var done;
       w.__introDone = new Promise(function (ok) { done = ok; });
-      var letters = [].slice.call(L.querySelectorAll(".ld__l")), mascot = L.querySelector(".ld__m");
-      var MIN = 1300, MAX = 6000, GRACE = 1200, t0 = performance.now(), shown = 0, lit = 0, ended = false;
+      var box = L.querySelector(".ld__box"), letters = [].slice.call(L.querySelectorAll(".ld__l")), mascot = L.querySelector(".ld__m");
+      var MIN = 1300, MAX = 5500, t0 = performance.now(), shown = 0, lit = 0, ended = false, left = false;
       var reduced = w.matchMedia && w.matchMedia("(prefers-reduced-motion: reduce)").matches;
       w.scrollTo(0, 0);
 
-      // what the first screen needs; each settles once, loaded or failed
-      var need = { word: false, fonts: false, farm: false, rack: false, scripts: false };
+      // what the first screen needs; each settles once, loaded or failed.
+      // "page" is DOMContentLoaded (the scripts). The sheets are not on the
+      // 5.5 s cap: leaving before them would lift the white off a page that
+      // cannot be drawn yet (SHEETS_MAX is the only limit on them).
+      var need = { word: false, fonts: false, farm: false, page: false };
+      var SHEETS_MAX = 15000, sheetsIn = false;
+      function sheets() {
+        if (sheetsIn) return true;
+        if (!d.getElementById("site-nav")) return false;            // the parser is not past them yet
+        sheetsIn = [].every.call(d.querySelectorAll('link[rel="stylesheet"]'), function (l) { return !!l.sheet; });
+        return sheetsIn;
+      }
       var word = new Image();
-      word.onload = word.onerror = function () { need.word = true; };
+      word.onload = word.onerror = function () { need.word = true; mascot.src = mascot.dataset.src; w.__heroGo(); };
       word.src = "assets/img/home/loader/word.webp";
       if (d.fonts && d.fonts.ready) d.fonts.ready.then(function () { need.fonts = true; }); else need.fonts = true;
-      d.addEventListener("DOMContentLoaded", function () { need.scripts = true; });
-      function img(key, sel) {
-        if (need[key]) return;
-        var el = d.querySelector(sel);
-        if (el && el.complete) need[key] = true;
-        else if (el && !el.dataset.ldw) {
-          el.dataset.ldw = 1;
-          el.addEventListener("load", function () { need[key] = true; }, { once: true });
-          el.addEventListener("error", function () { need[key] = true; }, { once: true });
-        }
+      d.addEventListener("DOMContentLoaded", function () { need.page = true; });
+      var farm = null;
+      function photo() {
+        if (need.farm) return;
+        farm = farm || d.querySelector(".hero__frame--farm img");
+        if (farm && farm.complete && farm.currentSrc) need.farm = true;
       }
 
       function tick(now) {
         if (ended) return;
-        img("farm", ".hero__frame--farm img");
-        img("rack", ".hero__frame--reactor img");
+        photo();
         var keys = Object.keys(need), n = 0;
         keys.forEach(function (k) { if (need[k]) n++; });
-        // the letters' pace counts from when this script runs; the cap from the
-        // click, since the stylesheets may already have taken a while
+        // the letters' pace counts from when this script runs; the cap from
+        // the click
         var el = now - t0, all = n === keys.length || now > MAX;
-        var goal = Math.min(el / MIN, all ? 1 : Math.max(n / keys.length * .84, .84 * (1 - Math.exp(-el / 2200))));
-        // a white screen with nothing on it is worse than no opening: if the
-        // drawing is not in soon, step aside and let the page load as it is
-        if (!need.word && el > GRACE) { leave(true); return; }
-        if (!need.word) goal = 0;
-        shown += (goal - shown) * .09;
+        var goal = !need.word ? 0
+          : Math.min(el / MIN, all ? 1 : Math.max(n / keys.length * .84, .84 * (1 - Math.exp(-el / 2200))));
+        if (need.word) box.classList.add("has-word");
+        shown += (goal - shown) * (now > MAX ? .22 : .09);   // past the cap, finish the word briskly
         if (all && el >= MIN && 1 - shown < .01) shown = 1;
         while (lit < letters.length && shown >= (lit + 1) / letters.length - .02) {
           letters[lit].classList.add("on");
           if (lit === letters.length - 1) mascot.classList.add("on");
           lit++;
         }
-        if (shown >= 1) { w.setTimeout(leave, reduced ? 250 : 420); return; }
+        var ready = sheets() || now > SHEETS_MAX;
+        if (ready && (shown >= 1 || (!need.word && now > MAX))) { w.setTimeout(leave, reduced ? 250 : 420); ended = true; return; }
         w.requestAnimationFrame(tick);
       }
 
-      function leave(skip) {
-        if (ended) return;
-        ended = true;
-        if (skip === true) {                             // not seen, so a later visit still gets it
-          L.classList.add("out");
-          w.setTimeout(function () { root.classList.remove("ld"); L.remove(); done(); }, 300);
-          return;
-        }
+      function leave() {
+        if (left) return;
+        left = ended = true;
         try { sessionStorage.setItem("releaf-intro", "1"); } catch (e) { /* fine */ }
         var badge = d.querySelector(".sitenav__logo"), b = badge && badge.getBoundingClientRect();
-        if (!reduced && b && b.width) {
+        if (!reduced && lit === letters.length && b && b.width) {
           // the mascot sits in the upper middle of the badge, about half its width
           var m = mascot.getBoundingClientRect();
           var s = b.width * .5 / m.width;
@@ -194,9 +215,29 @@
       }
 
       w.requestAnimationFrame(tick);
-      w.setTimeout(leave, Math.max(MAX - t0, 0) + 1500); // a hidden tab never ticks; never keep anyone out
+      w.setTimeout(leave, Math.max(SHEETS_MAX - t0, 0) + 1500); // a hidden tab never ticks; never keep anyone out
     })(document, window);
   </script>
+
+  <!-- the sheets: here, not in <head> (see WHY THE SHEETS ARE BELOW IT) -->
+  <link rel="stylesheet" href="assets/css/tokens.css" />
+  <link rel="stylesheet" href="assets/css/nav.css" />
+  <link rel="stylesheet" href="assets/css/page.css" />
+  <!-- ?v= on the homepage's own sheets and scripts: see the note above the scripts -->
+  <link rel="stylesheet" href="assets/css/home.css?v=20261010-home15" />
+  <link rel="stylesheet" href="assets/css/home-problem.css?v=20261010-home15" />
+  <link rel="stylesheet" href="assets/css/home-threat.css?v=20261010-home15" />
+  <link rel="stylesheet" href="assets/css/home-safe.css?v=20261010-home15" />
+  <link rel="stylesheet" href="assets/css/home-hour.css?v=20261010-home15" />
+  <link rel="stylesheet" href="assets/css/home-reactor.css?v=20261010-home15" />
+  <link rel="stylesheet" href="assets/css/home-vision.css?v=20261010-home15" />
+  <link rel="stylesheet" href="assets/css/big-picture-v4.css?v=20261010-home15" />
+  <link rel="stylesheet" href="assets/css/home-voices.css?v=20261010-home15" />
+  <!-- one sheet per section team, added 29 Sep; each is owned by one section -->
+  <link rel="stylesheet" href="assets/css/home-hero.css?v=20261010-home15" />
+  <link rel="stylesheet" href="assets/css/home-demands.css?v=20261010-home15" />
+  <link rel="stylesheet" href="assets/css/home-sponsors.css?v=20261010-home15" />
+  <link rel="stylesheet" href="assets/css/home-explore.css?v=20261010-home15" />
 
 <!-- =============================================================================
      HOMEPAGE.
@@ -261,12 +302,20 @@
          the farm is whole; the reactor is read out by its alt text. -->
     <div class="hero__frames" id="hero-spot">
       <div class="hero__frame hero__frame--farm">
-        <picture>
-          <source media="(max-aspect-ratio: 2/3)" type="image/webp" srcset="assets/img/home/hero-team-portrait.webp" />
-          <source media="(max-aspect-ratio: 2/3)" srcset="assets/img/home/hero-team-portrait.jpg" />
-          <source type="image/webp" srcset="assets/img/home/hero-team-1400.webp 1400w, assets/img/home/hero-team-1900.webp 1900w, assets/img/home/hero-team-2600.webp 2600w" sizes="100vw" />
-          <img src="assets/img/home/hero-team-1400.jpg" srcset="assets/img/home/hero-team-1400.jpg 1400w, assets/img/home/hero-team-1900.jpg 1900w, assets/img/home/hero-team-2600.jpg 2600w" sizes="100vw" alt="The ReLEAF team in their team shirts walking in single file between bean trellises on Farmer Chen&rsquo;s farm in Tamsui, with Chen at the head of the line." fetchpriority="high" />
+        <picture data-defer>
+          <source media="(max-aspect-ratio: 2/3)" type="image/webp" data-srcset="assets/img/home/hero-team-portrait.webp" />
+          <source media="(max-aspect-ratio: 2/3)" data-srcset="assets/img/home/hero-team-portrait.jpg" />
+          <source type="image/webp" data-srcset="assets/img/home/hero-team-1400.webp 1400w, assets/img/home/hero-team-1600.webp 1600w, assets/img/home/hero-team-1900.webp 1900w, assets/img/home/hero-team-2200.webp 2200w, assets/img/home/hero-team-2600.webp 2600w" sizes="100vw" />
+          <img data-src="assets/img/home/hero-team-1400.jpg" data-srcset="assets/img/home/hero-team-1400.jpg 1400w, assets/img/home/hero-team-1900.jpg 1900w, assets/img/home/hero-team-2600.jpg 2600w" sizes="100vw" alt="The ReLEAF team in their team shirts walking in single file between bean trellises on Farmer Chen&rsquo;s farm in Tamsui, with Chen at the head of the line." fetchpriority="high" />
         </picture>
+        <noscript>
+          <picture>
+            <source media="(max-aspect-ratio: 2/3)" type="image/webp" srcset="assets/img/home/hero-team-portrait.webp" />
+            <source media="(max-aspect-ratio: 2/3)" srcset="assets/img/home/hero-team-portrait.jpg" />
+            <source type="image/webp" srcset="assets/img/home/hero-team-1400.webp 1400w, assets/img/home/hero-team-1600.webp 1600w, assets/img/home/hero-team-1900.webp 1900w, assets/img/home/hero-team-2200.webp 2200w, assets/img/home/hero-team-2600.webp 2600w" sizes="100vw" />
+            <img src="assets/img/home/hero-team-1400.jpg" srcset="assets/img/home/hero-team-1400.jpg 1400w, assets/img/home/hero-team-1900.jpg 1900w, assets/img/home/hero-team-2600.jpg 2600w" sizes="100vw" alt="The ReLEAF team in their team shirts walking in single file between bean trellises on Farmer Chen&rsquo;s farm in Tamsui, with Chen at the head of the line." fetchpriority="high" />
+          </picture>
+        </noscript>
       </div>
       <div class="hero__lens" id="hero-lens">
         <div class="hero__lens-in">
@@ -274,13 +323,50 @@
           <div class="hero__halo"></div>
           <div class="hero__frame hero__frame--reactor">
             <picture>
-              <source type="image/webp" srcset="assets/img/home/hero-rack-cut-900.webp 900w, assets/img/home/hero-rack-cut-1440.webp 1440w" sizes="(max-aspect-ratio: 2/3) 92vw, 42vh" />
-              <img src="assets/img/home/hero-rack-cut-900.png" width="900" height="1347" decoding="async" fetchpriority="low" alt="A 3D model of the ReLEAF bioreactor: a wall rack of wire mesh carrying, from the top, the controller and driver boards, two peristaltic pumps, a tilted cartridge, inline sensors and valves, and at the foot the amber culture bottle and the pale harvest bottle, joined by amber and clear silicone lines." />
+              <source type="image/webp" data-srcset="assets/img/home/hero-rack-cut-900.webp 900w, assets/img/home/hero-rack-cut-1440.webp 1440w" sizes="(max-aspect-ratio: 2/3) 92vw, 42vh" />
+              <img data-src="assets/img/home/hero-rack-cut-900.png" width="900" height="1347" decoding="async" alt="A 3D model of the ReLEAF bioreactor: a wall rack of wire mesh carrying, from the top, the controller and driver boards, two peristaltic pumps, a tilted cartridge, inline sensors and valves, and at the foot the amber culture bottle and the pale harvest bottle, joined by amber and clear silicone lines." />
             </picture>
           </div>
         </div>
       </div>
     </div>
+
+    <!-- The farm photograph fades in over its blurred stand-in when it is
+         decoded (home.css, html.hl), so a slow line sees the field sharpen
+         rather than a half-drawn picture. The machine under the light is
+         only fetched after it, so the two never split the bandwidth: the
+         light cannot show the machine before the farm is there anyway. -->
+    <script>
+      (function (d) {
+        var farm = d.querySelector(".hero__frame--farm img"), rack = d.querySelector(".hero__frame--reactor picture");
+        // the farm's sources wait in data- attributes so that the opening's
+        // drawing goes first; __heroGo has started (or now starts) their
+        // download through preloads in <head>, and these pick it up
+        window.__heroGo();
+        [].forEach.call(d.querySelectorAll(".hero__frame--farm [data-srcset]"), function (s) { s.srcset = s.dataset.srcset; });
+        farm.src = farm.dataset.src;
+        function machine() {
+          [].forEach.call(rack.querySelectorAll("[data-srcset]"), function (s) { s.srcset = s.dataset.srcset; });
+          var i = rack.querySelector("img[data-src]");
+          if (i) i.src = i.dataset.src;
+        }
+        // the maps under the hero (home-threat.css) wait for this too, or
+        // for the reader to scroll, whichever comes first
+        function after() { d.documentElement.classList.add("hero-in"); }
+        function shown() {
+          farm.classList.add("is-in");
+          machine();
+          after();
+        }
+        window.addEventListener("scroll", after, { once: true, passive: true });
+        if (farm.complete && farm.currentSrc) shown();
+        else {
+          farm.addEventListener("load", function () { (farm.decode ? farm.decode() : Promise.resolve()).catch(function () {}).then(shown); }, { once: true });
+          farm.addEventListener("error", shown, { once: true });
+        }
+      })(document);
+    </script>
+    <noscript><style>.hero__frame--reactor, .hero__frame--farm picture[data-defer] { display: none; }</style></noscript>
 
     <div class="hero__inner">
       <div class="hero__head">
@@ -426,7 +512,7 @@
           <label><input type="radio" name="th-view" value="conv" /><span>Convergence</span></label>
         </fieldset>
         <div class="th-map__plate">
-          <img class="th-map__img" data-v="vol" src="assets/img/home/threat-volatility.webp" width="840" height="1267"
+          <img class="th-map__img" data-v="vol" src="assets/img/home/threat-volatility.webp" width="840" height="1267" loading="lazy"
                alt="Map of Taiwan's main island coloured by our climate volatility index, from 0.38 to 0.93. The western plain from Taichung to Tainan is in the two most volatile classes, darkest from Yunlin to Tainan; the north, the mountains, the east and the far south are in the lower classes." />
           <img class="th-map__img" data-v="small" src="assets/img/home/threat-small.webp" width="840" height="1267" loading="lazy"
                alt="Map of Taiwan's main island with every small-scale farm parcel, under two hectares, in green. They cover most of the western plain and run along the eastern valleys; the central mountains carry few." />
@@ -1363,9 +1449,9 @@
        ?v= on the homepage's own files: Pages lets browsers cache them for 10
        minutes, and an old home.js run against new markup breaks the page.
        Bump it on every deploy that changes one of them. -->
-  <script src="assets/js/home-reactor.js?v=20261009-home13" defer fetchpriority="high"></script>
-  <script src="assets/js/home.js?v=20261009-home13" defer fetchpriority="high"></script>
-  <script src="assets/js/home-vision-data.js?v=20261009-home13" defer fetchpriority="high"></script>
-  <script src="assets/js/home-vision.js?v=20261009-home13" defer fetchpriority="high"></script>
+  <script src="assets/js/home-reactor.js?v=20261010-home15" defer fetchpriority="high"></script>
+  <script src="assets/js/home.js?v=20261010-home15" defer fetchpriority="high"></script>
+  <script src="assets/js/home-vision-data.js?v=20261010-home15" defer fetchpriority="high"></script>
+  <script src="assets/js/home-vision.js?v=20261010-home15" defer fetchpriority="high"></script>
 </body>
 </html>

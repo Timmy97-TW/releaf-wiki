@@ -184,6 +184,19 @@ h2.band__title {
 .hero__frame--farm { z-index: 1; }
 .hero__frame--farm img { object-position: 50% 42%; }
 
+/* The photograph's stand-in: the same picture 48 px wide (half a kilobyte),
+   blurred. With script (html.hl, set in <head>) the photograph waits at
+   nothing until it is decoded and then fades in over it, so a slow line sees
+   the field come into focus instead of a picture drawn in from the top.
+   Without script the photograph simply loads over it. */
+.hero__frame--farm::before {
+  content: ""; position: absolute; inset: -8%; z-index: -1;
+  background: url("../img/home/hero-team-lqip.webp") 50% 42% / cover no-repeat;
+  filter: blur(26px);
+}
+html.hl .hero__frame--farm img { opacity: 0; transition: opacity .9s ease; }
+html.hl .hero__frame--farm img.is-in { opacity: 1; }
+
 /* The wash: a corner shadow for the title, a foot shadow for the quote, an
    edge vignette on the right. Light, so the field keeps its daylight. */
 .hero__frame--farm::after {
@@ -286,6 +299,7 @@ h2.band__title {
 /* a phone held upright gets the portrait files (index.html) */
 @media (max-aspect-ratio: 2/3) {
   .hero__frame--farm img { object-position: 50% 50%; }
+  .hero__frame--farm::before { background-image: url("../img/home/hero-team-portrait-lqip.webp"); background-position: 50% 50%; }
 }
 @media print {
   .hero__lens, .hero__label { display: none; }
