@@ -7,7 +7,8 @@ Run from the wiki root. Writes:
   assets/img/software/fig-r1-hydraulics.svg   R1, 260816 pressure to flow rate.xlsx
   assets/img/software/fig-r2-photometer.svg   R2, Inline photometer to biodrop.xlsx
   assets/img/software/fig-r3-run434.svg       R3, out/sentinel_series.json + out/sentinel.json
-  assets/img/software/fig-r4-run0902.svg      R4, record_20260906_090304.csv
+  assets/img/software/fig-r4-run0902.svg      R4, record_20260906_090304.csv (= 20260906 test4 photometer.csv)
+  assets/img/software/fig-runs-168.svg        Runs 1-4, the two test xlsx, test3 csv, both test4 csv
   assets/img/software/fig-e1..e4-*.svg        MOCK templates for the evidence package (no data)
   software/figures/numbers.json               every number quoted on the page, with its source file
 
@@ -26,6 +27,7 @@ WIKI = pathlib.Path(__file__).resolve().parents[2]
 ap = argparse.ArgumentParser()
 ap.add_argument("--project", default=str(pathlib.Path.home() / "Documents/Claude/Projects/2026 iGEM Project Plant Stress"))
 ap.add_argument("--downloads", default=str(pathlib.Path.home() / "Downloads"))
+ap.add_argument("--only-runs", action="store_true", help="redraw fig-runs-168.svg only")
 args = ap.parse_args()
 PROJECT, DL = pathlib.Path(args.project), pathlib.Path(args.downloads)
 MODEL_OUT = PROJECT / "Math Model" / "releaf-model" / "out"
@@ -420,6 +422,107 @@ def fig_r4():
     f.save("fig-r4-run0902.svg")
 
 
+# ================================================ Runs · every OD600 run =====
+def _iso(s):
+    from datetime import datetime
+    return datetime.fromisoformat(s.strip().replace("Z", "+00:00"))
+
+
+def _hourly(t, y, step=1.0):
+    t, y = np.asarray(t), np.asarray(y)
+    th, yh = [], []
+    for a in np.arange(math.floor(t.min()), math.ceil(t.max()), step):
+        k = (t >= a) & (t < a+step)
+        if k.sum():
+            th.append(a+step/2); yh.append(float(np.median(y[k])))
+    return np.array(th), np.array(yh)
+
+
+def _xlsx_rows(path, sheet=None):
+    ws = openpyxl.load_workbook(path, data_only=True)[sheet] if sheet else openpyxl.load_workbook(path, data_only=True).active
+    return [r for r in ws.iter_rows(min_row=2, values_only=True) if r and r[0] is not None]
+
+
+def fig_runs():
+    """Every B. subtilis 168 OD600 run on BR-01, June to September 2026, on one sheet."""
+    r1 = _xlsx_rows(DL / "260610 test1 no stir.xlsx")                       # time (h), Bioreactor, Flask
+    r2 = _xlsx_rows(DL / "260614, test 2 stir.xlsx", "260614")               # time (min), Flask, Bioreactor
+    t3, o3 = [], []
+    with open(DL / "0721, test3 20 day.csv", newline="") as fh:
+        rows3 = list(csv.DictReader(fh))
+    for r in rows3:
+        if r["reading_valid"] == "True" and r["od600"]:
+            t3.append(float(r["elapsed_hours"])); o3.append(float(r["od600"]))
+    parts, t0 = [], None
+    for name in ("20260902 test4 photometer.csv", "20260906 test4 photometer.csv"):
+        with open(DL / name, newline="") as fh:
+            rows = list(csv.DictReader(fh))
+        t0 = t0 or _iso(rows[0]["timestamp_start"])
+        tt = [((_iso(r["timestamp_start"])-t0).total_seconds()/3600, float(r["od600_au"])) for r in rows
+              if r["od600_valid"].strip().lower() == "true" and float(r["od600_bubble_pct"] or 0) <= 20]
+        parts.append((name, len(rows), _iso(rows[0]["timestamp_start"]), _iso(rows[-1]["timestamp_end"]), tt))
+    gap0 = (parts[0][3]-t0).total_seconds()/3600
+    gap1 = (parts[1][2]-t0).total_seconds()/3600
+    span4 = (parts[1][3]-t0).total_seconds()/3600
+    a3h, a3o = _hourly(t3, o3)
+    rec("runs", "~/Downloads: 260610 test1 no stir.xlsx; 260614, test 2 stir.xlsx (sheet 260614); "
+        "0721, test3 20 day.csv; 20260902 + 20260906 test4 photometer.csv",
+        run1_end_h=float(r1[-1][0]), run1_bioreactor_max=max(r[1] for r in r1 if r[1] is not None),
+        run1_flask_max=max(r[2] for r in r1 if r[2] is not None),
+        run2_end_h=float(r2[-1][0])/60, run2_bioreactor_max=max(r[2] for r in r2),
+        run2_flask_max=max(r[1] for r in r2),
+        run3_rows=len(rows3), run3_end_h=float(max(t3)), run3_start=rows3[0]["timestamp_utc"], run3_end=rows3[-1]["timestamp_utc"],
+        run4_partA_rows=parts[0][1], run4_partA_start=parts[0][2].isoformat(), run4_partA_end=parts[0][3].isoformat(),
+        run4_partA_last_od=float(parts[0][4][-1][1]),
+        run4_gap_h=gap1-gap0, run4_partB_rows=parts[1][1], run4_partB_start=parts[1][2].isoformat(),
+        run4_partB_first_od=float(parts[1][4][0][1]), run4_partB_end=parts[1][3].isoformat(), run4_span_h=span4)
+
+    f = Fig("Every B. subtilis 168 OD600 run on BR-01, June to September 2026",
+            "Four panels. Run 1 and run 2: hand-sampled OD600 in the reactor against a shake flask. "
+            "Run 3: 434 hours of in-line OD600 at 22 °C. Run 4: in-line OD600 in two logged parts with a 10-hour gap.",
+            880, 640)
+    BW, BH = 330, 190
+    boxes = [(80, 46, BW, BH), (510, 46, BW, BH), (80, 366, BW, BH), (510, 366, BW, BH)]
+    def head(box, t, sub):
+        f.text(box[0]-50, box[1]-22, t, 13, INK, weight=650)
+        f.text(box[0]-50, box[1]-7, sub, 11, INK3)
+    # run 1
+    head(boxes[0], "Run 1 · June, prototype 260606, no stirring", "Hand-sampled; stopped by a leak at the pump")
+    ax = Axes(f, boxes[0], (0, 28), (0, 2.6), "Time (h)", "OD600", range(0, 29, 7), [0, 1, 2], ylab_dx=40)
+    fl = [(r[0], r[2]) for r in r1 if r[2] is not None]; br = [(r[0], r[1]) for r in r1 if r[1] is not None]
+    ax.line(*zip(*fl), SLATE, 1.4); ax.dots(*zip(*fl), SLATE, 2.6, "#fff")
+    ax.line(*zip(*br), LEAF7, 1.4); ax.dots(*zip(*br), LEAF7, 2.6)
+    # run 2
+    head(boxes[1], "Run 2 · 14 June, prototype 260614, stirred 200 rpm", "Hand-sampled, 37 °C")
+    ax = Axes(f, boxes[1], (0, 7.5), (0, 1.0), "Time (h)", "OD600", range(0, 8, 1), [0, 0.5, 1.0], ylab_dx=40)
+    fl = [(r[0]/60, r[1]) for r in r2]; br = [(r[0]/60, r[2]) for r in r2]
+    ax.line(*zip(*fl), SLATE, 1.4); ax.dots(*zip(*fl), SLATE, 2.6, "#fff")
+    ax.line(*zip(*br), LEAF7, 1.4); ax.dots(*zip(*br), LEAF7, 2.6)
+    legend(f, boxes[0][0]+120, boxes[0][1]+30, [("Bioreactor", LEAF7, "dot"), ("Shake flask", SLATE, "ring")])
+    # run 3
+    head(boxes[2], "Run 3 · 21 July to 8 August, 22 °C", "In-line photometer, no sample drawn, 434 h")
+    ax = Axes(f, boxes[2], (0, 440), (0, 2.0), "Time (h)", "OD600 (in-line)", range(0, 441, 100), [0, 1, 2], ylab_dx=40)
+    ax.band(243.0, 434.2, FAINT)
+    ax.dots(t3[::4], o3[::4], LEAF2, 1.0)
+    ax.line(a3h, a3o, LEAF7, 1.6)
+    f.text(ax.X(250), ax.Y(1.88), "OD channel unreliable after 243 h (R3)", 10, INK3, italic=True)
+    # run 4
+    head(boxes[3], "Run 4 · 1 to 6 September, constitutive ACCD, full-length module",
+         "In-line photometer, two logged files, 10 h unrecorded")
+    ax = Axes(f, boxes[3], (0, 120), (0, 4.2), "Time from first logged row (h)", "OD600 (in-line)",
+              range(0, 121, 20), [0, 1, 2, 3, 4], ylab_dx=40)
+    ax.band(gap0, gap1, AMBER1)
+    for _, _, _, _, tt in parts:
+        tt = np.array(tt)
+        ax.dots(tt[::20, 0], tt[::20, 1], LEAF2, 1.0)
+        h, o = _hourly(tt[:, 0], tt[:, 1], 0.5 if tt[-1, 0] < 5 else 1.0)
+        ax.line(h, o, LEAF7, 1.6)
+    f.text(ax.X(gap1)+4, ax.Y(0.25), f"not logged, {gap1-gap0:.1f} h", 10, AMBER, italic=True)
+    f.text(80-50, 626, "Lines: hourly medians of the in-line reading (half-hourly in run 4's first file). "
+           "Panels have their own axes; run 1 and 2 are hand samples.", 10.5, INK3)
+    f.save("fig-runs-168.svg")
+
+
 # ============================================ E1–E4 · MOCK templates ========
 # 16:9, transparent, so the .fig--pending hatching shows through. No data.
 MW, MH = 880, 495
@@ -496,6 +599,12 @@ def fig_e4():
 
 
 if __name__ == "__main__":
+    if "--only-runs" in __import__("sys").argv:
+        old = json.loads((WIKI / "software" / "figures" / "numbers.json").read_text())
+        fig_runs(); old.update(NUM)
+        (WIKI / "software" / "figures" / "numbers.json").write_text(json.dumps(old, indent=1, ensure_ascii=False) + "\n", encoding="utf-8")
+        raise SystemExit
+    fig_runs()
     fig_r1(); fig_r2(); fig_r3(); fig_r4()
     fig_e1(); fig_e2(); fig_e3(); fig_e4()
     out = WIKI / "software" / "figures" / "numbers.json"
