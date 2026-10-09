@@ -245,6 +245,14 @@
     panels.forEach((p) => {
       p.addEventListener("mouseenter", () => clearTimeout(closeTimer));
       p.addEventListener("mouseleave", hideSoon);
+      /* the light on the card follows the pointer (see "the light" in nav.css) */
+      p.addEventListener("pointermove", (e) => {
+        const r = p.getBoundingClientRect();
+        p.style.setProperty("--mx", (e.clientX - r.left) + "px");
+        p.style.setProperty("--my", (e.clientY - r.top) + "px");
+        p.style.setProperty("--lit", "1");
+      });
+      p.addEventListener("pointerleave", () => p.style.setProperty("--lit", "0"));
       p.addEventListener("keydown", (e) => {
         if (e.key !== "Tab") return;
         const list = entries(p.dataset.tab);

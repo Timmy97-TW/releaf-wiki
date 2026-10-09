@@ -149,6 +149,27 @@
 /* 9 Oct (owner): the card sits a little smaller */
 .sitenav__panelinner { padding: 1.5rem 1rem; }
 
+/* ---- the light ------------------------------------------------------------
+   10 Oct: a soft light follows the pointer across the card (nav.js sets --mx,
+   --my and --lit on the panel). It is wide and faint, ambient rather than a
+   beam, and it carries a whisper of the section's banner colour (the same
+   values as bannerhead.css), so each card is felt to belong to the page it
+   opens. Circles and the open-tab pill stay leaf green. */
+@property --lit { syntax: "<number>"; inherits: false; initial-value: 0; }
+.sitenav__panel {
+  --mx: 50%; --my: 0%; --lit: 0;
+  --nv-glow: 79 156 111;
+  background:
+    radial-gradient(560px circle at var(--mx) var(--my),
+      rgb(var(--nv-glow) / calc(.08 * var(--lit))), transparent 65%),
+    #fff;
+  transition: --lit .35s;
+}
+.sitenav__panel[data-tab="project"]    { --nv-glow: 214 90 134; }
+.sitenav__panel[data-tab="drylab"]     { --nv-glow: 81 108 119; }
+.sitenav__panel[data-tab="engagement"] { --nv-glow: 170 111 78; }
+.sitenav__panel[data-tab="team"]       { --nv-glow: 217 154 30; }
+
 /* an invisible bridge over the gap above the card, so the pointer can travel
    from the tab down into the card without the card closing */
 .sitenav__panel::before {
@@ -237,7 +258,13 @@
   text-align: center;
   background: none;
 }
-.sitenav__panel .sitenav__entry + .sitenav__entry { border-left: 1px solid var(--nv-line); }
+/* the hairlines fade out at both ends instead of running edge to edge */
+.sitenav__panel .sitenav__entry + .sitenav__entry::after {
+  content: "";
+  position: absolute; left: 0; top: 12%; bottom: 12%; width: 1px;
+  background: linear-gradient(to bottom, transparent, var(--nv-line) 25%, var(--nv-line) 75%, transparent);
+  opacity: calc(1 - .6 * var(--lit, 0));
+}
 .sitenav__panel .sitenav__entry::before { display: none; }
 .sitenav__panel .sitenav__tile {
   width: 58px; height: 58px;
