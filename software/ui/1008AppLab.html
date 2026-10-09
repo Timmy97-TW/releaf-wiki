@@ -19,7 +19,7 @@ function __showUiErrors() {
       'border:1px solid #ef4444;border-radius:8px;padding:10px 14px;font:12px/1.6 monospace;max-height:40vh;overflow:auto;';
     document.body.appendChild(box);
   }
-  box.innerHTML = '<b>⛔ 網頁程式錯誤（請把這段文字拍照或複製回報）</b><br>' +
+  box.innerHTML = '<b>⛔ Page script error (copy this text and report it)</b><br>' +
     window.__uiErrors.map(e => String(e).replace(/&/g, '&amp;').replace(/</g, '&lt;')).join('<br>');
 }
 window.addEventListener('error', (e) => {
@@ -34,8 +34,7 @@ function __reportUiError(where, err) {
   try { console.error(where, err); } catch (e) {}
 }
 </script>
-<script src="libs/socket.io.min.js"></script>
-<script src="libs/arduino.js"></script>
+<!-- Wiki copy: the App Lab libs (libs/socket.io.min.js, libs/arduino.js) exist only on the board. -->
 <style>
   * { margin: 0; padding: 0; box-sizing: border-box; }
   body {
@@ -348,11 +347,11 @@ function __reportUiError(where, err) {
   <div class="top-row">
     <div>
       <h1><span data-i18n="pageH1">ReLeaf Perfusion Hollow Fiber Bioreactor</span> <span id="h1-ver" class="h1-ver">ver. 4.13</span></h1>
-      <div class="status-bar"><span data-i18n="connLabel">連線狀態：</span><span id="connectionText">連線中...</span>
+      <div class="status-bar"><span data-i18n="connLabel">Connection: </span><span id="connectionText">Connecting...</span>
         <span id="mcu-link" style="margin-left:14px;"></span>
         <span id="mcu-diag" style="margin-left:14px;"></span><span id="ui-version" style="margin-left:14px;color:#f87171;">UI v4.13（JS 未完成載入）</span></div>
     </div>
-    <div class="lang-toggle" id="lang-toggle">
+    <div class="lang-toggle" id="lang-toggle" style="display:none">
       <button data-lang="en" class="active">EN</button>
       <button data-lang="zh">正體中文</button>
     </div>
@@ -486,8 +485,8 @@ function __reportUiError(where, err) {
         <span id="steady-badge" class="steady-badge" data-info="Steady" role="button" tabindex="0" data-i18n="steadyWaiting">● 尚無足夠資料</span>
       </div>
       <div class="derived-meta">
-        <span id="config-version-text">config_version: --</span> ｜
-        <span id="constants-version-text">constants_version: --</span> ｜
+        <span id="config-version-text">config_version: --</span> |
+        <span id="constants-version-text">constants_version: --</span> |
         <span id="hfm-rho-info" class="info-link" data-info="Rho" role="button" tabindex="0">ρgh: --</span>
       </div>
 
@@ -1190,23 +1189,11 @@ if (window.__offlinePreview) {
   };
 }
 if (window.__offlinePreview || typeof io === 'undefined') {
+  // Wiki copy: no board here, so say so calmly in English instead of raising an error.
   document.addEventListener('DOMContentLoaded', () => {
     const d = document.createElement('div');
-    if (location.protocol === 'about:' || location.protocol === 'file:' || location.protocol === 'blob:') {
-      d.style.cssText = 'background:#1e3a8a;color:#bfdbfe;border:1px solid #3b82f6;border-radius:8px;padding:14px 16px;margin:0 0 16px;font-weight:700;line-height:1.7;font-size:14px;';
-      d.innerHTML = 'ℹ️ 這是<b>離線預覽</b>（不是板子上的網頁），所以沒有讀值、按鈕不會送出指令。要操作系統請在瀏覽器開啟板子的網址，例如 <code>http://192.168.1.124:7000</code>（App Lab 啟動 App 時 log 裡的 Network URL）。<br>' +
-        'ℹ️ This is an <b>offline preview</b>, not the page served by the board. Open the board URL (the "Network URL" in the App Lab log, e.g. <code>http://192.168.1.124:7000</code>) to operate the system.';
-      const page = document.querySelector('.page');
-      page.insertBefore(d, page.firstChild);
-      return;
-    }
-    d.style.cssText = 'background:#7f1d1d;color:#fecaca;border:1px solid #ef4444;border-radius:8px;padding:14px 16px;margin:0 0 16px;font-weight:700;line-height:1.7;font-size:14px;';
-    d.innerHTML = '⛔ App Lab communication libraries are missing (assets/libs/socket.io.min.js / arduino.js), so no readings arrive and buttons do nothing. Copy the old App\'s <code>assets/libs/</code> folder into this App\'s <code>assets/</code>, or remove and re-add the WebUI - HTML Brick, then reload.<br>' +
-      '⛔ 網頁缺少 App Lab 的通訊函式庫（' +
-      (typeof io === 'undefined' ? 'assets/libs/socket.io.min.js ' : '') +
-      (typeof WebUI === 'undefined' ? 'assets/libs/arduino.js' : '') +
-      '），所以收不到任何讀值、按鈕也無法送出指令。<br>請把舊版 App 的 <code>assets/libs/</code> 資料夾整個複製到這個 App 的 <code>assets/</code> 底下，' +
-      '或在 App Lab 把 WebUI - HTML Brick 移除後重新加入，然後重新整理頁面。';
+    d.style.cssText = 'background:#1e293b;color:#cbd5e1;border:1px solid #334155;border-radius:8px;padding:10px 14px;margin:0 0 16px;line-height:1.6;font-size:13px;';
+    d.innerHTML = 'Preview without a board. Readings stay blank and the controls send nothing. On the rig, the Uno Q serves this page at port 7000.';
     const page = document.querySelector('.page');
     page.insertBefore(d, page.firstChild);
   });
@@ -2003,7 +1990,6 @@ const I18N = {
 
 // v3.10: 預設英文, 可切換正體中文; 選擇記在這台瀏覽器
 let currentLang = 'en';
-try { const sv = localStorage.getItem('hfm_lang'); if (sv === 'zh' || sv === 'en') currentLang = sv; } catch (e) {}
 function t(key, ...args) {
   const entry = I18N[currentLang][key];
   if (typeof entry === 'function') return entry(...args);
@@ -4172,7 +4158,7 @@ function applyMcuStatus(d) {
   const st = d.stress;
   if (st && st.state === 'running') tl.push(t('mtStressRun', st.n));
   else if (st && st.state === 'done') tl.push(t('mtStressRes', st.ok, st.n, st.avg_ms ?? '--', st.max_ms ?? '--', st.total_s));
-  document.getElementById('mt-test').textContent = tl.join('　｜　');
+  document.getElementById('mt-test').textContent = tl.join('  |  ');
   if (d.action && d.msg) { const m = document.getElementById('mt-msg'); m.textContent = d.msg; m.className = d.ok === false ? 'msg err' : 'msg ok'; }
 }
 ui.on_message('mcu_status', applyMcuStatus);
@@ -4645,6 +4631,7 @@ document.addEventListener('keydown', (e) => {
 window.onload = function () {
   applyLanguage(currentLang);      // v3.10: 預設英文(靜態 HTML 是中文, 這裡一次翻成目前語言)
   setConnectionStatus('connecting');
+  if (window.__offlinePreview) { const c = document.getElementById('connectionText'); c.textContent = 'No board (preview)'; c.style.color = '#94a3b8'; }
   applyPumpStatus(lastPumpStatus);
   applyOd600Blank(null);
   renderValveEvents();
