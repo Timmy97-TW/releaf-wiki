@@ -89,9 +89,15 @@
         }
       });
       place(animate);
-      /* the rail owns a slice of the contents list; rebuild it for the cycle
-         now showing, so the sidebar never lists headings that are hidden */
-      if (changed) buildToc();
+      /* A rail nested inside another rail's panel (the bioreactor's four
+         engineering tracks, inside chapter 2) is measured while its panel is
+         still hidden, and a hidden button is 0 wide, so its thumb comes out
+         zero-width and stays that way. Re-place every rail's thumb whenever
+         any of them changes what is showing; it is a handful of reads. */
+      if (changed) {
+        rails.forEach(function (r) { if (r.root !== root) r.place(false); });
+        buildToc();
+      }
     }
 
     /* A reader who switches cycles from deep inside one would otherwise land
@@ -124,7 +130,7 @@
       window.addEventListener("resize", function () { place(false); });
       if (document.fonts && document.fonts.ready) document.fonts.ready.then(function () { place(false); });
     }
-    rails.push({ root: root, panels: panels, show: show });
+    rails.push({ root: root, panels: panels, show: show, place: place });
   }
 
   /* ---- 2. the contents rail ---------------------------------------------- */
