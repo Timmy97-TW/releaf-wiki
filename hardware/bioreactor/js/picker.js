@@ -116,12 +116,18 @@
     listEl.className = "pick-list";
     listEl.setAttribute("aria-label", "Components");
     listEl.innerHTML =
-      '<div class="pick-list-head">Components <span>select to inspect</span></div>' +
+      '<div class="pick-list-head">Components <span id="pick-count"></span></div>' +
       BIO_COMPONENTS.filter(function (d) { return comps.has(d.id); }).map(function (d) {
         return '<button type="button" class="pick-item flow-' + d.flow + '" data-id="' + d.id + '">' +
           '<i class="pick-dot"></i><span class="pick-name">' + d.label + "</span>" +
           '<span class="pick-role-sm">' + d.role + "</span></button>";
       }).join("");
+    /* A count, not an instruction. The wiki does not print usage prompts on
+       its pages; "select to inspect" was one, and the list is visibly a list
+       of buttons without being told so. */
+    var cEl = listEl.querySelector("#pick-count");
+    if (cEl) cEl.textContent = listEl.querySelectorAll(".pick-item").length + " in the loop";
+
     host.parentNode.insertBefore(listEl, host.nextSibling);
 
     listEl.querySelectorAll(".pick-item").forEach(function (b) {

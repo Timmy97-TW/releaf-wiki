@@ -1,0 +1,624 @@
+/* =============================================================================
+   ReLeaf hardware: the record, in the wiki's own language
+   -----------------------------------------------------------------------------
+   The instrument pages are two documents in one file. Above, a dark stage
+   where the machine takes itself apart under scroll; below, the technical
+   record. The stage is Anton's and is not touched by anything here. This file
+   is only about the half below it, and it brings that half into the soft
+   language the Integrated Human Practices page established and the seven
+   Engagement pages share: a frosted segmented control that switches between
+   cycles, pale rounded cards instead of ruled boxes, and folds for anything a
+   reader does not need on the first pass.
+
+   Every rule is scoped to `body.doc-light` or to the record's own containers,
+   which is the same split polish.css and wiki-align.css already use:
+   photographs of hardware want black, a record wants ink on paper. polish.js
+   adds `doc-light` when the top of .doc-wrap crosses the upper third of the
+   viewport, so "after the animation" is a state the page already knows.
+
+   Load order on each page:
+     css/style.css          the instrument's own (Anton)
+     ../css/polish.css      the section's polish (Anton)
+     ../css/wiki-align.css  the record's wiki palette and links
+     ../css/hwdoc.css       THIS FILE, last
+     ../../assets/css/nav.css, nav-dark.css
+
+   Values under IHP below are copied from assets/css/engage.css and
+   assets/css/bannerhead.css so the pages match the rest of the wiki to the
+   pixel. Change a shared component in all three.
+   ========================================================================== */
+
+/* ---------------------------------------------------------------- TOKENS -- */
+/* The hardware pages do not load assets/css/tokens.css: they have their own
+   type stack and their own --fg/--line/--faint, and pulling the wiki's token
+   file in would duplicate an @font-face for no gain. The dozen values the
+   ported components actually use are declared here instead, on the record's
+   own containers, so nothing leaks up into the stage.                       */
+
+.doc-wrap,
+.hwsum {
+  --sp-2: .5rem;  --sp-3: .75rem; --sp-4: 1rem;   --sp-5: 1.5rem;
+  --sp-6: 2rem;   --sp-7: 3rem;   --sp-8: 4rem;
+  --ease: cubic-bezier(.25, .8, .25, 1);
+  /* the record's ink, the same three greys IHP uses */
+  --w-ink:   #1d1d1f;
+  --w-ink-2: #424245;
+  --w-ink-3: #6e6e73;
+  --w-well:  #f5f5f7;
+  /* the Dry Lab tab's colours: hardware hangs under Dry Lab in the site nav,
+     and the contents rail and status glyphs take their colour from the tab */
+  --w-tab:      #3f5a66;
+  --w-tab-line: #6f8f9c;
+  --w-tab-pill: #e3eef2;
+  --w-paper:    #eef4f6;
+  --w-paper-2:  #f9fbfc;
+  --serif: "Iowan Old Style", "Palatino Linotype", Palatino, "Book Antiqua", Georgia, serif;
+  /* the pill colour a cycle's chapter paints with; set per panel with .pl-N */
+  --pl: var(--w-tab);
+}
+.pl-1 { --pl: #3f5468; } .pl-2 { --pl: #23684a; } .pl-3 { --pl: #8a5a0b; }
+.pl-4 { --pl: #7a3b67; } .pl-5 { --pl: #1f5f8b; } .pl-6 { --pl: #5a4c9c; }
+
+/* The stage sits in front of everything while it is still on screen. The
+   summary rises into its bottom edge, so it has to be allowed through. */
+body.doc-light .story-stage { z-index: 0; }
+
+
+/* ============================================================== 1 SUMMARY ==
+   The sheet that meets the animation
+   -----------------------------------------------------------------------------
+   The wiki's 23 other pages open with a student drawing and, under it, a
+   one-screen abstract on a sheet of paper: what the page argues and how each
+   claim went, before the first scroll. The instrument pages have no drawing
+   to put there -- the machine has just spent a full screen of scroll showing
+   itself, which is the same job done better -- so the sheet arrives on its
+   own, and the overlap that used to tuck it under the drawing now tucks it
+   under the stage. The animation hands the reader to the sheet.
+
+   Three parts, left to right on a laptop and stacked on a phone:
+     .hwsum__story    what the instrument is and what it does, in the serif
+     .hwsum__spec     the numbers the stage just showed, as a small strip
+     .hwsum__ledger   each claim with a mark for how it went, linked into the
+                      record, which is the whole of the page's navigation at a
+                      glance
+   ========================================================================== */
+
+.hwsum {
+  position: relative;
+  z-index: 3;
+  grid-column: 1 / -1;          /* across all three columns of .doc-wrap */
+  max-width: 1400px;
+  margin: 0 auto;
+  padding: 0;
+  /* lift into the seam: the blend band above is 170-300px, and the sheet
+     climbs about a sixth of it so the paper interrupts the fade rather than
+     starting after it has finished */
+  margin-top: calc(-1 * clamp(28px, 5vh, 64px));
+  font-size: 1rem;
+  line-height: 1.6;
+}
+.hwsum__inner {
+  display: grid;
+  gap: 2rem;
+  grid-template-columns: minmax(0, 1fr);
+  padding: clamp(1.5rem, 1rem + 2vw, 2.75rem) clamp(1.25rem, .2rem + 4vw, 4rem) clamp(1.5rem, 1rem + 1.2vw, 2.5rem);
+  border-radius: 28px;
+  background: linear-gradient(180deg, var(--w-paper) 0%, var(--w-paper) 45%, var(--w-paper-2) 100%);
+  box-shadow:
+    inset 0 1px 0 rgb(255 255 255 / .8),
+    0 1px 2px rgb(14 22 28 / .05),
+    0 40px 80px -48px rgb(0 0 0 / .55);
+}
+@media (min-width: 980px) {
+  .hwsum__inner {
+    grid-template-columns: minmax(0, 1.34fr) minmax(0, 1fr);
+    column-gap: clamp(2.5rem, 1rem + 3vw, 4.5rem);
+    align-items: start;
+  }
+  .hwsum__spec { grid-column: 1; }
+  .hwsum__ledger { grid-column: 2; grid-row: 1 / span 2; }
+}
+
+/* small capitals that name each column, the wiki's .abs-kicker */
+.hwsum .hw-kicker {
+  margin: 0 0 1rem;
+  font-family: inherit;
+  font-size: .6875rem;
+  font-weight: 650;
+  letter-spacing: .2em;
+  text-transform: uppercase;
+  color: var(--w-tab);
+}
+
+/* one sentence in the book face, then the paragraphs */
+.hwsum__lead {
+  margin: 0;
+  max-width: 34ch;
+  font-family: var(--serif);
+  font-size: clamp(1.35rem, 1rem + 1vw, 1.75rem);
+  font-weight: 400;
+  line-height: 1.24;
+  letter-spacing: -.01em;
+  color: var(--w-ink);
+  text-wrap: balance;
+}
+.hwsum__lead em { font-style: italic; }
+.hwsum__body {
+  margin: 1rem 0 0;
+  max-width: 66ch;
+  font-size: 1rem;
+  line-height: 1.7;
+  color: var(--w-ink-2);
+  text-wrap: pretty;
+}
+.hwsum__body + .hwsum__body { margin-top: .7rem; }
+.hwsum__body strong { font-weight: 620; color: var(--w-ink); }
+
+/* ---- the numbers the stage just showed ----------------------------------
+   The stage carries four figures in its corner while it plays. They are the
+   instrument's size and reach, and a reader who has just watched them go past
+   should find them again at the top of the record rather than hunting for a
+   specifications table in part 6.                                          */
+.hwsum__spec { margin: var(--sp-5) 0 0; }
+.hwsum__spec dl {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(5.5rem, 1fr));
+  gap: .9rem 1.4rem;
+  margin: 0;
+  padding: .95rem 0 0;
+  border-top: 1px solid rgb(63 90 102 / .18);
+}
+.hwsum__spec div { margin: 0; }
+.hwsum__spec dt {
+  margin: 0;
+  font-size: .625rem;
+  font-weight: 650;
+  letter-spacing: .14em;
+  text-transform: uppercase;
+  color: var(--w-ink-3);
+}
+.hwsum__spec dd {
+  margin: .3rem 0 0;
+  font-size: 1.25rem;
+  font-weight: 620;
+  line-height: 1.1;
+  letter-spacing: -.02em;
+  color: var(--w-ink);
+  font-variant-numeric: tabular-nums;
+}
+.hwsum__spec dd span {
+  margin-left: .12em;
+  font-size: .8125rem;
+  font-weight: 550;
+  letter-spacing: 0;
+  color: var(--w-ink-3);
+}
+
+/* ---- the claims, with a mark for how each went --------------------------- */
+.hw-ledger {
+  list-style: none; margin: 0;
+  padding: .35rem;
+  background: rgb(255 255 255 / .9);
+  border-radius: 22px;
+  box-shadow: 0 1px 2px rgb(14 22 28 / .05), 0 18px 40px -28px rgb(14 22 28 / .3);
+}
+.hw-ledger li { margin: 0; }
+.hw-ledger a {
+  display: grid;
+  grid-template-columns: 1.05rem minmax(0, 1fr) auto;
+  align-items: baseline;
+  gap: .12rem .7rem;
+  padding: .62rem 1rem .68rem;
+  border-radius: 16px;
+  text-decoration: none;
+  color: inherit;
+  border: 0;
+  transition: background-color .25s ease;
+}
+.hw-ledger a:hover, .hw-ledger a:focus-visible { background: var(--w-paper); }
+.hw-ledger__name { font-size: 1rem; font-weight: 620; letter-spacing: -.008em; color: var(--w-ink); }
+.hw-ledger__text { grid-column: 2 / -1; font-size: .875rem; line-height: 1.45; color: var(--w-ink-3); text-wrap: pretty; }
+.hw-st {
+  font-size: .625rem; font-weight: 700;
+  letter-spacing: .14em; text-transform: uppercase;
+  color: var(--st); white-space: nowrap;
+}
+.hw-ledger a > i {
+  position: relative; align-self: start;
+  width: .65rem; height: .65rem; margin-top: .45rem;
+  border-radius: 50%;
+  border: 1.5px solid var(--st);
+}
+/* the wiki's six marks, unchanged, so they mean the same thing on every page */
+.hw-worked  { --st: #2f6b4a; } .hw-worked  > i { background: var(--st); }
+.hw-partial { --st: #9c6b1f; } .hw-partial > i { background: linear-gradient(90deg, var(--st) 50%, transparent 50%); }
+.hw-none    { --st: #767c77; }
+.hw-void    { --st: #a3452c; } .hw-void > i::after { content: ""; position: absolute; left: 50%; top: -2px; bottom: -2px; width: 1.5px; margin-left: -.75px; background: var(--st); transform: rotate(45deg); }
+.hw-open    { --st: #47627a; } .hw-open > i { border-style: dotted; border-width: 2px; }
+.hw-key     { --st: var(--w-tab); } .hw-key > i { border-radius: 1.5px; background: var(--st); transform: rotate(45deg) scale(.82); }
+
+/* the sheet settles in once, the way the wiki's abstract does */
+@media (prefers-reduced-motion: no-preference) {
+  .hwsum__inner > * { animation: hwsettle .9s cubic-bezier(.2, .7, .2, 1) both; }
+  .hwsum__inner > :nth-child(2) { animation-delay: .08s; }
+  .hwsum__inner > :nth-child(3) { animation-delay: .16s; }
+  @keyframes hwsettle { from { opacity: 0; transform: translateY(8px); } }
+}
+/* short laptop windows give up some air, as bannerhead.css does */
+@media (min-width: 980px) and (max-height: 780px) {
+  .hwsum__inner { padding-top: 1.4rem; padding-bottom: 1.25rem; }
+  .hwsum .hw-kicker { margin-bottom: .65rem; }
+  .hwsum__lead { font-size: 1.3rem; }
+  .hwsum__body { margin-top: .7rem; font-size: .9375rem; line-height: 1.6; }
+  .hw-ledger a { padding: .55rem .9rem .6rem; }
+  .hw-ledger__text { font-size: .8125rem; }
+}
+
+/* The record's own header repeated the instrument's name and standfirst
+   directly under the sheet, which said the same thing twice. The sheet is
+   now the opening, so the header keeps only its section marker. */
+/* `+` never fired: .doc-nav sits between the sheet and the record. */
+.doc-wrap .hwsum ~ .doc .doc-head { margin-bottom: var(--sp-7); }
+
+
+/* ======================================================= 2 SECTION SWITCH ==
+   The instrument strip (.hwnav) is styled in assets/css/nav-dark.css, beside
+   the dark strip it replaces, because the hub and the notebook carry the same
+   strip and do not load this file. Only the record's own components are here.
+   ========================================================================== */
+
+/* ====================================================== 3 THE CONTENTS RAIL ==
+   The record's sidebar, in the wiki's rail form
+   -----------------------------------------------------------------------------
+   The wiki's pages carry an "On this page" rail: the tab's colour, the
+   section numbers, a pill on the section the reader is in, and sub-headings
+   that unfold under it. The hardware record had a rail of its own -- the same
+   idea in the section's monospace, centred in the viewport -- so this keeps
+   the rail's position and Anton's dark field, as asked, and gives it the
+   wiki's structure and behaviour: numbers, the pill, and the unfolding subs.
+
+   .doc-nav keeps its grid column and its stickiness from style.css. hwdoc.js
+   fills it from the record's own headings, so a section added to a page shows
+   up in the rail without anyone editing a list.
+   ========================================================================== */
+
+.doc-nav { justify-content: flex-start; padding-top: calc(var(--nv-h, 68px) + 5.5rem); }
+.doc-nav .doc-nav-label { letter-spacing: .2em; }
+body.doc-light .doc-nav .doc-nav-label { color: var(--w-ink-3); }
+
+/* the generated rail */
+.hwtoc { list-style: none; margin: 0; padding: 0; }
+.hwtoc ol { list-style: none; margin: 0; padding: 0; }
+.hwtoc__sec { margin: 0; }
+.hwtoc__h {
+  display: grid;
+  grid-template-columns: 1.6rem minmax(0, 1fr);
+  align-items: baseline;
+  gap: .1rem;
+  padding: .4rem .6rem .42rem .5rem;
+  border: 0;
+  border-radius: 10px;
+  font-size: .8125rem;
+  font-weight: 500;
+  line-height: 1.32;
+  letter-spacing: -.005em;
+  color: #8b96a3;
+  text-decoration: none;
+  transition: background-color .22s ease, color .22s ease;
+}
+.hwtoc__no {
+  font-size: .6875rem;
+  font-weight: 600;
+  color: #5d6875;
+  font-variant-numeric: tabular-nums;
+}
+.hwtoc__h:hover { color: #e8edf2; background: rgb(255 255 255 / .05); }
+.hwtoc__sec.is-here > .hwtoc__h { color: #f4f7fa; background: rgb(255 255 255 / .08); }
+.hwtoc__sec.is-here > .hwtoc__h .hwtoc__no { color: #3ddc8b; font-weight: 650; }
+
+/* the record is light: the rail follows it over */
+body.doc-light .hwtoc__h { color: #6b7a85; }
+body.doc-light .hwtoc__no { color: #93a2ad; }
+body.doc-light .hwtoc__h:hover { color: var(--w-tab); background: rgb(63 90 102 / .06); }
+body.doc-light .hwtoc__sec.is-here > .hwtoc__h { color: var(--w-tab); background: var(--w-tab-pill); }
+body.doc-light .hwtoc__sec.is-here > .hwtoc__h .hwtoc__no { color: var(--w-tab); font-weight: 650; }
+
+/* sub-headings: shut, and unfolded under the section the reader is in */
+.hwtoc__subs {
+  overflow: hidden;
+  max-height: 0;
+  margin: 0; padding: 0;
+  transition: max-height .4s var(--ease);
+}
+.hwtoc__sec.is-here > .hwtoc__subs { max-height: 40rem; }
+.hwtoc__sub { opacity: 0; transition: opacity .3s ease; }
+.hwtoc__sec.is-here .hwtoc__sub { opacity: 1; }
+.hwtoc__sub a {
+  position: relative;
+  display: block;
+  padding: .24rem 0 .24rem 2.1rem;
+  border: 0;
+  font-size: .75rem;
+  line-height: 1.35;
+  color: #7c8794;
+  text-decoration: none;
+  transition: color .22s ease;
+}
+.hwtoc__sub a::before {
+  content: "";
+  position: absolute; left: 1.1rem; top: .62rem;
+  width: .3rem; height: .3rem;
+  border-radius: 50%;
+  background: currentColor;
+  transform: scale(0);
+  transition: transform .22s var(--ease);
+}
+.hwtoc__sub a:hover { color: #e8edf2; }
+.hwtoc__sub a.is-active { color: #f4f7fa; font-weight: 600; }
+.hwtoc__sub a.is-active::before { transform: scale(1); }
+body.doc-light .hwtoc__sub a { color: #7d8b95; }
+body.doc-light .hwtoc__sub a:hover { color: var(--w-tab); }
+body.doc-light .hwtoc__sub a.is-active { color: var(--w-tab); font-weight: 600; }
+
+@media (prefers-reduced-motion: reduce) {
+  .hwtoc__subs, .hwtoc__sub, .hwtoc__sub a::before, .hwtoc__h { transition: none !important; }
+}
+/* the rail is a luxury of a wide window; style.css already hides it narrow */
+@media (max-width: 1100px) { .doc-nav { padding-top: 0; } }
+
+
+/* ============================================================= 4 THE IHP KIT ==
+   Segmented cycles, cards and folds
+   -----------------------------------------------------------------------------
+   Ported from assets/css/engage.css. The record's long middle -- three or four
+   design-build-test-learn cycles, each with its own design, build, test and
+   learn -- is the part that most needs this: as a flat column it is a very
+   long scroll of near-identical structure, and as a segmented control it is
+   one cycle at a time with the others a click away.
+
+   The house rule the rest of the wiki follows applies here too: the argument
+   stays flat on the page and the evidence folds. A cycle's finding is never
+   behind a click; its full parameter table, its protocol and its raw run log
+   are.
+   ========================================================================== */
+
+/* ---- the frosted segmented control --------------------------------------- */
+/* The markup carries .rail--seg and no bare .rail: see the note above. */
+.rail--seg { margin: var(--sp-5) 0 0; }
+.rail--seg > .rail__panel[hidden] { display: none; }
+
+.seg {
+  position: sticky;
+  /* under the site nav and the instrument strip, both of which are fixed */
+  top: calc(var(--nv-h, 68px) + 44px + .6rem);
+  z-index: 5;
+  display: flex;
+  justify-content: center;
+  margin: 0 0 var(--sp-7);
+  pointer-events: none;
+}
+.seg__track {
+  position: relative;
+  display: flex;
+  flex: 0 1 auto;
+  gap: 2px;
+  max-width: 100%;
+  margin: 0;
+  padding: 5px;
+  overflow-x: auto;
+  scrollbar-width: none;
+  border-radius: 999px;
+  background: rgb(232 236 239 / .74);
+  -webkit-backdrop-filter: saturate(180%) blur(20px);
+          backdrop-filter: saturate(180%) blur(20px);
+  box-shadow: inset 0 0 0 .5px rgb(0 0 0 / .06), 0 8px 24px -14px rgb(0 0 0 / .3);
+  pointer-events: auto;
+}
+.seg__track::-webkit-scrollbar { display: none; }
+.seg__thumb {
+  position: absolute;
+  top: 5px; bottom: 5px; left: 0;
+  width: 0;
+  border-radius: 999px;
+  background: #fff;
+  box-shadow: 0 3px 8px rgb(0 0 0 / .12), 0 3px 1px rgb(0 0 0 / .04), 0 0 0 .5px rgb(0 0 0 / .04);
+  transition: transform .45s var(--ease), width .45s var(--ease);
+}
+.doc .seg__btn {
+  position: relative;
+  z-index: 1;
+  display: inline-flex;
+  flex: 1 0 auto;
+  align-items: center;
+  justify-content: center;
+  gap: .5rem;
+  padding: .72rem 1.1rem;
+  border: 0;
+  border-radius: 999px;
+  background: none;
+  font: inherit;
+  font-size: .9375rem;
+  font-weight: 500;
+  line-height: 1.2;
+  letter-spacing: -.01em;
+  color: var(--w-ink-2);
+  white-space: nowrap;
+  cursor: pointer;
+  transition: color .25s ease;
+}
+.seg__ico { flex: none; width: 1.125rem; height: 1.125rem; color: var(--pl); opacity: .7; transition: opacity .25s ease, transform .3s var(--ease); }
+.doc .seg__btn:hover { color: var(--w-ink); background: none; }
+.doc .seg__btn[aria-selected="true"] { color: var(--w-ink); font-weight: 600; }
+.seg__btn[aria-selected="true"] .seg__ico { opacity: 1; transform: scale(1.08); }
+.seg__btn:focus-visible { outline: 2px solid var(--pl); outline-offset: 1px; }
+.seg__track:not(.has-thumb) .seg__btn[aria-selected="true"] { background: #fff; box-shadow: 0 2px 6px rgb(0 0 0 / .1); }
+html:not(.js) .seg { display: none; }
+
+/* a cycle */
+.rail--seg > .rail__panel.chap { padding: 0; background: none; scroll-margin-top: calc(var(--nv-h, 68px) + 44px + 4.5rem); }
+.rail--seg > .rail__panel.is-entering { animation: hwchap-in .6s var(--ease) both; }
+@keyframes hwchap-in { from { opacity: 0; transform: translateY(14px); } to { opacity: 1; transform: none; } }
+html:not(.js) .rail--seg > .rail__panel + .rail__panel { margin-top: var(--sp-8); }
+
+/* ---- a cycle's opening and close ----------------------------------------- */
+.chap__hero { margin: 0 0 var(--sp-7); text-align: center; }
+.chap__eyebrow { margin: 0; font-size: .875rem; font-weight: 600; letter-spacing: -.005em; color: var(--pl); }
+.doc .chap__title {
+  margin: .35rem 0 0;
+  font-size: clamp(1.75rem, 1.3rem + 1.8vw, 2.5rem);
+  font-weight: 700;
+  line-height: 1.08;
+  letter-spacing: -.028em;
+  color: var(--w-ink);
+}
+.chap__intro { margin: var(--sp-5) 0 0; text-align: left; }
+.doc .chap__intro p {
+  margin: 0 auto var(--sp-3);
+  max-width: 40rem;
+  font-size: clamp(1.0625rem, 1rem + .3vw, 1.125rem);
+  line-height: 1.6;
+  letter-spacing: -.008em;
+  color: var(--w-ink-2);
+}
+.chap__end {
+  margin: var(--sp-7) 0 0;
+  padding: clamp(1.5rem, 1.1rem + 2vw, 2.75rem);
+  border-radius: 28px;
+  background: linear-gradient(160deg, color-mix(in srgb, var(--pl) 13%, #fff), color-mix(in srgb, var(--pl) 5%, #fff));
+}
+.doc .chap__end p:not(.chap__eyebrow) {
+  margin: .75rem 0 0;
+  max-width: 44rem;
+  font-size: clamp(1.125rem, 1.02rem + .5vw, 1.375rem);
+  font-weight: 500;
+  line-height: 1.45;
+  letter-spacing: -.016em;
+  color: var(--w-ink);
+}
+
+/* ---- pale rounded cards -------------------------------------------------- */
+/* .hwcard, not .card: all three instrument stylesheets already style a .card
+   of their own, and a shared name would have them trading properties with
+   this one depending on which file loaded last. Same reason the segmented
+   control below carries no bare .rail -- style.css uses .rail for the
+   teardown's step dots, absolutely positioned, which took this rail out of
+   flow and stacked it on top of the section above it. */
+.hwcard {
+  padding: clamp(1.35rem, 1rem + 1.8vw, 2.4rem);
+  border-radius: 28px;
+  background: var(--w-well);
+  color: var(--w-ink);
+}
+.hwcard + .hwcard, .hwcards > .hwcard + .hwcard { margin-top: 1.25rem; }
+.hwcards { display: grid; gap: 1.25rem; margin: var(--sp-5) 0 0; }
+.hwcards > .hwcard + .hwcard { margin-top: 0; }
+@media (min-width: 52rem) {
+  .hwcards--2 { grid-template-columns: 1fr 1fr; }
+  .hwcards--3 { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+}
+.hwcard--white { background: #fff; box-shadow: 0 0 0 1px rgb(0 0 0 / .06), 0 24px 44px -34px rgb(0 0 0 / .35); }
+/* polish.css styles `body.doc-light .sec h3` and `.sec h4` -- a descendant
+   selector that outranks this one and hangs an amber rule and its padding on
+   any heading used as a card's name. The card draws its own surface and wants
+   neither. */
+.doc .hwcard .hwcard__name,
+.doc .sec .hwcard__name {
+  padding-top: 0;
+  border-top: 0;
+  color: var(--w-ink);
+}
+.doc .hwcard__name {
+  margin: 0 0 .6rem;
+  font-size: 1.1875rem; font-weight: 650; line-height: 1.2;
+  letter-spacing: -.018em; color: var(--w-ink); text-transform: none;
+}
+.doc .hwcard p, .doc .hwcard li { max-width: 68ch; font-size: .96875rem; line-height: 1.65; color: var(--w-ink-2); }
+.doc .hwcard p { margin: 0 0 .85rem; }
+.doc .hwcard > :last-child, .doc .hwcard p:last-child { margin-bottom: 0; }
+.doc .hwcard h4, .doc .hwcard h5 {
+  margin: var(--sp-5) 0 .5rem;
+  font-size: 1.0625rem; font-weight: 650; letter-spacing: -.012em;
+  text-transform: none; color: var(--w-ink);
+}
+.doc .hwcard > h4:first-child, .doc .hwcard > h5:first-child { margin-top: 0; }
+
+/* ---- folds: what stays behind a click ------------------------------------ */
+.folds { display: grid; gap: .5rem; margin: 1.25rem 0 0; }
+.fold {
+  border-radius: 20px;
+  background: var(--w-well);
+  scroll-margin-top: calc(var(--nv-h, 68px) + 44px + var(--sp-4));
+}
+.hwcard .fold, .chap__end .fold { background: #fff; }
+.doc .fold > summary {
+  position: relative;
+  display: flex; align-items: center; gap: .75rem;
+  padding: 1rem 3rem 1rem 1.35rem;
+  list-style: none;
+  font-size: 1rem; font-weight: 600; letter-spacing: -.01em; line-height: 1.35;
+  color: var(--w-ink);
+  cursor: pointer;
+}
+.doc .fold > summary::-webkit-details-marker { display: none; }
+.doc .fold > summary::marker { content: ""; }
+.doc .fold > summary::after {
+  content: "";
+  position: absolute; right: 1.35rem; top: 50%;
+  width: .5rem; height: .5rem;
+  margin-top: -.35rem;
+  border-right: 1.75px solid var(--w-ink-3);
+  border-bottom: 1.75px solid var(--w-ink-3);
+  transform: rotate(45deg);
+  transition: transform .3s var(--ease), margin .3s var(--ease);
+}
+.doc .fold[open] > summary::after { transform: rotate(-135deg); margin-top: -.1rem; }
+.doc .fold > summary:hover { color: var(--pl); }
+.doc .fold > summary:focus-visible { outline: 2px solid var(--pl); outline-offset: 2px; border-radius: 20px; }
+.fold__t { min-width: 0; }
+.fold__sub { margin-left: auto; font-size: .8125rem; font-weight: 500; color: var(--w-ink-3); white-space: nowrap; }
+.fold__body { padding: 0 1.35rem 1.35rem; }
+.doc .fold__body p, .doc .fold__body li { max-width: 72ch; font-size: .9375rem; line-height: 1.62; color: var(--w-ink-2); }
+.doc .fold__body p { margin: 0 0 .75rem; }
+.doc .fold__body > :last-child { margin-bottom: 0; }
+.doc .fold__body h4, .doc .fold__body h5 {
+  margin: var(--sp-4) 0 .4rem;
+  font-size: .9375rem; font-weight: 650; color: var(--w-ink);
+  text-transform: none; letter-spacing: -.005em;
+}
+.doc .fold__body > h4:first-child, .doc .fold__body > h5:first-child { margin-top: 0; }
+/* a fold a link just opened gets one pulse so the reader sees where they landed */
+.fold.is-flash { animation: hwflash 2.2s var(--ease); }
+@keyframes hwflash {
+  0%, 100% { box-shadow: 0 0 0 0 transparent; }
+  12%, 55% { box-shadow: 0 0 0 3px color-mix(in srgb, var(--pl) 38%, transparent); }
+}
+
+/* tables and figures inside the ported components keep the record's own
+   styling from style.css; only their frame softens so they sit in a card */
+.hwcard .tablewrap, .fold .tablewrap { box-shadow: none; border-radius: 14px; }
+.hwcard .fig img, .fold .fig img, .chap__intro .fig img { border-radius: 14px; }
+
+
+/* ------------------------------------------------------- THE OLD CARD MAP -- */
+/* toc.js builds a grid of section cards under the record's header, which was
+   both a map for a judge and the only contents list below 1100px, where the
+   sticky rail hides. The summary sheet's ledger now does the first job better
+   -- it carries how each claim went, not just its name -- and it is on the
+   page at every width, so it does the second as well. Three navigations for
+   one record is two too many: the card map goes on the pages that carry a
+   summary. toc.js is left alone, so the notebook and the hub still get it. */
+body.hwreveal .doc-map { display: none; }
+
+
+/* ------------------------------------------------------------ ANCHOR ROOM -- */
+/* Two fixed bars sit over the record: the site nav (--nv-h) and the
+   instrument strip (44px). An anchor jump that does not allow for them puts
+   the heading it was aimed at underneath them, which is what every link into
+   a section, every ledger row on the summary sheet and every cross-reference
+   in the text was doing. One rule, and they all land clear. */
+.doc .part,
+.doc .sec,
+.doc .fig,
+.doc .frame,
+.doc figure[id],
+.doc [id] > h3 { scroll-margin-top: calc(var(--nv-h, 68px) + 44px + 1.25rem); }

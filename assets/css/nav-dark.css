@@ -185,6 +185,124 @@
 
 @media (max-width: 939px) { .hwnav { height: 40px; } }
 
+/* ============================================================ THE PILL STRIP ==
+   The strip that only arrives with the record
+   -----------------------------------------------------------------------------
+   .hwnav is the section's own switcher between instruments (nav-dark.css
+   gives it its dark form). On the hub it is the only way across the section
+   and stays where it is. On an instrument page it used to float over the
+   opening shot in small monospace capitals, competing with the title for the
+   first screen and saying nothing a reader needed while the machine was still
+   assembling itself.
+
+   Here it waits. `body.hwreveal` marks the four instrument records that opt
+   in; until the reader reaches the record the strip is lifted out of the way
+   and not focusable, and it comes down as a frosted pill track -- the same
+   control engage.css pins under the site nav. The notebook and the hub do not
+   carry .hwreveal and are untouched.
+
+   `at-record` is set by hardware/js/hwdoc.js, not by polish.js's `doc-light`,
+   although the two mark the same moment and share a threshold. doc-light is
+   recomputed only on scroll and resize: fine for a colour scheme, wrong for
+   navigation, because a layout shift after the reader's last scroll would
+   leave the page light and the strip still hidden. hwdoc.js re-checks at load,
+   on resize, on scroll and whenever the record's height moves.
+   ========================================================================== */
+
+.hwnav:has(.hwnav__track) {
+  /* keep the strip's box, take over its look */
+  top: calc(var(--nv-h, 68px) + 10px);
+  height: auto;
+  justify-content: center;
+  padding: 0;
+  pointer-events: none;            /* the track inside takes the clicks */
+}
+/* Only the four instrument records hold the strip back. The hub and the
+   notebook have no animation to wait through, so theirs is simply there. */
+body.hwreveal .hwnav {
+  opacity: 0;
+  transform: translateY(-14px);
+  transition: opacity .45s var(--ease, ease), transform .45s var(--ease, ease);
+}
+body.hwreveal .hwnav > * { visibility: hidden; }
+body.hwreveal.at-record .hwnav { opacity: 1; transform: none; }
+body.hwreveal.at-record .hwnav > * { visibility: visible; }
+@media (prefers-reduced-motion: reduce) {
+  body.hwreveal .hwnav { transition: none; }
+}
+
+/* the frosted track, from engage.css's .seg__track */
+.hwnav:has(.hwnav__track) {
+  font-family: inherit;
+  font-size: inherit;
+  letter-spacing: normal;
+  text-transform: none;
+}
+.hwnav:has(.hwnav__track) .hwnav__track {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  max-width: calc(100% - 2rem);
+  padding: 5px;
+  overflow-x: auto;
+  scrollbar-width: none;
+  border-radius: 999px;
+  background: rgb(232 236 239 / .78);
+  -webkit-backdrop-filter: saturate(180%) blur(20px);
+          backdrop-filter: saturate(180%) blur(20px);
+  box-shadow: inset 0 0 0 .5px rgb(0 0 0 / .07), 0 8px 24px -14px rgb(0 0 0 / .32);
+  pointer-events: auto;
+}
+.hwnav:has(.hwnav__track) .hwnav__track::-webkit-scrollbar { display: none; }
+.hwnav:has(.hwnav__track) .hwnav__lab {
+  flex: none;
+  margin: 0 .35rem 0 .6rem;
+  font-size: .6875rem;
+  font-weight: 650;
+  letter-spacing: .14em;
+  text-transform: uppercase;
+  color: var(--w-ink-3, #6e6e73);
+}
+.hwnav:has(.hwnav__track) a {
+  flex: none;
+  display: inline-flex;
+  align-items: center;
+  gap: .4rem;
+  padding: .5rem .9rem;
+  border: 0;
+  border-bottom: 0;
+  border-radius: 999px;
+  font-size: .9063rem;
+  font-weight: 500;
+  letter-spacing: -.01em;
+  line-height: 1.2;
+  color: #424245;
+  white-space: nowrap;
+  transition: color .25s ease, background-color .25s ease;
+}
+.hwnav:has(.hwnav__track) a:hover { color: #1d1d1f; background: rgb(255 255 255 / .6); }
+.hwnav:has(.hwnav__track) a[aria-current="page"] {
+  color: #1d1d1f;
+  font-weight: 600;
+  background: #fff;
+  box-shadow: 0 3px 8px rgb(0 0 0 / .12), 0 0 0 .5px rgb(0 0 0 / .05);
+}
+.hwnav:has(.hwnav__track) a:focus-visible { outline: 2px solid var(--w-tab, #3f5a66); outline-offset: 1px; }
+/* the small glyph before each instrument, so the strip reads at a glance */
+.hwnav:has(.hwnav__track) a svg { flex: none; width: 1rem; height: 1rem; opacity: .68; }
+.hwnav:has(.hwnav__track) a[aria-current="page"] svg { opacity: 1; color: var(--w-tab, #3f5a66); }
+@media (max-width: 760px) {
+  .hwnav:has(.hwnav__track) .hwnav__lab { display: none; }
+  .hwnav:has(.hwnav__track) a span { display: none; }   /* glyphs only on a phone */
+  .hwnav:has(.hwnav__track) a { padding: .5rem .7rem; }
+  .hwnav:has(.hwnav__track) a[aria-current="page"] span { display: inline; }
+}
+/* with the script off there is no doc-light to wait for: show it plainly */
+html:not(.js) body.hwreveal .hwnav { opacity: 1; transform: none; }
+html:not(.js) body.hwreveal .hwnav > * { visibility: visible; }
+
+
 /* ---- room for the strip ---------------------------------------------------
    The instrument heroes are deliberately full-bleed with the chrome floating
    over them, so they are not pushed down by a spacer. But they centre their

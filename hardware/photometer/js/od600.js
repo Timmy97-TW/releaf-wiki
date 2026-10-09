@@ -42,7 +42,6 @@
         '<div><span>OD600</span><b id="od-v" class="hi">' + S[S.length - 1][1].toFixed(3) + '</b></div>' +
         '<div><span>Phase</span><b id="od-p" class="ph">' + PHASES[PHASES.length - 1].name + '</b></div>' +
       "</div>" +
-      '<div class="od-hint">Hover to scrub the run</div>' +
     "</div>" +
     '<div class="od-plot"></div>';
 
