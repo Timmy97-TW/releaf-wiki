@@ -487,7 +487,7 @@ def fig_runs():
         f.text(box[0]-50, box[1]-22, t, 13, INK, weight=650)
         f.text(box[0]-50, box[1]-7, sub, 11, INK3)
     # run 1
-    head(boxes[0], "Run 1 · June, prototype 260606, no stirring", "Hand-sampled; stopped by a leak at the pump")
+    head(boxes[0], "Run 1 · 6 June, prototype 260606, no stirring", "Hand-sampled; stopped by a leak at the pump")
     ax = Axes(f, boxes[0], (0, 28), (0, 2.6), "Time (h)", "OD600", range(0, 29, 7), [0, 1, 2], ylab_dx=40)
     fl = [(r[0], r[2]) for r in r1 if r[2] is not None]; br = [(r[0], r[1]) for r in r1 if r[1] is not None]
     ax.line(*zip(*fl), SLATE, 1.4); ax.dots(*zip(*fl), SLATE, 2.6, "#fff")
@@ -507,7 +507,7 @@ def fig_runs():
     ax.line(a3h, a3o, LEAF7, 1.6)
     f.text(ax.X(250), ax.Y(1.88), "OD channel unreliable after 243 h (R3)", 10, INK3, italic=True)
     # run 4
-    head(boxes[3], "Run 4 · 1 to 6 September, constitutive ACCD, full-length module",
+    head(boxes[3], "Run 4 · 1 to 6 September, 168 + constitutive ACCD, full module",
          "In-line photometer, two logged files, 10 h unrecorded")
     ax = Axes(f, boxes[3], (0, 120), (0, 4.2), "Time from first logged row (h)", "OD600 (in-line)",
               range(0, 121, 20), [0, 1, 2, 3, 4], ylab_dx=40)
