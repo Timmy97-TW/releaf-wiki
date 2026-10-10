@@ -44,16 +44,21 @@
 .abstract strong { font-weight: 650; color: var(--black); }
 
 /* ---- the sheet -------------------------------------------------------------
-   The banner and its abstract fit one laptop window together (1440 × 800 of
-   page, after the browser's own bars), so a judge has the page's argument
-   before the first scroll.
+   The drawing runs the full width of the frame and keeps its own landscape
+   shape. Its bottom edge overlaps the sheet of paper below it so the two
+   read as one object.
 
-   The drawing's width is set by the window's height: what is left after the
-   nav and the abstract (--abs-h), times the drawing's aspect ratio (--ar).
-   It is centred on a sheet of paper the full width of the frame, and its
-   bottom edge overlaps the sheet so the two read as one object.
-   bannerhead.js measures the real abstract and shrinks the drawing further
-   when a page's text is longer.
+   This used to work the other way round. The banner and its abstract were
+   sized to fit one laptop window together, so the drawing was given whatever
+   height was left after the nav and the abstract, and bannerhead.js shrank it
+   further on any page whose abstract ran long. On 10 October 2026 Timmy said
+   the Protein Design header had become too small and asked for the drawing to
+   be as large as it is elsewhere, on every page, and for the abstract to run
+   past the fold if it needs to. By then the longest abstracts had pushed the
+   drawing all the way down to its 32rem floor, a 512px drawing inside a
+   1400px frame, so a page with more to say got a smaller header for saying
+   it. The drawing is now the same size on all twenty-four pages and the page
+   scrolls; bannerhead.js is gone.
 
    Two columns: the abstract on the left, given the larger share so it can
    carry a full paragraph or two, and the page's results on the right as one
@@ -72,8 +77,9 @@
   --ink-2: #444c46;
   --ink-3: #646b65;
   --ar: 3.012;                     /* 2253 / 748; description's drawing is 2.734 */
-  --abs-h: 25rem;                  /* the abstract's height on a laptop */
-  --bw: max(32rem, calc((100svh - var(--nav-h, 68px) - var(--abs-h)) * var(--ar)));
+  /* the drawing's width. It is the whole frame now, and --bw stays only
+     because the sheet's overlap is a share of it. */
+  --bw: 100%;
 }
 .bannerhead[data-tab="project"]    { --paper: #fbf1f3; --paper-2: #fdf9fa; --ink-1: #2a1d22; }
 .bannerhead[data-tab="drylab"]     { --paper: #eef4f6; --paper-2: #f9fbfc; --ink-1: #1b252a; }
@@ -82,7 +88,7 @@
 
 .bannerhead--rest .bannerhead__art { padding-top: var(--sp-2); }
 .bannerhead--rest .bannerhead__art img {
-  width: min(100%, var(--bw));
+  width: 100%;
   margin: 0 auto;
   filter: drop-shadow(0 16px 20px rgb(29 38 32 / .10)) drop-shadow(0 2px 3px rgb(29 38 32 / .06));
 }
@@ -92,7 +98,7 @@
 @media (min-width: 640px) { .abstract--sheet { padding: 0 var(--sp-5); } }
 
 .abstract--sheet .abstract__inner {
-  --overlap: calc(min(100%, var(--bw)) * .07);
+  --overlap: calc(var(--bw) * .07);
   margin-top: calc(-1 * var(--overlap));
   padding: calc(var(--overlap) + clamp(1.25rem, .8rem + 1vw, 2rem)) clamp(1.25rem, .2rem + 4vw, 4.5rem) clamp(1.5rem, 1rem + 1.2vw, 2.5rem);
   background: linear-gradient(180deg, var(--paper) 0%, var(--paper) 45%, var(--paper-2) 100%);
@@ -191,16 +197,9 @@
 /* an item that is not a test result: a small diamond in the tab's colour */
 .st-key     { --st: var(--bh-label); } .st-key > i { border-radius: 1.5px; background: var(--st); transform: rotate(45deg) scale(.82); }
 
-/* short laptop windows (about 1280 x 720 of page): the drawing is already at
-   its smallest, so the abstract gives up some air instead                    */
-@media (min-width: 900px) and (max-height: 780px) {
-  .abstract--sheet .abstract__inner { padding-top: calc(var(--overlap) + .9rem); padding-bottom: 1.25rem; }
-  .abs-kicker { margin-bottom: .65rem; }
-  .abstract--sheet .abstract__lead { font-size: 1.3rem; }
-  .abstract--sheet .abstract__body { margin-top: .7rem; font-size: .9375rem; line-height: 1.6; }
-  .abs-ledger a { padding: .55rem .9rem .6rem; }
-  .abs-ledger__text { font-size: .8125rem; }
-}
+/* The squeeze that used to run here, shrinking the abstract's type on a short
+   window, went with the one-window rule: the page scrolls now, so an abstract
+   is the same size on every screen.                                          */
 
 /* arrival: the two columns settle in once, after the drawing */
 @media (prefers-reduced-motion: no-preference) {
