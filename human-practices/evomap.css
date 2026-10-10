@@ -1,50 +1,59 @@
 /* =============================================================================
    ReLeaf: Project Evolution Map (the river)
    -----------------------------------------------------------------------------
-   The team's drawing (IHP_evolution_map.png, 4 October) with its words and
-   faces lifted off and set back on top as page text, so they stay sharp at
-   any width and every face is a link. Positions are the drawing's own, in
-   percent of its 1414 x 2000 frame; type is sized in container units so the
-   whole plate scales as one picture. Below 900px of width the stations drop
-   out of the drawing and stack underneath it.
+   Naomi's drawing of 10 October with its words, faces and note cards lifted
+   off and set back on top as page text, so they stay sharp at any width and
+   every face is a link. Its doodles are lifted off too, so a card can sit
+   under the doodle that leans on it, as in the drawing. Positions are the
+   drawing's own, in percent of its 1366 x 3401 frame; type is sized in
+   container units so the whole plate scales as one picture. Below 1000px of
+   width the stations drop out of the drawing and stack underneath it.
 
-   evomap.js adds three things, all optional: the water that runs down the
-   river as the reader scrolls, the stations arriving, and the card that
-   names each face.
+   evomap.js adds the rest, all optional: the water that runs down the river
+   as the reader scrolls, each stage arriving with every action that belongs
+   to it, the strip that says which stage is being read, and the card that
+   names each face. While the map is on screen the contents rail steps aside
+   and the map takes its room.
    ========================================================================== */
 
 .river {
+  --s1: #275a24; --s2: #121d4d; --s3: #5f3b06; --s4: #24807e;
   --navy: #15204a;
-  --ink:  #1f2b52;
+  --ink:  #1c2433;
   position: relative;
   container-type: inline-size;
   margin: var(--sp-5) 0 0;
   color: var(--ink);
 }
+/* the map takes the contents rail's column as well; the rail fades while
+   the map is being read (evomap.js sets .evo-open on the body) */
+@media (min-width: 1040px) {
+  .river { margin-left: calc(-15rem - var(--sp-8)); }
+  .toc { transition: opacity .35s ease, visibility 0s; }
+  .evo-open .toc { opacity: 0; visibility: hidden; pointer-events: none; transition: opacity .35s ease, visibility 0s linear .35s; }
+}
+.st--1 { --sc: var(--s1); } .st--2 { --sc: var(--s2); } .st--3 { --sc: var(--s3); } .st--4 { --sc: var(--s4); }
 
 .river__art {
   position: relative;
-  aspect-ratio: 1414 / 2000;
+  aspect-ratio: 1366 / 3401;
   overflow: hidden;
   /* the drawing has no frame: its edges melt into the page, which takes on
      the drawing's own colours while the map is being read (.river-tint) */
-  -webkit-mask-image: linear-gradient(to right, transparent, #000 6%, #000 94%, transparent),
-                      linear-gradient(to bottom, transparent, #000 4%, #000 96%, transparent);
+  -webkit-mask-image: linear-gradient(to right, transparent, #000 4%, #000 96%, transparent),
+                      linear-gradient(to bottom, transparent, #000 3%, #000 98%, transparent);
   -webkit-mask-composite: source-in;
-          mask-image: linear-gradient(to right, transparent, #000 6%, #000 94%, transparent),
-                      linear-gradient(to bottom, transparent, #000 4%, #000 96%, transparent);
+          mask-image: linear-gradient(to right, transparent, #000 4%, #000 96%, transparent),
+                      linear-gradient(to bottom, transparent, #000 3%, #000 98%, transparent);
           mask-composite: intersect;
 }
-
-/* the page behind the map: a fixed layer painted with the strip of the
-   drawing that is on screen, faded in while the map is being read */
 .river-tint {
   position: fixed;
   inset: 0;
   z-index: -1;
   pointer-events: none;
   opacity: 0;
-  background: linear-gradient(var(--t0, #fff7c5), var(--t1, #ddffcd));
+  background: linear-gradient(var(--t0, #fcf8c6), var(--t1, #d6ffcc));
   transition: opacity .9s ease;
 }
 .river-tint.is-on { opacity: 1; }
@@ -58,75 +67,182 @@
 }
 .river__svg { pointer-events: none; }
 .river__shimmer { animation: river-run 7s linear infinite; }
+.river__shimmer--b { animation-duration: 11s; }
 @keyframes river-run { to { stroke-dashoffset: -143; } }
 .river__front { transition: opacity .6s ease; }
 
+/* ---- the doodles ---------------------------------------------------------- */
+
+.river__sprites {
+  position: absolute;
+  left: 0; top: 0;
+  width: 100%;
+  aspect-ratio: 1366 / 3401;
+  z-index: 3;
+  pointer-events: none;
+}
+.sp { position: absolute; height: auto; display: block; will-change: transform; }
+.sp--bob  { animation: sp-bob 3.6s ease-in-out infinite; }
+.sp--fly  { animation: sp-fly 5.2s ease-in-out infinite; }
+.sp--sway { animation: sp-sway 4.4s ease-in-out infinite; transform-origin: 30% 90%; }
+.sp--nod  { animation: sp-nod 3.2s ease-in-out infinite; transform-origin: 50% 100%; }
+.sp--nod:nth-of-type(odd) { animation-duration: 3.9s; animation-delay: -1.3s; }
+@keyframes sp-bob  { 0%, 100% { transform: translateY(0) rotate(-3deg); } 50% { transform: translateY(-.55cqi) rotate(3deg); } }
+@keyframes sp-fly  { 0%, 100% { transform: translate(0, 0) rotate(0); } 30% { transform: translate(-.5cqi, -.7cqi) rotate(-5deg); } 65% { transform: translate(.35cqi, -.25cqi) rotate(3deg); } }
+@keyframes sp-sway { 0%, 100% { transform: rotate(-7deg); } 50% { transform: rotate(8deg); } }
+@keyframes sp-nod  { 0%, 100% { transform: rotate(-1.6deg); } 50% { transform: rotate(1.6deg) translateY(-.12cqi); } }
+
+/* ---- the strip that says which stage is being read ------------------------ */
+
+.river__steps { display: none; }
+.river.is-live .river__steps {
+  display: block;
+  position: sticky;
+  top: calc(var(--nav-h) + .75rem);
+  z-index: 5;
+  height: 0;
+  pointer-events: none;
+}
+.river__steps ol {
+  list-style: none;
+  margin: 0 auto;
+  padding: 5px;
+  width: max-content;
+  max-width: 100%;
+  display: flex;
+  gap: 2px;
+  border-radius: 999px;
+  background: rgb(255 255 255 / .8);
+  -webkit-backdrop-filter: saturate(180%) blur(18px);
+          backdrop-filter: saturate(180%) blur(18px);
+  box-shadow: inset 0 0 0 1.5px color-mix(in srgb, var(--now, var(--s1)) 55%, transparent), 0 8px 24px -14px rgb(0 0 0 / .3);
+  pointer-events: auto;
+  transition: box-shadow .5s ease;
+}
+.river__steps li { margin: 0; position: relative; }
+.river__steps li + li::before {
+  content: ""; position: absolute; left: -9px; top: 50%; width: 16px; height: 2px; margin-top: -1px; border-radius: 2px;
+  background: rgb(0 0 0 / .14); z-index: 0;
+}
+.river__steps a {
+  position: relative; z-index: 1;
+  display: flex; align-items: baseline; gap: .45rem;
+  padding: .55rem .95rem;
+  border-radius: 999px;
+  font-size: .875rem; font-weight: 500; letter-spacing: -.01em; line-height: 1.2;
+  color: #6e6e73;
+  text-decoration: none;
+  white-space: nowrap;
+  transition: background .45s ease, color .3s ease;
+}
+.river__steps a b { font-weight: 800; font-variant-numeric: tabular-nums; }
+.river__steps li:nth-child(1) a { --sc: var(--s1); } .river__steps li:nth-child(2) a { --sc: var(--s2); }
+.river__steps li:nth-child(3) a { --sc: var(--s3); } .river__steps li:nth-child(4) a { --sc: var(--s4); }
+.river__steps a.is-done { color: var(--sc); }
+.river__steps a.is-now { background: var(--sc); color: #fff; }
+.river__steps a:hover:not(.is-now) { color: var(--sc); }
+.river__steps a:focus-visible { outline: 2px solid var(--sc); outline-offset: 2px; }
+
 /* ---- stations ------------------------------------------------------------ */
 
-.river__stations { list-style: none; margin: 0; padding: 0; position: absolute; inset: 0; }
+.river__stations { list-style: none; margin: 0; padding: 0; position: absolute; inset: 0; z-index: 2; }
 .st { margin: 0; }
-.st__head, .st__body { position: absolute; }
-
-.st--1 .st__head { left: 5.3%;  top: 14.2%; }
-.st--1 .st__body { left: 22.5%; top: 14.8%; width: 35.6%; }
-.st--2 .st__head { left: 37.8%; top: 33.9%; }
-.st--2 .st__body { left: 56.2%; top: 32.4%; width: 39.6%; }
-.st--3 .st__head { left: 5.5%;  top: 54.4%; }
-.st--3 .st__body { left: 20.6%; top: 55.4%; width: 44.8%; }
-.st--4 .st__head { left: 51.5%; top: 79.6%; }
-.st--4 .st__body { left: 69.6%; top: 74.6%; width: 27.4%; }
+.st__head, .st__body, .note { position: absolute; }
+.st__head { scroll-margin-top: calc(var(--nav-h) + 5.5rem); }
 
 .st__no {
   display: block;
-  font-size: 9.4cqi;
+  font-size: 10.2cqi;
   font-weight: 850;
-  line-height: .8;
-  letter-spacing: -.035em;
-  color: var(--navy);
+  line-height: .78;
+  letter-spacing: -.045em;
+  margin-left: -.05em;
+  color: var(--sc);
   font-variant-numeric: tabular-nums;
 }
 .ihp .st__title {
-  margin: 1.1cqi 0 0;
-  font-size: 2.15cqi;
-  font-weight: 760;
-  line-height: 1.02;
-  letter-spacing: -.012em;
-  color: var(--navy);
+  margin: 1.5cqi 0 0;
+  font-size: 2.6cqi;
+  font-weight: 800;
+  line-height: .98;
+  letter-spacing: -.02em;
+  color: #0c0c0d;
 }
 .st__when {
-  margin: .75cqi 0 0;
-  font-size: max(.6875rem, .86cqi);
-  font-weight: 700;
-  letter-spacing: .14em;
-  text-transform: uppercase;
-  color: rgb(21 32 74 / .6);
+  margin: .9cqi 0 0;
+  font-size: max(.75rem, 1.3cqi);
+  font-weight: 500;
+  color: #1d1d1f;
   font-variant-numeric: tabular-nums;
 }
 .ihp .river .st__body p {
   margin: 0;
   max-width: none;
-  font-size: clamp(.875rem, 1.39cqi, 1.1875rem);
-  line-height: 1.5;
+  font-size: clamp(.8125rem, 1.36cqi, 1.1875rem);
+  line-height: 1.42;
   color: var(--ink);
   text-wrap: pretty;
 }
+
+/* ---- the note cards: what was done, month by month ------------------------ */
+
+.ihp .st__notes { list-style: none; margin: 0; padding: 0; max-width: none; }
+.note {
+  margin: 0;
+  box-sizing: border-box;
+  padding: 1.75cqi 1.1cqi .9cqi 1cqi;
+  border: max(1.5px, .18cqi) dashed var(--sc);
+  border-radius: .75cqi;
+  background: #fffde9;
+  z-index: 1;
+}
+.st--4 .note, .note--34 { background: #f3fdee; }
+/* the two farmers stand on this card's corner: its words start below them */
+.st--4 .note { padding-top: 3cqi; }
+.note__when {
+  position: absolute;
+  left: 50%; top: 0;
+  transform: translate(-50%, -62%);
+  margin: 0;
+  padding: .62cqi 1.3cqi;
+  border-radius: .6cqi;
+  background: var(--sc);
+  color: #fff;
+  font-size: max(.75rem, 1.2cqi);
+  font-weight: 700;
+  line-height: 1.1;
+  white-space: nowrap;
+}
+.note--12 .note__when { background: linear-gradient(90deg, var(--s1), var(--s2)); }
+.note--34 .note__when { background: linear-gradient(90deg, var(--s3), var(--s4)); }
+.note--34 { border-image: linear-gradient(90deg, var(--s3), var(--s4)) 1; border-radius: 0; }
+.ihp .river .note ul { list-style: disc; margin: 0; padding: 0 0 0 1.5cqi; max-width: none; }
+.ihp .river .note li {
+  margin: 0;
+  max-width: none;
+  font-size: max(.75rem, 1.16cqi);
+  line-height: 1.24;
+  color: #1d1d1f;
+}
+.ihp .river .note li + li { margin-top: .25cqi; }
 
 /* ---- faces --------------------------------------------------------------- */
 
 .ihp .st__faces {
   list-style: none;
-  margin: 1.15cqi 0 0;
+  margin: 1.5cqi 0 0;
   padding: 0;
   display: flex;
   flex-wrap: wrap;
-  gap: 1.15cqi 1.25cqi;
+  gap: .55cqi .68cqi;
   max-width: none;
 }
+.st--3 .st__faces { flex-wrap: nowrap; width: max-content; }
 .st__faces li { margin: 0; }
 .mface {
   position: relative;
   display: block;
-  width: 5.1cqi;
+  width: 4.95cqi;
   min-width: 2.5rem;
   aspect-ratio: 1;
   border-radius: 50%;
@@ -142,11 +258,11 @@
   box-shadow: 0 0 0 2px #fff, 0 2px 7px rgb(21 32 74 / .2);
   transition: transform .32s cubic-bezier(.2, .9, .25, 1.25), box-shadow .2s ease, opacity .2s ease, filter .2s ease;
 }
-.mface:hover .face-img,
-.mface:focus-visible .face-img,
-.mface.is-hot .face-img {
+a.mface:hover .face-img,
+a.mface:focus-visible .face-img,
+a.mface.is-hot .face-img {
   transform: scale(1.16);
-  box-shadow: 0 0 0 2px #fff, 0 0 0 4.5px var(--navy), 0 10px 22px rgb(21 32 74 / .3);
+  box-shadow: 0 0 0 2px #fff, 0 0 0 4.5px var(--sc, var(--navy)), 0 10px 22px rgb(21 32 74 / .3);
 }
 .river.is-peek .mface:not(.is-hot) .face-img { opacity: .5; filter: saturate(.4); }
 
@@ -230,49 +346,68 @@
 }
 .rcard:hover .rcard__go::after { transform: translateX(3px) rotate(-45deg); }
 
-/* ---- arrival (only once evomap.js has marked the map as animated) ------- */
+/* ---- arrival: a stage comes in whole, its actions with it ---------------- */
 
-.river.is-anim .st__head,
+.river.is-anim .st__no { color: transparent; -webkit-text-stroke: max(1.5px, .16cqi) color-mix(in srgb, var(--sc) 45%, transparent); transition: color .9s ease .15s, -webkit-text-stroke-color .9s ease; }
+.river.is-anim .st__title,
+.river.is-anim .st__when,
 .river.is-anim .st__body > p {
   opacity: 0;
-  transform: translateY(1.2cqi);
+  transform: translateY(1.1cqi);
   transition: opacity .7s ease, transform .9s cubic-bezier(.16, 1, .3, 1);
 }
-.river.is-anim .st__body > p { transition-delay: .12s; }
+.river.is-anim .st__when { transition-delay: .08s; }
+.river.is-anim .st__body > p { transition-delay: .16s; }
 .river.is-anim .st__faces li {
   opacity: 0;
   transform: scale(.6);
   transition: opacity .35s ease, transform .5s cubic-bezier(.2, .9, .25, 1.3);
-  transition-delay: calc(.3s + var(--i, 0) * 55ms);
+  transition-delay: calc(.35s + var(--i, 0) * 55ms);
 }
-.river.is-anim .st.is-in .st__head,
+.river.is-anim .note {
+  opacity: 0;
+  transform: translateY(1.4cqi) scale(.94) rotate(-1.5deg);
+  transition: opacity .5s ease, transform .75s cubic-bezier(.2, .9, .25, 1.2);
+  transition-delay: calc(.25s + var(--n, 0) * 160ms);
+}
+.river.is-anim .st.is-in .st__no { color: var(--sc); -webkit-text-stroke-color: transparent; }
+.river.is-anim .st.is-in .st__title,
+.river.is-anim .st.is-in .st__when,
 .river.is-anim .st.is-in .st__body > p,
-.river.is-anim .st.is-in .st__faces li { opacity: 1; transform: none; }
+.river.is-anim .st.is-in .st__faces li,
+.river.is-anim .st.is-in .note { opacity: 1; transform: none; }
 
 /* ---- narrow: the stations leave the drawing ------------------------------ */
 
-@container (max-width: 899px) {
+@container (max-width: 999px) {
   .river__stations { position: static; }
+  .river.is-live .river__steps { display: none; }
   .st { position: relative; padding: var(--sp-5) 0 var(--sp-4); border-bottom: 1px solid var(--gray-200); }
-  .st__head, .st__body { position: static; width: auto !important; }
+  .st__head, .st__body, .note { position: static !important; width: auto !important; min-height: 0 !important; }
   .st__head { display: grid; grid-template-columns: auto 1fr; align-items: end; gap: 0 .9rem; }
   .st__no { font-size: 3.25rem; grid-row: span 2; }
   .ihp .st__title { margin: 0; font-size: 1.25rem; }
   .ihp .st__title br { display: none; }
-  .st__when { margin: .3rem 0 0; font-size: .6875rem; }
+  .st__when { margin: .3rem 0 0; font-size: .8125rem; }
   .ihp .river .st__body p { margin-top: .85rem; font-size: 1rem; }
-  .ihp .st__faces { margin-top: 1rem; gap: .6rem; }
+  .ihp .st__faces, .st--3 .st__faces { margin-top: 1rem; gap: .6rem; flex-wrap: wrap; width: auto; }
   .mface { width: 2.75rem; }
-  .river.is-anim .st__head, .river.is-anim .st__body > p { transform: translateY(10px); }
+  .ihp .st__notes { margin-top: 1.6rem; display: grid; gap: 1.5rem; }
+  .note, .st--4 .note { padding: 1.15rem .9rem .8rem; border-width: 1.5px; border-radius: 10px; position: relative !important; left: auto !important; top: auto !important; }
+  .note--34 { border-radius: 0; }
+  .note__when { left: .9rem; transform: translateY(-55%); padding: .3rem .7rem; border-radius: 7px; font-size: .8125rem; }
+  .ihp .river .note ul { padding-left: 1.1rem; }
+  .ihp .river .note li { font-size: .9375rem; line-height: 1.4; }
+  .ihp .river .note li + li { margin-top: .3rem; }
+  .river.is-anim .st__title, .river.is-anim .st__when, .river.is-anim .st__body > p, .river.is-anim .note { transform: translateY(10px); }
 }
 
 @media (prefers-reduced-motion: reduce) {
   .mface .face-img, .rcard { transition: none; }
-  .river__shimmer { animation: none; }
-  .river-tint { transition: none; }
-  .river.is-anim .st__head, .river.is-anim .st__body > p, .river.is-anim .st__faces li { opacity: 1; transform: none; transition: none; }
+  .river__shimmer, .sp { animation: none; }
+  .river-tint, .toc { transition: none; }
 }
 
 @media print {
-  .rcard, .river__svg { display: none; }
+  .rcard, .river__svg, .river__steps { display: none; }
 }

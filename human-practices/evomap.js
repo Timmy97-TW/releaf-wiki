@@ -1,14 +1,17 @@
 /* =============================================================================
    ReLeaf: Project Evolution Map (the river)
    -----------------------------------------------------------------------------
-   The map is complete without this file: the drawing, the four stations and
+   The map is complete without this file: the drawing, the four stages and
    every face as a link to its write-up are plain HTML (index.html, section 2).
    This adds:
 
      1. water. The drawing is shown with a dry riverbed, and the river fills
         from the hose downwards as the reader scrolls, so the front of the
         water is always level with the line being read. It never drains.
-     2. arrival. Each station's words and faces come in as it is reached.
+     2. arrival. A stage comes in whole when it is reached: its words, its
+        faces and every note card that belongs to it. A strip pinned under
+        the nav names the stage being read, and the contents rail steps
+        aside so the map can take its room.
      3. the card. Pointing at (or tabbing to) a face shows who it is, when we
         met, and the line of theirs that changed the project. The face itself
         is the link; the card is a second, larger target for the same place.
@@ -24,14 +27,16 @@
   "use strict";
 
   var NS = "http://www.w3.org/2000/svg";
-  var W = 1414, H = 2000;
+  var W = 1366, H = 3401;
 
   /* The river's centre line, traced on the drawing in its own pixels. Its y
      only ever increases, which is what lets the water front follow the
      reading line: for any height there is exactly one point on the river. */
-  var LINE = [[270,130],[400,185],[600,215],[800,245],[960,290],[1080,350],[1190,430],[1200,500],[1100,560],[900,600],
-              [700,640],[520,700],[410,780],[385,880],[460,960],[660,1000],[900,1040],[1100,1120],[1180,1220],[1130,1350],
-              [940,1420],[700,1460],[460,1520],[300,1600],[255,1720],[360,1840],[560,1930],[760,2010]];
+  var LINE = [[292,328],[360,372],[430,410],[560,440],[700,455],[850,470],[960,500],[1060,560],[1120,640],[1100,740],[907,840],
+              [667,867],[507,893],[400,960],[360,1050],[387,1140],[470,1235],[600,1293],[827,1347],[1013,1413],[1150,1468],[1195,1538],
+              [1150,1606],[1050,1653],[900,1690],[747,1715],[600,1750],[480,1800],[400,1870],[373,1960],[400,2050],[500,2095],[650,2115],
+              [800,2135],[1000,2180],[1100,2260],[1125,2390],[1050,2470],[933,2505],[667,2553],[507,2580],[380,2620],[310,2680],[285,2770],
+              [300,2880],[400,2985],[533,3087],[667,3180],[747,3233]];
 
   var reduce = window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
   var hover  = window.matchMedia && window.matchMedia("(hover: hover) and (pointer: fine)").matches;
@@ -86,7 +91,7 @@
       el("rect", { width: W, height: H, fill: "#000" }, mask);
       var trail = el("rect", { x: "0", y: "0", width: W, height: "0", fill: "url(#river-trail)" }, mask);
       /* three widths, the narrow ones a little behind, so the front is soft */
-      var strokes = [[330, .38, 0], [262, .7, 26], [205, 1, 54]].map(function (s) {
+      var strokes = [[390, .38, 0], [340, .7, 26], [300, 1, 54]].map(function (s) {
         return el("use", { href: "#river-line", fill: "none", stroke: "#fff", "stroke-width": s[0], "stroke-opacity": s[1],
                            "stroke-linecap": "round", "data-lag": s[2] }, mask);
       });
@@ -96,10 +101,15 @@
       el("image", { href: img.currentSrc || img.src, x: "0", y: "0", width: W, height: H, preserveAspectRatio: "none" }, wet);
       el("use", { href: "#river-line", "class": "river__shimmer", fill: "none", stroke: "#fff", "stroke-width": "5",
                   "stroke-opacity": ".55", "stroke-linecap": "round", "stroke-dasharray": "2 46 7 88" }, wet);
+      /* two more strands either side of the middle, slower, so the current has depth */
+      [[-34, "3 70 9 61", ".38", ""], [38, "6 96 2 39", ".32", " river__shimmer--b"]].forEach(function (o) {
+        el("use", { href: "#river-line", "class": "river__shimmer" + o[3], fill: "none", stroke: "#fff", "stroke-width": "4",
+                    "stroke-opacity": o[2], "stroke-linecap": "round", "stroke-dasharray": o[1], transform: "translate(" + o[0] + " " + (o[0] * .6) + ")" }, wet);
+      });
       var rg = el("radialGradient", { id: "river-glow" }, defs);
       el("stop", { offset: "0", "stop-color": "#fff", "stop-opacity": ".9" }, rg);
       el("stop", { offset: "1", "stop-color": "#fff", "stop-opacity": "0" }, rg);
-      var glow = el("circle", { r: "70", fill: "url(#river-glow)", opacity: "0", "class": "river__front" }, svg);
+      var glow = el("circle", { r: "60", fill: "url(#river-glow)", opacity: "0", "class": "river__front" }, svg);
 
       art.appendChild(svg);
 
@@ -134,7 +144,7 @@
         trail.setAttribute("height", Math.max(0, front.y - 230).toFixed(1));
         glow.setAttribute("cx", front.x.toFixed(1));
         glow.setAttribute("cy", front.y.toFixed(1));
-        glow.setAttribute("opacity", reached > 0 && reached < L ? ".55" : "0");
+        glow.setAttribute("opacity", reached > 0 && reached < L ? ".38" : "0");
         if (reached >= L) {
           window.removeEventListener("scroll", tick);
           window.removeEventListener("resize", tick);
@@ -149,30 +159,52 @@
   }
 
   /* ---- 2. arrival --------------------------------------------------------- */
+  /* A stage arrives whole: its number, its paragraph, its faces and every
+     note card that belongs to it come in together when the reader reaches
+     the first of them. The strip pinned under the nav names the stage being
+     read, and while the map is on screen the contents rail steps aside.   */
 
   function arrival(river) {
     var st = $$(".st", river);
-    if (reduce || !("IntersectionObserver" in window)) return;
-    river.classList.add("is-anim");
-    var io = new IntersectionObserver(function (entries) {
-      entries.forEach(function (e) {
-        if (e.isIntersecting) { e.target.classList.add("is-in"); io.unobserve(e.target); }
+    var steps = $$(".river__steps a", river);
+    var bar = $(".river__steps ol", river);
+    var colours = ["--s1", "--s2", "--s3", "--s4"];
+    river.classList.add("is-live");
+    if (!reduce) river.classList.add("is-anim");
+    var parts = st.map(function (s) { return $$(".st__head, .note", s); });
+    var now = -1, queued = false;
+
+    function frame() {
+      queued = false;
+      var vh = window.innerHeight, r = river.getBoundingClientRect();
+      document.body.classList.toggle("evo-open", r.top < vh * 0.72 && r.bottom > vh * 0.42);
+      var cur = -1;
+      st.forEach(function (s, k) {
+        var top = Infinity;
+        parts[k].forEach(function (p) { top = Math.min(top, p.getBoundingClientRect().top); });
+        if (top < vh * 0.8) { s.classList.add("is-in"); }
+        if (top < vh * 0.6) cur = k;
       });
-    }, { rootMargin: "0px 0px -18% 0px" });
-    st.forEach(function (s) {
-      /* a station is as tall as its words, so watch the words */
-      var head = $(".st__head", s);
-      head._st = s;
-      io.observe(s);
-    });
-    /* anything already above the fold on load (a jump back to the map) */
-    st.forEach(function (s) { if (s.getBoundingClientRect().top < window.innerHeight) s.classList.add("is-in"); });
+      if (cur !== now) {
+        now = cur;
+        steps.forEach(function (a, k) {
+          a.classList.toggle("is-now", k === cur);
+          a.classList.toggle("is-done", k < cur);
+          if (k === cur) a.setAttribute("aria-current", "step"); else a.removeAttribute("aria-current");
+        });
+        if (bar) bar.style.setProperty("--now", "var(" + colours[Math.max(0, cur)] + ")");
+      }
+    }
+    function tick() { if (!queued) { queued = true; requestAnimationFrame(frame); } }
+    window.addEventListener("scroll", tick, { passive: true });
+    window.addEventListener("resize", tick);
+    frame();
   }
 
   /* ---- 3. the card -------------------------------------------------------- */
 
   function cards(river) {
-    var faces = $$(".mface", river);
+    var faces = $$("a.mface", river);
     if (!faces.length) return;
 
     var card = document.createElement("a");
@@ -251,8 +283,8 @@
      takes the colours of the strip of drawing that is on screen, so the map
      reads as a place the reader walks into, not a picture on white.       */
 
-  var GROUND = ["#fff7c5","#fdf7c5","#fbf8c6","#faf8c6","#f8f9c7","#f6f9c7","#f4f9c7","#f3fac8","#f1fac8","#effbc9","#edfbc9",
-                "#ecfbca","#eafcca","#e8fcca","#e6fccb","#e5fdcb","#e3fdcb","#e2fecc","#e0fecd","#defecd","#ddffcd"];
+  var GROUND = ["#fcf8c6","#faf7c4","#f8f7c2","#f6f6c0","#f4f6be","#f2f5bc","#f0f5ba","#eef4b8","#ecf4b6","#ebf3b4","#e9f3b2",
+                "#e7f4b4","#e5f5b7","#e3f6b9","#e1f7bc","#dff9bf","#ddfac1","#dbfbc4","#d9fcc6","#d8fdc9","#d6ffcc"];
   var RGB = GROUND.map(function (h) { return [1, 3, 5].map(function (i) { return parseInt(h.substr(i, 2), 16); }); });
   function ground(t) {
     t = Math.max(0, Math.min(1, t)) * (RGB.length - 1);
