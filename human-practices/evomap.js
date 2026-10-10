@@ -9,9 +9,9 @@
         from the hose downwards as the reader scrolls, so the front of the
         water is always level with the line being read. It never drains.
      2. arrival. A stage comes in whole when it is reached: its words, its
-        faces and every note card that belongs to it. A strip pinned under
-        the nav names the stage being read, and the contents rail steps
-        aside so the map can take its room.
+        faces and every note card that belongs to it. The other stages
+        stand back, and the contents rail steps aside so the map can take
+        its room.
      3. the card. Pointing at (or tabbing to) a face shows who it is, when we
         met, and the line of theirs that changed the project. The face itself
         is the link; the card is a second, larger target for the same place.
@@ -161,14 +161,11 @@
   /* ---- 2. arrival --------------------------------------------------------- */
   /* A stage arrives whole: its number, its paragraph, its faces and every
      note card that belongs to it come in together when the reader reaches
-     the first of them. The strip pinned under the nav names the stage being
-     read, and while the map is on screen the contents rail steps aside.   */
+     the first of them. The stage being read is in full ink and the others
+     stand back, and while the map is on screen the contents rail steps aside. */
 
   function arrival(river) {
     var st = $$(".st", river);
-    var steps = $$(".river__steps a", river);
-    var bar = $(".river__steps ol", river);
-    var colours = ["--s1", "--s2", "--s3", "--s4"];
     river.classList.add("is-live");
     if (!reduce) river.classList.add("is-anim");
     var parts = st.map(function (s) { return $$(".st__head, .note", s); });
@@ -187,12 +184,8 @@
       });
       if (cur !== now) {
         now = cur;
-        steps.forEach(function (a, k) {
-          a.classList.toggle("is-now", k === cur);
-          a.classList.toggle("is-done", k < cur);
-          if (k === cur) a.setAttribute("aria-current", "step"); else a.removeAttribute("aria-current");
-        });
-        if (bar) bar.style.setProperty("--now", "var(" + colours[Math.max(0, cur)] + ")");
+        st.forEach(function (x, k) { x.classList.toggle("is-now", k === cur); });
+        river.classList.toggle("has-now", cur >= 0);
       }
     }
     function tick() { if (!queued) { queued = true; requestAnimationFrame(frame); } }

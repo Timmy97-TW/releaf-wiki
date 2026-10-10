@@ -86,13 +86,6 @@
         h.prepend(tag);
       }
 
-      const a = document.createElement("a");
-      a.className = "anchor";
-      a.href = "#" + h.id;
-      a.textContent = "¶";
-      a.setAttribute("aria-label", "Link to this section");
-      h.append(a);
-
       const li = document.createElement("li");
       if (isSub && major) {
         li.className = "toc__sub";

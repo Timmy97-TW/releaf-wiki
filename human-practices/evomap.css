@@ -11,8 +11,7 @@
 
    evomap.js adds the rest, all optional: the water that runs down the river
    as the reader scrolls, each stage arriving with every action that belongs
-   to it, the strip that says which stage is being read, and the card that
-   names each face. While the map is on screen the contents rail steps aside
+   to it, and the card that names each face. While the map is on screen the contents rail steps aside
    and the map takes its room.
    ========================================================================== */
 
@@ -91,57 +90,6 @@
 @keyframes sp-fly  { 0%, 100% { transform: translate(0, 0) rotate(0); } 30% { transform: translate(-.5cqi, -.7cqi) rotate(-5deg); } 65% { transform: translate(.35cqi, -.25cqi) rotate(3deg); } }
 @keyframes sp-sway { 0%, 100% { transform: rotate(-7deg); } 50% { transform: rotate(8deg); } }
 @keyframes sp-nod  { 0%, 100% { transform: rotate(-1.6deg); } 50% { transform: rotate(1.6deg) translateY(-.12cqi); } }
-
-/* ---- the strip that says which stage is being read ------------------------ */
-
-.river__steps { display: none; }
-.river.is-live .river__steps {
-  display: block;
-  position: sticky;
-  top: calc(var(--nav-h) + .75rem);
-  z-index: 5;
-  height: 0;
-  pointer-events: none;
-}
-.river__steps ol {
-  list-style: none;
-  margin: 0 auto;
-  padding: 5px;
-  width: max-content;
-  max-width: 100%;
-  display: flex;
-  gap: 2px;
-  border-radius: 999px;
-  background: rgb(255 255 255 / .8);
-  -webkit-backdrop-filter: saturate(180%) blur(18px);
-          backdrop-filter: saturate(180%) blur(18px);
-  box-shadow: inset 0 0 0 1.5px color-mix(in srgb, var(--now, var(--s1)) 55%, transparent), 0 8px 24px -14px rgb(0 0 0 / .3);
-  pointer-events: auto;
-  transition: box-shadow .5s ease;
-}
-.river__steps li { margin: 0; position: relative; }
-.river__steps li + li::before {
-  content: ""; position: absolute; left: -9px; top: 50%; width: 16px; height: 2px; margin-top: -1px; border-radius: 2px;
-  background: rgb(0 0 0 / .14); z-index: 0;
-}
-.river__steps a {
-  position: relative; z-index: 1;
-  display: flex; align-items: baseline; gap: .45rem;
-  padding: .55rem .95rem;
-  border-radius: 999px;
-  font-size: .875rem; font-weight: 500; letter-spacing: -.01em; line-height: 1.2;
-  color: #6e6e73;
-  text-decoration: none;
-  white-space: nowrap;
-  transition: background .45s ease, color .3s ease;
-}
-.river__steps a b { font-weight: 800; font-variant-numeric: tabular-nums; }
-.river__steps li:nth-child(1) a { --sc: var(--s1); } .river__steps li:nth-child(2) a { --sc: var(--s2); }
-.river__steps li:nth-child(3) a { --sc: var(--s3); } .river__steps li:nth-child(4) a { --sc: var(--s4); }
-.river__steps a.is-done { color: var(--sc); }
-.river__steps a.is-now { background: var(--sc); color: #fff; }
-.river__steps a:hover:not(.is-now) { color: var(--sc); }
-.river__steps a:focus-visible { outline: 2px solid var(--sc); outline-offset: 2px; }
 
 /* ---- stations ------------------------------------------------------------ */
 
@@ -377,12 +325,19 @@ a.mface.is-hot .face-img {
 .river.is-anim .st.is-in .st__faces li,
 .river.is-anim .st.is-in .note { opacity: 1; transform: none; }
 
+/* one stage at a time: the stage being read is in full ink, the others
+   stand back until the reader scrolls to them */
+.river .st__head, .river .st__body, .river .note { transition: opacity .55s ease, filter .55s ease; }
+.river.has-now .st:not(.is-now) .st__head,
+.river.has-now .st:not(.is-now) .st__body,
+.river.has-now .st:not(.is-now) .note { opacity: .34; filter: saturate(.5); }
+
 /* ---- narrow: the stations leave the drawing ------------------------------ */
 
 @container (max-width: 999px) {
   .river__stations { position: static; }
-  .river.is-live .river__steps { display: none; }
   .st { position: relative; padding: var(--sp-5) 0 var(--sp-4); border-bottom: 1px solid var(--gray-200); }
+  .river.has-now .st:not(.is-now) .st__head, .river.has-now .st:not(.is-now) .st__body, .river.has-now .st:not(.is-now) .note { opacity: 1; filter: none; }
   .st__head, .st__body, .note { position: static !important; width: auto !important; min-height: 0 !important; }
   .st__head { display: grid; grid-template-columns: auto 1fr; align-items: end; gap: 0 .9rem; }
   .st__no { font-size: 3.25rem; grid-row: span 2; }
@@ -409,5 +364,5 @@ a.mface.is-hot .face-img {
 }
 
 @media print {
-  .rcard, .river__svg, .river__steps { display: none; }
+  .rcard, .river__svg { display: none; }
 }
