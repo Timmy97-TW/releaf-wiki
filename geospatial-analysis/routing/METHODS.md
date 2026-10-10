@@ -1,40 +1,30 @@
-# Taiwan-wide Fertilizer Companies → Farmland — Routing Package
+# Taiwan fertilizer supply routes: wiki package
 
-## Open this first
-**`taiwan_all_counties.html`** — double-click to open in a browser (needs internet: map tiles + live OSRM routing calls).
+Open `taiwan_fertilizer_routes.html` in a browser. It needs an internet connection for the Leaflet library, the CARTO basemap tiles and live OSRM road routing. The `raster_*.png` files must sit next to the HTML (or be re-pointed to their uploaded URLs).
 
-- **County dropdown** (top of side panel) — zooms/pans into any of the 19 counties. Leave on "All Taiwan" for the national view.
-- **"Load: every company → its own township's farmland"** — loads the default network: every one of the 613 companies that has local farmland data routes to its own township's farmland node, real OSRM road distance/time. ~613 live routing calls, throttled — takes a couple of minutes, progress bar shown.
-- **"Explore one company"** dropdown — pick any single company (labeled `[county] name`) and route it to every farmland node in **its own county only**.
+## What changed from the previous package
+- All county, township and supplier names are in English. `name_translations.csv` maps every original Chinese name to the English one used on the map, so any name can be checked.
+- Supplier names use the established English trade name where one exists (for example Taiwan Fertilizer Co., Ltd., Taiwan Sugar Corporation, Sinon Corporation, Known-You Seed, BASF Taiwan, Bayer Taiwan, Syngenta Taiwan). Every other name is a rendering: the business type is translated and the trade name is romanized in Hanyu Pinyin. These renderings are not registered English names.
+- Township names follow the Chunghwa Post English names (from the `twzipcode-data` package), with spelling errors corrected.
+- Street addresses were removed from popups because they were in Chinese and added nothing at map scale.
+- The editable cost and emission boxes are replaced by fixed, sourced parameters (below).
+- Cost is now per truck round trip and emissions per tonne delivered. The old formula multiplied a round trip by a per-tonne-km factor and a payload, which also counted the empty return leg as loaded.
 
-## The county-scoping rule you asked for
-Every route — in both modes — is restricted to farmland nodes inside the **same county** as the company. A Changhua company will never link to Yilan farmland, even if some Yilan node happens to be geographically closer as the crow flies. The fallback logic (used when a company's own township has no farmland data) searches only within `nodesByCounty[company's county]` — there is no cross-county fallback path in the code.
+## Fixed parameters
+| Parameter | Value | Source |
+|---|---|---|
+| Truck operating cost | US$1.45 per km (US$2.336 per mile) | American Transportation Research Institute, *An Analysis of the Operational Costs of Trucking: 2026 Update* (released July 2026, 2025 data). Industry-average cost per mile across fuel, driver wages and benefits, repair and maintenance, tires, tolls, insurance and truck payments. |
+| CO₂e emission factor | 0.276 kg CO₂e per tonne-km | Ministry of Environment (Taiwan), carbon footprint emission factor database (碳足跡排放係數, dataset CFP_P_02): "7.5–16 t ambient-temperature truck freight service, 80% load factor, including depot emissions". Declared by the MOTC Institute of Transportation, 2017. |
 
-## Scale — what actually went into this
-| | |
-|---|---|
-| Counties processed | 19 (all uploaded; missing only outlying islands — 金門縣, 澎湖縣, 連江縣 — not part of this upload) |
-| Total farmland parcels | **2,792,536** (every parcel from every uploaded shapefile — none sampled) |
-| Total farmland area | **743,529 ha** |
-| Farmland demand nodes | 346 (township-level, same aggregation method as the Taichung pilot — see `methods_farmland_aggregation.md` from earlier) |
-| Fertilizer companies | 616 (613 have in-county farmland data; 2 in 金門縣 + 1 in 澎湖縣 don't, since those counties weren't in this upload) |
+Caveats: the cost figure is a US benchmark (Class 8 trucks, US wages) because no per-km truck operating cost is published for Taiwan, so it is likely an upper estimate for Taiwanese medium trucks. Other entries in the same MOENV database cover the large-truck category: commercial large diesel truck 0.235 kg CO₂e/tkm (2014) and 3.5–7.4 t truck service at an 82% load factor 0.316 kg CO₂e/tkm (2017).
 
-Sanity check: 743,529 ha is in the right range for Taiwan's total farmland/arable area — a good sign the pipeline held up at national scale, not just for the Taichung pilot.
-
-## What's real vs. still an assumption (same standard as before)
-**Real:** every parcel's centroid (computed from its own polygon), the township spatial join (point-in-polygon against official MOI boundaries), the area-weighted aggregation, and every route's distance/time (live OSRM road-network routing, not straight-line).
-
-**Still an assumption, left editable in the UI:** NT$/km freight cost, kg CO₂/tonne-km emission factor, truck payload tonnage. No sourced Taiwan freight/emission rate was available, so these are exposed as input boxes rather than presented as fact.
-
-## Files in this package
+## Files
 | File | Purpose |
 |---|---|
-| `taiwan_all_counties.html` | The interactive map (open this) |
-| `raster_<code>.png` + `.pgw` (19 pairs) | Georeferenced parcel raster per county (EPSG:3826) — drag matching pairs into QGIS for the exact same visual as your original screenshots, at national scale |
-| `all_farmland_nodes.csv` / `.geojson` | All 346 township farmland nodes (county, township, hectares, parcel count, weighted centroid) |
-| `county_meta.json` | Per-county raster bounds/file references (used internally by the HTML; also useful if you want to script your own map) |
+| `taiwan_fertilizer_routes.html` | The interactive map |
+| `raster_<code>.png` + `.pgw` | Georeferenced farmland parcel raster per county (EPSG:3826) |
+| `all_farmland_nodes.csv` / `.geojson` | 346 township farmland nodes, English names |
+| `county_meta.json` | Per-county raster bounds, keyed by English county name |
+| `name_translations.csv` | Chinese → English mapping for every supplier, township and county |
 
-County → letter code mapping for the raster filenames: A=臺北市, B=臺中市, C=基隆市, D=臺南市, E=高雄市, F=新北市, G=宜蘭縣, H=桃園市, I=嘉義市, J=新竹縣, K=苗栗縣, M=南投縣, N=彰化縣, O=新竹市, P=雲林縣, Q=嘉義縣, T=屏東縣, U=花蓮縣, V=臺東縣.
-
-## If you add the missing counties later
-Send the 金門縣/連江縣/澎湖縣 (or any other) 農田坵塊圖 shapefiles and I'll run them through the identical pipeline and merge them in — no rework needed on the counties already done.
+Raster letter codes: A Taipei City, B Taichung City, C Keelung City, D Tainan City, E Kaohsiung City, F New Taipei City, G Yilan County, H Taoyuan City, I Chiayi City, J Hsinchu County, K Miaoli County, M Nantou County, N Changhua County, O Hsinchu City, P Yunlin County, Q Chiayi County, T Pingtung County, U Hualien County, V Taitung County.
