@@ -1,28 +1,31 @@
 /* =============================================================================
    The homepage reactor.
    -----------------------------------------------------------------------------
-   The same assembly as hardware/bioreactor/, rendered into the homepage's
-   reactor section (#solution). Everything it knows comes from files that
-   section already owns:
+   Anton's final design, the B2 carry case, turning slowly in the homepage's
+   reactor section (#solution). The model is one file,
 
-     BIO_PARTS       hardware/bioreactor/js/parts.js
-     FLOW_PATHS      hardware/bioreactor/js/flow-paths.js
-     BIO_COMPONENTS  hardware/bioreactor/js/components.js
-     the meshes      hardware/bioreactor/models/_pack.json + _pack.bin
+     assets/models/b2-reactor.glb     1.8 MB, 176k triangles
 
-   Nothing about the device is described twice, so the homepage cannot end up
-   claiming a part the technical record has dropped.
+   cut from his 201 MB CAD export by build/reactor-glb/build.mjs: every part
+   decimated to a 0.4 mm error, the case screws more roughly, the path-tracer
+   glass and liquids turned into plain blended glass and tinted liquid, and
+   the parts gathered under named groups (the scene's children):
 
-   Three things make this different from the record page's scene.js:
+     case fasteners fixtures light reservoir pump dosing membrane harvest koh
+     photometer vent sensors valves sampler line-culture line-koh line-product
 
-     · IT DOES NOT LOAD UNTIL ASKED. three.js (about 0.6 MB), the device files
-       above and the packed assembly (2.4 MB) are all fetched by start(), and
-       the WebGL renderer is only created then, so a reader who never scrolls
-       past the problem section pays for none of it. home.js calls start()
-       when #rx is 1.6 screens away. The page has no <script> tag for any of
-       them; DEPS below is the list, in the order they must run.
+   The demand cards name components (data-comp); CARD below says which groups
+   each one lights. Until 10 Oct this file built the bench assembly from
+   hardware/bioreactor/ (parts.js, flow-paths.js, components.js, _pack.bin);
+   the technical record still does, this page no longer loads any of it.
+
+     · IT DOES NOT LOAD UNTIL ASKED. three.js (0.6 MB), the glTF loader and
+       the model are fetched by start(), and the WebGL renderer is only
+       created then, so a reader who never scrolls past the problem section
+       pays for none of it. home.js calls start() when #rx is 1.6 screens
+       away. DEPS below is the list, in the order they must run.
      · IT STARTS AS A PHOTOGRAPH. The photograph of the rig under the canvas
-       is what #rx shows until the model is built: tally() then adds
+       is what #rx shows until the model is built: built() then adds
        .is-ready (the canvas fades in over it) and takes aria-hidden off the
        canvas, so until then the photograph's alt text speaks for it. No
        WebGL context, or a load that fails, adds .no-gl and the photograph
@@ -32,23 +35,28 @@
        light components up without a second copy of the picker. A lit set is
        painted in the signal green of the cards and everything else, the
        plinth's glow included, goes dark, because a glow on its own is too
-       faint to find in a rotating assembly. Besides the ids in
-       components.js it knows two of its own: "light", the induction light
-       just outside the culture vessel's wall, which is only on while it is
-       asked for, and "unit", every part of the machine (not the plinth).
-       On this page "harvest" also takes the shell-side line: the tubes and
-       the green flow that carry the harvest from outside the fibre to the
-       harvest bottle.
+       faint to find in a turning machine. Besides the groups it knows "unit",
+       every part of the machine (not the plinth). While anything is lit the
+       model comes round to its open side, where the parts can be seen.
 
-   The materials, lighting and flow colours are copied from scene.js on purpose
-   rather than imported: that file is an IIFE with no exports, and the two
-   scenes are framed differently. If you retune one, retune both.
+   Lengths are metres, as in the CAD.
    ========================================================================== */
 
 window.__homeRx = (function () {
   "use strict";
 
-  var MODEL_BASE = "hardware/bioreactor/models/";
+  var MODEL = "assets/models/b2-reactor.glb";
+  // what each card id lights: groups of the model. "light" is the case's own
+  // green LED strips, with the induction light inside switched on.
+  var CARD = {
+    light: ["light"],
+    reservoir: ["reservoir"],
+    pump: ["pump", "dosing"],
+    membrane: ["membrane"],
+    harvest: ["harvest", "line-product"],
+    photometer: ["photometer"],
+    vent: ["vent"]
+  };
   var api = {
     start: function () {},
     isReady: function () { return false; },
@@ -80,20 +88,18 @@ window.__homeRx = (function () {
   }
 
   /* ---------- the files it needs, fetched by start() ----------
-     The same vendor bundle, part list, flow centerlines and component
-     definitions as hardware/bioreactor/, in the order they must run. Classic
-     scripts inserted with async = false run in insertion order. */
+     Classic scripts inserted with async = false run in insertion order.
+     three.min.js and render-quality.js are the technical record's own copies;
+     the glTF loader and the meshopt decoder are three r128's, to match. */
   var DEPS = [
     "hardware/js/vendor/three.min.js",
-    "hardware/js/packed-loader.js",
-    "hardware/js/render-quality.js",
-    "hardware/bioreactor/js/parts.js",
-    "hardware/bioreactor/js/flow-paths.js",
-    "hardware/bioreactor/js/components.js"
+    "assets/js/vendor/GLTFLoader.js",
+    "assets/js/vendor/meshopt_decoder.js",
+    "hardware/js/render-quality.js"
   ];
   function haveDeps() {
-    return typeof THREE !== "undefined" && typeof BIO_PARTS !== "undefined" &&
-      typeof PackedModel !== "undefined" && typeof RQ !== "undefined";
+    return typeof THREE !== "undefined" && !!THREE.GLTFLoader &&
+      typeof MeshoptDecoder !== "undefined" && typeof RQ !== "undefined";
   }
   function loadDeps(done) {
     if (haveDeps()) { done(true); return; }
@@ -110,12 +116,10 @@ window.__homeRx = (function () {
   }
 
   var renderer, scene, camera, TARGET, key, sig, cultureLight;
-  // dist is 1550 here, not the record page's 1780: the model sits between
-  // two columns of cards, and at this distance it is about 1.1 × the canvas
-  // height wide (the field of view is vertical), which home-reactor.css
-  // counts on when it sizes the canvas.
-  var HOME = -0.62;        // the three-quarter view every part is visible from
-  var yaw = HOME, pitch = 0.14, dist = 1550;
+  // HOME is the three-quarter view onto the case's open side, the one every
+  // part can be seen from. dist is set from the model's height once it is in.
+  var HOME = -0.72;
+  var yaw = HOME, pitch = 0.16, dist = 3;
 
   function place() {
     camera.position.set(
@@ -147,132 +151,34 @@ window.__homeRx = (function () {
     renderer.toneMappingExposure = 1.05;
 
     scene = new THREE.Scene();
-    camera = new THREE.PerspectiveCamera(26, 16 / 9, 1, 8000);
-    TARGET = new THREE.Vector3(-80, 128, 0);
+    camera = new THREE.PerspectiveCamera(26, 16 / 9, 0.05, 40);
+    TARGET = new THREE.Vector3(0, 0.36, 0);
 
     scene.environment = RQ.studioEnv(renderer);
-    key = new THREE.DirectionalLight(0xfff6ec, 0.38);
-    key.position.set(300, 500, 600);
+    key = new THREE.DirectionalLight(0xfff6ec, 0.55);
+    key.position.set(-0.5, 0.9, 0.7);
     scene.add(key);
-    RQ.enableShadows(renderer, key);
-    var rimW = new THREE.DirectionalLight(0xffd9a8, 0.22); rimW.position.set(500, -100, -500); scene.add(rimW);
-    var rimC = new THREE.DirectionalLight(0xbcd0e6, 0.30); rimC.position.set(-500, 200, -550); scene.add(rimC);
+    // the case is black on an ink band: two rims draw its edges out of it
+    var rimW = new THREE.DirectionalLight(0xffd9a8, 0.45); rimW.position.set(0.6, 0.2, -0.5); scene.add(rimW);
+    var rimC = new THREE.DirectionalLight(0xbcd0e6, 0.60); rimC.position.set(-0.6, 0.5, -0.55); scene.add(rimC);
     // the 520 nm the circuit actually runs on, thrown from the reader's left so
     // the reveal's green light and the scene's green light are the same light
-    sig = new THREE.DirectionalLight(0x3ddc8b, SIG_I); sig.position.set(-620, 240, 380); scene.add(sig);
-    // the induction light itself, just outside the culture vessel's wall:
-    // off until a card asks for "light"; placed by the bottle once the
-    // model is in
-    cultureLight = new THREE.PointLight(0x3ddc8b, 0, 360, 1.4);
+    sig = new THREE.DirectionalLight(0x3ddc8b, SIG_I); sig.position.set(-0.62, 0.24, 0.38); scene.add(sig);
+    // a lamp inside the case, so what stands in it is not lost in its shadow
+    var inner = new THREE.PointLight(0xf2f6ff, 0.9, 0.9, 1.6); inner.position.set(-0.02, 0.42, 0.02); scene.add(inner);
+    // the induction light itself, beside the culture vessel: off until a card
+    // asks for "light"; placed by the vessel once the model is in
+    cultureLight = new THREE.PointLight(0x3ddc8b, 0, 0.5, 1.4);
     scene.add(cultureLight);
     SIG_COL = new THREE.Color(SIGNAL);
     return true;
   }
 
-  /* ---------- materials ---------- */
-  var std = function (c, m, r, e) {
-    return new THREE.MeshPhysicalMaterial({
-      color: c, metalness: m,
-      roughness: Math.max(0.18, r * 0.72), envMapIntensity: e * 1.35,
-      clearcoat: 1, clearcoatRoughness: 0.09 });
-  };
-  var glassy = function (c, r, t, e, em, ei) {
-    return new THREE.MeshPhysicalMaterial({
-      color: c, metalness: 0, roughness: r, transmission: t, ior: 1.5,
-      transparent: true, opacity: 1, envMapIntensity: e,
-      clearcoat: 1, clearcoatRoughness: r * 1.4,
-      emissive: em, emissiveIntensity: ei,
-      side: THREE.DoubleSide, depthWrite: false });
-  };
-  var MATERIALS = {
-    blackPrint: function () { return std(0x1d2025, .16, .58, .8); },
-    charcoal:   function () { return std(0x2a2d33, .22, .55, .75); },
-    probeBlack: function () { return std(0x121417, .20, .50, .85); },
-    cable:      function () { return std(0x17181a, .05, .72, .6); },
-    navy:       function () { return std(0x1f3f74, .12, .45, .95); },
-    skyBlue:    function () { return std(0x7fb2d9, .10, .42, 1); },
-    rotorBlue:  function () { return std(0x2f6fbb, .14, .40, 1); },
-    knobBlue:   function () { return std(0x2e5fa3, .14, .42, 1); },
-    white:      function () { return std(0xe4e6e8, .04, .62, .8); },
-    greyLight:  function () { return std(0x9aa2ab, .30, .48, .9); },
-    steel:      function () { return std(0xb8bcc2, .88, .34, 1.1); },
-    pcb:        function () { return std(0x14306b, .18, .52, .85); },
-    glass:       function () { return glassy(0xeaf4ff, .02, .86, 3.4, 0x93bce4, .30); },
-    bottleGlass: function () { return glassy(0xe4eef8, .06, .90, 3.0, 0x9dc0e2, .12); },
-    frostBottle: function () { return glassy(0xeef2f4, .30, .62, 2.2, 0xaebfd0, .10); },
-    tube:        function () { return glassy(0xf0f4f6, .26, .70, 2.4, 0xa9c2d8, .10); },
-    beam: function () {
-      return new THREE.MeshBasicMaterial({
-        color: 0xff8a1e, transparent: true, opacity: .22,
-        blending: THREE.AdditiveBlending, depthWrite: false, depthTest: false });
-    },
-    amber: function () {
-      return new THREE.MeshPhysicalMaterial({
-        color: 0xffab34, metalness: 0, roughness: .10, transmission: .62, ior: 1.55,
-        transparent: true, opacity: 1, envMapIntensity: 1.5,
-        clearcoat: 1, clearcoatRoughness: .04,
-        emissive: 0xff8a00, emissiveIntensity: .42,
-        side: THREE.DoubleSide, depthWrite: false });
-    },
-  };
-
-  /* ---------- flow ---------- */
-  var FLOW_SPEED = 70, DASH_MM = 44, flowMats = [];
-  var LOOP_COLORS = {
-    lumen: { edge: "rgba(255,110,10,0)", core: "rgba(255,126,20,1)" },
-    shell: { edge: "rgba(20,225,120,0)", core: "rgba(24,235,132,1)" },
-  };
-  function pulseTexture(loop) {
-    var cl = LOOP_COLORS[loop] || LOOP_COLORS.lumen;
-    var c = document.createElement("canvas");
-    c.width = 128; c.height = 4;
-    var g = c.getContext("2d");
-    var grad = g.createLinearGradient(0, 0, 52, 0);
-    grad.addColorStop(0, cl.edge); grad.addColorStop(.5, cl.core); grad.addColorStop(1, cl.edge);
-    g.fillStyle = grad; g.fillRect(0, 0, 52, 4);
-    var tex = new THREE.CanvasTexture(c);
-    tex.encoding = THREE.sRGBEncoding;
-    tex.wrapS = THREE.RepeatWrapping;
-    tex.wrapT = THREE.ClampToEdgeWrapping;
-    return tex;
-  }
-  function buildFlow() {
-    if (typeof FLOW_PATHS === "undefined") return;
-    FLOW_PATHS.forEach(function (fp) {
-      var pts = fp.points.map(function (p) { return new THREE.Vector3(p[0], p[1], p[2]); });
-      if (pts.length < 2) return;
-      var curve = new THREE.CatmullRomCurve3(pts, false, "centripetal");
-      var geo = new THREE.TubeGeometry(
-        curve, Math.min(400, Math.max(24, Math.round(fp.length / 3))), 2.55, 10, false);
-      var tex = pulseTexture(fp.loop);
-      tex.repeat.x = fp.length / DASH_MM;
-      var mat = new THREE.MeshBasicMaterial({
-        map: tex, transparent: true, depthWrite: false, blending: THREE.AdditiveBlending });
-      flowMats.push(mat);
-      // the green shell-side flow is the harvest leaving the fibre from
-      // outside it: it stays up while the harvest is lit
-      if (fp.loop === "shell") glowOf.set(mat, "harvest");
-      var mesh = new THREE.Mesh(geo, mat);
-      mesh.renderOrder = 2;
-      scene.add(mesh);
-    });
-    var core = new THREE.Mesh(new THREE.CylinderGeometry(4.4, 4.4, 200, 14),
-      new THREE.MeshBasicMaterial({ color: 0xff8a2e, transparent: true, opacity: .5,
-        blending: THREE.AdditiveBlending, depthWrite: false }));
-    core.position.set(-405.3, 195.4, 0); core.renderOrder = 2; scene.add(core);
-    glowOf.set(core.material, "membrane");
-    var halo = new THREE.Mesh(new THREE.CylinderGeometry(6.6, 6.6, 285, 16),
-      new THREE.MeshBasicMaterial({ color: 0x3ddc8b, transparent: true, opacity: .22,
-        blending: THREE.AdditiveBlending, depthWrite: false }));
-    halo.position.set(-405.3, 195.4, 0); halo.renderOrder = 2; scene.add(halo);
-    glowOf.set(halo.material, "membrane");
-  }
-
   /* ---------- the plinth ---------- */
-  // The record page's stage carries a wordmark. This one does not: the
-  // heading above the reactor is already saying it, and saying it twice in
-  // the same frame reads as a placeholder nobody removed.
-  var GROUND = -72;
+  // A dark slab with a rim of the signal green under the case: it stands the
+  // machine on something, and its light is what separates a black case from
+  // the ink of the band.
+  var glowOf = new Map();  // kept for shade(): an additive glow that belongs to a component
   function roundedRect(w, d, r) {
     var s = new THREE.Shape(), x = -w / 2, y = -d / 2;
     s.moveTo(x + r, y);
@@ -282,55 +188,24 @@ window.__homeRx = (function () {
     s.lineTo(x, y + r); s.quadraticCurveTo(x, y, x + r, y);
     return s;
   }
-  function buildStage() {
-    var dark = std(0x080d0a, .5, .42, .8);
+  function buildStage(box) {
+    var cx = (box.min.x + box.max.x) / 2, cz = (box.min.z + box.max.z) / 2, ground = box.min.y;
+    var w = box.max.x - box.min.x + 0.08, dp = box.max.z - box.min.z + 0.08;
+    // no specular at all: the rim lamps graze a flat slab and any gloss on it
+    // turns the whole top into one pale glare
+    var dark = new THREE.MeshLambertMaterial({ color: 0x070d09 });
     var glow = function (o) {
       return new THREE.MeshBasicMaterial({ color: 0x3ddc8b, transparent: true,
         opacity: o, blending: THREE.AdditiveBlending, depthWrite: false, side: THREE.DoubleSide });
     };
+    var flat = function (mesh, y) { mesh.rotation.x = -Math.PI / 2; mesh.position.set(cx, y, cz); scene.add(mesh); return mesh; };
 
-    var slab = new THREE.Mesh(new THREE.ExtrudeGeometry(
-      roundedRect(760, 220, 42), { depth: 12, bevelEnabled: false }), dark);
-    slab.rotation.x = -Math.PI / 2; slab.position.set(-80, GROUND - 12, -5); scene.add(slab);
-
-    var base = new THREE.Mesh(new THREE.ExtrudeGeometry(
-      roundedRect(792, 248, 50), { depth: 8, bevelEnabled: false }), dark);
-    base.rotation.x = -Math.PI / 2; base.position.set(-80, GROUND - 23, -5); scene.add(base);
-
-    var strip = new THREE.Mesh(new THREE.ExtrudeGeometry(
-      roundedRect(766, 226, 44), { depth: 1.6, bevelEnabled: false }), glow(.42));
-    strip.rotation.x = -Math.PI / 2; strip.position.set(-80, GROUND - 14.3, -5);
-    strip.renderOrder = 1; scene.add(strip);
-
-    var rimShape = roundedRect(752, 212, 40);
-    rimShape.holes.push(new THREE.Path(roundedRect(740, 200, 34).getPoints(24)));
-    var rim = new THREE.Mesh(new THREE.ShapeGeometry(rimShape, 24), glow(.6));
-    rim.rotation.x = -Math.PI / 2; rim.position.set(-80, GROUND + .45, -5);
-    rim.renderOrder = 1; scene.add(rim);
-
-    var poolC = document.createElement("canvas");
-    poolC.width = poolC.height = 256;
-    var pg = poolC.getContext("2d");
-    var rad = pg.createRadialGradient(128, 128, 0, 128, 128, 128);
-    rad.addColorStop(0, "rgba(70,225,150,0.50)");
-    rad.addColorStop(.55, "rgba(60,190,130,0.14)");
-    rad.addColorStop(1, "rgba(60,190,130,0)");
-    pg.fillStyle = rad; pg.fillRect(0, 0, 256, 256);
-    var poolTex = new THREE.CanvasTexture(poolC);
-    poolTex.encoding = THREE.sRGBEncoding;
-    [[-300, 175], [-165, 140], [0, 165], [190, 185]].forEach(function (st) {
-      var pool = new THREE.Mesh(new THREE.PlaneGeometry(st[1], st[1]),
-        new THREE.MeshBasicMaterial({ map: poolTex, transparent: true, opacity: .40,
-          blending: THREE.AdditiveBlending, depthWrite: false }));
-      pool.rotation.x = -Math.PI / 2;
-      pool.position.set(st[0], GROUND + .6, 0);
-      pool.renderOrder = 1; scene.add(pool);
-    });
-
-    var ped = new THREE.Mesh(new THREE.BoxGeometry(104, 29.5, 40), dark);
-    ped.position.set(0, GROUND + 14.75, -23); scene.add(ped);
-    var mast = new THREE.Mesh(new THREE.BoxGeometry(12, 462, 7), dark);
-    mast.position.set(-398, GROUND + 231, -12); scene.add(mast);
+    flat(new THREE.Mesh(new THREE.ExtrudeGeometry(roundedRect(w, dp, .03), { depth: .012, bevelEnabled: false }), dark), ground - .012);
+    flat(new THREE.Mesh(new THREE.ExtrudeGeometry(roundedRect(w + .03, dp + .03, .038), { depth: .008, bevelEnabled: false }), dark), ground - .022);
+    flat(new THREE.Mesh(new THREE.ExtrudeGeometry(roundedRect(w + .006, dp + .006, .032), { depth: .0016, bevelEnabled: false }), glow(.5)), ground - .0143).renderOrder = 1;
+    var rimShape = roundedRect(w - .008, dp - .008, .028);
+    rimShape.holes.push(new THREE.Path(roundedRect(w - .02, dp - .02, .023).getPoints(24)));
+    flat(new THREE.Mesh(new THREE.ShapeGeometry(rimShape, 24), glow(.7)), ground + .0005).renderOrder = 1;
   }
 
   /* ---------- highlight, for the demand cards ---------- */
@@ -352,22 +227,19 @@ window.__homeRx = (function () {
   // as one flat shape, so each keeps more of its own colour
   var UNIT_LIT = 0.22, UNIT_TINT = 0.16;
   var GLOW_L = 2.3;        // the induction light at full strength
-  // Clear glass (the membrane shell, the harvest bottle, the tubes) is
-  // mostly transmission, and the renderer draws a transmissive surface
-  // nearly see-through over this transparent canvas, so a green glow on it
-  // barely shows. While it is lit it is made less clear (GLASS_TR, GLASS_LIT
-  // in paint()). Lit glass, the frosted culture bottle included, also takes
+  // Clear glass (the membrane shell, the bottles, the tubes) is drawn nearly
+  // see-through, so a green glow on it barely shows. While it is lit it is
+  // made more solid (GLASS_OP, GLASS_LIT in paint()). Lit glass also takes
   // the green further into its own colour (GLASS_TINT in shade()), so it
   // reads as green glass rather than white.
-  var GLASS_TR = 0.4, GLASS_TINT = 0.8, GLASS_LIT = 0.45, GLASS_ENV = 0.55;
-  var comps = {};          // id -> [{ mat, hex, ei, tr }]
+  var GLASS_OP = 0.72, GLASS_TINT = 0.8, GLASS_LIT = 0.45, GLASS_ENV = 0.55;
+  var comps = {};          // id -> [{ mat, hex, ei, op, glass }]
   var litIds = [];
   // What the cards last asked for. A card can be pointed at while the model
   // is still loading; the request is kept and applied once it is ready.
   var wantIds = [];
   var shades = [];         // every material in the scene, with its own values
   var litMats = null;      // the lit materials (a Set), or null
-  var glowOf = new Map();  // an additive glow that belongs to a component
   var unitMats = new Set();// every material of the machine itself
   var dimNow = 0, dimWant = 0, lightNow = 0, lightWant = 0;
 
@@ -425,42 +297,36 @@ window.__homeRx = (function () {
     if (cultureLight) cultureLight.intensity = GLOW_L * lightNow;
   }
 
-  function entry(o) {
-    return { mat: o.material, hex: o.material.emissive.getHex(), ei: o.material.emissiveIntensity || 0,
-             tr: o.material.transmission || 0 };
+  function entry(m) {
+    return { mat: m, hex: m.emissive.getHex(), ei: m.emissiveIntensity || 0, op: m.opacity,
+             glass: m.transparent && m.opacity < 0.6 };
   }
-  function indexComponents() {
-    if (typeof BIO_COMPONENTS === "undefined") return;
-    BIO_COMPONENTS.forEach(function (def) {
-      var found = [];
-      def.meshes.forEach(function (n) {
-        var o = scene.getObjectByName(n);
-        if (!o || !o.material) return;
-        // a glow with no surface of its own (the photometer's beam) is
-        // kept up while its component is lit
-        if (o.material.blending === THREE.AdditiveBlending) { glowOf.set(o.material, def.id); return; }
-        if (o.material.emissive) found.push(entry(o));
+  // Every mesh takes its own copy of its material (the file shares one "lab
+  // grey" between a pump and a valve, and a card must be able to light one
+  // without the other), then the groups are indexed for the cards.
+  function indexComponents(root) {
+    var byGroup = {}, unit = [];
+    root.children.forEach(function (g) {
+      var list = byGroup[g.name] = [];
+      g.traverse(function (o) {
+        if (!o.isMesh) return;
+        var m = o.material = o.material.clone();
+        // more of the studio on the case and its fittings, or black on ink is a hole
+        if (g.name === "case" || g.name === "fasteners" || g.name === "fixtures") m.envMapIntensity = 1.9;
+        if (g.name === "light") m.emissiveIntensity = 2.2;
+        if (m.transparent) { m.depthWrite = false; o.renderOrder = m.opacity > 0.45 ? 1 : 2; }
+        unitMats.add(m);
+        var e = entry(m);
+        list.push(e); unit.push(e);
       });
-      if (found.length) comps[def.id] = found;
     });
-    // the harvest line: the shell-side tubes named in FLOW_PATHS
-    if (typeof FLOW_PATHS !== "undefined") {
-      FLOW_PATHS.forEach(function (fp) {
-        var o = fp.loop === "shell" && scene.getObjectByName(fp.name);
-        if (!o || !o.material || !o.material.emissive) return;
-        (comps.harvest = comps.harvest || []).push(entry(o));
-      });
-    }
-    // the whole machine: every part in the part list
-    var unit = [];
-    BIO_PARTS.forEach(function (p) {
-      var o = scene.getObjectByName(p.file);
-      if (!o || !o.material) return;
-      unitMats.add(o.material);
-      if (o.material.emissive) unit.push(entry(o));
+    Object.keys(CARD).forEach(function (id) {
+      var found = [];
+      CARD[id].forEach(function (g) { found = found.concat(byGroup[g] || []); });
+      if (found.length) comps[id] = found;
     });
     comps.unit = unit;
-    // every material in the scene, plinth and flow included, with the values
+    // every material in the scene, the plinth included, with the values
     // shade() scales from
     var seen = new Set();
     scene.traverse(function (o) {
@@ -471,9 +337,9 @@ window.__homeRx = (function () {
         mat: m,
         additive: m.blending === THREE.AdditiveBlending,
         comp: glowOf.get(m) || null,
-        unit: unitMats.has(m) || flowMats.indexOf(m) >= 0 || glowOf.has(m),
+        unit: unitMats.has(m),
         color: m.color ? m.color.clone() : null,
-        glass: (m.transmission || 0) >= 0.6,   // clear and frosted glass
+        glass: !!m.transparent && m.blending !== THREE.AdditiveBlending && m.opacity < 0.6,
         env: m.envMapIntensity,
         op: m.opacity,
         ei: m.emissiveIntensity
@@ -482,41 +348,34 @@ window.__homeRx = (function () {
   }
 
   // an opaque part has no emissive of its own (black at intensity 1), so its
-  // lit strength is the whole intensity; glass already glows a little, so
-  // its strength goes on top. Glass (the membrane shell, the harvest
-  // bottle, the tubes, the frosted culture bottle) is made less clear while
-  // it is lit (GLASS_TR), or the Biosafe card lights little more than a
-  // cap, and it gets a gentler glow of its own (GLASS_LIT), because a bright
-  // one tone-maps to white. With "unit" the glass keeps its clearness, so
-  // the whole machine does not turn milky.
+  // lit strength is the whole intensity; a liquid or an LED already glows a
+  // little, so its strength goes on top. Glass is made more solid while it is
+  // lit (GLASS_OP), or the Biosafe card lights little more than a cap, and it
+  // gets a gentler glow of its own (GLASS_LIT), because a bright one
+  // tone-maps to white. With "unit" the glass keeps its clearness, so the
+  // whole machine does not turn milky.
   function paint(id, strength) {
     (comps[id] || []).forEach(function (m) {
-      var clear = m.tr >= 0.6 && id !== "unit";
+      var clear = m.glass && id !== "unit";
       if (strength > 0) {
         m.mat.emissive.setHex(SIGNAL);
-        m.mat.emissiveIntensity = m.hex === 0 ? strength
-          : m.ei + (clear ? GLASS_LIT : strength);
-        if (clear) m.mat.transmission = GLASS_TR;
+        m.mat.emissiveIntensity = m.hex === 0 ? (clear ? GLASS_LIT : strength) : m.ei + strength;
+        if (clear) m.mat.opacity = GLASS_OP;
       } else {
         m.mat.emissive.setHex(m.hex);
         m.mat.emissiveIntensity = m.ei;
-        if (m.tr) m.mat.transmission = m.tr;
+        m.mat.opacity = m.op;
       }
     });
   }
 
-  // The induction light sits just outside the culture vessel's wall, on the
-  // side the reader looks from, a third of the way up: it lights the culture
-  // through the wall and throws green onto the plinth round it.
-  function placeCultureLight() {
-    var o = scene.getObjectByName("media-bottle");
+  // The induction light sits beside the culture vessel, on the open side, a
+  // third of the way up: it lights the culture and the deck round it.
+  function placeCultureLight(root) {
+    var o = root.getObjectByName("reservoir");
     if (!o || !cultureLight) return;
-    o.geometry.computeBoundingBox();
-    var b = o.geometry.boundingBox;
-    var cx = (b.min.x + b.max.x) / 2, cz = (b.min.z + b.max.z) / 2;
-    var r = Math.max(b.max.x - b.min.x, b.max.z - b.min.z) / 2 + 45;
-    cultureLight.position.set(cx + r * Math.sin(HOME), b.min.y + (b.max.y - b.min.y) * 0.32,
-                              cz + r * Math.cos(HOME));
+    var b = new THREE.Box3().setFromObject(o);
+    cultureLight.position.set(b.min.x - 0.03, b.min.y + (b.max.y - b.min.y) * 0.4, (b.min.z + b.max.z) / 2 + 0.05);
   }
 
   /* ---------- drive ---------- */
@@ -614,10 +473,7 @@ window.__homeRx = (function () {
       var dt = Math.min(0.05, real);                     // cap the step so a
       clock += dt;                                       // long park does not
       lastNow = now;                                     // spin the reactor
-      var t = clock;
       if (!dragging && !userHeld) turn(dt);
-      flowMats.forEach(function (m) { m.map.offset.x = -(t * FLOW_SPEED) / DASH_MM; });
-      rotors.forEach(function (r) { r.rotation.z = t * 1.7; });
       if (dimNow !== dimWant || lightNow !== lightWant) {
         // the fades run on real time, not the capped step, so a slow frame
         // rate does not leave the last card's light up for seconds
@@ -634,26 +490,28 @@ window.__homeRx = (function () {
   }
 
   /* ---------- load ---------- */
-  var ROTOR = { x: -16.7, y: 0 };
-  var rotors = [];
-  var done = 0, failedParts = 0;
   var loadEl = document.getElementById("rx-load");
   var loadPct = loadEl ? loadEl.querySelector("span") : null;
 
-  function tally() {
-    done++;
-    if (loadPct) loadPct.textContent = Math.round((done / BIO_PARTS.length) * 100) + "%";
-    if (done < BIO_PARTS.length) return;
-    if (failedParts > BIO_PARTS.length / 3) { giveUp(); return; }
-    // this runs inside the loader's promise, where nothing would catch a
+  function built(gltf) {
+    // this runs inside the loader's callback, where nothing would catch a
     // throw: any failure in the build leaves the photograph, not a stuck pill
     try {
-      buildFlow();
-      buildStage();
-      RQ.shadowAll(scene);
-      RQ.fitShadow(key, scene);
-      indexComponents();
-      placeCultureLight();
+      var root = gltf.scene;
+      scene.add(root);
+      var box = new THREE.Box3().setFromObject(root);
+      TARGET.set((box.min.x + box.max.x) / 2, (box.min.y + box.max.y) / 2 - 0.02, (box.min.z + box.max.z) / 2);
+      // the whole case, handle and plinth, inside the canvas's height with air
+      // above and below; the field of view is vertical, so this holds at any width
+      dist = (box.max.y - box.min.y) / 2 / Math.tan(camera.fov * Math.PI / 360) * 1.3;
+      buildStage(box);
+      indexComponents(root);
+      placeCultureLight(root);
+      // upload everything now, while the photograph still covers the canvas,
+      // so the first visible frames do not hitch on shader compiles
+      size(); place();
+      renderer.compile(scene, camera);
+      renderer.render(scene, camera);
     } catch (e) {
       giveUp();
       return;
@@ -677,39 +535,12 @@ window.__homeRx = (function () {
       if (!ok) { giveUp(); return; }
       try {
         if (!init()) { giveUp(); return; }
-        loadModel();
+        new THREE.GLTFLoader().setMeshoptDecoder(MeshoptDecoder).load(MODEL, built, function (e) {
+          if (loadPct && e.total) loadPct.textContent = Math.round(e.loaded / e.total * 100) + "%";
+        }, giveUp);
       } catch (e) {
         giveUp();
       }
-    });
-  }
-
-  function loadModel() {
-    // The geometry is one packed bundle, models/_pack.json + _pack.bin (the
-    // 55 separate .stl files no longer exist). PackedModel.bundle() is a
-    // drop-in for THREE.STLLoader: same load(url, ok, progress, fail) shape,
-    // resolved by basename, one 2.4 MB fetch for the whole assembly.
-    var stl = PackedModel.bundle(MODEL_BASE);
-    BIO_PARTS.forEach(function (p) {
-      stl.load(MODEL_BASE + p.file + ".stl", function (geo) {
-        // a part that cannot be built counts as a failed part, never as a
-        // throw inside the loader's promise (which would leave the pill up)
-        try {
-          RQ.smoothNormals(geo);
-          var mesh = new THREE.Mesh(geo, (MATERIALS[p.mat] || MATERIALS.blackPrint)());
-          mesh.name = p.file;
-          if (p.mat === "beam") mesh.renderOrder = 3;
-          if (p.file === "pump-rotor-back" || p.file === "pump-rotor-front") {
-            geo.translate(-ROTOR.x, -ROTOR.y, 0);
-            mesh.position.set(ROTOR.x, ROTOR.y, 0);
-            rotors.push(mesh);
-          }
-          scene.add(mesh);
-        } catch (e) {
-          failedParts++;
-        }
-        tally();
-      }, undefined, function () { failedParts++; tally(); });
     });
   }
 

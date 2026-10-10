@@ -11,10 +11,11 @@
   <!-- The opening (#ld, first thing in <body>): once per visit, not with a
        #link into the page, not again in the same tab, never without script.
        This runs before anything is requested. When the opening plays, its
-       drawing (33 kB) is fetched ALONE first, and the font and the farm
-       photograph start only once it is in (or after 4 s): on a slow line
+       first frame (9 kB) is fetched ALONE first, then the walk itself gets up
+       to 1.2 s to itself, and the font and the farm photograph start after
+       that (or after 4 s): on a slow line
        they would otherwise split the bandwidth and the screen would hold a
-       blank white for seconds. Without the opening they start at once.
+       blank ground for seconds. Without the opening they start at once.
        "hl" (any visit with script) lets the farm photograph fade in over
        its blurred stand-in, home.css. -->
   <script>
@@ -41,8 +42,8 @@
       try { if (sessionStorage.getItem("releaf-intro") === "1") go = false; } catch (e) { /* storage blocked: play it */ }
       if (!go) { w.__heroGo(); return; }
       root.classList.add("ld");
-      pre("assets/img/home/loader/word.webp", "image", { fetchpriority: "high" });
-      w.setTimeout(w.__heroGo, 4000);                   // the drawing failed or crawls: do not wait on it
+      pre("assets/img/home/loader/moonwalk-still.webp", "image", { fetchpriority: "high" });
+      w.setTimeout(w.__heroGo, 4000);                   // the frame failed or crawls: do not wait on it
     })(document, window);
   </script>
   <noscript><link rel="preload" href="assets/fonts/inter-variable.woff2" as="font" type="font/woff2" crossorigin /></noscript>
@@ -52,53 +53,37 @@
     html.ld #ld {
       display: grid; place-items: center;
       position: fixed; inset: 0; z-index: 9999;
-      background: rgb(255 255 255 / 1);
+      background: rgb(239 249 184 / 1);                 /* the animation's own ground, exactly */
       transition: background-color .7s ease;
     }
-    html.ld #ld.out { background-color: rgb(255 255 255 / 0); }
-    .ld__box { position: relative; width: min(640px, 82vw); aspect-ratio: 2.5785; }
-    .ld__w { position: absolute; inset: 0; transition: opacity .45s ease, transform .7s cubic-bezier(.4, 0, .2, 1); }
-    #ld.out .ld__w { opacity: 0; transform: translateY(2%) scale(.985); }
-    .ld__l {
-      position: absolute; inset: 0;
-      background: url("assets/img/home/loader/word.webp") 0 0 / 100% 100% no-repeat;
-      clip-path: inset(0 calc(100% - var(--r) * 100%) 0 calc(var(--l) * 100%));
-      transform-origin: calc((var(--l) + var(--r)) * 50%) 100%;
-      opacity: 0; transform: translateY(16%) scale(.9);
-      transition: opacity .3s ease, transform .62s cubic-bezier(.3, 1.45, .55, 1);
-    }
+    html.ld #ld.out { background-color: rgb(239 249 184 / 0); }
+    .ld__box { position: relative; width: min(300px, 62vw); aspect-ratio: 400 / 299; }
     .ld__m {
-      position: absolute; left: 85.84%; top: 1.15%; width: 13.71%; height: auto;
-      opacity: 0; transform: translateY(16%) scale(.9); transform-origin: 50% 100%;
-      transition: opacity .3s ease, transform .62s cubic-bezier(.3, 1.45, .55, 1);
+      position: absolute; inset: 0; width: 100%; height: 100%;
+      opacity: 0; transition: opacity .3s ease, transform .7s cubic-bezier(.4, 0, .2, 1);
     }
-    .ld__l.on, .ld__m.on { opacity: 1; transform: none; }
-    /* until the drawing is in: one point of green light where the word will be */
+    .ld__m.on { opacity: 1; }
+    #ld.out .ld__m { opacity: 0; transform: translateY(2%) scale(.985); }
+    /* until the first frame is in: one point of green light where he will stand */
     .ld__dot {
       position: absolute; left: 50%; top: 50%; width: 14px; height: 14px; margin: -7px 0 0 -7px;
-      border-radius: 50%; background: #35e08a; box-shadow: 0 0 18px 4px rgb(53 224 138 / .45);
+      border-radius: 50%; background: #2fbf74; box-shadow: 0 0 18px 4px rgb(47 191 116 / .4);
       animation: ld-breathe 1.6s ease-in-out infinite; transition: opacity .3s ease;
     }
-    .ld__box.has-word .ld__dot { opacity: 0; animation: none; }
+    .ld__box.has-art .ld__dot { opacity: 0; animation: none; }
     @keyframes ld-breathe { 50% { transform: scale(.6); opacity: .55; } }
-    .ld__m.fly { transition: transform .95s cubic-bezier(.6, 0, .25, 1), opacity .25s ease .75s; }
-    .ld__m.fly.gone { opacity: 0; }
     @media (prefers-reduced-motion: reduce) {
-      .ld__l, .ld__m { transform: none; transition: opacity .2s ease; }
       .ld__dot { animation: none; }
-      html.ld #ld, .ld__w { transition-duration: .3s; }
+      html.ld #ld, .ld__m { transition-duration: .3s; }
     }
   </style>
 </head>
 <body>
   <!-- ═══════════════════════════════════════════════════ 0  THE OPENING ══ -->
-  <!-- The team's student-drawn ReLEAF wordmark (20 July 2026): a test tube,
-       pathogens, wheat and a crate of tomatoes, leaves, and the mascot on
-       the F. Its letters come in one by one as the first screen arrives
-       (the drawing, the font, the farm photograph and the page's scripts and
-       sheets), so how far along it is shows without a bar or a number. Then
-       the mascot leaves the F for the badge in the nav, the word fades, and
-       the white lifts off the farm. The hero's own pass with the light waits
+  <!-- The students' mascot doing the moonwalk (their animation, 10 Oct 2026),
+       on its own pale ground, while the first screen arrives (the font, the
+       farm photograph and the page's scripts and sheets). Then he fades and
+       the ground lifts off the farm. The hero's own pass with the light waits
        for this to end (window.__introDone).
 
        WHY THE SHEETS ARE BELOW IT. A stylesheet in <head> holds back every
@@ -106,27 +91,26 @@
        <body> it holds back only what follows it, so the opening paints from
        the HTML alone and covers the page while the sheets load.
 
-       Until the drawing is in, a point of green light holds the screen. At
-       least 1.3 s, so six letters read as a word and not a flicker; at most
-       5.5 s from the click, except that it never lifts before the sheets are
-       in (else the white would lift off a page that cannot be drawn yet).
-       Whatever is still loading then (on a slow line, the photograph) arrives on a hero built to receive it: the farm shows
-       blurred and sharpens as the photograph comes in (home.css, "hl").
-       Cut by build/loader-letters.py from the drawing in iGEM2026_Images; the
-       left/right numbers are its output. Only the white ground was removed
-       and the mascot lifted off. -->
+       Until his first frame is in (a 9 kB still), a point of green light
+       holds the screen; the moving file (177 kB) takes the still's place when
+       it has arrived, and with reduced motion the still stays. The walk is
+       given a head start on the font and the photograph (HEAD, 1.2 s at
+       most): on a 1.6 Mbit line they used to share the line with it, and the
+       walk arrived after the opening had already left. At least
+       1.8 s, so the walk is seen and is not a flicker; at most 5.5 s from the
+       click (plus up to 1.4 s if he has only just started walking), except that it never lifts before the sheets are in (else the
+       ground would lift off a page that cannot be drawn yet). Whatever is
+       still loading then (on a slow line, the photograph) arrives on a hero
+       built to receive it: the farm shows blurred and sharpens as the
+       photograph comes in (home.css, "hl").
+
+       The files: the students' 400 px GIF, its ground made one flat colour
+       (the #ld background is that colour, so the picture has no edge), the
+       video noise taken out, 28 colours, lossless (the GIF was 406 kB). -->
   <div id="ld" aria-hidden="true">
     <div class="ld__box">
       <span class="ld__dot"></span>
-      <div class="ld__w">
-        <i class="ld__l" style="--l:.0032;--r:.2024"></i>
-        <i class="ld__l" style="--l:.2069;--r:.3306"></i>
-        <i class="ld__l" style="--l:.3363;--r:.5148"></i>
-        <i class="ld__l" style="--l:.5278;--r:.6515"></i>
-        <i class="ld__l" style="--l:.6564;--r:.8292"></i>
-        <i class="ld__l" style="--l:.8414;--r:.9594"></i>
-      </div>
-      <img class="ld__m" data-src="assets/img/home/loader/mascot.webp" width="137" height="161" alt="" />
+      <img class="ld__m" width="400" height="299" alt="" decoding="async" />
     </div>
   </div>
   <script>
@@ -135,16 +119,17 @@
       if (!root.classList.contains("ld")) { L.remove(); return; }
       var done;
       w.__introDone = new Promise(function (ok) { done = ok; });
-      var box = L.querySelector(".ld__box"), letters = [].slice.call(L.querySelectorAll(".ld__l")), mascot = L.querySelector(".ld__m");
-      var MIN = 1300, MAX = 5500, t0 = performance.now(), shown = 0, lit = 0, ended = false, left = false;
+      var box = L.querySelector(".ld__box"), mascot = L.querySelector(".ld__m");
+      var MIN = 1800, MAX = 5500, HEAD = 1200, STEPS = 1400, walkAt = 0, t0 = performance.now(), ended = false, left = false;
       var reduced = w.matchMedia && w.matchMedia("(prefers-reduced-motion: reduce)").matches;
+      var DIR = "assets/img/home/loader/";
       w.scrollTo(0, 0);
 
       // what the first screen needs; each settles once, loaded or failed.
       // "page" is DOMContentLoaded (the scripts). The sheets are not on the
-      // 5.5 s cap: leaving before them would lift the white off a page that
+      // 5.5 s cap: leaving before them would lift the ground off a page that
       // cannot be drawn yet (SHEETS_MAX is the only limit on them).
-      var need = { word: false, fonts: false, farm: false, page: false };
+      var need = { art: false, fonts: false, farm: false, page: false };
       var SHEETS_MAX = 15000, sheetsIn = false;
       function sheets() {
         if (sheetsIn) return true;
@@ -152,9 +137,21 @@
         sheetsIn = [].every.call(d.querySelectorAll('link[rel="stylesheet"]'), function (l) { return !!l.sheet; });
         return sheetsIn;
       }
-      var word = new Image();
-      word.onload = word.onerror = function () { need.word = true; mascot.src = mascot.dataset.src; w.__heroGo(); };
-      word.src = "assets/img/home/loader/word.webp";
+      // the still first, alone; then the walk, which takes its place once it
+      // is whole (a half-arrived animation would stutter through its frames)
+      var still = new Image();
+      still.onload = function () {
+        mascot.src = still.src; mascot.classList.add("on"); box.classList.add("has-art");
+        need.art = true;
+        if (reduced) { w.__heroGo(); return; }
+        var walk = new Image();
+        walk.onload = function () { if (!left) { mascot.src = walk.src; walkAt = performance.now(); } w.__heroGo(); };
+        walk.onerror = w.__heroGo;
+        walk.src = DIR + "moonwalk.webp";
+        w.setTimeout(w.__heroGo, HEAD);
+      };
+      still.onerror = function () { need.art = true; w.__heroGo(); };
+      still.src = DIR + "moonwalk-still.webp";
       if (d.fonts && d.fonts.ready) d.fonts.ready.then(function () { need.fonts = true; }); else need.fonts = true;
       d.addEventListener("DOMContentLoaded", function () { need.page = true; });
       var farm = null;
@@ -167,23 +164,13 @@
       function tick(now) {
         if (ended) return;
         photo();
-        var keys = Object.keys(need), n = 0;
-        keys.forEach(function (k) { if (need[k]) n++; });
-        // the letters' pace counts from when this script runs; the cap from
-        // the click
-        var el = now - t0, all = n === keys.length || now > MAX;
-        var goal = !need.word ? 0
-          : Math.min(el / MIN, all ? 1 : Math.max(n / keys.length * .84, .84 * (1 - Math.exp(-el / 2200))));
-        if (need.word) box.classList.add("has-word");
-        shown += (goal - shown) * (now > MAX ? .22 : .09);   // past the cap, finish the word briskly
-        if (all && el >= MIN && 1 - shown < .01) shown = 1;
-        while (lit < letters.length && shown >= (lit + 1) / letters.length - .02) {
-          letters[lit].classList.add("on");
-          if (lit === letters.length - 1) mascot.classList.add("on");
-          lit++;
-        }
+        // MIN counts from when this script runs; the cap from the click
+        var all = now > MAX || Object.keys(need).every(function (k) { return need[k]; });
         var ready = sheets() || now > SHEETS_MAX;
-        if (ready && (shown >= 1 || (!need.word && now > MAX))) { w.setTimeout(leave, reduced ? 250 : 420); ended = true; return; }
+        // once he is walking he gets STEPS to be seen, even past the cap; a walk
+        // that has not arrived by then is not waited for
+        var walked = !walkAt || now - walkAt >= STEPS;
+        if (ready && all && walked && now - t0 >= MIN) { ended = true; leave(); return; }
         w.requestAnimationFrame(tick);
       }
 
@@ -191,27 +178,12 @@
         if (left) return;
         left = ended = true;
         try { sessionStorage.setItem("releaf-intro", "1"); } catch (e) { /* fine */ }
-        var badge = d.querySelector(".sitenav__logo"), b = badge && badge.getBoundingClientRect();
-        if (!reduced && lit === letters.length && b && b.width) {
-          // the mascot sits in the upper middle of the badge, about half its width
-          var m = mascot.getBoundingClientRect();
-          var s = b.width * .5 / m.width;
-          var dx = b.left + b.width / 2 - (m.left + m.width / 2);
-          var dy = b.top + b.height * .42 - (m.top + m.height / 2);
-          mascot.style.transformOrigin = "50% 50%";
-          mascot.classList.add("fly");
-          mascot.style.transform = "translate(" + dx.toFixed(1) + "px," + dy.toFixed(1) + "px) scale(" + s.toFixed(3) + ")";
-          mascot.classList.add("gone");
-          w.setTimeout(function () { L.classList.add("out"); }, 260);
-        } else {
-          mascot.style.opacity = 0;
-          L.classList.add("out");
-        }
+        L.classList.add("out");
         w.setTimeout(function () {
           root.classList.remove("ld");
           L.remove();
           done();
-        }, reduced ? 400 : 1100);
+        }, reduced ? 400 : 800);
       }
 
       w.requestAnimationFrame(tick);
@@ -224,20 +196,20 @@
   <link rel="stylesheet" href="assets/css/nav.css" />
   <link rel="stylesheet" href="assets/css/page.css" />
   <!-- ?v= on the homepage's own sheets and scripts: see the note above the scripts -->
-  <link rel="stylesheet" href="assets/css/home.css?v=20261010-home15" />
-  <link rel="stylesheet" href="assets/css/home-problem.css?v=20261010-home15" />
-  <link rel="stylesheet" href="assets/css/home-threat.css?v=20261010-home15" />
-  <link rel="stylesheet" href="assets/css/home-safe.css?v=20261010-home15" />
-  <link rel="stylesheet" href="assets/css/home-hour.css?v=20261010-home15" />
-  <link rel="stylesheet" href="assets/css/home-reactor.css?v=20261010-home15" />
-  <link rel="stylesheet" href="assets/css/home-vision.css?v=20261010-home15" />
-  <link rel="stylesheet" href="assets/css/big-picture-v4.css?v=20261010-home15" />
-  <link rel="stylesheet" href="assets/css/home-voices.css?v=20261010-home15" />
+  <link rel="stylesheet" href="assets/css/home.css?v=20261010-home16" />
+  <link rel="stylesheet" href="assets/css/home-problem.css?v=20261010-home16" />
+  <link rel="stylesheet" href="assets/css/home-threat.css?v=20261010-home16" />
+  <link rel="stylesheet" href="assets/css/home-safe.css?v=20261010-home16" />
+  <link rel="stylesheet" href="assets/css/home-hour.css?v=20261010-home16" />
+  <link rel="stylesheet" href="assets/css/home-reactor.css?v=20261010-home16" />
+  <link rel="stylesheet" href="assets/css/home-vision.css?v=20261010-home16" />
+  <link rel="stylesheet" href="assets/css/big-picture-v4.css?v=20261010-home16" />
+  <link rel="stylesheet" href="assets/css/home-voices.css?v=20261010-home16" />
   <!-- one sheet per section team, added 29 Sep; each is owned by one section -->
-  <link rel="stylesheet" href="assets/css/home-hero.css?v=20261010-home15" />
-  <link rel="stylesheet" href="assets/css/home-demands.css?v=20261010-home15" />
-  <link rel="stylesheet" href="assets/css/home-sponsors.css?v=20261010-home15" />
-  <link rel="stylesheet" href="assets/css/home-explore.css?v=20261010-home15" />
+  <link rel="stylesheet" href="assets/css/home-hero.css?v=20261010-home16" />
+  <link rel="stylesheet" href="assets/css/home-demands.css?v=20261010-home16" />
+  <link rel="stylesheet" href="assets/css/home-sponsors.css?v=20261010-home16" />
+  <link rel="stylesheet" href="assets/css/home-explore.css?v=20261010-home16" />
 
 <!-- =============================================================================
      HOMEPAGE.
@@ -287,10 +259,10 @@
          the farm has had the screen to itself for a moment, the light makes
          one pass on its own: in from the field, onto the machine, out.
 
-         9 Oct: the machine is Anton's new wall rack (1010 Bioreactor), cut
-         off its black field by luminance so the open mesh reads through it
-         (build note in the commit). It stands PORTRAIT, so the frame is a
-         tall centred column rather than the old bench's wide one.
+         10 Oct: the machine is Anton's final design, the B2 carry case,
+         drawn from his CAD with a clear ground, so the farm shows through
+         its open side and the slots in its panel. It stands PORTRAIT, so the
+         frame is a tall centred column.
 
          HOW IT STAYS SMOOTH. The light is one element, .hero__lens, with a
          fixed soft-edged mask; home.js (piece 0) only ever moves and scales
@@ -323,8 +295,8 @@
           <div class="hero__halo"></div>
           <div class="hero__frame hero__frame--reactor">
             <picture>
-              <source type="image/webp" data-srcset="assets/img/home/hero-rack-cut-900.webp 900w, assets/img/home/hero-rack-cut-1440.webp 1440w" sizes="(max-aspect-ratio: 2/3) 92vw, 42vh" />
-              <img data-src="assets/img/home/hero-rack-cut-900.png" width="900" height="1347" decoding="async" alt="A 3D model of the ReLEAF bioreactor: a wall rack of wire mesh carrying, from the top, the controller and driver boards, two peristaltic pumps, a tilted cartridge, inline sensors and valves, and at the foot the amber culture bottle and the pale harvest bottle, joined by amber and clear silicone lines." />
+              <source type="image/webp" data-srcset="assets/img/home/hero-b2-cut-900.webp 900w, assets/img/home/hero-b2-cut-1440.webp 1440w" sizes="(max-aspect-ratio: 2/3) 92vw, 50vh" />
+              <img data-src="assets/img/home/hero-b2-cut-900.png" width="900" height="1435" decoding="async" alt="A 3D model of the ReLEAF bioreactor: a black carry case with a handle on top and one side open. Inside, from the top, are the pressure sensors, two small dosing pumps and the blue peristaltic pump on black decks, the hollow-fibre cartridge, and at the foot the culture vessel and the bottles, joined by clear silicone lines." />
             </picture>
           </div>
         </div>
@@ -687,9 +659,9 @@
        back to plain text if the model gives up: .rx-static on #solution): a
        click, a tap, Enter or Space keeps a card lit (aria-pressed) until it
        is pressed again, another card is pressed, a click lands outside the
-       cards, or Escape. data-comp may hold several ids: the ids of
-       hardware/bioreactor/js/components.js, plus "light" (the induction
-       light at the culture vessel) and "unit" (every part of the machine).
+       cards, or Escape. data-comp may hold several ids: the keys of CARD in
+       home-reactor.js ("light" is the case's green strips and the induction
+       light at the culture vessel), and "unit" (every part of the machine).
 
        THE RESTING STATE IS THE FINISHED LAYOUT. With scripting off, or motion
        reduced, this is an ordinary band with the photograph of the rig in
@@ -731,7 +703,7 @@
 
           <div class="rxs__model" id="rx">
             <div class="rxs__canvas">
-              <canvas id="rx-gl" role="img" aria-hidden="true" aria-label="A 3D model of the ReLEAF bench bioreactor, turning slowly: a culture bottle, a peristaltic pump, a hollow-fibre cartridge, an in-line photometer and a harvest bottle on one plinth. Drag to turn it."></canvas>
+              <canvas id="rx-gl" role="img" aria-hidden="true" aria-label="A 3D model of the ReLEAF bioreactor, turning slowly: a black carry case with one side open, holding the culture vessel, the pumps, the hollow-fibre cartridge, the in-line photometer and the bottles, lit by a strip of green light. Drag to turn it."></canvas>
             </div>
             <picture class="rxs__poster">
               <source type="image/webp" srcset="assets/img/home/reactor-poster-1200.webp" />
@@ -1435,23 +1407,22 @@
   <script src="assets/data/site-nav.js" fetchpriority="high"></script>
   <script src="assets/js/nav.js" fetchpriority="high"></script>
 
-  <!-- The reactor uses the same vendor bundle, part list, flow centerlines and
-       component definitions as hardware/bioreactor/, so the homepage and the
-       technical record cannot drift apart. None of them has a tag here:
-       home-reactor.js (the only homepage-specific file) fetches them, and the
-       packed model, when home.js calls its start(), with #rx 1.6 screens
-       away. Order matters: home-reactor.js before home.js, and home.js before
-       home-vision.js, which takes the one animation frame home.js makes
-       (window.__homeFrame) so the whole page measures and writes together.
-       home-vision-data.js is the artwork's rectangles, written by
-       build/vision-art.py; the vision reads it and stays still without it.
+  <!-- The reactor (assets/js/home-reactor.js) has no tag for what it needs:
+       it fetches three.js, the glTF loader and the model
+       (assets/models/b2-reactor.glb) when home.js calls its start(), with #rx
+       1.6 screens away. Order matters: home-reactor.js before home.js, and
+       home.js before home-vision.js, which takes the one animation frame
+       home.js makes (window.__homeFrame) so the whole page measures and
+       writes together. home-vision-data.js is the artwork's rectangles,
+       written by build/vision-art.py; the vision reads it and stays still
+       without it.
 
        ?v= on the homepage's own files: Pages lets browsers cache them for 10
        minutes, and an old home.js run against new markup breaks the page.
        Bump it on every deploy that changes one of them. -->
-  <script src="assets/js/home-reactor.js?v=20261010-home15" defer fetchpriority="high"></script>
-  <script src="assets/js/home.js?v=20261010-home15" defer fetchpriority="high"></script>
-  <script src="assets/js/home-vision-data.js?v=20261010-home15" defer fetchpriority="high"></script>
-  <script src="assets/js/home-vision.js?v=20261010-home15" defer fetchpriority="high"></script>
+  <script src="assets/js/home-reactor.js?v=20261010-home16" defer fetchpriority="high"></script>
+  <script src="assets/js/home.js?v=20261010-home16" defer fetchpriority="high"></script>
+  <script src="assets/js/home-vision-data.js?v=20261010-home16" defer fetchpriority="high"></script>
+  <script src="assets/js/home-vision.js?v=20261010-home16" defer fetchpriority="high"></script>
 </body>
 </html>
