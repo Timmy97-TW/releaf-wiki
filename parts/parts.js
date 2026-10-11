@@ -5,16 +5,17 @@
 
    1. THE TABLE. One table of thirty-two rows in five module groups, and three
       ways of cutting it down: the search field and the chips in the left rail,
-      and six sortable columns. All of it is progressive. The HTML ships every
+      and five sortable columns. All of it is progressive. The HTML ships every
       row written out, in module order, with the function sentence in a row of
       its own marked hidden; without this script a reader still gets the whole collection as
       a plain table, which is what a printout and a text browser get too.
 
       Sorting hides the five module group headers, because a header that says
-      "Module 01, 3 parts" over a column sorted by evidence is a lie. The
-      Module column exists for exactly that moment. Clicking the sorted
-      column a third time drops back to module order and brings the headers
-      back.
+      "Module 01, 3 parts" over a column sorted by evidence is a lie. Each row
+      carries its own module under its name for exactly that moment, written
+      in the HTML and shown by the sheet only inside the flat body. Clicking
+      the sorted column a third time drops back to module order and brings
+      the headers back.
 
    2. THE FOLDS. A link into the closed references <details>, from a URL
       somebody shared or from a citation on another page, would

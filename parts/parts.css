@@ -5,32 +5,53 @@
    WHAT THE PAGE IS. A judge lands here to find a part and leave for the
    Registry. Since 10 October 2026 the whole collection is a single table of
    thirty-two rows in five module groups; since 11 October the page is that
-   table, the controls that cut it down, and the references. The controls used
-   to be a frosted track pinned over the table and are now a panel in the left
-   column under the contents rail. page.css already owns the disclosure
-   (.disclose), the contents rail and the callouts; this file owns the rail
-   panel, the table and the status marks in it.
+   table, the controls that cut it down, the key to its marks and the
+   references. The controls used to be a frosted track pinned over the table
+   and are now a panel in the left column under the contents rail. page.css
+   already owns the disclosure (.disclose), the contents rail and the
+   callouts; this file owns the rail panel, the table, the marks in it and
+   the key under it.
+
+   THE TABLE READS LEFT TO RIGHT in the order a judge needs: the chevron that
+   opens the part's function, its name, the link off to its Registry entry (or
+   the one word that says why there is none), what it is, whether it is basic
+   or composite, and what evidence stands behind it. The module is not a
+   column: it is the band the row sits in, named once above the group and
+   drawn as a coloured line down the left of its rows. A sort takes the bands
+   away, so each row then carries its module under its name.
+
+   NOTHING IN A ROW WRAPS. Every cell is nowrap and the table is auto-layout,
+   so each column is exactly as wide as its longest entry; where the card is
+   too narrow for the lot it scrolls sideways. Two widths are tuned to that:
+   83rem, above which the card is not a scroller and the header row can pin to
+   the window, and 86rem, above which the Type column also spells out the word
+   behind its letter.
 
    HOUSE RULES THIS FILE OBEYS
-   1. One white ground. The table sits on white; the only tints are the module
-      group headers and the function rows, both --well, and the status pills.
-   2. Argument flat, evidence folded. The table is flat. What a row does not
-      need in order to be found and followed to the Registry is not on the
-      page at all now; the references are the one fold left.
-   3. No usage hints. The panel has a search field, chips and the table has a
-      chevron, and not one sentence telling anyone to use them. The count
-      under the chips reports a result, which is a result and not an
-      instruction.
+   1. One white ground, and since 11 October that is the whole table: the grey
+      band behind a module header and the grey behind an open function
+      sentence are both gone. What separates one module from the next is a
+      2px rule in its colour, a coloured eyebrow and a 3px line down the left
+      of its rows; what marks a function sentence is the same coloured line
+      and an indent. The only tints left are the status pills and a 6% wash
+      on the row under the pointer.
+   2. Argument flat, evidence folded. The table and the key are flat. What a
+      row does not need in order to be found and followed to the Registry is
+      not on the page at all now; the references are the one fold left.
+   3. No usage hints. The panel has a search field and chips, the table has a
+      chevron at the head of every row, and not one sentence tells anyone to
+      use them. The count under the chips reports a result, which is a result
+      and not an instruction.
 
-   WIDTH. The body column opens to 70rem, which is what the table's seven
-   columns need before anything starts wrapping. The table is still wider than
-   a phone and cannot be made narrower without losing a column, so it scrolls
-   sideways inside .ptable__scroll. Nothing is ever laid out wider than the box
-   it sits in, which is what used to push the page to 167,000px on a phone.
+   WIDTH. The frame opens to 1480px and the rail gives up 2rem of the house
+   15rem; every pixel they give up is a pixel the table can use to keep a
+   category on one line. The body column opens to 70rem. Nothing is
+   ever laid out wider than the box it sits in, which is what used to push
+   the page to 167,000px on a phone.
 
    COLOUR. Two status pills are earned by rows in the table, green for read
    and grey for designed, and those are the two this file defines; the four
-   the build-record folds used went with those folds on 11 October. Beside
+   the build-record folds used went with those folds. Beside
    them the table carries five module colours, the same five the IHP pipelines
    use, as a dot and an eyebrow only. A status colour is never a background.
    ========================================================================== */
@@ -84,7 +105,7 @@
 .parts {
   /* the table needs more than the 1280px house frame before a column wraps,
      so Parts runs at the Engagement pages' width and caps its prose instead */
-  --max: 1400px;
+  --max: 1480px;
   --ink: #1d1d1f; --ink-2: #424245; --ink-3: #6e6e73;
   --well: #f5f5f7;
   --ease: cubic-bezier(.25, .8, .25, 1);
@@ -101,6 +122,9 @@
    page. If the two together are taller than the window the rail scrolls on
    its own rather than pushing the filters off the bottom. */
 .parts .prail { display: grid; gap: var(--sp-5); align-content: start; min-width: 0; }
+/* the rail is narrower than the house 15rem: every pixel it gives up is a
+   pixel the table can use to keep a category on one line */
+@media (min-width: 1040px) { .parts .pagewrap { grid-template-columns: 13rem minmax(0, 1fr); } }
 
 @media (min-width: 1040px) {
   .parts .prail {
@@ -189,7 +213,7 @@
   .parts .pchip {
     width: 100%; justify-content: flex-start;
     padding: .45rem .6rem; border-radius: 12px;
-    white-space: normal; line-height: 1.3;
+    white-space: nowrap; line-height: 1.3;
   }
   .parts .ptools__chips--pair .pchip { justify-content: center; padding-inline: .35rem; }
   .parts .ptools__set > .pchip { justify-self: stretch; }
@@ -223,16 +247,18 @@
    window and sat 221px down, over the first part of module 01. Below it the
    box scrolls again and the header row is static (see the rule further down),
    so the two never apply at once. */
-@media (min-width: 60.0625rem) {
+@media (min-width: 83rem) {
   .parts .ptable__scroll { overflow-x: visible; }
 }
 
 .parts .ptable {
-  width: 100%; min-width: 46rem;
-  /* fixed, so the percentages below are the widths and not merely hints: with
-     auto layout a long category like "chromophore biosynthesis operon" pulls
-     width off the module column and the five groups stop lining up */
-  table-layout: fixed;
+  width: 100%; min-width: 58rem;
+  /* auto, not fixed: every cell in a row is nowrap (below), so each column
+     takes exactly the width of its longest entry and nothing is broken
+     across lines. The five groups are five tbodies of one table, so they
+     still line up. Where the box is too narrow for them it scrolls
+     sideways; it never breaks a cell across two lines. */
+  table-layout: auto;
   /* separate, not collapse: a sticky <th> inside a collapsed table has its
      offset mis-measured and the header row sits 24px down over the first part
      in the group. Spacing is zeroed and every rule on this table is a
@@ -251,7 +277,7 @@
 }
 .parts .ptable thead th button {
   display: flex; align-items: center; gap: .3rem;
-  width: 100%; padding: var(--sp-3) var(--sp-4);
+  width: 100%; padding: var(--sp-3) .7rem;
   border: 0; background: none;
   font: inherit; font-size: var(--text-xs); font-weight: 700;
   letter-spacing: .07em; text-transform: uppercase;
@@ -270,19 +296,19 @@
 }
 .parts .ptable thead th[aria-sort] button::after { opacity: .75; }
 .parts .ptable thead th[aria-sort="descending"] button::after { transform: rotate(180deg); }
-/* Widths are the balance that keeps "Sequence-confirmed L1" and "Constitutive
-   promoter" each on one line at the frame's full width; below that the table
-   hits its min-width and scrolls rather than wrapping them. */
-.parts .ptable__c-part { width: 19%; } .parts .ptable__c-cat  { width: 17%; }
-.parts .ptable__c-type { width: 10%; } .parts .ptable__c-mod  { width: 17%; }
-.parts .ptable__c-st   { width: 22%; } .parts .ptable__c-reg  { width: 13%; }
-.parts .ptable__c-x    { width: 2.75rem; }
+/* Nothing in a row wraps. The Category column holds the longest entry in the
+   table, "Chromophore biosynthesis operon", and it is the one that used to
+   break into three lines in a 17% column. */
+.parts .ptable__row > th, .parts .ptable__row > td { white-space: nowrap; }
 
 /* -- a module group header -- */
+/* It used to be a grey band. It is white like everything else now, and what
+   separates one module from the next is a 2px rule in that module's colour
+   and the coloured eyebrow under it. */
 .parts .ptable__head th {
-  padding: var(--sp-5) var(--sp-4) var(--sp-4);
-  border-top: 1px solid var(--gray-200);
-  background: var(--well);
+  padding: var(--sp-6) var(--sp-4) var(--sp-4) 1rem;
+  border-top: 2px solid var(--pl);
+  background: #fff;
   font-weight: 400; text-align: left;
 }
 .parts .ptable__grp:first-of-type .ptable__head th { border-top: 0; }
@@ -299,30 +325,45 @@
   font-size: var(--text-xs); font-variant-numeric: tabular-nums; color: var(--gray-500);
 }
 .parts .ptable__gtext {
-  display: block; max-width: min(62ch, calc(100vw - 4.5rem)); margin-top: var(--sp-2);
+  display: block; max-width: min(76ch, calc(100vw - 4.5rem)); margin-top: var(--sp-2);
   font-size: var(--text-sm); line-height: 1.6; color: var(--ink-2);
+  white-space: normal;
 }
 
 /* -- a part row -- */
+/* The module's colour runs down the left edge of its rows as a 3px line, so
+   the five groups read as five bands without a single filled background. */
 .parts .ptable__row > th, .parts .ptable__row > td {
-  padding: var(--sp-3) var(--sp-4);
+  padding: var(--sp-3) .7rem;
   border-top: 1px solid var(--gray-200);
   text-align: left; vertical-align: middle;
 }
+.parts .ptable__grp > tr > *:first-child { box-shadow: inset 3px 0 0 var(--pl); padding-left: .85rem; }
 .parts .ptable__grp .ptable__head + .ptable__row > th,
 .parts .ptable__grp .ptable__head + .ptable__row > td { border-top: 0; }
+.parts .ptable__grp:last-of-type > tr:last-child > *:first-child { border-bottom-left-radius: 17px; }
 .parts .ptable__row { transition: background .15s ease; cursor: pointer; }
-.parts .ptable__row:hover { background: var(--leaf-50); }
+.parts .ptable__row:hover,
 .parts .ptable__row.is-open { background: var(--leaf-50); }
+@supports (background: color-mix(in srgb, red 5%, white)) {
+  .parts .ptable__row:hover,
+  .parts .ptable__row.is-open { background: color-mix(in srgb, var(--pl) 6%, #fff); }
+}
 
 .parts .ptable__part { font-weight: 400; }
 .parts .ptable__nm {
   font-family: var(--font-mono); font-size: .9em; font-weight: 600;
-  color: var(--leaf-900); overflow-wrap: anywhere;
+  color: var(--leaf-900);
 }
-.parts .ptable__cat { color: var(--gray-600); overflow-wrap: break-word; }
+/* Which module a row belongs to is written once, in the band above it. A sort
+   takes those bands away, so the line comes back here, under the name. */
+.parts .ptable__rmod {
+  display: none; margin-top: .2rem;
+  font-size: var(--text-xs); color: var(--gray-500);
+}
+.parts .ptable__grp--flat .ptable__rmod { display: block; }
+.parts .ptable__cat { color: var(--gray-700); }
 .parts .ptable__st .st { white-space: nowrap; }
-.parts .ptable__mod { color: var(--gray-600); }
 .parts .mdot {
   display: inline-block; width: .45rem; height: .45rem; margin-right: .45rem;
   border-radius: 50%; background: var(--pl); vertical-align: .05em;
@@ -330,17 +371,21 @@
 
 /* Basic or composite. The letter is what fits a narrow column; the word is
    spelled out next to it whenever there is room for it. */
-.parts .ty { display: inline-flex; align-items: center; gap: .4rem; white-space: nowrap; }
+.parts .ty { display: inline-flex; align-items: center; gap: .35rem; white-space: nowrap; }
 .parts .ty i {
   display: grid; place-items: center;
-  width: 1.3rem; height: 1.3rem; flex: none;
+  width: 1.2rem; height: 1.2rem; flex: none;
   border-radius: 6px;
   font-style: normal; font-size: .6875rem; font-weight: 700;
 }
 .parts .ty em { font-style: normal; font-size: var(--text-xs); color: var(--gray-600); }
 .parts .ty--b i { background: var(--slate-100); color: var(--slate-700); }
 .parts .ty--c i { background: var(--leaf-100);  color: var(--leaf-900); }
-@media (max-width: 70rem) { .parts .ty em { display: none; } }
+/* The word is what the letter means, so it is spelled out whenever the table
+   has the width for it. Under 86rem it goes and the badge carries the
+   column on its own, because that is the width at which the word would push the
+   table wider than the card; the key below spells both out either way. */
+@media (max-width: 85.9375rem) { .parts .ty em { display: none; } }
 
 /* The registry column. A row either leaves the wiki or says, in one word, why
    it cannot: Kit for a SubtiToolKit entry, New for something built this year.
@@ -364,20 +409,28 @@
   background: none; padding: 0;
   font-family: var(--font-mono); font-size: .8125rem; color: var(--leaf-700);
 }
+.parts .noreg--reglegend {
+  background: none; padding: 0;
+  font-family: var(--font-mono); font-size: .8125rem; color: var(--leaf-700);
+}
 
 /* -- the chevron, and the function row behind it -- */
-.parts .ptable__x { text-align: right; }
+/* It used to be a column of its own at the far right of the row, a long way
+   from the name it opens. It is a disclosure triangle at the head of the row
+   now, which is where a reader looks for one, and the row keeps its width. */
+.parts .pcell { display: flex; align-items: center; gap: .45rem; }
+.parts .pcell__txt { min-width: 0; }
 .parts .pfx {
-  display: grid; place-items: center;
-  width: 1.75rem; height: 1.75rem; margin-left: auto;
+  display: grid; place-items: center; flex: none;
+  width: 1.5rem; height: 1.5rem;
   border: 0; border-radius: 50%;
-  background: none; color: var(--gray-500);
+  background: none; color: var(--gray-450);
   cursor: pointer; transition: background .2s ease, color .2s ease;
 }
-.parts .pfx svg { width: 1.25rem; height: 1.25rem; transition: transform .3s var(--ease); }
+.parts .pfx svg { width: 1.15rem; height: 1.15rem; transition: transform .3s var(--ease); }
 .parts .pfx:hover { background: #fff; color: var(--ink); box-shadow: 0 0 0 1px var(--gray-200); }
 .parts .pfx:focus-visible { outline: 2px solid var(--leaf-700); outline-offset: 1px; }
-.parts .pfx[aria-expanded="true"] svg { transform: rotate(180deg); }
+.parts .pfx[aria-expanded="true"] svg { transform: rotate(-180deg); }
 .parts .pfx[aria-expanded="true"] { color: var(--leaf-700); }
 
 /* Shipped visible, folded away only once the js class is on <html>: with
@@ -385,16 +438,25 @@
    on the page. */
 html.js .parts .ptable__fn { display: none; }
 html.js .parts .ptable__fn.is-open { display: table-row; }
-.parts .ptable__fn > td { padding: 0; border-top: 1px solid var(--gray-200); background: var(--well); }
-.parts .ptable__fnin { padding: var(--sp-4) var(--sp-4) var(--sp-5); }
+/* The sentence sits on the same white ground as the row it belongs to; what
+   marks it as a note rather than a row is the module-coloured line beside it
+   and the indent, which puts it under the part's name. */
+.parts .ptable__fn > td {
+  padding: 0; border-top: 1px solid var(--gray-200); background: #fff;
+}
+.parts .ptable__fnin {
+  padding: var(--sp-3) var(--sp-4) var(--sp-4) 1.1rem;
+  border-left: 3px solid var(--pl);
+}
 .parts .ptable__fnin p {
-  margin: 0; max-width: 78ch;
+  margin: 0; max-width: 84ch;
   font-size: var(--text-sm); line-height: 1.65; color: var(--ink-2);
+  white-space: normal;
 }
 
 .parts .ptable__none {
   margin: var(--sp-5) 0 0; padding: var(--sp-5);
-  border-radius: 18px; background: var(--well);
+  border-radius: 18px; box-shadow: inset 0 0 0 1px var(--gray-200);
   font-size: var(--text-sm); color: var(--gray-600); text-align: center;
 }
 
@@ -408,9 +470,53 @@ html.js .parts .ptable__fn.is-open { display: table-row; }
    line of the module lead-in it would cover, so on a phone it scrolls away.
    This has to sit after the sticky rule above, not with the other narrow-screen
    overrides, which come before it and lose on source order. */
-@media (max-width: 60rem) {
+@media (max-width: 82.9375rem) {
   .parts .ptable thead th { position: static; }
 }
+
+/* ============================================================== THE KEY ====
+   Six marks, six lines. It used to be a section with its own heading and a
+   six-row table; it is a legend now, under the table it explains, in two
+   columns on a wide screen and one on a narrow one. White ground, a hairline
+   over it, and the mark itself doing the work of a term.                  */
+
+.parts .plegend { margin: var(--sp-6) 0 0; }
+.parts .plegend__lab {
+  margin: 0 0 var(--sp-3);
+  font-size: .6875rem; font-weight: 700; letter-spacing: .14em;
+  text-transform: uppercase; color: var(--gray-450);
+}
+/* One column, not two: in two columns the line of explanation came out five
+   words wide and broke in the middle of every phrase. */
+.parts .plegend__list {
+  display: grid; gap: 0; margin: 0;
+  border-top: 1px solid var(--gray-200);
+}
+.parts .plegend__list > div {
+  display: grid; gap: .2rem;
+  padding: var(--sp-3) 0;
+  border-top: 1px solid var(--gray-200);
+}
+.parts .plegend__list > div:first-child { border-top: 0; }
+@media (min-width: 52rem) {
+  .parts .plegend__list > div {
+    grid-template-columns: 13rem minmax(0, 1fr); gap: var(--sp-5);
+    align-items: baseline;
+  }
+}
+.parts .plegend dt { margin: 0; }
+/* an italic L1 at 13px has no right bearing to speak of and runs into the
+   word after it */
+.parts .plegend dd i { padding-right: .12em; }
+.parts .plegend dd {
+  margin: 0; max-width: 88ch;
+  font-size: var(--text-sm); line-height: 1.6; color: var(--gray-700);
+}
+.parts .acc {
+  font-family: var(--font-mono); font-size: .8125rem;
+  color: var(--leaf-700); text-decoration: none;
+}
+.parts .acc:hover { text-decoration: underline; }
 
 /* ============================================================== STATUS =====
    The one vocabulary. Every part in every table on this page carries exactly
