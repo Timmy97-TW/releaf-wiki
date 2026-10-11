@@ -46,7 +46,15 @@
 window.__homeRx = (function () {
   "use strict";
 
-  var MODEL = "assets/models/b2-reactor.glb";
+  // 11 Oct: the Biomanufacturing page shows the same model, two directories
+  // down, so every path this file fetches is resolved against #rx's
+  // data-base. The homepage sets no data-base, so BASE is "" there and the
+  // paths are exactly what they were.
+  var BASE = (function () {
+    var h = document.getElementById("rx");
+    return (h && h.getAttribute("data-base")) || "";
+  })();
+  var MODEL = BASE + "assets/models/b2-reactor.glb";
   // what each card id lights: groups of the model. "light" is the case's own
   // green LED strips, with the induction light inside switched on.
   var CARD = {
@@ -97,10 +105,10 @@ window.__homeRx = (function () {
      three.min.js and render-quality.js are the technical record's own copies;
      the glTF loader and the meshopt decoder are three r128's, to match. */
   var DEPS = [
-    "hardware/js/vendor/three.min.js",
-    "assets/js/vendor/GLTFLoader.js",
-    "assets/js/vendor/meshopt_decoder.js",
-    "hardware/js/render-quality.js"
+    BASE + "hardware/js/vendor/three.min.js",
+    BASE + "assets/js/vendor/GLTFLoader.js",
+    BASE + "assets/js/vendor/meshopt_decoder.js",
+    BASE + "hardware/js/render-quality.js"
   ];
   function haveDeps() {
     return typeof THREE !== "undefined" && !!THREE.GLTFLoader &&
