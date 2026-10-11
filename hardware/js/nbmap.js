@@ -37,14 +37,17 @@
   // The site's .topbar is position:fixed at z-index 50, so anything sticking to
   // top:0 slides underneath it. Measure it rather than hard-coding 78px, which
   // is only true at the default root font size.
-  // wiki: the fixed chrome is the nav bar plus the .hwnav strip under it, so
-  // what matters is where the strip ends, not how tall it is
-  const topbar = document.querySelector(".topbar, .hwnav");
+  // wiki: the fixed chrome is the site nav alone since the hardware strip left
+  // on 11 Oct 2026. nav.js builds the bar after this file has run, so look for
+  // it each time, and use its design height until it is there.
+  let topbar = document.querySelector(".topbar");
   function publishTopbar() {
-    const h = topbar ? Math.round(topbar.getBoundingClientRect().bottom) : 0;
+    if (!topbar) topbar = document.querySelector(".sitenav__bar");
+    const h = topbar ? Math.round(topbar.getBoundingClientRect().bottom) : 68;
     document.documentElement.style.setProperty("--topbar-h", h + "px");
   }
   publishTopbar();
+  window.addEventListener("load", publishTopbar);
 
   /* ---------- index ---------- */
   const dots = Array.prototype.slice.call(panel.querySelectorAll(".lane-dot"));

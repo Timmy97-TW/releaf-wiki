@@ -60,7 +60,7 @@
 .sitenav--dark .sitenav__bar::before {
   content: "";
   position: absolute; left: 0; right: 0; top: 0;
-  height: calc(var(--nv-h) + 96px);      /* bar, plus the .hwnav strip, plus fade */
+  height: calc(var(--nv-h) + 30px);     /* the bar and a short fade under it */
   background: linear-gradient(180deg,
               rgb(5 6 10 / .94) 0%,
               rgb(5 6 10 / .78) 38%,
@@ -71,11 +71,9 @@
   pointer-events: none;
 }
 .sitenav--dark.is-scrolled .sitenav__bar::before { opacity: 1; }
-/* The hub and the four instrument records gave up the strip on 11 Oct 2026.
-   With nothing under the bar the long fade only dims the first thing on the
-   page, which on a record is its pinned chapter control, so it stops short.
-   The notebook still carries the strip and keeps the long one. */
-.sitenav--dark:not(:has(~ .hwnav)) .sitenav__bar::before { height: calc(var(--nv-h) + 30px); }
+/* The fade ran 96px under the bar while the hardware strip sat there. With
+   nothing under the bar it only dimmed the first thing on the page, which on
+   a record is its pinned chapter control, so it stops short. */
 
 /* the scrim is a sibling of the bar's contents, so lift the contents over it */
 .sitenav--dark .sitenav__inner { position: relative; z-index: 1; }
@@ -138,145 +136,9 @@
   border-top-color: rgba(255, 255, 255, .1);
 }
 
-/* =============================================================== SUB-NAV ==== */
-/* The hardware section has five pages of its own and the wiki nav only carries
-   one entry for the lot, so switching instruments meant going back to the hub
-   every time. This strip sits under the bar on those five pages and does that
-   job. It is plain markup in each page rather than generated, so a student can
-   add an instrument by copying a line.                                        */
-
-.hwnav {
-  position: fixed;
-  top: var(--nv-h, 68px);
-  left: 0; right: 0;
-  z-index: 49;
-  display: flex;
-  align-items: center;
-  gap: clamp(.5rem, 2vw, 1.6rem);
-  overflow-x: auto;
-  scrollbar-width: none;
-  padding: 0 clamp(18px, 3.4vw, 40px);
-  height: 44px;
-  font-family: ui-monospace, "SFMono-Regular", Menlo, Consolas, monospace;
-  font-size: .6875rem;   /* 11px: was .625rem (10px), below the section's label floor */
-  letter-spacing: .2em;
-  text-transform: uppercase;
-  background: transparent;   /* the bar's scrim covers this strip too */
-  transition: opacity .3s;
-}
-.hwnav::-webkit-scrollbar { display: none; }
-
-/* an open nav panel covers this strip; fade it rather than let it show through */
-.sitenav--dark.has-panel ~ .hwnav { opacity: 0; pointer-events: none; }
-
-.hwnav a {
-  flex: none;
-  color: #78818f;
-  text-decoration: none;
-  padding: .35rem 0;
-  border-bottom: 1px solid transparent;
-  transition: color .2s, border-color .2s;
-  white-space: nowrap;
-}
-.hwnav a:hover { color: #f4f7fa; }
-.hwnav a[aria-current="page"] { color: #f4f7fa; border-bottom-color: #3ddc8b; }
-
-.hwnav b {
-  flex: none;
-  margin-right: .4rem;
-  color: #78818f;         /* the links' grey: 5.2:1 on the bar. #363c45 was 1.8:1 */
-  font-weight: 500;
-}
-
-@media (max-width: 939px) { .hwnav { height: 40px; } }
-
-/* ============================================================ THE PILL STRIP ==
-   The strip that only arrives with the record
-   -----------------------------------------------------------------------------
-   .hwnav is the hardware section's own switcher between its pages, as a
-   frosted pill track -- the same control engage.css pins under the site nav.
-   Since 11 Oct 2026 only the notebook carries it: the hub and the four
-   instrument records gave it up, and the rules that held it back on a record
-   until the reader was past the animation (body.hwreveal, body.at-record)
-   went with it.
-   ========================================================================== */
-
-.hwnav:has(.hwnav__track) {
-  /* keep the strip's box, take over its look */
-  top: calc(var(--nv-h, 68px) + 10px);
-  height: auto;
-  justify-content: center;
-  padding: 0;
-  pointer-events: none;            /* the track inside takes the clicks */
-}
-
-/* the frosted track, from engage.css's .seg__track */
-.hwnav:has(.hwnav__track) {
-  font-family: inherit;
-  font-size: inherit;
-  letter-spacing: normal;
-  text-transform: none;
-}
-.hwnav:has(.hwnav__track) .hwnav__track {
-  position: relative;
-  display: flex;
-  align-items: center;
-  gap: 2px;
-  max-width: calc(100% - 2rem);
-  padding: 5px;
-  overflow-x: auto;
-  scrollbar-width: none;
-  border-radius: 999px;
-  background: rgb(232 236 239 / .78);
-  -webkit-backdrop-filter: saturate(180%) blur(20px);
-          backdrop-filter: saturate(180%) blur(20px);
-  box-shadow: inset 0 0 0 .5px rgb(0 0 0 / .07), 0 8px 24px -14px rgb(0 0 0 / .32);
-  pointer-events: auto;
-}
-.hwnav:has(.hwnav__track) .hwnav__track::-webkit-scrollbar { display: none; }
-.hwnav:has(.hwnav__track) .hwnav__lab {
-  flex: none;
-  margin: 0 .35rem 0 .6rem;
-  font-size: .6875rem;
-  font-weight: 650;
-  letter-spacing: .14em;
-  text-transform: uppercase;
-  color: var(--w-ink-3, #6e6e73);
-}
-.hwnav:has(.hwnav__track) a {
-  flex: none;
-  display: inline-flex;
-  align-items: center;
-  gap: .4rem;
-  padding: .5rem .9rem;
-  border: 0;
-  border-bottom: 0;
-  border-radius: 999px;
-  font-size: .9063rem;
-  font-weight: 500;
-  letter-spacing: -.01em;
-  line-height: 1.2;
-  color: #424245;
-  white-space: nowrap;
-  transition: color .25s ease, background-color .25s ease;
-}
-.hwnav:has(.hwnav__track) a:hover { color: #1d1d1f; background: rgb(255 255 255 / .6); }
-.hwnav:has(.hwnav__track) a[aria-current="page"] {
-  color: #1d1d1f;
-  font-weight: 600;
-  background: #fff;
-  box-shadow: 0 3px 8px rgb(0 0 0 / .12), 0 0 0 .5px rgb(0 0 0 / .05);
-}
-.hwnav:has(.hwnav__track) a:focus-visible { outline: 2px solid var(--w-tab, #3f5a66); outline-offset: 1px; }
-/* the small glyph before each instrument, so the strip reads at a glance */
-.hwnav:has(.hwnav__track) a svg { flex: none; width: 1rem; height: 1rem; opacity: .68; }
-.hwnav:has(.hwnav__track) a[aria-current="page"] svg { opacity: 1; color: var(--w-tab, #3f5a66); }
-@media (max-width: 760px) {
-  .hwnav:has(.hwnav__track) .hwnav__lab { display: none; }
-  .hwnav:has(.hwnav__track) a span { display: none; }   /* glyphs only on a phone */
-  .hwnav:has(.hwnav__track) a { padding: .5rem .7rem; }
-  .hwnav:has(.hwnav__track) a[aria-current="page"] span { display: inline; }
-}
+/* The hardware section's own strip between its pages (.hwnav) lived here from
+   the first hardware sync until 11 Oct 2026, when it was taken off every page:
+   first the hub and the four instrument records, then the notebook. */
 
 
 /* ---- room for the strip ---------------------------------------------------
