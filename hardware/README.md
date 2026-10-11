@@ -66,7 +66,8 @@ that has loaded.
 
 Each scene exposes what the renderer needs on its QA hook — `__photo.scene` /
 `.camera` / `.renderer` on the photometer and DiOPAL, and `__bioHero.scene` on
-the bioreactor. With the site served, a tool attaches its own camera to the
+the bioreactor (until 10 Oct 2026: that walkthrough was retired to
+`dev/retired/2026-10-10/` when V4 became the page's opening scene; V4's hook is `__b2`). With the site served, a tool attaches its own camera to the
 scene, frames the assembled model, renders at 2400×1800 with a transparent
 background, and posts the PNG out of the browser. The bioreactor's renderer has
 no `preserveDrawingBuffer`, so its shot goes through a private renderer that
@@ -140,8 +141,9 @@ python3 tools/build_orbit.py > orbit.html && python3 tools/stamp_assets.py
 
 ## Packed models
 
-Three STL sets are drawn but never offered for download: the bioreactor
-walkthrough (`bioreactor/models/`), its three-channel package
+Three STL sets were drawn but never offered for download: the bioreactor
+walkthrough (`bioreactor/models/`; its pack retired on 10 Oct 2026 with the old
+opening scene, see *The bioreactor's opening scene*), its three-channel package
 (`bioreactor/package/`) and the hub cards (`img/deck3d/`). Each of those folders
 ships as `_pack.json` + `_pack.bin` instead: every part's vertices quantised to
 uint16 across its own bounding box (under 0.005 mm), 18 bytes a triangle against
@@ -159,6 +161,33 @@ python3 tools/pack_models.py && python3 tools/stamp_assets.py
 
 Not packed: the photometer and DiOPAL models. Their pages offer every part as an
 STL download, so those files have to ship as they are.
+
+## The bioreactor's opening scene (V4, 10 Oct 2026)
+
+`bioreactor/` opens on V4 "Follow the culture", built in `dev/bioreactor-hero/` and copied here by one command:
+
+```sh
+python3 tools/b2web/sync_v4.py
+python3 tools/b2web/bake_v4dom.py --dev        # from the DEV page (the clips are rendered from it), served in-process
+python3 tools/stamp_assets.py
+```
+
+- **Generated, never edited here:** `js/{story,b2-core,b2-fx,b2-look,micro,look-v4,story-core-v4}.js`, `css/story.css`
+  and the `#story` markup and `#hero-live3d` script list in `index.html` (between the "V4 hero" / "V4 live3d scripts"
+  markers). Edit the dev files, then re-sync. `js/hero-v4dom.js` (the video mode's captions' timing, labels, route
+  and fades, at adaptive keyframes) is baked by `tools/b2web/bake_v4dom.py` from the page the clips were rendered from,
+  at the clips' frame count; `js/hero-clips.js` comes from the clip renderer (`dev/hero-video/tools/capture_v4.py`).
+  `js/hero.js` is hand-written (the video mode) and is not touched by the sync.
+- **Two modes, the house way** (`dev/hero-video/README.md`): video (the clips in `clips/`, git-ignored; `js/hero.js`
+  draws V4's captions, labels and route over them) or live3d (`?live3d=1`, and anywhere the clip URLs are still local).
+- **The live3d model** is `b2/` (`b2.json`, `b2.bin`, `tubes.json`): a light export of the compact B2 for the deploy budget,
+  made by `tools/b2web/export_b2_web.py` (Blender, under the lock) and `tools/b2web/pack_b2_web.py --enc 2 --no-normals`,
+  with per-part weights in `tools/b2web/plan.json`: 106,406 triangles, 0.56 MB zipped; the page computes the normals.
+  The case keeps the dev model's flying pieces and their order (the export's `decimate_case`), so it comes apart and back
+  as in the clips. The dev page keeps the full 605k model, and the clips are rendered from it.
+- **The record's 3D figure** (7.4, `js/product.js`) and three.js load when the figure nears the screen (`js/record-3d.js`).
+- **Revert:** `dev/night-logs/2026-10-09-v4/PORT-PLAN.md` section 3.11. The old walkthrough's seven files are in
+  `dev/retired/2026-10-10/hardware/bioreactor/`.
 
 ## Hardware notebook
 

@@ -15,7 +15,9 @@
   let zeroRetries = 0, sizeWatch = null;   // bounded wait for a real width
   if (!canvas) return;
   const embedded = canvas.id === "pkg-gl";
-  const hud = document.getElementById("hud") || { style: {}, set textContent(v) {} };
+  // #hud is the standalone dev page's own read-out (dev/bioreactor/product.html). Embedded in the record, the page's
+  // #hud belongs to the opening scene (its captions): never write to it from here.
+  const hud = (!embedded && document.getElementById("hud")) || { style: {}, set textContent(v) {}, set innerHTML(v) {} };
 
   const renderer = new THREE.WebGLRenderer({ canvas: canvas, antialias: true, alpha: true });
   renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));

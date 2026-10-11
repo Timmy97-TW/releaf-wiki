@@ -52,7 +52,11 @@ assembly is genuinely one part lighter.
 | `js/parts.js` | all the part data — names, roles, copy, specs, order, materials |
 | `js/scene.js` | the scroll engine and renderer |
 | `js/doc.js` | technical-record scrollspy (and DiOPAL's I² chart) |
-| `bioreactor/js/picker.js` | raycast part picker, wired to the BOM |
+
+The bioreactor is the exception: its orbit stage and the `js/picker.js` that
+tied the BOM to it were retired on 11 Oct 2026, when the V4 opening scene
+("Follow the culture") replaced them. Its remaining 3D figure, 7.4, loads from
+`bioreactor/package/` through `js/record-3d.js` when it nears the screen.
 
 Anything shared lives once, at `hardware/js/` or `hardware/css/`, and every page
 loads it from there. Do not copy these back into an instrument folder — they

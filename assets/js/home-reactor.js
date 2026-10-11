@@ -17,8 +17,9 @@
 
    The demand cards name components (data-comp); CARD below says which groups
    each one lights. Until 10 Oct this file built the bench assembly from
-   hardware/bioreactor/ (parts.js, flow-paths.js, components.js, _pack.bin);
-   the technical record still does, this page no longer loads any of it.
+   hardware/bioreactor/ (parts.js, flow-paths.js, components.js, _pack.bin).
+   The technical record retired those too on 11 Oct, when the V4 opening scene
+   replaced its orbit stage, so neither page loads any of them now.
 
      · IT DOES NOT LOAD UNTIL ASKED. three.js (0.6 MB), the glTF loader and
        the model are fetched by start(), and the WebGL renderer is only
