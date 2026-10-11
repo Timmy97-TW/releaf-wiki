@@ -414,10 +414,29 @@
 
   /* ══════════════════════════════════════════════════════ 2  THE REACTOR ══ */
   /* Wakes the reactor: home-reactor.js loads nothing until start() is
-     called, and this calls it once #rx is within 1.6 screens. Inside the
-     scene (piece 7) #rx sits at the top of the pinned screen, so it wakes
-     as the demands come up, several screens before the model pops in.
-     Reduced motion and narrow screens need it too. */
+     called. It is woken twice over, and whichever comes first wins.
+
+     EARLY, ON ITS OWN (11 Oct, owner: "can it load before people scroll down
+     to it"). three.js, the glTF loader and the model are about 2.5 MB, and
+     at 1.6 screens' warning a reader who scrolls briskly used to arrive
+     while the photograph was still standing in for it. So once the FIRST
+     SCREEN IS PAID FOR — the load event, which on this page means the farm
+     photograph and the machine in it are in — and the browser next goes
+     idle, it starts loading anyway. The reader is still reading the problem
+     at that point, seven screens up, and the files come down while nothing
+     else wants the line.
+
+     NOT ON A LINE THAT CANNOT AFFORD IT. With Data Saver on, or on a
+     connection the browser calls 2g, the early wake is skipped and the
+     observer below is the only one: 2.5 MB is not something to spend on a
+     section the reader may never reach.
+
+     THE OBSERVER IS THE FLOOR. It calls start() once #rx is within 1.6
+     screens, so a reader who scrolls straight down is never waiting on the
+     idle queue. Inside the scene (piece 7) #rx sits at the top of the
+     pinned screen, so it fires as the demands come up, several screens
+     before the model pops in. Reduced motion and narrow screens need it
+     too. */
 
   (function reactor() {
     var host = document.getElementById("rx");
@@ -432,6 +451,19 @@
       }
     }, { rootMargin: "0px 0px 160% 0px" });
     io.observe(host);
+
+    var net = navigator.connection || {};
+    if (net.saveData || /(^|-)2g$/.test(net.effectiveType || "")) return;
+    function early() {
+      // the opening's own promise, where there is one: the white must be off
+      // the farm before anything else is asked for
+      Promise.resolve(window.__introDone).then(function () {
+        if (window.requestIdleCallback) window.requestIdleCallback(wake, { timeout: 3000 });
+        else window.setTimeout(wake, 1500);
+      });
+    }
+    if (document.readyState === "complete") early();
+    else window.addEventListener("load", early, { once: true });
   })();
 
   /* ═══════════════════════════════════════════════════════════ 3  PARTS ══ */
