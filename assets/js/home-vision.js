@@ -156,17 +156,28 @@
   }
 
   var atlas = null, heroPool = null, landMask = null, ready = false, dead = false;
+  // READY MEANS THE DRAWING IS THERE. It used to mean only that the three
+  // masks were in, so on a slow line the camera could pull back over an
+  // empty frame while the valley was still coming down. It now also counts
+  // the six layers of the drawing itself, each one decoded, which is what
+  // the reader is actually here to see; the light (write(), below) waits on
+  // the same flag, so no field is ever lit before it is drawn.
+  var layersLeft = imgs.length;
+  function settle() {
+    if (ready || dead) return;
+    if (!atlas || !heroPool || !landMask || layersLeft > 0) return;
+    ready = true;
+    shown = -1;                                       // the light draws from this frame on
+    sec.classList.add("is-ready");
+    frame.request();
+  }
   function fetchImg(name, done) {
     var im = new Image();
     im.decoding = "async";
     im.onload = function () {
       var go = function () {
         try { done(im); } catch (err) { fail(); return; }
-        if (atlas && heroPool && landMask && !ready && !dead) {
-          ready = true;
-          shown = -1;                                   // the light draws from this frame on
-          sec.classList.add("is-ready");
-        }
+        settle();
         frame.request();
       };
       if (im.decode) im.decode().then(go, go); else go();
@@ -174,8 +185,21 @@
     im.onerror = fail;
     im.src = DIR + name;
   }
+  var started = false;
   function loadAll() {
-    imgs.forEach(function (el) { el.loading = "eager"; });
+    if (started || dead) return;
+    started = true;
+    imgs.forEach(function (el) {
+      el.loading = "eager";
+      var done = function () { layersLeft--; settle(); frame.request(); };
+      // already in, or already broken: either way it is not worth waiting on
+      if (el.complete) { layersLeft--; return; }
+      el.addEventListener("load", function () {
+        (el.decode ? el.decode() : Promise.resolve()).catch(function () {}).then(done);
+      }, { once: true });
+      // a layer that will not come is not worth holding the valley for
+      el.addEventListener("error", done, { once: true });
+    });
     fetchImg("masks.webp", function (im) {
       var c = document.createElement("canvas");
       c.width = im.naturalWidth; c.height = im.naturalHeight;
@@ -193,6 +217,7 @@
       heroPool = c;
     });
     fetchImg("land-mask.webp", function (im) { landMask = im; });
+    settle();                                         // everything was cached
   }
 
   function clamp01(v) { return v < 0 ? 0 : v > 1 ? 1 : v; }
@@ -472,12 +497,37 @@
   if (mq.addEventListener) mq.addEventListener("change", setMode);
   else if (mq.addListener) mq.addListener(setMode);
 
-  // the pictures are lazy for the page's first load; fetch them properly once
-  // the section is within two screens
+  /* ---- when the valley is fetched ----
+     The six layers are lazy in the markup so they cost the first screen
+     nothing. They are then asked for twice over, and whichever comes first
+     wins.
+
+     EARLY, ON ITS OWN (11 Oct, owner: every reader should meet the pull-back
+     with the drawing already there). Once the FIRST SCREEN IS PAID FOR — the
+     load event — and the browser next goes idle, the whole valley is
+     fetched: 440 kB, eight screens before anyone reaches it, while nothing
+     else wants the line. With Data Saver on, or on a connection the browser
+     calls 2g, this is skipped.
+
+     THE OBSERVER IS THE FLOOR, at two screens, so a reader who scrolls
+     straight down is never waiting on the idle queue. */
   if ("IntersectionObserver" in window) {
     var near = new IntersectionObserver(function (es) {
       if (es.some(function (x) { return x.isIntersecting; })) { near.disconnect(); loadAll(); }
     }, { rootMargin: "200% 0px" });
     near.observe(sec);
+    var net = navigator.connection || {};
+    if (!net.saveData && !/(^|-)2g$/.test(net.effectiveType || "")) {
+      var early = function () {
+        // the opening's own promise, where there is one: the white must be
+        // off the farm before anything else is asked for
+        Promise.resolve(window.__introDone).then(function () {
+          if (window.requestIdleCallback) window.requestIdleCallback(loadAll, { timeout: 4000 });
+          else window.setTimeout(loadAll, 2000);
+        });
+      };
+      if (document.readyState === "complete") early();
+      else window.addEventListener("load", early, { once: true });
+    }
   } else loadAll();
 })();
