@@ -15,7 +15,7 @@
 <meta property="og:description" content="The GEMS-Taiwan in-line photometer: a flow cuvette, a 90:10 beam splitter and two lux sensors reading OD600 from the culture as it flows." />
 <meta property="og:image" content="../img/card-photometer.png" />
 <meta name="twitter:card" content="summary_large_image" />
-<link rel="stylesheet" href="css/style.css?v=c3ae4336" />
+<link rel="stylesheet" href="css/style.css?v=9fa8ce4c" />
 <link rel="stylesheet" href="../css/polish.css?v=f857778d" />
 <!-- Wiki alignment layer: matches the main wiki's document styling. Delete this one line to revert. -->
 <link rel="stylesheet" href="../css/wiki-align.css?v=e522198b" />
@@ -961,17 +961,383 @@
   </section>
 
   <section class="sec" id="sec51">
-    <h3><i>5.1</i> Blank Protocol</h3>
+    <h3><i>5.1</i> TiO<sub>2</sub>, the First Standard</h3>
     <p>
-      The blanking protocol accounted for much of the inaccuracy in our early iterations.
-      Our external OD600 instrument, the BioDrop, is normally calibrated against distilled
-      water. We are measuring the OD600 of bacteria in medium, so the blank has to account
-      for the 600&nbsp;nm absorbance of the nutrient medium they are cultured in. Blanking
-      against the medium brought our readings close to the BioDrop&rsquo;s. The paired
-      readings are not tabulated here, so the agreement is reported as observed.
+      A photometer is only worth the reference it has been checked against. We calibrate
+      against inert mineral suspensions rather than culture, because a growing culture changes
+      while it is being measured: cells divide, settle and lyse, so no two instruments ever
+      read quite the same sample. A suspension of hard, non-absorbing particles holds still,
+      scatters in proportion to how much of it is there, and can be added in weighed steps
+      &mdash; which gives a <em>ground truth</em> independent of both instruments, instead of
+      only ever comparing one machine against another.
+    </p>
+    <p>
+      Our first calibration used titanium dioxide. The iGEM protocol specifies silica, but
+      TiO<sub>2</sub> was on the shelf, behaved almost identically suspended in 1% SDS, and
+      cost a fraction as much, so we used it to answer the first question &mdash; does this
+      instrument respond linearly at all? &mdash; and deferred the standard material. It does:
+      across two runs the raw, uncalibrated output tracked the BioDrop to a <b>median paired
+      difference of 3.8%</b>, with both instruments regressing against TiO<sub>2</sub> mass at
+      R&sup2;&nbsp;&gt;&nbsp;0.999. No correction transform was needed, and none has been
+      applied since. Those two runs, their two excluded points and their open questions are
+      written up in full as
+      <a href="../bioreactor/index.html#pm6">photometer cycle&nbsp;6</a> on the bioreactor page.
+    </p>
+    <p>
+      What that run could not do is say anything above OD&nbsp;1.9, or about any build but the
+      complex one. Both gaps are what the silica run was for.
     </p>
   </section>
 
+  <section class="sec" id="sec52">
+    <h3><i>5.2</i> SiO<sub>2</sub>, the Standard Material</h3>
+    <p>
+      On 10 October we ran the calibration the protocol actually calls for. Silica was added to
+      500&nbsp;mL of 1% SDS in <b>2.5&nbsp;mg steps from 2.5 to 100&nbsp;mg</b>, forty points in
+      all, stirred continuously and circulated through the same loop the earlier runs used. At
+      every step the suspension was read three times over: on the BioDrop, on the complex
+      photometer, and on the slim build described in the previous section. This is the first
+      run that puts all three on one series, which is what makes the comparison below possible
+      at all.
+    </p>
+
+    <h4>Where the reference runs out</h4>
+    <p>
+      The first thing the run established is a limit of the <em>reference</em> instrument,
+      not of ours. The BioDrop&rsquo;s direct channel climbs normally to about OD&nbsp;2.3 and
+      then stops: from 70&nbsp;mg onward it returns exactly 2.50 at every single point, which
+      is a ceiling, not a measurement. To carry the series past it we read dilutions instead
+      &mdash; a two-fold dilution from 22.5&nbsp;mg and a four-fold from 50&nbsp;mg &mdash; and
+      multiplied back. Every BioDrop value plotted above OD&nbsp;2.5 is therefore
+      <em>reconstructed</em>, and the reconstruction has its own error:
+    </p>
+    <ul class="tight">
+      <li>In the 22.5&ndash;50&nbsp;mg window we have both a direct reading and a two-fold one
+        for the same sample. They disagree by up to <b>14%</b> &mdash; at 35&nbsp;mg the direct
+        channel says 1.536 and the dilution says 1.326.</li>
+      <li>Above 50&nbsp;mg the dilution-corrected BioDrop <b>falls as silica is added</b> at
+        7 of its 20 steps, the worst by 0.34&nbsp;OD at 80&nbsp;mg. A weighed, inert scattering standard
+        cannot become less turbid when more of it is added, so those steps are measurement
+        error rather than sample behaviour.</li>
+    </ul>
+    <p>
+      This matters for reading everything that follows. Below OD&nbsp;2.5 the BioDrop is a
+      reference. Above it, the BioDrop is an estimate, and a noisy one &mdash; so a disagreement
+      up there does not automatically belong to our instrument.
+    </p>
+
+    <figure class="frame" id="fig-cal-mass">
+      <div class="frame-img"><svg class="cal-svg" viewBox="0 0 760 430" role="img" aria-labelledby="figa-t figa-d" preserveAspectRatio="xMidYMid meet">
+<title id="figa-t">Both photometers and the BioDrop against SiO2 mass added</title><desc id="figa-d">OD600 against SiO2 added, 2.5 to 100 mg. The complex V1 photometer follows the dilution-corrected BioDrop closely up to about OD 2.5 and then reads progressively lower. The BioDrop trace becomes jagged and non-monotonic above 50 mg, where its direct channel is saturated and every value is reconstructed from a four-fold dilution. The slim V2 photometer rises smoothly but on a scale about six times compressed.</desc>
+<line class="gl" x1="62" y1="384.0" x2="742" y2="384.0"/>
+<text class="tk ty" x="52" y="388.0">0</text>
+<line class="gl" x1="62" y1="294.5" x2="742" y2="294.5"/>
+<text class="tk ty" x="52" y="298.5">1</text>
+<line class="gl" x1="62" y1="205.0" x2="742" y2="205.0"/>
+<text class="tk ty" x="52" y="209.0">2</text>
+<line class="gl" x1="62" y1="115.5" x2="742" y2="115.5"/>
+<text class="tk ty" x="52" y="119.5">3</text>
+<line class="gl" x1="62" y1="26.0" x2="742" y2="26.0"/>
+<text class="tk ty" x="52" y="30.0">4</text>
+<line class="gl gv" x1="62.0" y1="26" x2="62.0" y2="384"/>
+<text class="tk tx" x="62.0" y="404">0</text>
+<line class="gl gv" x1="198.0" y1="26" x2="198.0" y2="384"/>
+<text class="tk tx" x="198.0" y="404">20</text>
+<line class="gl gv" x1="334.0" y1="26" x2="334.0" y2="384"/>
+<text class="tk tx" x="334.0" y="404">40</text>
+<line class="gl gv" x1="470.0" y1="26" x2="470.0" y2="384"/>
+<text class="tk tx" x="470.0" y="404">60</text>
+<line class="gl gv" x1="606.0" y1="26" x2="606.0" y2="384"/>
+<text class="tk tx" x="606.0" y="404">80</text>
+<line class="gl gv" x1="742.0" y1="26" x2="742.0" y2="384"/>
+<text class="tk tx" x="742.0" y="404">100</text>
+<line class="ax" x1="62" y1="26" x2="62" y2="384"/>
+<line class="ax" x1="62" y1="384" x2="742" y2="384"/>
+<text class="al" x="402" y="422">SiO₂ added (mg in 500 mL)</text>
+<text class="al" transform="translate(16 205) rotate(-90)" x="0" y="0">OD600</text>
+<line class="mk" x1="538.0" y1="26" x2="538.0" y2="384"/>
+<text class="note" x="528.0" y="372" text-anchor="end">BioDrop direct channel saturated beyond here →</text>
+<path class="s3" d="M79.0 371.0 L96.0 360.4 L113.0 350.3 L130.0 339.3 L147.0 328.4 L164.0 312.3 L181.0 306.9 L198.0 297.5 L215.0 285.2 L232.0 274.6 L249.0 270.9 L266.0 263.5 L283.0 257.6 L300.0 265.3 L317.0 246.7 L334.0 229.3 L351.0 224.5 L368.0 215.6 L385.0 207.7 L402.0 175.3 L419.0 183.2 L436.0 187.1 L453.0 168.5 L470.0 160.2 L487.0 145.9 L504.0 140.2 L521.0 156.7 L538.0 124.8 L555.0 140.9 L572.0 102.3 L589.0 69.7 L606.0 100.1 L623.0 122.7 L640.0 112.6 L657.0 89.7 L674.0 87.2 L691.0 79.0 L708.0 67.9 L725.0 42.1 L742.0 61.1"/><circle class="d3" cx="79.0" cy="371.0" r="2.2"/><circle class="d3" cx="96.0" cy="360.4" r="2.2"/><circle class="d3" cx="113.0" cy="350.3" r="2.2"/><circle class="d3" cx="130.0" cy="339.3" r="2.2"/><circle class="d3" cx="147.0" cy="328.4" r="2.2"/><circle class="d3" cx="164.0" cy="312.3" r="2.2"/><circle class="d3" cx="181.0" cy="306.9" r="2.2"/><circle class="d3" cx="198.0" cy="297.5" r="2.2"/><circle class="d3" cx="215.0" cy="285.2" r="2.2"/><circle class="d3" cx="232.0" cy="274.6" r="2.2"/><circle class="d3" cx="249.0" cy="270.9" r="2.2"/><circle class="d3" cx="266.0" cy="263.5" r="2.2"/><circle class="d3" cx="283.0" cy="257.6" r="2.2"/><circle class="d3" cx="300.0" cy="265.3" r="2.2"/><circle class="d3" cx="317.0" cy="246.7" r="2.2"/><circle class="d3" cx="334.0" cy="229.3" r="2.2"/><circle class="d3" cx="351.0" cy="224.5" r="2.2"/><circle class="d3" cx="368.0" cy="215.6" r="2.2"/><circle class="d3" cx="385.0" cy="207.7" r="2.2"/><circle class="d3" cx="402.0" cy="175.3" r="2.2"/><circle class="d3" cx="419.0" cy="183.2" r="2.2"/><circle class="d3" cx="436.0" cy="187.1" r="2.2"/><circle class="d3" cx="453.0" cy="168.5" r="2.2"/><circle class="d3" cx="470.0" cy="160.2" r="2.2"/><circle class="d3" cx="487.0" cy="145.9" r="2.2"/><circle class="d3" cx="504.0" cy="140.2" r="2.2"/><circle class="d3" cx="521.0" cy="156.7" r="2.2"/><circle class="d3" cx="538.0" cy="124.8" r="2.2"/><circle class="d3" cx="555.0" cy="140.9" r="2.2"/><circle class="d3" cx="572.0" cy="102.3" r="2.2"/><circle class="d3" cx="589.0" cy="69.7" r="2.2"/><circle class="d3" cx="606.0" cy="100.1" r="2.2"/><circle class="d3" cx="623.0" cy="122.7" r="2.2"/><circle class="d3" cx="640.0" cy="112.6" r="2.2"/><circle class="d3" cx="657.0" cy="89.7" r="2.2"/><circle class="d3" cx="674.0" cy="87.2" r="2.2"/><circle class="d3" cx="691.0" cy="79.0" r="2.2"/><circle class="d3" cx="708.0" cy="67.9" r="2.2"/><circle class="d3" cx="725.0" cy="42.1" r="2.2"/><circle class="d3" cx="742.0" cy="61.1" r="2.2"/>
+<path class="s1" d="M79.0 379.5 L96.0 370.9 L113.0 361.4 L130.0 353.0 L147.0 340.7 L164.0 328.0 L181.0 315.8 L198.0 304.5 L215.0 294.3 L232.0 281.0 L249.0 274.3 L266.0 265.5 L283.0 259.4 L300.0 248.3 L317.0 239.1 L334.0 231.6 L351.0 227.1 L368.0 220.4 L385.0 210.5 L402.0 202.7 L419.0 196.7 L436.0 190.3 L453.0 182.5 L470.0 175.8 L487.0 169.0 L504.0 162.4 L521.0 156.8 L538.0 151.7 L555.0 148.4 L572.0 143.5 L589.0 137.5 L606.0 132.6 L623.0 129.4 L640.0 123.8 L657.0 118.2 L674.0 116.2 L691.0 111.0 L708.0 106.0 L725.0 102.3 L742.0 100.3"/><circle class="d1" cx="79.0" cy="379.5" r="2.6"/><circle class="d1" cx="96.0" cy="370.9" r="2.6"/><circle class="d1" cx="113.0" cy="361.4" r="2.6"/><circle class="d1" cx="130.0" cy="353.0" r="2.6"/><circle class="d1" cx="147.0" cy="340.7" r="2.6"/><circle class="d1" cx="164.0" cy="328.0" r="2.6"/><circle class="d1" cx="181.0" cy="315.8" r="2.6"/><circle class="d1" cx="198.0" cy="304.5" r="2.6"/><circle class="d1" cx="215.0" cy="294.3" r="2.6"/><circle class="d1" cx="232.0" cy="281.0" r="2.6"/><circle class="d1" cx="249.0" cy="274.3" r="2.6"/><circle class="d1" cx="266.0" cy="265.5" r="2.6"/><circle class="d1" cx="283.0" cy="259.4" r="2.6"/><circle class="d1" cx="300.0" cy="248.3" r="2.6"/><circle class="d1" cx="317.0" cy="239.1" r="2.6"/><circle class="d1" cx="334.0" cy="231.6" r="2.6"/><circle class="d1" cx="351.0" cy="227.1" r="2.6"/><circle class="d1" cx="368.0" cy="220.4" r="2.6"/><circle class="d1" cx="385.0" cy="210.5" r="2.6"/><circle class="d1" cx="402.0" cy="202.7" r="2.6"/><circle class="d1" cx="419.0" cy="196.7" r="2.6"/><circle class="d1" cx="436.0" cy="190.3" r="2.6"/><circle class="d1" cx="453.0" cy="182.5" r="2.6"/><circle class="d1" cx="470.0" cy="175.8" r="2.6"/><circle class="d1" cx="487.0" cy="169.0" r="2.6"/><circle class="d1" cx="504.0" cy="162.4" r="2.6"/><circle class="d1" cx="521.0" cy="156.8" r="2.6"/><circle class="d1" cx="538.0" cy="151.7" r="2.6"/><circle class="d1" cx="555.0" cy="148.4" r="2.6"/><circle class="d1" cx="572.0" cy="143.5" r="2.6"/><circle class="d1" cx="589.0" cy="137.5" r="2.6"/><circle class="d1" cx="606.0" cy="132.6" r="2.6"/><circle class="d1" cx="623.0" cy="129.4" r="2.6"/><circle class="d1" cx="640.0" cy="123.8" r="2.6"/><circle class="d1" cx="657.0" cy="118.2" r="2.6"/><circle class="d1" cx="674.0" cy="116.2" r="2.6"/><circle class="d1" cx="691.0" cy="111.0" r="2.6"/><circle class="d1" cx="708.0" cy="106.0" r="2.6"/><circle class="d1" cx="725.0" cy="102.3" r="2.6"/><circle class="d1" cx="742.0" cy="100.3" r="2.6"/>
+<path class="s2" d="M79.0 381.3 L96.0 379.1 L113.0 377.2 L130.0 375.2 L147.0 373.2 L164.0 371.9 L181.0 370.1 L198.0 368.1 L215.0 366.7 L232.0 364.9 L249.0 363.3 L266.0 361.8 L283.0 360.5 L300.0 359.5 L317.0 358.0 L334.0 357.0 L351.0 355.9 L368.0 354.9 L385.0 353.4 L402.0 351.9 L419.0 350.4 L436.0 349.4 L453.0 348.1 L470.0 346.9 L487.0 345.7 L504.0 344.4 L521.0 343.3 L538.0 342.1 L555.0 340.9 L572.0 339.6 L589.0 338.6 L606.0 337.5 L623.0 336.6 L640.0 335.5 L657.0 334.4 L674.0 331.4 L691.0 332.5 L708.0 331.7 L725.0 330.7 L742.0 329.9"/><circle class="d2" cx="79.0" cy="381.3" r="2.6"/><circle class="d2" cx="96.0" cy="379.1" r="2.6"/><circle class="d2" cx="113.0" cy="377.2" r="2.6"/><circle class="d2" cx="130.0" cy="375.2" r="2.6"/><circle class="d2" cx="147.0" cy="373.2" r="2.6"/><circle class="d2" cx="164.0" cy="371.9" r="2.6"/><circle class="d2" cx="181.0" cy="370.1" r="2.6"/><circle class="d2" cx="198.0" cy="368.1" r="2.6"/><circle class="d2" cx="215.0" cy="366.7" r="2.6"/><circle class="d2" cx="232.0" cy="364.9" r="2.6"/><circle class="d2" cx="249.0" cy="363.3" r="2.6"/><circle class="d2" cx="266.0" cy="361.8" r="2.6"/><circle class="d2" cx="283.0" cy="360.5" r="2.6"/><circle class="d2" cx="300.0" cy="359.5" r="2.6"/><circle class="d2" cx="317.0" cy="358.0" r="2.6"/><circle class="d2" cx="334.0" cy="357.0" r="2.6"/><circle class="d2" cx="351.0" cy="355.9" r="2.6"/><circle class="d2" cx="368.0" cy="354.9" r="2.6"/><circle class="d2" cx="385.0" cy="353.4" r="2.6"/><circle class="d2" cx="402.0" cy="351.9" r="2.6"/><circle class="d2" cx="419.0" cy="350.4" r="2.6"/><circle class="d2" cx="436.0" cy="349.4" r="2.6"/><circle class="d2" cx="453.0" cy="348.1" r="2.6"/><circle class="d2" cx="470.0" cy="346.9" r="2.6"/><circle class="d2" cx="487.0" cy="345.7" r="2.6"/><circle class="d2" cx="504.0" cy="344.4" r="2.6"/><circle class="d2" cx="521.0" cy="343.3" r="2.6"/><circle class="d2" cx="538.0" cy="342.1" r="2.6"/><circle class="d2" cx="555.0" cy="340.9" r="2.6"/><circle class="d2" cx="572.0" cy="339.6" r="2.6"/><circle class="d2" cx="589.0" cy="338.6" r="2.6"/><circle class="d2" cx="606.0" cy="337.5" r="2.6"/><circle class="d2" cx="623.0" cy="336.6" r="2.6"/><circle class="d2" cx="640.0" cy="335.5" r="2.6"/><circle class="d2" cx="657.0" cy="334.4" r="2.6"/><circle class="d2" cx="674.0" cy="331.4" r="2.6"/><circle class="d2" cx="691.0" cy="332.5" r="2.6"/><circle class="d2" cx="708.0" cy="331.7" r="2.6"/><circle class="d2" cx="725.0" cy="330.7" r="2.6"/><circle class="d2" cx="742.0" cy="329.9" r="2.6"/>
+<line class="s3" x1="78" y1="60" x2="100" y2="60"/><circle class="d3" cx="89" cy="60" r="2.6"/><text class="lg" x="108" y="64" fill="var(--fg)">BioDrop, dilution-corrected</text>
+<line class="s1" x1="78" y1="78" x2="100" y2="78"/><circle class="d1" cx="89" cy="78" r="2.6"/><text class="lg" x="108" y="82" fill="var(--fg)">V1 complex</text>
+<line class="s2" x1="78" y1="96" x2="100" y2="96"/><circle class="d2" cx="89" cy="96" r="2.6"/><text class="lg" x="108" y="100" fill="var(--fg)">V2 slim</text>
+</svg></div>
+      <figcaption><b>All three against the standard.</b> OD600 against silica added. The
+        complex photometer sits on the BioDrop&rsquo;s trace until about OD&nbsp;2.5 and then
+        reads lower; the BioDrop&rsquo;s own trace turns jagged past 50&nbsp;mg, where it is
+        reconstructed from dilutions; the slim build rises smoothly but on a compressed
+        scale.</figcaption>
+    </figure>
+
+    <h4>The complex photometer against the reference</h4>
+    <p>
+      Over the range where the BioDrop is measuring rather than estimating, the agreement is
+      as close as the TiO<sub>2</sub> run suggested it would be, and now holds over a range
+      more than twice as wide:
+    </p>
+    <div class="tablewrap">
+      <table class="spec">
+        <caption>Complex photometer against the dilution-corrected BioDrop, SiO<sub>2</sub> series</caption>
+        <thead><tr><th scope="col">Range</th><th scope="col" class="num">Slope</th><th scope="col" class="num">Intercept</th><th scope="col" class="num">R&sup2;</th><th scope="col" class="num">Mean difference</th></tr></thead>
+        <tbody>
+          <tr><th scope="row">OD 0&ndash;1.0</th><td class="num">1.001</td><td class="num">&minus;0.123</td><td class="num">0.988</td><td class="num">&minus;0.12</td></tr>
+          <tr><th scope="row">OD 0&ndash;2.5</th><td class="num">0.995</td><td class="num">&minus;0.074</td><td class="num">0.982</td><td class="num">&minus;0.08</td></tr>
+          <tr><th scope="row">OD above 2.5</th><td class="num">0.594</td><td class="num">+0.944</td><td class="num">0.796</td><td class="num">&minus;0.33</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <p>
+      A slope of <b>0.995</b> with an intercept of &minus;0.07 is, for practical purposes, a
+      one-to-one instrument: up to OD&nbsp;2.5 the photometer reports the BioDrop&rsquo;s number
+      without any transform applied to it. Above OD&nbsp;2.5 the slope drops to 0.59 and the
+      photometer reads about 0.33&nbsp;OD low.
+    </p>
+
+    <figure class="frame" id="fig-cal-identity">
+      <div class="frame-img"><svg class="cal-svg" viewBox="0 0 430 430" role="img" aria-labelledby="figb-t figb-d" preserveAspectRatio="xMidYMid meet">
+<title id="figb-t">V1 photometer against the BioDrop with the line of identity</title><desc id="figb-d">The complex photometer plotted against the dilution-corrected BioDrop. Filled points at or below OD 2.5 sit on the line of identity, slope 0.995. Open points above OD 2.5, where the reference is reconstructed from a dilution, fall below the line at slope 0.59.</desc>
+<line class="idn" x1="62.0" y1="384.0" x2="412.0" y2="26.0"/>
+<line class="gl" x1="62" y1="384.0" x2="412" y2="384.0"/>
+<text class="tk ty" x="52" y="388.0">0</text>
+<line class="gl" x1="62" y1="294.5" x2="412" y2="294.5"/>
+<text class="tk ty" x="52" y="298.5">1</text>
+<line class="gl" x1="62" y1="205.0" x2="412" y2="205.0"/>
+<text class="tk ty" x="52" y="209.0">2</text>
+<line class="gl" x1="62" y1="115.5" x2="412" y2="115.5"/>
+<text class="tk ty" x="52" y="119.5">3</text>
+<line class="gl" x1="62" y1="26.0" x2="412" y2="26.0"/>
+<text class="tk ty" x="52" y="30.0">4</text>
+<line class="gl gv" x1="62.0" y1="26" x2="62.0" y2="384"/>
+<text class="tk tx" x="62.0" y="404">0</text>
+<line class="gl gv" x1="149.5" y1="26" x2="149.5" y2="384"/>
+<text class="tk tx" x="149.5" y="404">1</text>
+<line class="gl gv" x1="237.0" y1="26" x2="237.0" y2="384"/>
+<text class="tk tx" x="237.0" y="404">2</text>
+<line class="gl gv" x1="324.5" y1="26" x2="324.5" y2="384"/>
+<text class="tk tx" x="324.5" y="404">3</text>
+<line class="gl gv" x1="412.0" y1="26" x2="412.0" y2="384"/>
+<text class="tk tx" x="412.0" y="404">4</text>
+<line class="ax" x1="62" y1="26" x2="62" y2="384"/>
+<line class="ax" x1="62" y1="384" x2="412" y2="384"/>
+<text class="al" x="237" y="422">BioDrop OD600 (dilution-corrected)</text>
+<text class="al" transform="translate(16 205) rotate(-90)" x="0" y="0">V1 photometer OD600</text>
+<line class="mk" x1="280.8" y1="26" x2="280.8" y2="384"/>
+<circle class="d1" cx="74.7" cy="379.5" r="3"/><circle class="d1" cx="85.1" cy="370.9" r="3"/><circle class="d1" cx="95.0" cy="361.4" r="3"/><circle class="d1" cx="105.7" cy="353.0" r="3"/><circle class="d1" cx="116.3" cy="340.7" r="3"/><circle class="d1" cx="132.1" cy="328.0" r="3"/><circle class="d1" cx="137.3" cy="315.8" r="3"/><circle class="d1" cx="146.5" cy="304.5" r="3"/><circle class="d1" cx="158.6" cy="294.3" r="3"/><circle class="d1" cx="168.9" cy="281.0" r="3"/><circle class="d1" cx="172.6" cy="274.3" r="3"/><circle class="d1" cx="179.8" cy="265.5" r="3"/><circle class="d1" cx="185.6" cy="259.4" r="3"/><circle class="d1" cx="178.0" cy="248.3" r="3"/><circle class="d1" cx="196.2" cy="239.1" r="3"/><circle class="d1" cx="213.2" cy="231.6" r="3"/><circle class="d1" cx="217.9" cy="227.1" r="3"/><circle class="d1" cx="226.7" cy="220.4" r="3"/><circle class="d1" cx="234.4" cy="210.5" r="3"/><circle class="d1" cx="266.0" cy="202.7" r="3"/><circle class="d1" cx="258.4" cy="196.7" r="3"/><circle class="d1" cx="254.5" cy="190.3" r="3"/><circle class="d1" cx="272.7" cy="182.5" r="3"/><circle class="d1" cx="280.8" cy="175.8" r="3"/>
+<circle class="hol" cx="294.8" cy="169.0" r="3"/><circle class="hol" cx="300.4" cy="162.4" r="3"/><circle class="hol" cx="284.2" cy="156.8" r="3"/><circle class="hol" cx="315.4" cy="151.7" r="3"/><circle class="hol" cx="299.6" cy="148.4" r="3"/><circle class="hol" cx="337.4" cy="143.5" r="3"/><circle class="hol" cx="369.3" cy="137.5" r="3"/><circle class="hol" cx="339.6" cy="132.6" r="3"/><circle class="hol" cx="317.5" cy="129.4" r="3"/><circle class="hol" cx="327.3" cy="123.8" r="3"/><circle class="hol" cx="349.7" cy="118.2" r="3"/><circle class="hol" cx="352.1" cy="116.2" r="3"/><circle class="hol" cx="360.2" cy="111.0" r="3"/><circle class="hol" cx="371.1" cy="106.0" r="3"/><circle class="hol" cx="396.2" cy="102.3" r="3"/><circle class="hol" cx="377.7" cy="100.3" r="3"/>
+<text class="note" x="267.6" y="328.5" text-anchor="end">≤ 2.5 · slope 0.995</text>
+<text class="note" x="291.2" y="263.2">&gt; 2.5 · slope 0.59</text>
+<text class="note" x="337.6" y="70.8">y = x</text>
+</svg></div>
+      <figcaption><b>Against the line of identity.</b> Filled points are where the BioDrop
+        still has a direct reading; open points are where its value is reconstructed from a
+        four-fold dilution.</figcaption>
+    </figure>
+
+    <h4>Whose error is it, above OD 2.5?</h4>
+    <p>
+      The honest answer is that this run cannot fully separate the two, and we want to be
+      clear about that rather than claim the flattering reading. What it can do is ask which
+      instrument better tracks the one quantity neither of them measures &mdash; the mass of
+      silica actually weighed in. Over the 50&ndash;100&nbsp;mg span, against that ground truth:
+    </p>
+    <div class="tablewrap">
+      <table class="spec">
+        <caption>Each instrument against weighed SiO<sub>2</sub> mass, 50&ndash;100&nbsp;mg</caption>
+        <thead><tr><th scope="col">Instrument</th><th scope="col" class="num">R&sup2; vs mass</th><th scope="col" class="num">Residual scatter</th><th scope="col" class="num">Steps that decrease</th></tr></thead>
+        <tbody>
+          <tr><th scope="row">Complex photometer</th><td class="num">0.990</td><td class="num">0.035 OD</td><td class="num">0 of 20</td></tr>
+          <tr><th scope="row">Slim photometer</th><td class="num">0.993</td><td class="num">0.007 OD</td><td class="num">1 of 20</td></tr>
+          <tr><th scope="row">BioDrop, reconstructed</th><td class="num">0.878</td><td class="num">0.165 OD</td><td class="num">7 of 20</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <p>
+      Against the standard itself, both of our builds are the better-behaved instruments in
+      that span: the complex photometer scatters about its line five times less than the
+      reconstructed BioDrop does, and it never once reads lower when more silica has been
+      added. So the gap above OD&nbsp;2.5 is not simply our instrument failing &mdash; a real
+      part of it is the dilution step in the reference.
+    </p>
+    <p>
+      That said, we are not claiming the gap is <em>all</em> the reference. Compression at high
+      turbidity is exactly what a single-pass absorbance measurement is expected to do, as
+      multiply-scattered light finds its way to the sample sensor and the relationship between
+      transmission and density stops being logarithmic. Both effects point the same way and
+      this dataset cannot weigh one against the other. Settling it needs a reference that does
+      not saturate at 2.5 &mdash; a shorter path length, or a reference instrument with more
+      headroom &mdash; which is the next calibration we would run.
+    </p>
+    <p>
+      What the run does settle is the working range. <b>Up to OD&nbsp;2.5 the complex
+      photometer can be read as an absolute OD600 instrument.</b> Above that it is still
+      strictly monotonic and still linear in true concentration, so it remains usable for
+      following a culture, but its numbers should be treated as an index of density rather
+      than as OD600 values until the high range has a reference worth checking against.
+    </p>
+
+    <h4>Resolution</h4>
+    <p>
+      Linearity says where the readings sit; it says nothing about how finely the instrument
+      can tell two concentrations apart. Taking the point-to-point scatter of each series
+      &mdash; which, over a smoothly rising standard, is dominated by measurement noise rather
+      than by any real curvature &mdash; and dividing by how much each instrument&rsquo;s
+      reading moves per milligram of silica gives the smallest difference each one can
+      actually resolve:
+    </p>
+    <div class="tablewrap">
+      <table class="spec">
+        <caption>Smallest resolvable change, expressed as SiO<sub>2</sub> mass</caption>
+        <thead><tr><th scope="col">Instrument</th><th scope="col" class="num">Noise</th><th scope="col" class="num">Low range</th><th scope="col" class="num">High range</th></tr></thead>
+        <tbody>
+          <tr><th scope="row">Complex photometer</th><td class="num">0.010 OD</td><td class="num">0.21 mg</td><td class="num">0.46 mg</td></tr>
+          <tr><th scope="row">Slim photometer</th><td class="num">0.004 OD</td><td class="num">0.49 mg</td><td class="num">0.78 mg</td></tr>
+          <tr><th scope="row">BioDrop</th><td class="num">0.106 OD</td><td class="num">2.20 mg</td><td class="num">3.60 mg</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <p>
+      The complex photometer resolves a change about <b>ten times smaller</b> than the
+      reference does on this series. That is less surprising than it sounds, and it is worth
+      being precise about why: the BioDrop is a far better instrument that was being used
+      here in a far worse way. It reads a hand-pipetted cuvette once per point, and above its
+      ceiling a hand-made dilution of one; our photometer reads a continuously stirred, flowing
+      loop and returns the median of a 14-reading burst with outliers rejected. The comparison
+      is not "which instrument is better" but "which measurement is more repeatable", and for
+      following one vessel over time, the second question is the one that matters.
+    </p>
+  </section>
+
+  <section class="sec" id="sec53">
+    <h3><i>5.3</i> Simplified Against Complex</h3>
+    <p>
+      The slim build was the point of running all three instruments on one series. It drops
+      the paralleling lens and the beam splitter and couples the LED to the cuvette through an
+      optical fibre instead, which is what removes the long light-travelling region and most
+      of the cost. The question was what that costs in measurement.
+    </p>
+    <div class="todo"><b>Check against the build &middot; slim optics</b>The earlier design-changes
+      section keeps the beam splitter and replaces only the lens. The unit measured on
+      10&nbsp;October has the splitter removed as well, so it is single-beam: there is no
+      reference sensor and nothing to normalise against LED drift. Confirm which of the two is
+      the design being carried forward, because the limitation below follows from it.</div>
+
+    <p>
+      The headline result is that the slim build is <b>linear across the entire range</b>, and
+      slightly more smoothly so than the complex one: R&sup2;&nbsp;=&nbsp;0.992 against silica
+      mass over the full series, against the complex build&rsquo;s 0.974, and it reverses
+      direction only once in 39 steps, by 0.013&nbsp;OD. Plotted against the complex
+      photometer, the two builds fall on a single straight line.
+    </p>
+
+    <figure class="frame" id="fig-cal-slim">
+      <div class="frame-img"><svg class="cal-svg" viewBox="0 0 430 430" role="img" aria-labelledby="figc-t figc-d" preserveAspectRatio="xMidYMid meet">
+<title id="figc-t">The slim photometer against the complex photometer</title><desc id="figc-d">The slim V2 reading plotted against the complex V1 reading for the same samples. The points lie on a single straight line of slope 0.178 with R squared 0.993, so the slim build is linear against the complex one across the whole range and differs from it by a fixed scale factor.</desc>
+<line class="idn" x1="62.0" y1="375.5" x2="412.0" y2="41.8"/>
+<line class="gl" x1="62" y1="384.0" x2="412" y2="384.0"/>
+<text class="tk ty" x="52" y="388.0">0.0</text>
+<line class="gl" x1="62" y1="273.8" x2="412" y2="273.8"/>
+<text class="tk ty" x="52" y="277.8">0.2</text>
+<line class="gl" x1="62" y1="163.7" x2="412" y2="163.7"/>
+<text class="tk ty" x="52" y="167.7">0.4</text>
+<line class="gl" x1="62" y1="53.5" x2="412" y2="53.5"/>
+<text class="tk ty" x="52" y="57.5">0.6</text>
+<line class="gl gv" x1="62.0" y1="26" x2="62.0" y2="384"/>
+<text class="tk tx" x="62.0" y="404">0</text>
+<line class="gl gv" x1="164.9" y1="26" x2="164.9" y2="384"/>
+<text class="tk tx" x="164.9" y="404">1</text>
+<line class="gl gv" x1="267.9" y1="26" x2="267.9" y2="384"/>
+<text class="tk tx" x="267.9" y="404">2</text>
+<line class="gl gv" x1="370.8" y1="26" x2="370.8" y2="384"/>
+<text class="tk tx" x="370.8" y="404">3</text>
+<line class="ax" x1="62" y1="26" x2="62" y2="384"/>
+<line class="ax" x1="62" y1="384" x2="412" y2="384"/>
+<text class="al" x="237" y="422">V1 complex OD600</text>
+<text class="al" transform="translate(16 205) rotate(-90)" x="0" y="0">V2 slim reading</text>
+<circle class="d2" cx="67.2" cy="367.1" r="3"/><circle class="d2" cx="77.0" cy="354.1" r="3"/><circle class="d2" cx="88.0" cy="342.3" r="3"/><circle class="d2" cx="97.6" cy="329.9" r="3"/><circle class="d2" cx="111.8" cy="317.6" r="3"/><circle class="d2" cx="126.4" cy="309.5" r="3"/><circle class="d2" cx="140.4" cy="298.5" r="3"/><circle class="d2" cx="153.5" cy="286.3" r="3"/><circle class="d2" cx="165.1" cy="277.6" r="3"/><circle class="d2" cx="180.5" cy="266.6" r="3"/><circle class="d2" cx="188.2" cy="256.6" r="3"/><circle class="d2" cx="198.3" cy="247.1" r="3"/><circle class="d2" cx="205.3" cy="239.6" r="3"/><circle class="d2" cx="218.1" cy="233.4" r="3"/><circle class="d2" cx="228.6" cy="224.1" r="3"/><circle class="d2" cx="237.2" cy="217.7" r="3"/><circle class="d2" cx="242.4" cy="211.2" r="3"/><circle class="d2" cx="250.2" cy="205.1" r="3"/><circle class="d2" cx="261.6" cy="195.8" r="3"/><circle class="d2" cx="270.5" cy="186.7" r="3"/><circle class="d2" cx="277.4" cy="177.3" r="3"/><circle class="d2" cx="284.8" cy="170.9" r="3"/><circle class="d2" cx="293.8" cy="162.9" r="3"/><circle class="d2" cx="301.5" cy="155.7" r="3"/><circle class="d2" cx="309.3" cy="148.1" r="3"/><circle class="d2" cx="316.9" cy="140.3" r="3"/><circle class="d2" cx="323.3" cy="133.3" r="3"/><circle class="d2" cx="329.2" cy="125.9" r="3"/><circle class="d2" cx="333.0" cy="118.5" r="3"/><circle class="d2" cx="338.6" cy="111.0" r="3"/><circle class="d2" cx="345.5" cy="104.8" r="3"/><circle class="d2" cx="351.2" cy="98.2" r="3"/><circle class="d2" cx="354.9" cy="92.4" r="3"/><circle class="d2" cx="361.3" cy="85.5" r="3"/><circle class="d2" cx="367.7" cy="79.0" r="3"/><circle class="d2" cx="370.0" cy="60.1" r="3"/><circle class="d2" cx="376.1" cy="67.1" r="3"/><circle class="d2" cx="381.7" cy="62.2" r="3"/><circle class="d2" cx="386.0" cy="55.8" r="3"/><circle class="d2" cx="388.3" cy="51.1" r="3"/>
+<text class="note" x="80" y="44">V2 = 0.178 × V1 + 0.015</text>
+<text class="note" x="80" y="62">R² = 0.993 over the full range</text>
+</svg></div>
+      <figcaption><b>One line, one scale factor.</b> The slim build&rsquo;s reading against the
+        complex build&rsquo;s for the same forty samples.</figcaption>
+    </figure>
+
+    <p>
+      That straight line is the whole finding, and it has two halves. The good half: with
+      R&sup2;&nbsp;=&nbsp;0.993 between them, the slim build is not measuring something
+      different or something noisier &mdash; it is measuring the same thing on a different
+      scale, and a single constant converts one to the other. Rescaling the slim reading by
+      <b>5.57&times;</b>, less a 0.07 offset &mdash; OD&nbsp;=&nbsp;5.573&nbsp;&times;&nbsp;<i>r</i>&nbsp;&minus;&nbsp;0.073
+      &mdash; brings it onto the OD600 axis, and once rescaled its mean difference
+      from the BioDrop below OD&nbsp;2.5 is &minus;0.10, against the complex build&rsquo;s
+      &minus;0.08. In agreement with the reference, the two builds are near enough
+      indistinguishable.
+    </p>
+    <p>
+      The costly half: that scale factor is a <b>six-fold compression</b>. Across the whole
+      series the slim build moves only from 0.03 to 0.60, where the complex one moves from
+      0.05 to 3.17. It is quieter in absolute terms &mdash; 0.004&nbsp;OD of point-to-point
+      scatter against 0.010 &mdash; but not quietly enough to pay for the lost span, so after
+      rescaling it resolves about <b>twice as coarse</b> a change: 0.49&nbsp;mg against
+      0.21&nbsp;mg of silica at the low end. It is stable, and it is blunt.
+    </p>
+    <p>
+      This is the sense in which the slim build is &ldquo;more stable but less sensitive&rdquo;,
+      and the data lets us say exactly how much of each: it buys whole-range linearity and
+      about two-thirds off the length and roughly $70 off the cost, and it pays for that with
+      half the resolution and the loss of the reference beam.
+    </p>
+
+    <div class="tablewrap">
+      <table class="spec">
+        <caption>The two builds on the 10&nbsp;October SiO<sub>2</sub> series</caption>
+        <thead><tr><th scope="col"></th><th scope="col">Complex</th><th scope="col">Slim</th></tr></thead>
+        <tbody>
+          <tr><th scope="row">Optical path</th><td>Dual beam: lens, splitter, sample and reference sensors</td><td>Single beam: fibre-coupled LED, sample sensor</td></tr>
+          <tr><th scope="row">Reads OD600 directly</th><td>Yes, to OD 2.5</td><td>No &mdash; needs a 5.57&times; factor</td></tr>
+          <tr><th scope="row">Agreement with BioDrop, OD &le; 2.5</th><td class="num">&minus;0.08 OD</td><td class="num">&minus;0.10 OD</td></tr>
+          <tr><th scope="row">Linearity vs mass, full range</th><td class="num">R&sup2; 0.974</td><td class="num">R&sup2; 0.992</td></tr>
+          <tr><th scope="row">Resolution, low range</th><td class="num">0.21 mg</td><td class="num">0.49 mg</td></tr>
+          <tr><th scope="row">Corrects for LED drift</th><td>Yes, reference beam</td><td>No</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <section class="sec" id="sec54">
+    <h3><i>5.4</i> Which Build to Use</h3>
+    <p>
+      The two are not competing versions of one instrument; this run shows they are suited to
+      different jobs, and the choice follows from the run you intend to do.
+    </p>
+    <dl class="verdict">
+      <div>
+        <dt>Use the complex photometer for a bioreactor run.</dt>
+        <dd>It reads true OD600 without a conversion up to OD&nbsp;2.5, resolves twice as
+          finely, and &mdash; the reason it exists &mdash; its reference beam normalises every
+          reading against the LED&rsquo;s own output. Over a run of several hundred hours that
+          is not a refinement; it is what keeps a slow drift in the source from being recorded
+          as growth.</dd>
+      </div>
+      <div>
+        <dt>Use the slim photometer where cost and size decide.</dt>
+        <dd>For a teaching lab, a replicate vessel, or anywhere a second instrument is better
+          than none, it is about two-thirds shorter, roughly $70 cheaper, simpler to assemble,
+          and linear across a wider range than the complex build. It needs its scale factor
+          applied and it should be blanked more often, since it has no reference beam to lean
+          on.</dd>
+      </div>
+    </dl>
+    <p>
+      One caveat applies to both. The 5.57&times; factor and the OD&nbsp;2.5 working limit come
+      from a single run on one scattering standard. Silica and bacteria do not scatter
+      identically &mdash; cells are larger, softer and change shape as they grow &mdash; so
+      these constants describe the instruments, not a conversion that can be dropped onto a
+      culture unchecked. Before either build is trusted quantitatively on culture, the same
+      series needs repeating against <i>B.&nbsp;subtilis</i> at known cell densities.
+    </p>
+  </section>
 
     </div><!-- /part4-panel: electronics, and the blank it is calibrated against -->
 
@@ -1267,7 +1633,7 @@
 <script src="js/story.js?v=f2686721"></script>
 </template>
 <script>HeroMode.load();</script>
-<script src="js/od600.js?v=72f10459"></script>
+<script src="js/od600.js?v=82c677be"></script>
 <script src="js/doc.js?v=3428cfe7"></script>
 <script src="../js/annot.js?v=73ef5082"></script>
 <script src="../js/toc.js?v=3c82154c"></script>
