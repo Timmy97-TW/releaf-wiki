@@ -1,26 +1,37 @@
-// DiOPAL technical record: the LED spread chart, the section map's numbers, and
-// the contents rail.
+// The LPA technical record: the LED spread chart, the two-level contents rail,
+// and the small fixes this page needs over the shared hardware scripts.
 (function () {
   "use strict";
 
-  /* ---------- spread chart (4.4) ----------
-     Drawn from the two lux tables in 4.3, not from a copy of their numbers, so
-     the chart cannot disagree with the tables it summarises. Each cell carries
+  /* ---------- the LED spread chart, under Prototype 2's Learn ----------
+     Drawn from the two lux tables in that prototype's Test, not from a copy of
+     their numbers, so the chart cannot disagree with the tables it summarises. Each cell carries
      its reading in data-v and its matched group in data-g (low, mid, high, or
      none for the eight LEDs per colour that were not used).
 
      The SVG is drawn at the figure's real pixel width rather than scaled from a
      fixed viewBox, so its labels stay at 11px on a phone instead of shrinking
      with the drawing. */
-  /* ---------- table numbers for cross-references ----------
-     ../js/figures.js numbers tables in document order and resolves a link to
-     one from its data-fignum, which it only writes on figures. This page links
-     to its tables by name (#tbl-green), so each table is given the number
-     figures.js is about to print in its caption. Same order, same count:
-     the two cannot disagree. */
-  document.querySelectorAll(".doc table").forEach(function (t, i) {
-    t.setAttribute("data-fignum", String(i + 1));
+  /* ---------- no "Figure N" / "Table N" ----------
+     ../js/figures.js is still loaded: its lightbox is wanted, and several
+     figures on this page are unreadable at column width without it. The labels
+     it prints into every caption are not — no caption or cross-reference on
+     this page refers to a figure by number any more. They are taken back out
+     once it has run, which is after every script in the page has, rather than
+     left in the markup hidden, where a screen reader would still find them.
+     css/style.css hides .fignum as well, for the instant before this runs. */
+  document.addEventListener("DOMContentLoaded", function () {
+    document.querySelectorAll(".doc .fignum").forEach(function (n) {
+      const prev = n.nextSibling;
+      if (prev && prev.nodeType === 3 && !prev.nodeValue.trim()) prev.remove();
+      n.remove();
+    });
   });
+
+  /* The shim that gave every table the number ../js/figures.js was about to
+     print, so an <a class="xref"> could resolve to it, went with the
+     cross-references themselves: nothing on this page refers to a figure or a
+     table by number now. */
 
   const NS = "http://www.w3.org/2000/svg";
   const TIERS = ["low", "mid", "high"];
@@ -235,8 +246,8 @@
   cropOnPhone(".autodraw.drive", "284 18 324 322");
 
   /* ---------- part numbers: a balloon and its name light up together ----------
-     Figures 14 (the parts plate) and 16 (the section) number the parts the same
-     way, and their captions name them by number. Pointing at a name or a balloon
+     The parts plate under Final Design numbers the printed parts, and its
+     caption names them by number. Pointing at a name or a balloon
      lights every place that number appears, so a reader never has to hold a
      number in mind while scanning a drawing for it. Hover only: the captions
      already say everything this shows. */
@@ -251,37 +262,78 @@
     el.addEventListener("mouseleave", function () { light(el, false); });
   });
 
-  /* ---------- section map numbers ----------
-     ../js/toc.js numbers its cards 01, 02 ... in document order. This record
-     starts at section 2 (section 1 is the 3D walkthrough above it), so the map
-     takes each card's number from its own part instead. Runs once every script
-     has, which is when the map exists. */
-  document.addEventListener("DOMContentLoaded", function () {
-    document.querySelectorAll(".doc-map .map-card").forEach(function (card) {
-      const part = document.querySelector(card.getAttribute("href"));
-      const num = card.querySelector(".map-n");
-      const n = part && parseInt(part.getAttribute("data-n"), 10);
-      if (num && n) num.textContent = (n < 10 ? "0" : "") + n;
+  /* ---------- contents rail ----------
+     Two levels, and only one of them open at a time: the main section the reader
+     is in takes the accent and shows its subsections, every other section stays
+     collapsed. Both the highlight and the expansion follow the scroll.
+
+     The collapse is CSS, gated on `html.js`, and the subsections are in the
+     markup either way — with the script off, or before it runs, every entry
+     including every subsection is listed and clickable. Collapsed subsections go
+     to `visibility: hidden` rather than staying in the tab order invisibly.
+
+     The compact disclosure that carries the same list below 1100px (.doc-toc-sm)
+     is driven from here too, so the two never disagree.
+
+     The state class is `is-here`, not `on`: ../js/polish.js runs a scrollspy of
+     its own over `#doc-nav a`, marks exactly one link `on` — a subsection link
+     among them — and clears every other, which would fight this one entry for
+     entry. Its `.rail-fill` marker is hidden in css/style.css for the same
+     reason. Nothing here touches `on`, so the two no longer collide. */
+  const rails = Array.prototype.slice.call(document.querySelectorAll(".doc-nav, .doc-toc-sm"));
+  if (!rails.length) return;
+
+  // One row per main entry: its item, its link, and the heading it points at.
+  const rows = [];
+  rails.forEach(function (rail) {
+    rail.querySelectorAll(".dn-item").forEach(function (item) {
+      const a = item.querySelector(".dn-main");
+      const el = a && document.querySelector(a.getAttribute("href"));
+      if (el) rows.push({ item: item, a: a, el: el });
     });
   });
+  if (!rows.length) return;
 
-  /* ---------- contents rail ---------- */
-  const nav = document.getElementById("doc-nav");
-  if (!nav) return;
-  const links = Array.prototype.slice.call(nav.querySelectorAll("a"));
-  const targets = links.map(function (a) {
-    const t = document.querySelector(a.getAttribute("href"));
-    return t ? { a: a, el: t } : null;
-  }).filter(Boolean);
-  if (!targets.length) return;
+  // Every sub-entry, so the subsection being read can be marked inside the open
+  // section. Grouped under its own main entry, not the rail as a whole.
+  rows.forEach(function (r) {
+    r.subs = Array.prototype.slice.call(r.item.querySelectorAll(".dn-subs a, .dn-subs-sm a"))
+      .map(function (a) {
+        const el = document.querySelector(a.getAttribute("href"));
+        return el ? { a: a, el: el } : null;
+      }).filter(Boolean);
+  });
 
   function update() {
     const line = window.innerHeight * 0.34;
+
+    // The last heading to have crossed the line is the one being read. Measured
+    // per update rather than cached: the record's figures and tables change
+    // height as they load and as the column reflows.
     let active = null;
-    targets.forEach(function (t) {
-      if (t.el.getBoundingClientRect().top <= line) active = t;
+    rows.forEach(function (r) {
+      if (r.el.getBoundingClientRect().top <= line) active = r;
     });
-    links.forEach(function (a) { a.classList.toggle("on", !!active && a === active.a); });
+    // Above the first heading, hold the first entry rather than showing none.
+    if (!active) active = rows[0];
+
+    // Both copies of the same section light up together: match on the href, not
+    // on object identity, so the rail and the small disclosure stay in step.
+    const href = active.a.getAttribute("href");
+
+    rows.forEach(function (r) {
+      const on = r.a.getAttribute("href") === href;
+      r.item.classList.toggle("is-here", on);
+      r.a.classList.toggle("is-here", on);
+      if (on) r.a.setAttribute("aria-current", "true");
+      else r.a.removeAttribute("aria-current");
+
+      let sub = null;
+      if (on) r.subs.forEach(function (sd) {
+        if (sd.el.getBoundingClientRect().top <= line) sub = sd;
+      });
+      r.subs.forEach(function (sd) { sd.a.classList.toggle("is-here", sd === sub); });
+    });
   }
 
   let ticking = false;
@@ -291,6 +343,8 @@
     requestAnimationFrame(function () { update(); ticking = false; });
   }, { passive: true });
   window.addEventListener("resize", update);
+  // The record's own figures settle after load and move every heading with them.
+  window.addEventListener("load", update);
   update();
 
   const smooth = !window.matchMedia("(prefers-reduced-motion: reduce)").matches;

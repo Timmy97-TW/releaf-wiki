@@ -15,7 +15,7 @@
 <meta property="og:description" content="The GEMS-Taiwan hydroponics floating plate: a printed plate that floats on the medium, so thirteen Arabidopsis seedlings stay at the same depth no matter how much liquid is left, shown as a scroll-driven 3D walkthrough." />
 <meta property="og:image" content="../img/film/hub-film-poster.jpg" />
 <meta name="twitter:card" content="summary_large_image" />
-<link rel="stylesheet" href="css/style.css?v=0f6c4fd6" />
+<link rel="stylesheet" href="css/style.css?v=9ee598eb" />
 <link rel="stylesheet" href="../css/polish.css?v=f857778d" />
 <!-- Wiki alignment layer: matches the main wiki's document styling. Delete this one line to revert. -->
 <link rel="stylesheet" href="../css/wiki-align.css?v=e522198b" />
@@ -83,20 +83,58 @@
      (hydroponics-cad/, the four STLs the parts print from) or from the doc's own words.
      Orange .todo marks are what the doc does not have yet. -->
 <div class="doc-wrap">
-<aside class="doc-nav" id="doc-nav">
-  <div class="doc-nav-label">Contents</div>
-  <ol>
-    <li><a href="#story"><b>01</b> 3D Design and Animation</a></li>
-    <li><a href="#purpose"><b>02</b> Purpose</a></li>
-    <li><a href="#requirements"><b>03</b> Design Requirements</a></li>
-    <li><a href="#buoyancy"><b>04</b> Buoyancy Design</a></li>
-    <li><a href="#geometry"><b>05</b> Geometry and Mechanical Design</a></li>
-    <li><a href="#evolution"><b>06</b> Design Evolution</a></li>
-    <li><a href="#dbtl"><b>07</b> Full DBTL Cycles</a></li>
-    <li><a href="#reproduction"><b>08</b> Reproduction</a></li>
-    <li><a href="#files"><b>09</b> Design Files</a></li>
-    <li><a href="#references"><b>10</b> References</a></li>
-  </ol>
+<!-- Contents, two levels. Every main section is always listed; the one the reader is in
+     takes the accent and opens to show its subsections, and the highlight follows the scroll
+     (js/record.js). The collapse is gated on the html.js class, so with JavaScript off every
+     entry, subsections included, is listed and clickable.
+
+     The id is deliberately not "doc-nav": ../js/polish.js runs its own one-level scrollspy over
+     #doc-nav, which would light a subsection in place of the section it belongs to. -->
+<aside class="doc-nav" id="doc-rail">
+  <nav class="rail" aria-label="Contents">
+    <div class="doc-nav-label">Contents</div>
+    <ol>
+      <li data-sec="purpose">
+        <a href="#purpose"><b>01</b> <span>Purpose</span></a>
+        <ol class="rail-sub">
+          <li><a href="#sec21">Standardization of Hydroponics for Labs</a></li>
+          <li><a href="#sec22">The Problem With Fixed Plates</a></li>
+          <li><a href="#sec23">Outreach Story</a></li>
+        </ol>
+      </li>
+      <li data-sec="requirements">
+        <a href="#requirements"><b>02</b> <span>Design Requirements</span></a>
+      </li>
+      <li data-sec="buoyancy">
+        <a href="#buoyancy"><b>03</b> <span>Buoyancy Design</span></a>
+      </li>
+      <li data-sec="geometry">
+        <a href="#geometry"><b>04</b> <span>Geometry and Mechanical Design</span></a>
+      </li>
+      <li data-sec="evolution">
+        <a href="#evolution"><b>05</b> <span>Design Evolution</span></a>
+        <ol class="rail-sub">
+          <li><a href="#versions">Three Versions</a></li>
+          <li><a href="#dbtl">Design, Build, Test and Learn</a></li>
+        </ol>
+      </li>
+      <li data-sec="reproduction">
+        <a href="#reproduction"><b>06</b> <span>Reproduction</span></a>
+        <ol class="rail-sub">
+          <li><a href="#sec81">Bill of Materials</a></li>
+          <li><a href="#sec82">Print Settings</a></li>
+          <li><a href="#sec83">Assembly</a></li>
+          <li><a href="#sec84">Setting Up a Run</a></li>
+        </ol>
+      </li>
+      <li data-sec="files">
+        <a href="#files"><b>07</b> <span>Design Files</span></a>
+      </li>
+      <li data-sec="references">
+        <a href="#references"><b>08</b> <span>References</span></a>
+      </li>
+    </ol>
+  </nav>
 </aside>
 
 <article class="doc" id="record" tabindex="-1">
@@ -110,37 +148,73 @@
       built into its own frame, prints in PLA on a standard FDM printer, and assembles
       with no adhesives and no fasteners.
     </p>
-    <!-- The plate in four numbers, each one on the page below (the doc's outline asks for the system's highlights). -->
-    <dl class="hp-keynums">
-      <div><dt>Seedlings</dt><dd><b>13</b><span>in rows of 4, 5 and 4</span></dd></div>
-      <div><dt>Sealed air</dt><dd><b>42.3<em>&nbsp;cm³</em></b><span>in two chambers in the frame</span></dd></div>
-      <div><dt>Sensitivity</dt><dd><b>3.5<em>&nbsp;g</em></b><span>sinks it about 1&nbsp;mm</span></dd></div>
-      <div><dt>Printed parts</dt><dd><b>16</b><span>no adhesives, no fasteners</span></dd></div>
-    </dl>
-    <p class="doc-aim">
-      Section&nbsp;1, the 3D design and animation, is the walkthrough above.
-      Another lab should be able to download the files and run the same geometry we did.
-      Where a number, a part or a passage is still missing, it is marked in orange rather
-      than invented.
-    </p>
+    <!-- The plate in one row of specifications, each figure on the page below. -->
+    <p class="hp-specrow">13 seedlings &middot; 42.3&nbsp;cm³ of sealed air &middot;
+      3.5&nbsp;g sinks it about 1&nbsp;mm &middot; 16 printed parts</p>
     <div class="status">
       <span class="status-dot"></span>
       <span class="todo">not written yet</span>
-      <span class="status-label">the outreach story (<a href="#sec23">2.3</a>), the link to the plant DBTL
-        cycles (<a href="#dbtl">7</a>), the bill of materials, assembly and run set-up (<a href="#sec81">8.1</a>,
-        <a href="#sec83">8.3</a>, <a href="#sec84">8.4</a>), the design files (<a href="#files">9</a>) and the
-        references (<a href="#references">10</a>).</span>
+      <span class="status-label">the <a href="#sec23">outreach story</a>, the link to the
+        <a href="#dbtl">plant DBTL cycles</a>, the <a href="#sec81">bill of materials</a>,
+        <a href="#sec83">assembly</a> and <a href="#sec84">run set-up</a>, the
+        <a href="#files">design files</a> and the <a href="#references">references</a>.</span>
     </div>
   </header>
 
-  <!-- ─────────── 2 ─────────── -->
+  <!-- Below 1100px the sticky rail is hidden, so the record needs a contents list of its own.
+       A native disclosure: closed to start with, and open and usable with JavaScript off. -->
+  <details class="doc-toc">
+    <summary>Contents</summary>
+    <ol>
+      <li>
+        <a href="#purpose"><b>01</b> <span>Purpose</span></a>
+        <ol>
+          <li><a href="#sec21">Standardization of Hydroponics for Labs</a></li>
+          <li><a href="#sec22">The Problem With Fixed Plates</a></li>
+          <li><a href="#sec23">Outreach Story</a></li>
+        </ol>
+      </li>
+      <li>
+        <a href="#requirements"><b>02</b> <span>Design Requirements</span></a>
+      </li>
+      <li>
+        <a href="#buoyancy"><b>03</b> <span>Buoyancy Design</span></a>
+      </li>
+      <li>
+        <a href="#geometry"><b>04</b> <span>Geometry and Mechanical Design</span></a>
+      </li>
+      <li>
+        <a href="#evolution"><b>05</b> <span>Design Evolution</span></a>
+        <ol>
+          <li><a href="#versions">Three Versions</a></li>
+          <li><a href="#dbtl">Design, Build, Test and Learn</a></li>
+        </ol>
+      </li>
+      <li>
+        <a href="#reproduction"><b>06</b> <span>Reproduction</span></a>
+        <ol>
+          <li><a href="#sec81">Bill of Materials</a></li>
+          <li><a href="#sec82">Print Settings</a></li>
+          <li><a href="#sec83">Assembly</a></li>
+          <li><a href="#sec84">Setting Up a Run</a></li>
+        </ol>
+      </li>
+      <li>
+        <a href="#files"><b>07</b> <span>Design Files</span></a>
+      </li>
+      <li>
+        <a href="#references"><b>08</b> <span>References</span></a>
+      </li>
+    </ol>
+  </details>
+
+  <!-- ─────────── Purpose ─────────── -->
   <section class="part" id="purpose" data-n="2">
-    <div class="part-mark"><span>Section</span><b>02</b></div>
     <h2>Purpose</h2>
   </section>
 
   <section class="sec" id="sec21">
-    <h3><i>2.1</i> Standardization of Hydroponics for Labs</h3>
+    <h3>Standardization of Hydroponics for Labs</h3>
     <p>
       Labs that grow <i>Arabidopsis</i> in liquid medium tend to improvise the setup: a
       piece of foam cut to size, a mesh taped over a container, or a fixed plate sitting
@@ -150,13 +224,12 @@
     <p>
       Our plate floats on the medium, so the seedlings stay at the same depth no matter how
       much liquid is left. Everything prints on a normal FDM printer, so another lab can
-      download the files and run the same geometry we did. <b class="mark">Same depth, same
-      spacing, same conditions, whoever is running it.</b>
+      download the files and run the same geometry we did.
     </p>
   </section>
 
   <section class="sec" id="sec22">
-    <h3><i>2.2</i> The Problem With Fixed Plates</h3>
+    <h3>The Problem With Fixed Plates</h3>
     <p>
       Our first version was a fixed plate sitting over a liquid chamber. The plate held the
       seedlings at a set height and the medium sat underneath, so the level had to be set by
@@ -191,23 +264,22 @@
                aria-label="Time through one run, from its start to its end" />
         <div class="hp-lvl-ends" aria-hidden="true"><span>Start of a run</span><span>End of a run</span></div>
       </div>
-      <figcaption><b>The level falls through a run.</b> Over a fixed plate it has to stay in
-        a narrow window: too high and the platform floods, too low and the roots lose
-        contact. A floating plate falls with the level, so the roots stay at the same depth.
-        Schematic, not to scale.</figcaption>
+      <figcaption><b>The level falls through a run.</b> Over a fixed plate it has to stay in a
+        narrow window, too high and the platform floods and too low and the roots lose contact,
+        while a floating plate falls with the level and the roots stay at the same depth; the
+        drawing is schematic.</figcaption>
     </figure>
   </section>
 
   <section class="sec" id="sec23">
-    <h3><i>2.3</i> Outreach Story: Prof. Cheng Mei Jun</h3>
-    <div class="todo"><b>Unwritten · 2.3 Outreach story</b>The outline puts the outreach
+    <h3>Outreach Story: Prof. Cheng Mei Jun</h3>
+    <div class="todo"><b>Unwritten · Outreach story</b>The outline puts the outreach
       story with Prof. Cheng Mei Jun here, with photos of our outreach. Neither the text nor
       the photos are in the writing doc yet.</div>
   </section>
 
-  <!-- ─────────── 3 ─────────── -->
+  <!-- ─────────── Design Requirements ─────────── -->
   <section class="part" id="requirements" data-n="3">
-    <div class="part-mark"><span>Section</span><b>03</b></div>
     <h2>Design Requirements</h2>
   </section>
 
@@ -218,40 +290,40 @@
         <b class="hp-req-t">Hold root depth constant for the whole run, with no manual topping up</b>
         <span class="hp-req-a">The plate floats, so the seedlings stay at the same depth no
           matter how much liquid is left.
-          <span class="hp-req-x">Sections <a href="#sec22">2.2</a> and <a href="#buoyancy">4</a></span></span>
+          <span class="hp-req-x"><a href="#sec22">The Problem With Fixed Plates</a> and
+            <a href="#buoyancy">Buoyancy Design</a></span></span>
       </li>
       <li>
         <span class="hp-req-n">R2</span>
         <b class="hp-req-t">Carry 13 <i>Arabidopsis</i> seedlings</b>
         <span class="hp-req-a">Thirteen seed positions in rows of four, five and four.
-          <span class="hp-req-x">Section <a href="#geometry">5</a></span></span>
+          <span class="hp-req-x"><a href="#geometry">Geometry and Mechanical Design</a></span></span>
       </li>
       <li>
         <span class="hp-req-n">R3</span>
         <b class="hp-req-t">Float on the medium under its own buoyancy, with no separate float attached</b>
         <span class="hp-req-a">Sealed air built into its own frame: no foam block, nothing
           strapped underneath.
-          <span class="hp-req-x">Section <a href="#buoyancy">4</a></span></span>
+          <span class="hp-req-x"><a href="#buoyancy">Buoyancy Design</a></span></span>
       </li>
       <li>
         <span class="hp-req-n">R4</span>
         <b class="hp-req-t">Print in PLA on a standard FDM machine</b>
         <span class="hp-req-a">PLA, 15% gyroid infill in the pontoon sections, no supports
           needed.
-          <span class="hp-req-x">Section <a href="#sec82">8.2</a></span></span>
+          <span class="hp-req-x"><a href="#sec82">Print Settings</a></span></span>
       </li>
       <li>
         <span class="hp-req-n">R5</span>
         <b class="hp-req-t">Assemble with no adhesives and no fasteners</b>
         <span class="hp-req-a">Clip-in handles, and nothing to glue or strap on.
-          <span class="hp-req-x">Section <a href="#geometry">5</a></span></span>
+          <span class="hp-req-x"><a href="#geometry">Geometry and Mechanical Design</a></span></span>
       </li>
     </ol>
   </section>
 
-  <!-- ─────────── 4 ─────────── -->
+  <!-- ─────────── Buoyancy Design ─────────── -->
   <section class="part" id="buoyancy" data-n="4">
-    <div class="part-mark"><span>Section</span><b>04</b></div>
     <h2>Buoyancy Design</h2>
   </section>
 
@@ -266,8 +338,7 @@
       The teardrop is the sealed chamber inside each pontoon: a box section 6.99&nbsp;mm wide
       whose lower sides are chamfered at about 45° to a point, so its cross-section is a
       pentagon 20.32&nbsp;mm deep, walled in 1.59&nbsp;mm of plastic
-      (<a class="xref" href="#fig-sheet"></a>). The two chambers hold 42.27&nbsp;cm³ of sealed
-      air between them.
+      (<a href="#fig-sheet">drawn in detail below</a>). The two chambers hold 42.27&nbsp;cm³ of sealed air between them.
     </p>
     <p>
       Sizing them is a displacement problem. The plate has to displace its own mass plus the
@@ -287,24 +358,23 @@
         <li class="k-free" data-tie="free"><b>Freeboard</b><span>Where the two balance: the roots in the
           medium and the crowns above it.</span></li>
       </ul>
-      <figcaption><b>A displacement problem.</b> Section A–A of the CAD, afloat. The plate
-        settles where its mass equals the mass of medium it displaces. The waterline is drawn
-        6.0&nbsp;mm under the slab, a freeboard of 9.2&nbsp;mm, where the assembled plate
-        displaces 54.2&nbsp;cm³ (<a class="xref" href="#tbl-1"></a>; point 1 of <a class="xref" href="#fig-load"></a>).</figcaption>
+      <figcaption><b>A displacement problem.</b> Section A–A of the CAD, afloat, with the
+        waterline drawn 6.0&nbsp;mm under the slab: the plate settles where its mass equals the
+        mass of medium it displaces.</figcaption>
     </figure>
 
     <p>
-      Measured off the CAD, the displacement at each waterline gives the plate&rsquo;s load line
-      (<a class="xref" href="#fig-load"></a>). In water at 1.00&nbsp;g/cm³ every cubic centimetre
+      Measured off the CAD, the displacement at each waterline gives the plate&rsquo;s load line,
+      the curve below. In water at 1.00&nbsp;g/cm³ every cubic centimetre
       displaced floats a gram, so weigh the assembled plate with its seedlings, find that mass
-      along the bottom, and read the freeboard up the side; <a class="xref" href="#tbl-1"></a>
+      along the bottom, and read the freeboard up the side; the table under it
       lists seven of its points. Down the straight sides of the pontoons the hull gains
       3.51&nbsp;cm³ per millimetre of draft, so every 3.5&nbsp;g added sinks it
       about&nbsp;1&nbsp;mm.
     </p>
 
     <!-- Figure: the load line, generated by polish/hydroponics/work/gen_load.py from the STLs (curve.py, the
-         method of answers/hydro-cad/buoyancy.py). Every mark is a computed value; the dots are Table 1's rows. -->
+         method of answers/hydro-cad/buoyancy.py). Every mark is a computed value; the dots are the displacement table's rows. -->
     <figure class="frame hp-fig hp-loadfig" id="fig-load">
       <div class="hp-load">
         <p class="hp-load-ylab" aria-hidden="true">Freeboard, mm</p>
@@ -315,17 +385,16 @@
         <p class="hp-load-xlab" aria-hidden="true">Mass afloat, g: the plate, its seedlings and any water it takes on</p>
       </div>
       <ol class="hp-load-key">
-        <li><span class="hp-load-pin" aria-hidden="true">1</span><span><b>The waterline drawn in <a class="xref" href="#fig-buoyancy"></a>:</b> 54.2&nbsp;g floats with 9.2&nbsp;mm of freeboard.</span></li>
+        <li><span class="hp-load-pin" aria-hidden="true">1</span><span><b>The waterline drawn above:</b> 54.2&nbsp;g floats with 9.2&nbsp;mm of freeboard.</span></li>
         <li><span class="hp-load-pin" aria-hidden="true">2</span><span><b>The slab&rsquo;s underside meets the water</b> at 79.4&nbsp;g and 3.2&nbsp;mm. From here the whole slab displaces, so each gram sinks it less.</span></li>
         <li><span class="hp-load-pin" aria-hidden="true">3</span><span><b>The slab top is awash</b> at 111.9&nbsp;g.</span></li>
         <li class="is-pla"><span class="hp-load-sw" aria-hidden="true"></span><span><b>Solid PLA:</b> printed solid, the sixteen parts would weigh 92.6&nbsp;g at most, and float with 1.9&nbsp;mm of freeboard.</span></li>
       </ol>
       <p class="hp-load-off">Off this scale: <span class="todo">180&nbsp;g, the worked case below</span>,
         more than this plate can keep afloat.</p>
-      <figcaption><b>How low it floats.</b> The load line of the assembled plate, computed from the
-        STLs: the freeboard it floats at for each mass it carries. The dots are the seven waterlines
-        of <a class="xref" href="#tbl-1"></a>. Down the pontoons&rsquo; straight sides it sinks about
-        1&nbsp;mm for every 3.5&nbsp;g; past point 2, about 1&nbsp;mm for every 10&nbsp;g.</figcaption>
+      <figcaption><b>How low it floats.</b> The load line of the assembled plate, computed from
+        the STLs: the freeboard it floats at for each mass it carries, the dots being the seven
+        waterlines of the table below.</figcaption>
     </figure>
 
     <div class="table-scroll">
@@ -356,22 +425,16 @@
       extra volume each to sit at the target freeboard.
     </p>
     <div class="todo"><b>To confirm · the worked case</b>180&nbsp;g is more than the plate in
-      the CAD could keep afloat (<a class="xref" href="#fig-load"></a>): fully submerged, the plate, both handles and all thirteen
+      the CAD could keep afloat: fully submerged, the plate, both handles and all thirteen
       seed holders displace only 117.0&nbsp;cm³, and their printed parts come to
-      74.72&nbsp;cm³ of material (<a class="xref" href="#tbl-2"></a>). Even printed solid in
+      74.72&nbsp;cm³ of material (<a href="#geometry">Geometry and Mechanical Design</a>). Even printed solid in
       PLA (1.24&nbsp;g/cm³), an upper bound since the print uses infill, the sixteen parts
       would weigh 92.6&nbsp;g and float with 1.9&nbsp;mm of freeboard. Say which version the
       case comes from, and weigh the printed plate.</div>
-    <p>
-      The four corner poles on the first floating version were the safety margin on this.
-      They take washers as ballast in case the plate rides too high. Later iterations tuned
-      the volume closely enough that the poles came off.
-    </p>
   </section>
 
-  <!-- ─────────── 5 ─────────── -->
+  <!-- ─────────── Geometry and Mechanical Design ─────────── -->
   <section class="part" id="geometry" data-n="5">
-    <div class="part-mark"><span>Section</span><b>05</b></div>
     <h2>Geometry and Mechanical Design</h2>
   </section>
 
@@ -385,9 +448,8 @@
         <span class="hp-pin" style="left:39.5%;top:12.5%" aria-hidden="true">3</span>
       </div>
       <figcaption><b>Cut open.</b> Rendered from the CAD and cut through the outer row of seed
-        holders. Each pontoon carries a sealed chamber (violet); the middle of the plate is open
-        underneath. Pins 1 to 3 match the list below; 4 is not on this version of
-        the plate.</figcaption>
+        holders: each pontoon carries a sealed chamber (violet), the middle of the plate is open
+        underneath, and pins 1 to 3 match the list below.</figcaption>
     </figure>
 
     <ol class="hp-feats">
@@ -402,7 +464,7 @@
         lifts out of the reservoir without anyone touching the seedlings.</div></li>
       <li class="is-gone"><span class="hp-fn">4</span><div><b>Corner poles</b> for washer
         ballast on the first floating version, removed once the buoyancy was tuned
-        (<a href="#evolution">section 6</a>).</div></li>
+        (<a href="#evolution">Design Evolution</a>), so it has no pin here.</div></li>
     </ol>
   </section>
 
@@ -417,9 +479,9 @@
         <li data-tie="cut"><i class="sw sw-cut"></i>Printed plate, in section</li>
         <li data-tie="hold"><i class="sw sw-hold"></i>Seed holder</li>
       </ul>
-      <figcaption><b>Measured off the CAD.</b> Plan, section A–A through the outer-row bores,
-        and one pontoon in detail. Every outline is a slice of the STLs the parts print from;
-        dimensions in millimetres.</figcaption>
+      <figcaption><b>Measured off the CAD.</b> Plan, section A–A through the outer-row bores
+        and one pontoon in detail, every outline a slice of the STLs the parts print from, in
+        millimetres.</figcaption>
     </figure>
 
     <div class="table-scroll">
@@ -447,7 +509,7 @@
           <tr><td>Below the centre</td><td>Nothing: the middle of the plate is flat slab, open underneath</td></tr>
           <tr><td>Displacement</td><td>75.9&nbsp;cm³ up to the underside of the slab;
             105.9&nbsp;cm³ with the whole plate submerged; 117.0&nbsp;cm³ with the handles and
-            seed holders as well (<a class="xref" href="#tbl-1"></a>)</td></tr>
+            seed holders as well</td></tr>
         </tbody>
         <tbody>
           <tr class="hp-grp"><th colspan="2" scope="rowgroup">The printed parts</th></tr>
@@ -463,15 +525,16 @@
     </div>
   </section>
 
-  <!-- ─────────── 6 ─────────── -->
+  <!-- ─────────── Design Evolution ─────────── -->
   <section class="part" id="evolution" data-n="6">
-    <div class="part-mark"><span>Section</span><b>06</b></div>
     <h2>Design Evolution</h2>
   </section>
 
-  <section class="sec">
-    <!-- The three versions as a path. The connectors between them are the doc's own reasons, from 2.2
-         and 4; nothing is added that the doc does not say. The side views are schematic. -->
+  <section class="sec" id="versions">
+    <h3>Three Versions</h3>
+    <!-- The three versions as a path. The connectors between them are the doc's own reasons, from
+         "The Problem With Fixed Plates" and "Buoyancy Design"; nothing is added that the doc does
+         not say. The side views are schematic. -->
     <ol class="hp-path">
       <li>
         <div class="hp-v-row">
@@ -480,14 +543,14 @@
           <div class="hp-v-tx">
             <div class="hp-v-h"><h4>Fixed plate</h4></div>
             <p>A plate held at a set height over a liquid chamber. It worked, but only for as long
-              as someone kept the level correct, which is covered in <a href="#sec22">2.2</a>.</p>
+              as someone kept the level correct, which is covered in <a href="#sec22">The Problem With Fixed Plates</a>.</p>
           </div>
         </div>
       </li>
       <li>
         <p class="hp-v-why"><b>Why it changed</b>The level does not stay where you put it: the plants
           drink and the medium evaporates, so someone had to watch the reservoir and top it up
-          (<a href="#sec22">2.2</a>).</p>
+          (<a href="#sec22">The Problem With Fixed Plates</a>).</p>
         <div class="hp-v-row">
           <span class="hp-v-node" aria-hidden="true">02</span>
           <div class="hp-evo-fig"><svg class="dw hp-evo-svg" viewBox="0 0 220 116" role="img" aria-label="First floating version: the flotation moved into the frame and the plate riding on the surface, with a pole at each corner carrying washers as ballast."><rect class="hp-water" x="26" y="64" width="168" height="40"/><line class="hp-wline" x1="26" y1="64" x2="194" y2="64"/><path class="hp-res" d="M20 30V108H200V30"/><rect class="hp-slab" x="30" y="56" width="160" height="5" rx="1"/><rect class="hp-slab" x="30" y="56" width="11" height="14" rx="2"/><rect class="hp-slab" x="179" y="56" width="11" height="14" rx="2"/><line class="hp-pole" x1="35.5" y1="56" x2="35.5" y2="14"/><rect class="hp-washer" x="29.5" y="48.0" width="12" height="3" rx="1"/><rect class="hp-washer" x="29.5" y="43.8" width="12" height="3" rx="1"/><rect class="hp-washer" x="29.5" y="39.6" width="12" height="3" rx="1"/><line class="hp-pole" x1="184.5" y1="56" x2="184.5" y2="14"/><rect class="hp-washer" x="178.5" y="48.0" width="12" height="3" rx="1"/><rect class="hp-washer" x="178.5" y="43.8" width="12" height="3" rx="1"/><rect class="hp-washer" x="178.5" y="39.6" width="12" height="3" rx="1"/><path class="hp-root" d="M72 69c1.5 7.2 -1.5 12.6 0 18"/><path class="hp-hold" d="M65 54H79L75 67H69Z"/><path class="hp-stem" d="M72 54V48"/><ellipse class="hp-leaf" cx="66.5" cy="46" rx="6" ry="2.6" transform="rotate(-18 66.5 46)"/><ellipse class="hp-leaf" cx="77.5" cy="46" rx="6" ry="2.6" transform="rotate(18 77.5 46)"/><path class="hp-root" d="M110 69c1.5 7.2 -1.5 12.6 0 18"/><path class="hp-hold" d="M103 54H117L113 67H107Z"/><path class="hp-stem" d="M110 54V48"/><ellipse class="hp-leaf" cx="104.5" cy="46" rx="6" ry="2.6" transform="rotate(-18 104.5 46)"/><ellipse class="hp-leaf" cx="115.5" cy="46" rx="6" ry="2.6" transform="rotate(18 115.5 46)"/><path class="hp-root" d="M148 69c1.5 7.2 -1.5 12.6 0 18"/><path class="hp-hold" d="M141 54H155L151 67H145Z"/><path class="hp-stem" d="M148 54V48"/><ellipse class="hp-leaf" cx="142.5" cy="46" rx="6" ry="2.6" transform="rotate(-18 142.5 46)"/><ellipse class="hp-leaf" cx="153.5" cy="46" rx="6" ry="2.6" transform="rotate(18 153.5 46)"/></svg></div>
@@ -502,7 +565,7 @@
       <li class="is-now">
         <p class="hp-v-why"><b>How it changed</b>The poles were the safety margin on the buoyancy. We
           ran the displacement calculation again every time the design changed
-          (<a href="#buoyancy">section 4</a>), and later iterations tuned the volume closely enough
+          (<a href="#buoyancy">Buoyancy Design</a>), and later iterations tuned the volume closely enough
           that the poles came off.</p>
         <div class="hp-v-row">
           <span class="hp-v-node" aria-hidden="true">03</span>
@@ -510,58 +573,49 @@
           <div class="hp-v-tx">
             <div class="hp-v-h"><h4>Current version</h4></div>
             <p>Smaller footprint, clip-in handles, and buoyancy tuned closely enough that the
-              ballast poles were no longer doing anything. This is the version in
-              <a href="#reproduction">section 8</a>.</p>
+              ballast poles were no longer doing anything. It is the version that
+              <a href="#reproduction">Reproduction</a> covers.</p>
           </div>
         </div>
       </li>
     </ol>
     <p class="fineprint hp-v-note">The side views are schematic, not to scale. The current version is
-      drawn from its CAD in <a class="xref" href="#fig-sheet"></a>.</p>
+      drawn from its CAD in the <a href="#fig-sheet">drawing sheet above</a>.</p>
     <div class="todo"><b>Photos needed · design evolution</b>A photo of each version: the fixed
       plate over its chamber, the first floating version with its corner poles and washers,
       and the printed current plate. The outline asks for prototype photos; the writing doc
       has none of the plate yet.</div>
   </section>
 
-  <!-- ─────────── 7 ─────────── -->
-  <!-- The shared DBTL band (../css/wiki-align.css, as on the LPA's cycles). The writing doc sends this section
-       to a Plants DBTL page (p64), so the ring names no cycle number, and the strip says stage by stage what
-       this page already holds: a stage with nothing on record is a gap (orange), not filled in. -->
-  <section class="part dbtl-part hp-dbtl" id="dbtl" data-n="7">
-    <div class="part-mark"><span>Section</span><b>07</b></div>
-    <div class="dbtl-head">
-      <div class="dbtl-ring" aria-hidden="true"><i class="q d">D</i><i class="q b">B</i><i class="q t">T</i><i class="q l">L</i><span>Cycles</span><b><svg viewBox="0 0 24 24"><path d="M19.4 13.6A7.6 7.6 0 1 1 17.2 6.8"/><path d="M18.2 2.9v4.6h-4.6"/></svg></b></div>
-      <div class="dbtl-tx">
-        <p class="dbtl-kick">DBTL cycles <span>on the Plants DBTL page</span></p>
-        <h2>Full DBTL Cycles</h2>
-        <p class="dbtl-gist">The plate&rsquo;s full design&ndash;build&ndash;test&ndash;learn cycles belong on the
-          Plants DBTL page. Stage by stage, this is what this page already holds.</p>
-      </div>
+  <!-- The four stages, one short block each. The writing doc sends the plate's full cycles to a
+       Plants DBTL page (p64), so this says stage by stage what this page itself holds; a stage
+       with nothing on record is a gap (orange), not filled in. -->
+  <section class="sec" id="dbtl">
+    <h3>Design, Build, Test and Learn</h3>
+    <p>The plate&rsquo;s full design&ndash;build&ndash;test&ndash;learn cycles belong on the Plants
+      DBTL page. Stage by stage, this is what this page holds.</p>
+    <div class="hp-stages">
+      <p><b>Design</b> The buoyancy sizing and the geometry drawn off the CAD:
+        <a href="#buoyancy">Buoyancy Design</a> and
+        <a href="#geometry">Geometry and Mechanical Design</a>.</p>
+      <p><b>Build</b> The <a href="#sec82">print settings</a> are on record.
+        <span class="todo">No build photos yet</span></p>
+      <p><b>Test</b> <span class="todo">No test results with numbers yet</span></p>
+      <p><b>Learn</b> What each version changed, and why: the three versions above.</p>
     </div>
-    <ol class="dbtl-steps" aria-label="The four stages, and what this page holds for each">
-      <li class="d"><a href="#buoyancy"><b>D</b><span><em>Design</em>Buoyancy sizing, the CAD and its drawings</span></a></li>
-      <li class="b gap"><a href="#sec82"><b>B</b><span><em>Build</em>Print settings only; no build photos yet</span></a></li>
-      <li class="t gap"><a href="#dbtl-link"><b>T</b><span><em>Test</em>No results with numbers yet</span></a></li>
-      <li class="l"><a href="#evolution"><b>L</b><span><em>Learn</em>What each version changed, and why</span></a></li>
-    </ol>
+    <div class="todo" id="dbtl-link"><b>Link needed · Plants DBTL page</b>The writing doc sends the
+      cycles to the Plants DBTL page, where the plate's design–build–test–learn cycles are to be
+      written up. Link to it here; there is no such page in this hardware site yet. The outline asks
+      each cycle for its design, build photos, test results with numbers, and what was learned.</div>
   </section>
 
-  <section class="sec" id="dbtl-link">
-    <div class="todo"><b>Link needed · Plants DBTL page</b>The writing doc sends this section to
-      the Plants DBTL page, where the plate's design–build–test–learn cycles are to be written
-      up. Link to it here; there is no such page in this hardware site yet. The outline asks each
-      cycle for its design, build photos, test results with numbers, and what was learned.</div>
-  </section>
-
-  <!-- ─────────── 8 ─────────── -->
+  <!-- ─────────── Reproduction ─────────── -->
   <section class="part" id="reproduction" data-n="8">
-    <div class="part-mark"><span>Section</span><b>08</b></div>
     <h2>Reproduction</h2>
   </section>
 
   <section class="sec" id="sec81">
-    <h3><i>8.1</i> Bill of Materials</h3>
+    <h3>Bill of Materials</h3>
     <figure class="frame r16x10" id="fig-parts">
       <div class="frame-img">
         <img src="photos/plate-parts-exploded.webp" width="1600" height="1000" loading="lazy" decoding="async"
@@ -575,59 +629,60 @@
         <caption>Printed parts</caption>
         <thead><tr><th scope="col">Part</th><th scope="col" class="num">Qty</th><th scope="col" class="num">Volume, each</th><th scope="col" class="num">Cost</th></tr></thead>
         <tbody>
-          <tr><td><span class="hp-pc"><span class="hp-thumb"><img src="photos/parts/plate.webp" width="320" height="197" alt="" loading="lazy" decoding="async" /></span>Floating plate</span></td><td class="num">1</td><td class="num">63.60&nbsp;cm³</td><td class="num"><span class="todo">cost</span></td></tr>
-          <tr><td><span class="hp-pc"><span class="hp-thumb is-pair"><img src="photos/parts/handle-left.webp" width="191" height="320" alt="" loading="lazy" decoding="async" /><img src="photos/parts/handle-right.webp" width="191" height="320" alt="" loading="lazy" decoding="async" /></span>Handle, left and right</span></td><td class="num">2</td><td class="num">2.76&nbsp;cm³</td><td class="num"><span class="todo">cost</span></td></tr>
-          <tr><td><span class="hp-pc"><span class="hp-thumb"><img src="photos/parts/seed-holder.webp" width="320" height="320" alt="" loading="lazy" decoding="async" /></span>Seed holder</span></td><td class="num">13</td><td class="num">0.43&nbsp;cm³</td><td class="num"><span class="todo">cost</span></td></tr>
+          <tr><td>Floating plate</td><td class="num">1</td><td class="num">63.60&nbsp;cm³</td><td class="num"><span class="todo">cost</span></td></tr>
+          <tr><td>Handle, left and right</td><td class="num">2</td><td class="num">2.76&nbsp;cm³</td><td class="num"><span class="todo">cost</span></td></tr>
+          <tr><td>Seed holder</td><td class="num">13</td><td class="num">0.43&nbsp;cm³</td><td class="num"><span class="todo">cost</span></td></tr>
         </tbody>
         <tfoot><tr><td>Total</td><td class="num">16</td><td class="num">74.72&nbsp;cm³ in all</td><td class="num"><span class="todo">total</span></td></tr></tfoot>
       </table>
     </div>
     <p class="fineprint">All four parts print in PLA. Volume is the solid volume of one part in
       the CAD, not the filament a print uses, which depends on walls and infill.</p>
-    <div class="todo"><b>Unwritten · 8.1 Bill of materials</b>Unit costs, the filament each part
+    <div class="todo"><b>Unwritten · Bill of materials</b>Unit costs, the filament each part
       uses, and anything a run needs beyond the printed parts, with the total cost linked to
       the business plan for the detailed cost analysis, as the outline asks.</div>
   </section>
 
   <section class="sec" id="sec82">
-    <h3><i>8.2</i> Print Settings</h3>
-    <div class="spec-card hp-print">
-      <div class="spec-card-title">Print settings</div>
-      <dl>
-        <div><dt>Material</dt><dd>PLA</dd></div>
-        <div><dt>Printer</dt><dd>A standard FDM printer</dd></div>
-        <div><dt>Infill</dt><dd>15% gyroid in the pontoon sections</dd></div>
-        <div><dt>Supports</dt><dd>None needed</dd></div>
-      </dl>
-      <p class="spec-note">Layer height, wall count and print orientation:
-        <span class="todo">not recorded</span></p>
+    <h3>Print Settings</h3>
+    <div class="table-scroll">
+      <table class="compare hp-print">
+        <caption class="sr-only">Print settings</caption>
+        <thead><tr><th scope="col">Setting</th><th scope="col">As printed</th></tr></thead>
+        <tbody>
+          <tr><td>Material</td><td>PLA</td></tr>
+          <tr><td>Printer</td><td>A standard FDM printer</td></tr>
+          <tr><td>Infill</td><td>15% gyroid in the pontoon sections</td></tr>
+          <tr><td>Supports</td><td>None needed</td></tr>
+          <tr><td>Layer height, wall count, orientation</td><td><span class="todo">not recorded</span></td></tr>
+        </tbody>
+      </table>
     </div>
   </section>
 
   <section class="sec" id="sec83">
-    <h3><i>8.3</i> Assembly</h3>
-    <div class="todo"><b>Unwritten · 8.3 Assembly</b>How the parts go together: the two handles
+    <h3>Assembly</h3>
+    <div class="todo"><b>Unwritten · Assembly</b>How the parts go together: the two handles
       clip onto the ends of the plate and the thirteen seed holders sit in their bores
-      (<a class="xref" href="#fig-parts"></a> shows them drawn apart). Steps and photos still to be
+      (the printed parts are shown drawn apart above). Steps and photos still to be
       written.</div>
   </section>
 
   <section class="sec" id="sec84">
-    <h3><i>8.4</i> Setting Up a Run</h3>
-    <div class="todo"><b>Unwritten · 8.4 Setting up a run</b>The protocol for one run, from
+    <h3>Setting Up a Run</h3>
+    <div class="todo"><b>Unwritten · Setting up a run</b>The protocol for one run, from
       preparing the seed holders to floating the plate on the medium.</div>
   </section>
 
-  <!-- ─────────── 9 ─────────── -->
+  <!-- ─────────── Design Files ─────────── -->
   <section class="part" id="files" data-n="9">
-    <div class="part-mark"><span>Section</span><b>09</b></div>
     <h2>Design Files</h2>
   </section>
 
   <section class="sec">
     <p>
       The four printed parts, one STL each, rendered here from their own files. The plate, the
-      handles and the holder all print in PLA (<a href="#sec82">8.2</a>).
+      handles and the holder all print in PLA (<a href="#sec82">Print Settings</a>).
     </p>
     <ol class="files hp-files">
       <li><span class="fn">1</span><div class="fb"><b>Floating plate</b><p>The slab, both pontoons and their sealed chambers, as one print. 117.50&nbsp;&times;&nbsp;92.50&nbsp;&times;&nbsp;25.08&nbsp;mm.</p><p class="dl"><span class="todo">STL not published yet</span></p></div><img class="f-part" src="photos/parts/plate.webp" alt="" loading="lazy" decoding="async" /></li>
@@ -635,15 +690,14 @@
       <li><span class="fn">3</span><div class="fb"><b>Right handle</b><p>The left handle&rsquo;s mirror image, for the other end of the slab.</p><p class="dl"><span class="todo">STL not published yet</span></p></div><img class="f-part is-tall" src="photos/parts/handle-right.webp" alt="" loading="lazy" decoding="async" /></li>
       <li><span class="fn">4</span><div class="fb"><b>Seed holder</b><p>A flange over a tapered basket, 12.07&nbsp;mm tall. Print thirteen, one for each bore.</p><p class="dl"><span class="todo">STL not published yet</span></p></div><img class="f-part is-small" src="photos/parts/seed-holder.webp" alt="" loading="lazy" decoding="async" /></li>
     </ol>
-    <div class="todo"><b>Unwritten · 9 Design files</b>Downloads for the four STLs, with dimensioned
+    <div class="todo"><b>Unwritten · Design files</b>Downloads for the four STLs, with dimensioned
       drawings and instructions for printing each, as the outline asks. The files exist but are
-      not published here yet; <a class="xref" href="#fig-sheet"></a> already gives the main
+      not published here yet; the <a href="#fig-sheet">drawing sheet</a> already gives the main
       dimensions.</div>
   </section>
 
-  <!-- ─────────── 10 ─────────── -->
+  <!-- ─────────── References ─────────── -->
   <section class="part" id="references" data-n="10">
-    <div class="part-mark"><span>Section</span><b>10</b></div>
     <h2>References</h2>
   </section>
 
@@ -696,15 +750,14 @@
 <script src="../js/vendor/three.min.js?v=9274bbce"></script>
 <script src="../js/render-quality.js?v=707e6ddf"></script>
 <script src="../js/packed-loader.js?v=eb28100c"></script>
-<script src="js/story.js?v=a2aef2ea"></script>
+<script src="js/story.js?v=486f3fc4"></script>
 <script src="../js/annot.js?v=73ef5082"></script>
-<script src="../js/toc.js?v=3c82154c"></script>
 <script src="../js/figures.js?v=f8f00208"></script>
 <script src="../js/chrome.js?v=27d9c2d1"></script>
 <script src="../js/atmos.js?v=15acf0e1"></script>
-<script src="../js/wipe.js?v=2ead4af6"></script>
+<script src="../js/wipe.js?v=d7276728"></script>
 <script src="../js/polish.js?v=26a624b8"></script>
-<script src="js/record.js?v=f2a564c4"></script>
+<script src="js/record.js?v=e58d575b"></script>
 <script src="../../assets/data/site-nav.js" fetchpriority="high"></script>
 <script src="../../assets/js/nav.js" fetchpriority="high"></script>
 </body>

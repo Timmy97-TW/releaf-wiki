@@ -1,24 +1,70 @@
-// Hydroponics record: the one moving figure.
+// Hydroponics record: the contents rail, the one moving figure, the load line and the figure ties.
+
+// Contents rail: two levels, one of them open.
 //
-// Section 2.2 sets a fixed plate beside a floating one and lets the reader move
-// through a run. The level is the only input: the fixed plate's roots dry out
-// once it leaves the window, the floating plate rides down with it. Without
-// this script the figure still reads: both panels show the start of a run with
-// the end-of-run level dashed in, and the control simply stays hidden.
+// Every main section is listed. The one the reader is in takes the accent and opens to show its
+// subsections; the rest stay collapsed, and the highlight follows the scroll. The collapse is a
+// class on the <li>, gated in CSS on html.js, so with JavaScript off the rail is a plain complete
+// list rather than a hidden one.
+//
+// The rail's id is not "doc-nav" on purpose: ../js/polish.js runs a one-level scrollspy over
+// #doc-nav, which would light a subsection in place of the section it belongs to.
 (function () {
   "use strict";
-  // ../js/toc.js strips a leading number from each map card's title so the card does
-  // not repeat its own number, which turns "3D Design and Animation" into "D Design
-  // and Animation". This page's part titles carry no numbers; give the cards them back.
-  var cards = document.querySelectorAll(".doc-map .map-card");
-  for (var c = 0; c < cards.length; c++) {
-    var part = document.querySelector(cards[c].getAttribute("href"));
-    var h2 = part && part.querySelector("h2");
-    var t = cards[c].querySelector(".map-t");
-    if (h2 && t) t.textContent = h2.textContent.replace(/\s+/g, " ").trim();
+  var rail = document.getElementById("doc-rail");
+  if (!rail) return;
+
+  var spans = Array.prototype.slice.call(rail.querySelectorAll("li[data-sec]"))
+    .map(function (li) {
+      return { li: li, a: li.querySelector("a"), el: document.getElementById(li.getAttribute("data-sec")) };
+    })
+    .filter(function (s) { return s.a && s.el; });
+  if (!spans.length) return;
+
+  var at = null;
+  function update() {
+    // the same reading line as the shared scrollspy: a band across the middle of the viewport
+    // marks exactly one section active, which is steadier than "whichever heading passed last".
+    // Some embedded and headless contexts report innerHeight as 0, which would put the line on
+    // the very top of the viewport and light the section above the one being read.
+    var vh = document.documentElement.clientHeight || window.innerHeight || 800;
+    var line = vh * 0.42;
+    var active = null;
+    for (var i = 0; i < spans.length; i++) {
+      if (spans[i].el.getBoundingClientRect().top <= line) active = spans[i];
+    }
+    if (active === at) return;
+    at = active;
+    spans.forEach(function (s) {
+      var on = s === active;
+      s.li.classList.toggle("is-open", on);
+      if (on) s.a.setAttribute("aria-current", "true");
+      else s.a.removeAttribute("aria-current");
+    });
   }
+
+  var ticking = false;
+  function queue() {
+    if (ticking) return;
+    ticking = true;
+    requestAnimationFrame(function () { ticking = false; update(); });
+  }
+  window.addEventListener("scroll", queue, { passive: true });
+  window.addEventListener("resize", queue, { passive: true });
+  // a jump from the rail or the narrow-screen contents lands mid-section, not on a scroll event
+  window.addEventListener("hashchange", queue);
+  // the walkthrough above this record is tall and sizes itself late, so a reader who arrives on a
+  // #fragment is scrolled before the layout settles. Read again once it has.
+  window.addEventListener("load", queue);
+  setTimeout(queue, 400);
+  setTimeout(queue, 1500);
+  update();
 })();
 
+// The fixed plate beside the floating one, under "The Problem With Fixed Plates": the reader moves
+// through a run, and the level is the only input. The fixed plate's roots dry out once it leaves the
+// window; the floating plate rides down with it. Without this script the figure still reads — both
+// panels show the start of a run with the end-of-run level dashed in, and the control stays hidden.
 (function () {
   "use strict";
   var fig = document.getElementById("fig-level");
@@ -110,10 +156,10 @@
   }
 })();
 
-// Section 4's load line: a reading layer over the chart. A hairline snaps to the nearest computed point
+// The load line under "Buoyancy Design": a reading layer over the chart. A hairline snaps to the nearest computed point
 // (the plot's data-curve: grams afloat, freeboard in mm, from the STLs) and its values are written beside it.
-// The same reading answers the keyboard (a slider over the points) and Table 1, whose rows are the chart's
-// dots. Without this script the chart and the table still carry every value.
+// The same reading answers the keyboard (a slider over the points) and the displacement table, whose rows
+// are the chart's dots. Without this script the chart and the table still carry every value.
 (function () {
   "use strict";
   var plot = document.querySelector(".hp-load-plot");
@@ -136,7 +182,7 @@
   hit.setAttribute("aria-valuemin", "0");
   hit.setAttribute("aria-valuemax", pts[pts.length - 1][0].toFixed(1));
   plot.appendChild(hit);
-  (function () {                                   // until it is moved, the slider rests on Figure 2's waterline
+  (function () {                                   // until it is moved, the slider rests on the section drawing's waterline
     var d = dots[3]; if (!d) return;
     var i = 0, g = parseFloat(d.style.left) / 100 * X1, e = Infinity;
     for (var k = 0; k < pts.length; k++) { var x = Math.abs(pts[k][0] - g); if (x < e) { e = x; i = k; } }
@@ -180,7 +226,7 @@
   hit.addEventListener("pointermove", readAt);
   hit.addEventListener("click", readAt);            // a tap on a phone reads the point tapped (judge pass)
   hit.addEventListener("pointerleave", function () { if (document.activeElement !== hit) hide(); });
-  hit.addEventListener("focus", function () { if (at < 0) show(indexOfDot(3)); });   // Figure 2's waterline
+  hit.addEventListener("focus", function () { if (at < 0) show(indexOfDot(3)); });   // the section drawing's waterline
   hit.addEventListener("blur", hide);
   hit.addEventListener("keydown", function (e) {
     var k = e.key, i = at < 0 ? indexOfDot(3) : at;
@@ -194,7 +240,7 @@
     e.preventDefault(); show(i);
   });
 
-  // Table 1: each row is one of the chart's dots
+  // the displacement table: each row is one of the chart's dots
   Array.prototype.forEach.call(rows, function (row, k) {
     if (!dots[k]) return;
     row.addEventListener("mouseenter", function () { row.classList.add("is-on"); dots[k].classList.add("is-on"); show(indexOfDot(k)); });
@@ -202,20 +248,9 @@
   });
 })();
 
-// ../js/toc.js numbers the section map's cards 01, 02 ... in document order. This record starts at section 2
-// (section 1 is the 3D walkthrough above it), so each card takes its number from its own part, as the LPA page does.
-document.addEventListener("DOMContentLoaded", function () {
-  Array.prototype.forEach.call(document.querySelectorAll(".doc-map .map-card"), function (card) {
-    var part = document.querySelector(card.getAttribute("href"));
-    var num = card.querySelector(".map-n");
-    var n = part && parseInt(part.getAttribute("data-n"), 10);
-    if (num && n) num.textContent = (n < 10 ? "0" : "") + n;
-  });
-});
-
 // Ties between words and figures (pointer only; everything they show is also in the text):
-// section 5's feature list lights its pin on the cut-open render, and the drawing sheet's key picks out
-// what it names in the plan, the detail and the section.
+// the feature list under "Geometry and Mechanical Design" lights its pin on the cut-open render, and the
+// drawing sheet's key picks out what it names in the plan, the detail and the section.
 (function () {
   "use strict";
   var pins = document.querySelectorAll("#fig-cutaway .hp-pin");
@@ -226,8 +261,8 @@ document.addEventListener("DOMContentLoaded", function () {
     li.addEventListener("mouseleave", function () { pin.classList.remove("is-on"); });
   });
 
-  // a key's words pick out what they name in the drawing beside them: the drawing sheet's key (section 5)
-  // and the three words under the plate afloat (section 4)
+  // a key's words pick out what they name in the drawing beside them: the drawing sheet's key
+  // and the three words under the plate afloat (under "Buoyancy Design")
   function tie(wrap, keys, SEL) {
     if (!wrap || !keys.length) return;
     Array.prototype.forEach.call(keys, function (li) {

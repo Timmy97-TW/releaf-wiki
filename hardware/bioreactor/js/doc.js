@@ -94,10 +94,15 @@
   const nav = document.getElementById("doc-nav");
   if (!nav) return;
 
-  // Each part lists its own sections under it, read from the record's h3s so the list cannot drift from the
-  // headings; only the part being read shows them. Built before polish.js runs, so its scrollspy picks the
-  // section entries up with the rest.
+  // Each part lists its own sections under it; only the part being read shows them.
+  //
+  // The lists are written out in the markup, so the contents are complete with
+  // JavaScript off — which is the whole table of contents on this page now that
+  // the section-card bar is gone. Where a part has a list already, nothing is
+  // built here; where it has none, the sections are read from the record's own
+  // h3s so a hand-written list cannot drift from the headings.
   Array.prototype.forEach.call(nav.querySelectorAll(":scope > ol > li > a"), function (a) {
+    if (a.parentNode.querySelector(":scope > ol.rail-sub")) return;
     const part = document.querySelector(a.getAttribute("href"));
     if (!part) return;
     const subs = [];

@@ -343,23 +343,9 @@ h1, h2 { font-weight: 600; letter-spacing: -0.035em; margin: 0; }
   letter-spacing: .26em; text-transform: uppercase;
   color: var(--faint); margin-bottom: 1.1rem;
 }
-.doc-nav ol { list-style: none; margin: 0; padding: 0; }
-.doc-nav li { margin-bottom: .7rem; }
-.doc-nav a {
-  display: flex; gap: .7rem; align-items: baseline;
-  text-decoration: none; color: var(--dim);
-  font-size: .8rem; line-height: 1.3;
-  transition: color .25s var(--ease);
-  border-left: 1px solid transparent; padding-left: .8rem;
-  margin-left: -.8rem;
-}
-.doc-nav a b {
-  font-family: var(--mono); font-size: .62rem; color: var(--faint);
-  transition: color .25s var(--ease);
-}
-.doc-nav a:hover { color: var(--fg); }
-.doc-nav a.on { color: var(--fg); border-left-color: var(--amber); }
-.doc-nav a.on b { color: var(--amber); }
+/* The rail's own rules live in the editor's pass at the end of this file: it is
+   two levels now, and `.on` belongs to ../js/polish.js's scrollspy rather than
+   to this one, so nothing here may key off it. */
 
 .doc { grid-column: 2; padding-top: 5rem; }
 
@@ -1025,16 +1011,8 @@ body.leaving { opacity: 0; transition: opacity .32s var(--ease); }
 .frame img { transition: transform .8s var(--ease-out), filter .6s var(--ease); }
 .frame:hover img { transform: scale(1.035); filter: saturate(1) contrast(1.06); }
 
-/* contents rail: a travelling marker rather than a static tick */
-.doc-nav a { position: relative; }
-.doc-nav a::before {
-  content: ""; position: absolute; left: -.8rem; top: 50%;
-  width: 2px; height: 0; border-radius: var(--r-xs); background: var(--amber);
-  transform: translateY(-50%);
-  transition: height .45s var(--ease-out);
-}
-.doc-nav a.on::before { height: 1.1rem; }
-.doc-nav a.on { border-left-color: transparent; }
+/* The travelling marker beside the rail is drawn in the editor's pass at the
+   end of this file, on the entry this page's own scrollspy marks. */
 
 /* tables breathe */
 table tbody tr { transition: background .3s var(--ease); }
@@ -1183,60 +1161,10 @@ stroke='white' stroke-width='2' stroke-linecap='round'>\
 }
 
 
-/* ---- section map ------------------------------------------------------ */
-/* Built by js/toc.js from the document's own parts. Doubles as the table of
-   contents below 1100px, where the sticky rail is hidden. */
-.doc-map {
-  display: grid; gap: .8rem;
-  grid-template-columns: repeat(auto-fit, minmax(min(100%, 220px), 1fr));
-  margin: 0 0 4.5rem;
-}
-.map-card {
-  display: grid;
-  grid-template-columns: auto 1fr;
-  grid-template-areas: "n t" ". s";
-  column-gap: .75rem; row-gap: .5rem;
-  padding: 1.05rem 1.1rem 1.15rem;
-  border: 1px solid var(--line); border-radius: var(--r-md);
-  background: rgba(255,255,255,.015);
-  text-decoration: none; color: inherit;
-  transition: border-color .3s var(--ease), background .3s var(--ease),
-              transform .3s var(--ease);
-}
-.map-card:hover, .map-card:focus-visible {
-  border-color: color-mix(in srgb, var(--amber) 34%, transparent);
-  background: color-mix(in srgb, var(--amber) 4%, transparent);
-  transform: translateY(-2px);
-}
-.map-n {
-  grid-area: n;
-  font-family: var(--mono); font-size: .6rem; letter-spacing: .14em;
-  color: var(--amber); padding-top: .2em;
-}
-.map-t {
-  grid-area: t;
-  font-size: .92rem; font-weight: 600; line-height: 1.3;
-  letter-spacing: -.012em;
-}
-.map-sub {
-  grid-area: s;
-  display: flex; flex-direction: column; gap: .28rem;
-}
-.map-sub > span {
-  font-size: .72rem; line-height: 1.45; color: var(--dim);
-  padding-left: .72rem; position: relative;
-}
-.map-sub > span::before {
-  content: ""; position: absolute; left: 0; top: .62em;
-  width: 3px; height: 1px; background: var(--faint);
-}
-.map-more { color: var(--faint) !important; font-family: var(--mono);
-            font-size: .6rem !important; letter-spacing: .1em; }
-
-@media (prefers-reduced-motion: reduce) {
-  .map-card { transition: none; }
-  .map-card:hover, .map-card:focus-visible { transform: none; }
-}
+/* The horizontal section-card bar that used to stand here is gone: ../js/toc.js
+   is no longer loaded on this page, and the two-level contents rail (plus the
+   compact disclosure below 1100px) carries the table of contents instead. The
+   .doc-map rules went with it. */
 
 
 /* ---- heading levels ---------------------------------------------------
@@ -1578,10 +1506,6 @@ body.doc-light .mx-c.picked { background: rgba(18,112,63,.09); box-shadow: inset
     .story .collab { display: none; }
 }
 
-.doc-wrap {
-  --blend-h: clamp(170px, 20vh, 300px);
-  --blend-glow: rgba(70, 224, 143, .11);
-}
 
 
 /* The seam itself. The stage is sticky inside the track, so when the record
@@ -1603,41 +1527,13 @@ body.doc-light .mx-c.picked { background: rgba(18,112,63,.09); box-shadow: inset
     rgba(5, 6, 10, .74) 74%, rgb(5, 6, 10) 100%);
 }
 
-/* ---------------------------------------------------- story -> record blend
-   The record used to begin on a 1px rule laid straight across the stage: dark
-   3D, hard line, paper. That rule is what made the two halves of the page read
-   as two pages. It is gone, and in its place the record opens through a band
-   that starts at the stage's own colour and dissolves into the page's, so the
-   instrument fades into the document instead of being cut off it.
-
-   The band is a real element, not a pseudo: ../css/polish.css loads after this
-   file and already owns both .doc-wrap::before (the cursor glow) and ::after
-   (the watermark), so a pseudo here loses some properties to it and keeps
-   others, which is worse than losing outright.
-
-   Drawn in both themes deliberately. In the light record it crosses the whole
-   distance from #05060a to white; in the dark one there is almost no distance
-   to cross and the band simply keeps the seam from being an edge. The colour
-   it starts from is written out rather than taken from --bg, because --bg is
-   the thing changing underneath it. */
-.doc-wrap { border-top: 0; padding-top: var(--blend-h); }
-.story-blend {
-  position: absolute; left: 0; right: 0; top: 0;
-  height: var(--blend-h); pointer-events: none; z-index: 0;
-  background:
-    /* A breath of the instrument's own colour across the crossing, so the
-       dissolve carries the story's light into the page rather than going grey.
-       Centred well down the band, not at its top: peaked at the top it put a
-       warm bar right on the seam and made a worse edge than the rule it
-       replaced — measured, rgb(33,23,16) against rgb(5,6,10) one pixel above. */
-    radial-gradient(120% 74% at 50% 64%, var(--blend-glow) 0%, transparent 58%),
-    linear-gradient(to bottom,
-      rgb(5, 6, 10) 0%,
-      rgba(5, 6, 10, .90) 26%,
-      rgba(5, 6, 10, .58) 50%,
-      rgba(5, 6, 10, .24) 74%,
-      rgba(5, 6, 10, 0) 100%);
-}
+/* ---------------------------------------------------- story -> record seam
+   The record used to open through a tall band that started at the stage's own
+   black and dissolved into the page's white. Over paper that band read as a
+   grey shadow lying across the head of the record, so it is gone, element and
+   all; the record simply begins. Its top spacing is set in the editor's pass
+   at the end of this file. */
+.doc-wrap { border-top: 0; }
 
   /* The opening's right-hand column, the same one the photometer carries.
      The title holds the left, the instrument the middle; without this the
@@ -2022,7 +1918,6 @@ body.doc-light .doc .part + .sec > p.nodrop:first-of-type::first-letter {
 @media (max-width: 700px) {
   .filter-steps.changes b { font-size: 11px; }
   .doc .autodraw text.dim { font-size: 11.5px; }
-  .doc-map .map-n { font-size: 11px; }
 }
 .doc td .todo sub { font-size: .9em; }
 
@@ -2366,10 +2261,260 @@ table.mat.prints img.tp { flex: none; width: 58px; height: 40px; object-fit: con
   .sx-lbl { font-size: 11px; padding: 1px 3px; }
 }
 
-/* ---- Figures 14 and 16: a part's balloon and its name light up together ---- */
+/* ---- the parts plate: a part's balloon and its name light up together ---- */
 .doc .frame.cad .balloon, .doc .sect-box .balloon { pointer-events: auto; cursor: default; transition: transform .15s ease, background-color .15s ease; }
 .doc .balloon.hot { transform: translate(-50%, -50%) scale(1.3); background: var(--w-leaf-900, #14402b); z-index: 4; }
 .doc .pk { border-radius: 3px; transition: background-color .15s ease, box-shadow .15s ease; }
 .doc .pk.hot { background: var(--w-leaf-100, rgba(61, 220, 139, .18)); box-shadow: 0 0 0 2px var(--w-leaf-100, rgba(61, 220, 139, .18)); }
 @media (prefers-reduced-motion: reduce) { .doc .balloon, .doc .pk { transition: none; } }
 body.doc-light .doc .sec > figure.sect > figcaption { margin-top: 1.4rem; }
+
+
+/* ══════════════════════════════════════════════════════════════════════════
+   Editor's pass, 12 Oct 2026 — Jacquelyn's line-by-line edit of this page.
+   Everything below either replaces chrome she asked to be taken off or styles
+   markup this round introduced. Grouped and ordered the way her notes run:
+   the hero, the overview, the contents rail, then the figures and tables.
+   ══════════════════════════════════════════════════════════════════════════ */
+
+/* ---- the hero title ------------------------------------------------------
+   The instrument's full name reads as the page's title and must never break
+   across two lines, so it is set `nowrap` on a vw-based scale and the card is
+   only as wide as the name needs, capped to the frame's own margins. The
+   question it was built to answer sits under it: the kick line in the page
+   accent a size down, then the question itself in reading grey. */
+.story .story-title {
+  width: max-content;
+  max-width: calc(100vw - 2 * clamp(1.4rem, 9vw, 7.5rem));
+}
+.story .story-title .hero-name {
+  margin: 0; white-space: nowrap;
+  font-family: "Oxanium Title", var(--sans); font-weight: 600;
+  /* 5vw, not more: this page does not load the @font-face for "Oxanium Title"
+     (it lives in hub.css), so the name is set in the system sans and has to fit
+     on one line in whatever that is. At 360px it leaves about a tenth of the
+     frame's width in hand. */
+  font-size: clamp(1rem, 5vw, 3.6rem);
+  letter-spacing: -.02em; line-height: 1.05; color: #fff;
+  text-shadow: 0 0 64px rgba(0, 0, 0, .85);
+}
+.story .story-title .hero-kick {
+  margin: .95rem 0 0; color: var(--accent);
+  font-family: "Oxanium Title", var(--sans); font-weight: 600;
+  font-size: clamp(.98rem, 2.1vw, 1.42rem); letter-spacing: -.012em; line-height: 1.2;
+}
+.story .story-title .hero-q {
+  margin: .5rem 0 0; color: #c3cbd6; max-width: 34ch;
+  font-size: clamp(.86rem, 1.1vw, .98rem); line-height: 1.6; text-wrap: pretty;
+}
+
+/* ---- the top of the record ----------------------------------------------
+   "Remove gray shadow on top": the band that dissolved the black story into
+   the white record read, over paper, as a grey shadow lying across the head of
+   the page. The band is gone, and the space it occupied shrinks to what the
+   fixed chrome above actually needs: the wiki bar and the hardware strip stand
+   116px deep together, and the record's header has to clear them. */
+:root { --chrome-h: 116px; }
+.doc-wrap { padding-top: clamp(8.5rem, 16vh, 11rem); }
+
+/* ---- the overview block -------------------------------------------------
+   No eyebrow, no shaded aside, no card: a large header, two paragraphs, and
+   one small row of specifications. */
+.doc-head .doc-title {
+  font-size: clamp(2rem, 5vw, 3.4rem); line-height: 1.03;
+  letter-spacing: -.045em; margin: 0 0 1.6rem;
+}
+.doc-head .specrow {
+  margin: 1.7rem 0 0; padding-top: 1rem; border-top: 1px solid var(--line);
+  font-family: var(--mono); font-size: .66rem; letter-spacing: .18em;
+  text-transform: uppercase; color: var(--muted);
+}
+.doc-head .doc-key { margin: .7rem 0 0; font-size: .78rem; color: var(--faint); }
+/* ../css/wiki-align.css holds every paragraph in the header to the running
+   text's measure; the specification row is a row and is let out of it. */
+body.doc-light .doc-wrap .doc-head .specrow { max-width: none; border-top-color: var(--w-line); color: #5f6b78; }
+body.doc-light .doc-wrap .doc-head .doc-key { color: #78828e; }
+
+/* ---- the contents rail, two levels --------------------------------------
+   Only the section being read carries the accent, and only that section shows
+   its subsections. The collapse is gated on `html.js`: with the script off,
+   or before it runs, every entry and every subsection is listed and clickable,
+   which is why none of this hides anything by default. Collapsed entries also
+   leave the tab order, so a keyboard never lands inside a shut section. */
+.doc-nav .dn-list { list-style: none; margin: 0; padding: 0; }
+.doc-nav .dn-item { margin-bottom: .55rem; }
+.doc-nav .dn-main {
+  display: flex; gap: .7rem; align-items: baseline;
+  text-decoration: none; color: var(--dim);
+  font-size: .8rem; line-height: 1.3;
+  border-left: 1px solid transparent; padding-left: .8rem; margin-left: -.8rem;
+  transition: color .25s var(--ease);
+}
+.doc-nav .dn-main b {
+  font-family: var(--mono); font-size: .62rem; color: var(--faint); flex: none;
+  transition: color .25s var(--ease);
+}
+.doc-nav .dn-main { position: relative; }
+.doc-nav .dn-main:hover { color: var(--fg); }
+.doc-nav .dn-main.is-here { color: var(--fg); }
+.doc-nav .dn-main.is-here b { color: var(--amber); }
+
+/* the marker beside the current entry, grown rather than switched on */
+.doc-nav .dn-main::before {
+  content: ""; position: absolute; left: -.8rem; top: 50%;
+  width: 2px; height: 0; border-radius: var(--r-xs); background: var(--amber);
+  transform: translateY(-50%);
+  transition: height .4s var(--ease-out);
+}
+.doc-nav .dn-main.is-here::before { height: 1.15rem; }
+
+/* ../js/polish.js drops a marker of its own into every link in the rail and
+   lights whichever one its own scrollspy picks, which on a two-level rail is a
+   second, disagreeing highlight. The marker above is this page's. */
+.doc-nav a .rail-fill { display: none !important; }
+
+.dn-subs, .dn-subs-sm {
+  list-style: none; margin: .45rem 0 .7rem; padding: 0 0 0 2.1rem;
+}
+.dn-subs li, .dn-subs-sm li { margin: 0 0 .3rem; }
+.dn-subs a, .dn-subs-sm a {
+  display: block; text-decoration: none; color: var(--dim);
+  font-size: .73rem; line-height: 1.45;
+  transition: color .2s var(--ease);
+}
+.dn-subs a:hover, .dn-subs-sm a:hover { color: var(--fg); }
+.dn-subs a.is-here, .dn-subs-sm a.is-here { color: var(--fg); font-weight: 600; }
+
+/* the collapse itself, and only where a script can undo it */
+html.js .dn-subs, html.js .dn-subs-sm {
+  max-height: 0; margin-top: 0; margin-bottom: 0;
+  overflow: hidden; opacity: 0; visibility: hidden;
+  transition: max-height .36s var(--ease-out), opacity .24s var(--ease),
+              margin .36s var(--ease-out), visibility 0s linear .36s;
+}
+html.js .dn-item.is-here > .dn-subs, html.js .dn-item.is-here > .dn-subs-sm {
+  max-height: 16rem; margin-top: .45rem; margin-bottom: .7rem;
+  opacity: 1; visibility: visible;
+  transition: max-height .36s var(--ease-out), opacity .24s var(--ease) .06s,
+              margin .36s var(--ease-out), visibility 0s linear;
+}
+@media (prefers-reduced-motion: reduce) {
+  html.js .dn-subs, html.js .dn-subs-sm,
+  html.js .dn-item.is-here > .dn-subs, html.js .dn-item.is-here > .dn-subs-sm { transition: none; }
+}
+
+/* The rail travels with the reader: held under the fixed chrome rather than at
+   the very top of the viewport, and allowed to scroll inside itself once ten
+   entries plus one open section outgrow the space left. */
+.doc-nav {
+  top: var(--chrome-h); height: calc(100vh - var(--chrome-h));
+  justify-content: flex-start;
+  padding-top: clamp(1.4rem, 7vh, 3.4rem); padding-bottom: 2rem;
+  overflow-y: auto; overscroll-behavior: contain;
+  scrollbar-width: thin;
+}
+body.doc-light .doc-wrap .doc-nav .dn-main { color: #5f6b78; }
+body.doc-light .doc-wrap .doc-nav .dn-main:hover,
+body.doc-light .doc-wrap .doc-nav .dn-main.is-here { color: var(--w-leaf-700); }
+body.doc-light .doc-wrap .doc-nav .dn-main b { color: #98a2ad; }
+body.doc-light .doc-wrap .doc-nav .dn-main.is-here b { color: var(--w-leaf-700); }
+body.doc-light .doc-wrap .dn-subs a { color: #6b7580; }
+body.doc-light .doc-wrap .dn-subs a:hover,
+body.doc-light .doc-wrap .dn-subs a.is-here { color: var(--w-leaf-700); }
+
+/* ---- the same contents, narrow ------------------------------------------
+   The rail is hidden below 1100px. Removing the card grid that used to stand
+   in for it there would have left narrow screens with no table of contents, so
+   the list lives on as a disclosure, shut until it is asked for. */
+.doc-toc-sm { display: none; }
+@media (max-width: 1100px) {
+  .doc-toc-sm {
+    display: block; margin: 0 0 2.6rem;
+    border: 1px solid var(--line); border-radius: var(--r-md);
+  }
+  .doc-toc-sm > summary {
+    cursor: pointer; list-style: none; padding: .85rem 1rem;
+    font-family: var(--mono); font-size: .62rem; letter-spacing: .22em;
+    text-transform: uppercase; color: var(--muted);
+    display: flex; align-items: center; gap: .6rem;
+  }
+  .doc-toc-sm > summary::-webkit-details-marker { display: none; }
+  .doc-toc-sm > summary::after {
+    content: ""; width: 6px; height: 6px; margin-left: auto;
+    border-right: 1.5px solid currentColor; border-bottom: 1.5px solid currentColor;
+    transform: rotate(45deg) translateY(-2px);
+    transition: transform .25s var(--ease);
+  }
+  .doc-toc-sm[open] > summary::after { transform: rotate(225deg) translateY(-1px); }
+  .doc-toc-sm .dn-list { list-style: none; margin: 0; padding: 0 1rem 1rem; }
+  .doc-toc-sm .dn-item { margin-bottom: .5rem; }
+  .doc-toc-sm .dn-main {
+    display: flex; gap: .7rem; align-items: baseline;
+    text-decoration: none; color: var(--dim); font-size: .86rem; line-height: 1.35;
+  }
+  .doc-toc-sm .dn-main b { font-family: var(--mono); font-size: .66rem; color: var(--faint); flex: none; }
+  .doc-toc-sm .dn-main.is-here, .doc-toc-sm .dn-main.is-here b { color: var(--amber); }
+  .doc-toc-sm .dn-subs-sm { padding-left: 2.2rem; }
+  .doc-toc-sm .dn-subs-sm a { font-size: .78rem; }
+  body.doc-light .doc-wrap .doc-toc-sm { border-color: var(--w-line); background: #fff; }
+  body.doc-light .doc-wrap .doc-toc-sm > summary { color: #5f6b78; }
+  body.doc-light .doc-wrap .doc-toc-sm .dn-main { color: #39424c; }
+  body.doc-light .doc-wrap .doc-toc-sm .dn-main b { color: #98a2ad; }
+  body.doc-light .doc-wrap .doc-toc-sm .dn-main.is-here,
+  body.doc-light .doc-wrap .doc-toc-sm .dn-main.is-here b { color: var(--w-leaf-700); }
+}
+
+/* ---- no figure numbers, anywhere ---------------------------------------
+   ../js/figures.js still numbers the figures and tables, because the lightbox
+   it also installs is wanted; the numbers it prints are not. No prose refers
+   to a figure by number any more either, so nothing is left dangling. */
+.fignum { display: none !important; }
+
+/* ---- photos sit on the page, not in a box ------------------------------
+   "Remove the outline boxes of the photos (do this for all)": the mount, its
+   hairline, the four registration marks and the plate number all come off.
+   The rule above a caption stays — that is what reads as a caption. */
+.frame-img { box-shadow: none; }
+.frame-img::before { display: none; }
+body.doc-light .frame {
+  background: none; border: 0; border-radius: 0; padding: 0; box-shadow: none;
+}
+body.doc-light .frames .frame { padding: 0; }
+body.doc-light .frame::before { display: none; }
+body.doc-light .frame::after { content: none; }
+body.doc-light .frame-img { background: none; border: 0; box-shadow: none; }
+
+/* ---- a photo beside its paragraph --------------------------------------
+   Prototype 1's build: the photo on the left of the frame, the text on the
+   right. Stacks under 760px, photo first. */
+.sidefig { display: grid; gap: 1.2rem 1.6rem; align-items: start; margin: 0 0 1.4rem; }
+@media (min-width: 761px) { .sidefig { grid-template-columns: minmax(0, 280px) minmax(0, 1fr); } }
+.sidefig figure { margin: 0; }
+.sidefig .sidefig-tx > p:first-child { margin-top: 0; }
+
+/* ---- stacked lessons, no accent rule ----------------------------------
+   "Remove the green light on the left": the blocks are separated by a plain
+   divider instead of standing behind a coloured bar. */
+.limits.plain > div { border-left: 0; padding-left: 0; padding-top: 1.1rem; border-top: 1px solid var(--line); }
+.limits.plain > div:first-child { padding-top: 0; border-top: 0; }
+body.doc-light .doc-wrap .limits.plain > div { border-left: 0; border-top-color: var(--w-line); }
+body.doc-light .doc-wrap .limits.plain > div:first-child { border-top: 0; }
+
+/* ---- specifications as a plain table ----------------------------------
+   Two columns, inline, no dropdown and no explanatory third column. The
+   560px floor every other table on this page needs would make a two-column
+   table scroll sideways on a phone for no reason. */
+table.specs { min-width: 0; }
+table.specs th[scope="row"] {
+  width: 42%; text-align: left; color: var(--fg); font-weight: 600;
+  font-family: var(--sans); font-size: .9em; letter-spacing: 0; text-transform: none;
+}
+table.specs td { color: var(--muted); }
+body.doc-light .doc-wrap table.specs th[scope="row"] { color: #15181d; }
+body.doc-light .doc-wrap table.specs td { color: #262626; }
+
+/* a bare frame carries no caption of its own */
+.frame.bare figcaption { display: none; }
+
+/* the note that a value is still missing, on its own line under a paragraph */
+.todo-wrap { margin: 0 0 1.4rem; }

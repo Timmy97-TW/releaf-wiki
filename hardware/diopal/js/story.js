@@ -947,21 +947,23 @@
   // the story (whole instrument to a close-up of the wells) and needs the room.
   const B0 = 0.098, B1 = 0.180, B2 = 0.300, B3 = 0.420, B4 = 0.560, B5 = 0.680, B6 = 0.790, B7 = 0.920;
 
+  // The captions. No ordinal labels: `n: ""` empties story-core's tag number and
+  // the number node it still writes is stripped once the HUD exists (see below).
+  // The act that used to sit between the grid and the drive chain said the same
+  // thing as both of them, so it is gone and DRIVE now carries its window.
   const CAPS = [
-    { win: [B0, B1], n: "01", role: "The switch", name: "Green on, red off",
-      body: "In these cells a green photon and a red photon mean opposite things: green switches protectant production on through the <b>CcaS/CcaR</b> pair, red switches it off. The instrument exists to hold that one variable still." },
-    { win: [B1, B2], n: "02", role: "The tube", name: "Lit from underneath",
-      body: "Each tube drops into the rack over an emitter that fires up through its floor. Nothing goes into a culture and nothing is drawn out of it for the whole run &mdash; the only thing that reaches it is <em>light</em>." },
-    { win: [B2, B3], n: "03", role: "Shielding", name: "One tube sees one LED",
-      body: "Every tube sits in its own bore over its own LED, and the housing closes the array in. A tube in a red column never sees green light from the column beside it." },
-    { win: [B3, B4], n: "04", role: "The grid", name: "Six conditions, four tubes each",
-      body: "Two wavelengths at three intensities is six conditions, and every condition gets <b>four</b> tubes. One run answers all six at once, under the same temperature, shaking and medium." },
-    { win: [B4, B5], n: "05", role: "Dose", name: "Intensity is a duty cycle",
-      body: "The tier is set by how long each LED is on, fixed before the run starts. Nothing in the light path is adjusted while a run is going, so the dose is <em>a number you can state</em>." },
-    { win: [B5, B6], n: "06", role: "Drive", name: "One MOSFET per intensity",
-      body: "The green and the red column at one intensity share a MOSFET and a single PWM pin, so a tier switches as a pair &mdash; three gates across the whole array." },
-    { win: [B6, B7], n: "07", role: "Assembly", name: "It goes back the same way",
-      body: "Base plate, perf board, LED holder, housing, tube rack. Nothing is aligned by hand: the geometry between an LED and its tube is set by the print, so the array is the same instrument every time it is put together." },
+    { win: [B0, B1], n: "", role: "The switch", name: "Green on, red off",
+      body: "Green light activates the <b>CcaS/CcaR</b> signaling system, while red light switches the response off." },
+    { win: [B1, B2], n: "", role: "The tube", name: "Lit from underneath",
+      body: "Each culture tube sits directly above an LED emitter, delivering light from below while keeping the culture closed and undisturbed throughout the run." },
+    { win: [B2, B3], n: "", role: "Shielding", name: "One tube &ndash; One LED",
+      body: "Each culture tube is positioned above a single LED, while the housing isolates the light paths between columns to prevent cross-illumination from neighboring LEDs." },
+    { win: [B3, B4], n: "", role: "Dose", name: "Six conditions, four tubes each",
+      body: "Red and green light are tested across six conditions in parallel, with four replicate cultures assigned to each condition." },
+    { win: [B4, B6], n: "", role: "Drive", name: "One MOSFET per intensity",
+      body: "PWM controls how long each LED is on during a cycle, creating the low, mid, and high intensity levels. Each intensity level is driven through its own MOSFET control channel across the array." },
+    { win: [B6, B7], n: "", role: "Assembly", name: "Consistent alignment, every build",
+      body: "The printed geometry fixes the position of the LEDs, tube rack, and housing, so the array can be reassembled with the same alignment each time." },
   ];
 
   function smoothp(p, a, b) { const x = (p - a) / (b - a); return x <= 0 ? 0 : x >= 1 ? 1 : x * x * x * (x * (x * 6 - 15) + 10); }
@@ -1356,8 +1358,16 @@
       const ci = tb.userData.ci, ri = tb.userData.ri;
       const order = ((ci * 7 + ri * 5) % 24);                 // scattered, not a scan
       const t0 = seatT + order * 0.0026;
-      const drop = clamp01((p - t0) / 0.042);
-      const fall = 1 - Math.pow(drop, 1.9);                    // a fall: slow to start, fast to land
+      const drop = clamp01((p - t0) / 0.050);
+      // A fall that still starts slowly and gathers speed, but settles into the
+      // bore instead of stopping dead: `Math.pow(drop, 1.9)` alone is at full
+      // velocity the instant it lands, which read as a snap. Smootherstep is
+      // blended in, weighted to the end of the travel, so the last of the drop
+      // decelerates. Both terms rise monotonically, so the tube never backs up.
+      const g = Math.pow(drop, 1.9);
+      const e = drop * drop * drop * (drop * (drop * 6 - 15) + 10);
+      const k = drop * drop;
+      const fall = 1 - (g * (1 - k) + e * k);
       let z = TUBE_Z + fall * 150;
       // act 5: the front-row green tubes come up, low then mid then high
       if (ri === 3 && ci % 2 === 0) {
@@ -1743,5 +1753,15 @@
     titleOut: B0 - 0.012,
     draw: draw,
   });
+
+  // story-core writes the act's ordinal as the first node of each caption tag and
+  // falls back to "01", "02"... when a caption leaves `n` empty. The acts are not
+  // numbered any more, so that leading text node comes straight back off; the rule
+  // and the role beside it are elements and are left alone.
+  hud.querySelectorAll(".cap-tag").forEach(function (tag) {
+    const first = tag.firstChild;
+    if (first && first.nodeType === 3) tag.removeChild(first);
+  });
+
   resize();
 })();

@@ -113,7 +113,7 @@ or the next promotion will undo the edit. The way back to the previous hub (v6, 
 
 "Choose an instrument" and "How they fit together" are one drawing. The
 bioreactor sits at the core. The photometer rides its culture loop, which
-carries the loop's stations in the order bioreactor section 2.1 draws them.
+carries the loop's stations in the order the bioreactor's Hardware Highlights draws them.
 DiOPAL (upstream) and the hydroponics plate (downstream) sit on the ring outside
 the loop, joined to it by the two hand-offs between instruments, drawn dashed.
 
@@ -352,3 +352,35 @@ close), chosen by the owner on 2 Oct 2026; the 720p and 480p clips still open on
 - The Blender scripts that build and render the film live in `dev/film/`.
 - The film on the page is v3 (43.75 s). A v2 cut (44 s, 13 Sep 2026) is kept, git-ignored, in
   `dev/film/work/v2-2026-09-13/clip/`; copy its three files over `img/film/` to use it instead.
+
+## The 12 October 2026 restructure
+
+All four instrument pages were rebuilt to a line-by-line edit from Jacquelyn Inocencio
+("Hardware Page Edit", 10&ndash;11 Oct). The parts of it that are structural, and that any
+later page here should follow:
+
+- **One continuous scroll.** The horizontal section-card grid is gone from all four pages,
+  and with it `js/toc.js`, which injected it. It is still in the tree because nothing else
+  loads it; delete it once that is certain.
+- **Two-level contents rail.** Every main section is listed; only the one being read expands
+  to show its subsections. With scripting off the whole list renders expanded, because the
+  rail is now the only table of contents the pages have. Below 1100px the rail is hidden and
+  a closed `<details>` disclosure carries the same links.
+- **The rail's id is not `doc-nav`.** `js/polish.js` runs a one-level scrollspy over
+  `#doc-nav` and toggles `.on` across every link it finds, subsections included, which fights
+  the two-level spy. The photometer rail is `#doc-rail` and hydroponics' is the same; both
+  keep the `doc-nav` class so the shared styling and the print rule still apply.
+- **No section numbers and no figure numbers** anywhere in the body. `js/figures.js` still
+  stamps "Figure N", so the photometer and hydroponics hide `.fignum` in CSS while keeping its
+  lightbox; the bioreactor stopped loading it and has a local `js/lightbox.js` instead. If
+  every page ends up dropping the numbers, move the numbering behind a flag and share the
+  lightbox again.
+- **Captions** are a short bolded lead plus one sentence. Cross-references name the figure
+  rather than numbering it. Photographs carry no outline box, in either theme &mdash;
+  `css/wiki-align.css` draws one in the light theme, so each page overrides it.
+
+The photometer's engineering cycles **moved off the bioreactor page** (it had carried them as
+section 3.2, `#pm1`&ndash;`#pm8`). They are now Prototypes 1&ndash;4 on the photometer page,
+and the TiO<sub>2</sub> and SiO<sub>2</sub> calibration runs are its Calibration part. The
+photographs stay in `bioreactor/photos/`, where they were catalogued, and the photometer page
+references them across the folder boundary.
