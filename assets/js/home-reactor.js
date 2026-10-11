@@ -1,8 +1,9 @@
 /* =============================================================================
    The homepage reactor.
    -----------------------------------------------------------------------------
-   Anton's final design, the B2 carry case, turning slowly in the homepage's
-   reactor section (#solution). The model is one file,
+   Anton's final design, the B2 carry case, standing square on to the reader
+   and rocking a little, in the homepage's reactor section (#solution). The
+   model is one file,
 
      assets/models/b2-reactor.glb     1.8 MB, 176k triangles
 
@@ -37,7 +38,7 @@
        plinth's glow included, goes dark, because a glow on its own is too
        faint to find in a turning machine. Besides the groups it knows "unit",
        every part of the machine (not the plinth). While anything is lit the
-       model comes round to its open side, where the parts can be seen.
+       model settles square on, where the parts can be seen.
 
    Lengths are metres, as in the CAD.
    ========================================================================== */
@@ -55,7 +56,11 @@ window.__homeRx = (function () {
     membrane: ["membrane"],
     harvest: ["harvest", "line-product"],
     photometer: ["photometer"],
-    vent: ["vent"]
+    vent: ["vent"],
+    // 11 Oct: Monitored names the pressure, flow and pH readings as well as
+    // the photometer, and Automated names what the dashboard drives
+    sensors: ["sensors"],
+    valves: ["valves"]
   };
   var api = {
     start: function () {},
@@ -116,9 +121,10 @@ window.__homeRx = (function () {
   }
 
   var renderer, scene, camera, TARGET, key, sig, cultureLight;
-  // HOME is the three-quarter view onto the case's open side, the one every
-  // part can be seen from. dist is set from the model's height once it is in.
-  var HOME = -0.72;
+  // HOME is square on to the case's open side: the reader looks straight
+  // into the machine and every part of the loop is in front of them.
+  // dist is set from the model's height once it is in.
+  var HOME = -Math.PI / 2;
   var yaw = HOME, pitch = 0.16, dist = 3;
 
   function place() {
@@ -441,26 +447,28 @@ window.__homeRx = (function () {
   }
   function render() { size(); place(); renderer.render(scene, camera); }
 
-  // The idle turn. While a card has parts lit, the model comes round to the
-  // three-quarter view it opens on, where every part can be seen, and holds
-  // there; the swing is capped at a gentle speed so a far turn never whips.
-  // When the light goes out the turn picks up again from wherever it
-  // stopped, easing back to speed. A reader who has dragged the model keeps
-  // the view they chose (the caller skips this).
-  // 1 Oct: half the old idle speed (0.055) and a slower swing, on the
-  // students' note that the model spun too much
-  var TAU = Math.PI * 2, SPIN = 0.025, spin = 1;
+  // The idle turn. 11 Oct (owner): it no longer goes round. The machine
+  // stands square on to the reader, open side forward, and rocks about
+  // fifteen degrees to either side — enough to read as a solid object with
+  // depth, never enough to turn its back. The swing is sin cubed rather
+  // than a plain sine, which crowds the slow part of the cycle around the
+  // middle: most of the time the reader is looking straight in at the loop,
+  // and the ends of the swing pass quickly.
+  // While a card has parts lit the swing winds down to nothing and the model
+  // settles square on, where every part can be seen; when the light goes out
+  // it picks the swing back up. The step is capped at a gentle speed so no
+  // move ever whips. A reader who has dragged the model keeps the view they
+  // chose (the caller skips this).
+  var SWING = 0.26;      // the farthest it goes, in radians: just under 15 degrees
+  var SWING_T = 15;      // seconds for one full pass, left and right
+  var swing = 1;         // how much of it is running; 0 while a card is lit
   function turn(dt) {
-    if (litIds.length) {
-      var goal = HOME + Math.round((yaw - HOME) / TAU) * TAU;
-      var step = (goal - yaw) * Math.min(1, dt * 3);
-      var cap = dt * 0.45;
-      yaw += Math.max(-cap, Math.min(cap, step));
-      spin = 0;
-    } else {
-      spin += (1 - spin) * Math.min(1, dt * 1.2);
-      yaw += dt * SPIN * spin;
-    }
+    swing += ((litIds.length ? 0 : 1) - swing) * Math.min(1, dt * 1.2);
+    var s = Math.sin(clock * (Math.PI * 2 / SWING_T));
+    var goal = HOME + SWING * s * s * s * swing;
+    var step = (goal - yaw) * Math.min(1, dt * 3);
+    var cap = dt * 0.45;
+    yaw += Math.max(-cap, Math.min(cap, step));
   }
 
   function run() {
@@ -502,8 +510,11 @@ window.__homeRx = (function () {
       var box = new THREE.Box3().setFromObject(root);
       TARGET.set((box.min.x + box.max.x) / 2, (box.min.y + box.max.y) / 2 - 0.02, (box.min.z + box.max.z) / 2);
       // the whole case, handle and plinth, inside the canvas's height with air
-      // above and below; the field of view is vertical, so this holds at any width
-      dist = (box.max.y - box.min.y) / 2 / Math.tan(camera.fov * Math.PI / 360) * 1.3;
+      // above and below; the field of view is vertical, so this holds at any
+      // width. 11 Oct (owner): the machine fills more of the band — 1.12
+      // leaves about a tenth of the height clear above the handle and below
+      // the plinth, where 1.3 left a quarter.
+      dist = (box.max.y - box.min.y) / 2 / Math.tan(camera.fov * Math.PI / 360) * 1.12;
       buildStage(box);
       indexComponents(root);
       placeCultureLight(root);

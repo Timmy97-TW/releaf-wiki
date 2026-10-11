@@ -797,7 +797,7 @@
     var model = document.getElementById("rx");
     var grid = document.getElementById("partlist");
     // the card tags, in the chips' order: Protective (under the model), On
-    // demand and Automatic (left), Biosafe and Monitored (right)
+    // demand and Automated (left), Biosafe and Monitored (right)
     var tags = [".rxs__wide", ".rxs__side--l > li:nth-child(1)", ".rxs__side--l > li:nth-child(2)",
                 ".rxs__side--r > li:nth-child(1)", ".rxs__side--r > li:nth-child(2)"].map(function (q) {
       var el = sol.querySelector(q);

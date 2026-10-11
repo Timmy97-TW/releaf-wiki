@@ -82,11 +82,13 @@
   font-size: var(--text-lede); line-height: 1.5; color: var(--leaf-200);
   text-wrap: balance;
 }
-/* From 980px it sits on the model's box: the model is drawn with about a
-   tenth of the box's height clear above it, and the lede takes half of that,
-   which pays for most of its own height */
+/* From 980px it sits on the model's box: the model is drawn with a clear
+   band above it, and the lede takes half of that, which pays for part of its
+   own height. 11 Oct: the band is half what it was (the machine fills more
+   of the canvas, home-reactor.js), so the lede may only take half as much
+   back, or the case's top edge runs under its second line. */
 @media (min-width: 980px) {
-  .rxs__lede { max-width: 54ch; margin-bottom: calc(-.05 * var(--rxs-h)); }
+  .rxs__lede { max-width: 54ch; margin-bottom: calc(-.025 * var(--rxs-h)); }
 }
 /* Below about 1080px the gap between the two card columns is narrower than
    the lede's 54ch, so its second line, tucked into the model's clear band,
@@ -99,7 +101,7 @@
 @media (min-width: 980px) {
   /* the photograph has no clear band at its top, so it starts under the
      lede, with a gap of its own (it only gets shorter: object-fit: cover) */
-  .rxs__model > .rxs__poster { top: calc(.05 * var(--rxs-h) + var(--sp-4)); }
+  .rxs__model > .rxs__poster { top: calc(.025 * var(--rxs-h) + var(--sp-4)); }
 }
 
 /* ------------------------------------------------------------------ stage - */
@@ -330,6 +332,22 @@
   .rxs { --stage-pad: 5rem; }
 }
 
+/* 11 Oct: the owner's five cards carry more words than the old ones, and the
+   two card rows share a height (subgrid), so the longest card sets both. On
+   a short laptop screen it is the cards, not the model, that have to fit the
+   pinned stage: one step less in the words and a tighter gap round them buys
+   back what the longer lines cost. Measured at 1024x700 — the smallest
+   screen the scene is allowed — where it takes the room to spare from 10px
+   back to about 70. Without it piece 7 drops the scene and the question and
+   the answer simply stack, which is the resting state and reads fine, but
+   there is no reason to lose it. */
+@media (min-width: 980px) and (max-height: 820px) {
+  .rxs__side { row-gap: var(--sp-3); }
+  .rxs-card { padding: .75rem var(--sp-3) var(--sp-3); gap: .375rem; }
+  .rxs-card__say { font-size: .8125rem; line-height: 1.45; }
+  .rxs__wide { margin-top: var(--sp-3); }
+}
+
 /* on paper everything is in and nothing is pinned */
 @media print {
   .rxs__model { position: relative; }
@@ -367,8 +385,14 @@
   /* the reserve pays for the taller name and for a lede that may take two
      lines; if either changes, check #dx still keeps .is-live at 1440x900
      and at 1024x700, because piece 7 drops the scene when the stage's
-     content no longer fits the pinned screen */
-  .rxs { --rxs-h: min(calc(100svh - var(--nav-h) - 27.5rem), calc(var(--gap-x) / 1.24), 38rem); }
+     content no longer fits the pinned screen.
+     11 Oct (owner): the machine is bigger. The reserve came down from 27.5rem
+     to 22.5rem, which is most of the air the stage was holding above and
+     below itself, and the model now draws about 470px tall at 1440x900
+     instead of 390. Seen square on it is narrow (about .6 of its height
+     across), so the width between the cards stopped being the limit and the
+     /1.24 term never binds at these sizes. */
+  .rxs { --rxs-h: min(calc(100svh - var(--nav-h) - 22.5rem), calc(var(--gap-x) / 1.1), 42rem); }
 }
 @media (scripting: enabled) {
   .rxs__model:not(.no-gl) .rxs__poster { opacity: 0; visibility: hidden; transition: none; }
