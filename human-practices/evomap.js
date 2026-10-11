@@ -27,16 +27,18 @@
   "use strict";
 
   var NS = "http://www.w3.org/2000/svg";
-  var W = 1366, H = 3401;
+  var W = 1366, H = 3204;
 
   /* The river's centre line, traced on the drawing in its own pixels. Its y
      only ever increases, which is what lets the water front follow the
      reading line: for any height there is exactly one point on the river. */
-  var LINE = [[292,328],[360,372],[430,410],[560,440],[700,455],[850,470],[960,500],[1060,560],[1120,640],[1100,740],[907,840],
-              [667,867],[507,893],[400,960],[360,1050],[387,1140],[470,1235],[600,1293],[827,1347],[1013,1413],[1150,1468],[1195,1538],
-              [1150,1606],[1050,1653],[900,1690],[747,1715],[600,1750],[480,1800],[400,1870],[373,1960],[400,2050],[500,2095],[650,2115],
-              [800,2135],[1000,2180],[1100,2260],[1125,2390],[1050,2470],[933,2505],[667,2553],[507,2580],[380,2620],[310,2680],[285,2770],
-              [300,2880],[400,2985],[533,3087],[667,3180],[747,3233]];
+  var LINE = [[245,123],[291,137],[359,186],[440,205],[524,207],[608,209],[692,215],[773,236],[853,262],[931,294],[1003,338],
+              [1055,403],[1062,485],[1008,547],[929,576],[847,593],[764,610],[682,627],[601,649],[527,689],[464,745],[418,814],
+              [406,896],[443,971],[508,1024],[583,1061],[662,1090],[743,1113],[824,1134],[904,1161],[980,1197],[1044,1251],[1085,1324],
+              [1077,1405],[1021,1467],[946,1504],[864,1523],[780,1531],[696,1535],[612,1537],[528,1540],[445,1554],[374,1597],[341,1672],
+              [375,1747],[439,1801],[513,1841],[592,1870],[674,1890],[756,1908],[838,1928],[916,1958],[985,2005],[1038,2071],[1071,2148],
+              [1072,2231],[1032,2304],[965,2355],[888,2387],[805,2403],[722,2410],[637,2412],[553,2414],[470,2424],[391,2453],[327,2507],
+              [297,2584],[313,2665],[361,2734],[423,2790],[487,2846],[540,2910],[611,3024],[648,3084]];
 
   var reduce = window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
   var hover  = window.matchMedia && window.matchMedia("(hover: hover) and (pointer: fine)").matches;
@@ -141,7 +143,8 @@
           u.setAttribute("stroke-dashoffset", (L - Math.max(0, reached - lag)).toFixed(1));
         });
         var front = probe.getPointAtLength(reached);
-        trail.setAttribute("height", Math.max(0, front.y - 230).toFixed(1));
+        /* at the foot the river is whole, its ragged end included */
+        trail.setAttribute("height", reached >= L ? H * 1.2 : Math.max(0, front.y - 230).toFixed(1));
         glow.setAttribute("cx", front.x.toFixed(1));
         glow.setAttribute("cy", front.y.toFixed(1));
         glow.setAttribute("opacity", reached > 0 && reached < L ? ".38" : "0");
@@ -276,8 +279,8 @@
      takes the colours of the strip of drawing that is on screen, so the map
      reads as a place the reader walks into, not a picture on white.       */
 
-  var GROUND = ["#fcf8c6","#faf7c4","#f8f7c2","#f6f6c0","#f4f6be","#f2f5bc","#f0f5ba","#eef4b8","#ecf4b6","#ebf3b4","#e9f3b2",
-                "#e7f4b4","#e5f5b7","#e3f6b9","#e1f7bc","#dff9bf","#ddfac1","#dbfbc4","#d9fcc6","#d8fdc9","#d6ffcc"];
+  var GROUND = ["#fcf8c6","#faf7c4","#f8f7c2","#f6f6c0","#f4f6be","#f2f5bc","#f0f5ba","#eff4b8","#edf4b6","#ebf3b4","#e9f3b2",
+                "#e7f4b5","#e5f5b7","#e3f7ba","#e1f7bc","#dff9bf","#ddfac1","#dbfbc4","#dafcc7","#d8fec9","#d6ffcc"];
   var RGB = GROUND.map(function (h) { return [1, 3, 5].map(function (i) { return parseInt(h.substr(i, 2), 16); }); });
   function ground(t) {
     t = Math.max(0, Math.min(1, t)) * (RGB.length - 1);
