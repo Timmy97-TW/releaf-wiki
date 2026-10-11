@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-ReLeaf wiki: build the standard sub-pages.
+ReLEAF wiki: build the standard sub-pages.
 
     python3 build/generate.py            # write every page in pages.py
     python3 build/generate.py model       # write one
@@ -165,7 +165,7 @@ def footer(base):
         '  <footer class="footer2">\n'
         '    <div class="footer2__inner">\n%s'
         '      <div class="footer2__legal">\n'
-        '        <p><b>ReLeaf</b> &middot; GEMS Taiwan &middot; iGEM 2026 '
+        '        <p><b>ReLEAF</b> &middot; GEMS Taiwan &middot; iGEM 2026 '
         '&middot; Biomanufacturing Village</p>\n'
         '        <p>&copy; 2026 &middot; Content on this wiki is licensed '
         'under a <a href="https://creativecommons.org/licenses/by/4.0/" '
@@ -212,7 +212,7 @@ def build(page):
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>{title} | ReLeaf &middot; iGEM 2026</title>
+  <title>{title} | ReLEAF &middot; iGEM 2026</title>
   <meta name="description" content="{desc}" />
   <link rel="icon" href="{base}assets/img/logo.png" />
   <link rel="stylesheet" href="{base}assets/css/tokens.css" />
@@ -230,7 +230,7 @@ def build(page):
   <header class="pagehead">
     <div class="pagehead__inner">
       <p class="pagehead__eyebrow">
-        <a href="{base}">ReLeaf</a> <i>/</i> {tabname} <i>/</i> {title}
+        <a href="{base}">ReLEAF</a> <i>/</i> {tabname} <i>/</i> {title}
       </p>
       <h1 class="pagehead__title">{title}</h1>
       <p class="pagehead__lede">{lede}</p>
@@ -283,7 +283,7 @@ def build(page):
         title=esc(page["title"]),
         desc=esc(page["lede"]),
         lede=esc(page["lede"]),
-        owner=esc(page.get("owner", "ReLeaf")),
+        owner=esc(page.get("owner", "ReLEAF")),
         tab=tab,
         tabname=esc(TAB_NAME.get(tab, tab.title())),
         slug=slug,

@@ -76,7 +76,7 @@ HTML = r'''<!DOCTYPE html>
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Molecular Dynamics | Protein Design | ReLeaf &middot; iGEM 2026</title>
+  <title>Molecular Dynamics | Protein Design | ReLEAF &middot; iGEM 2026</title>
   <meta name="description" content="Nine all-atom trajectories of BoPEP4 against the PEPR1 ectodomain, with the analysis, the plots and the animations on the page: a purification tag that passed every check it should have failed, a salt bridge on no published list, the apoplast at pH 5.5, and the receptor on its own." />
   <link rel="icon" href="../../assets/img/logo.png" />
   <link rel="stylesheet" href="../../assets/css/tokens.css" />
@@ -137,7 +137,7 @@ HTML = r'''<!DOCTYPE html>
            width="1800" height="787" fetchpriority="high" />
       <div class="pagehead__heroinner">
         <p class="pagehead__eyebrow">
-          <a href="../../">ReLeaf</a> <i>/</i> Dry Lab <i>/</i> <a href="../">Protein Design</a> <i>/</i> Molecular Dynamics
+          <a href="../../">ReLEAF</a> <i>/</i> Dry Lab <i>/</i> <a href="../">Protein Design</a> <i>/</i> Molecular Dynamics
         </p>
         <h1 class="pagehead__title">Molecular Dynamics</h1>
       </div>
@@ -185,7 +185,7 @@ HTML = r'''<!DOCTYPE html>
 
         <h3 id="scope">Molecular dynamics ran on BoPEP4 only</h3>
 
-        <p class="ai">ReLeaf carries three protectants. <b>BoPEP4</b> is a twenty-three residue elicitor peptide that signals through the PEPR1 receptor; <b>LEA14</b> is a folded protein that stabilises other proteins under osmotic stress; <b>ACC deaminase</b> is an enzyme that lowers stress-induced ethylene. All three were designed, and all three were codon-optimised and packaged for ordering. Only BoPEP4 was simulated, and the reason is structural rather than a matter of priority: it is the only one of the three with a solved receptor complex, PDB&nbsp;5GR8, to build a trajectory on and to check the result against. <b>Nothing on this page speaks for LEA14 or ACC deaminase.</b></p>
+        <p class="ai">ReLEAF carries three protectants. <b>BoPEP4</b> is a twenty-three residue elicitor peptide that signals through the PEPR1 receptor; <b>LEA14</b> is a folded protein that stabilises other proteins under osmotic stress; <b>ACC deaminase</b> is an enzyme that lowers stress-induced ethylene. All three were designed, and all three were codon-optimised and packaged for ordering. Only BoPEP4 was simulated, and the reason is structural rather than a matter of priority: it is the only one of the three with a solved receptor complex, PDB&nbsp;5GR8, to build a trajectory on and to check the result against. <b>Nothing on this page speaks for LEA14 or ACC deaminase.</b></p>
 
         <div class="tablewrap">
           <table class="scope">

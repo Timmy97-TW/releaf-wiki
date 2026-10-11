@@ -1,14 +1,14 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
-"""Bring the nine MD report pages into the ReLeaf wiki.
+"""Bring the nine MD report pages into the ReLEAF wiki.
 
 Five changes, all mechanical, none of them touching the science:
 
   1. Pin the page to light. The wiki has no dark mode, so the theme button is
      hidden rather than deleted -- its click handler is written as
      $('#theme').onclick and would throw on a null.
-  2. Swap the light palette for the ReLeaf tokens, and load the wiki's Inter.
-  3. Point the nav brand back at the ReLeaf page instead of at a standalone
+  2. Swap the light palette for the ReLEAF tokens, and load the wiki's Inter.
+  3. Point the nav brand back at the ReLEAF page instead of at a standalone
      overview.
   4. Give the page the wiki's favicon and title suffix, and a meta description
      to the two reports that come without one.
@@ -31,7 +31,7 @@ FILES = ["atpep1-benchmark-vs-bopep4", "apo-PEPR1", "bopep4-wt-round1",
          "bopep4-7-23", "bopep4-9-23-vs-wt", "bopep4-15-23-vs-wt",
          "bopep4-chis-vs-wt", "bopep4-lowph-vs-wt", "bopep4-9-23-lowph"]
 
-# variable -> ReLeaf value, applied inside the first :root{} block only, which
+# variable -> ReLEAF value, applied inside the first :root{} block only, which
 # is the light palette. The dark blocks below it are left alone; data-theme
 # ="light" on <html> stops them matching anyway.
 #
@@ -75,10 +75,10 @@ BRAND_OLD = ('<a class="navbrand" href="index.html">'
              '<b data-en="BoPep4 &times; PEPR1" data-zh="BoPep4 &times; PEPR1">'
              'BoPep4 &times; PEPR1</b><span>MD</span></a>')
 BRAND_NEW = ('<a class="navbrand" href="./" '
-             'data-ten="Back to the MD Simulations page on the ReLeaf wiki" '
-             'data-tzh="回到 ReLeaf wiki 的分子動力學模擬頁" '
-             'title="Back to the MD Simulations page on the ReLeaf wiki">'
-             '<b data-en="&larr; ReLeaf" data-zh="&larr; ReLeaf">&larr; ReLeaf</b>'
+             'data-ten="Back to the MD Simulations page on the ReLEAF wiki" '
+             'data-tzh="回到 ReLEAF wiki 的分子動力學模擬頁" '
+             'title="Back to the MD Simulations page on the ReLEAF wiki">'
+             '<b data-en="&larr; ReLEAF" data-zh="&larr; ReLEAF">&larr; ReLEAF</b>'
              '<span>MD</span></a>')
 
 # Only for reports that ship without a meta description; the wording is the
@@ -154,9 +154,9 @@ def reskin(path, slug):
 
     # 4. favicon and title suffix
     m = re.search(r"<title>(.*?)</title>", src, re.S)
-    if m and "ReLeaf" not in m.group(1):
+    if m and "ReLEAF" not in m.group(1):
         src = (src[:m.start()]
-               + "<title>%s | ReLeaf &middot; iGEM 2026</title>\n"
+               + "<title>%s | ReLEAF &middot; iGEM 2026</title>\n"
                  '<link rel="icon" href="../assets/img/logo.png">' % m.group(1)
                + src[m.end():])
 

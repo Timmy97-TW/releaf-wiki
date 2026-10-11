@@ -85,7 +85,7 @@ const NAV = [
     name: "Engagement",
     pages: [
       { title: "Integrated Human Practices", slug: "human-practices",      icon: "ihp", prize: true,
-        caption: "Voices that reshaped ReLeaf" },
+        caption: "Voices that reshaped ReLEAF" },
       { title: "Education",                  slug: "education",            icon: "education",
         caption: "Lessons across three school levels" },
       { title: "Entrepreneurship",           slug: "entrepreneurship",     icon: "entrepreneurship",
@@ -105,7 +105,7 @@ const NAV = [
     name: "Team",
     pages: [
       { title: "Members",     slug: "team",         icon: "members",
-        caption: "The people behind ReLeaf" },
+        caption: "The people behind ReLEAF" },
       { title: "Attribution", slug: "attributions", icon: "attribution",
         caption: "Who did what" },
       { title: "Milestone",   slug: "milestone",    icon: "milestone",

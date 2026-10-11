@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 """
-ReLeaf wiki: the page specification.
+ReLEAF wiki: the page specification.
 
 One entry per sub-page. generate.py turns each into <slug>/index.html.
 
@@ -56,7 +56,7 @@ PAGES = [
 {
  "slug": "description", "tab": "project", "title": "Description",
  "lede": "Biomanufacturing is gated, and the gate is not made of science. "
-         "ReLeaf is an attempt to hand the means of production to the person "
+         "ReLEAF is an attempt to hand the means of production to the person "
          "standing in the field.",
  "owner": "Project leads",
  "award": None,
@@ -67,10 +67,10 @@ PAGES = [
             "figures from the project brief. Do not let this drift into "
             "climate, margins or hunger."},
    {"h": "Why we did not pick the obvious problem",
-    "note": "State plainly what ReLeaf is not about: not climate change, not "
+    "note": "State plainly what ReLEAF is not about: not climate change, not "
             "farmer margins, not hunger. Name what is at stake instead, which "
             "is who is permitted to manufacture."},
-   {"h": "What ReLeaf is",
+   {"h": "What ReLEAF is",
     "note": "One paragraph a non-specialist can repeat back. Then the system "
             "in four moving parts.",
     "subs": [
@@ -114,11 +114,11 @@ PAGES = [
 
 {
  "slug": "biomanufacturing", "tab": "project", "title": "Biomanufacturing",
- "lede": "What ReLeaf contributes to making things with biology, and the "
+ "lede": "What ReLEAF contributes to making things with biology, and the "
          "evidence behind every claim we make about it.",
  "owner": "Project leads",
  "award": ("medal", "Biomanufacturing Village",
-           "ReLeaf competes in the Biomanufacturing Village. This page is "
+           "ReLEAF competes in the Biomanufacturing Village. This page is "
            "where the village question gets answered in one place: what does "
            "this project contribute to making things with biology?",
            "https://competition.igem.org/participation/villages"),
@@ -167,7 +167,7 @@ PAGES = [
                 "believe the measured ones."]])},
 
    {"h": "Our claim, in one sentence",
-    "note": "One sentence, under forty words, naming what ReLeaf contributes "
+    "note": "One sentence, under forty words, naming what ReLEAF contributes "
             "to biomanufacturing rather than to plant science. Write it last, "
             "after the ledger below is filled, then move it up here. Test it "
             "before you keep it: if another team could write the same "
@@ -863,7 +863,7 @@ PAGES = [
 
 {
  "slug": "sustainability", "tab": "engagement", "title": "Sustainability",
- "lede": "Measuring ReLeaf against the Sustainable Development Goals, "
+ "lede": "Measuring ReLEAF against the Sustainable Development Goals, "
          "including the goals it does not touch.",
  "owner": "Sustainability",
  "award": ("special", "Best Sustainable Development Impact",
