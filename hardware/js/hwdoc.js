@@ -27,11 +27,10 @@
   var $$ = function (s, r) { return Array.prototype.slice.call((r || document).querySelectorAll(s)); };
   var reduce = window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
 
-  /* The site nav and the instrument strip are both fixed, so anything scrolled
-     to has to clear the pair of them. 44px is .hwnav's height in nav-dark.css. */
+  /* The site nav is fixed, so anything scrolled to has to clear it. (Until
+     11 Oct 2026 the instrument strip sat under it and this added its 44px.) */
   function navH() {
-    var nv = parseFloat(getComputedStyle(document.documentElement).getPropertyValue("--nv-h")) || 68;
-    return nv + 44;
+    return parseFloat(getComputedStyle(document.documentElement).getPropertyValue("--nv-h")) || 68;
   }
 
   function targetOf(hash) {
@@ -349,52 +348,11 @@
       if (e.target.classList && e.target.classList.contains("fold")) mark();
     }, true);
 
-    /* ---- the instrument strip's own reveal --------------------------------
-       The strip waits for the reader to reach the record. The obvious hook was
-       polish.js's `doc-light`, which marks the same moment -- but that flag is
-       recomputed only on scroll and resize, which is fine for a colour scheme
-       and not fine for navigation: a layout shift landing after the reader's
-       last scroll (a figure arriving, the stage settling, a font swapping)
-       leaves the flag stale, and a stale colour is a blemish where a stale nav
-       is a page with no way off it. So this file decides it, from the same
-       geometry, and re-checks it everywhere it could have changed: on scroll,
-       on resize, at load, and whenever the record's own height moves.
-       Same hysteresis as polish.js, so the two never disagree visibly. */
-    var atRecord = false;
-    function revealStrip() {
-      var wrap = $(".doc-wrap");
-      if (!wrap) return;
-      var vh = document.documentElement.clientHeight || window.innerHeight || 800;
-      var top = wrap.getBoundingClientRect().top;
-      var next = atRecord ? top < vh * 0.52 : top < vh * 0.34;
-      if (next === atRecord) return;
-      atRecord = next;
-      document.body.classList.toggle("at-record", next);
-    }
-    revealStrip();
-    window.addEventListener("load", function () {
-      requestAnimationFrame(revealStrip);
-      setTimeout(revealStrip, 400);
-    });
-    if ("ResizeObserver" in window) {
-      var docEl = $(".doc");
-      if (docEl) {
-        var lastH = 0, settle = 0;
-        new ResizeObserver(function () {
-          var n = docEl.offsetHeight;
-          if (n === lastH) return;
-          lastH = n;
-          clearTimeout(settle);
-          settle = setTimeout(revealStrip, 120);
-        }).observe(docEl);
-      }
-    }
-
     var queued = false;
     function onScroll() {
       if (queued) return;
       queued = true;
-      requestAnimationFrame(function () { queued = false; revealStrip(); mark(); });
+      requestAnimationFrame(function () { queued = false; mark(); });
     }
     window.addEventListener("scroll", onScroll, { passive: true });
     window.addEventListener("resize", onScroll, { passive: true });

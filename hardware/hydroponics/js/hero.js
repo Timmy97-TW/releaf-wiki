@@ -135,7 +135,9 @@ window.HERO = (function () {
   // authored gap at 1440x810 is act 3's, ~0.097 h of clear air under the ink.
   const CAP_SLACK = 0.040;
   const panel = document.getElementById("panel");
-  const topbar = document.querySelector(".topbar, .hwnav");
+  // wiki: the instrument strip left on 11 Oct 2026, so the bar to clear is the
+  // site nav itself, which nav.js builds after this file has run
+  let topbar = document.querySelector(".topbar, .hwnav");
   const pEls = panel ? {
     tag: panel.querySelector(".tag"), name: panel.querySelector(".pname"),
     role: panel.querySelector(".prole"), body: panel.querySelector("p")
@@ -167,7 +169,10 @@ window.HERO = (function () {
     pEls.body.innerHTML = c.body;
   }
   // The fixed topbar is painted over the stage; type stays 14 px under it.
-  function capBar() { return (topbar ? topbar.getBoundingClientRect().bottom : 52) + 14; }
+  function capBar() {
+    if (!topbar) topbar = document.querySelector(".sitenav__bar");
+    return (topbar ? topbar.getBoundingClientRect().bottom : 68) + 14;
+  }
   // The block's unclamped top: its own bot, or (align "next") the next
   // caption's top. 05 hands straight to 06 (out 0.890, show 0.894); seated by
   // its own bottom the one-line 05 sat a body line lower, and the eyebrow and

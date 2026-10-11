@@ -71,6 +71,11 @@
   pointer-events: none;
 }
 .sitenav--dark.is-scrolled .sitenav__bar::before { opacity: 1; }
+/* The hub and the four instrument records gave up the strip on 11 Oct 2026.
+   With nothing under the bar the long fade only dims the first thing on the
+   page, which on a record is its pinned chapter control, so it stops short.
+   The notebook still carries the strip and keeps the long one. */
+.sitenav--dark:not(:has(~ .hwnav)) .sitenav__bar::before { height: calc(var(--nv-h) + 30px); }
 
 /* the scrim is a sibling of the bar's contents, so lift the contents over it */
 .sitenav--dark .sitenav__inner { position: relative; z-index: 1; }
@@ -188,25 +193,12 @@
 /* ============================================================ THE PILL STRIP ==
    The strip that only arrives with the record
    -----------------------------------------------------------------------------
-   .hwnav is the section's own switcher between instruments (nav-dark.css
-   gives it its dark form). On the hub it is the only way across the section
-   and stays where it is. On an instrument page it used to float over the
-   opening shot in small monospace capitals, competing with the title for the
-   first screen and saying nothing a reader needed while the machine was still
-   assembling itself.
-
-   Here it waits. `body.hwreveal` marks the four instrument records that opt
-   in; until the reader reaches the record the strip is lifted out of the way
-   and not focusable, and it comes down as a frosted pill track -- the same
-   control engage.css pins under the site nav. The notebook and the hub do not
-   carry .hwreveal and are untouched.
-
-   `at-record` is set by hardware/js/hwdoc.js, not by polish.js's `doc-light`,
-   although the two mark the same moment and share a threshold. doc-light is
-   recomputed only on scroll and resize: fine for a colour scheme, wrong for
-   navigation, because a layout shift after the reader's last scroll would
-   leave the page light and the strip still hidden. hwdoc.js re-checks at load,
-   on resize, on scroll and whenever the record's height moves.
+   .hwnav is the hardware section's own switcher between its pages, as a
+   frosted pill track -- the same control engage.css pins under the site nav.
+   Since 11 Oct 2026 only the notebook carries it: the hub and the four
+   instrument records gave it up, and the rules that held it back on a record
+   until the reader was past the animation (body.hwreveal, body.at-record)
+   went with it.
    ========================================================================== */
 
 .hwnav:has(.hwnav__track) {
@@ -216,19 +208,6 @@
   justify-content: center;
   padding: 0;
   pointer-events: none;            /* the track inside takes the clicks */
-}
-/* Only the four instrument records hold the strip back. The hub and the
-   notebook have no animation to wait through, so theirs is simply there. */
-body.hwreveal .hwnav {
-  opacity: 0;
-  transform: translateY(-14px);
-  transition: opacity .45s var(--ease, ease), transform .45s var(--ease, ease);
-}
-body.hwreveal .hwnav > * { visibility: hidden; }
-body.hwreveal.at-record .hwnav { opacity: 1; transform: none; }
-body.hwreveal.at-record .hwnav > * { visibility: visible; }
-@media (prefers-reduced-motion: reduce) {
-  body.hwreveal .hwnav { transition: none; }
 }
 
 /* the frosted track, from engage.css's .seg__track */
@@ -298,9 +277,6 @@ body.hwreveal.at-record .hwnav > * { visibility: visible; }
   .hwnav:has(.hwnav__track) a { padding: .5rem .7rem; }
   .hwnav:has(.hwnav__track) a[aria-current="page"] span { display: inline; }
 }
-/* with the script off there is no doc-light to wait for: show it plainly */
-html:not(.js) body.hwreveal .hwnav { opacity: 1; transform: none; }
-html:not(.js) body.hwreveal .hwnav > * { visibility: visible; }
 
 
 /* ---- room for the strip ---------------------------------------------------

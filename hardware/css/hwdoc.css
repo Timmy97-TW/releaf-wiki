@@ -261,12 +261,6 @@ body.doc-light .story-stage { z-index: 0; }
 .doc-wrap .hwsum ~ .doc .doc-head { margin-bottom: var(--sp-7); }
 
 
-/* ======================================================= 2 SECTION SWITCH ==
-   The instrument strip (.hwnav) is styled in assets/css/nav-dark.css, beside
-   the dark strip it replaces, because the hub and the notebook carry the same
-   strip and do not load this file. Only the record's own components are here.
-   ========================================================================== */
-
 /* ====================================================== 3 THE CONTENTS RAIL ==
    The record's sidebar, in the wiki's rail form
    -----------------------------------------------------------------------------
@@ -396,8 +390,8 @@ body:has(#site-nav[data-tab="engagement"]) { --seg-ink: #85502f; }
 body:has(#site-nav[data-tab="team"])       { --seg-ink: #845c0f; }
 .seg {
   position: sticky;
-  /* under the site nav and the instrument strip, both of which are fixed */
-  top: calc(var(--nv-h, 68px) + 44px + .6rem);
+  /* under the site nav, which is fixed */
+  top: calc(var(--nv-h, 68px) + .6rem);
   z-index: 5;
   display: flex;
   justify-content: center;
@@ -418,7 +412,7 @@ body:has(#site-nav[data-tab="team"])       { --seg-ink: #845c0f; }
    one sits under the outer one instead of behind it, and loses the outer's
    bottom margin so the pair does not open a gap above the first heading. */
 .rail--seg .rail--seg > .seg {
-  top: calc(var(--nv-h, 68px) + 44px + .6rem + 3.1rem);
+  top: calc(var(--nv-h, 68px) + .6rem + 3.1rem);
   margin-bottom: var(--sp-6);
 }
 .seg__track {
@@ -479,7 +473,7 @@ body:has(#site-nav[data-tab="team"])       { --seg-ink: #845c0f; }
 html:not(.js) .seg { display: none; }
 
 /* a cycle */
-.rail--seg > .rail__panel.chap { padding: 0; background: none; scroll-margin-top: calc(var(--nv-h, 68px) + 44px + 4.5rem); }
+.rail--seg > .rail__panel.chap { padding: 0; background: none; scroll-margin-top: calc(var(--nv-h, 68px) + 4.5rem); }
 .rail--seg > .rail__panel.is-entering { animation: hwchap-in .6s var(--ease) both; }
 @keyframes hwchap-in { from { opacity: 0; transform: translateY(14px); } to { opacity: 1; transform: none; } }
 html:not(.js) .rail--seg > .rail__panel + .rail__panel { margin-top: var(--sp-8); }
@@ -571,7 +565,7 @@ html:not(.js) .rail--seg > .rail__panel + .rail__panel { margin-top: var(--sp-8)
 .fold {
   border-radius: 20px;
   background: var(--w-well);
-  scroll-margin-top: calc(var(--nv-h, 68px) + 44px + var(--sp-4));
+  scroll-margin-top: calc(var(--nv-h, 68px) + var(--sp-4));
 }
 .hwcard .fold, .chap__end .fold { background: #fff; }
 .doc .fold > summary {
@@ -642,14 +636,186 @@ body.hwreveal .doc-wrap .doc-map { display: none; }
 
 
 /* ------------------------------------------------------------ ANCHOR ROOM -- */
-/* Two fixed bars sit over the record: the site nav (--nv-h) and the
-   instrument strip (44px). An anchor jump that does not allow for them puts
-   the heading it was aimed at underneath them, which is what every link into
-   a section, every ledger row on the summary sheet and every cross-reference
-   in the text was doing. One rule, and they all land clear. */
+/* The site nav is fixed over the record. An anchor jump that does not allow
+   for it puts the heading it was aimed at underneath, which is what every
+   link into a section, every ledger row on the summary sheet and every
+   cross-reference in the text was doing. One rule, and they all land clear. */
 .doc .part,
 .doc .sec,
 .doc .fig,
 .doc .frame,
 .doc figure[id],
-.doc [id] > h3 { scroll-margin-top: calc(var(--nv-h, 68px) + 44px + 1.25rem); }
+.doc [id] > h3 { scroll-margin-top: calc(var(--nv-h, 68px) + 4.75rem); }
+/* 4.75rem is the pinned chapter control (.6rem off the nav, 3.1rem tall) and
+   a little air: a section a link lands on starts under the control, not
+   behind it. Inside the bioreactor's four tracks there are two controls. */
+.doc .rail--seg .rail--seg :is(.sec, .fig, .frame, figure[id], [id] > h3, .iters > li) {
+  scroll-margin-top: calc(var(--nv-h, 68px) + 7.85rem);
+}
+
+
+/* ============================================================ 5 THE READING ==
+   One section, one card
+   -----------------------------------------------------------------------------
+   11 Oct 2026. With the instrument strip and the record's own title block
+   gone, a chapter is the summary sheet, the control, and then writing. The
+   writing was a single column of same-weight paragraphs under green headings,
+   with the text set to a narrower measure than the figures between it, so a
+   chapter read as one long grey ribbon with a ragged right edge and nothing to
+   say where one numbered section stopped and the next began.
+
+   Each numbered section (`section.sec`) is now a pale rounded card, the card
+   the Engagement pages use, with its number as a chip in the chapter's own
+   colour and its heading in ink. Figures, tables and folds sit inside it as
+   white sheets. On a wide window the card bleeds into the gutters by exactly
+   its own padding, so everything inside it is as wide as it was before:
+   nothing of Anton's is resized. The chapter's part header loses its two
+   rules and becomes the chapter's title.
+
+   Every selector starts `body.hwreveal .doc-wrap .doc`: wiki-align.css styles
+   the same prose with `body.doc-light .doc-wrap section.sec > p`, and this has
+   to outrank it without an !important.
+   ========================================================================== */
+
+body.hwreveal .doc-wrap .doc {
+  --card-pad: clamp(1.1rem, .55rem + 2vw, 2rem);
+  --bleed: 0px;
+  padding-top: 3.25rem;
+}
+@media (min-width: 1320px) {
+  body.hwreveal .doc-wrap .doc { --card-pad: 2rem; --bleed: 2rem; }
+  /* the rail keeps clear of the card that now reaches into its gutter */
+  body.hwreveal .doc-wrap .doc-nav { padding-right: 3.75rem; }
+}
+@media (max-width: 600px)  { body.hwreveal .doc-wrap .doc { --bleed: .4rem; padding-top: 2.25rem; } }
+
+.doc .seg { margin-bottom: 2.5rem; }
+
+/* ---- the chapter's title -------------------------------------------------- */
+body.hwreveal .doc-wrap .doc section.part {
+  min-height: 0;          /* hydroponics held 234px open above each title */
+  margin: 0 0 1.5rem;
+  padding: 0;
+  border: 0;
+}
+/* a second part in the same chapter, and the flat parts under the control */
+body.hwreveal .doc-wrap .doc .rail__panel > section.part ~ section.part,
+body.hwreveal .doc-wrap .doc > section.part { margin-top: 4rem; }
+body.hwreveal .doc-wrap .doc > section.part {
+  padding-top: 3rem;
+  border-top: 1px solid rgb(0 0 0 / .08);
+}
+body.hwreveal .doc-wrap .doc section.part > .part-mark {
+  margin: 0 0 .55rem;
+  color: var(--pl);
+}
+body.hwreveal.doc-light .doc-wrap .doc section.part > .part-mark span,
+body.hwreveal.doc-light .doc-wrap .doc section.part > .part-mark b { color: inherit; }
+body.hwreveal .doc-wrap .doc section.part > h2 {
+  font-size: clamp(1.85rem, 1.35rem + 1.7vw, 2.5rem);
+  font-weight: 700;
+  line-height: 1.08;
+  letter-spacing: -.028em;
+  color: var(--w-ink);
+  text-wrap: balance;
+}
+
+/* ---- the card -------------------------------------------------------------- */
+body.hwreveal .doc-wrap .doc section.sec {
+  margin: 0 calc(-1 * var(--bleed)) 1.25rem;
+  padding: calc(var(--card-pad) * .92) var(--card-pad) var(--card-pad);
+  border-radius: 28px;
+  background: var(--w-well);
+}
+body.hwreveal .doc-wrap .doc section.sec > :last-child { margin-bottom: 0; }
+body.hwreveal .doc-wrap .doc section.sec > :first-child { margin-top: 0; }
+@media (max-width: 600px) { body.hwreveal .doc-wrap .doc section.sec { border-radius: 22px; } }
+
+/* the number is a chip, the name is ink */
+body.hwreveal .doc-wrap .doc section.sec > h3 {
+  display: flex;
+  align-items: baseline;
+  gap: .7rem;
+  margin: 0 0 1.05rem;
+  padding: 0;
+  border: 0;
+  font-size: clamp(1.25rem, 1.1rem + .5vw, 1.4375rem);
+  font-weight: 650;
+  line-height: 1.22;
+  letter-spacing: -.02em;
+  color: var(--w-ink);
+}
+body.hwreveal .doc-wrap .doc section.sec > h3 > i {
+  flex: none;
+  margin: 0;
+  padding: .26em .62em .24em;
+  border-radius: 999px;
+  font-size: .8125rem;
+  font-style: normal;
+  font-weight: 650;
+  line-height: 1.15;
+  letter-spacing: .01em;
+  font-variant-numeric: tabular-nums;
+  color: var(--pl);
+  background: color-mix(in srgb, var(--pl) 13%, #fff);
+  transform: translateY(-.16em);
+}
+
+/* ---- the prose ------------------------------------------------------------- */
+body.hwreveal .doc-wrap .doc section.sec > p,
+body.hwreveal .doc-wrap .doc section.part > p {
+  max-width: 68ch;
+  margin: 0 0 1rem;
+  font-size: 1.0625rem;
+  line-height: 1.7;
+  letter-spacing: -.004em;
+  color: #2b2b2e;
+  text-wrap: pretty;
+}
+body.hwreveal .doc-wrap .doc section.sec > p strong,
+body.hwreveal .doc-wrap .doc section.sec > ul > li strong,
+body.hwreveal .doc-wrap .doc section.sec > ol > li strong { font-weight: 650; color: var(--w-ink); }
+
+/* ---- what sits inside a card ---------------------------------------------- */
+/* the card is the pale thing now, so what it holds is white */
+body.hwreveal .doc-wrap .doc section.sec .fold { background: #fff; }
+body.hwreveal .doc-wrap .doc section.sec .hwcard { background: #fff; }
+body.hwreveal .doc-wrap .doc section.sec .hwcard .fold { background: var(--w-well); }
+body.hwreveal .doc-wrap .doc section.sec > figure,
+body.hwreveal .doc-wrap .doc section.sec > .frames > figure {
+  border-color: rgb(0 0 0 / .07);
+  border-radius: 20px;
+}
+body.hwreveal .doc-wrap .doc section.sec > figure { margin: 1.5rem 0; }
+body.hwreveal .doc-wrap .doc section.sec > .folds { margin-top: 1.25rem; }
+
+/* Panels that were pale on a white page are white on a pale card: the same
+   step of contrast, the other way round. --hw-surface is what a panel inside
+   a section paints with, so the one section that is not a card (below) can
+   hand its panels their old ground back. */
+body.hwreveal .doc-wrap .doc section.sec { --hw-surface: #fff; }
+body.hwreveal .doc-wrap .doc section.sec :is(.rel-card, .circuit, .track, .chart-fig, .asm-kit, .spart, .bom-search),
+body.hwreveal .doc-wrap .doc section.sec .params .param:not(.prio) { background: var(--hw-surface); }
+body.hwreveal .doc-wrap .doc section.sec .params .param:not(.prio) .openitem { background: var(--w-well); }
+
+/* A figure built to break out of the old column sits inside the card instead. */
+body.hwreveal .doc-wrap .doc section.sec figure.feature {
+  width: auto;
+  max-width: 100%;
+  margin-left: 0;
+  margin-right: 0;
+}
+
+/* The bioreactor's walkthrough of the loop (2.5) is a scroll scene two
+   columns wide: its diagram stands to the right of the record's column and
+   stays pinned while eight captions pass. That is a stage, not a passage of
+   writing, and a card drawn round half of it cuts the diagram in two. This
+   one section keeps the open page. */
+body.hwreveal .doc-wrap .doc section.sec:has(.syswalk) {
+  --hw-surface: var(--w-well);
+  margin-left: 0;
+  margin-right: 0;
+  padding: 1.5rem 0 0;
+  border-radius: 0;
+  background: none;
+}
