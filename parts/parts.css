@@ -1,50 +1,38 @@
 /* =============================================================================
-   Parts: one table, and the few things page.css does not already do.
+   Parts: one table, the rail of controls beside it, and the few things
+   page.css does not already do.
 
    WHAT THE PAGE IS. A judge lands here to find a part and leave for the
    Registry. Since 10 October 2026 the whole collection is a single table of
-   thirty-two rows in five module groups, with a frosted toolbar pinned over
-   it, and everything longer, the build sheets, the protectant series and the
-   references, sits behind a <details> with a summary line that says what is
-   inside. page.css already owns the disclosure (.disclose), the contents rail
-   and the callouts; this file owns the toolbar, the table, the key and the
-   figure frames that the folds still use.
+   thirty-two rows in five module groups; since 11 October the page is that
+   table, the controls that cut it down, and the references. The controls used
+   to be a frosted track pinned over the table and are now a panel in the left
+   column under the contents rail. page.css already owns the disclosure
+   (.disclose), the contents rail and the callouts; this file owns the rail
+   panel, the table and the status marks in it.
 
    HOUSE RULES THIS FILE OBEYS
    1. One white ground. The table sits on white; the only tints are the module
       group headers and the function rows, both --well, and the status pills.
-      A boxed note is white with a hairline and a 3px left edge.
-   2. Figures are one component with a fixed set of frames, and every one opens
-      full-window (page.js wires the lightbox; the frames are set here). Only
-      the folds carry figures now.
-   3. Argument flat, evidence folded. The table and the key are flat. What a
-      row does not need in order to be found and followed to the Registry, the
-      colony numbers and the dates behind its evidence word, is in a fold.
-   4. No usage hints. The toolbar has a search field, chips and a chevron, and
-      not one sentence telling anyone to use them. The line under the toolbar
-      reports a count, which is a result and not an instruction.
+   2. Argument flat, evidence folded. The table is flat. What a row does not
+      need in order to be found and followed to the Registry is not on the
+      page at all now; the references are the one fold left.
+   3. No usage hints. The panel has a search field, chips and the table has a
+      chevron, and not one sentence telling anyone to use them. The count
+      under the chips reports a result, which is a result and not an
+      instruction.
 
    WIDTH. The body column opens to 70rem, which is what the table's seven
-   columns need before anything starts wrapping; the prose is capped back to
-   the normal measure, the way entrepreneurship.css does it. The table is
-   still wider than a phone and cannot be made narrower without losing a
-   column, so it scrolls sideways inside .ptable__scroll. Nothing is ever laid out wider
-   than the box it sits in, which is what used to push the page to 167,000px
-   on a phone.
+   columns need before anything starts wrapping. The table is still wider than
+   a phone and cannot be made narrower without losing a column, so it scrolls
+   sideways inside .ptable__scroll. Nothing is ever laid out wider than the box
+   it sits in, which is what used to push the page to 167,000px on a phone.
 
-   FRAMES. The house strip is 7:2, and it is right for a linear transcription
-   unit. It is wrong for a SnapGene circular map, which arrives about square:
-   contained inside a 7:2 box, a 1477 x 1440 map renders at under a third of
-   the column and the restriction-site labels stop being legible. Cropping it
-   would cut those labels off, which is the thing the rule exists to prevent.
-   So circular maps get their own 1:1 frame, contained, and .fig--strip stays
-   7:2 for the linear unit diagrams borrowed from Engineering.
-
-   COLOUR. Two status pills are earned by rows in the new table, green for
-   read and grey for designed; the other four stay defined because the
-   build-record tables in the folds still use them. Beside them the table
-   carries five module colours, the same five the IHP pipelines use, as a dot
-   and an eyebrow only. A status colour is never a background.
+   COLOUR. Two status pills are earned by rows in the table, green for read
+   and grey for designed, and those are the two this file defines; the four
+   the build-record folds used went with those folds on 11 October. Beside
+   them the table carries five module colours, the same five the IHP pipelines
+   use, as a dot and an eyebrow only. A status colour is never a background.
    ========================================================================== */
 
 .parts .pagebody { max-width: 70rem; }
@@ -79,17 +67,19 @@
   border-left-width: 3px;
 }
 
-/* ========================================================== THE TOOLBAR ====
-   The page is one table, so the controls over it are the page's furniture and
-   they are built in the IHP soft language: a frosted pill track pinned under
-   the site nav, a search field at its head and chips after it. The track is
-   the only sticky thing on the page, so the header row of the table parks
-   directly beneath it (see .ptable thead below) and a judge who has scrolled
-   to module 5 can still cut the collection down without scrolling back.
+/* ============================================================= THE RAIL ====
+   The page is one table, so the controls over it are the page's furniture,
+   and since 11 October they are furniture in the left column: the contents
+   rail, and under it a frosted panel holding the search field and three
+   groups of chips under their own labels. They were a pill track pinned
+   across the top of the table. In the rail they are in view beside the rows
+   for the whole scroll, the table gets the body column back, and the header
+   row of the table now parks under the site nav alone.
 
-   There is no microcopy here telling anyone to type or to click. The count
-   under the track reports a result, which is a different thing: it says how
-   many rows are showing out of how many there are.                        */
+   There is no microcopy here telling anyone to type or to click. The three
+   labels name what a group filters; the count under them reports a result,
+   which is a different thing: it says how many rows are showing out of how
+   many there are.                                                         */
 
 .parts {
   /* the table needs more than the 1280px house frame before a column wraps,
@@ -105,12 +95,27 @@
 .parts .pl-3 { --pl: var(--c3); } .parts .pl-4 { --pl: var(--c4); }
 .parts .pl-5 { --pl: var(--c5); }
 
-.parts .ptools { position: sticky; top: calc(var(--nav-h) + .5rem); z-index: 7; margin: 0 0 var(--sp-5); }
+/* The rail stacks: contents, then the panel. Above 1040px the rail itself is
+   what sticks, so the contents block inside it must not — a sticky child of a
+   sticky parent is held inside the parent's own box and stops moving with the
+   page. If the two together are taller than the window the rail scrolls on
+   its own rather than pushing the filters off the bottom. */
+.parts .prail { display: grid; gap: var(--sp-5); align-content: start; min-width: 0; }
 
-.parts .ptools__track {
-  display: flex; flex-wrap: wrap; align-items: center; gap: var(--sp-2) var(--sp-3);
-  padding: .5rem .6rem;
-  border-radius: 22px;
+@media (min-width: 1040px) {
+  .parts .prail {
+    position: sticky; top: calc(var(--nav-h) + var(--sp-5));
+    align-self: start; order: -1;
+    max-height: calc(100vh - var(--nav-h) - var(--sp-6));
+    overflow-y: auto; overscroll-behavior-y: contain;
+  }
+  .parts .prail .toc { position: static; top: auto; }
+}
+
+.parts .ptools {
+  display: grid; gap: var(--sp-2);
+  padding: .6rem;
+  border-radius: 20px;
   background: rgb(240 240 244 / .82);
   -webkit-backdrop-filter: saturate(180%) blur(20px);
           backdrop-filter: saturate(180%) blur(20px);
@@ -118,7 +123,7 @@
 }
 
 /* -- the search field -- */
-.parts .ptools__search { position: relative; flex: 1 1 13rem; min-width: 11rem; }
+.parts .ptools__search { position: relative; }
 .parts .ptools__mag {
   position: absolute; left: .7rem; top: 50%; transform: translateY(-50%);
   width: 1rem; height: 1rem; color: var(--ink-3); pointer-events: none;
@@ -136,17 +141,25 @@
 .parts .ptools__search input:focus-visible { outline: 2px solid var(--leaf-700); outline-offset: 1px; }
 .parts .ptools__search input::-webkit-search-cancel-button { cursor: pointer; }
 
-/* -- the chips -- */
+/* -- the chips, in three labelled groups -- */
+.parts .ptools__set { display: grid; gap: 2px; }
+/* the reset chip is a set of one, so it would stretch the full width of the
+   panel; in a row of pills that is wrong, in the rail it is right */
+.parts .ptools__set > .pchip { justify-self: start; }
+.parts .ptools__lab {
+  margin: .4rem 0 .15rem; padding-left: .6rem;
+  font-size: .625rem; font-weight: 700; letter-spacing: .12em;
+  text-transform: uppercase; color: var(--ink-3);
+}
 .parts .ptools__chips { display: flex; flex-wrap: wrap; align-items: center; gap: 3px; }
-.parts .ptools__div { width: 1px; height: 1.1rem; margin: 0 .35rem; background: rgb(0 0 0 / .1); }
 
 .parts .pchip {
-  display: inline-flex; align-items: center; gap: .4rem;
+  display: inline-flex; align-items: center; gap: .45rem;
   padding: .5rem .8rem;
   border: 0; border-radius: 999px;
   background: none;
   font: inherit; font-size: var(--text-xs); font-weight: 500; letter-spacing: -.005em;
-  color: var(--ink-2); white-space: nowrap; cursor: pointer;
+  color: var(--ink-2); white-space: nowrap; text-align: left; cursor: pointer;
   transition: background .2s ease, color .2s ease, box-shadow .2s ease;
 }
 .parts .pchip > i {
@@ -161,25 +174,26 @@
 .parts .pchip.is-on > i { opacity: 1; }
 .parts .pchip:focus-visible { outline: 2px solid var(--leaf-700); outline-offset: 1px; }
 
-/* The count sits outside the sticky block on purpose. Inside it, it had no
-   background of its own and slid over the rows underneath. */
 .parts .ptools__count {
-  margin: var(--sp-2) 0 var(--sp-3); padding-left: .35rem;
+  margin: .5rem 0 .15rem; padding-left: .6rem;
   font-size: var(--text-xs); font-variant-numeric: tabular-nums;
   color: var(--gray-500);
 }
 
-/* On a narrow screen the chips would wrap to four rows and the pinned toolbar
-   would eat half the window, taking the table's header row down with it,
-   since that header parks under whatever height the toolbar reports. So below
-   60rem the track stops wrapping and scrolls sideways instead, the way the
-   IHP segmented control does, and the toolbar stays one row tall. */
-@media (max-width: 60rem) {
-  .parts .ptools__track { flex-wrap: nowrap; overflow-x: auto; scrollbar-width: none; }
-  .parts .ptools__track::-webkit-scrollbar { display: none; }
-  .parts .ptools__chips { flex-wrap: nowrap; }
-  .parts .ptools__search { flex: 0 0 9.5rem; min-width: 9.5rem; }
-  .parts .pchip { flex: 0 0 auto; }
+/* In the rail a chip is a full-width row, like a row of the contents rail
+   above it, and a long module name is allowed to take a second line rather
+   than be cut off. Type is two chips, so they share one line. */
+@media (min-width: 1040px) {
+  .parts .ptools__chips { display: grid; gap: 2px; }
+  .parts .ptools__chips--pair { grid-template-columns: 1fr 1fr; }
+  .parts .pchip {
+    width: 100%; justify-content: flex-start;
+    padding: .45rem .6rem; border-radius: 12px;
+    white-space: normal; line-height: 1.3;
+  }
+  .parts .ptools__chips--pair .pchip { justify-content: center; padding-inline: .35rem; }
+  .parts .ptools__set > .pchip { justify-self: stretch; }
+  .parts .pchip--all { font-weight: 600; }
 }
 
 /* ======================================================= THE COLLECTION ====
@@ -229,7 +243,7 @@
 
 /* -- the header row -- */
 .parts .ptable thead th {
-  position: sticky; top: var(--pthead, calc(var(--nav-h) + 9rem)); z-index: 3;
+  position: sticky; top: calc(var(--nav-h) + .5rem); z-index: 3;
   padding: 0;
   background: #fff;
   box-shadow: inset 0 -1px 0 var(--gray-300);
@@ -398,27 +412,6 @@ html.js .parts .ptable__fn.is-open { display: table-row; }
   .parts .ptable thead th { position: static; }
 }
 
-/* ============================================================== THE KEY ====
-   Six rows saying what every mark in the table means. It is a table too, so
-   the page keeps its promise of being nothing but tables.                  */
-
-.parts .ktable {
-  width: 100%; max-width: 54rem; margin: 0;
-  border-collapse: collapse; font-size: var(--text-sm);
-}
-.parts .ktable th, .parts .ktable td {
-  padding: var(--sp-3) var(--sp-4);
-  border-top: 1px solid var(--gray-200);
-  text-align: left; vertical-align: top;
-}
-.parts .ktable tr:first-child th, .parts .ktable tr:first-child td { border-top: 0; }
-.parts .ktable th { width: 14rem; font-weight: 400; white-space: nowrap; }
-.parts .ktable td { line-height: 1.6; color: var(--gray-700); }
-@media (max-width: 40rem) {
-  .parts .ktable th, .parts .ktable td { display: block; width: auto; white-space: normal; }
-  .parts .ktable td { border-top: 0; padding-top: 0; }
-}
-
 /* ============================================================== STATUS =====
    The one vocabulary. Every part in every table on this page carries exactly
    one of these words, and the little tag after it says which assembly level
@@ -441,160 +434,12 @@ html.js .parts .ptable__fn.is-open { display: table-row; }
   color: var(--gray-400);
 }
 .parts .st--designed { border-color: var(--gray-300); color: var(--gray-500); }
-.parts .st--cloned   { border-color: var(--gray-400); color: var(--gray-700); }
-.parts .st--assembled{ border-color: var(--amber-700); color: var(--amber-700); }
-.parts .st--pcr      { border-color: var(--slate-700); color: var(--slate-700); }
 .parts .st--seq      { border-color: var(--leaf-700);  color: var(--leaf-700); }
-.parts .st--failed   { border-color: var(--rust-700);  color: var(--rust-700); }
-
-/* ============================================================== TABLES =====
-   The only tables left are the build-record ones, and they all live inside
-   folds. They keep the house .data look and get the width they need.       */
-
-.parts table.data { border-collapse: collapse; width: 100%; font-size: var(--text-sm); }
-.parts table.data th, .parts table.data td {
-  padding: var(--sp-3) var(--sp-4);
-  border-bottom: 1px solid var(--gray-200);
-  text-align: left; vertical-align: top;
-}
-.parts table.data thead th {
-  border-bottom: 1px solid var(--gray-400);
-  font-size: var(--text-xs); font-weight: 700;
-  letter-spacing: .07em; text-transform: uppercase;
-  color: var(--gray-600);
-  white-space: nowrap;
-}
-.parts table.data tbody tr:last-child td { border-bottom: 1px solid var(--gray-400); }
-.parts table.data td b { color: var(--leaf-900); font-weight: 650; }
-
-/* A build-record table is eight or nine columns of dates and lengths and it
-   cannot be made to fit a phone. It is given the width it needs and allowed to
-   scroll sideways inside .tablewrap, which is the scroll box. Never a fixed
-   width wider than the box: that is what used to burst the page on a phone. */
-.parts table.rec { table-layout: auto; min-width: 42rem; }
-.parts table.rec th, .parts table.rec td { padding: var(--sp-2) var(--sp-3); }
-.parts table.rec .st { white-space: normal; }
-.parts table.rec th { font-size: .625rem; white-space: normal; }
-.parts table.rec td { overflow-wrap: break-word; }
-
-.parts table.data code,
-.parts .acc {
-  font-family: var(--font-mono);
-  font-size: .9em;
-  color: var(--gray-700);
-}
-
-/* The build record tables use a tick for a completed step, because six columns
-   of "complete" is unreadable. A step that did not happen leaves the cell
-   empty: no dash, no placeholder glyph. */
-.parts .yes { color: var(--leaf-700); font-weight: 700; }
-.parts .no  { color: var(--gray-300); }
-
-/* ============================================================== FIGURES ====
-   Two frames and nothing sized by hand.
-
-     .fig--plasmid  a circular SnapGene map: a 1:1 box, white mat, hairline,
-                    contained and never cropped, because cropping cuts the
-                    restriction-site labels off.
-     .fig--strip    a linear transcription-unit map: the house 7:2 strip,
-                    contained, for the same reason.
-     .fig--plate    a gel photograph: the house 4:3 plate, contained, with the
-                    team's own lane labels left on the panel and the white
-                    legend block beside it cropped away and re-set as caption.
-
-   Nothing is upscaled except an SVG, which loses nothing by it.            */
-
-.parts .fig { margin: 0 0 var(--sp-6); max-width: 34rem; }
-.parts .fig.wide, .parts .figs .fig { max-width: none; }
-
-.parts .fig__frame {
-  position: relative;
-  aspect-ratio: var(--fr, 4 / 3);
-  display: grid; place-items: center;
-  overflow: hidden;
-  padding: var(--sp-3);
-  background: var(--white);
-  border: 1px solid var(--gray-200);
-  border-radius: var(--radius-sm);
-}
-.parts .fig__frame img {
-  max-width: 100%; max-height: 100%;
-  width: auto; height: auto;
-  object-fit: contain;
-  border: 0; border-radius: 0; background: none;
-  cursor: zoom-in;
-}
-
-.parts .fig--plate   { --fr: 4 / 3; }
-.parts .fig--plasmid { --fr: 1 / 1; }
-.parts .fig--strip   { --fr: 7 / 2; }
-.parts .fig--strip .fig__frame { padding: var(--sp-4); }
-
-.parts .fig figcaption {
-  margin-top: var(--sp-3);
-  padding-left: var(--sp-4);
-  border-left: 3px solid var(--leaf-500);
-  font-size: var(--text-sm); line-height: 1.6;
-  color: var(--gray-600);
-}
-.parts .fig figcaption b { color: var(--gray-700); font-weight: 650; }
-
-/* A row of figures: equal columns, so equal frames. Captions are not equal
-   length, so the row puts every frame on one grid row and every caption on
-   the next; the images sit on a shared floor and the captions all start on
-   the same line, however long they run. A plate and a strip never share a
-   row, so every .figs below holds one frame type.                          */
-.parts .figs { display: grid; gap: var(--sp-5); margin: var(--sp-6) 0; align-items: start; }
-@media (min-width: 46rem) {
-  .parts .figs--2 { grid-template-columns: repeat(2, minmax(0, 1fr)); }
-  .parts .figs--3 { grid-template-columns: repeat(3, minmax(0, 1fr)); }
-}
-.parts .figs .fig { margin-bottom: 0; }
-@supports (grid-template-rows: subgrid) {
-  @media (min-width: 46rem) {
-    .parts .figs[class*="figs--"] { grid-template-rows: auto auto; }
-    .parts .figs[class*="figs--"] .fig {
-      display: grid; grid-row: span 2; grid-template-rows: subgrid;
-    }
-  }
-}
 
 /* =============================================================== PRINT ===== */
 
 @media print {
-  .parts .fig, .parts .fix, .parts .tablewrap { break-inside: avoid; }
-  .parts .lightbox, .sitenav-spacer { display: none !important; }
+  .parts .ptable__scroll { box-shadow: none; }
+  .parts .ptable tbody { break-inside: avoid; }
+  .sitenav-spacer { display: none !important; }
 }
-
-/* ============================================================ LIGHTBOX =====
-   page.js builds the overlay; page.css gives it a backdrop at 88% opacity,
-   which lets body text show through under a pale map and leaves the caption
-   sitting on a muddy ground. Engineering solved this already: a near-opaque
-   backdrop, the image and the caption on the same 80% column, and the caption
-   left-aligned so a long one reads as a paragraph. Same treatment here, and
-   it matters more on this page than most, because half the maps are drawn on
-   a near-black ground and the other half on a near-white one.              */
-
-.parts .lightbox {
-  display: none;
-  place-items: initial;
-  flex-direction: column;
-  align-items: center; justify-content: center;
-  padding: 3vh 3vw;
-  background: rgb(8 20 15 / .97);
-}
-.parts .lightbox.is-open { display: flex; }
-.parts .lightbox figure { margin: 0; width: 80vw; display: grid; justify-items: center; }
-.parts .lightbox img {
-  max-width: 80vw; max-height: 76vh;
-  width: auto; height: auto;
-  object-fit: contain;
-}
-.parts .lightbox figcaption {
-  width: 80vw; max-width: 80vw;
-  margin: var(--sp-4) 0 0;
-  text-align: left;
-  color: var(--gray-200);
-  font-size: var(--text-sm); line-height: 1.6;
-}
-.parts .lightbox figcaption b { color: var(--white); }

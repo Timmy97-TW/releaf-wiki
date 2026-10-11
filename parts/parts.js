@@ -4,10 +4,10 @@
    TWO JOBS.
 
    1. THE TABLE. One table of thirty-two rows in five module groups, and three
-      ways of cutting it down: a search field, a row of chips, and six sortable
-      columns. All of it is progressive. The HTML ships every row written out,
-      in module order, with the function sentence in a row of its own marked
-      hidden; without this script a reader still gets the whole collection as
+      ways of cutting it down: the search field and the chips in the left rail,
+      and six sortable columns. All of it is progressive. The HTML ships every
+      row written out, in module order, with the function sentence in a row of
+      its own marked hidden; without this script a reader still gets the whole collection as
       a plain table, which is what a printout and a text browser get too.
 
       Sorting hides the five module group headers, because a header that says
@@ -16,8 +16,8 @@
       column a third time drops back to module order and brings the headers
       back.
 
-   2. THE FOLDS. A link to a heading inside a closed <details>, from the
-      contents rail, from a citation or from a URL somebody shared, would
+   2. THE FOLDS. A link into the closed references <details>, from a URL
+      somebody shared or from a citation on another page, would
       otherwise scroll to something the reader cannot see. This opens every
       fold above the target first and then lets the browser do the scrolling.
       page.js does the same for tab panels; this is the <details> half of it.
@@ -210,19 +210,6 @@
         sort(by);
       });
     });
-
-    /* -- where the header row parks -- */
-    /* The toolbar is sticky and its height changes as the chips wrap, so the
-       offset the table header sticks at cannot be a constant in the sheet.
-       It is measured here and written as a custom property; the sheet keeps a
-       calc() fallback for the no-script case, where nothing is sticky anyway. */
-    function park() {
-      var top = parseFloat(getComputedStyle(tools).top) || 0;
-      table.style.setProperty("--pthead", (top + tools.offsetHeight) + "px");
-    }
-    park();
-    if (window.ResizeObserver) new ResizeObserver(park).observe(tools);
-    else window.addEventListener("resize", park);
 
     apply();
   }
