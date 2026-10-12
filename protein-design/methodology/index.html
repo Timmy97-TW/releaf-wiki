@@ -501,6 +501,8 @@
         <p>Run 1, PEPR1 against AtPEP1 (656 restraints, 41 &times; 16) is the positive control. The pair is drawn from a solved co-crystal and is known to bind in that geometry, so this run calibrates what a true interface looks like under this restraint-generation scheme.</p>
 
         <p>Run 2, PEPR1 against BAK1 (552 restraints, 23 &times; 24) is the actual test. Here the PEPR1 side is the US-align homology transfer and the BAK1 side is the 4MN8 contact list. The two were derived independently and had never been tested for mutual compatibility. If Run 2 returns results on a similar scale to Run 1, the inferred interface is at least geometrically coherent. If it returns substantially fewer consistent restraints and far less accessible space, that is a signal the homology transfer implies an arrangement the structures cannot adopt.</p>
+
+        <p class="ai">Neither run has numbers on it yet. The inputs are prepared, but the DisVis web server needs a WeNMR login the team does not have, so the count of simultaneously satisfiable restraints and the accessible interaction space are still missing, and with them the Run&nbsp;2 against Run&nbsp;1 comparison this check exists to make.</p>
           </div>
         </details>
 
@@ -521,6 +523,54 @@
           </div>
         </details>
 
+        <h4>The restraint lists as run</h4>
+
+        <dl class="defs">
+          <dt>BoPEP4 WT active</dt>
+          <dd>7, 8, 9, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23</dd>
+          <dt>PEPR1 WT active</dt>
+          <dd>129, 153, 155, 175, 177, 179, 198, 199, 201, 203, 225, 227, 249, 271, 273, 275, 276, 295, 297, 299, 319, 321, 324, 345, 347, 348, 369, 371, 372, 393, 395, 417, 419, 439, 441, 443, 463, 465, 487, 489, 491</dd>
+          <dt>PEPR1 WT passive</dt>
+          <dd>252, 254, 270, 278, 326, 374, 420, 486, 492</dd>
+          <dt>Apoplast pH under heat stress</dt>
+          <dd>Estimated 5.7 to 6.3.</dd>
+        </dl>
+
+        <h3 id="lea14-ensemble">LEA14 conformer ensemble</h3>
+
+        <p>We took the protein from PDB structure 1XO8, the solution NMR structure of At1g01470, deposited by the Center for Eukaryotic Structural Genomics under the Protein Structure Initiative. Two things about that deposition matter for how we use it. The entry is annotated &ldquo;UNKNOWN FUNCTION&rdquo;, so nothing in the structure record tells us where the protein binds anything. And the construct is the whole protein: the deposition cross-references UniProt O03983 with the alignment running from residue 1 to residue 151, the database sequence is 151 residues long, and the coordinates carry all 151 with no gaps and no expression tag. What we are docking is the complete mature protein.</p>
+
+        <p>The deposition contains 20 models, which gives us a conformer ensemble without having to build one. We checked what that ensemble actually contains before relying on it. Over the first ten models the mean pairwise C&alpha; RMSD across all 151 residues is 3.94&nbsp;&Aring;, with a maximum of 5.55&nbsp;&Aring;. Restricted to the folded core, residues 24 to 145, the same comparison gives 0.66&nbsp;&Aring; with a maximum of 0.84&nbsp;&Aring;. The spread is therefore almost entirely in the N-terminal tail, and the &beta;-sandwich core is one conformation reproduced twenty times.</p>
+
+        <p>Per-residue fluctuation says the same thing with more resolution. Superposing all 20 models on the core and measuring C&alpha; RMSF gives a mean of 8.75&nbsp;&Aring; across residues 1 to 16 against 0.42&nbsp;&Aring; across residues 24 to 145. The transition is sharp rather than gradual: Leu16 fluctuates by 3.97&nbsp;&Aring; and Ala18 by 1.16&nbsp;&Aring;, a factor of three across two residues. The C-terminal six residues sit at 1.61&nbsp;&Aring;, mobile without being disordered. The most rigid position in the protein is Cys58, at 0.26&nbsp;&Aring;.</p>
+
+        <p>Those figures reproduce the ones already in the LEA14 design documents to the same decimal, which is the cross-check we wanted before building anything on them. They are also what sets the truncation boundary: a cut at residue 16 removes the mobile segment and leaves the ordered region intact, while a cut at 23 would remove six residues that belong to the folded core. Glu23 is 10.9% solvent exposed on our own calculation, which is to say buried.</p>
+
+        <aside class="callout callout--unproven">
+          <b class="callout__label">Two truncation boundaries, not yet reconciled</b>
+          <p class="ai">The LEA14 truncation axis above removes residues 1 to 23, on the grounds that the published structure defines residues 24 to 145. This ensemble measurement puts the boundary at residue 16 instead, and says a cut at 23 would take six residues out of the folded core. Both numbers are the team's own, and the page carries both until the team picks one.</p>
+        </aside>
+
+        <p>For docking we prepared two forms: model 1 alone, and the first ten models concatenated as a HADDOCK ensemble input. Chain and segment identifier A, heavy atoms only.</p>
+
+        <h3 id="atpp2-ensemble">AtPP2-B11 conformer ensemble</h3>
+
+        <p class="ai">Why AtPP2-B11 is the protein LEA14 is docked against has not been written up yet, so this section starts with the structure rather than the reason for it.</p>
+
+        <p>No experimental structure of AtPP2-B11 exists, so this one had to be predicted. We folded the full 257-residue sequence of UniProt Q949S5 with AlphaFold&nbsp;3 on the AlphaFold Server, with structural templates enabled, and the server returned five models from the submitted seed.</p>
+
+        <p>The confidence is uniform and high. All five models report pTM 0.89 with ranking scores of 0.89 to 0.90, no clashes, and a disordered fraction of 0.00 or 0.01. Mean pLDDT on the top model is 90.8, broken down as 92.8 over the F-box region, 89.9 over the linker and 90.6 over the PP2 domain. Three stretches fall below pLDDT 70: residues 1 to 2 at the terminus, and two loops inside the PP2 domain at 179 to 186 and 196 to 202.</p>
+
+        <p>As an independent check we compared the top model against the AlphaFold Database entry for the same protein, which was computed separately. The two agree to 1.27&nbsp;&Aring; C&alpha; RMSD over all 257 residues, and both place the same two loops in their low-confidence regions.</p>
+
+        <p>The word ensemble needs qualifying here. The mean pairwise C&alpha; RMSD among the five returned models is 0.94&nbsp;&Aring;, with a maximum of 1.14&nbsp;&Aring;, and restricting the comparison to the PP2 domain changes nothing, at 0.95&nbsp;&Aring;. The five models are the same conformation five times. What they sample is the predictor's uncertainty rather than the molecule's conformational space, and we report them as a confidence estimate rather than as alternative conformers. This is the opposite situation to LEA14, where the deposited models carry genuine conformational variety in the tail.</p>
+
+        <h4>Which part of AtPP2-B11 we dock</h4>
+
+        <p>InterPro places the F-box domain at residues 1 to 44 and the PP2 lectin-like domain at 92 to 255, with an unassigned linker between them. The F-box is the surface that binds ASK1 inside the SCF complex, which UniProt records directly, so it is not available to LEA14 in the cell. Docking against the full chain would let the search place LEA14 on a face that is occupied <i>in vivo</i>, so the docking input is residues 45 to 257 with the F-box removed. Chain and segment identifier B, numbering preserved from the full-length protein so that residue identifiers remain comparable across documents.</p>
+
+        <p>That leaves the PP2 lectin domain as the surface under test, which is also the substrate-recognition module by analogy with the solved plant F-box complexes, where TIR1 and COI1 grip their degrons through the equivalent domain.</p>
+
       </section>
 
       <!-- ==================================================== 4 · ASSEMBLY --->
@@ -531,7 +581,9 @@
 
         <p>With the receptor structures and docking restraints established, we first investigated the interactions between individual pairs of components in the BoPEP4 signaling complex. Binary docking allowed us to reduce the complexity of the full system and independently characterize interfaces between BoPEP4 and PEPR1, or the ligand and receptor. This allowed us to experiment with a variety of BoPEP4 mutations and their effect on docking affinity. From a wider perspective, due to the relative simplicity of binary docking, most of our docking runs (e.g. alanine scans, truncation ladders) were based on this workflow.</p>
 
-        <p>For the primary ligand-receptor interaction, we docked BoPEP4 against the extracellular domain of PEPR1 using HADDOCK 2.4. The three-dimensional conformations generated during structure preparation were treated as alternative representations of the flexible peptide, while the active and passive residues identified during our restraint-mapping workflow guided the docking search toward biologically plausible interfaces. Restraints and other additional inputs were taken from previous steps in the workflow, while the</p>
+        <p>For the primary ligand-receptor interaction, we docked BoPEP4 against the extracellular domain of PEPR1 using HADDOCK 2.4. The three-dimensional conformations generated during structure preparation were treated as alternative representations of the flexible peptide, while the active and passive residues identified during our restraint-mapping workflow guided the docking search toward biologically plausible interfaces. Restraints and other additional inputs were taken from previous steps in the workflow.</p>
+
+        <p class="ai">Sampling was 1000 rigid-body, 200 semi-flexible and 200 water-refined models per run, with FCC clustering at a 0.60 cutoff, a minimum cluster size of 4, and the peptide set fully flexible. Confirmation-class runs, where the question was the cost of a single edit rather than where the peptide docks, used reduced sampling of 40/10/10 on the same protocol. These settings were held constant across every binary run so that scores stay comparable within the series.</p>
 
         <p>The resulting models were clustered according to structural similarity and evaluated using HADDOCK scoring and subsequent structural assessment. Rather than treating the highest-scoring structure as definitively correct, we retained structurally plausible clusters for comparison and downstream analysis. This allowed us to determine whether different peptide conformations converged on similar binding modes and provided candidate PEPR1-BoPEP4 interfaces for assembly of the complete signaling complex. A further explanation of our docking results analysis is detailed in later sections.</p>
 
@@ -542,6 +594,23 @@
         <p>To construct this ternary model, we used our binary docking results as structural starting points rather than independently docking all three components simultaneously. A selected PEPR1-BoPEP4 complex was retained as the established interaction, after which the BAK1 ectodomain was introduced based on the receptor-co-receptor interface identified during our structural restraint-mapping process.</p>
 
         <p>This threaded approach allowed us to preserve the molecular geometry of the previously modeled ligand-receptor interaction while searching for a BAK1 orientation that was compatible with the existing complex. The resulting ternary models were then assessed for steric clashes, interface plausibility, and consistency with the structural information used to define our restraints.</p>
+
+        <p class="ai">Two properties of the procedure are recorded alongside it. The ternary run inherits its binary input, so an error in the peptide register would be carried into the assembly and would not be caught downstream, which is why the binary complex was validated against 5GR8 before any ternary run was spent on it. And the two restraint sets holding the assembly together have different provenance: the peptide-to-receptor set is contact-derived from a solved co-crystal, the BAK1-to-receptor set is transferred from 4MN8 by structural analogy. They are not equally certain, so the output is reported as a structural hypothesis consistent with the published heterodimerisation biochemistry, not as a residue-level prediction of the complex.</p>
+
+        <h3 id="ai-cofolding">AI co-folding</h3>
+
+        <p class="ai">HADDOCK searches for a favourable arrangement under restraints we supply. An AI co-folding predictor builds the complex straight from sequence with no restraints at all, so the two methods fail for different reasons and agreement between them carries information. We ran AlphaFold&nbsp;3 through the AlphaFold Server, templates enabled, five models per seed, with nothing from the HADDOCK workflow entering the job: no restraints, no docked coordinates, no interface lists. The two tracks run in parallel, and a co-fold result is never used to seed a docking run.</p>
+
+        <p class="ai">For each job we record ipTM for the interface, pTM for the model, the ranking score, and the chain-pair ipTM matrix with the interface PAE, because a single ipTM averages across every interface and one confident pair can hide a failed one. The two tracks are compared on interface residue identity rather than global RMSD, since two models can superpose poorly and still put the same residues in contact. Agreement is read as independent support, and disagreement marks a region to scrutinise rather than a loss for either method.</p>
+
+        <p class="ai">Confidence is calibrated before it is trusted. Solved complexes of the same class are predicted first under identical settings, checked that they reproduce the deposited interface rather than merely scoring well, and the acceptance threshold is fixed from those values before the unknown target is run.</p>
+
+        <aside class="callout callout--unproven">
+          <b class="callout__label">Confidence is not activity</b>
+          <p class="ai">Our July methodology audit found AlphaFold&nbsp;3 returned ipTM 0.73 for a peptide published as more than 4000-fold inactive, against 0.74 for BoPEP4. The metric does not separate a functional ligand from a dead one, so we use it only as a structural confidence estimate. Multiple models from one seed are the predictor's uncertainty about a single answer, not a conformational ensemble.</p>
+        </aside>
+
+        <p>Results from the docking and co-folding runs are reported on the <a href="../sprints/">Sprints and Results</a> page.</p>
       </section>
 
       <!-- ======================================================== 5 · FLEX --->
