@@ -28,8 +28,12 @@ ap = argparse.ArgumentParser()
 ap.add_argument("--project", default=str(pathlib.Path.home() / "Documents/Claude/Projects/2026 iGEM Project Plant Stress"))
 ap.add_argument("--downloads", default=str(pathlib.Path.home() / "Downloads"))
 ap.add_argument("--only-runs", action="store_true", help="redraw fig-runs-168.svg only")
+ap.add_argument("--only-r6", action="store_true", help="redraw fig-r6-leafair.svg only")
+ap.add_argument("--leaf", default=str(pathlib.Path.home() / "Documents/Claude/Projects/Releaf_Wiki/drafts"
+                                     / "2026-10-12 student drafts" / "Drylab" / "Digital Twin"),
+                help="folder holding the three 1010Temp_*.csv leaf-sensor logs")
 args = ap.parse_args()
-PROJECT, DL = pathlib.Path(args.project), pathlib.Path(args.downloads)
+PROJECT, DL, LEAF = pathlib.Path(args.project), pathlib.Path(args.downloads), pathlib.Path(args.leaf)
 MODEL_OUT = PROJECT / "Math Model" / "releaf-model" / "out"
 OUT = WIKI / "assets" / "img" / "software"
 OUT.mkdir(parents=True, exist_ok=True)
@@ -523,6 +527,82 @@ def fig_runs():
     f.save("fig-runs-168.svg")
 
 
+# ===================================== R6 · leaf and air sensors, 10 Oct ====
+LEAF_SITES = [("Incubator, 22 °C", "1010Temp_incubator_22C_runs1-3.csv", SLATE),
+              ("Room, 26 °C", "1010Temp_ room_26C_runs1-3.csv", RUST),
+              ("Stairwell, 26.4 °C", "1010Temp_stairwell_26.4C_runs1-3.csv", LEAF7)]
+
+
+def _leaf_rows(path):
+    with open(path, newline="") as fh:
+        return [{k: float(v) for k, v in r.items()} for r in csv.DictReader(fh)]
+
+
+def fig_r6():
+    """Leaf minus air temperature for the nine bench runs of 10 October 2026.
+
+    Both sensors were in the same air with no leaf between them, so the honest
+    reading of the series is instrument bias, not plant physiology. The left
+    panel keeps each site's three runs in order with the joins marked, because
+    the room site drifts across its three runs and a site mean would hide that.
+    """
+    f = Fig("R6. Leaf sensor against the air reference, nine bench runs",
+            "Left: leaf minus air temperature against logging time, three five-minute runs per site joined end to "
+            "end, one line per site, with the run joins dashed. Right: the mean of each run, with each site's mean "
+            "marked. The incubator and stairwell sit between 1.2 and 1.9 C warm; the room climbs from below zero "
+            "to near 1 C across its three runs.", 880, 470)
+    ax = Axes(f, (72, 92, 470, 300), (0, 15), (-0.6, 2.3),
+              "Logging time at the site (min), three runs joined end to end", "Leaf − air (°C)",
+              [0, 5, 10, 15], [-0.5, 0, 0.5, 1, 1.5, 2], "{:+.1f}")
+    ax.hline(0, INK3, "3 3", 1.2)
+    for x in (5, 10):
+        ax.vline(x, GRID, "3 4", 1.2)
+    bx = Axes(f, (700, 92, 140, 300), (0, 3), (-0.6, 2.3), "Mean of each run", "", [], [], "{:+.1f}")
+    ends = {"Incubator, 22 °C": -9, "Stairwell, 26.4 °C": -9, "Room, 26 °C": 16}
+    stats = {}
+    for si, (label, name, colour) in enumerate(LEAF_SITES):
+        rows = _leaf_rows(LEAF / name)
+        off = np.array([r["leaf_minus_air_C"] for r in rows])
+        air = np.array([r["air_T_C"] for r in rows])
+        rh = np.array([r["air_RH_pct"] for r in rows])
+        leaf = np.array([r["leaf_T_C"] for r in rows])
+        wet = np.array([r["leaf_wet_pct"] for r in rows])
+        runs = np.array([int(r["run"]) for r in rows])
+        xs, ys = [], []
+        for ri in (1, 2, 3):
+            m = runs == ri
+            t = np.array([r["time_s"] for r in rows])[m] / 60 + (ri - 1) * 5
+            xs.append(t); ys.append(off[m])
+            ax.line(t, off[m], colour, 1.9)
+            bx.dots([si + 0.3 + 0.2 * ri], [off[m].mean()], colour, 3.4, "#fff")
+        bx.f.add(f'<line x1="{bx.X(si+0.38):.1f}" y1="{bx.Y(off.mean()):.1f}" x2="{bx.X(si+1.02):.1f}" '
+                 f'y2="{bx.Y(off.mean()):.1f}" stroke="{colour}" stroke-width="2.4"/>')
+        f.text(bx.X(si + 0.36), bx.Y(off.mean()) + 3.6, f"{off.mean():+.2f}", 10.5, colour, "end", 600)
+        f.text(bx.X(si + 0.7), 410, label.split(",")[0], 10.5, colour, "middle", 600)
+        f.text(ax.X(14.9), ax.Y(float(off[runs == 3][-6:].mean())) + ends[label],
+               label, 11.5, colour, "end", 600)
+        per_run = [float(off[runs == ri].mean()) for ri in (1, 2, 3)]
+        stats[label] = dict(
+            n=int(len(rows)), offset_mean=float(off.mean()), offset_sd=float(off.std(ddof=0)),
+            offset_min=float(off.min()), offset_max=float(off.max()), per_run_mean=per_run,
+            air_min=float(air.min()), air_max=float(air.max()), air_mean=float(air.mean()),
+            rh_min=float(rh.min()), rh_max=float(rh.max()), rh_mean=float(rh.mean()),
+            leaf_min=float(leaf.min()), leaf_max=float(leaf.max()),
+            leaf_distinct_values=int(len(set(leaf.round(1)))),
+            wet_min=float(wet.min()), wet_max=float(wet.max()),
+            pearson_air_leaf=float(np.corrcoef(air, leaf)[0, 1]),
+            drift_C_per_min=[float(np.polyfit(np.array([r["time_s"] for r in rows])[runs == ri] / 60,
+                                              off[runs == ri], 1)[0]) for ri in (1, 2, 3)])
+    f.text(80, 40, "Both sensors in the same air, with no leaf between them, so the gap is the", 11, INK3, italic=True)
+    f.text(80, 56, "instrument, not the plant. Dashed verticals: the joins between runs, whose", 11, INK3, italic=True)
+    f.text(80, 72, "real spacing the log does not record.", 11, INK3, italic=True)
+    rec("R6", f"{LEAF.name}/1010Temp_*.csv (ESP32 log, 5 s sampling; three 5-minute runs per site)",
+        date="2026-10-10", sites=3, runs_per_site=3, sample_interval_s=5, paired_readings=540,
+        wetness_all_samples_pct=0.0, leaf_resolution_C=0.1, air_resolution_C=0.01,
+        difference_column_is_derived=True, **{k.split(",")[0].lower(): v for k, v in stats.items()})
+    f.save("fig-r6-leafair.svg")
+
+
 # ============================================ E1–E4 · MOCK templates ========
 # 16:9, transparent, so the .fig--pending hatching shows through. No data.
 MW, MH = 880, 495
@@ -599,13 +679,16 @@ def fig_e4():
 
 
 if __name__ == "__main__":
-    if "--only-runs" in __import__("sys").argv:
-        old = json.loads((WIKI / "software" / "figures" / "numbers.json").read_text())
-        fig_runs(); old.update(NUM)
-        (WIKI / "software" / "figures" / "numbers.json").write_text(json.dumps(old, indent=1, ensure_ascii=False) + "\n", encoding="utf-8")
+    if args.only_runs or args.only_r6:
+        out = WIKI / "software" / "figures" / "numbers.json"
+        old = json.loads(out.read_text())
+        fig_runs() if args.only_runs else fig_r6()
+        old.update(NUM)
+        out.write_text(json.dumps(old, indent=1, ensure_ascii=False) + "\n", encoding="utf-8")
+        print("wrote", out.relative_to(WIKI))
         raise SystemExit
     fig_runs()
-    fig_r1(); fig_r2(); fig_r3(); fig_r4()
+    fig_r1(); fig_r2(); fig_r3(); fig_r4(); fig_r6()
     fig_e1(); fig_e2(); fig_e3(); fig_e4()
     out = WIKI / "software" / "figures" / "numbers.json"
     out.write_text(json.dumps(NUM, indent=1, ensure_ascii=False) + "\n", encoding="utf-8")
