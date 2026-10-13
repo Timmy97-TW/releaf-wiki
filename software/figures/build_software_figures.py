@@ -28,6 +28,7 @@ ap = argparse.ArgumentParser()
 ap.add_argument("--project", default=str(pathlib.Path.home() / "Documents/Claude/Projects/2026 iGEM Project Plant Stress"))
 ap.add_argument("--downloads", default=str(pathlib.Path.home() / "Downloads"))
 ap.add_argument("--only-runs", action="store_true", help="redraw fig-runs-168.svg only")
+ap.add_argument("--only-r2", action="store_true", help="redraw the two R2 calibration figures only")
 ap.add_argument("--only-r6", action="store_true", help="redraw fig-r6-leafair.svg only")
 ap.add_argument("--leaf", default=str(pathlib.Path.home() / "Documents/Claude/Projects/Releaf_Wiki/drafts"
                                      / "2026-10-12 student drafts" / "Drylab" / "Digital Twin"),
@@ -234,65 +235,73 @@ def fig_r1():
 
 
 # ======================================================= R2 · photometer =====
+def _first(*names):
+    for n in names:
+        if (DL / n).exists():
+            return DL / n
+    return DL / names[0]
+
+
+def _calib_fig(name, title, desc, xlabel, xmax, xstep, ymax, series):
+    """One calibration sheet: each series against the dose, a straight line through all of its points, its R²."""
+    f = Fig(title, desc, 640, 470)
+    ax = Axes(f, (64, 24, 552, 370), (0, xmax), (0, ymax), xlabel, "Optical density at 600 nm",
+              range(0, int(xmax)+1, xstep), [v/2 for v in range(0, int(ymax*2)+1)], "{:g}", ylab_dx=42)
+    out, items = {}, []
+    for label, x, y, color, kind in series:
+        k = ~np.isnan(y)
+        c, rr, sd = linfit(x[k], y[k])
+        xx = np.array([x[k].min(), x[k].max()])
+        ax.line(xx, np.polyval(c, xx), color, 1.3, "5 3")
+        out[label] = dict(n=int(k.sum()), slope=c[0], intercept=c[1], r2=rr, sd=sd)
+        items.append((f"{label}   R² {rr:.3f}", color, kind))
+    for label, x, y, color, kind in series:
+        ax.dots(x, y, color, 3.0, "#fff" if kind == "ring" else None)
+    f.add(f'<rect x="{ax.L+12}" y="{ax.T+8}" width="236" height="{20*len(items)+12}" rx="4" fill="#fff" stroke="{GRID}"/>')
+    legend(f, ax.L+22, ax.T+30, items)
+    f.save(name)
+    return out
+
+
+def _col(rows, i):
+    return np.array([r[i] if isinstance(r[i], (int, float)) else np.nan for r in rows], float)
+
+
 def fig_r2():
-    src = DL / "Inline photometer to biodrop.xlsx"
+    src = _first("Inline photometer to biodrop.xlsx", "0823_Inline photometer to biodrop.xlsx")
     rows = [r for r in openpyxl.load_workbook(src, data_only=True).worksheets[0].iter_rows(min_row=2, values_only=True)
             if isinstance(r[0], (int, float))]
-    m = np.array([r[0] for r in rows], float)
-    ours = np.array([r[1] if isinstance(r[1], (int, float)) else np.nan for r in rows], float)
-    bd = np.array([r[2] if isinstance(r[2], (int, float)) else np.nan for r in rows], float)
-    # agreement with the BioDrop where the BioDrop reads below 1.2
+    m, ours, bd = _col(rows, 0), _col(rows, 1), _col(rows, 2)
     k = ~np.isnan(bd) & (bd < 1.2)
     cab, r2ab, sdab = linfit(bd[k], ours[k])
-    diff = ours[k] - bd[k]
-    bias, loa = float(diff.mean()), 1.96*float(diff.std(ddof=1))
-    # linearity against dose, above 30 mg
-    # scored over the range both instruments cover (30 < m <= 46 mg), and ours alone to 60 mg
-    kb = ~np.isnan(bd) & (m > 30)
-    ko = ~np.isnan(ours) & (m > 30) & (m <= m[kb].max())
-    co, r2o, sdo = linfit(m[ko], ours[ko])
-    k60 = ~np.isnan(ours) & (m > 30)
-    c60, r2o60, sdo60 = linfit(m[k60], ours[k60])
-    cb, r2b, sdb = linfit(m[kb], bd[kb])
-    kl = ~np.isnan(ours) & (m <= 30)
-    cl, r2l, sdl = linfit(m[kl], ours[kl])
+    fit = _calib_fig("fig-r2-photometer.svg", "R2. In-line photometer and BioDrop against TiO2 dose, 23 August 2026",
+                     "Optical density at 600 nm reported by the in-line photometer and by a BioDrop for cumulative "
+                     "TiO2 additions from 2 to 60 mg, each with a straight line fitted through all of its points.",
+                     "Cumulative TiO₂ added (mg)", 62, 10, 3.0,
+                     [("In-line photometer", m, ours, LEAF7, "dot"), ("BioDrop", m, bd, SLATE, "ring")])
     rec("R2", "~/Downloads/Inline photometer to biodrop.xlsx (sheet 1; TiO2 mg, in-line photometer, BioDrop)",
         n_ours=int((~np.isnan(ours)).sum()), n_biodrop=int((~np.isnan(bd)).sum()),
         mass_min=float(m.min()), mass_max=float(m.max()), biodrop_max_mass=float(m[~np.isnan(bd)].max()),
         agree_n=int(k.sum()), agree_slope=cab[0], agree_intercept=cab[1], agree_r2=r2ab, agree_sd=sdab,
-        agree_bias=bias, agree_loa_low=bias-loa, agree_loa_high=bias+loa,
-        ours_le30_r2=r2l, ours_le30_slope=cl[0],
-        ours_gt30_n=int(ko.sum()), ours_gt30_r2=r2o, ours_gt30_sd=sdo,
-        ours_30_60_n=int(k60.sum()), ours_30_60_r2=r2o60, ours_30_60_sd=sdo60,
-        biodrop_gt30_n=int(kb.sum()), biodrop_gt30_r2=r2b, biodrop_gt30_sd=sdb)
+        ours_all_r2=fit["In-line photometer"]["r2"], biodrop_all_r2=fit["BioDrop"]["r2"])
 
-    f = Fig("R2. In-line photometer and BioDrop against TiO2 dose, 23 August 2026",
-            "Optical density reported by the in-line photometer and by a BioDrop for cumulative TiO2 additions "
-            "into 400 mL, with the region above 30 mg shaded and a straight line fitted to each instrument there.")
-    ax = Axes(f, (80, 30, 560, 340), (0, 62), (0, 3.0), "Cumulative TiO₂ added (mg in 400 mL)", "Reported OD",
-              range(0, 61, 10), [0, .5, 1, 1.5, 2, 2.5, 3], "{:g}")
-    ax.band(30, 62, FAINT)
-    f.add(f'<line x1="{ax.X(30):.1f}" y1="{ax.T}" x2="{ax.X(30):.1f}" y2="{ax.T+ax.H}" stroke="{GRID}" stroke-width="1.5"/>')
-    f.text(ax.X(31), ax.T+16, "above 30 mg: linearity scored against dose", 10.5, INK3, italic=True)
-    xx = np.linspace(30, 46, 20)
-    ax.line(xx, np.polyval(co, xx), LEAF9, 1.4, "5 3")
-    xb = np.linspace(30, 46, 20)
-    ax.line(xb, np.polyval(cb, xb), SLATE, 1.4, "5 3")
-    ax.dots(m, bd, SLATE, 3.2, "#fff")
-    ax.dots(m, ours, LEAF7, 3.2)
-    x0 = 664
-    legend(f, x0, 52, [("In-line photometer (ours)", LEAF7, "dot"), ("BioDrop", SLATE, "ring"),
-                       ("Line fitted, 31–46 mg", INK3, "dash")])
-    f.text(x0, 136, "31–46 mg, fit against dose", 12, INK, weight=650)
-    f.text(x0, 158, f"Ours     R² {r2o:.4f}, SD {sdo:.3f}", 11.5, LEAF9)
-    f.text(x0, 176, f"BioDrop  R² {r2b:.4f}, SD {sdb:.3f}", 11.5, SLATE)
-    f.text(x0, 204, "Below BioDrop OD 1.2 (n = %d)" % k.sum(), 12, INK, weight=650)
-    f.text(x0, 226, f"ours = {cab[0]:.3f} × BioDrop − {abs(cab[1]):.3f}", 11.5, INK2)
-    f.text(x0, 244, f"R² {r2ab:.3f}, residual SD {sdab:.3f}", 11.5, INK2)
-    f.text(x0, 284, "One reading per point, no replicates;", 11, INK3, italic=True)
-    f.text(x0, 301, "additions cumulative. TiO₂ tests", 11, INK3, italic=True)
-    f.text(x0, 318, "linearity, not cell number.", 11, INK3, italic=True)
-    f.save("fig-r2-photometer.svg")
+
+def fig_r2_sio2():
+    src = _first("10_10 Photometer Calibration (1).xlsx", "10_10 Photometer Calibration.xlsx")
+    rows = [r for r in openpyxl.load_workbook(src, data_only=True).active.iter_rows(min_row=2, values_only=True)
+            if isinstance(r[7], (int, float))]
+    m, bd, v1, v2 = _col(rows, 2), _col(rows, 6), _col(rows, 7), _col(rows, 8)
+    fit = _calib_fig("fig-r2-sio2.svg", "R2. Both in-line photometers and the BioDrop against SiO2 dose, 10 October 2026",
+                     "Optical density at 600 nm reported by the two in-line photometer builds, V1 complex and V2 slim, "
+                     "and by a BioDrop for cumulative SiO2 additions from 2.5 to 100 mg, each with a straight line "
+                     "fitted through all of its points.",
+                     "Cumulative SiO₂ added (mg)", 104, 20, 4.0,
+                     [("Photometer V1 complex", m, v1, LEAF7, "dot"), ("Photometer V2 slim", m, v2, AMBER, "dot"),
+                      ("BioDrop", m, bd, SLATE, "ring")])
+    rec("R2_SiO2", "~/Downloads/10_10 Photometer Calibration (1).xlsx (SiO2 mg, True BioDrop OD, V1, V2)",
+        n=int(len(m)), mass_min=float(m.min()), mass_max=float(m.max()),
+        **{f"{k2}_{k3}": v for k1, k2 in (("Photometer V1 complex", "v1"), ("Photometer V2 slim", "v2"), ("BioDrop", "biodrop"))
+           for k3, v in fit[k1].items()})
 
 
 # ============================================================ R3 · 434 h =====
@@ -679,16 +688,21 @@ def fig_e4():
 
 
 if __name__ == "__main__":
-    if args.only_runs or args.only_r6:
+    if args.only_runs or args.only_r6 or args.only_r2:
         out = WIKI / "software" / "figures" / "numbers.json"
         old = json.loads(out.read_text())
-        fig_runs() if args.only_runs else fig_r6()
+        if args.only_runs:
+            fig_runs()
+        elif args.only_r2:
+            fig_r2(); fig_r2_sio2()
+        else:
+            fig_r6()
         old.update(NUM)
         out.write_text(json.dumps(old, indent=1, ensure_ascii=False) + "\n", encoding="utf-8")
         print("wrote", out.relative_to(WIKI))
         raise SystemExit
     fig_runs()
-    fig_r1(); fig_r2(); fig_r3(); fig_r4(); fig_r6()
+    fig_r1(); fig_r2(); fig_r2_sio2(); fig_r3(); fig_r4(); fig_r6()
     fig_e1(); fig_e2(); fig_e3(); fig_e4()
     out = WIKI / "software" / "figures" / "numbers.json"
     out.write_text(json.dumps(NUM, indent=1, ensure_ascii=False) + "\n", encoding="utf-8")
