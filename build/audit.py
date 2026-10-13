@@ -39,7 +39,9 @@ from pathlib import Path
 from urllib.parse import unquote, urlsplit
 
 ROOT = Path(__file__).resolve().parent.parent
-SKIP_DIRS = {".git", "node_modules", "__pycache__", "build", ".claude"}
+# rig-app is the App Lab source as shipped: its page names two libraries that
+# App Lab supplies at run time, so its links cannot be checked from here.
+SKIP_DIRS = {".git", "node_modules", "__pycache__", "build", ".claude", "rig-app"}
 IGEM_HOSTS = ("igem.wiki", "igem.org")
 BIG = 5 * 1024 * 1024
 # the addresses iGEM judges medals and special awards from (notes/structure.md)
