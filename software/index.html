@@ -143,37 +143,16 @@
 
       <!-- ============================================ 1 · INTRODUCTION ===== -->
       <section class="sec" id="intro">
-        <h2>Introduction</h2>
+        <h2>Digital Twin and ReLEAF's System</h2>
         <div class="lede-c">
-          <p>Our bioreactor will run for weeks beside farmland, far from a lab. Nobody will be there to take samples or read every value, <span class="ai">so the twin has to turn the instrument readings into a recommendation a farmer can act on.</span></p>
-          <p>Without manual sampling, the reactor's own instruments are the only record of the batch, and they drift as they wear. On the 434-hour run the OD channel failed, and the twin's trust layer flagged the reference beam 26.7 hours before the OD readings became unusable.</p>
-        </div>
-        <p class="ai">The twin reads three kinds of data. Regional data (the weather forecast, crop-stress risk and the <a href="../geospatial-analysis/">Geospatial Analysis</a> maps) show when and where crops will come under stress. Field sensors beside the crop measure leaf temperature, leaf wetness, and air temperature and humidity, which show what the plants are experiencing at that moment and check the regional forecast against conditions on site (<a href="#r4">R4</a>). Local data from BR-01 show how much biomass is in the loop, whether it is growing, whether the membrane still passes permeate, and whether those readings can be trusted (<a href="#r3">R3</a>).</p>
-        <p class="ai">From these it works out when to switch on green light to start protectant production, which protectant, and how much. Induction makes sense when the field is heading into stress and the culture can respond, and the forecast (<a href="#r5">R5</a>) and growth prior (<a href="#r6">R6</a>) say whether the batch will be ready in time.</p>
-        <div class="folds">
-          <details class="fold" id="what">
-            <summary>What is a digital twin?</summary>
-            <div class="fold__body">
-              <p>A digital model represents a physical system but is updated by hand. A digital shadow receives live data automatically, but changes back to the system still need a person. A digital twin closes the loop: data flows automatically from the system to the model and back. The line between the three is not always clear; what separates them is whether information moves on its own.</p>
-            </div>
-          </details>
+          <p>A digital model represents a physical system but is updated by hand. A digital shadow receives live data automatically, but changes back to the system still need a person. A digital twin closes the loop: data flows automatically from the system to the model and back (Portela et al. 2021, Gargalo et al. 2021). In the field of biomanufacturing, a digital twin can not only help monitor live data, it also acts as a second simulated world that runs the exact same work as the physical world, but ahead, giving the users risk assessments and action suggestions before things actually happen.</p>
+          <p>Our bioreactor is meant to run for weeks beside farmland, far from laboratories where results can be analyzed precisely. Because no one will always be there to take samples or interpret every reading, we developed a digital twin that can monitor live readings from sensors and weather forecasts, acts as the decision-making &ldquo;brain&rdquo; of the system, and allow user to loop back the result to predict more accurate projections and risks.</p>
         </div>
       </section>
 
       <!-- ================================================= 2 · THE RIG ===== -->
       <section class="sec" id="rig">
-        <h2>What the reactor measures now</h2>
-        <p>Every value is tagged by how it was obtained:</p>
-        <ul class="taglegend">
-          <li><span class="tag tag--meas">in-line</span> A sensor on the loop of culture pumped around the bioreactor.</li>
-          <li><span class="tag tag--cmd">commanded</span> Set by the operator (the farmer).</li>
-          <li><span class="tag tag--der">soft</span> Calculated from in-line readings.</li>
-          <li><span class="tag tag--part">bench tested</span> Measured on a bench, not yet in the field or on the rig.</li>
-          <li><span class="tag tag--abs">planned</span> Not yet collected.</li>
-          <li class="ai"><span class="tag tag--lit">external</span> Data pulled in from outside the rig.</li>
-        </ul>
-        <p class="ai">The rig app logs plain CSV with a fixed header and follows no synthetic biology standard such as SBOL. In the log only temperature carries its source, in <code>temp_src</code>; the columns are under <a href="#rigapp-stack">What survives which failure</a>.</p>
-
+        <h2>What our digital twin measures</h2>
         <div class="rail rail--seg" data-rail data-rail-top>
           <div class="seg"><div class="rail__strip seg__track" role="tablist" aria-label="Where the twin's data come from">
             <button class="rail__btn seg__btn pl-2" role="tab" type="button" id="t-rig-reactor" aria-controls="p-rig-reactor" aria-selected="true"><svg class="seg__ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="M9 3.5h6M10 3.5v6L5 19a1.5 1.5 0 0 0 1.3 2h11.4a1.5 1.5 0 0 0 1.3-2l-5-9.5v-6"/></svg>Within the bioreactor</button>
@@ -189,20 +168,18 @@
                 <caption class="visually-hidden">Measured channels and actuators of BR-01</caption>
                 <thead><tr><th scope="col">Channel</th><th scope="col">Instrument</th><th scope="col">Purpose</th><th scope="col">Provenance</th></tr></thead>
                 <tbody>
-                  <tr><td><b>OD600</b></td><td>Photometer: <span class="ai">600&nbsp;nm</span> amber LED, 2&nbsp;mm flow cuvette, sample and reference lux sensors</td><td>Biomass</td><td><span class="tag tag--meas">in-line</span></td></tr>
+                  <tr><td><b>Optical density 600&nbsp;nm</b></td><td>Photometer: <span class="ai">600&nbsp;nm</span> amber LED, 2&nbsp;mm flow cuvette, sample and reference lux sensors</td><td>Biomass</td><td><span class="tag tag--meas">in-line</span></td></tr>
                   <tr><td><b>pH</b></td><td>Arduino pH probe</td><td>Growth and secretion conditions; alarm</td><td><span class="tag tag--meas">in-line</span></td></tr>
-                  <tr><td><b>Pressure &times;&nbsp;3</b></td><td class="ai">Transducers on lumen in, lumen out and shell</td><td>Lumen &Delta;P, trans-membrane pressure<span class="ai"> (TMP)</span>, fouling</td><td><span class="tag tag--meas">in-line</span></td></tr>
-                  <tr><td><b>Loop flow</b></td><td>Turbine flow meter</td><td>Cross-flow, wall shear, hydraulic model (R1)</td><td><span class="tag tag--meas">in-line</span></td></tr>
+                  <tr><td><b>Pressure &times;&nbsp;4</b></td><td class="ai">Transducers around the hollow fibre module</td><td>Lumen &Delta;P, trans-membrane pressure<span class="ai"> (TMP)</span>, fouling</td><td><span class="tag tag--meas">in-line</span></td></tr>
+                  <tr><td><b>Flow rate</b></td><td>Turbine flow meter</td><td>Cross-flow, wall shear, hydraulic model (R1)</td><td><span class="tag tag--meas">in-line</span></td></tr>
                   <tr><td><b>Pinch valve</b></td><td class="ai">One STS3215 serial servo</td><td>Lumen isolation</td><td><span class="tag tag--cmd">commanded</span></td></tr>
-                  <tr><td><b>Luer valves &times;&nbsp;4</b></td><td class="ai">Turned by hand; no actuator yet</td><td>Routing between reservoir, module and permeate</td><td><span class="tag tag--abs">planned</span></td></tr>
-                  <tr><td><b>Lumen &Delta;P, TMP, fouling ratio</b></td><td>Pressure and flow through the hydraulic model</td><td>Membrane state; when to clean</td><td><span class="tag tag--der">soft</span></td></tr>
-                  <tr><td><b>Green light</b></td><td class="ai">Characterised on the light-programmable array (LPA)</td><td>Induces the CcaS/CcaR strain to make protectant</td><td><span class="tag tag--abs">planned</span></td></tr>
-                  <tr class="ai"><td><b>Loop temperature</b></td><td>DS18B20 probe, or a value typed by the operator; the record says which</td><td>pH compensation, viscosity, growth</td><td><span class="tag tag--meas">in-line</span> or <span class="tag tag--cmd">commanded</span>, per row</td></tr>
-                  <tr><td><b>Dissolved oxygen, permeate mass</b></td><td class="ai">None fitted</td><td class="ai">See <a href="#gaps">Must have, yet to have</a></td><td><span class="tag tag--abs">planned</span></td></tr>
+                  <tr><td><b>Luer valves &times;&nbsp;4</b></td><td class="ai">Four valves on the loop</td><td>Routing between reservoir, module and permeate</td><td><span class="tag tag--cmd">commanded</span></td></tr>
+                  <tr><td><b>Lumen &Delta;P, TMP, fouling ratio</b></td><td>Pressure and flow through the hydraulic model</td><td>Membrane state; when to clean</td><td><span class="tag tag--der">indirect</span></td></tr>
+                  <tr><td><b>Green light</b></td><td>Tested separately<span class="ai"> on the light-programmable array (LPA)</span>, but not integrated yet</td><td>Induces the CcaS/CcaR strain to make protectant</td><td><span class="tag tag--part">tested, not integrated</span></td></tr>
+                  <tr><td><b>Dissolved oxygen</b></td><td>Had trouble calibrating our DO sensor</td><td>Measure DO</td><td><span class="tag tag--part">experimented, not integrated</span></td></tr>
                 </tbody>
               </table>
             </div>
-            <p class="ai">This is the rig as designed. The firmware reads three of the four pressure transducers on the parts list, one pinch valve, and no Luer valve or light.</p>
           </div>
 
           <div class="rail__panel chap pl-3" role="tabpanel" id="p-rig-local" aria-labelledby="t-rig-local" hidden>
@@ -217,11 +194,8 @@
                 <tbody>
                   <tr><td><b>Leaf temperature</b></td><td class="ai">SN-3001-YM-N01 dummy-leaf sensor, read over Modbus RTU by an ESP32</td><td>Leaf minus air temperature as a water-stress signal</td><td><span class="tag tag--part">bench tested</span></td></tr>
                   <tr><td><b>Leaf wetness</b></td><td class="ai">The same sensor, its other register</td><td>Biotic stress detection</td><td><span class="tag tag--abs">planned</span></td></tr>
-                  <tr class="ai"><td><b>Air temperature and humidity</b></td><td>SHT31 on I&sup2;C, in the same air as the leaf sensor</td><td>Vapour pressure deficit; the reference for the leaf sensor; 5-day mean for the blast rule</td><td><span class="tag tag--part">bench tested</span></td></tr>
-                  <tr><td><b>Geospatial analysis</b></td><td class="ai"><a href="../geospatial-analysis/">Geospatial Analysis</a> maps</td><td class="ai">Where crops are likely to come under stress</td><td><span class="tag tag--lit">external</span></td></tr>
                   <tr><td><b>Weather forecast</b></td><td class="ai">Open-Meteo, hourly, five days back and three ahead</td><td class="ai">Temperature, humidity, rain, wind, evapotranspiration</td><td><span class="tag tag--lit">external</span></td></tr>
-                  <tr><td><b>Crop stress risk</b></td><td class="ai">Computed from the forecast</td><td class="ai">When protectant is needed</td><td><span class="tag tag--der">soft</span></td></tr>
-                  <tr><td><b>Time</b></td><td class="ai">Crop calendar</td><td>Tracks the farming cycle</td><td><span class="tag tag--abs">planned</span></td></tr>
+                  <tr class="ai"><td><b>Air temperature and humidity</b></td><td>SHT31 on I&sup2;C, in the same air as the leaf sensor</td><td>Vapour pressure deficit; the reference for the leaf sensor; 5-day mean for the blast rule</td><td><span class="tag tag--part">bench tested</span></td></tr>
                 </tbody>
               </table>
             </div>
@@ -229,12 +203,23 @@
               <details class="fold" id="blast">
                 <summary class="ai">The rice blast rule</summary>
                 <div class="fold__body">
-                  <p class="ai">Leaf wetness does not stress rice; it matters because blast fungus needs a wet leaf to infect. The interface applies the BLASTAM rule for leaf blast&nbsp;[7], which counts a wet period from hours of leaf wetness and their temperature&nbsp;[8], with future hours taken from forecast humidity&nbsp;[9]. The sensor is on a bench, the rule is unscored on Taiwanese fields and ACC deaminase is untested against blast, so blast risk is shown to the grower and triggers nothing.</p>
+                  <p class="ai">Leaf wetness does not stress rice; it matters because blast fungus needs a wet leaf to infect. The interface applies the BLASTAM rule for leaf blast&nbsp;[7], which counts a wet period from hours of leaf wetness and their temperature&nbsp;[8], with future hours taken from forecast humidity&nbsp;[9].</p>
                 </div>
               </details>
             </div>
           </div>
         </div>
+        <p>Every value is tagged by how it was obtained:</p>
+        <ul class="taglegend">
+          <li><span class="tag tag--meas">in-line</span> A sensor on the loop of culture pumped around the bioreactor.</li>
+          <li><span class="tag tag--cmd">commanded</span> Set by the operator (the farmer).</li>
+          <li><span class="tag tag--der">indirect</span> Calculated from in-line readings.</li>
+          <li><span class="tag tag--part">bench tested</span> Measured on a bench, not yet in the field or on the rig.</li>
+          <li class="ai"><span class="tag tag--part">not integrated</span> Tested or experimented with separately, not yet connected to the bioreactor.</li>
+          <li><span class="tag tag--abs">planned</span> Not yet collected.</li>
+          <li class="ai"><span class="tag tag--lit">external</span> Data pulled in from outside the rig.</li>
+        </ul>
+        <p class="ai">The rig app logs plain CSV with a fixed header and follows no synthetic biology standard such as SBOL. In the log only temperature carries its source, in <code>temp_src</code>; the columns are under <a href="#rigapp-stack">What survives which failure</a>.</p>
       </section>
 
       <!-- ================================================= 3 · RESULTS ===== -->
@@ -631,7 +616,7 @@
               <h3 class="chap__title" id="limits">Current limits</h3>
             </header>
             <ul class="findings">
-              <li><b>The loop is not closed.</b> Valves move under software control, but every decision about the culture, above all induction, still goes through a person, so by the definition in <a href="#what">the introduction</a> this is a digital shadow with actuation and not yet a twin&nbsp;[1,&nbsp;2].</li>
+              <li><b>The loop is not closed.</b> Valves move under software control, but every decision about the culture, above all induction, still goes through a person, so by the definition in <a href="#intro">the introduction</a> this is a digital shadow with actuation and not yet a twin&nbsp;[1,&nbsp;2].</li>
               <li><b><i>n</i>&nbsp;=&nbsp;1 almost everywhere.</b> One run behind R3, part of one behind R5, one plate behind R6. The 102&nbsp;hour log also records the reference beam, so it can be a second test of the trust layer without a new run.</li>
               <li><b>37&nbsp;&deg;C fits, 22&nbsp;&deg;C operation.</b> At 22&nbsp;&deg;C growth is <b>28 times slower</b> but plateaus at OD&nbsp;1.454, within noise of the 37&nbsp;&deg;C plateau, so the cost is time, not yield, and rate parameters do not transfer.</li>
               <li><b>Beer&ndash;Lambert at scale.</b> On the path runs&nbsp;3 and&nbsp;4 used, the photometer is linear only to about OD&nbsp;1.2, so most of the 102&nbsp;hour run sits above it. The splitter path reads one to one to OD&nbsp;2.5 (<a href="#r2-sio2">the silica repeat</a>) but does not retrofit the earlier runs.</li>
