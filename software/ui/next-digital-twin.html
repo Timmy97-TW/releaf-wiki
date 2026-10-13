@@ -370,6 +370,8 @@ details.card[open]>summary h2::before{content:"− "}
 /* ================================================================
    0. LANGUAGE, STORAGE, SMALL HELPERS
    ================================================================ */
+/* iGEM's wiki allows no request to an outside server: there the forecast falls back to the stored snapshot and the chat is off */
+var NO_NET = /(^|\.)igem\.(wiki|org)$/i.test(location.hostname);
 function lsGet(k){ try{ return localStorage.getItem(k); }catch(e){ return null; } }
 function lsSet(k,v){ try{ localStorage.setItem(k,v); }catch(e){} }
 var LANG = lsGet("releaf.lang")==="zh" ? "zh" : "en";
@@ -891,6 +893,7 @@ function wxUrl(){
     "wind_speed_10m,wind_gusts_10m,et0_fao_evapotranspiration,vapour_pressure_deficit&forecast_days=3&past_days=5&timezone=auto";
 }
 function wxFetch(){
+  if(NO_NET){ WX.err="outside requests are off on the iGEM wiki"; if(WX.src!=="live") wxSnapshot(); return; }
   if(WX.busy) return; WX.busy=true;
   var ctl = ("AbortController" in window) ? new AbortController() : null;
   var to = setTimeout(function(){ if(ctl) ctl.abort(); }, 10000);
@@ -1472,7 +1475,7 @@ function exportLog(){ save("BR01_"+stamp()+"_"+S.mode+"_process.csv", csv([COLS]
 function exportAudit(){ save("BR01_"+stamp()+"_"+S.mode+"_audit.csv", csv([["time_iso","run_h","who","what","why","source"]].concat(S.audit.slice().reverse().map(function(a){ return [iso(a.t),a.h.toFixed(4),a.who,a.what,a.why,a.mode]; })))); }
 function exportMeta(){
   save("BR01_"+stamp()+"_"+S.mode+"_meta.json", JSON.stringify({
-    rig:"ReLEAF hollow-fibre bioreactor", ui_build:"1013UI 2026-10-13", source:S.mode,
+    rig:"ReLEAF hollow-fibre bioreactor", ui_build:"next-digital-twin 2026-10-13", source:S.mode,
     run_start:iso(S.runStart), exported:iso(Date.now()),
     channels:Object.keys(CH).map(function(k){ return {key:k, tag:CH[k].tag, name:CH[k].n[0], unit:CH[k].unit, pat_class:CH[k].pat, source:CH[k].src[0]}; }),
     calibration:{od_blank:CAL.odBlank, od_blank_when:CAL.odWhen, ph_calibrated:CAL.phWhen, od_plate_to_inline_scale:CFG.odScale},
@@ -2208,7 +2211,7 @@ var ASK = {
     gemini:{n:"Gemini (Google)",    model:"gemini-2.5-flash", ph:"AI…"}
   },
   /* iGEM's wiki allows no request to an outside server, so the chat is switched off there */
-  blocked: /(^|\.)igem\.(wiki|org)$/i.test(location.hostname)
+  blocked: NO_NET
 };
 function askModel(){ return lsGet("releaf.ask.model."+ASK.prov) || ASK.P[ASK.prov].model; }
 function askContext(){

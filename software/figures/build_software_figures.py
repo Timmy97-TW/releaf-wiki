@@ -277,7 +277,7 @@ def fig_r2():
     fit = _calib_fig("fig-r2-photometer.svg", "R2. In-line photometer and BioDrop against TiO2 dose, 23 August 2026",
                      "Optical density at 600 nm reported by the in-line photometer and by a BioDrop for cumulative "
                      "TiO2 additions from 2 to 60 mg, each with a straight line fitted through all of its points.",
-                     "Cumulative TiO₂ added (mg)", 62, 10, 3.0,
+                     "Cumulative TiO₂ added (mg in 400 mL)", 62, 10, 3.0,
                      [("In-line photometer", m, ours, LEAF7, "dot"), ("BioDrop", m, bd, SLATE, "ring")])
     rec("R2", "~/Downloads/Inline photometer to biodrop.xlsx (sheet 1; TiO2 mg, in-line photometer, BioDrop)",
         n_ours=int((~np.isnan(ours)).sum()), n_biodrop=int((~np.isnan(bd)).sum()),
