@@ -116,7 +116,7 @@
     <div class="abstract__inner">
       <div class="abstract__story">
         <h2 class="abs-kicker">Abstract</h2>
-        <p class="abstract__lead">ReLEAF's bioreactor is meant to run for weeks with minimal manual instructions and automated controls and risk evaluations because of the digital twin.</p>
+        <p class="abstract__lead">ReLEAF's bioreactor is meant to run for weeks with minimal manual instructions and automated controls and risk evaluations because of the digital twin<span class="ai">, an AIoT system that connects the reactor's sensors and valves to models that learn from their data</span>.</p>
         <p class="abstract__body">The digital twin reads optical density, pH, pressure and flow from the reactor. All live. We calibrated its photometer against TiO&#8322; and SiO&#8322; and ran <em>B.&nbsp;subtilis</em> in the reactor four times, the longest for 434 hours. Replayed over that run, the twin flagged the photometer <strong>26.7 hours</strong> before its reading failed. Green light, dissolved oxygen and the field sensors have been tested separately and are not yet integrated. The future version adds leaf temperature, leaf wetness and the weather forecast into the full loop, designed but not tested yet.</p>
       </div>
       <div class="abstract__outcomes">
@@ -127,6 +127,7 @@
           <li><a class="st-worked" href="#r4"><i></i><span class="abs-ledger__name">Pressure and flow</span><span class="abs-st">Worked</span></a></li>
           <li><a class="st-worked" href="#r5"><i></i><span class="abs-ledger__name">Batch forecast</span><span class="abs-st">Worked</span></a></li>
           <li><a class="st-partial" href="#r3"><i></i><span class="abs-ledger__name">Field leaf sensor</span><span class="abs-st">Bench</span></a></li>
+          <li><a class="st-partial" href="#aiot"><i></i><span class="abs-ledger__name">AIoT</span><span class="abs-st">Partial</span></a></li>
         </ul>
       </div>
     </div>
@@ -420,6 +421,16 @@
       <!-- ========================================= 5 · THE SOFTWARE ======= -->
       <section class="sec" id="rigapp">
         <h2>The Software</h2>
+
+        <div class="card card--white ai">
+          <h3 id="aiot">AIoT</h3>
+          <p>The digital twin is an AIoT system: connected devices that sense and act, and models that learn from their data.</p>
+          <ul class="findings">
+            <li><b>What is connected.</b> A microcontroller reads optical density, pH, four pressures and flow, and moves the pinch valve and the four Luer valves on command. The board's Linux side logs every reading and serves the dashboard over the network. A second node, an ESP32 with the leaf and air sensors, has been bench tested (<a href="#r3">R3</a>) and is not connected to the twin yet.</li>
+            <li><b>What learns.</b> The sensor alarm in the 434-hour run (<a href="#r2">R2</a>) is an autoencoder our team trained on the healthy first 120 hours of that run, 601 samples, from the level and scatter of the reference beam and the scatter of the optical density reading. Its alarm limit was fixed before the rest of the run was scored. It raised the alarm at 216.3&nbsp;h; a second method, principal component analysis, trained the same way raised it at 216.7&nbsp;h. A Kalman filter forecasts growth from each new reading (<a href="#r5">R5</a>), and a growth curve fitted on the light plate predicts 24-hour growth from the first eight hours (<a href="#r6">R6</a>).</li>
+            <li><b>What is not joined yet.</b> The models were run on recorded data after the runs ended. None of them runs on the board yet, and none triggers a valve or the light: a person still makes those decisions. Joining the two is the job of the next Digital Twin.</li>
+          </ul>
+        </div>
 
         <div class="rail rail--seg" data-rail data-rail-top>
           <div class="seg"><div class="rail__strip seg__track" role="tablist" aria-label="The two digital twins">
