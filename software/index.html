@@ -146,7 +146,7 @@
         <h2>Digital Twin and ReLEAF's System</h2>
         <div class="lede-c">
           <p>A digital model represents a physical system but is updated by hand. A digital shadow receives live data automatically, but changes back to the system still need a person. A digital twin closes the loop: data flows automatically from the system to the model and back&nbsp;[1,&nbsp;2]. In the field of biomanufacturing, a digital twin can not only help monitor live data, it also acts as a second simulated world that runs the exact same work as the physical world, but ahead, giving the users risk assessments and action suggestions before things actually happen.</p>
-          <p>Our bioreactor is meant to run for weeks beside farmland, far from laboratories where results can be analyzed precisely. Because no one will always be there to take samples or interpret every reading, we developed a digital twin that can monitor live readings from sensors and weather forecasts, acts as the decision-making &ldquo;brain&rdquo; of the system, and allow user to loop back the result to predict more accurate projections and risks. The next version adds an Ask tab, so that a farmer with no expertise in biomanufacturing can ask what the reactor is doing in plain language and act on the answer.</p>
+          <p>Our bioreactor is meant to run for weeks beside farmland, far from laboratories where results can be analyzed precisely. Because no one will always be there to take samples or interpret every reading, we developed a digital twin that can monitor live readings from sensors and weather forecasts, acts as the decision-making &ldquo;brain&rdquo; of the system, and allow user to loop back the result to predict more accurate projections and risks. Some of what it watches sits outside the reactor: a sensor beside the crop reads leaf temperature and leaf wetness, two readings that together say when the weather is letting disease into the field. The next version adds an Ask tab, so that a farmer with no expertise in biomanufacturing can ask what the reactor is doing in plain language and act on the answer.</p>
         </div>
       </section>
 
@@ -191,12 +191,17 @@
                 <caption class="visually-hidden">Field sensors beside the crop, and regional data the twin uses</caption>
                 <thead><tr><th scope="col">Channel</th><th scope="col">Instrument or source</th><th scope="col">Purpose</th><th scope="col">Provenance</th></tr></thead>
                 <tbody>
-                  <tr><td><b>Leaf temperature</b></td><td>Leaf sensor</td><td>Leaf minus air temperature as a water-stress signal</td><td><span class="tag tag--part">bench tested</span></td></tr>
+                  <tr><td><b>Leaf temperature</b></td><td>Leaf sensor</td><td>Leaf minus air temperature as a water-stress signal; the temperature of a wet period in the blast rule</td><td><span class="tag tag--part">bench tested</span></td></tr>
                   <tr><td><b>Leaf wetness</b></td><td>The same leaf sensor</td><td>Biotic stress detection</td><td><span class="tag tag--abs">planned</span></td></tr>
                   <tr><td><b>Weather forecast</b></td><td>Weather service</td><td>Temperature, humidity, rain, wind, evapotranspiration</td><td><span class="tag tag--lit">external</span></td></tr>
                   <tr><td><b>Air temperature and humidity</b></td><td>Air sensor</td><td>Vapour pressure deficit; the reference for the leaf sensor</td><td><span class="tag tag--part">bench tested</span></td></tr>
                 </tbody>
               </table>
+            </div>
+            <div class="card card--white" id="blast">
+              <h4>Leaf wetness and the rice blast rule</h4>
+              <p>Leaf wetness on its own is not a stress for rice: the leaf sheds water as beads. It matters because a wet leaf is the condition blast fungus needs in order to infect, and whether an infection can start depends on how long the leaf stays wet and how warm it is while wet. That is why one sensor beside the crop reads both channels. The twin applies the BLASTAM rule for leaf blast&nbsp;[3], which counts a wet period as an infection condition when the leaf stays wet for at least 10&nbsp;hours at a mean of 22 to 25&nbsp;&deg;C, asks for longer as it gets cooler, and allows no infection below 15&nbsp;&deg;C or above 25&nbsp;&deg;C&nbsp;[4]; a dry hour ends the period. Hours already past come from the sensor, and hours ahead are estimated from the forecast, counted as wet when relative humidity reaches 90%&nbsp;[5]. When a period meets the rule, the interface tells the grower to look for lesions five to ten days later.</p>
+              <p>The sensor has only been on a bench (<a href="#r3">R3</a>), and its wet threshold is a default until a dry-down test sets it. The rule itself has not been checked against disease records from a Taiwanese field. A met condition means the weather allowed infection; whether lesions appear also depends on spores being present and on the variety and growth stage. ACC deaminase has not been tested against blast, so blast risk is shown to the grower and does not switch the green light on its own.</p>
             </div>
           </div>
         </div>
@@ -383,7 +388,7 @@
           <div class="rail__panel chap pl-6" role="tabpanel" id="p-r6" aria-labelledby="t-r6" hidden>
             <header class="chap__hero">
               <h3 class="chap__title" id="r6" data-toc="R6 Light plate">Light plate</h3>
-              <div class="chap__intro"><p>On 19 September 2026, <i>B.&nbsp;subtilis</i> WB800 grew in light-programmable array wells under six light arms, read on a plate reader at five time points to 24&nbsp;h. A logistic model beat logistic-with-lag by AICc and fits at <b>NRMSE 1.9%</b> (R&sup2;&nbsp;0.997), against the 15% criterion for bioprocess models&nbsp;[3]: \(r = 0.299 \pm 0.017\;\mathrm{h^{-1}}\) (doubling time 139&nbsp;min), \(K = 1.005\), \(X_0 = 0.0235\).</p></div>
+              <div class="chap__intro"><p>On 19 September 2026, <i>B.&nbsp;subtilis</i> WB800 grew in light-programmable array wells under six light arms, read on a plate reader at five time points to 24&nbsp;h. A logistic model beat logistic-with-lag by AICc and fits at <b>NRMSE 1.9%</b> (R&sup2;&nbsp;0.997), against the 15% criterion for bioprocess models&nbsp;[6]: \(r = 0.299 \pm 0.017\;\mathrm{h^{-1}}\) (doubling time 139&nbsp;min), \(K = 1.005\), \(X_0 = 0.0235\).</p></div>
             </header>
             <p>To test the fit as a prior, we left out each arm in turn, fitted the other five, and predicted its 24&nbsp;h OD from its first 8 hours, with and without the prior.</p>
             <div class="tablewrap">
@@ -490,6 +495,9 @@
         <ol>
           <li>Portela, R. M. C., Varsakelis, C., Richelle, A., Giannelos, N., Pence, J., Dessoy, S., &amp; von Stosch, M. (2021). When is an in silico representation a digital twin? A biopharmaceutical industry approach to the digital twin concept. <i>Advances in Biochemical Engineering/Biotechnology</i> 176, 35&ndash;56. doi:10.1007/10_2020_138</li>
           <li>Gargalo, C. L., Ca&ntilde;o de las Heras, S., Jones, M. N., Udugama, I., Mansouri, S. S., Kr&uuml;hne, U., &amp; Gernaey, K. V. (2021). Towards the development of digital twins for the bio-manufacturing industry. <i>Advances in Biochemical Engineering/Biotechnology</i> 176, 1&ndash;34. doi:10.1007/10_2020_142</li>
+          <li>Koshimizu, Y. (1988). [BLASTAM, leaf blast forecasting from AMeDAS weather data; in Japanese.] <i>Bulletin of the Tohoku National Agricultural Experiment Station</i> 78, 67&ndash;121. Cited from secondary sources; the original was not read.</li>
+          <li>Yoshino, R. (1979). [Leaf wetness duration and temperature required for rice blast infection; in Japanese.] <i>Bulletin of the Hokuriku National Agricultural Experiment Station</i> 22, 163. Cited from secondary sources; the original was not read.</li>
+          <li>Sentelhas, P. C., Dalla Marta, A., Orlandini, S., Santos, E. A., Gillespie, T. J., &amp; Gleason, M. L. (2008). Suitability of relative humidity as an estimator of leaf wetness duration. <i>Agricultural and Forest Meteorology</i> 148, 392&ndash;400. doi:10.1016/j.agrformet.2007.09.011</li>
           <li>Sinner, P., Daume, S., Herwig, C., &amp; Kager, J. (2021). Usage of digital twins along a typical process development cycle. <i>Advances in Biochemical Engineering/Biotechnology</i> 176, 71&ndash;96. doi:10.1007/10_2020_149</li>
         </ol>
       </section>
