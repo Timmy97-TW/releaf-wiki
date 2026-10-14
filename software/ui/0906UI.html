@@ -3040,7 +3040,7 @@ function wxDerive(w){
 }
 
 /* Crop thresholds. Broccoli is a cool-season crop: optimum 15-20 C,
-   heat stress begins near 25 C. Salinity is the stress BoPep4 answers,
+   heat stress begins near 25 C. Salinity is the stress BoPEP4 answers,
    and weather only reaches it through the root-zone water balance. */
 function wxRisk(w,d){
   var heat = clamp((w.heatIdx-25)/(35-25),0,1);
@@ -3452,8 +3452,8 @@ var MODELS = [
    v:"no", vn:["Its one measured input (103,006 MEFL, n = 3) is validated for sfGFP in Castillo-Hair 2019. Nothing in the chain is validated for a secreted 23-mer peptide. It is a ceiling, and the page says so in three places.",
                "唯一的實測輸入（103,006 MEFL，n = 3）在 Castillo-Hair 2019 中對 sfGFP 是有效的。整條鏈對一個分泌型 23 胜肽都沒有驗證。它是上限，本頁在三個地方都這樣寫。"],
    r:["upper bound only, never quote it as a titre","僅為上限, 絕不可當成產量引用"],
-   f:["Any measured BoPep4 titre ABOVE the ceiling falsifies it. A titre below it does not confirm it.",
-      "任何量到高於上限的 BoPep4 產量即可推翻它。量到低於它並不能證實它。"]},
+   f:["Any measured BoPEP4 titre ABOVE the ceiling falsifies it. A titre below it does not confirm it.",
+      "任何量到高於上限的 BoPEP4 產量即可推翻它。量到低於它並不能證實它。"]},
 
   {n:["Reference ET₀  wxDerive()","參考蒸散量 wxDerive()"],
    t:["Rigorous · published correlation (Hargreaves, Tetens)","嚴謹模型 · 公開相關式（Hargreaves、Tetens）"],
@@ -3817,10 +3817,10 @@ function renderQbD(){
   host.innerHTML =
      '<div class="qbd"><div class="cqa-list">'
     +'<div class="c"><b>'+(Z?'CQA · 關鍵品質屬性':'CQA · critical quality attribute')+'</b><span>'
-      +(Z? 'BoPep4 在收出濾液中的濃度，施用當下需 ≥ 100 nM（Wang 2022 對 200 mM NaCl 的有效劑量）。'
+      +(Z? 'BoPEP4 在收出濾液中的濃度，施用當下需 ≥ 100 nM（Wang 2022 對 200 mM NaCl 的有效劑量）。'
          +'<b>目前完全量不到。</b>不論管內或離線，我們沒有任何胜肽定量方法，這是整個 QbD 架構最大的洞，'
          +'因為沒有 CQA 就沒有設計空間，沒有設計空間就沒有控制策略。'
-         : 'BoPep4 concentration in the harvested permeate, ≥ 100 nM at the point of application (the effective dose against 200 mM '
+         : 'BoPEP4 concentration in the harvested permeate, ≥ 100 nM at the point of application (the effective dose against 200 mM '
          +'NaCl in Wang 2022). <b>It is currently unmeasurable.</b> There is no assay for the peptide, in-line or off-line. This is '
          +'the largest hole in the QbD frame: no CQA means no design space, and no design space means no control strategy.')
       +'</span></div>'
@@ -3905,16 +3905,16 @@ function renderTwin(){
     ? '<b>算法。</b>Castillo-Hair 2019 Fig 5，CcaSR v1.0 在飽和綠光下 sfGFP = '+MEFL.green.toLocaleString()+' MEFL'
       +'（n=3，'+MEFL.spread[0].toLocaleString()+'–'+MEFL.spread[1].toLocaleString()+'），紅光下 '+MEFL.red.toLocaleString()
       +' MEFL，'+y.fold.toFixed(0)+' 倍。MEFL 以亮度比 '+y.ratio.toFixed(3)+' 換成分子數（sfGFP ε·QY 對螢光素 ε·QY）。'
-      +'BoPep4 序列 '+PEP.seq+'，23 aa，MW '+PEP.mw+' Da。有效劑量 100 nM 對 200 mM NaCl，取自 Wang 2022。'
-      +'<br><br><b>這是上限，不是預測。</b>sfGFP 是胞內、穩定、不用分泌的報告蛋白；BoPep4 是 23 個胺基酸的分泌胜肽，'
+      +'BoPEP4 序列 '+PEP.seq+'，23 aa，MW '+PEP.mw+' Da。有效劑量 100 nM 對 200 mM NaCl，取自 Wang 2022。'
+      +'<br><br><b>這是上限，不是預測。</b>sfGFP 是胞內、穩定、不用分泌的報告蛋白；BoPEP4 是 23 個胺基酸的分泌胜肽，'
       +'要走 Sec 路徑，而且枯草桿菌會分泌至少八種胞外蛋白酶。真實產量低一到兩個數量級是完全合理的。'
       +'這個計算的用處不是給你一個產量，而是告訴你<b>要補的差距是兩個數量級以內，不是五個</b>。'
     : '<b>How this is computed.</b> Castillo-Hair 2019 Fig 5: CcaSR v1.0 under saturating green gives sfGFP = '
       +MEFL.green.toLocaleString()+' MEFL (n=3, '+MEFL.spread[0].toLocaleString()+'–'+MEFL.spread[1].toLocaleString()
       +'), against '+MEFL.red.toLocaleString()+' MEFL under red, a '+y.fold.toFixed(0)+'-fold window. MEFL converts to molecules '
       +'through a brightness ratio of '+y.ratio.toFixed(3)+' (sfGFP &epsilon;&middot;QY over fluorescein &epsilon;&middot;QY). '
-      +'BoPep4 is '+PEP.seq+', 23 aa, MW '+PEP.mw+' Da. The 100 nM effective dose against 200 mM NaCl is from Wang 2022.'
-      +'<br><br><b>This is a ceiling, not a prediction.</b> sfGFP is intracellular, stable and never secreted; BoPep4 is a 23-residue '
+      +'BoPEP4 is '+PEP.seq+', 23 aa, MW '+PEP.mw+' Da. The 100 nM effective dose against 200 mM NaCl is from Wang 2022.'
+      +'<br><br><b>This is a ceiling, not a prediction.</b> sfGFP is intracellular, stable and never secreted; BoPEP4 is a 23-residue '
       +'secreted peptide that must cross the Sec pathway, and B. subtilis secretes at least eight extracellular proteases. A real '
       +'yield one to two orders of magnitude below this is entirely reasonable. The value of the calculation is not a yield figure '
       +'but the news that <b>the gap to close is under two logs, not five</b>.')+'</div>';
