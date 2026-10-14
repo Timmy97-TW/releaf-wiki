@@ -117,6 +117,13 @@ DELIV_LANE = {
     ('2026-08-29', 'MD Batch 3'): 'protect',
     ('2026-08-29', 'Rig Firmware v0.3'): 'twin',
     ('2026-08-29', 'Wet Lab Handoff: The Whole Rig'): 'wet',
+    # 14 October: the week of 10 October.
+    ('2026-10-10', 'Silica Calibration Series'): 'photo',
+    ('2026-10-10', 'Hardware Records As Chapters'): 'reactor',
+    ('2026-10-10', 'Rig Application Source'): 'twin',
+    ('2026-10-10', 'Protein Design Fact Check'): 'protect',
+    ('2026-10-10', 'ACC Deaminase Salinity Plate'): 'chamber',
+    ('2026-10-10', 'Soil Salinity Fresh Weights'): 'math',
 }
 KW = {
     'dataphys': ['physicali', 'simulator', 'oobleck', 'thermochromic'],
@@ -271,7 +278,7 @@ BRANCHES = [
 # the orange drafting mark like the late-August ones. What follows is what
 # the record alone cannot say: the kind and weight of each September node,
 # the handoffs after Felix's six, and the plan to the wiki freeze.
-TODAY = '2026-10-07'
+TODAY = '2026-10-14'
 FREEZE = '2026-10-21'
 LAST_PLAN_WEEK = '2026-10-17'   # the last weekend before the freeze
 
@@ -302,6 +309,19 @@ NODES = {
     ('lpa', '2026-10-03'): dict(k='work', h=2),
     ('chamber', '2026-10-03'): dict(k='milestone', h=3),
     ('wiki', '2026-10-03'): dict(k='work', h=1),
+    # 14 October: three lanes the new Discord pull adds to the week of 3 October,
+    # and the week of 10 October, which is the last full week before the freeze.
+    ('reactor', '2026-10-03'): dict(k='work', h=2),
+    ('twin', '2026-10-03'): dict(k='milestone', h=3),
+    ('math', '2026-10-03'): dict(k='work', h=2),
+    ('photo', '2026-10-10'): dict(k='milestone', h=3),
+    ('reactor', '2026-10-10'): dict(k='work', h=2),
+    ('twin', '2026-10-10'): dict(k='work', h=2),
+    ('protect', '2026-10-10'): dict(k='work', h=2),
+    ('chamber', '2026-10-10'): dict(k='work', h=2),
+    ('math', '2026-10-10'): dict(k='work', h=2),
+    ('gis', '2026-10-10'): dict(k='work', h=1),
+    ('wiki', '2026-10-10'): dict(k='milestone', h=3),
 }
 
 # Handoffs after Felix's board, in his shape.
@@ -312,7 +332,7 @@ EXTRA_HANDOFFS = [
          did=['Ran it from 2 to 4 September in the 37 °C incubator',
               'Sampled lumen lysate, lumen medium and shell medium at nine time points to 44 h',
               'Ran a Western blot on the samples'],
-         back='OD600 rose from 0.1738 to 2.4474 over 53 h 22 min and 6,387 logged samples, with transmembrane pressure flat at -0.0005 bar after 1,132 L. The team\'s own documents read the 44 h blot three ways (not detectable, low but present, a faint band near 42 kDa), so the run counts as proof that the rig works with cells in it until the blot is read once, properly.'),
+         back='OD600 rose from 0.83 to 2.45 over 53 h 22 min and 6,387 logged samples, with transmembrane pressure flat at -0.0005 bar after 1,132 L. The team\'s own documents read the 44 h blot three ways (not detectable, low but present, a faint band near 42 kDa), so the run counts as proof that the rig works with cells in it until the blot is read once, properly.'),
     dict(p='lpa', w=25, t='DiOPAL, for a light-control run',
          d='The light plate apparatus went to the wet lab for its first culture run under defined light.',
          sent='DiOPAL, six light conditions with four matched LEDs each.',
@@ -371,6 +391,15 @@ SEPT_PHOTOS = {
     '224-t.webp': dict(p='chamber', s=0, team='Drylab', k='photo', m=1),
     '225-t.webp': dict(p='chamber', s=0, team='Drylab', k='photo', m=0),
     '226-t.webp': dict(p=None, s=0, team='Drylab', k='photo', m=0),
+    # 14 October: the weeks of 3 and 10 October, from the Discord record.
+    '227-t.webp': dict(p='reactor', s=1, team='Drylab', k='figure', m=0),
+    '228-t.webp': dict(p='twin', s=1, team='Drylab', k='figure', m=0),
+    '229-t.webp': dict(p='photo', s=0, team='Drylab', k='figure', m=0),
+    '249-t.webp': dict(p='photo', s=0, team='Drylab', k='figure', m=0),
+    '250-t.webp': dict(p='photo', s=1, team='Drylab', k='photo', m=1),
+    '251-t.webp': dict(p='photo', s=0, team='Drylab', k='figure', m=0),
+    '252-t.webp': dict(p='chamber', s=1, team='Wetlab', k='photo', m=1),
+    '253-t.webp': dict(p='chamber', s=0, team='Wetlab', k='figure', m=0),
 }
 
 # What came back later, added to Felix's own account of a handoff.
@@ -390,33 +419,32 @@ BACK_MORE = {
 # The plan to the freeze, pencilled in by week. The pages say what is left;
 # the week each item sits in is our proposal, so every one is drafted.
 PLAN = [
-    ('2026-10-03', 'twin', 'Mirror the software repository to iGEM\'s GitLab',
-     'The Judge Handbook only accepts software hosted on gitlab.igem.org for the Best Software award.'),
-    ('2026-10-03', 'reactor', 'Repeat the 22 °C growth test and check plasmid stability',
-     'Prof. Chang\'s first two asks from 4 September, before the reactor is shown again.'),
-    ('2026-10-03', 'math', 'Close the six open questions in the model\'s section 12',
-     'Publish the yield fit, record the nine unrecorded constants and the salt-ladder to index conversion, and settle the two disputed Hill constants.'),
-    ('2026-10-10', 'lpa', 'Measure photon flux and well-to-well uniformity',
-     'Lux readings do not give the dose the circuit sees; the next culture run needs flux per well. '
-     'Pencilled in for 3 October and still open on 7 October.'),
-    ('2026-10-10', 'lpa', 'Green against dark on the Level 2 strain, reading the output',
-     'The run the Engineering page waits on: the first time the apparatus would test whether the switch switches.'),
-    ('2026-10-10', 'photo', 'Write up cycles 7 and 8 and upload the STEP files',
-     'The silicon dioxide calibration and the simplified optics, both built, neither written.'),
-    ('2026-10-10', 'gis', 'Take the routing map off OpenStreetMap and OSRM',
-     'Cache or replace both, so nothing on the wiki is fetched from a server outside iGEM.'),
-    ('2026-10-10', 'protect', 'Scope or drop the unspecified engineering-direction runs',
-     'The layout document lists them without saying what they are; the page asks for a decision before the freeze.'),
-    ('2026-10-10', 'hydro', 'Assembly section, drawings and print settings for the four STLs',
-     'So the plate can be printed by someone who has not seen it.'),
-    ('2026-10-17', 'reactor', 'Write the proof-of-concept run and the assembly guide',
-     'Section 4.2 links stress, sensor, green light, protectant and the hydroponics plate in one run.'),
+    # Rewritten 14 October: the weeks of 3 and 10 October are written record now,
+    # so everything still open stands in the one week that is left.
+    ('2026-10-17', 'lpa', 'Measure photon flux, then run green against dark on the Level 2 strain',
+     'Every dose on that page is in lux, which is weighted for human vision; the run the Engineering page waits on '
+     'needs flux per well before it can mean anything. Pencilled in for 3 October, then for 10 October.'),
+    ('2026-10-17', 'reactor', 'Repeat the growth test at 22 \u00b0C, and write the proof-of-concept run',
+     'Prof. Chang\'s first ask from 4 September, and the single run that would put stress, sensor, green light, '
+     'protectant and the hydroponics plate on one page.'),
     ('2026-10-17', 'twin', 'Move the pressure ceiling and the command watchdog into the rig firmware',
      'The page names this as the precondition for any automation above tier 0.'),
-    ('2026-10-17', 'math', 'Publish the stress index as the contingency',
-     'If the plant replicates do not arrive, the index goes up without a thin dose-response fit.'),
-    ('2026-10-17', 'wiki', 'Close the Engineering and Results fix lists; freeze on 21 October',
-     'Every page finished and every file moved onto iGEM\'s servers.'),
+    ('2026-10-17', 'math', 'Close section 12, and publish the stress index as the contingency',
+     'The yield fit, the nine unrecorded constants, the salt-ladder conversion and the two disputed Hill constants; '
+     'and if the plant replicates do not arrive, the index goes up without a thin dose-response fit.'),
+    ('2026-10-17', 'gis', 'Take the routing map off OpenStreetMap and OSRM, and settle the crop',
+     'Nothing on the wiki may be fetched from a server outside iGEM, and the maps still answer the rice question '
+     'that 吳姿嫺 said is not the one being asked.'),
+    ('2026-10-17', 'photo', 'Say which build is the final slim design, and upload the STEP files',
+     'The unit read on 10 October has the beam splitter out as well as the lens, which the design-changes card on '
+     'the same page contradicts.'),
+    ('2026-10-17', 'hydro', 'Assembly section, drawings and print settings for the four STLs',
+     'So the plate can be printed by someone who has not seen it.'),
+    ('2026-10-17', 'protect', 'Scope or drop the unspecified engineering-direction runs',
+     'The layout document lists them without saying what they are; the page asks for a decision before the freeze.'),
+    ('2026-10-17', 'wiki', 'Port the remaining pages to iGEM\'s GitLab, and freeze on 21 October',
+     'Nine of the thirty-three addresses there carry real content; the rest are blank template pages, and the '
+     'freeze is 21 October at 23:00 Taiwan time.'),
 ]
 
 RETURNS = [
