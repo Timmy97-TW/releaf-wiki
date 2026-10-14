@@ -1444,7 +1444,7 @@ BODY = """
                  alt="Ribbon rendering of the peptide lying along the concave face of the receptor solenoid, with three basic side chains reaching down to receptor carboxylates and the distances labelled."
                  width="1300" height="950" loading="lazy" decoding="async" />
             <figcaption>
-              <b>Figure 1.</b> The electrostatic belt. The peptide (orange) runs the concave
+              The electrostatic belt. The peptide (orange) runs the concave
               face of the leucine-rich-repeat solenoid, and the basic side chains at
               positions 7, 9 and 18 reach down onto fixed receptor carboxylates at 2.6 to
               3.0&nbsp;&Aring;. Rendered from a docked model that carries Arg at position 18;
@@ -1457,7 +1457,7 @@ BODY = """
                  alt="Surface rendering showing the peptide C-terminus buried inside a pocket of the receptor, with the terminal asparagine drawn as sticks."
                  width="1150" height="950" loading="lazy" decoding="async" />
             <figcaption>
-              <b>Figure 2.</b> The C-terminal clamp. Asn23 is not on the surface of the
+              The C-terminal clamp. Asn23 is not on the surface of the
               interface, it is inside a pocket, and its free &alpha;-carboxylate
               salt-bridges Arg487 at 2.40&nbsp;&Aring; in the crystal&nbsp;[1]. There is no
               room for a residue 24 without the peptide leaving the pocket.
@@ -1759,7 +1759,7 @@ BODY = """
                alt="Bar chart of free space at each peptide terminus with and without the co-receptor bound. The N-terminal bars are identical; the C-terminal free space collapses from 45 points to 2."
                width="1400" height="526" loading="lazy" decoding="async" />
           <figcaption>
-            <b>Figure 3.</b> Free space at each terminus, with and without the co-receptor.
+            Free space at each terminus, with and without the co-receptor.
             The two N-terminal bars are identical because the co-receptor does not touch
             that side.
             <span class="prov">Generated from our own flood-fill output. Scaled only.</span>
@@ -1789,7 +1789,7 @@ BODY = """
                alt="Two panels: how much of the crystallographic interface each construct reproduces, and the same data plotted against docking score. The already-ordered construct scores best and makes none of the contacts."
                width="1400" height="545" loading="lazy" decoding="async" />
           <figcaption>
-            <b>Figure 4.</b> Clamp integrity against docking score. The construct already in
+            Clamp integrity against docking score. The construct already in
             flight buries 2,261&nbsp;&Aring;&sup2; and scores &minus;155.7, better than
             untagged wild-type BoPep4 at &minus;125.9, while making none of the four contacts
             that carry function. It binds the receptor extensively, in the wrong register.
@@ -1854,7 +1854,7 @@ BODY = """
                alt="Grouped bars of the translation-initiation bottleneck for each payload at three optimisation stages, with the reference gene marked as a dotted line."
                width="1360" height="545" loading="lazy" decoding="async" />
           <figcaption>
-            <b>Figure 5.</b> The initiation bottleneck by payload and stage. Optimising for
+            The initiation bottleneck by payload and stage. Optimising for
             codon usage alone gives an adaptation index of 0.87 to 0.89 and a bottleneck
             near 0.054, with the Shine-Dalgarno core essentially fully occluded in
             every case.
@@ -1929,7 +1929,7 @@ BODY = """
                alt="Every BoPep4 expression cassette drawn to scale on a common axis, showing where the affinity tag sits in each one."
                width="1400" height="443" loading="lazy" decoding="async" />
           <figcaption>
-            <b>Figure 6.</b> Every cassette drawn to scale. The ones already at synthesis put
+            Every cassette drawn to scale. The ones already at synthesis put
             the tag where the receptor reads the peptide; the new ones put it at the end the
             crystal cannot resolve.
             <span class="prov">Generated from our own construct files. Scaled only.</span>

@@ -97,8 +97,8 @@ def figure(caption, n):
         '        <div class="fig__slot">Figure %d &middot; image not added yet'
         '<br />drop the file in <code>assets/img/</code> and replace this div '
         'with an &lt;img&gt;</div>\n'
-        '        <figcaption><b>Figure %d.</b> %s</figcaption>\n'
-        '      </figure>\n' % (n, n, esc(caption)))
+        '        <figcaption>%s</figcaption>\n'
+        '      </figure>\n' % (n, esc(caption)))
 
 
 def table(headers, rows):

@@ -21,14 +21,8 @@
     // the drawing-sheet plate tag in css/polish.css prints this one, zero-padded the way a sheet numbers plates
     fig.setAttribute("data-plate", n < 10 ? "0" + n : String(n));
 
-    const cap = fig.querySelector("figcaption");
-    if (!cap || cap.querySelector(".fignum")) return;
-
-    const label = document.createElement("span");
-    label.className = "fignum";
-    label.textContent = "Figure " + n;
-    cap.insertBefore(document.createTextNode(" "), cap.firstChild);
-    cap.insertBefore(label, cap.firstChild);
+    // Captions carry no "Figure N" label (team's call, 14 Oct 2026): the
+    // number stays on the element so cross-references still resolve.
   });
 
   /* ---------- number the tables ---------- */
