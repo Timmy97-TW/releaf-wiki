@@ -925,7 +925,7 @@ function buildGallery(){
       h+=`<figure class="galitem" style="--ct:${ct}">
         <button type="button" class="shot-btn${ph.k==='figure'?' fig':''}" data-pix="${ph.i}" aria-label="Enlarge: ${attr(ph.c)}">
           <img src="${ph.t}" alt="${attr(ph.c)}" loading="lazy">${ph.s?STARSVG:''}</button>
-        <figcaption class="meta"><span class="cap ai">${esc(ph.c)}</span>
+        <figcaption class="meta"><span class="cap">${esc(ph.c)}</span>
           <span class="sub"><span class="pd">${esc(who)}</span><span>${esc(ph.d)}</span>${ph.s?'<span>team pick</span>':''}</span></figcaption></figure>`;
     });
     h+=`</div></section>`;
