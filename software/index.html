@@ -11,7 +11,7 @@
   <link rel="stylesheet" href="../assets/css/page.css" />
   <link rel="stylesheet" href="../assets/css/engage.css?v=1010seg" />
   <link rel="stylesheet" href="../assets/vendor/katex/katex.min.css" />
-  <link rel="stylesheet" href="software.css?v=20261015" />
+  <link rel="stylesheet" href="software.css?v=20261015b" />
   <link rel="stylesheet" href="../assets/css/bannerhead.css?v=20261010b" />
 <link rel="stylesheet" href="../assets/css/fulllines.css?v=1014" />
 </head>
@@ -149,6 +149,105 @@
           <p>A digital model represents a physical system but is updated by hand. A digital shadow receives live data automatically, but changes back to the system still need a person. A digital twin closes the loop: data flows automatically from the system to the model and back&nbsp;[1,&nbsp;2]. In the field of biomanufacturing, a digital twin can not only help monitor live data, it also acts as a second simulated world that runs the exact same work as the physical world, but ahead, giving the users risk assessments and action suggestions before things actually happen.</p>
           <p id="aiot">Our bioreactor is meant to run for weeks beside farmland, far from laboratories where results can be analyzed precisely. Because no one will always be there to take samples or interpret every reading, we developed a digital twin that can monitor live readings from sensors and weather forecasts, acts as the decision-making &ldquo;brain&rdquo; of the system, and allow user to loop back the result to predict more accurate projections and risks. Some of what it watches sits outside the bioreactor: a sensor beside the crop reads leaf temperature and leaf wetness, two readings that together say when the weather is letting disease into the field. ReLEAF is an AIoT system: these sensors and the bioreactor's valves are wired to a board that logs every reading, and models learn from those readings. An autoencoder our team trained on the healthy first 120 hours of the 434-hour run flagged a failing photometer 26.7 hours before its reading became unusable (<a href="#r2">R2</a>). The models have so far run on recorded data after each run, and a person still makes every decision. <a href="#ui-next">The next Digital Twin</a> joins them to the live loop and adds the Ask tab, where a farmer with no expertise in biomanufacturing can ask about the bioreactor in plain language and act on the answer.</p>
         </div>
+        <figure class="flow" id="flow" aria-labelledby="flow-cap"
+                data-edges="in-br>m-alarm m-alarm>m-fc m-prior>m-fc m-fc>w-ready ~in-out>m-stress ~in-wx>m-stress ~m-stress>w-need ~w-ready>d-ind ~w-need>d-ind ~d-ind>a-light +d-ind>a-valve">
+          <div class="flow__grid">
+            <div class="flow__col">
+              <p class="flow__head"><i>1</i>What it takes in</p>
+              <div class="flow__body">
+                <div class="flow__group pl-2">
+                  <p class="flow__glabel">Within the bioreactor</p>
+                  <div class="flow__node flow__node--live" data-node="in-br">
+                    <b><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9 3.5h6M10 3.5v6L5 19a1.5 1.5 0 0 0 1.3 2h11.4a1.5 1.5 0 0 0 1.3-2l-5-9.5v-6"/></svg>Bioreactor sensors</b>
+                    <ul class="flow__chips"><li class="flow__badge">Live</li><li>OD600</li><li>pH</li><li>Flow rate</li><li>Pressure &times;&nbsp;4</li></ul>
+                  </div>
+                </div>
+                <div class="flow__group pl-3">
+                  <p class="flow__glabel">Outside the bioreactor</p>
+                  <div class="flow__node" data-node="in-out">
+                    <b><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 19c0-8 5-14 14-14 0 9-6 14-14 14z"/><path d="M5 19l7-7"/></svg>Field sensors</b>
+                    <span>Leaf temperature and wetness, air temperature and humidity</span>
+                  </div>
+                  <div class="flow__node" data-node="in-wx">
+                    <b><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7 18h10a4 4 0 0 0 .6-7.95A6 6 0 0 0 6.2 11 3.5 3.5 0 0 0 7 18z"/></svg>Weather forecast</b>
+                    <span>Temperature, humidity, rain, wind</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div class="flow__col">
+              <p class="flow__head"><i>2</i>What the models do</p>
+              <div class="flow__body">
+                <div class="flow__node flow__node--model" data-node="m-alarm">
+                  <b><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 12h4l2-5 4 10 2-5h6"/></svg>Sensor alarm</b>
+                  <span>Autoencoder on the sensor and process axes <small>R2</small></span>
+                </div>
+                <div class="flow__node flow__node--model" data-node="m-fc">
+                  <b><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 17l5-5 4 3 7-8"/><path d="M15 7h5v5"/></svg>Batch forecast</b>
+                  <span>Kalman filter, 2 to 12&nbsp;h ahead <small>R5</small></span>
+                </div>
+                <div class="flow__node flow__node--model" data-node="m-prior">
+                  <b><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="7.5" cy="7.5" r="2.2"/><circle cx="16.5" cy="7.5" r="2.2"/><circle cx="7.5" cy="16.5" r="2.2"/><circle cx="16.5" cy="16.5" r="2.2"/></svg>Growth prior</b>
+                  <span>Logistic fit from the light plate <small>R6</small></span>
+                </div>
+                <div class="flow__node flow__node--model" data-node="m-stress">
+                  <b><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 4l9 16H3z"/><path d="M12 10v4M12 17v.01"/></svg>Crop-stress risk</b>
+                  <span>Stress index and the rice blast rule</span>
+                </div>
+              </div>
+            </div>
+
+            <div class="flow__col">
+              <p class="flow__head"><i>3</i>What it works out</p>
+              <div class="flow__body">
+                <div class="flow__node" data-node="w-ready">
+                  <b><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="8.5"/><path d="M12 7.5V12l3 2"/></svg>Batch readiness</b>
+                  <span>Is the protectant ready in time</span>
+                </div>
+                <div class="flow__node" data-node="w-need">
+                  <b><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 20v-8"/><path d="M12 12c0-4 3-6 7-6 0 4-3 6-7 6z"/><path d="M12 14c0-3-2.5-5-6-5 0 3.5 2.5 5 6 5z"/></svg>Field need</b>
+                  <span>When the crop will want it</span>
+                </div>
+              </div>
+            </div>
+
+            <div class="flow__col">
+              <p class="flow__head"><i>4</i>What it decides</p>
+              <div class="flow__body">
+                <div class="flow__node flow__node--decide" data-node="d-ind">
+                  <b>Induction decision</b>
+                  <span>Switch the green light on, and for how long</span>
+                  <em><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="8.5" r="3.5"/><path d="M5 20c.8-3.6 3.6-5.5 7-5.5s6.2 1.9 7 5.5"/></svg>A person approves</em>
+                </div>
+              </div>
+            </div>
+
+            <div class="flow__col">
+              <p class="flow__head"><i>5</i>What it acts on</p>
+              <div class="flow__body">
+                <div class="flow__node flow__node--live" data-node="a-valve">
+                  <b><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 8v8l9-4zM21 8v8l-9-4z"/><path d="M12 12V5M9 5h6"/></svg>Valves</b>
+                  <ul class="flow__chips"><li class="flow__badge">Live</li><li>Pinch valve</li><li>Luer valves &times;&nbsp;4</li></ul>
+                  <span>Commanded from the controller UI</span>
+                </div>
+                <div class="flow__node flow__node--muted" data-node="a-light">
+                  <b><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9 18h6M10 21h4"/><path d="M12 3a6 6 0 0 0-3.5 10.9c.6.5 1 1.2 1 2.1h5c0-.9.4-1.6 1-2.1A6 6 0 0 0 12 3z"/></svg>Green light</b>
+                  <span>Tested, not yet integrated</span>
+                </div>
+              </div>
+            </div>
+          </div>
+          <svg class="flow__wires" aria-hidden="true" focusable="false"></svg>
+          <figcaption id="flow-cap">
+            <span class="flow__title">How the twin's inputs reach the induction decision.</span>
+            <span class="flow__legend">
+              <span><i class="flow__key flow__key--live"></i>Live on the bioreactor today</span>
+              <span><i class="flow__key flow__key--on"></i>Runs on our recorded data</span>
+              <span><i class="flow__key flow__key--off"></i>Designed, not yet connected; the return closes once induction is automatic</span>
+            </span>
+          </figcaption>
+        </figure>
       </section>
 
       <!-- ================================================= 2 · THE RIG ===== -->
@@ -158,7 +257,6 @@
           <div class="seg"><div class="rail__strip seg__track" role="tablist" aria-label="Where the twin's data come from">
             <button class="rail__btn seg__btn pl-2" role="tab" type="button" id="t-rig-reactor" aria-controls="p-rig-reactor" aria-selected="true"><svg class="seg__ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="M9 3.5h6M10 3.5v6L5 19a1.5 1.5 0 0 0 1.3 2h11.4a1.5 1.5 0 0 0 1.3-2l-5-9.5v-6"/></svg>Within the bioreactor</button>
             <button class="rail__btn seg__btn pl-3" role="tab" type="button" id="t-rig-local" aria-controls="p-rig-local" aria-selected="false"><svg class="seg__ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="M5 19c0-8 5-14 14-14 0 9-6 14-14 14z"/><path d="M5 19l7-7"/></svg>Outside the bioreactor</button>
-            <button class="rail__btn seg__btn pl-6" role="tab" type="button" id="t-rig-time" aria-controls="p-rig-time" aria-selected="false"><svg class="seg__ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><circle cx="12" cy="12" r="8.5"/><path d="M12 7.5V12l3 2"/></svg>Time and farming cycles</button>
           </div></div>
 
           <div class="rail__panel chap pl-2" role="tabpanel" id="p-rig-reactor" aria-labelledby="t-rig-reactor">
@@ -206,82 +304,7 @@
               <p>The sensor has only been on a bench (<a href="#r3">R3</a>), and its wet threshold is a default until a dry-down test sets it. The rule itself has not been checked against disease records from a Taiwanese field. A met condition means the weather allowed infection; whether lesions appear also depends on spores being present and on the variety and growth stage. ACC deaminase has not been tested against blast, so blast risk is shown to the grower and does not switch the green light on its own.</p>
             </div>
           </div>
-
-          <div class="rail__panel chap pl-6" role="tabpanel" id="p-rig-time" aria-labelledby="t-rig-time" hidden>
-            <header class="chap__hero">
-              <h3 class="chap__title" id="rig-time">Time and farming cycles</h3>
-            </header>
-            <div class="tablewrap">
-              <table class="data chan">
-                <caption class="visually-hidden">Time inputs: the run clock and the crop calendar</caption>
-                <thead><tr><th scope="col">Channel</th><th scope="col">Source</th><th scope="col">Purpose</th><th scope="col">Provenance</th></tr></thead>
-                <tbody>
-                  <tr><td><b>Run clock</b></td><td>The board's timestamp on every logged reading</td><td>Hours into the batch; the horizon of each forecast</td><td><span class="tag tag--meas">in-line</span></td></tr>
-                  <tr><td><b>Crop calendar</b></td><td>Planting dates of the first and second rice crops</td><td>Tracks the farming cycle, so the twin knows which growth stage a forecast stress would land on</td><td><span class="tag tag--abs">planned</span></td></tr>
-                </tbody>
-              </table>
-            </div>
-          </div>
         </div>
-        <figure class="flow" id="flow" aria-labelledby="flow-cap"
-                data-edges="in-br>m-alarm m-alarm>m-fc m-prior>m-fc m-fc>w-ready ~in-out>m-stress ~in-wx>m-stress ~in-cal>m-stress ~m-stress>w-need in-clock>m-fc ~w-ready>d-ind ~w-need>d-ind ~d-ind>a-light ~d-ind>a-valve">
-          <div class="flow__grid">
-            <div class="flow__col">
-              <p class="flow__head">What it takes in</p>
-              <div class="flow__body">
-              <div class="flow__group pl-2">
-                <p class="flow__glabel">Within the bioreactor</p>
-                <div class="flow__node" data-node="in-br"><b>Bioreactor instruments</b><span>OD600, pH, pressure &times;&nbsp;4, flow</span></div>
-              </div>
-              <div class="flow__group pl-3">
-                <p class="flow__glabel">Outside the bioreactor</p>
-                <div class="flow__node" data-node="in-out"><b>Field sensors</b><span>Leaf temperature, leaf wetness, air temperature and humidity</span></div>
-                <div class="flow__node" data-node="in-wx"><b>Weather forecast</b><span>Temperature, humidity, rain, wind</span></div>
-              </div>
-              <div class="flow__group pl-6">
-                <p class="flow__glabel">Time and farming cycles</p>
-                <div class="flow__node" data-node="in-clock"><b>Run clock</b><span>Hours into the batch</span></div>
-                <div class="flow__node" data-node="in-cal"><b>Crop calendar</b><span>Which rice crop, which stage</span></div>
-              </div>
-              </div>
-            </div>
-
-            <div class="flow__col">
-              <p class="flow__head">What the models do</p>
-              <div class="flow__body">
-              <div class="flow__node flow__node--model" data-node="m-alarm"><b>Sensor alarm</b><span>Autoencoder on the sensor and process axes (R2)</span></div>
-              <div class="flow__node flow__node--model" data-node="m-fc"><b>Batch forecast</b><span>Kalman filter, 2 to 12&nbsp;h ahead (R5)</span></div>
-              <div class="flow__node flow__node--model" data-node="m-prior"><b>Growth prior</b><span>Logistic fit from the light plate (R6)</span></div>
-              <div class="flow__node flow__node--model" data-node="m-stress"><b>Crop-stress risk</b><span>Stress index and the rice blast rule</span></div>
-              </div>
-            </div>
-
-            <div class="flow__col">
-              <p class="flow__head">What it works out</p>
-              <div class="flow__body">
-              <div class="flow__node" data-node="w-ready"><b>Batch readiness</b><span>Is the protectant ready in time</span></div>
-              <div class="flow__node" data-node="w-need"><b>Field need</b><span>When the crop will want it</span></div>
-              </div>
-            </div>
-
-            <div class="flow__col">
-              <p class="flow__head">What it decides</p>
-              <div class="flow__body">
-              <div class="flow__node flow__node--decide" data-node="d-ind"><b>Induction decision</b><span>Switch the green light on, and for how long</span><em>A person approves</em></div>
-              </div>
-            </div>
-
-            <div class="flow__col">
-              <p class="flow__head">What it acts on</p>
-              <div class="flow__body">
-              <div class="flow__node" data-node="a-light"><b>Green light</b><span>Tested, not integrated</span></div>
-              <div class="flow__node" data-node="a-valve"><b>Valves</b><span>Pinch valve and four Luer valves</span></div>
-              </div>
-            </div>
-          </div>
-          <svg class="flow__wires" aria-hidden="true" focusable="false"></svg>
-          <figcaption id="flow-cap">How the twin's inputs reach the induction decision. <span class="flow__key flow__key--on"></span>Runs on our recorded data today. <span class="flow__key flow__key--off"></span>Designed, not yet connected; the return to the bioreactor closes once induction is automatic.</figcaption>
-        </figure>
       </section>
 
       <!-- ================================================= 3 · RESULTS ===== -->
@@ -669,6 +692,6 @@
   <script src="../assets/js/engage.js?v=1007s"></script>
   <script defer src="../assets/vendor/katex/katex.min.js"></script>
   <script defer src="../assets/js/math.js"></script>
-  <script defer src="flow.js?v=20261015"></script>
+  <script defer src="flow.js?v=20261015b"></script>
 </body>
 </html>
