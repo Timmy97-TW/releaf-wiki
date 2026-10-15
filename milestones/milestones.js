@@ -4,7 +4,7 @@
    lightbox is open, and lets the arrow keys step to the previous or next
    photograph on the page. It only reads and writes the lightbox page.js
    built, so page.js stays the single owner of opening and closing.
-   (The same file is copied to milestone/ for the milestone page.)
+   (The same file is copied to milestones/ for the Milestones page.)
    ========================================================================== */
 (function () {
   "use strict";

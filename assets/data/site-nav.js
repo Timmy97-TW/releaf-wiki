@@ -108,7 +108,7 @@ const NAV = [
         caption: "The people behind ReLEAF" },
       { title: "Attribution", slug: "attributions", icon: "attribution",
         caption: "Who did what" },
-      { title: "Milestone",   slug: "milestone",    icon: "milestone",
+      { title: "Milestones",  slug: "milestones",    icon: "milestone",
         caption: "Our season, month by month" }
     ]
   }

@@ -1,48 +1,94 @@
 /* =============================================================================
-   Milestone: the year as a vertical timeline, one section per month.
+   Milestones: the year as a vertical timeline, one section per month.
    Each entry is a date, a short title, a line or two, and a strip of
    photographs; extra photographs from the same day sit in a toggle. The strip
    keeps every photograph's own shape: each image's flex-grow is its aspect
    ratio (set inline), so a row comes out at one height without cropping.
-   The lightbox from page.js opens the large file (milestone.js).
+   The lightbox from page.js opens the large file (milestones.js).
    ========================================================================== */
 
-/* ---- four phases ----------------------------------------------------------- */
-.phases {
+/* ---- highlights: the gold sheet under the banner ---------------------------
+   One line per month on a horizontal track, the abstract flat beneath it.
+   Below 900px the track turns vertical. */
+.abstract--sheet.abstract--timeline .abstract__inner { grid-template-columns: minmax(0, 1fr); row-gap: 2.25rem; }
+.abstract--sheet.abstract--timeline .abstract__body { max-width: none; margin-top: 0; font-size: 1.0625rem; }
+
+.hl__track {
+  --dot: 13px;
+  position: relative;
   list-style: none;
-  counter-reset: phase;
-  display: grid;
-  gap: var(--sp-4);
-  grid-template-columns: repeat(auto-fit, minmax(15rem, 1fr));
-  margin: var(--sp-5) 0 var(--sp-3);
+  margin: 0;
   padding: 0;
+  display: grid;
+  grid-template-columns: repeat(10, minmax(0, 1fr));
+  column-gap: 1rem;
 }
-.sec .phases li + li { margin-top: 0; }
-.phases__item {
-  counter-increment: phase;
-  padding: var(--sp-4) var(--sp-5);
-  border: 1px solid var(--gray-200);
-  border-top: 3px solid var(--leaf-500);
-  border-radius: var(--radius-sm);
-  background: var(--white);
-  font-size: var(--text-sm);
-  line-height: 1.55;
+/* the rail through every dot */
+.hl__track::before {
+  content: "";
+  position: absolute;
+  left: calc(var(--dot) / 2); right: 0;
+  top: calc(2.3rem + .8rem + var(--dot) / 2 - 1px);
+  height: 2px;
+  background: linear-gradient(90deg, var(--bh-deep), color-mix(in srgb, var(--bh-deep) 35%, transparent));
 }
-.sec .phases__title {
-  margin: 0 0 var(--sp-2);
-  font-size: var(--text-base);
-  color: var(--leaf-900);
+.hl__item { min-width: 0; margin: 0; }
+.hl__item a {
+  display: grid;
+  grid-template-rows: 2.3rem var(--dot) auto;
+  row-gap: .8rem;
+  color: inherit;
+  text-decoration: none;
 }
-.sec .phases__title::before {
-  content: counter(phase) ".";
-  margin-right: .45em;
-  color: var(--leaf-500);
+.hl__mon {
+  align-self: end;
+  font-size: .8125rem;
+  font-weight: 650;
+  letter-spacing: .04em;
+  color: var(--bh-label);
   font-variant-numeric: tabular-nums;
+  white-space: nowrap;
 }
-.phases__note { font-size: var(--text-sm); color: var(--gray-500); }
+.hl__yr { display: block; font-size: .6875rem; font-weight: 500; letter-spacing: .08em; opacity: .7; }
+.hl__dot {
+  position: relative;
+  width: var(--dot); height: var(--dot);
+  border-radius: 50%;
+  background: var(--bh-deep);
+  box-shadow: 0 0 0 4px var(--paper);
+  transition: transform .2s ease;
+}
+.hl__text {
+  font-size: .875rem;
+  line-height: 1.45;
+  color: var(--ink-1);
+  text-wrap: pretty;
+}
+.hl__item a:hover .hl__dot,
+.hl__item a:focus-visible .hl__dot { transform: scale(1.35); }
+.hl__item a:hover .hl__text { text-decoration: underline; text-decoration-color: var(--bh-deep); text-underline-offset: 3px; }
+
+@media (max-width: 899px) {
+  .hl__track { grid-template-columns: minmax(0, 1fr); row-gap: 1.1rem; }
+  .hl__track::before {
+    left: calc(4.75rem + .9rem + var(--dot) / 2 - 1px); right: auto;
+    top: .4rem; bottom: .4rem;
+    width: 2px; height: auto;
+    background: color-mix(in srgb, var(--bh-deep) 55%, transparent);
+  }
+  .hl__item a {
+    grid-template-columns: 4.75rem var(--dot) minmax(0, 1fr);
+    grid-template-rows: auto;
+    column-gap: .9rem;
+    align-items: start;
+  }
+  .hl__mon { align-self: start; padding-top: .05rem; }
+
+  .hl__dot { margin-top: .3rem; }
+}
 
 /* ---- the timeline ------------------------------------------------------------ */
-.milestone { --tl-date: 6.75rem; --tl-gap: 2.25rem; --tl-h: 10.5rem; }
+.milestones { --tl-date: 6.75rem; --tl-gap: 2.25rem; --tl-h: 10.5rem; }
 
 .sec ol.tl {
   position: relative;
@@ -120,7 +166,7 @@
 
 /* ---- phone: dates move above the titles, the rail moves to the edge --------- */
 @media (max-width: 720px) {
-  .milestone { --tl-h: 8rem; }
+  .milestones { --tl-h: 8rem; }
   .sec ol.tl::before { left: .4rem; }
   .sec ol.tl > li.tl__item {
     grid-template-columns: minmax(0, 1fr);

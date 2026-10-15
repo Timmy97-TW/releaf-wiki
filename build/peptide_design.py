@@ -1264,7 +1264,7 @@ FOOTER = """
           <ul>
           <li><a href="../team/">Members</a></li>
           <li><a href="../attributions/">Attribution</a></li>
-          <li><a href="../milestone/">Milestone</a></li>
+          <li><a href="../milestones/">Milestones</a></li>
           </ul>
         </div>
       <div class="footer2__legal">

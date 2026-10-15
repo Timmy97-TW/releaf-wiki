@@ -1011,7 +1011,7 @@ PAGES = [
 # =============================================================== TEAM ========
 
 {
- "slug": "milestone", "tab": "team", "title": "Milestone",
+ "slug": "milestones", "tab": "team", "title": "Milestones",
  "lede": "The year in order, from the first meeting to the freeze.",
  "owner": "Whole team",
  "award": None,
