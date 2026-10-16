@@ -1649,18 +1649,7 @@ body.doc-light .od-event text { fill: #c1392a; }
 .story .hero-frame i.hf-br { right: 26px; bottom: 26px; border-left: 0; border-top: 0; }
 /* one pass every nine seconds, a fifth of a percent of the frame's luminance —
    enough to make the stage feel alive, not enough to read as a scanline */
-.story .hero-scan {
-  position: absolute; left: 0; right: 0; height: 26vh; top: -30vh;
-  background: linear-gradient(to bottom,
-    transparent 0%, color-mix(in srgb, var(--accent) 12%, transparent) 50%, transparent 100%);
-  animation: heroScan 9s linear infinite;
-}
-@keyframes heroScan {
-  0%   { transform: translateY(0); opacity: 0; }
-  12%  { opacity: 1; }
-  88%  { opacity: 1; }
-  100% { transform: translateY(150vh); opacity: 0; }
-}
+.story .hero-scan { display: none; }  /* 15 Oct 2026, the owner: no scan bar at all */
 @media (max-width: 760px) {
   .story .hero-frame i { width: 18px; height: 18px; }
   .story .hero-frame i.hf-tl, .story .hero-frame i.hf-tr { top: 84px; }
@@ -2750,6 +2739,18 @@ body.doc-light[data-instrument="photometer"] .doc-wrap section.sec > h3 { align-
 
 /* Plain inline results tables: no card, no dropdown, directly under the heading. */
 table.spec { width: 100%; border-collapse: collapse; font-size: .875rem; }
+/* 14 Oct 2026. `.spec` is also the stage's spec strip (above), a flex row with
+   a rule over it, and a table that inherits `display: flex` lays its caption,
+   head and body out side by side: the head floated over nothing and the
+   numbers ran off the card to the right. While these tables sat in a shut
+   chapter nobody saw it; in one continuous scroll they are on the page. The
+   table is a table again, and on a phone its frame scrolls sideways rather
+   than pushing the page wider (the phone rule below lets the BOM's frame
+   overflow, because the BOM turns into cards there and these do not). */
+.doc table.spec { display: table; padding: 0; border: 0; gap: 0; }
+@media (max-width: 620px) {
+  .tablewrap:has(> table.spec) { overflow-x: auto; }
+}
 table.spec caption {
   text-align: left; color: var(--muted); font-size: .78rem;
   padding-bottom: .7rem; line-height: 1.45;
@@ -2777,3 +2778,291 @@ dl.verdict dd { margin: 0; color: var(--muted); line-height: 1.7; }
 
 ul.tight { margin: 1.1rem 0; padding-left: 1.15rem; }
 ul.tight li { margin-bottom: .7rem; line-height: 1.68; color: var(--muted); }
+
+
+/* =====================================================================
+   14 Oct 2026 — the teammate's edit doc (Hardware Page Edit, pp. 19–40)
+   Page-scoped: nothing here touches ../css/hwdoc.css or ../js/hwdoc.js.
+   ===================================================================== */
+
+/* --- the stage title: "Photometer" is the header, the line its subtext --- */
+.story .pm-title h1.line {
+  margin: 0;
+  font-size: clamp(2.6rem, 7.6vw, 5.4rem);
+  line-height: 1;
+  color: #fff;
+}
+.story .pm-title .pm-title__sub {
+  margin: .9rem 0 0;
+  font-family: "Oxanium Title", var(--sans);
+  font-weight: 500; letter-spacing: -.01em; line-height: 1.2;
+  font-size: clamp(1.1rem, 2.3vw, 1.7rem);
+  color: var(--accent);
+  text-shadow: 0 0 40px rgba(0, 0, 0, .85);
+}
+
+/* --- no dark band between the stage and the record (doc: "remove top black shading") --- */
+.story-blend { display: none; }
+body.hwreveal .doc-wrap { padding-top: 0; }
+
+/* --- no figure labels anywhere on the record (doc: remove "Figure N", every figure) --- */
+.doc .fignum, .doc .fignum + br { display: none; }
+body.doc-light .doc .frame::after { content: none; }
+
+/* --- the equation boxes lose their green left rule --- */
+body.doc-light .doc .equation.eqn { border-left-width: 1px; border-left-color: rgba(15, 19, 25, .13); }
+
+/* --- Overview: the lede that opens part 2 --- */
+body.hwreveal .doc-wrap .doc section.sec.pm-overview { padding-top: var(--card-pad); padding-bottom: var(--card-pad); }
+body.hwreveal .doc-wrap .doc .pm-overview .pm-lede {
+  margin: 0; max-width: 44rem;
+  font-size: clamp(1.125rem, 1.02rem + .5vw, 1.35rem); line-height: 1.55;
+  font-weight: 500; letter-spacing: -.012em; color: var(--w-ink, #1d1d1f);
+}
+
+/* --- 3.4 Bubble Management: the tilted CAD left, the text right --- */
+.pm-split { display: grid; grid-template-columns: minmax(0, 15rem) minmax(0, 1fr); gap: 1.6rem 2rem; align-items: center; }
+.pm-split .frame { margin: 0; }
+.pm-split .frame-img img { display: block; width: 100%; height: auto; }
+.pm-split__text p:last-child { margin-bottom: 0; }
+@media (max-width: 640px) {
+  .pm-split { grid-template-columns: 1fr; }
+  .pm-split .frame { max-width: 15rem; margin: 0 auto; }
+}
+
+/* --- 3.5 Optical Layout: region list left with connectors, the cross-section right --- */
+body.hwreveal .doc-wrap .doc section.sec.pm-olay-sec > h3 { font-size: 1.15rem; }
+body.hwreveal .doc-wrap .doc section.sec.pm-olay-sec > p { font-size: .95rem; }
+.pm-olay .elev text { font-size: 9px; }
+.pm-olay {
+  --gap: 2.2rem;
+  display: grid; grid-template-columns: minmax(0, 13.5rem) minmax(0, 1fr);
+  column-gap: var(--gap); margin: 1.6rem 0 .4rem; position: relative;
+}
+.pm-olay__draw { position: relative; min-width: 0; }
+.pm-olay__draw svg { display: block; width: 100%; height: auto; max-height: 46rem; overflow: visible; }
+.pm-olay__list { position: relative; list-style: none; margin: 0; padding: 0; counter-reset: rg; }
+.pm-olay__list li {
+  position: absolute; left: 0; right: 0; top: var(--at);
+  transform: translateY(-.72rem);
+  counter-increment: rg; margin: 0; padding: 0;
+}
+.pm-olay__list li::after {
+  /* the connector: from the label's first line across the gap to the bracket */
+  content: ""; position: absolute; top: .72rem; left: calc(100% + .5rem); width: calc(var(--gap) - .5rem);
+  border-top: 1px solid var(--pm-leaf-700, #23684a); opacity: .7;
+}
+.doc .pm-olay__list li b {
+  display: block; font-size: .95rem; font-weight: 650; line-height: 1.45; color: var(--pm-leaf-900, #14402b);
+}
+.doc .pm-olay__list li b::before { content: counter(rg) "\2009\00b7\2009"; color: var(--pm-ink-2); font-weight: 600; }
+.doc .pm-olay__list li b span { display: block; font-family: var(--mono); font-size: .8rem; font-weight: 600; color: var(--w-leaf-700, #23684a); }
+.doc .pm-olay__list li p { margin: .2rem 0 0; font-size: .85rem; line-height: 1.5; color: var(--pm-ink-2); }
+@media (max-width: 760px) {
+  .pm-olay { grid-template-columns: 1fr; row-gap: 1.2rem; }
+  .pm-olay__list { order: 2; display: grid; gap: .9rem; }
+  .pm-olay__list li { position: static; transform: none; padding-top: .8rem; border-top: 1px solid var(--pm-hair); }
+  .pm-olay__list li::after { display: none; }
+  .pm-olay__draw svg { max-height: none; }
+  .pm-olay .elev text { font-size: 11px; }
+}
+
+/* --- 4.2 the four filtering steps, as the doc writes them --- */
+ol.pm-steps { list-style: none; margin: .4rem 0 1.6rem; padding: 0; counter-reset: st; }
+ol.pm-steps > li { counter-increment: st; position: relative; padding: 1rem 0 1rem 2.6rem; border-top: 1px solid var(--pm-hair); }
+ol.pm-steps > li:last-child { border-bottom: 1px solid var(--pm-hair); }
+ol.pm-steps > li::before {
+  content: counter(st); position: absolute; left: 0; top: 1rem;
+  width: 1.7rem; height: 1.7rem; border-radius: 50%;
+  display: grid; place-items: center;
+  font-family: var(--mono); font-size: .8rem; font-weight: 700;
+  color: var(--w-leaf-700, #23684a); background: var(--pm-leaf-50, #f4f9f6); border: 1px solid var(--pm-leaf-200, #cfe4d8);
+}
+.doc ol.pm-steps h4 { margin: .15rem 0 .3rem; font-size: 1.02rem; }
+.doc ol.pm-steps p { margin: 0; }
+
+/* --- a prototype: Design / Build / Test / Learn --- */
+.doc .pm-cycle h4.dbtl-h {
+  margin: 1.8rem 0 .55rem; padding-top: 1rem; border-top: 1px solid var(--pm-hair);
+  font-family: var(--mono); font-size: .72rem; font-weight: 700; letter-spacing: .16em;
+  text-transform: uppercase; color: var(--pl, var(--w-leaf-700));
+}
+.doc .pm-cycle h3 + h4.dbtl-h { margin-top: 1rem; padding-top: 0; border-top: 0; }
+body.doc-light .doc .frame.pm-solo { max-width: 22rem; margin: 1rem auto 1.4rem; }
+.doc .frame.pm-solo .frame-img img, .doc .pm-cycle .frames .frame-img img { display: block; width: 100%; height: auto; }
+.doc .pm-cycle .frames { display: grid; grid-template-columns: minmax(0, .75fr) minmax(0, 1fr); gap: 1rem; align-items: start; }
+@media (max-width: 600px) { .doc .pm-cycle .frames { grid-template-columns: 1fr; } }
+body.doc-light .doc .pm-cycle .frames .frame-img { aspect-ratio: auto; height: auto; }
+.doc table.pm-readings td .todo { margin-left: .35rem; }
+
+/* --- the simplified photometer's clip --- */
+figure.sp-clip { margin: 1.8rem 0 .6rem; }
+.sp-clip__frame { position: relative; border-radius: 14px; overflow: hidden; background: #05060a; aspect-ratio: 16 / 9; }
+.sp-clip__frame video { display: block; width: 100%; height: 100%; object-fit: cover; }
+figure.sp-clip.is-portrait .sp-clip__frame { aspect-ratio: 9 / 16; max-height: 82vh; margin: 0 auto; }
+body.doc-light .doc figure.sp-clip figcaption { margin-top: .7rem; font-size: .85rem; color: var(--pm-ink-2); }
+
+/* --- the TiO2 charts (from the bioreactor page's chart kit) --- */
+.chart-fig { margin: 1.6rem 0; }
+body.doc-light .doc .chart-fig { padding: 1rem 1.1rem .8rem; border: 1px solid rgba(15, 19, 25, .1); border-radius: 14px; background: #fff; }
+body.doc-light .doc .chart-fig figcaption { margin-top: .7rem; font-size: .85rem; line-height: 1.55; color: var(--pm-ink-2); }
+.bc { --bc-photo: #c96d0b; --bc-ref: #5b6573; }
+.bc img { display: block; width: 100%; height: auto; border-radius: 8px; }
+.bc-legend { display: flex; flex-wrap: wrap; gap: .35rem 1.3rem; margin: 0 0 .55rem; font-family: var(--mono); font-size: .62rem; letter-spacing: .04em; color: var(--pm-ink-2); }
+.bc-key { display: inline-flex; align-items: center; gap: .45rem; }
+.bc-key em { font-style: normal; color: #7a8590; margin-left: .3rem; font-variant-numeric: tabular-nums; }
+.bc .bc-key i { width: 8px; height: 8px; border-radius: 50%; display: inline-block; color: inherit; background: currentColor; flex: none; }
+.bc .bc-key i.square { border-radius: 1px; }
+.bc .bc-key i.open { background: transparent; box-shadow: inset 0 0 0 1.5px currentColor; }
+.bc .bc-key i.dash { width: 18px; height: 0; border-radius: 0; background: none; border-top: 1.5px dashed #7a8590; }
+.bc-key.s-photo { color: var(--bc-photo); }
+.bc-key.s-ref { color: var(--bc-ref); }
+.bc-key.id { color: #7a8590; }
+svg.bc-svg { width: 100%; height: auto; display: block; overflow: visible; }
+.bc-grid { stroke: #e3e7eb; stroke-width: 1; }
+.bc-tick { fill: #6b7680; font-family: var(--mono); font-size: 10px; }
+.bc-tick.x { text-anchor: middle; }
+.bc-tick.y { text-anchor: end; }
+.bc-ax { fill: #7a8590; font-family: var(--mono); font-size: 9.5px; letter-spacing: .14em; text-anchor: middle; text-transform: uppercase; }
+.bc-id { stroke: #7a8590; stroke-width: 1.1; stroke-dasharray: 5 5; opacity: .8; }
+.bc-fit { stroke-width: 1.4; opacity: .7; }
+.bc-fit.s-photo { stroke: var(--bc-photo); }
+.bc-fit.s-ref { stroke: var(--bc-ref); stroke-dasharray: 2 3; }
+.bc-pt.s-photo { fill: var(--bc-photo); }
+.bc-pt.s-ref { fill: var(--bc-ref); }
+.bc-pt.open { fill: none; stroke-width: 1.6; }
+.bc-pt.open.s-photo { stroke: var(--bc-photo); }
+.bc-pt.open.s-ref { stroke: var(--bc-ref); }
+
+/* --- 8.1 / 8.2: the final design beside its key specifications --- */
+.pm-final { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 1.6rem 2rem; align-items: start; margin-top: 1.4rem; }
+.doc .pm-final .pm-final__fig { margin: 0; }
+.doc .pm-final .frame-img img { display: block; width: 100%; height: auto; }
+.doc .pm-final .cadfig-draw { max-width: 21rem; margin: 0 auto; }
+dl.pm-keyspecs { margin: 0; }
+dl.pm-keyspecs > div { display: grid; grid-template-columns: 7.2rem minmax(0, 1fr); gap: .8rem; padding: .55rem 0; border-top: 1px solid var(--pm-hair); }
+dl.pm-keyspecs > div:last-child { border-bottom: 1px solid var(--pm-hair); }
+.doc dl.pm-keyspecs dt { font-family: var(--mono); font-size: .66rem; letter-spacing: .1em; text-transform: uppercase; color: var(--pm-ink-2); padding-top: .2rem; }
+.doc dl.pm-keyspecs dd { margin: 0; font-size: .92rem; line-height: 1.5; color: var(--pm-ink); }
+@media (max-width: 760px) { .pm-final { grid-template-columns: 1fr; } }
+
+/* --- 8.3 Evaluation: the doc's two lines --- */
+ul.pm-eval { list-style: none; margin: .6rem 0 1.4rem; padding: 0; }
+ul.pm-eval li { padding: .8rem 0; border-top: 1px solid var(--pm-hair); line-height: 1.65; }
+ul.pm-eval li:last-child { border-bottom: 1px solid var(--pm-hair); }
+
+/* --- 9.1 Limitations: three stacked blocks on subtle dividers, then a larger break --- */
+.pm-limit { padding: 1.2rem 0; border-top: 1px solid var(--pm-hair); }
+.pm-limit:last-child { border-bottom: 1px solid var(--pm-hair); }
+.doc .pm-limit h4 { margin: 0 0 .45rem; }
+.doc .pm-limit p { margin: 0; }
+.pm-limit--fig { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 23rem); gap: 1.2rem 2rem; align-items: start; }
+.pm-limit--fig figure.ledclip { margin: 0; min-width: 0; }
+.pm-limit--fig figure.ledclip .lc-i { min-width: 0; }
+.pm-limit--fig figure.ledclip img { max-width: 100%; height: auto; }
+@media (max-width: 760px) { .pm-limit--fig { grid-template-columns: 1fr; } }
+body.hwreveal .doc-wrap .doc section.sec.pm-future { margin-top: 4.5rem; }
+/* the photos here keep their own shape: no fixed-ratio well around them */
+body.doc-light .doc :is(.pm-final, .pm-split, .pm-cycle) .frame-img { aspect-ratio: auto; height: auto; }
+body.doc-light .doc :is(.pm-final, .pm-split, .pm-cycle) .frame-img img { object-fit: contain; }
+
+/* --- Stage C review, 15 Oct ------------------------------------------------- */
+/* The record turns light (doc-light, polish.js) only once it has climbed a third
+   of the screen; until then its first title is dark type on the dark page. Same
+   fix as the LPA page: light type for that phase. Page-scoped. */
+body.hwreveal[data-instrument="photometer"]:not(.doc-light) .doc-wrap .doc section.part > h2 { color: #eef2f6; }
+body.hwreveal[data-instrument="photometer"]:not(.doc-light) .doc-wrap .doc section.part > .part-mark { color: #9fd3b4; }
+/* the region numbers beside the brackets, for the phone, where the list stacks below */
+.pm-olay .elev text.rgn { display: none; font-family: var(--mono); font-weight: 700; fill: var(--w-leaf-700, #23684a); }
+@media (max-width: 760px) { .pm-olay .elev text.rgn { display: inline; font-size: 11px; } }
+
+/* ---- 15 Oct 2026: the summary sheet is back (the owner's call) --------------
+   The stage here stacks above the record (.story z-index 3, line ~1281) and the
+   dark blend band is gone, so hwdoc.css's climb into the seam would slide the
+   sheet's top edge under the stage. On this page it starts just below the
+   stage instead, as on the LPA page. */
+body[data-instrument="photometer"] .doc-wrap > .hwsum { margin-top: clamp(1.25rem, 2.5vw, 2.25rem); }
+
+/* 15 Oct 2026, the owner: the simplified build drops the beam splitter too. A removed
+   part reads as a cross, not the "change" arrows of the lens card. */
+.cst .gone .cst-v::before { content: "\2715"; font-size: 11px; letter-spacing: 0; }
+
+/* 15 Oct 2026, content doc v5: the two bubble gates in 4.2 sit in .hwcards; give the
+   paragraph after them the same breathing room as after a figure. */
+#filter-gates { margin-bottom: 1.25rem; }
+
+/* The seven-column dashboard-snapshot table in 5.3 (the long-term run): on a phone it scrolls
+   sideways inside its own frame rather than breaking its headers mid-word. */
+@media (max-width: 640px) {
+  .doc .cycles .tablewrap > table.pm-snap { min-width: 540px; }
+  .doc .cycles .tablewrap > table.pm-snap :is(th, td) { white-space: nowrap; overflow-wrap: normal; }
+}
+
+/* ---- the opening title, toward the middle (15 Oct 2026) ------------------
+   The owner: "If the title can be more centered, make it centered, data on
+   right as well. Such as photometer". The mast stands in the middle of the
+   frame, so the title cannot sit over it: it holds the left column and is
+   centred in the height below the site menu, and the numbers (levelled on
+   the title by js/hero.js) come with it on the right, inset as far as the
+   title is. On the integrated wiki, assets/css/nav-dark.css pins every
+   instrument title but the bioreactor's just under the menu; the #story
+   selectors outrank it. `translate` centres the block whatever its height,
+   and composes with the fade's per-frame `transform` (js/story-core.js). */
+@media (min-aspect-ratio: 91/100) {
+  body[data-instrument="photometer"] #story .story-title {
+    top: calc(50% + var(--nv-h, 68px) / 2);
+    translate: 0 -50%;
+  }
+  body[data-instrument="photometer"] #story .title-stats { right: clamp(1.4rem, 9vw, 7.5rem); }
+}
+/* A portrait frame plays the portrait clip (js/scrub-video.js picks it below an aspect of about
+   0.91), with the instrument in the top half: the title hangs under it, centred. */
+@media (max-aspect-ratio: 91/100) {
+  body[data-instrument="photometer"] #story .story-title {
+    top: 57%; left: 50%; translate: -50% 0; text-align: center;
+  }
+  body[data-instrument="photometer"] #story .title-stats { display: none; }
+}
+/* A portrait tablet plays the portrait clip larger, so the base sits lower: the title drops with it. */
+@media (max-aspect-ratio: 91/100) and (min-aspect-ratio: 3/5) {
+  body[data-instrument="photometer"] #story .story-title { top: 61%; }
+}
+/* A landscape phone: the mast fills the middle of a short frame, so the title shrinks to fit the
+   left column, and the four numbers, which would run into the scroll cue, stand down. */
+@media (min-aspect-ratio: 91/100) and (max-height: 520px) {
+  body[data-instrument="photometer"] #story .pm-title h1.line { font-size: clamp(1.6rem, 5vw, 2.5rem); }
+  body[data-instrument="photometer"] #story .pm-title .pm-title__sub { font-size: clamp(.85rem, 2.2vw, 1.1rem); margin-top: .45rem; }
+  body[data-instrument="photometer"] #story .title-stats { display: none; }
+}
+
+/* ---- 5.1 Bacteria Growth (15 Oct 2026) ------------------------------------
+   The bioreactor page's culture prototypes moved here. These are the pieces of
+   their markup that only the bioreactor's style.css styled: a species name in a
+   heading, drawings shown whole, the prototype-2 sketch's width, and the four
+   headline numbers on a phone (this page's own phone rule sets three across,
+   which left the fourth alone on a row). Their charts' styles came with them in
+   css/xp-charts.css, and part 5's map has its own, css/xp-cyclemap.css. */
+.sp { font-style: italic; }
+.frame.contain .frame-img { background: #f3f3ef; }
+.frame.contain .frame-img img { object-fit: contain; filter: none; }
+#fig-c2-sketch { max-width: 360px; }
+@media (max-width: 700px) {
+  body[data-instrument="photometer"] .cycles .headline-stats { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
+/* 5.2, prototype 1: the bench photo is landscape, so it stands wider than the
+   portrait build photos (.pm-solo, 22rem) without filling the column */
+body.doc-light .doc .pm-cycle .frame#fig-bench { max-width: 30rem; margin: 1rem auto 1.4rem; }
+/* ...and its three spacings side by side where there is room. This page's only spec
+   grid had no layout of its own (in the fold it came from, each cell ran the full
+   column); these are the bioreactor's style.css rules for its spec grids. */
+.specgrid {
+  display: grid; gap: .8rem; margin: 1.5rem 0;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 190px), 1fr));
+}
+.specgrid > div > h4 { margin: 0 0 .45rem; }
+.specgrid > div > p { margin: 0 !important; font-size: .95rem; line-height: 1.68; max-width: none; }
+/* "Back to the cycle map" closes each track, as on the bioreactor page, in the record's link colour */
+.doc .cyc-group > p.to-map { margin: 1.25rem 0 0; font-size: .9375rem; }
+body.doc-light .doc .cyc-group > p.to-map a {
+  color: var(--w-link, #23684a); text-decoration: underline; text-decoration-thickness: 1px; text-underline-offset: 2.7px;
+}

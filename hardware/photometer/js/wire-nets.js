@@ -1,5 +1,5 @@
-// Figure 10 (4.1): pick one part of the wiring and the rest of the drawing steps back. The four buttons and the four
-// lead-in paragraphs of 4.1 name the same four things (ground, the LED's transistor, the sensor bus, the supplies), so
+// Figure 10 (9.1, Electronics; 4.1 until the 15 Oct reorder): pick one part of the wiring and the rest of the drawing steps back. The four buttons and the four
+// lead-in paragraphs of 9.1 (#sec41) name the same four things (ground, the LED's transistor, the sensor bus, the supplies), so
 // pointing at a paragraph lights its part of the drawing too. A click pins the choice; a second click lets it go.
 // Every wire, pin and label in the SVG carries the class of the net(s) it belongs to (n-gnd, n-led, n-bus, n-pwr).
 (function () {

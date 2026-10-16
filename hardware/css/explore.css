@@ -1,0 +1,146 @@
+/* ===========================================================================
+   The hardware records' interactive pieces: the shared kit (15 Oct 2026)
+   ---------------------------------------------------------------------------
+   The owner: "I want more things like 11 and graphs, make the whole thing
+   more interactive". Every explorable on the bioreactor and photometer pages
+   is an `.xp` card built from these parts, so they read as one family. It
+   was the bioreactor page's own (bioreactor/css/explore.css) until the
+   photometer page took over the bacteria-growth cycles and their charts on
+   15 Oct; both pages load it from here, with ../js/xp-kit.js:
+
+     <figure class="xp" id="xp-…">
+       <div class="xp-head">
+         <p class="xp-title">…</p>
+         <span class="xp-tag model">Model</span>      measured | model | concept
+       </div>
+       <p class="xp-sub">one line: what to do with it</p>
+       <div class="xp-stage">…canvas / svg…</div>
+       <div class="xp-controls">…xp-btn, xp-seg, xp-range…</div>
+       <figcaption class="xp-note">what is real and what is illustrated</figcaption>
+     </figure>
+
+   Tags carry the honesty, the same way the summary sheet's marks do:
+     measured  the numbers are the team's own record
+     model     the shape is computed from a stated formula; the numbers are illustrative
+     concept   designed, not built or not yet run
+   Orange stays reserved for missing content (wiki-align.css), so no tag uses it.
+   Component styles live in each page's own css/xp-*.css; only shared pieces go here.
+   =========================================================================== */
+
+.xp {
+  --xp-ink: #1f2933;
+  --xp-ink-2: #556070;
+  --xp-line: var(--w-line, #e5e5e5);
+  --xp-leaf: var(--w-leaf-700, #23684a);
+  --xp-leaf-d: var(--w-leaf-900, #14402b);
+  --xp-leaf-l: var(--w-leaf-100, #e3f0e8);
+  --xp-shell: #2f8f5b;        /* harvest side, as the record's leaf green */
+  --xp-lumen: #1d5a9e;        /* culture side, as the bioreactor's deep blue */
+  --xp-r: 14px;
+  position: relative;
+  margin: 1.75rem 0;
+  border: 1px solid var(--xp-line);
+  border-radius: var(--xp-r);
+  background: #fff;
+  box-shadow: 0 1px 2px rgba(20, 64, 43, .05), 0 18px 40px -26px rgba(20, 64, 43, .28);
+  overflow: hidden;
+  color: var(--xp-ink);
+}
+.xp-head {
+  display: flex; align-items: center; flex-wrap: wrap; gap: .5rem .75rem;
+  padding: 1rem 1.15rem .25rem;
+}
+.xp .xp-title { margin: 0; font: 650 1.02rem/1.3 var(--sans); letter-spacing: -.005em; color: var(--xp-leaf-d); }
+.xp-tag {
+  display: inline-flex; align-items: center; gap: .35rem;
+  padding: .18rem .55rem; border-radius: 999px;
+  font: 700 .6875rem/1.2 var(--sans); letter-spacing: .1em; text-transform: uppercase;  /* 11 px, the page's text floor */
+  border: 1px solid currentColor;
+}
+.xp-tag::before { content: ""; width: .45rem; height: .45rem; border-radius: 50%; background: currentColor; }
+.xp-tag.measured { color: #2f6b4a; background: #eef6f1; }
+.xp-tag.model    { color: #3f5468; background: #eef2f6; }
+.xp-tag.concept  { color: #5b4a86; background: #f2eefa; }
+.xp-tag.concept::before { background: transparent; border: 1.5px dashed currentColor; width: .35rem; height: .35rem; }
+.xp .xp-sub { margin: .1rem 1.15rem .75rem; font-size: .9rem; line-height: 1.5; color: var(--xp-ink-2); max-width: 64ch; }
+
+.xp-stage { position: relative; background: #fbfcfb; border-top: 1px solid var(--xp-line); border-bottom: 1px solid var(--xp-line); }
+.xp-stage canvas, .xp-stage svg { display: block; width: 100%; }
+
+.xp-controls {
+  display: flex; flex-wrap: wrap; align-items: center; gap: .65rem 1.1rem;
+  padding: .8rem 1.15rem .9rem;
+}
+
+/* buttons that look like buttons (the owner: "parts must look clickable") */
+.xp-btn {
+  -webkit-appearance: none; appearance: none;
+  display: inline-flex; align-items: center; gap: .45rem;
+  padding: .5rem .9rem; border-radius: 10px;
+  border: 1px solid #cfd8d3; background: #fff; color: var(--xp-leaf-d);
+  font: 600 .85rem/1 var(--sans); cursor: pointer;
+  box-shadow: 0 1px 0 rgba(20, 64, 43, .06);
+  transition: background .18s, border-color .18s, transform .12s;
+}
+.xp-btn:hover { background: var(--xp-leaf-l); border-color: #a9c9b7; }
+.xp-btn:active { transform: translateY(1px); }
+.xp-btn:focus-visible { outline: 2px solid var(--xp-leaf); outline-offset: 2px; }
+.xp-btn.primary { background: var(--xp-leaf); border-color: var(--xp-leaf); color: #fff; }
+.xp-btn.primary:hover { background: var(--xp-leaf-d); }
+.xp-btn[aria-pressed="true"] { background: var(--xp-leaf-d); border-color: var(--xp-leaf-d); color: #fff; }
+
+.xp-seg { display: inline-flex; border: 1px solid #cfd8d3; border-radius: 10px; overflow: hidden; background: #fff; }
+.xp-seg button {
+  -webkit-appearance: none; appearance: none; border: 0; background: transparent; cursor: pointer;
+  padding: .5rem .8rem; font: 600 .82rem/1 var(--sans); color: var(--xp-ink-2);
+}
+.xp-seg button + button { border-left: 1px solid #e3e8e5; }
+.xp-seg button[aria-pressed="true"] { background: var(--xp-leaf-d); color: #fff; }
+.xp-seg button:focus-visible { outline: 2px solid var(--xp-leaf); outline-offset: -2px; }
+
+.xp-range { display: inline-flex; align-items: center; gap: .6rem; font: 600 .82rem/1.2 var(--sans); color: var(--xp-ink-2); }
+.xp-range input[type="range"] { width: clamp(120px, 22vw, 220px); accent-color: var(--xp-leaf); cursor: pointer; }
+.xp-range output, .xp-readout { font: 600 .82rem/1.2 var(--mono); color: var(--xp-leaf-d); min-width: 4.5ch; }
+
+.xp .xp-note,
+body.doc-light .doc-wrap .xp figcaption.xp-note {
+  max-width: none;
+  margin: 0; padding: .7rem 1.15rem 1rem; border-top: 1px solid var(--xp-line);
+  font-size: .8rem; line-height: 1.5; color: var(--xp-ink-2);
+}
+.xp .xp-note b { color: var(--xp-ink); font-weight: 650; }
+
+/* a device screen inside the paper record (the controller concept) */
+.xp.dark { background: #0d1614; border-color: #1d2a26; color: #dfe9e4; box-shadow: 0 24px 60px -30px rgba(0, 0, 0, .55); }
+.xp.dark .xp-title { color: #eaf5ef; }
+.xp.dark .xp-sub, .xp.dark .xp-note { color: #9fb2aa; border-color: #1d2a26; }
+body.doc-light .doc-wrap .xp.dark figcaption.xp-note { color: #9fb2aa; border-color: #1d2a26; }
+.xp.dark .xp-note b { color: #eaf5ef; }
+/* the honesty tags on a dark card: the same three hues, lifted for the dark ground */
+.xp.dark .xp-tag.measured { color: #8fd4ac; background: rgba(143, 212, 172, .1); }
+.xp.dark .xp-tag.model    { color: #a9bfd6; background: rgba(169, 191, 214, .1); }
+.xp.dark .xp-tag.concept  { color: #c9bbf2; background: rgba(201, 187, 242, .1); }
+.xp.dark .xp-stage { background: #0a1210; border-color: #1d2a26; }
+
+@media (max-width: 560px) {
+  .xp { border-radius: 12px; margin: 1.4rem 0; }
+  .xp-head, .xp-controls { padding-left: .85rem; padding-right: .85rem; }
+  .xp .xp-sub { margin-left: .85rem; margin-right: .85rem; }
+  .xp .xp-note, body.doc-light .doc-wrap .xp figcaption.xp-note { padding-left: .85rem; padding-right: .85rem; }
+}
+/* polish.css sets a dark-theme figure's caption in the right margin at 1360 px and up
+   (body:not(.doc-light) .doc .sec > figure > figcaption). A card clips its overflow, so its note
+   would vanish while the record is still dark: it stays inside the card. */
+@media (min-width: 1360px) {
+  body:not(.doc-light) .doc .sec > figure.xp > figcaption.xp-note {
+    position: static; top: auto; left: auto; width: auto; max-width: none;
+    border-left: 0; text-align: left;
+    padding: .7rem 1.15rem 1rem; border-top: 1px solid var(--xp-line);
+    font-size: .8rem; line-height: 1.5;
+  }
+}
+/* the record's `.sec p` / `.sec li` (1.05rem, 1.8) must not reach inside a card */
+.xp li { font-size: inherit; line-height: inherit; }
+@media (prefers-reduced-motion: reduce) {
+  .xp-btn { transition: none; }
+}

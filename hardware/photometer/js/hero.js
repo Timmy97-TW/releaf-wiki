@@ -26,19 +26,21 @@ window.HERO = (function () {
         A5 = 0.775,   // through the culture, and the ratio
         A6 = 0.905;   // the record, then the close
 
+  // 14 Oct 2026, the teammate's edit doc: no act numbers on the captions. story-core prints
+  // `n` when it is set and falls back to a number when it is empty, so a lone space prints nothing.
   const CAPS = [
-    { win: [A0, A1], n: "01", role: "Sampling", name: "In the line",
-      body: "The culture never leaves the loop: it flows through a cuvette <b>0.2&nbsp;mm</b> thick and straight back to the reactor. Every reading is taken through the glass, on culture that is still moving." },
-    { win: [A1, A2], n: "02", role: "Amber LED", name: "One source",
+    { win: [A0, A1], n: " ", role: "Sampling", name: "In the line",
+      body: "The culture never leaves the loop: it flows through a cuvette <b>2&nbsp;mm</b> thick and straight back to the reactor. Every reading is taken through the glass, on culture that is still moving." },
+    { win: [A1, A2], n: " ", role: "Amber LED", name: "One source",
       body: "A single amber LED at <b>600&nbsp;nm</b>, the wavelength optical density is defined at, fires down the optical axis. Everything below is what happens to that one beam." },
-    { win: [A2, A3], n: "03", role: "Beam conditioning", name: "Gathered into a column",
+    { win: [A2, A3], n: " ", role: "Beam conditioning", name: "Gathered into a column",
       body: "The cone leaving the emitter is wider than the cuvette it has to cross. A focusing lens gathers it, and from here down the light is one tight column." },
-    { win: [A3, A4], n: "04", role: "Beamsplitter", name: "Two paths",
+    { win: [A3, A4], n: " ", role: "Beamsplitter", name: "Two paths",
       body: "A 45° beamsplitter turns one beam into two. One crosses the culture. The other never meets it — it goes straight to a second sensor as a <em>reference</em>." },
-    { win: [A4, A5], n: "05", role: "The measurement", name: "The ratio, not the reading",
-      body: "The sample beam crosses <b>0.2&nbsp;mm</b> of flowing culture and lands on one sensor; the reference has already gone straight to the other. The instrument records the <em>ratio</em>, so anything that changes the lamp divides out of it." },
-    { win: [A5, A6], n: "06", role: "The record", name: "400 hours, unattended",
-      body: "<b>2,132</b> points across the run, no samples withdrawn. The dip is a recirculation pump that failed overnight — the instrument caught it because it was still reading when nobody was watching." },
+    { win: [A4, A5], n: " ", role: "The measurement", name: "The ratio, not the reading",
+      body: "The sample beam crosses <b>2&nbsp;mm</b> of flowing culture and lands on one sensor; the reference has already gone straight to the other. The instrument records the <em>ratio</em>, so anything that changes the lamp divides out of it." },
+    { win: [A5, A6], n: " ", role: "The record", name: "400 hours, unattended",
+      body: "<b>2,132</b> points in its first 336 hours, no samples withdrawn. The dip is a recirculation pump that failed overnight — the instrument caught it because it was still reading when nobody was watching." },
   ];
 
   function ramp(p, a, b) { const t = (p - a) / (b - a); return t < 0 ? 0 : t > 1 ? 1 : t * t * (3 - 2 * t); }

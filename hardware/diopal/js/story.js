@@ -25,12 +25,12 @@
   // the lux each channel measured at 5 V.
   const GRID = { cols: [-45, -27, -9, 9, 27, 45], rows: [27, 9, -9, -27], pitch: 18 };
   const CHANNELS = [
-    { x: -45, hue: "green", tier: "Low", nm: 520, lux: 2.33, unit: "klx" },
-    { x: -27, hue: "red", tier: "Low", nm: 660, lux: 390, unit: "lx" },
-    { x: -9, hue: "green", tier: "Mid", nm: 520, lux: 2.36, unit: "klx" },
-    { x: 9, hue: "red", tier: "Mid", nm: 660, lux: 410, unit: "lx" },
-    { x: 27, hue: "green", tier: "High", nm: 520, lux: 2.40, unit: "klx" },
-    { x: 45, hue: "red", tier: "High", nm: 660, lux: 428, unit: "lx" },
+    { x: -45, hue: "green", tier: "Low", nm: 535, lux: 2.33, unit: "klx" },
+    { x: -27, hue: "red", tier: "Low", nm: 670, lux: 390, unit: "lx" },
+    { x: -9, hue: "green", tier: "Mid", nm: 535, lux: 2.36, unit: "klx" },
+    { x: 9, hue: "red", tier: "Mid", nm: 670, lux: 410, unit: "lx" },
+    { x: 27, hue: "green", tier: "High", nm: 535, lux: 2.40, unit: "klx" },
+    { x: 45, hue: "red", tier: "High", nm: 670, lux: 428, unit: "lx" },
   ];
   // Tier is a PWM duty cycle in the instrument, not a different LED: the six
   // channels are matched to within a few percent at full drive. js/hero.js holds it

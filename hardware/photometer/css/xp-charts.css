@@ -1,0 +1,114 @@
+/* ===========================================================================
+   5.1's growth charts, read by touch (js/growth-charts.js; 15 Oct 2026)
+   ---------------------------------------------------------------------------
+   The arms' names are buttons that show or hide them; a crosshair snaps to
+   the readings and a readout gives both arms at that time; the record's notes
+   (prototype 1's early end, prototype 2's plateaus) draw on in each arm's own
+   colour. They came from the bioreactor page (its 4.1, css/xp-charts.css) with
+   the bacteria-growth prototypes. No new colours: the arms keep the
+   bioreactor's deep blue and the reference grey, and orange stays reserved
+   for missing content.
+   =========================================================================== */
+
+/* ---- the arms' colours ----
+   This page's style.css colours only the TiO2 charts (--bc-photo, --bc-ref, no
+   lines), so the culture arms' rules came with these charts, as the
+   bioreactor's style.css had them on the paper record. Nothing here reaches a
+   TiO2 chart: none of its series is drawn as a line or in s-reactor. */
+.bc { --bc-reactor: #1d5a9e; }
+.bc-line { fill: none; stroke-width: 1.7; stroke-linejoin: round; }
+.bc-line.s-reactor { stroke: var(--bc-reactor); }
+.bc-line.s-ref { stroke: var(--bc-ref); }
+.bc-pt.s-reactor { fill: var(--bc-reactor); }
+/* a key's words are ink (below); its swatch carries the arm's colour */
+.bc.is-live .bc-key.s-reactor i { color: var(--bc-reactor); }
+.bc.is-live .bc-key.s-ref i { color: var(--bc-ref); }
+
+.bc.is-live { position: relative; }
+
+/* ---- the arms' names: buttons, so they look like buttons ---- */
+.bc.is-live .bc-legend { display: flex; flex-wrap: wrap; align-items: center; gap: .45rem; margin: 0 0 .75rem; }
+.bc.is-live button.bc-key {
+  -webkit-appearance: none; appearance: none;
+  display: inline-flex; align-items: center; gap: .5rem;
+  min-height: 2rem; margin: 0; padding: .3rem .8rem .3rem .65rem;
+  border: 1px solid #cfd8d3; border-radius: 999px; background: #fff;
+  font: 600 12px/1.1 var(--sans); letter-spacing: 0; text-transform: none; color: var(--fg);
+  cursor: pointer; box-shadow: 0 1px 0 rgba(20, 64, 43, .06);
+  transition: background .18s, border-color .18s, color .18s;
+}
+.bc.is-live button.bc-key:hover { background: var(--w-leaf-50, #f4f9f6); border-color: #a9c9b7; }
+.bc.is-live button.bc-key:active { transform: translateY(1px); }
+.bc.is-live button.bc-key:focus-visible { outline: 2px solid var(--w-leaf-700, #23684a); outline-offset: 2px; }
+.bc.is-live button.bc-key i { width: 9px; height: 9px; }
+.bc.is-live button.bc-key[aria-pressed="false"] { color: #7b8490; background: #f6f7f8; border-style: dashed; box-shadow: none; }
+.bc.is-live button.bc-key[aria-pressed="false"] i { background: transparent; box-shadow: inset 0 0 0 1.5px currentColor; }
+
+/* ---- the plot: a crosshair cursor, and room for a finger to scroll the page past it ---- */
+.bc-plot { position: relative; touch-action: pan-y; cursor: crosshair; border-radius: 6px; -webkit-tap-highlight-color: transparent; }
+.bc-plot:focus { outline: none; }
+.bc-plot:focus-visible { outline: 2px solid var(--w-leaf-700, #23684a); outline-offset: 4px; }
+
+.bc-s, .bc-ann { transition: opacity .25s ease; }
+.bc-s.is-off, .bc-ann.is-off { opacity: 0; pointer-events: none; }
+/* a long stretch with no readings (prototype 1, 7 h to 24 h) is dashed, not drawn as if it were measured */
+.bc-line.bc-gap { stroke-width: 1.4; stroke-dasharray: 2 4; stroke-linecap: round; opacity: .8; }
+
+.bc-xh-l { stroke: var(--fg); stroke-opacity: .34; stroke-width: 1; stroke-dasharray: 3 3; }
+.bc-xh-pt { stroke: #fff; stroke-width: 2; }
+.bc-xh-pt.s-reactor { fill: var(--bc-reactor); }
+.bc-xh-pt.s-ref { fill: var(--bc-ref); }
+
+/* ---- the record's notes ---- */
+.bc-band { fill-opacity: .12; }
+.bc-ann.s-reactor .bc-band { fill: var(--bc-reactor); }
+.bc-ann.s-ref .bc-band { fill: var(--bc-ref); }
+.bc-guide { fill: none; stroke-width: 1.3; stroke-dasharray: 3 4; }
+.bc-ann.s-reactor .bc-guide { stroke: var(--bc-reactor); }
+.bc-ann.s-ref .bc-guide { stroke: var(--bc-ref); }
+.bc-note { font: 650 11px var(--sans); letter-spacing: .01em; paint-order: stroke; stroke: #fff; stroke-width: 3px; stroke-linejoin: round; }
+.bc-ann.s-reactor .bc-note { fill: var(--bc-reactor); }
+.bc-ann.s-ref .bc-note { fill: var(--bc-ref); }
+.bc-note.end { text-anchor: end; }
+
+/* ---- the readout: pinned in the plot's empty top-left corner (a line under the plot on a phone) ---- */
+.bc-read {
+  position: absolute; z-index: 1; pointer-events: none;
+  display: grid; gap: .15rem;
+  padding: .4rem .55rem .45rem; border-radius: 9px;
+  font: 500 11px/1.35 var(--sans); color: var(--dim);
+}
+.bc-read.is-on { background: rgba(255, 255, 255, .95); box-shadow: 0 0 0 1px rgba(15, 19, 25, .1), 0 8px 20px -12px rgba(15, 19, 25, .4); }
+.bc-read b { font: 650 12px/1.3 var(--mono); color: var(--fg); }
+.bc-read small { font: 500 11px/1.3 var(--mono); color: var(--dim); margin-left: .5rem; }
+.bc-read .bc-hint { font: 500 11px/1.35 var(--sans); color: var(--dim); }
+.bc-read:not(.is-on):empty { display: none; }
+.bc.is-live .bc-legend > .bc-hint { margin-left: auto; font: 500 11px/1.35 var(--sans); letter-spacing: 0; text-transform: none; color: var(--dim); }
+.bc.is-live.is-narrow .bc-legend > .bc-hint { display: none; }
+.bc-rv { display: flex; align-items: center; gap: .4rem; color: var(--fg); font: 500 11px/1.35 var(--sans); }
+.bc-rv i { flex: none; width: 8px; height: 8px; border-radius: 50%; background: currentColor; }
+.bc-rv i.square { border-radius: 1px; }
+.bc-rv.s-reactor i { color: var(--bc-reactor); }
+.bc-rv.s-ref i { color: var(--bc-ref); }
+.bc-rv em { margin-left: auto; padding-left: .75rem; font: 650 12px/1.35 var(--mono); font-style: normal; color: var(--fg); }
+
+.bc.is-narrow .bc-read {
+  position: static; display: flex; flex-wrap: wrap; align-items: center; align-content: center; gap: .15rem 1rem;
+  min-width: 0; min-height: 3.4rem; margin: .55rem 0 0; padding: .4rem .7rem;
+  background: #fff; box-shadow: inset 0 0 0 1px rgba(15, 19, 25, .1);
+}
+.bc.is-narrow .bc-read.is-on { box-shadow: inset 0 0 0 1px rgba(15, 19, 25, .14); }
+.bc.is-narrow .bc-read b { flex-basis: 100%; }
+.bc.is-narrow .bc-rv em { margin-left: .2rem; padding-left: 0; }
+
+/* ---- where the numbers come from ---- */
+.bc.is-live p.bc-src { margin: .65rem 0 0; max-width: none; font: 500 11px/1.6 var(--sans); letter-spacing: .01em; color: var(--dim); }
+.bc.is-live p.bc-src .xp-tag { margin-right: .45rem; vertical-align: 1px; }
+.bc.is-live p.bc-live {
+  position: absolute; width: 1px; height: 1px; margin: -1px; padding: 0; overflow: hidden;
+  clip: rect(0 0 0 0); clip-path: inset(50%); white-space: nowrap; border: 0;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .bc.is-live button.bc-key, .bc-s, .bc-ann { transition: none; }
+}

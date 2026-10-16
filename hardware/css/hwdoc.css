@@ -278,6 +278,25 @@ body.doc-light .story-stage { z-index: 0; }
 
 .doc-nav { justify-content: flex-start; padding-top: calc(var(--nv-h, 68px) + 5.5rem); }
 .doc-nav .doc-nav-label { letter-spacing: .2em; }
+
+/* 14 Oct 2026. The record is one continuous scroll again, so the rail is the
+   only way round it and lists every part at once, with the open one unfolded.
+   In a short laptop window that no longer fits: the rail scrolls
+   inside itself instead of running off the bottom, without a scrollbar, and
+   hwdoc.js keeps the part the reader is in on screen. It stays sticky -- the
+   `top: 0; height: 100vh` style.css gives it -- so nothing here may set an
+   overflow on .doc-wrap or .doc, which would unstick it. */
+.doc-nav {
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  scrollbar-width: none;
+  padding-bottom: 2rem;
+}
+.doc-nav::-webkit-scrollbar { display: none; }
+/* style.css spaces its own one-line entries .7rem apart; the generated rail
+   has a pill and unfolding subs, and wants them tighter */
+.doc-nav .hwtoc li { margin-bottom: 0; }
+.doc-nav .hwtoc__sec + .hwtoc__sec { margin-top: .12rem; }
 body.doc-light .doc-nav .doc-nav-label { color: var(--w-ink-3); }
 
 /* the generated rail */
@@ -362,121 +381,19 @@ body.doc-light .hwtoc__sub a.is-active { color: var(--w-tab); font-weight: 600; 
 
 
 /* ============================================================= 4 THE IHP KIT ==
-   Segmented cycles, cards and folds
+   Cycle intros, cards and folds
    -----------------------------------------------------------------------------
-   Ported from assets/css/engage.css. The record's long middle -- three or four
-   design-build-test-learn cycles, each with its own design, build, test and
-   learn -- is the part that most needs this: as a flat column it is a very
-   long scroll of near-identical structure, and as a segmented control it is
-   one cycle at a time with the others a click away.
+   Ported from assets/css/engage.css. Until 15 Oct 2026 a segmented control
+   here switched a record's design-build-test-learn cycles one at a time; the
+   owner found readers scrolled straight past the hidden ones, so every cycle
+   is now stacked on the page (4b, below) and the control and its code are
+   gone. What is left is what the cycles and the rest of the record share.
 
    The house rule the rest of the wiki follows applies here too: the argument
    stays flat on the page and the evidence folds. A cycle's finding is never
    behind a click; its full parameter table, its protocol and its raw run log
    are.
    ========================================================================== */
-
-/* ---- the frosted segmented control --------------------------------------- */
-/* The markup carries .rail--seg and no bare .rail: see the note above. */
-.rail--seg { margin: var(--sp-5) 0 0; }
-.rail--seg > .rail__panel[hidden] { display: none; }
-
-/* The control takes the page's banner colour, the one the contents rail
-   uses (page.css --toc-ink): Wet Lab green unless the nav names another tab. */
-body { --seg-ink: #3d6a4b; }
-body:has(#site-nav[data-tab="project"])    { --seg-ink: #a3375f; }
-body:has(#site-nav[data-tab="drylab"])     { --seg-ink: #3f5a66; }
-body:has(#site-nav[data-tab="engagement"]) { --seg-ink: #85502f; }
-body:has(#site-nav[data-tab="team"])       { --seg-ink: #845c0f; }
-.seg {
-  position: sticky;
-  /* under the site nav, which is fixed */
-  top: calc(var(--nv-h, 68px) + .6rem);
-  z-index: 5;
-  display: flex;
-  justify-content: center;
-  margin: 0 0 var(--sp-7);
-  pointer-events: none;
-}
-/* Seven chapters do not fit the record column at 1440 the way six do, and a
-   track that has to scroll hides the chapter a reader is looking for behind
-   an edge. The bioreactor's control takes the tight variant instead: the same
-   pill, the same glyphs, less air either side of each label. */
-.doc .seg__track--tight .seg__btn {
-  padding-left: .62rem; padding-right: .62rem; gap: .34rem; font-size: .90625rem;
-}
-.seg__track--tight .seg__ico { width: 1rem; height: 1rem; }
-
-/* A chapter that carries a control of its own -- the bioreactor's four
-   engineering tracks, inside chapter 2 -- pins two bars, not one. The inner
-   one sits under the outer one instead of behind it, and loses the outer's
-   bottom margin so the pair does not open a gap above the first heading. */
-.rail--seg .rail--seg > .seg {
-  top: calc(var(--nv-h, 68px) + .6rem + 3.1rem);
-  margin-bottom: var(--sp-6);
-}
-.seg__track {
-  position: relative;
-  display: flex;
-  flex: 1 1 auto;
-  gap: 2px;
-  max-width: 100%;
-  margin: 0;
-  padding: 5px;
-  overflow-x: auto;
-  scrollbar-width: none;
-  border-radius: 999px;
-  background: rgb(255 255 255 / .82);
-  -webkit-backdrop-filter: saturate(180%) blur(20px);
-          backdrop-filter: saturate(180%) blur(20px);
-  box-shadow: inset 0 0 0 1.5px var(--seg-ink), 0 8px 24px -14px rgb(0 0 0 / .3);
-  pointer-events: auto;
-}
-.seg__track::-webkit-scrollbar { display: none; }
-.seg__thumb {
-  position: absolute;
-  top: 5px; bottom: 5px; left: 0;
-  width: 0;
-  border-radius: 999px;
-  background: var(--seg-ink);
-  box-shadow: 0 3px 8px -2px rgb(0 0 0 / .18);
-  transition: transform .45s var(--ease), width .45s var(--ease);
-}
-.doc .seg__btn {
-  position: relative;
-  z-index: 1;
-  display: inline-flex;
-  flex: 1 0 auto;
-  align-items: center;
-  justify-content: center;
-  gap: .5rem;
-  padding: .72rem 1.1rem;
-  border: 0;
-  border-radius: 999px;
-  background: none;
-  font: inherit;
-  font-size: .9375rem;
-  font-weight: 500;
-  line-height: 1.2;
-  letter-spacing: -.01em;
-  color: var(--w-ink-2);
-  white-space: nowrap;
-  cursor: pointer;
-  transition: color .25s ease;
-}
-.seg__ico { flex: none; width: 1.125rem; height: 1.125rem; color: var(--pl); opacity: .7; transition: opacity .25s ease, transform .3s var(--ease); }
-.doc .seg__btn:hover { color: var(--seg-ink); background: none; }
-.doc .seg__btn[aria-selected="true"] { color: #fff; font-weight: 600; }
-.seg__btn[aria-selected="true"] .seg__ico { color: #fff; opacity: 1; transform: scale(1.08); }
-.seg__btn:focus-visible { outline: 2px solid var(--seg-ink); outline-offset: 2px; }
-.seg__track:not(.has-thumb) .seg__btn[aria-selected="true"] { background: var(--seg-ink); }
-html:not(.js) .seg { display: none; }
-
-/* a cycle */
-.rail--seg > .rail__panel.chap { padding: 0; background: none; scroll-margin-top: calc(var(--nv-h, 68px) + 4.5rem); }
-.rail--seg > .rail__panel.is-entering { animation: hwchap-in .6s var(--ease) both; }
-@keyframes hwchap-in { from { opacity: 0; transform: translateY(14px); } to { opacity: 1; transform: none; } }
-html:not(.js) .rail--seg > .rail__panel + .rail__panel { margin-top: var(--sp-8); }
 
 /* ---- a cycle's opening and close ----------------------------------------- */
 .chap__hero { margin: 0 0 var(--sp-7); text-align: center; }
@@ -517,10 +434,7 @@ html:not(.js) .rail--seg > .rail__panel + .rail__panel { margin-top: var(--sp-8)
 /* ---- pale rounded cards -------------------------------------------------- */
 /* .hwcard, not .card: all three instrument stylesheets already style a .card
    of their own, and a shared name would have them trading properties with
-   this one depending on which file loaded last. Same reason the segmented
-   control below carries no bare .rail -- style.css uses .rail for the
-   teardown's step dots, absolutely positioned, which took this rail out of
-   flow and stacked it on top of the section above it. */
+   this one depending on which file loaded last.  */
 .hwcard {
   padding: clamp(1.35rem, 1rem + 1.8vw, 2.4rem);
   border-radius: 28px;
@@ -645,13 +559,292 @@ body.hwreveal .doc-wrap .doc-map { display: none; }
 .doc .fig,
 .doc .frame,
 .doc figure[id],
-.doc [id] > h3 { scroll-margin-top: calc(var(--nv-h, 68px) + 4.75rem); }
-/* 4.75rem is the pinned chapter control (.6rem off the nav, 3.1rem tall) and
-   a little air: a section a link lands on starts under the control, not
-   behind it. Inside the bioreactor's four tracks there are two controls. */
-.doc .rail--seg .rail--seg :is(.sec, .fig, .frame, figure[id], [id] > h3, .iters > li) {
-  scroll-margin-top: calc(var(--nv-h, 68px) + 7.85rem);
+.doc .chap,
+.doc [id] > h3 { scroll-margin-top: calc(var(--nv-h, 68px) + 1.5rem); }
+/* Inside a set of prototypes the tab strip is pinned (.5rem off the nav),
+   so anything a link lands on in there starts under it. */
+.doc .cycles :is(.part, .sec, .cyc, .fig, .frame, figure[id], [id] > h3, [id]) {
+  scroll-margin-top: calc(var(--nv-h, 68px) + .5rem + 3.4rem + 1.25rem);
 }
+
+
+/* ===================================================== 4b CYCLES =========
+   15 Oct 2026. One layout for every instrument's engineering cycles. Since
+   16 Oct the prototypes of a set sit in tabs (below); the card layout of
+   each prototype is unchanged.
+   -----------------------------------------------------------------------------
+   The owner: the tab bar "is not thought through enough because most people
+   will just scroll down without looking". So no prototype is behind a click.
+   Each one is a single card -- a band that says which prototype of how many
+   it is (the DBTL ring, the kicker, the title, the four stages as links) and
+   then its design, build, test and learn -- and between two cards a "Next"
+   cue says what comes. Over the set, a stepper (hwdoc.js) pins under the nav
+   while the reader is inside it. Markup: see hwdoc.js, part 4.
+   ========================================================================== */
+
+.cycles { position: relative; --cy-ink: var(--w-leaf-700, #23684a); }
+.cyc {
+  --dq-d: var(--w-leaf-900, #14402b); --dq-b: var(--w-leaf-700, #23684a); --dq-t: #2e7d5b; --dq-l: #1d6a62;
+  margin: 0;
+}
+
+/* ---- the tabs over a set of prototypes (16 Oct 2026) --------------------------
+   One pill per prototype, outlined and filled in the section's banner colour
+   like every chapter control on the wiki. The strip pins under the nav while
+   the reader is inside its set and leaves with it. hwdoc.js builds it. */
+.cyc-set { position: relative; }
+.cyc-tabs {
+  position: sticky;
+  top: calc(var(--nv-h, 68px) + .5rem);
+  z-index: 6;
+  display: flex;
+  margin: 0 calc(-1 * var(--bleed, 0px)) 1.5rem;
+  pointer-events: none;
+}
+.cyc-tabs__track {
+  position: relative;
+  display: flex;
+  flex: 1 1 auto;
+  gap: 2px;
+  max-width: 100%;
+  padding: 5px;
+  overflow-x: auto;
+  scrollbar-width: none;
+  border-radius: 999px;
+  background: rgb(255 255 255 / .86);
+  -webkit-backdrop-filter: saturate(180%) blur(20px);
+          backdrop-filter: saturate(180%) blur(20px);
+  box-shadow: inset 0 0 0 1.5px var(--seg-ink, #3f5a66), 0 8px 24px -14px rgb(0 0 0 / .3);
+  pointer-events: auto;
+}
+.cyc-tabs__track::-webkit-scrollbar { display: none; }
+.cyc-tabs__thumb {
+  position: absolute;
+  top: 5px; bottom: 5px; left: 0;
+  width: 0;
+  border-radius: 999px;
+  background: var(--seg-ink, #3f5a66);
+  box-shadow: 0 3px 8px -2px rgb(0 0 0 / .18);
+  transition: transform .4s cubic-bezier(.2,.8,.2,1), width .4s cubic-bezier(.2,.8,.2,1);
+}
+.doc .cyc-tabs__btn {
+  position: relative;
+  z-index: 1;
+  display: inline-flex;
+  flex: 1 0 auto;
+  align-items: center;
+  justify-content: center;
+  gap: .45rem;
+  margin: 0;
+  padding: .66rem 1rem;
+  border: 0;
+  border-radius: 999px;
+  background: none;
+  font: inherit;
+  font-size: .9375rem;
+  font-weight: 500;
+  line-height: 1.2;
+  color: var(--w-ink-2, #3c4650);
+  white-space: nowrap;
+  cursor: pointer;
+  transition: color .25s ease;
+}
+.doc .cyc-tabs__btn > b {
+  display: inline-grid; place-items: center;
+  width: 1.45rem; height: 1.45rem;
+  border-radius: 50%;
+  font-size: .75rem; font-weight: 700;
+  color: var(--seg-ink, #3f5a66);
+  box-shadow: inset 0 0 0 1.5px currentColor;
+}
+.doc .cyc-tabs__btn:hover { color: var(--seg-ink, #3f5a66); background: none; }
+.doc .cyc-tabs__btn[aria-selected="true"] { color: #fff; font-weight: 600; }
+.doc .cyc-tabs__btn[aria-selected="true"] > b { color: #fff; }
+.cyc-tabs__btn:focus-visible { outline: 2px solid var(--seg-ink, #3f5a66); outline-offset: 2px; }
+.cyc-tabs__track:not(.has-thumb) .cyc-tabs__btn[aria-selected="true"] { background: var(--seg-ink, #3f5a66); }
+.cyc-set > .cyc[hidden] { display: none !important; }
+.cycles .cyc-set > .cyc { margin-top: 0; }
+.cycles .cyc-group > .cyc-set { margin-top: 2.5rem; }
+@media (max-width: 700px) {
+  .cyc-tabs { margin-left: 0; margin-right: 0; }
+  .doc .cyc-tabs__btn { flex: 0 0 auto; padding: .55rem .8rem; font-size: .875rem; }
+}
+@media (prefers-reduced-motion: reduce) { .cyc-tabs__thumb, .doc .cyc-tabs__btn { transition: none; } }
+
+/* ---- a prototype: one card, a band on top ---------------------------------- */
+/* Every selector starts `body.hwreveal .doc-wrap .doc .cycles`: the band is a
+   section.part on the LPA and a section.sec elsewhere, and both of those
+   carry card and title rules this has to outrank. */
+body.hwreveal .doc-wrap .doc .cycles .cyc > section.cyc__band {
+  margin: 0 calc(-1 * var(--bleed)) 0;
+  padding: calc(var(--card-pad) * .9) var(--card-pad) calc(var(--card-pad) * .8);
+  min-height: 0;
+  border: 0;
+  border-radius: 28px 28px 0 0;
+  background: linear-gradient(180deg, var(--w-leaf-50, #f4f9f6), #fff 85%);
+  box-shadow: inset 0 0 0 1px var(--w-leaf-200, #cfe4d8), inset 0 4px 0 var(--w-leaf-700, #23684a);
+}
+body.hwreveal .doc-wrap .doc .cycles .cyc > section.cyc__band::after,
+body.hwreveal .doc-wrap .doc .cycles .cyc > section.cyc__band > .part-mark { display: none; }
+/* a prototype after the first opens with air, and the cue sits in it */
+body.hwreveal .doc-wrap .doc .cycles .cyc + .cyc > section.cyc__band:first-child,
+body.hwreveal .doc-wrap .doc .cycles .cyc-group .cyc > section.cyc__band:first-child { margin-top: 0; }
+.cycles .cyc + .cyc, .cycles .cyc-group + .cyc-group { margin-top: 3.5rem; }
+.cycles .cyc-group > .cyc { margin-top: 2.5rem; }
+
+/* the card under the band: every section after it, joined into one */
+body.hwreveal .doc-wrap .doc .cycles .cyc > section.sec:not(.cyc__band) {
+  margin-top: 0; margin-bottom: 0;
+  border-radius: 0;
+  box-shadow: inset 0 1px 0 rgb(0 0 0 / .06);
+}
+body.hwreveal .doc-wrap .doc .cycles .cyc > section.sec:last-of-type { border-radius: 0 0 28px 28px; }
+body.hwreveal .doc-wrap .doc .cycles .cyc > section.cyc__band:last-of-type { border-radius: 28px; }
+@media (max-width: 600px) {
+  body.hwreveal .doc-wrap .doc .cycles .cyc > section.cyc__band { border-radius: 22px 22px 0 0; }
+  body.hwreveal .doc-wrap .doc .cycles .cyc > section.sec:last-of-type { border-radius: 0 0 22px 22px; }
+  body.hwreveal .doc-wrap .doc .cycles .cyc > section.cyc__band:last-of-type { border-radius: 22px; }
+}
+
+/* the band's title, whatever its level (h2 on the LPA, h3, or h4 under a
+   group's h3 on the bioreactor) */
+body.hwreveal .doc-wrap .doc .cycles .cyc__band .dbtl-head :is(h2, h3, h4) {
+  display: block;
+  margin: 0; padding: 0; border: 0;
+  font-size: clamp(1.5rem, 1.15rem + 1.3vw, 2.125rem);
+  font-weight: 800; line-height: 1.1; letter-spacing: -.022em;
+  color: var(--w-leaf-900, #14402b);
+  text-transform: none;
+  text-wrap: balance;
+}
+body.hwreveal .doc-wrap .doc .cycles .cyc__band .dbtl-head :is(h2, h3, h4) > i {
+  display: inline-block;
+  margin: 0 .45rem 0 0; padding: .2em .55em;
+  border-radius: 999px;
+  font-size: .5em; font-style: normal; font-weight: 650; letter-spacing: .01em;
+  vertical-align: .35em;
+  color: var(--pl, var(--w-leaf-700)); background: color-mix(in srgb, var(--pl, #23684a) 13%, #fff);
+}
+.dbtl-head .dbtl-pre {
+  position: absolute; width: 1px; height: 1px; margin: -1px; padding: 0; overflow: hidden;
+  clip: rect(0 0 0 0); clip-path: inset(50%); white-space: nowrap; border: 0;
+}
+body.hwreveal .doc-wrap .doc .cycles .cyc__band .dbtl-kick {
+  max-width: none; margin: 0 0 .4rem;
+  font: 700 .8125rem/1.25 var(--sans, inherit); letter-spacing: .1em; text-transform: uppercase;
+  color: var(--w-leaf-700, #23684a);
+}
+body.hwreveal .doc-wrap .doc .cycles .cyc__band .dbtl-kick span { color: #5f6b78; font-weight: 600; }
+body.hwreveal .doc-wrap .doc .cycles .cyc.is-todo .cyc__band .dbtl-kick { color: #9a3412; }
+body.hwreveal .doc-wrap .doc .cycles .cyc__band .dbtl-gist {
+  margin: .5rem 0 0; max-width: 62ch;
+  font-size: .9375rem; line-height: 1.5; color: var(--w-ink-3);
+}
+/* the stage list sits in a card whose own list and link rules (width cap,
+   bullets, underlines) are for prose, not for this */
+body.hwreveal .doc-wrap .doc .cycles .cyc__band ol.dbtl-steps {
+  width: auto; max-width: none; margin: 1.3rem 0 0; padding: 0; list-style: none;
+}
+body.hwreveal .doc-wrap .doc .cycles .cyc__band ol.dbtl-steps > li {
+  margin: 0; padding: 0; max-width: none; list-style: none; border: 0; background: none;
+}
+body.hwreveal .doc-wrap .doc .cycles .cyc__band ol.dbtl-steps > li::marker { content: ""; }
+body.hwreveal .doc-wrap .doc .cycles .cyc__band ol.dbtl-steps a,
+body.hwreveal .doc-wrap .doc .cycles .cyc__band ol.dbtl-steps a :is(span, em) {
+  text-decoration: none; background-image: none;
+}
+/* The card itself, whole here: wiki-align.css draws it only under
+   body.doc-light, which polish.js sets on scroll, so before that (or if
+   polish.js stops early) the box lost its grid and its border. And the
+   record's link rule draws an amber underline as a bottom border. */
+body.hwreveal .doc-wrap .doc .cycles .cyc__band ol.dbtl-steps a {
+  display: grid; grid-template-columns: auto minmax(0, 1fr); gap: .6rem; align-items: start;
+  height: 100%; box-sizing: border-box;
+  padding: .65rem .75rem; border-radius: .375rem;
+  background: #fff; border: 1px solid var(--w-line, #e5e5e5);
+  color: #262626;
+  transition: border-color .2s ease, background .2s ease, transform .2s ease;
+}
+body.hwreveal .doc-wrap .doc .cycles .cyc__band ol.dbtl-steps a > span { display: block; font-size: .875rem; line-height: 1.4; color: #4a5560; }
+body.hwreveal .doc-wrap .doc .cycles .cyc__band ol.dbtl-steps a > span em {
+  display: block; font-style: normal; font-weight: 700; font-size: .9375rem; color: var(--w-leaf-900, #14402b);
+}
+body.hwreveal .doc-wrap .doc .cycles .cyc__band ol.dbtl-steps li.gap a { background: #fff7f2; }
+body.hwreveal .doc-wrap .doc .cycles .cyc__band ol.dbtl-steps li.gap a > span { color: #9a3412; }
+@media (prefers-reduced-motion: reduce) { body.hwreveal .doc-wrap .doc .cycles .cyc__band ol.dbtl-steps a { transition: none; } }
+body.hwreveal .doc-wrap .doc .cycles .cyc__band ol.dbtl-steps a:is(:hover, :focus-visible) { border-color: var(--w-leaf-500, #4f9c6f); background: var(--w-leaf-50, #f4f9f6); transform: translateY(-1px); }
+body.hwreveal .doc-wrap .doc .cycles .cyc__band ol.dbtl-steps li.gap a { border-color: #fdba8c; }
+/* Phones: wiki-align.css puts the ring beside the kicker and an h2 under
+   both; the title here may be an h3 or h4 and may have a line under it, so
+   each is given its place, or they fall into the kicker's narrow column. */
+@media (max-width: 700px) {
+  body.hwreveal .doc-wrap .doc .cycles .cyc__band .dbtl-head :is(h2, h3, h4) { grid-area: h2; }
+  body.hwreveal .doc-wrap .doc .cycles .cyc__band .dbtl-head .dbtl-gist { grid-area: gist; margin: 0; }
+  body.hwreveal .doc-wrap .doc .cycles .cyc__band .dbtl-kick { font-size: .75rem; letter-spacing: .08em; }
+}
+/* the ring carries the prototype's number alone; the kicker says what it is */
+.cyc__band .dbtl-ring > b { margin-top: 0; }
+/* the four stages: each in its own column, so a missing one leaves its gap */
+.cyc__band ol.dbtl-steps > li.d { grid-column: 1; }
+.cyc__band ol.dbtl-steps > li.b { grid-column: 2; }
+.cyc__band ol.dbtl-steps > li.t { grid-column: 3; }
+.cyc__band ol.dbtl-steps > li.l { grid-column: 4; }
+/* the joining dash only between two stages that sit side by side */
+.cyc__band ol.dbtl-steps > li + li::before { display: none; }
+@media (min-width: 701px) {
+  .cyc__band ol.dbtl-steps > li.d + li.b::before,
+  .cyc__band ol.dbtl-steps > li.b + li.t::before,
+  .cyc__band ol.dbtl-steps > li.t + li.l::before { display: block; }
+}
+@media (max-width: 700px) {
+  .cyc__band ol.dbtl-steps > li { grid-column: auto !important; }
+}
+/* a prototype outlined but not written: an orange band, no stages */
+body.hwreveal .doc-wrap .doc .cycles .cyc.is-todo > section.cyc__band {
+  background: linear-gradient(180deg, #fff7f2, #fff 85%);
+  box-shadow: inset 0 0 0 1px #fde0cc, inset 0 4px 0 #fdba8c;
+}
+.cyc.is-todo .dbtl-ring { filter: saturate(.25) opacity(.55); }
+body.hwreveal .doc-wrap .doc .cycles .cyc.is-todo .cyc__band .dbtl-head :is(h2, h3, h4) { color: var(--w-ink-2); }
+body.hwreveal .doc-wrap .doc .cycles .cyc__band > .todo { margin: 1.1rem 0 0; }
+
+/* ---- a stage inside the card ----------------------------------------------- */
+/* D, B, T or L in the ring's colour for that quarter, the name, a hairline */
+body.hwreveal .doc-wrap .doc .cycles .cyc :is(h3, h4, h5).dbtl-h {
+  display: flex; align-items: center; gap: .65rem;
+  margin: 2.1rem 0 .9rem; padding: 0; border: 0;
+  font-family: var(--sans, inherit);
+  font-size: .8125rem; font-weight: 700; line-height: 1.2; letter-spacing: .12em; text-transform: uppercase;
+  color: var(--w-leaf-900, #14402b);
+}
+body.hwreveal .doc-wrap .doc .cycles .cyc :is(h3, h4, h5).dbtl-h::before {
+  content: "D"; flex: none;
+  display: grid; place-items: center;
+  width: 1.625rem; height: 1.625rem; border-radius: 50%;
+  font-size: .75rem; letter-spacing: 0; color: #fff; background: var(--dq-d);
+}
+body.hwreveal .doc-wrap .doc .cycles .cyc .dbtl-h.b::before { content: "B"; background: var(--dq-b); }
+body.hwreveal .doc-wrap .doc .cycles .cyc .dbtl-h.t::before { content: "T"; background: var(--dq-t); }
+body.hwreveal .doc-wrap .doc .cycles .cyc .dbtl-h.l::before { content: "L"; background: var(--dq-l); }
+body.hwreveal .doc-wrap .doc .cycles .cyc :is(h3, h4, h5).dbtl-h::after {
+  content: ""; flex: 1; height: 1px; background: rgb(0 0 0 / .1);
+}
+body.hwreveal .doc-wrap .doc .cycles .cyc section.sec > .dbtl-h:first-child,
+body.hwreveal .doc-wrap .doc .cycles .cyc .iter-body > .dbtl-h:first-child { margin-top: 0; }
+
+/* ---- a reading table inside a prototype, on a phone ----------------------- */
+/* The photometer's readings tables (prototypes 2 and 3) carried the record's
+   560px table floor, so at 390px they ran ~600px wide past the card. On a
+   phone they reflow to the card instead: the headers wrap, the numbers stay
+   on one line, and the frame still scrolls inside itself as a last resort. */
+@media (max-width: 700px) {
+  .doc .cycles .tablewrap { max-width: 100%; overflow-x: auto; }
+  .doc .cycles .tablewrap > table { min-width: 0; width: 100%; font-size: .78rem; }
+  .doc .cycles .tablewrap > table :is(th, td) { padding-right: .45rem; white-space: normal; overflow-wrap: anywhere; }
+  .doc .cycles .tablewrap > table td.num { white-space: nowrap; overflow-wrap: normal; }
+  .doc .cycles .tablewrap > table td .todo { display: block; margin: .2rem 0 0; white-space: normal; }
+}
+
 
 
 /* ============================================================ 5 THE READING ==
@@ -689,8 +882,6 @@ body.hwreveal .doc-wrap .doc {
 }
 @media (max-width: 600px)  { body.hwreveal .doc-wrap .doc { --bleed: .4rem; padding-top: 2.25rem; } }
 
-.doc .seg { margin-bottom: 2.5rem; }
-
 /* ---- the chapter's title -------------------------------------------------- */
 body.hwreveal .doc-wrap .doc section.part {
   min-height: 0;          /* hydroponics held 234px open above each title */
@@ -698,12 +889,21 @@ body.hwreveal .doc-wrap .doc section.part {
   padding: 0;
   border: 0;
 }
-/* a second part in the same chapter, and the flat parts under the control */
-body.hwreveal .doc-wrap .doc .rail__panel > section.part ~ section.part,
-body.hwreveal .doc-wrap .doc > section.part { margin-top: 4rem; }
+/* Every part after the first opens on a hairline and some air: it is the one
+   mark, in one continuous scroll, of where a numbered section starts. The
+   parts sit in their old chapter wrappers (.chap, which carry the colour) or
+   flat in the record; the first one meets the summary sheet and needs
+   neither. */
+body.hwreveal .doc-wrap .doc .chap > section.part,
 body.hwreveal .doc-wrap .doc > section.part {
+  margin-top: 4rem;
   padding-top: 3rem;
   border-top: 1px solid rgb(0 0 0 / .08);
+}
+body.hwreveal .doc-wrap .doc .chaps > .chap:first-child > section.part:first-of-type {
+  margin-top: 0;
+  padding-top: 0;
+  border-top: 0;
 }
 body.hwreveal .doc-wrap .doc section.part > .part-mark {
   margin: 0 0 .55rem;

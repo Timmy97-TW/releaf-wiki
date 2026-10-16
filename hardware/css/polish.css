@@ -935,28 +935,12 @@ body.doc-light .onward-card { background: #f7f5f0; border-color: rgba(15, 19, 25
 }
 .headline-stats > div + div::before { display: none; }
 
-/* ==== scanline sweep ==================================================== */
-/* One pass down the viewport every 9s. Screen-blended, so it only ever
-   brightens; it can never darken content. */
+/* ==== scanline sweep ====================================================
+   15 Oct 2026, the owner: "remove the bar scanner completely". The full-screen
+   sweep that crossed the stories is gone (the markup too); this keeps any
+   copy of the element that a re-sync brings back inert. */
 body::before, body::after { will-change: transform; }
-.scanline {
-  position: fixed; left: 0; right: 0; top: 0; height: 26vh;
-  z-index: 41; pointer-events: none; mix-blend-mode: screen;
-  background: linear-gradient(180deg,
-    transparent 0%,
-    color-mix(in srgb, var(--amber) 5%, transparent) 46%,
-    color-mix(in srgb, var(--amber) 9%, transparent) 52%,
-    transparent 100%);
-  animation: sweep 9s linear infinite;
-}
-@keyframes sweep {
-  0%   { transform: translateY(-30vh); opacity: 0; }
-  8%   { opacity: 1; }
-  92%  { opacity: 1; }
-  100% { transform: translateY(100vh); opacity: 0; }
-}
-@media (prefers-reduced-motion: reduce) { .scanline { display: none; } }
-@media print { .scanline { display: none !important; } }
+.scanline { display: none !important; }
 
 /* ==== light record ======================================================
    Dark belongs to the hero and the 3D walkthrough — that stretch is a product
@@ -1259,8 +1243,6 @@ body.doc-light .frame::before {
 }
 /* plate number, sitting on the top rule the way a drawing sheet labels one */
 body.doc-light .frame:not([data-plate])::after { content: none; }
-/* no plate numbers on figures (14 Oct 2026): the captions carry no figure label */
-body.doc-light .frame::after { content: none !important; }
 body.doc-light .frame::after {
   content: "FIG " attr(data-plate);
   position: absolute; top: 0; right: 16px; transform: translateY(-50%);
@@ -2168,3 +2150,28 @@ body.doc-light .bom-meter { background: rgba(15, 19, 25, .10); }
   .doc dt, .stats dt { letter-spacing: .08em !important; }
   .skip-link { font-size: 12px !important; }
 }
+
+/* ---- the way back, 15 Oct 2026 ------------------------------------------
+   The section's own topbar carried "← Back to hardware" until the wiki's site
+   menu replaced it (716ebaa), and the button went with it. The owner wants it
+   back. The menu is fixed at the top, so the button cannot sit in a bar of
+   its own: it rides in the opening scene, top left, just under the menu (the
+   scene's titles start 44px lower than that), and the contents sidebar opens
+   with the same link for anyone already reading the record. */
+.backbtn--stage {
+  position: absolute; z-index: 6;
+  /* in line with the scene titles' left edge, clear of the corner brackets */
+  top: calc(var(--nv-h, 68px) + 14px); left: clamp(1.4rem, 9vw, 7.5rem);
+  -webkit-backdrop-filter: blur(8px); backdrop-filter: blur(8px);
+}
+.doc-nav-back {
+  display: inline-flex; align-items: center; gap: .45rem;
+  margin: 0 0 1.1rem; color: var(--muted, #5b6b64); text-decoration: none;
+  font-family: var(--mono); font-size: .6rem; letter-spacing: .16em; text-transform: uppercase;
+}
+.doc-nav-back i { font-style: normal; transition: transform .25s var(--ease); }
+.doc-nav-back:hover, .doc-nav-back:focus-visible { color: var(--fg); }
+.doc-nav-back:hover i, .doc-nav-back:focus-visible i { transform: translateX(-3px); }
+
+/* no plate numbers on figures (14 Oct 2026): the captions carry no figure label */
+body.doc-light .frame::after { content: none !important; }

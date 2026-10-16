@@ -126,7 +126,7 @@
   });
   const parts = Array.prototype.slice.call(nav.querySelectorAll(":scope > ol > li"));
 
-  const links = Array.prototype.slice.call(nav.querySelectorAll("a"));
+  const links = Array.prototype.slice.call(nav.querySelectorAll('a[href^="#"]')); // not the "All hardware" link
   const targets = links.map(function (a) {
     const el = document.querySelector(a.getAttribute("href"));
     return el ? { a: a, el: el } : null;

@@ -1,0 +1,135 @@
+/* ===========================================================================
+   8.1 "Materials List & Cost": where the parts money goes (15 Oct 2026)
+   ---------------------------------------------------------------------------
+   An .xp card (../css/explore.css) tagged MEASURED: the team's component sheet,
+   read by js/xp-bom.js from the table right below it. One series, so one
+   colour (the record's leaf) for every bar; the reference spectrophotometer,
+   which is not part of the build, is a neutral slate. Orange is used only
+   for what the sheet does not cost, as it is everywhere on this record.
+
+   The id on every rule is deliberate: this page's `.sec p` and `.sec li`
+   (css/style.css) and wiki-align.css's figcaption rule outrank the kit's
+   one-class rules (logged in NEED-SHARED.md).
+   =========================================================================== */
+
+html:not(.js) #xp-bom { display: none; }      /* drawn from the table by script; without it the table stands alone */
+
+#xp-bom {
+  container-type: inline-size;
+  --bom-bar: var(--w-leaf-500, #4f9c6f);
+  --bom-bar-hot: var(--xp-leaf);
+  --bom-bar-on: var(--xp-leaf-d);
+  --bom-ref: #8492a0;                /* the perfusion card's slate: 3.1:1 on the stage, so the bar holds its edge */
+  --bom-ref-hot: #687583;
+  --bom-wash: #f2f7f4;
+  --bom-on: #e6f1ea;
+  --bom-lab: 7.8rem;                 /* room kept at the end of the longest bar for its value and share */
+}
+
+#xp-bom .xp-title {
+  margin: 0; max-width: none;
+  font: 650 1.02rem/1.3 var(--sans); letter-spacing: -.005em; color: var(--xp-leaf-d);
+}
+#xp-bom .xp-sub {
+  margin: .1rem 1.15rem .8rem; max-width: 70ch;
+  font-size: .9rem; line-height: 1.5; color: var(--xp-ink-2);
+}
+#xp-bom .xp-note { font-size: .8rem; line-height: 1.55; color: var(--xp-ink-2); max-width: none; }
+
+#xp-bom .xp-stage { padding: .55rem .7rem .6rem; }
+#xp-bom .xp-bom-list { list-style: none; margin: 0; padding: 0; }
+#xp-bom .xp-bom-list > li { margin: 0; padding: 0; font-size: inherit; line-height: inherit; }
+#xp-bom .xp-bom-list > li::before, #xp-bom .xp-bom-list > li::marker { content: none; }
+#xp-bom .xp-bom-list > li[hidden] { display: none; }
+#xp-bom .xp-bom-list > li.xp-bom-in { animation: xp-bom-in .45s ease-out both; }
+@keyframes xp-bom-in { from { opacity: 0; transform: translateY(-4px); } to { opacity: 1; transform: none; } }
+
+/* each line is a real button: it has a share to show and a table row to find */
+#xp-bom .xp-bom-row {
+  -webkit-appearance: none; appearance: none;
+  display: grid; grid-template-columns: minmax(8.5rem, 11.25rem) minmax(0, 1fr); align-items: center; column-gap: .9rem;
+  width: 100%; min-height: 31px; margin: 0; padding: .22rem .5rem;
+  border: 0; border-radius: 8px; background: transparent;
+  font: inherit; color: inherit; text-align: left; cursor: pointer;
+  transition: background .18s;
+}
+#xp-bom .xp-bom-row:hover, #xp-bom .xp-bom-row.is-hot { background: var(--bom-wash); }
+#xp-bom .xp-bom-row[aria-pressed="true"] { background: var(--bom-on); }
+#xp-bom .xp-bom-row:focus-visible { outline: 2px solid var(--xp-leaf); outline-offset: -2px; }
+
+#xp-bom .xp-bom-name { min-width: 0; font: 600 .84rem/1.3 var(--sans); color: var(--xp-ink); }
+#xp-bom .xp-bom-tag { display: block; font: 500 .74rem/1.3 var(--sans); color: var(--xp-ink-2); }
+
+#xp-bom .xp-bom-line { display: flex; align-items: center; gap: .5rem; min-width: 0; min-height: 18px; }
+#xp-bom .xp-bom-bar {
+  flex: none; height: 14px; min-width: 3px;
+  width: calc(var(--w, 0) * (100% - var(--bom-lab)));
+  border-radius: 0 4px 4px 0; background: var(--bom-bar);
+  transition: width .75s cubic-bezier(.22, .7, .2, 1) calc(var(--i, 0) * 45ms), background .18s;
+}
+#xp-bom .xp-bom-row.is-ref .xp-bom-bar { background: var(--bom-ref); }
+#xp-bom .xp-bom-row:hover .xp-bom-bar, #xp-bom .xp-bom-row.is-hot .xp-bom-bar,
+#xp-bom .xp-bom-row:focus-visible .xp-bom-bar { background: var(--bom-bar-hot); }
+#xp-bom .xp-bom-row.is-ref:hover .xp-bom-bar, #xp-bom .xp-bom-row.is-ref.is-hot .xp-bom-bar,
+#xp-bom .xp-bom-row.is-ref:focus-visible .xp-bom-bar { background: var(--bom-ref-hot); }
+#xp-bom .xp-bom-row[aria-pressed="true"] .xp-bom-bar { background: var(--bom-bar-on); }
+#xp-bom .xp-bom-row.is-ref[aria-pressed="true"] .xp-bom-bar { background: #4d5866; }
+
+#xp-bom .xp-bom-val {
+  flex: none; font: 600 .8rem/1 var(--sans); font-variant-numeric: tabular-nums; color: var(--xp-ink-2); white-space: nowrap;
+}
+/* the share appears beside the value only for the line being looked at, and takes no room until then */
+#xp-bom .xp-bom-share {
+  flex: none; display: none; font: 650 .78rem/1 var(--sans); font-variant-numeric: tabular-nums; color: var(--xp-leaf-d); white-space: nowrap;
+}
+#xp-bom .xp-bom-row:hover .xp-bom-share, #xp-bom .xp-bom-row.is-hot .xp-bom-share,
+#xp-bom .xp-bom-row:focus-visible .xp-bom-share, #xp-bom .xp-bom-row[aria-pressed="true"] .xp-bom-share { display: inline; }
+
+/* what the sheet does not cost: the record's orange, as a stub, never a zero-length bar */
+#xp-bom .xp-bom-stub {
+  flex: none; display: inline-flex; align-items: center;
+  padding: .14rem .48rem; border-radius: 4px;
+  border: 1px dashed #fdba8c; background: #fff3eb; color: #c2410c;
+  font: 650 .72rem/1.2 var(--sans); white-space: nowrap;
+}
+
+#xp-bom .xp-controls { gap: .6rem 1.1rem; padding-bottom: .8rem; }
+#xp-bom .xp-bom-read {
+  flex: 1 1 18rem; margin: 0; max-width: none; min-height: 2.9em;
+  display: flex; align-items: center;
+  font: 500 .86rem/1.45 var(--sans); color: var(--xp-ink-2);
+}
+#xp-bom .xp-bom-read > span { display: block; }
+#xp-bom .xp-bom-read b { color: var(--xp-ink); font-weight: 650; font-variant-numeric: tabular-nums; }
+#xp-bom .xp-bom-read .miss { color: #c2410c; font-weight: 650; }
+#xp-bom #xp-bom-ref .xp-bom-ico { width: .75rem; height: .5rem; border-radius: 2px; background: var(--bom-ref); }
+
+/* the table row a bar points at */
+#sec81 table.bom tr > td { transition: background-color .35s ease, box-shadow .35s ease; }
+#sec81 table.bom tr.xp-bom-hl > td { background-color: var(--bom-on, #e6f1ea); }
+#sec81 table.bom tr.xp-bom-hl > td:first-child { box-shadow: inset 3px 0 0 var(--w-leaf-700, #23684a); }
+#sec81 table.bom tr.xp-bom-hot > td { background-color: #f2f7f4; }
+
+/* The completeness meter polish.js prints over every BOM ("16450.00", "0 / 12") was switched off for this table
+   (data-summary="off", and css/style.css's `#sec61 .bom-summary`), but that rule kept the old 6.1 id when Reproduction
+   became Part 8. The chart above and the table's own foot carry the totals, so the meter stays off here. */
+#sec81 .bom-summary { display: none; }
+
+/* phones and narrow columns: the name sits over its bar, which then has the card's whole width */
+@container (max-width: 520px) {
+  #xp-bom .xp-bom-row { grid-template-columns: minmax(0, 1fr); row-gap: .2rem; min-height: 0; padding: .3rem .45rem .36rem; }
+  #xp-bom .xp-bom-tag { display: inline; margin-left: .35rem; }
+  #xp-bom .xp-bom-line { min-height: 16px; }
+  #xp-bom .xp-bom-bar { height: 9px; }
+  #xp-bom #xp-bom-ref { text-align: left; line-height: 1.25; }
+  #xp-bom { --bom-lab: 5.9rem; }
+}
+@media (max-width: 560px) {
+  #xp-bom .xp-sub { margin-left: .85rem; margin-right: .85rem; }
+  #xp-bom .xp-stage { padding: .4rem .35rem .45rem; }
+  #xp-bom .xp-bom-read { flex-basis: 100%; min-height: 4.35em; align-items: flex-start; }
+}
+@media (prefers-reduced-motion: reduce) {
+  #xp-bom .xp-bom-row, #xp-bom .xp-bom-bar, #sec81 table.bom tr > td { transition: none; }
+  #xp-bom .xp-bom-list > li.xp-bom-in { animation: none; }
+}

@@ -1,0 +1,251 @@
+/* ===========================================================================
+   Part 4's build timeline (js/xp-timeline.js; 15 Oct 2026, suggestion 4)
+   ---------------------------------------------------------------------------
+   nav#dbtl-map, the cycle map, as a June → October timeline of the
+   tracks. Each node is the record's own D/B/T/L ring in small: the four
+   greens where a stage is written, the record's orange where it is not, so a
+   prototype that is only outlined is a hollow orange ring.
+     .is-h  wide: one lane per track on a date axis, a panel under them
+     .is-v  narrow: a vertical timeline, rails at the left, one row each
+   Without JavaScript neither class is set and the map stays the plain list
+   (css/style.css), with each outcome under its name.
+   The ids and rules of style.css's old map (#dbtl-map …) are outranked here
+   by #dbtl-map.xp-tl.is-h / .is-v, so nothing in style.css is changed.
+   =========================================================================== */
+
+#dbtl-map.xp-tl {
+  --tl-ink: #1f2933; --tl-ink-2: #556070; --tl-mute: #69727e;
+  --tl-d: var(--w-leaf-900, #14402b); --tl-b: var(--w-leaf-700, #23684a); --tl-t: #2e7d5b; --tl-l: #1d6a62;
+  --tl-miss: #fdba8c; --tl-miss-bg: #fff7f2; --tl-miss-ink: #c2410c;
+  display: block; gap: 0; margin: 1.75rem 0 .75rem; padding: 0;
+}
+/* the sub-line runs the card's whole width; the kit caps it at 64ch */
+#dbtl-map.xp-tl > p.xp-sub { max-width: none; }
+
+/* ---- no JavaScript: the list it always was, each outcome under its name ---- */
+#dbtl-map.xp-tl:not(.is-h):not(.is-v) .tl-stage { display: grid; gap: .5rem; padding: .8rem; }
+#dbtl-map.xp-tl:not(.is-h):not(.is-v) ol { display: grid; gap: .55rem; }
+#dbtl-map.xp-tl:not(.is-h):not(.is-v) li > :is(.tl-name, .tl-story, .tl-k, .tl-date) { display: none; }
+#dbtl-map.xp-tl:not(.is-h):not(.is-v) li > :is(.tl-when, .tl-out) { display: block; margin: .2rem 0 0 .6rem; font-size: 13px; line-height: 1.45; color: var(--tl-ink-2); }
+#dbtl-map.xp-tl:not(.is-h):not(.is-v) .tl-arc { display: none; }
+/* the card is white in either theme, so the old map's light-on-dark words are made dark here */
+#dbtl-map.xp-tl:not(.is-h):not(.is-v) .track { background: #f7f9fb; border-color: rgba(15, 19, 25, .1); }
+#dbtl-map.xp-tl:not(.is-h):not(.is-v) .track-h, #dbtl-map.xp-tl:not(.is-h):not(.is-v) li:not(.tk-todo) > a { color: var(--tl-ink); }
+#dbtl-map.xp-tl:not(.is-h):not(.is-v) .track-h i, #dbtl-map.xp-tl:not(.is-h):not(.is-v) li:not(.tk-todo) > a b { color: var(--tl-b); }
+/* hidden only until the script has laid it out; should the script never finish, it shows as the list after 3 s */
+html.js #dbtl-map.xp-tl:not(.is-ready) .tl-stage { visibility: hidden; min-height: 300px; animation: tl-failsafe 0s linear 3s forwards; }
+@keyframes tl-failsafe { to { visibility: visible; } }
+html:not(.js) #dbtl-map.xp-tl .tl-how { display: none; }
+
+/* ---- shared: the stage, the nodes ---- */
+#dbtl-map.xp-tl.is-h .tl-stage, #dbtl-map.xp-tl.is-v .tl-stage { position: relative; }
+#dbtl-map.xp-tl :is(.tl-name, .tl-when, .tl-out, .tl-story) i { font-style: italic; color: inherit; }
+#dbtl-map.xp-tl a.tl-node { -webkit-tap-highlight-color: transparent; }
+#dbtl-map.xp-tl .tl-ring { display: block; width: 28px; height: 28px; overflow: visible; }
+#dbtl-map.xp-tl.is-h .tl-ring { width: 100%; height: 100%; }
+#dbtl-map.xp-tl .tl-core { fill: #fff; }
+#dbtl-map.xp-tl .tl-q { fill: none; stroke-width: 4.8; }
+#dbtl-map.xp-tl .tl-q.d { stroke: var(--tl-d); }
+#dbtl-map.xp-tl .tl-q.b { stroke: var(--tl-b); }
+#dbtl-map.xp-tl .tl-q.t { stroke: var(--tl-t); }
+#dbtl-map.xp-tl .tl-q.l { stroke: var(--tl-l); }
+#dbtl-map.xp-tl .tl-q.miss { stroke: var(--tl-miss); }
+#dbtl-map.xp-tl li.tk-todo .tl-core { fill: var(--tl-miss-bg); }
+
+/* the visually hidden words: still read aloud */
+#dbtl-map.xp-tl.is-h li > :is(.tl-name, .tl-when, .tl-out, .tl-story),
+#dbtl-map.xp-tl.is-h a.tl-node > span,
+#dbtl-map.xp-tl p.tl-say {
+  position: absolute !important; width: 1px; height: 1px; margin: -1px; padding: 0; overflow: hidden;
+  clip: rect(0 0 0 0); clip-path: inset(50%); white-space: nowrap; border: 0;
+}
+
+/* ====================== wide: lanes on the date axis ====================== */
+/* room under the last lane, so the panel's caret never reaches a date label */
+#dbtl-map.xp-tl.is-h .tl-stage { display: block; padding: 0 0 12px; }
+#dbtl-map.xp-tl.is-h .tl-axis { position: relative; height: 30px; }
+#dbtl-map.xp-tl .tl-month {
+  position: absolute; top: 11px; transform: translateX(-50%); white-space: nowrap;
+  font: 600 11px/1 var(--mono); letter-spacing: .12em; text-transform: uppercase; color: var(--tl-mute);
+}
+#dbtl-map.xp-tl .tl-grid { position: absolute; inset: 0; pointer-events: none; }
+#dbtl-map.xp-tl .tl-gl { position: absolute; top: 0; bottom: 0; width: 1px; background: rgba(15, 19, 25, .07); }
+#dbtl-map.xp-tl .tl-gut { position: absolute; top: 0; bottom: 0; background: #f4f6f5; border-left: 1px dashed rgba(15, 19, 25, .18); }
+#dbtl-map.xp-tl.is-v :is(.tl-grid, .tl-axis) { display: none; }
+
+#dbtl-map.xp-tl.is-h .track {
+  position: relative; display: block; height: 74px; margin: 0; padding: 0;
+  border: 0; border-radius: 0; background: none; box-shadow: none;
+}
+#dbtl-map.xp-tl.is-h .track + .track { border-top: 1px solid rgba(15, 19, 25, .07); }
+#dbtl-map.xp-tl.is-h .track-h {
+  position: absolute; left: 20px; top: 10px; z-index: 2;
+  display: inline-flex; align-items: baseline; gap: .45rem; padding: 0;
+  font: 650 12.5px/1.2 var(--sans); letter-spacing: -.005em; color: var(--tl-ink); text-decoration: none; border: 0;
+}
+#dbtl-map.xp-tl .track-h i { font: 600 11px/1 var(--mono); font-style: normal; color: var(--tl-b); }
+#dbtl-map.xp-tl .track-h:hover { color: var(--tl-b); }
+#dbtl-map.xp-tl .track-h:focus-visible { outline: 2px solid var(--tl-b); outline-offset: 3px; border-radius: 4px; }
+#dbtl-map.xp-tl.is-h .track > ol { position: absolute; inset: 0; display: block; margin: 0; padding: 0; list-style: none; }
+#dbtl-map.xp-tl.is-h .track > ol > li {
+  position: absolute; left: var(--x, 0); top: 44px; width: 0; height: 0; margin: 0; padding: 0; list-style: none;
+}
+#dbtl-map.xp-tl.is-h .tl-lines { position: absolute; inset: 0; pointer-events: none; }
+#dbtl-map.xp-tl .tl-seg { position: absolute; top: 43px; height: 2px; border-radius: 2px; }
+#dbtl-map.xp-tl .tl-seg.solid { background: color-mix(in srgb, var(--tl-b) 55%, #fff); }
+#dbtl-map.xp-tl .tl-seg.dash { background: repeating-linear-gradient(90deg, rgba(15, 19, 25, .26) 0 5px, transparent 5px 10px); }
+#dbtl-map.xp-tl.is-v .tl-lines { display: none; }
+
+/* a node: the ring, the number in it, a lift on hover; the chosen one keeps a halo */
+#dbtl-map.xp-tl.is-h a.tl-node {
+  position: absolute; left: calc(var(--ring, 28px) / -2); top: calc(var(--ring, 28px) / -2); z-index: 1; display: block;
+  width: var(--ring, 28px); height: var(--ring, 28px); margin: 0; padding: 0; border: 0; border-radius: 50%;
+  background: none; text-decoration: none; cursor: pointer; white-space: normal;
+  transition: transform .2s ease, box-shadow .2s ease;
+}
+#dbtl-map.xp-tl a.tl-node > b {
+  position: absolute; display: grid; place-items: center;
+  font: 750 12px/1 var(--sans); font-variant-numeric: tabular-nums; color: var(--tl-d); pointer-events: none;
+}
+#dbtl-map.xp-tl.is-h a.tl-node > b { inset: 0; }
+#dbtl-map.xp-tl li.tk-todo a.tl-node > b { color: var(--tl-miss-ink); }
+#dbtl-map.xp-tl.is-h a.tl-node:hover { transform: scale(1.1); z-index: 3; }
+#dbtl-map.xp-tl.is-h li.is-on > a.tl-node { z-index: 2; transform: scale(1.1); box-shadow: 0 0 0 3px rgba(35, 104, 74, .2), 0 3px 8px -4px rgba(20, 64, 43, .45); }
+#dbtl-map.xp-tl.is-h li.tk-todo.is-on > a.tl-node { box-shadow: 0 0 0 3px rgba(194, 65, 12, .18), 0 3px 8px -4px rgba(124, 45, 18, .35); }
+#dbtl-map.xp-tl a.tl-node:focus-visible { outline: 2px solid var(--tl-b); outline-offset: 4px; }
+
+#dbtl-map.xp-tl.is-h .tl-date {
+  position: absolute; left: 0; top: 20px; transform: translateX(-50%); white-space: nowrap;
+  font: 600 11px/1 var(--mono); letter-spacing: .02em; color: var(--tl-ink-2); pointer-events: none; z-index: 4;
+}
+#dbtl-map.xp-tl.is-h .tl-date.to-l { transform: translateX(calc(-100% + 7px)); }
+#dbtl-map.xp-tl.is-h .tl-date.to-r { transform: translateX(-7px); }
+#dbtl-map.xp-tl.is-h li > .tl-k { display: none; }
+
+/* a track's story between two of its prototypes (.tl-arc); the culture track's, the leak then the stirrer,
+   went with it to the photometer page on 15 Oct, so none is drawn today */
+#dbtl-map.xp-tl.is-h .tl-arc {
+  position: absolute; top: 35px; margin: 0; max-width: none; white-space: nowrap; pointer-events: none;
+  font: 500 12.5px/1.3 var(--sans); letter-spacing: 0; color: var(--tl-ink-2);
+}
+
+/* ---- the panel under the lanes ---- */
+#dbtl-map.xp-tl .tl-peek {
+  position: relative; display: grid; grid-template-columns: 176px minmax(0, 1fr); gap: 1.1rem; align-items: start;
+  min-height: 212px; padding: 15px 18px 15px; border-top: 0; background: #fff;
+}
+@media (max-width: 1100px) {
+  #dbtl-map.xp-tl.is-h .tl-peek { grid-template-columns: 150px minmax(0, 1fr); gap: 1rem; }
+  #dbtl-map.xp-tl.is-h .tl-pic { width: 150px; }
+}
+#dbtl-map.xp-tl .tl-peek[hidden] { display: none !important; }
+#dbtl-map.xp-tl.is-h .tl-peek::before {
+  content: ""; position: absolute; top: -6px; left: var(--cx, 40px); width: 11px; height: 11px; margin-left: -5.5px;
+  background: #fff; border-left: 1px solid var(--xp-line, #e5e5e5); border-top: 1px solid var(--xp-line, #e5e5e5);
+  transform: rotate(45deg); transition: left .25s ease;
+}
+#dbtl-map.xp-tl .tl-pic { position: relative; width: 176px; aspect-ratio: 4 / 3; border-radius: 10px; overflow: hidden; background: #eef1ef; }
+#dbtl-map.xp-tl .tl-pic img { display: block; width: 100%; height: 100%; object-fit: cover; }
+#dbtl-map.xp-tl .tl-pic.sketch { background: #fff; box-shadow: inset 0 0 0 1px rgba(15, 19, 25, .08); }
+#dbtl-map.xp-tl .tl-pic.none {
+  display: grid; place-items: center; background: var(--tl-miss-bg); box-shadow: inset 0 0 0 1.5px var(--tl-miss);
+  font: 650 11px/1.2 var(--sans); letter-spacing: .1em; text-transform: uppercase; color: var(--tl-miss-ink);
+}
+#dbtl-map.xp-tl .tl-tx { min-width: 0; }
+#dbtl-map.xp-tl .tl-peek p { max-width: 62ch; }
+#dbtl-map.xp-tl .tl-peek p.tl-pk { margin: 0 0 .35rem; max-width: none; font: 600 11px/1.35 var(--mono); letter-spacing: .06em; text-transform: uppercase; color: var(--tl-mute); }
+#dbtl-map.xp-tl .tl-peek p.tl-pt { margin: 0 0 .35rem; font: 650 1.02rem/1.3 var(--sans); letter-spacing: -.005em; color: var(--w-leaf-900, #14402b); }
+#dbtl-map.xp-tl .tl-peek p.tl-po { margin: 0 0 .4rem; font: 400 .92rem/1.5 var(--sans); color: var(--tl-ink); }
+#dbtl-map.xp-tl .tl-peek.is-todo p.tl-po { color: #9a3412; }
+#dbtl-map.xp-tl .tl-peek p.tl-ps { margin: 0 0 .7rem; font: 400 .86rem/1.5 var(--sans); color: var(--tl-ink-2); }
+#dbtl-map.xp-tl .tl-peek p.tl-ps::before { content: "\21b3\00a0"; color: var(--tl-b); }
+#dbtl-map.xp-tl .tl-peek p[hidden] { display: none; }
+#dbtl-map.xp-tl .tl-pgo { display: flex; flex-wrap: wrap; align-items: center; gap: .5rem; margin-top: .65rem; }
+/* the kit's button, restated: inside an open row the old map's `#dbtl-map li a` pill would outrank it */
+#dbtl-map.xp-tl .tl-pgo a.xp-btn.primary {
+  display: inline-flex; align-items: center; gap: .45rem; padding: .55rem .95rem; margin: 0;
+  border: 1px solid var(--tl-b); border-radius: 10px; background: var(--tl-b); color: #fff;
+  font: 600 .85rem/1 var(--sans); letter-spacing: 0; text-decoration: none; white-space: nowrap;
+  box-shadow: 0 1px 0 rgba(20, 64, 43, .06);
+}
+#dbtl-map.xp-tl .tl-pgo a.xp-btn.primary:hover { background: var(--tl-d); border-color: var(--tl-d); color: #fff; }
+#dbtl-map.xp-tl .tl-pgo a.xp-btn.primary:focus-visible { outline: 2px solid var(--tl-b); outline-offset: 2px; }
+#dbtl-map.xp-tl .tl-pnav { display: inline-flex; gap: .35rem; margin-left: auto; }
+#dbtl-map.xp-tl .tl-pnav .xp-btn { min-width: 2.4rem; justify-content: center; padding: .42rem .6rem; font-size: 1.05rem; line-height: 1; }
+#dbtl-map.xp-tl .tl-pnav .xp-btn:disabled { opacity: .4; cursor: default; background: #fff; }
+
+/* ====================== narrow: the vertical timeline ====================== */
+#dbtl-map.xp-tl.is-v .tl-stage { display: block; padding: 12px 12px 8px; }
+/* the tracks become the key: each name beside a short piece of its rail */
+#dbtl-map.xp-tl.is-v .track {
+  position: relative; display: block; margin: 0; padding: 3px 0 3px 74px; min-height: 0;
+  border: 0; border-radius: 0; background: none; box-shadow: none;
+}
+#dbtl-map.xp-tl.is-v .track::before {
+  content: ""; position: absolute; left: calc(var(--rx, 13px) - 1px); top: 4px; bottom: 4px; width: 2px; border-radius: 2px;
+  background: color-mix(in srgb, var(--tl-b) 55%, #fff);
+}
+/* a lane with no prototype dated on record has a dashed rail, so its key is dashed too (the membrane and the pumps and
+   valves since 15 Oct; their data-lane is the short name the panel shows, the stepper's group label) */
+#dbtl-map.xp-tl.is-v .track:is([data-lane="Membrane"], [data-lane="Pumps & Valve"])::before { background: repeating-linear-gradient(180deg, rgba(15, 19, 25, .3) 0 4px, transparent 4px 8px); }
+#dbtl-map.xp-tl.is-v .track-h { display: inline-flex; align-items: baseline; gap: .45rem; font: 650 13px/1.35 var(--sans); color: var(--tl-ink); text-decoration: none; border: 0; padding: 0; }
+#dbtl-map.xp-tl.is-v .track > ol, #dbtl-map.xp-tl.is-v .tl-arc { display: none; }
+
+/* display: block, or the old map's `#dbtl-map ol { display: flex; flex-wrap: wrap }` shrink-wraps the short rows */
+#dbtl-map.xp-tl.is-v .tl-list { position: relative; z-index: 1; display: block; margin: 10px 0 0; padding: 0; list-style: none; }
+#dbtl-map.xp-tl.is-v .tl-rails { position: absolute; inset: 0; pointer-events: none; z-index: 0; }
+#dbtl-map.xp-tl .tl-rail { position: absolute; width: 2px; border-radius: 2px; }
+#dbtl-map.xp-tl .tl-rail.solid { background: color-mix(in srgb, var(--tl-b) 55%, #fff); }
+#dbtl-map.xp-tl .tl-rail.dash { background: repeating-linear-gradient(180deg, rgba(15, 19, 25, .26) 0 5px, transparent 5px 10px); }
+#dbtl-map.xp-tl.is-v .tl-list > li.tl-mon {
+  margin: 14px 0 4px 74px; padding: 0; list-style: none;
+  font: 600 11px/1.2 var(--mono); letter-spacing: .12em; text-transform: uppercase; color: var(--tl-mute);
+}
+#dbtl-map.xp-tl.is-v .tl-list > li.tl-mon:first-child { margin-top: 2px; }
+#dbtl-map.xp-tl.is-v .tl-list > li:not(.tl-mon):not(.tl-via) {
+  position: relative; margin: 0; padding: 7px 34px 9px 74px; list-style: none; cursor: pointer;
+  border-radius: 10px; -webkit-tap-highlight-color: transparent;
+}
+#dbtl-map.xp-tl.is-v .tl-list > li:not(.tl-mon):not(.tl-via):hover { background: rgba(35, 104, 74, .045); }
+/* a track's story, on its rail between two prototypes (none since the culture track moved) */
+#dbtl-map.xp-tl.is-v .tl-list > li.tl-via {
+  position: relative; margin: 0; padding: 2px 8px 4px 74px; list-style: none;
+  font: 500 12.5px/1.4 var(--sans); color: var(--tl-ink-2);
+}
+#dbtl-map.xp-tl.is-v .tl-list > li.is-open { background: rgba(35, 104, 74, .06); }
+/* the row looks like it opens: a plus at the right that turns as it does */
+#dbtl-map.xp-tl.is-v .tl-list > li:not(.tl-mon):not(.tl-via)::after {
+  content: "+"; position: absolute; right: 8px; top: 8px; width: 20px; height: 20px; border-radius: 50%;
+  display: grid; place-items: center; font: 500 15px/1 var(--sans); color: var(--tl-b);
+  box-shadow: inset 0 0 0 1px rgba(35, 104, 74, .3); transition: transform .2s ease;
+}
+#dbtl-map.xp-tl.is-v .tl-list > li.is-open::after { transform: rotate(45deg); }
+#dbtl-map.xp-tl.is-v li > .tl-k { display: block; margin: 0 0 .1rem; font: 600 11px/1.35 var(--mono); letter-spacing: .05em; text-transform: uppercase; color: var(--tl-mute); }
+#dbtl-map.xp-tl .tl-sr, #dbtl-map.xp-tl.is-v li > .tl-k.is-sr, #dbtl-map.xp-tl.is-v li.tk-todo > .tl-out {
+  position: absolute !important; width: 1px; height: 1px; margin: -1px; padding: 0; overflow: hidden;
+  clip: rect(0 0 0 0); clip-path: inset(50%); white-space: nowrap; border: 0;
+}
+/* the name is the link; its ring sits on the track's rail, centred on the name's first line */
+#dbtl-map.xp-tl.is-v a.tl-node {
+  position: relative; display: block; padding: 0; border: 0; background: none; text-decoration: none;
+  color: var(--tl-ink); font: 650 15px/1.35 var(--sans);
+}
+#dbtl-map.xp-tl.is-v a.tl-node > span { white-space: normal; }
+#dbtl-map.xp-tl.is-v a.tl-node:hover > span { text-decoration: underline; text-underline-offset: 3px; }
+#dbtl-map.xp-tl.is-v li.tk-todo a.tl-node { color: #9a3412; font-weight: 600; }
+#dbtl-map.xp-tl.is-v a.tl-node .tl-ring { position: absolute; left: calc(var(--rx) - 89px); top: -5px; width: 30px; height: 30px; z-index: 1; }
+#dbtl-map.xp-tl.is-v a.tl-node > b { left: calc(var(--rx) - 89px); top: -5px; width: 30px; height: 30px; z-index: 2; font-size: 11.5px; }
+#dbtl-map.xp-tl.is-v li > :is(.tl-name, .tl-when, .tl-date, .tl-story) { display: none; }
+#dbtl-map.xp-tl.is-v li > .tl-out { display: block; margin: .15rem 0 0; font: 400 13.5px/1.45 var(--sans); color: var(--tl-ink-2); }
+#dbtl-map.xp-tl.is-v li.is-on:not(.is-open) > a.tl-node .tl-ring { filter: drop-shadow(0 0 3px rgba(35, 104, 74, .35)); }
+
+/* the open row: its photo or sketch, and the way to it */
+#dbtl-map.xp-tl.is-v .tl-peek { display: block; min-height: 0; margin: .65rem 0 0; padding: 0; border: 0; background: none; cursor: default; }
+#dbtl-map.xp-tl.is-v .tl-pic { width: 100%; max-width: 340px; aspect-ratio: 16 / 10; }
+#dbtl-map.xp-tl.is-v .tl-peek :is(.tl-pk, .tl-pt, .tl-po, .tl-pnav) { display: none; }
+#dbtl-map.xp-tl.is-v .tl-peek p.tl-ps { margin: .55rem 0 0; font-size: 13px; }
+#dbtl-map.xp-tl.is-v .tl-pgo { margin-top: .6rem; }
+
+@media (prefers-reduced-motion: reduce) {
+  #dbtl-map.xp-tl a.tl-node, #dbtl-map.xp-tl .tl-peek::before, #dbtl-map.xp-tl.is-v .tl-list > li::after { transition: none; }
+}

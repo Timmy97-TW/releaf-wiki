@@ -1702,18 +1702,7 @@ body.doc-light .mx-c.picked { background: rgba(18,112,63,.09); box-shadow: inset
 .story .hero-frame i.hf-br { right: 26px; bottom: 26px; border-left: 0; border-top: 0; }
 /* one pass every nine seconds, a fifth of a percent of the frame's luminance —
    enough to make the stage feel alive, not enough to read as a scanline */
-.story .hero-scan {
-  position: absolute; left: 0; right: 0; height: 26vh; top: -30vh;
-  background: linear-gradient(to bottom,
-    transparent 0%, color-mix(in srgb, var(--accent) 12%, transparent) 50%, transparent 100%);
-  animation: heroScan 9s linear infinite;
-}
-@keyframes heroScan {
-  0%   { transform: translateY(0); opacity: 0; }
-  12%  { opacity: 1; }
-  88%  { opacity: 1; }
-  100% { transform: translateY(150vh); opacity: 0; }
-}
+.story .hero-scan { display: none; }  /* 15 Oct 2026, the owner: no scan bar at all */
 @media (max-width: 760px) {
   .story .hero-frame i { width: 18px; height: 18px; }
   .story .hero-frame i.hf-tl, .story .hero-frame i.hf-tr { top: 84px; }
@@ -2389,3 +2378,183 @@ body.doc-light .doc .sec > figure.sect > figcaption { margin-top: 1.4rem; }
    (`align-items: first baseline`; polish.css centres it). Delete this block to revert. */
 body.doc-light[data-instrument="diopal"] .doc-wrap section.sec > h3 { gap: 0; align-items: first baseline; }
 body.doc-light[data-instrument="diopal"] .doc-wrap section.sec > h3 > i { min-width: 0; }
+
+
+/* ══════════════════ 14 Oct 2026: the teammate's edit doc ══════════════════
+   Everything below is this page's own answer to "Hardware Page Edit" (LPA,
+   PDF pp. 1-18). Scoped to the LPA page; the shared hwdoc/polish files are
+   untouched. Delete this block to go back to the 13 Oct look (the markup
+   changes are in the same commit). */
+
+/* ---- the opening title: the name large and white on one line, the old
+   headline under it smaller in green, then the question ---------------- */
+.story .story-title.lpa-title { width: min(calc(100vw - 2.8rem), 52rem); }
+.story .lpa-title .lpa-title__name {
+  margin: 0;
+  font-family: "Oxanium Title", var(--sans);
+  font-weight: 600; letter-spacing: -.02em; line-height: 1.04;
+  font-size: clamp(1.2rem, 7vw, 3.25rem);
+  color: #fff; white-space: nowrap;
+  text-shadow: 0 0 64px rgba(0, 0, 0, .85);
+}
+.story .lpa-title .line {
+  margin: .7rem 0 0;
+  font-size: clamp(1.05rem, 2.6vw, 1.75rem);
+  line-height: 1.15; color: var(--accent);
+}
+.story .lpa-title .lpa-title__q {
+  margin: 1.1rem 0 0; max-width: 26rem;
+  font-size: clamp(.9rem, 1.2vw, 1.05rem); line-height: 1.55;
+  color: rgba(226, 232, 240, .82);
+  text-shadow: 0 0 24px rgba(0, 0, 0, .9);
+}
+
+/* ---- the overview: no box, no shadow, no grey fade above it ---------------- */
+body[data-instrument="diopal"] .story-blend { display: none; }
+body[data-instrument="diopal"] .doc-wrap { padding-top: clamp(3rem, 6vw, 5rem); }
+body[data-instrument="diopal"] .hwsum.lpa-ov { margin-top: 0; }
+body[data-instrument="diopal"] .lpa-ov .hwsum__inner {
+  display: block; max-width: 760px; margin: 0 auto; padding: 0;
+  background: none; box-shadow: none; border-radius: 0;
+}
+body[data-instrument="diopal"] .lpa-ov__title {
+  margin: 0 0 1.1rem;
+  font-size: clamp(2rem, 1.3rem + 2.6vw, 3.2rem);
+  font-weight: 700; line-height: 1.06; letter-spacing: -.03em;
+  color: var(--w-ink);
+}
+body[data-instrument="diopal"] .lpa-ov .hwsum__body { max-width: none; font-size: 1.0625rem; }
+body[data-instrument="diopal"] .lpa-ov__spec {
+  margin: 1.4rem 0 0; padding-top: .9rem;
+  border-top: 1px solid rgb(63 90 102 / .18);
+  font-size: .9375rem; font-weight: 600; letter-spacing: .01em;
+  color: var(--w-ink); font-variant-numeric: tabular-nums;
+}
+body[data-instrument="diopal"] .lpa-ov__spec i { font-style: normal; margin: 0 .35em; color: var(--w-ink-3); }
+
+/* ---- no "Figure N" / "Table N" labels and no plate numbers ------------------- */
+body[data-instrument="diopal"] .doc .fignum { display: none; }
+body[data-instrument="diopal"] .doc .fignum + br { display: none; }
+body.doc-light[data-instrument="diopal"] .doc .frame::after { content: none; }
+
+/* ---- photos without their outline boxes (the doc: "do this for all") -------- */
+body.doc-light[data-instrument="diopal"] .doc .frame {
+  background: none; border: 0; box-shadow: none; padding: 0;
+}
+body.doc-light[data-instrument="diopal"] .doc .frame::before { content: none; }
+body.doc-light[data-instrument="diopal"] .doc .frame figcaption { border-top: 0; padding: 0 2px; margin-top: .6rem; }
+
+/* ---- lessons and limitations without the coloured bar on the left ----------- */
+body[data-instrument="diopal"] .doc .limits > div { border-left: 0; padding-left: 0; }
+
+/* ---- the green line under the array drawing ---------------------------------- */
+body.doc-light[data-instrument="diopal"] .doc figcaption.lpa-subcap {
+  color: var(--w-leaf-700, #23684a); font-weight: 550;
+}
+
+/* ---- cycle 1 build: the photo on the left, its text on the right -------------- */
+.lpa-split {
+  display: grid; grid-template-columns: minmax(0, 300px) minmax(0, 1fr);
+  gap: clamp(1.25rem, 3vw, 2.25rem); align-items: center; margin: 1.2rem 0;
+}
+.lpa-split > .frame { margin: 0; max-width: none; }
+.lpa-split > p { margin: 0; }
+@media (max-width: 620px) {
+  .lpa-split { grid-template-columns: minmax(0, 1fr); }
+  .lpa-split > .frame { max-width: 340px; }
+}
+
+/* ---- the two plain tables of the final design ------------------------------- */
+.doc table.lpa-kv { width: 100%; border-collapse: collapse; font-size: .9375rem; }
+.doc table.lpa-kv th, .doc table.lpa-kv td {
+  text-align: left; vertical-align: top; padding: .62rem .9rem .62rem 0;
+  border-bottom: 1px solid var(--w-line, rgba(15, 19, 25, .12));
+}
+.doc table.lpa-kv thead th {
+  font-size: .75rem; font-weight: 700; letter-spacing: .08em; text-transform: uppercase;
+  color: var(--w-ink-3, #6e6e73);
+}
+.doc table.lpa-kv tbody th { width: 38%; font-weight: 650; color: var(--w-ink, #1d1d1f); }
+.doc table.lpa-kv td { color: var(--w-ink-2, #424245); }
+.doc table.lpa-kv tbody th { font-size: inherit; letter-spacing: 0; text-transform: none; vertical-align: baseline; }
+.doc table.lpa-kv td { vertical-align: baseline; }
+.doc .table-scroll table.lpa-kv { min-width: 0; }
+@media (max-width: 520px) { .doc table.lpa-kv tbody th { width: 42%; } .doc table.lpa-kv { font-size: .875rem; } }
+body[data-instrument="diopal"] .lpa-ov__spec span { white-space: nowrap; }
+
+/* ---- 15 Oct 2026, review fixes ---------------------------------------------- */
+/* The overview has no paper box now, and the record only turns light (doc-light,
+   polish.js) once it has climbed a third of the screen. Until then it is dark
+   type on the dark page, so it gets light type for that phase. */
+body[data-instrument="diopal"]:not(.doc-light) .lpa-ov__title,
+body[data-instrument="diopal"]:not(.doc-light) .lpa-ov__spec,
+body[data-instrument="diopal"]:not(.doc-light) #purpose > h2 { color: #eef2f6; }
+body[data-instrument="diopal"]:not(.doc-light) .lpa-ov .hwsum__body { color: rgba(226, 232, 240, .86); }
+body[data-instrument="diopal"]:not(.doc-light) .lpa-ov__spec { border-top-color: rgba(255, 255, 255, .14); }
+body[data-instrument="diopal"]:not(.doc-light) .lpa-ov__spec i { color: rgba(226, 232, 240, .55); }
+body[data-instrument="diopal"] .lpa-ov :is(h1, p) { transition: color .45s ease, border-color .45s ease; }
+body[data-instrument="diopal"] .lpa-ov__spec i { margin: 0 .5em 0 .1em; }
+
+/* the contents rail starts beside the overview, not under it */
+@media (min-width: 1101px) {
+  body[data-instrument="diopal"] .hwsum.lpa-ov { grid-column: 2; grid-row: 1; }
+  body[data-instrument="diopal"] .doc-nav { grid-row: 1 / span 2; }
+  body[data-instrument="diopal"] .doc { grid-row: 2; }
+}
+
+/* the opening title sits above the model on a landscape screen, as in the doc's mock-up */
+@media (min-width: 900px) and (min-aspect-ratio: 5/4) {
+  .story .story-title.lpa-title { top: 18%; }
+}
+
+/* cycle 3 build: the two boards centred like the photo under them, with run-in captions */
+body[data-instrument="diopal"] .doc #fig-mosfets { margin-left: auto; margin-right: auto; }
+body[data-instrument="diopal"] .doc .pair-tag b {
+  display: inline; margin-right: .45em;
+  font-family: inherit; font-size: inherit; font-weight: 700;
+  letter-spacing: 0; text-transform: none; color: var(--w-ink, #1d1d1f);
+}
+
+/* the CAD render without its outline box, like the photos */
+body[data-instrument="diopal"] .doc #fig-cad .frame-img { border: 0 !important; box-shadow: none !important; }
+
+/* ---- 15 Oct 2026: the summary sheet is back, above the overview ------------
+   The owner asked for the instructor's summary card on every instrument page.
+   It is the plain .hwsum of ../css/hwdoc.css (paper, ledger, spec strip); the
+   un-boxed overview keeps its .lpa-ov look. On a wide screen the sheet takes
+   row 1 across all three columns, and the overview, the rail and the record
+   each move down one row, so the rail still starts beside the overview. */
+body[data-instrument="diopal"] .hwsum:not(.lpa-ov) + .hwsum.lpa-ov { margin-top: clamp(3rem, 6vw, 5rem); }
+@media (min-width: 1101px) {
+  body[data-instrument="diopal"] .hwsum:not(.lpa-ov) { grid-row: 1; }
+  body[data-instrument="diopal"] .hwsum.lpa-ov { grid-row: 2; }
+  body[data-instrument="diopal"] .doc-nav { grid-row: 2 / span 2; }
+  body[data-instrument="diopal"] .doc { grid-row: 3; }
+}
+
+/* ---- the opening title on a portrait screen (15 Oct 2026) ------------------
+   The owner asked for the titles to be centred where they can be. On a landscape screen the LPA's
+   title stays above the model, left, as in the doc's mock-up: the model is a wide block in the
+   middle of the frame, and a centred title would sit on the tube block. On a portrait screen the
+   portrait clip (below an aspect of about 0.91) puts the model in the top half, and the title used
+   to lie across it (at 37% here, and under the menu on the integrated wiki, assets/css/nav-dark.css):
+   it now hangs under the model, centred. The #story selectors outrank nav-dark.css. */
+@media (max-aspect-ratio: 91/100) {
+  body[data-instrument="diopal"] #story .story-title.lpa-title {
+    top: 57%; left: 50%; translate: -50% 0; text-align: center;
+  }
+  body[data-instrument="diopal"] #story .lpa-title .lpa-title__q { margin-left: auto; margin-right: auto; }
+  body[data-instrument="diopal"] #story .title-stats { display: none; }
+}
+/* A landscape phone: the model fills the middle of a short frame and there is no band above it, so
+   the title moves into the left column, smaller and wrapping, without the question, and the four
+   numbers stand down. */
+@media (min-aspect-ratio: 91/100) and (max-height: 520px) {
+  body[data-instrument="diopal"] #story .story-title.lpa-title {
+    top: calc(50% + var(--nv-h, 68px) / 2); translate: 0 -50%; width: 30vw;
+  }
+  body[data-instrument="diopal"] #story .lpa-title .lpa-title__name { font-size: clamp(1rem, 3vw, 1.65rem); white-space: normal; }
+  body[data-instrument="diopal"] #story .lpa-title .line { font-size: clamp(.8rem, 1.9vw, 1rem); margin-top: .4rem; }
+  body[data-instrument="diopal"] #story .lpa-title .lpa-title__q { display: none; }
+  body[data-instrument="diopal"] #story .title-stats { display: none; }
+}

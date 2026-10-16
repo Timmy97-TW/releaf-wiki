@@ -268,7 +268,7 @@
   /* ---------- contents rail ---------- */
   const nav = document.getElementById("doc-nav");
   if (!nav) return;
-  const links = Array.prototype.slice.call(nav.querySelectorAll("a"));
+  const links = Array.prototype.slice.call(nav.querySelectorAll('a[href^="#"]')); // not the "All hardware" link
   const targets = links.map(function (a) {
     const t = document.querySelector(a.getAttribute("href"));
     return t ? { a: a, el: t } : null;

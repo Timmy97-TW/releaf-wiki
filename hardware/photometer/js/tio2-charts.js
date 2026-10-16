@@ -1,4 +1,17 @@
-// Bioreactor record — data charts, drawn from the numbers rather than pasted as screenshots.
+// Photometer record: the TiO2 calibration charts (Calibration 6.1; 7.1 until the 15 Oct reorder).
+// 14 Oct 2026: these three charts moved here with the TiO2 calibration cycle, which used to be
+// photometer cycle 6 on the bioreactor page. This is a trimmed copy of the bioreactor page's js/charts.js
+// (its draw code, unchanged) with only the TiO2 charts and their data, so this page does not depend
+// on the bioreactor page's scripts. The traced Test 2 series came from its js/traced.js. 15 Oct 2026:
+// both of those files are gone; their growth half is this page's js/growth-charts.js (its header says
+// how the series were traced and checked), and each of the two files draws only its own hosts.
+window.PM_TRACED = {
+  // p28_1.png (Test 2 against TiO2 mass, mg)
+  tio2_t2_mass: {"releaf":[[1,0.066],[2,0.102],[3,0.141],[4,0.172],[6,0.227],[7,0.25],[8,0.287],[9,0.315],[10,0.346],[15,0.486],[25,0.793],[30,0.946],[35,1.102],[40,1.245],[45,1.392],[50,1.55],[55,1.696],[60,1.836]],"biodrop":[[1,0.034],[2,0.068],[3,0.095],[4,0.127],[6,0.194],[7,0.226],[8,0.25],[9,0.284],[10,0.34],[15,0.468],[20,0.637],[25,0.796],[30,0.951],[35,1.13],[40,1.272],[45,1.438],[50,1.581],[55,1.741],[60,1.927]],"biodropExcluded":[[5,0.262]]},
+  // p29_1.png (Test 2 agreement: [Bio-Drop, ReLEAF])
+  tio2_t2_identity: {"pairs":[[0.035,0.066],[0.068,0.102],[0.095,0.141],[0.127,0.172],[0.194,0.227],[0.227,0.25],[0.25,0.286],[0.284,0.315],[0.34,0.345],[0.468,0.486],[0.637,0.637],[0.796,0.793],[0.951,0.946],[1.13,1.102],[1.272,1.245],[1.438,1.392],[1.581,1.55],[1.741,1.696],[1.927,1.835]]}
+};
+// Data charts, drawn from the numbers rather than pasted as screenshots.
 //
 // Every chart host is `<div class="bc" data-chart="name">`. If a chart has no data here the host keeps
 // whatever it already contains (the figure's image), so a chart can be swapped in without touching the
@@ -23,7 +36,7 @@
   const T1_PLOTTED_TO = 41;        // the extent of the team's own Test 1 agreement figure
 
   // Traced series are filled in from traced chart images; each carries its own provenance note.
-  const TRACED = window.BIO_TRACED || {};
+  const TRACED = window.PM_TRACED || {};
 
   // ---------- helpers ----------
   function fit(pts) {
@@ -129,8 +142,8 @@
         (T1_EXCLUDED.indexOf(mass) >= 0 ? open : keep).push(p);
       });
       return {
-        aria: "Test 1: BioDrop OD600 against RELEAF photometer OD600 for TiO2 suspensions from 2 to 41 mg, with a least-squares line and the line of identity",
-        x: { min: 0, max: 2.5, step: 0.5, dp: 1, label: "RELEAF photometer OD600 (raw)", short: "RELEAF OD600 (raw)" },
+        aria: "Test 1: BioDrop OD600 against ReLEAF photometer OD600 for TiO2 suspensions from 2 to 41 mg, with a least-squares line and the line of identity",
+        x: { min: 0, max: 2.5, step: 0.5, dp: 1, label: "ReLEAF photometer OD600 (raw)", short: "ReLEAF OD600 (raw)" },
         y: { min: 0, max: 2.5, step: 0.5, dp: 1, label: "BioDrop OD600" },
         identity: true,
         series: [{ name: "Test 1, 2–41 mg", cls: "s-photo", pts: keep, open: open, fit: fit(keep),
@@ -143,11 +156,11 @@
       const t = TRACED.tio2_t2_mass;
       if (!t) return null;
       return {
-        aria: "Test 2: OD600 of the RELEAF photometer and the BioDrop against TiO2 mass added, each with its own least-squares line",
+        aria: "Test 2: OD600 of the ReLEAF photometer and the BioDrop against TiO2 mass added, each with its own least-squares line",
         x: { min: 0, max: 60, step: 10, dp: 0, label: "TiO₂ added (mg)" },
         y: { min: 0, max: 2, step: 0.5, dp: 1, label: "OD600" },
         series: [
-          { name: "RELEAF photometer", cls: "s-photo", pts: t.releaf, fit: fit(t.releaf) },
+          { name: "ReLEAF photometer", cls: "s-photo", pts: t.releaf, fit: fit(t.releaf) },
           { name: "BioDrop", cls: "s-ref", shape: "square", pts: t.biodrop, open: t.biodropExcluded || [],
             fit: fit(t.biodrop), openName: "BioDrop, excluded (breaks monotonicity)" }
         ]
@@ -159,41 +172,14 @@
       const t = TRACED.tio2_t2_identity;
       if (!t) return null;
       return {
-        aria: "Test 2: RELEAF photometer OD600 against BioDrop OD600 with the line of identity",
+        aria: "Test 2: ReLEAF photometer OD600 against BioDrop OD600 with the line of identity",
         x: { min: 0, max: 2, step: 0.5, dp: 1, label: "BioDrop OD600" },
-        y: { min: 0, max: 2, step: 0.5, dp: 1, label: "RELEAF photometer OD600 (raw)", short: "RELEAF OD600 (raw)" },
+        y: { min: 0, max: 2, step: 0.5, dp: 1, label: "ReLEAF photometer OD600 (raw)", short: "ReLEAF OD600 (raw)" },
         identity: true,
         series: [{ name: "Test 2", cls: "s-photo", pts: t.pairs, fit: fit(t.pairs) }]
       };
     },
 
-    // Bacteria growth, cycle 1 and cycle 2 (traced).
-    "growth-c1": function () {
-      const t = TRACED.growth_c1;
-      if (!t) return null;
-      return {
-        aria: "Cycle 1: OD600 against time in hours for the bioreactor and a flask control",
-        x: { min: 0, max: 30, step: 5, dp: 0, label: "Time (h)" },
-        y: { min: 0, max: 3, step: 0.5, dp: 1, label: "OD600" },
-        series: [
-          { name: "Bioreactor", cls: "s-reactor", pts: t.bioreactor, line: true },
-          { name: "Flask control", cls: "s-ref", shape: "square", pts: t.flask, line: true }
-        ]
-      };
-    },
-    "growth-c2": function () {
-      const t = TRACED.growth_c2;
-      if (!t) return null;
-      return {
-        aria: "Cycle 2: OD600 against time in minutes for the bioreactor and a flask control at 37 degrees C",
-        x: { min: 0, max: 500, step: 100, dp: 0, label: "Time (min)" },
-        y: { min: 0, max: 1, step: 0.2, dp: 1, label: "OD600" },
-        series: [
-          { name: "Bioreactor", cls: "s-reactor", pts: t.bioreactor, line: true },
-          { name: "Flask control", cls: "s-ref", shape: "square", pts: t.flask, line: true }
-        ]
-      };
-    }
   };
 
   const drawn = [];
@@ -228,5 +214,5 @@
     drawn.forEach(function (d) { ro.observe(d.el); });
   }
 
-  window.__bioCharts = { fit: fit, charts: Object.keys(CHARTS) };
+  window.__pmCharts = { fit: fit, charts: Object.keys(CHARTS) };
 })();

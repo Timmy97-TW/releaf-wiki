@@ -176,7 +176,7 @@
   // active, which is steadier than "whichever heading passed last".
   const nav = document.getElementById("doc-nav");
   if (nav && "IntersectionObserver" in window) {
-    const links = Array.prototype.slice.call(nav.querySelectorAll("a"));
+    const links = Array.prototype.slice.call(nav.querySelectorAll('a[href^="#"]')); // not the "All hardware" link
     links.forEach(function (a) {
       if (a.querySelector(".rail-fill")) return;
       const f = document.createElement("span");
@@ -253,6 +253,8 @@
        It recomputes from the DOM, so it cannot drift from the table it
        describes: the day someone types a price in, this moves. */
     (function summarise() {
+      // a table that opts out (data-summary="off", the bioreactor's 8.1, which has its own cost chart) gets no meter
+      if (table.getAttribute("data-summary") === "off") return;
       const rows = Array.prototype.slice.call(table.tBodies[0].rows);
       let priced = 0, identified = 0, sum = 0;
       rows.forEach(function (tr) {

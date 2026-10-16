@@ -1,6 +1,6 @@
 // The rejection filter, as something you can push on.
 //
-// Section 4.2 explains why the burst is reduced with a median rather than a
+// Section 8.1 (4.2 until the 15 Oct reorder) explains why the burst is reduced with a median rather than a
 // mean, and why the spread is a MAD rather than a standard deviation. Both are
 // the same argument — one outlier cannot drag a median — and it is an argument
 // that is much easier to believe when you can put the outlier there yourself.
@@ -46,7 +46,7 @@
 
   const BASE = 26.7;                  // lux, about where the reference sat
   // The first burst is a fixed, typical one (its MAD is 0.094 lux), so the demo
-  // opens on the case 4.2 describes: the bubble thrown out, every clean reading
+  // opens on the case 8.1 describes: the bubble thrown out, every clean reading
   // kept. "New burst" draws fresh noise, where a clean reading can still go.
   const FIRST = [26.658, 26.597, 26.823, 26.674, 26.989, 26.603, 26.64,
                  26.75, 26.785, 26.72, 26.77, 26.784, 26.9, 26.869];
