@@ -27,7 +27,7 @@
               PT-01 lumen in, PT-03 lumen out, PT-04 shell in, PT-05 shell out
     actuated  lumen pinch valve (XV-01), green light (L-01)
     manual    loop flow (pump set by hand)
-    online    weather forecast (Open-Meteo), falls back to a stored snapshot
+    recorded  weather: one stored Taipei reading, 2026-09-06 15:20 CST
     field     leaf wetness, leaf temperature (RS485 leaf sensor), air T and RH (SHT)
   Design basis
     ISA-101 HMI: grey field, colour only for state; every number carries its
@@ -38,8 +38,9 @@
       Portela et al. 2021). The model is "the heart" (Portela), so the growth
       model is live, re-fitted on every new point (Cabaneros Lopez et al. 2020)
       and scored against its own forecasts (NRMSE < 15 %, Sinner et al. 2021).
-  One file, no external fonts or libraries. The only network call is the
-  weather request, and the page works without it.
+  One file, no external fonts or libraries, and no network calls: the
+  iGEM wiki allows no request to an outside server, so the weather is a
+  recorded reading and the Ask tab calls no AI.
   Growth prior: 04_Results/lpa_growth_fit_20260919.json, embedded below by
   03_Scripts/embed_fit_into_ui.py. Re-run both scripts after a new LPA run.
 -->
@@ -307,13 +308,7 @@ details.card[open]>summary h2::before{content:"− "}
 
 .ask-grid{align-items:start}
 .ask-log{min-height:220px;max-height:52vh;overflow:auto;display:grid;gap:var(--space-sm);align-content:start;padding-bottom:var(--space-sm)}
-.ask-m{max-width:88%;padding:var(--space-xs) var(--space-sm);border-radius:var(--radius);border:1px solid var(--color-rule-2);background:var(--color-panel-2);font-size:var(--text-md);line-height:1.5}
-.ask-m b{display:block;font-size:var(--text-xs);color:var(--color-ink-2);margin-bottom:2px}
-.ask-m div{white-space:pre-wrap;overflow-wrap:anywhere}
-.ask-m.me{justify-self:end;background:var(--color-signal-bg);border-color:transparent}
-.ask-wait{color:var(--color-ink-3)}
 .ask-empty{color:var(--color-ink-2);font-size:var(--text-sm);margin:0}
-.ask-err{color:var(--color-alarm);background:var(--color-alarm-bg);border-radius:var(--radius);padding:var(--space-xs) var(--space-sm);font-size:var(--text-sm);margin:0}
 .ask-row{display:flex;gap:var(--space-xs);align-items:stretch}
 .ask-row textarea{flex:1;min-width:0;resize:vertical;padding:var(--space-xs);border:1px solid var(--color-rule);border-radius:var(--radius);background:var(--color-panel);font:inherit;color:inherit}
 .ask-row .btn{height:auto}
@@ -370,8 +365,6 @@ details.card[open]>summary h2::before{content:"− "}
 /* ================================================================
    0. LANGUAGE, STORAGE, SMALL HELPERS
    ================================================================ */
-/* iGEM's wiki allows no request to an outside server: there the forecast falls back to the stored snapshot and the chat is off */
-var NO_NET = /(^|\.)igem\.(wiki|org)$/i.test(location.hostname);
 function lsGet(k){ try{ return localStorage.getItem(k); }catch(e){ return null; } }
 function lsSet(k,v){ try{ localStorage.setItem(k,v); }catch(e){} }
 var LANG = lsGet("releaf.lang")==="zh" ? "zh" : "en";
@@ -877,8 +870,8 @@ function parseTable(text, minutes){
 
 /* ================================================================
    6. WEATHER → DEMAND
-   Open-Meteo hourly forecast, 3 days. If the request fails the page
-   falls back to the stored 6 Sep Taipei snapshot, held flat, and says so.
+   One recorded Taipei reading (6 Sep 2026, 15:20 CST), held flat over
+   the 96 hours the twin looks at. The page makes no network request.
    Risk drivers are the 0906 heuristics, unchanged (NOT VALIDATED):
      heat  = (apparent T − 25) / 10        broccoli heat stress from 25 °C
      vpd   = VPD / 2 kPa
@@ -887,30 +880,6 @@ function parseTable(text, minutes){
    ================================================================ */
 var WX = {src:"none", fetched:null, err:null, hours:[], busy:false};
 var WX_SNAPSHOT = {stamp:"2026-09-06 15:20 CST", T:24, RH:96, AT:27, P:26/24, PP:60, W:6, G:19, ET0:3.0/24, VPD:0.12};
-function wxUrl(){
-  return "https://api.open-meteo.com/v1/forecast?latitude="+CFG.lat+"&longitude="+CFG.lon+
-    "&hourly=temperature_2m,relative_humidity_2m,apparent_temperature,precipitation,precipitation_probability,"+
-    "wind_speed_10m,wind_gusts_10m,et0_fao_evapotranspiration,vapour_pressure_deficit&forecast_days=3&past_days=5&timezone=auto";
-}
-function wxFetch(){
-  if(NO_NET){ WX.err="outside requests are off on the iGEM wiki"; if(WX.src!=="live") wxSnapshot(); return; }
-  if(WX.busy) return; WX.busy=true;
-  var ctl = ("AbortController" in window) ? new AbortController() : null;
-  var to = setTimeout(function(){ if(ctl) ctl.abort(); }, 10000);
-  fetch(wxUrl(), ctl?{signal:ctl.signal}:{}).then(function(r){ if(!r.ok) throw new Error("HTTP "+r.status); return r.json(); })
-  .then(function(j){
-    var H=j.hourly, off=(j.utc_offset_seconds||0)*1000;
-    WX.hours = H.time.map(function(t,i){
-      return {t: Date.parse(t+":00Z") - off, T:H.temperature_2m[i], RH:H.relative_humidity_2m[i], AT:H.apparent_temperature[i],
-              P:H.precipitation[i]||0, PP:H.precipitation_probability[i], W:H.wind_speed_10m[i], G:H.wind_gusts_10m[i],
-              ET0:H.et0_fao_evapotranspiration[i]||0, VPD:H.vapour_pressure_deficit[i]||0};
-    });
-    WX.src="live"; WX.fetched=Date.now(); WX.err=null;
-  }).catch(function(e){
-    WX.err = String(e && e.message || e);
-    if(WX.src!=="live") wxSnapshot();
-  }).then(function(){ clearTimeout(to); WX.busy=false; renderAll(); });
-}
 function wxSnapshot(){
   var t0=Date.now()-24*3.6e6; t0-=t0%3.6e6;
   WX.hours=[]; for(var i=0;i<96;i++) WX.hours.push(Object.assign({t:t0+i*3.6e6}, WX_SNAPSHOT));
@@ -936,7 +905,7 @@ function wxAhead(){
 }
 function wxCurrent(){ var t=nowT(), best=null; WX.hours.forEach(function(h){ if(!best || Math.abs(h.t-t)<Math.abs(best.t-t)) best=h; }); return best; }
 function wxStale(){
-  if(WX.src!=="live") return true;
+  if(WX.src!=="live") return true;            /* always, now: a recorded reading is not a forecast */
   if(S.mode==="live" && Date.now()-WX.fetched > 3*3.6e6) return true;
   var ah=wxAhead(); return ah.length < 6;
 }
@@ -1219,7 +1188,7 @@ function trust(){
   if(S.alarms.some(function(a){return a.pri===1;})) r.push(L("a priority-1 alarm is active","有第一級警報"));
   if(S.mode==="live" && !liveIn()) r.push(L("no fresh data from the board","板子沒有新數據"));
   if(!fresh("od")) r.push(L("no OD reading","沒有 OD 讀值"));
-  if(wxStale()) r.push(WX.src==="snapshot" ? L("weather is a stored snapshot, not a forecast","天氣是舊快照，不是預報") : L("weather forecast is stale","天氣預報過期"));
+  if(wxStale()) r.push(L("weather is a recorded reading from 6 Sep 2026, not a forecast","天氣是 2026/9/6 的紀錄讀值，不是預報"));
   var sk=GT.skill(), model = sk && sk.nrmse!=null && sk.nrmse<0.15 && sk.inBand>=0.6;
   return {ok:r.length===0, reasons:r, model:!!model, skill:sk};
 }
@@ -1438,7 +1407,7 @@ function evalAlarms(){
     add("blast",2,"Rice blast infection conditions "+dayHm(bp.metAt)+" ("+bp.cnt+" h wet at "+fmt(bp.T,1)+" °C). Look for leaf lesions "+dmd(bp.metAt+5*864e5)+"–"+dmd(bp.metAt+10*864e5),
                   "稻熱病感染條件 "+dayHm(bp.metAt)+"（濕潤 "+bp.cnt+" 小時、"+fmt(bp.T,1)+"°C）。請於 "+dmd(bp.metAt+5*864e5)+"–"+dmd(bp.metAt+10*864e5)+" 檢查葉片病斑"); }
   if(LEAF.src==="serial" && LEAF.on && !leafLive()) add("leaf_stale",2,"Leaf sensor sent nothing for over a minute","葉面感測器超過 1 分鐘沒有數據");
-  if(WX.src==="snapshot") add("wx",2,"Weather offline. Using the stored 6 Sep snapshot","天氣離線，使用 9/6 的舊快照");
+  if(WX.src==="snapshot") add("wx",2,"Weather is the recorded reading of 6 Sep 2026, 15:20","天氣為 2026/9/6 15:20 的紀錄讀值");
   var prev={}; S.alarms.forEach(function(a){ prev[a.id]=a.since; });
   A.forEach(function(a){ a.since = prev[a.id] || nowT(); if(!prev[a.id]) audit("alarm","P"+a.pri+" "+a.id,a.t); });
   Object.keys(S.acked).forEach(function(id){ if(!A.some(function(a){return a.id===id;})) delete S.acked[id]; });
@@ -1482,7 +1451,7 @@ function exportMeta(){
     growth_model:{form:"logistic X(t)=K/(1+((K-X0)/X0)exp(-r t))", fit:"MAP, log-normal prior, re-fitted every "+GT.BIN_H+" h on bin medians",
       prior_source:"run library, fingerprint "+BANK.prior().fp, prior_runs:BANK.used().map(function(r){ return {id:r.id, name:r.name, date:r.date, scale:r.scale, r:Math.exp(r.fit.q[1]), K:Math.exp(r.fit.q[2]), n:r.fit.n}; }), prior:GT.prior(), posterior:GT.params(), sigma_y:CFG.sigmaY, skill_2h:GT.skill()},
     decision:{threshold:CFG.thr, od_min:CFG.odMin, lead_time_h:leadH(), light_mode:CFG.lightMode},
-    weather:{source:WX.src, provider:"Open-Meteo", lat:CFG.lat, lon:CFG.lon, fetched:WX.fetched?iso(WX.fetched):null},
+    weather:{source:"recorded reading", recorded:WX_SNAPSHOT.stamp, place:"Taipei"},
     leaf:{source:LEAF.src, file:LEAF.file, sensor:"RS485 leaf wetness/temperature (Modbus RTU) on ESP32, SHT31/40 reference",
       wetness_register:CFG.lwReg, wet_threshold:CFG.lwThr, wet_hour:">= 30 min above threshold",
       blast_rule:"BLASTAM (Koshimizu 1988): continuous wetness >= 10 h at 22-25 C, 11 h at 20-21 C, 17 h at 15 C (Yoshino 1979), linear 15-20 C, none outside 15-25 C; 5-day mean air T 20-25 C; rain >= 4 mm/h not counted",
@@ -1718,7 +1687,7 @@ function registerCard(){
     [L("Cell growth (logistic)","菌體生長（邏輯斯）"),L("prior pooled from "+BANK.prior().n+" run(s); held-out tested; scored live","先驗由 "+BANK.prior().n+" 次運行合併；保留測試；即時評分"),"warn",L("partly validated","部分驗證")],
     [L("Trans-membrane pressure","跨膜壓差"),L("direct from 4 pressure sensors","由 4 支壓力感測器直接計算"),"ok",L("measured","量測值")],
     [L("Filter fouling","濾膜堵塞"),L("assumed resistance law; no fouling data yet","假設阻力模型；尚無堵塞數據"),"bad",L("not validated","未驗證")],
-    [L("Crop stress from weather","天氣推估作物逆境"),L("our thresholds; FAO-56 ET₀ from Open-Meteo","自訂門檻；Open-Meteo 的 FAO-56 ET₀"),"bad",L("not validated","未驗證")],
+    [L("Crop stress from weather","天氣推估作物逆境"),L("our thresholds; FAO-56 ET₀ from one recorded reading","自訂門檻；單筆紀錄讀值的 FAO-56 ET₀"),"bad",L("not validated","未驗證")],
     [L("Leaf wetness sensor","葉面濕潤感測器"),L("bench tests T0–C4 not yet run; wet threshold 10.0 is the default, not measured","實驗台測試 T0–C4 尚未進行；濕潤門檻 10.0 為預設，非實測"),"bad",L("not calibrated","未校正")],
     [L("Rice blast infection (BLASTAM)","稻熱病感染（BLASTAM）"),L("published rule (Koshimizu 1988; Yoshino 1979); hours ahead estimated from RH ≥ 90 %","已發表規則（Koshimizu 1988；Yoshino 1979）；未來時數由 RH ≥ 90% 估算"),"warn",L("literature, not field-tested here","文獻規則，未在本地田間測試")],
     [L("Lead time to protectant","保護劑前置時間"),L("1.75 h from literature (E. coli) + "+CFG.allowH+" h assumed","文獻 1.75 h（大腸桿菌）+ 假設 "+CFG.allowH+" h"),"bad",L("not measured","未量測")]
@@ -1891,8 +1860,7 @@ function bankFile(file){
    ================================================================ */
 function renderWeather(){
   var ah=wxAhead(), cur=wxCurrent(), D=LAST_D||decide(), t0=nowT();
-  var src = WX.src==="live" ? badge("ok",L("live forecast · Open-Meteo · ","即時預報 · Open-Meteo · ")+hm(WX.fetched))
-          : WX.src==="snapshot" ? badge("warn",L("offline · old snapshot ","離線 · 舊快照 ")+WX_SNAPSHOT.stamp) : badge("off",L("loading","載入中"));
+  var src = badge("warn",L("recorded reading · ","紀錄讀值 · ")+WX_SNAPSHOT.stamp);
   var h='<div class="card"><div class="card-hd"><h2>'+L("Field weather","田間天氣")+' · '+esc(CFG.place)+'</h2><span class="hint">'+src+'</span></div><div class="card-bd">';
   if(cur){
     var d24=ah.filter(function(x){ return x.t<t0+24*3.6e6; });
@@ -1918,7 +1886,7 @@ function renderWeather(){
     '<p class="small muted" style="margin-top:6px">'+L("Risk = the worst of four signals: heat (feels-like above 25 °C, broccoli), dry air (VPD / 2 kPa), water deficit (rain − ET₀ from now, 20 mm = full) and salt build-up (25 mm). These thresholds are our judgement and have not been field-tested.",
       "風險取四項中最高者：高溫（體感溫度超過 25°C，以青花菜為例）、空氣乾燥（VPD / 2 kPa）、缺水（從現在起雨量 − ET₀，20 mm 為滿）、鹽分累積（25 mm）。門檻為自訂，尚未經田間測試。")+'</p></div></div>';
   h+=leafCards();
-  h+='<div class="card" style="margin-top:12px"><div class="card-hd"><h2>'+L("Field location","田地位置")+'</h2><button class="btn" data-wx style="height:28px;font-size:12px">'+L("Refresh forecast","更新預報")+'</button></div><div class="card-bd"><div class="fields">'+
+  h+='<div class="card" style="margin-top:12px"><div class="card-hd"><h2>'+L("Field location","田地位置")+'</h2></div><div class="card-bd"><div class="fields">'+
     '<label class="field">'+L("Place name","地名")+'<input data-cfg="place" type="text" value="'+esc(CFG.place)+'"></label>'+
     input("lat",L("Latitude","緯度"),CFG.lat,0.01)+input("lon",L("Longitude","經度"),CFG.lon,0.01)+input("thr",L("Risk that needs protectant (0–1)","需要保護劑的風險（0–1）"),CFG.thr,0.01)+'</div></div></div>';
   $("#v-weather").innerHTML=h;
@@ -2006,7 +1974,7 @@ function leafCards(){
   h+='<div class="card"><div class="card-hd"><h2>'+L("Temperature: leaf, air and forecast","溫度：葉面、空氣與預報")+'</h2><span class="hint">°C</span></div><div class="card-bd">'+
     plot({w:520,h:180,x0:-72,x1:24,y0:tlo,y1:thi,title:"temperature",xfmt:function(v){ return (v>0?"+":"")+v+"h"; },yfmt:function(v){ return +v.toFixed(0); },
       lines:[{p:ft,c:C.prior,w:1.4,dash:"5 4"},{p:at,c:C.data2,w:1.4},{p:lt,c:C.heat,w:1.8}], rules:[{x:0,c:C.ink},{y:15,c:C.prior},{y:25,c:C.prior}]})+
-    key([{c:C.heat,t:L("leaf (sensor)","葉面（感測器）")},{c:C.data2,t:L("air (SHT reference)","空氣（SHT 參考）")},{c:C.prior,t:L("forecast air, Open-Meteo","預報氣溫 Open-Meteo")}])+'</div></div></div>';
+    key([{c:C.heat,t:L("leaf (sensor)","葉面（感測器）")},{c:C.data2,t:L("air (SHT reference)","空氣（SHT 參考）")},{c:C.prior,t:L("recorded air, 6 Sep 2026","紀錄氣溫 2026/9/6")}])+'</div></div></div>';
   /* the periods */
   var rows=B.ev.filter(function(p){ return p.hrs>=3 && p.end>now-72*HR && p.start<now+72*HR; });
   h+='<div class="card" style="margin-top:12px"><div class="card-hd"><h2>'+L("Wet periods","濕潤期")+'</h2><span class="hint">'+L("3 h or longer, 3 days back and 3 ahead","3 小時以上，前後 3 天")+'</span></div><div class="tbl-wrap"><table class="tbl"><tr><th>'+L("Starts","開始")+'</th><th>'+L("Wet, counted","濕潤（計入）")+'</th><th>'+L("Mean T","平均溫度")+'</th><th>'+L("Needed","需要")+'</th><th>'+L("5-day mean","5 日均溫")+'</th><th>'+L("Source","來源")+'</th><th>'+L("Verdict","判定")+'</th></tr>'+
@@ -2197,140 +2165,22 @@ function renderTop(){
   var nb=$("#nav-badge"); nb.hidden=!un.length; nb.textContent=un.length;
 }
 /* ================================================================
-   ASK. A plain-language chat about what the twin is showing.
-   The operator brings a key from their own AI provider. The key is
-   held in memory for this tab only: never stored, logged or exported,
-   and sent nowhere but the provider picked here. The assistant is
-   handed a snapshot of the twin and cannot command the reactor.
+   ASK. A plain-language chat about what the twin is showing, laid out
+   but not connected: the iGEM wiki allows no request to an outside
+   server, so this version calls no AI and the Ask button does nothing.
    ================================================================ */
-var ASK = {
-  prov: lsGet("releaf.ask.prov") || "claude", key:"", msgs:[], busy:false, err:"", built:null,
-  P: {
-    claude:{n:"Claude (Anthropic)", model:"claude-opus-5-5", ph:"sk-ant-…"},
-    openai:{n:"ChatGPT (OpenAI)",   model:"gpt-5",           ph:"sk-…"},
-    gemini:{n:"Gemini (Google)",    model:"gemini-2.5-flash", ph:"AI…"}
-  },
-  /* iGEM's wiki allows no request to an outside server, so the chat is switched off there */
-  blocked: NO_NET
-};
-function askModel(){ return lsGet("releaf.ask.model."+ASK.prov) || ASK.P[ASK.prov].model; }
-function askContext(){
-  var o=[];
-  try{
-    o.push("Data source: "+(S.mode==="live"?"live reactor board":"DEMO plant. Every number below is simulated, not measured."));
-    Object.keys(CH).forEach(function(k){ var c=CH[k], v=S.pv[k];
-      if(v!=null && isFinite(v)) o.push(c.n[0]+" ("+c.tag+"): "+fmt(v,c.dec)+" "+(c.unit||"")); });
-    o.push("Filter valve: "+S.act.valve+". Green induction light: "+S.act.light+". Light mode: "+CFG.lightMode+".");
-    if(LAST_D) o.push("The twin's current advice: "+LAST_D.h+". Reason: "+(LAST_D.why||""));
-    o.push(S.alarms.length ? "Open warnings: "+S.alarms.map(function(a){ return "P"+a.pri+" "+a.t; }).join("; ") : "No open warnings.");
-    o.push("Run time so far: "+durH(hNow())+".");
-  }catch(e){}
-  return o.join("\n");
-}
-function askSystem(){
-  return "You are the helper built into the ReLEAF digital twin, the screen that watches a small bioreactor growing Bacillus subtilis beside a farm. "+
-    "The person asking is a farmer or operator with no laboratory training. Answer in the language they write in, in short plain sentences, and explain any technical word you have to use. "+
-    "Explain what the readings and the twin's advice mean and what the person could check next. You can only read the snapshot below: you cannot switch the light, move a valve or change a setting, so tell the person which tab or button to use instead. "+
-    "If the snapshot does not hold the answer, say so plainly. Do not invent readings. For anything about safety, a leak or a spill, tell them to press SAFE STATE and contact the team.\n\n"+
-    "Snapshot of the twin at the moment of this question:\n"+askContext();
-}
-function askFail(r, j){
-  var m = j && j.error ? (j.error.message || (typeof j.error==="string" ? j.error : "")) : "";
-  if(r.status===401 || r.status===403) return L("The provider did not accept this key.","供應商不接受這把金鑰。")+(m?" ("+m+")":"");
-  if(r.status===429) return L("The provider says this key is over its limit. Try again later.","供應商表示這把金鑰已達上限，請稍後再試。");
-  return L("The provider returned an error","供應商回傳錯誤")+" ("+r.status+")"+(m?": "+m:"");
-}
-function askCall(){
-  var p=ASK.prov, model=askModel(), sys=askSystem(), url, headers={"content-type":"application/json"}, body;
-  if(p==="claude"){
-    url="https://api.anthropic.com/v1/messages";
-    headers["x-api-key"]=ASK.key; headers["anthropic-version"]="2023-06-01";
-    headers["anthropic-dangerous-direct-browser-access"]="true";       /* the key is the operator's own, typed into this page */
-    headers["anthropic-beta"]="server-side-fallback-2026-07-01";
-    body={model:model, max_tokens:16000, system:sys, fallbacks:"default", output_config:{effort:"low"},
-      /* a turn Claude wrote on this model goes back exactly as it came; anything else goes as plain text */
-      messages:ASK.msgs.map(function(m){ return {role:m.role, content:(m.raw && m.rawModel===model) ? m.raw : m.text}; })};
-  } else if(p==="openai"){
-    url="https://api.openai.com/v1/chat/completions";
-    headers["authorization"]="Bearer "+ASK.key;
-    body={model:model, messages:[{role:"system",content:sys}].concat(ASK.msgs.map(function(m){ return {role:m.role, content:m.text}; }))};
-  } else {
-    url="https://generativelanguage.googleapis.com/v1beta/models/"+encodeURIComponent(model)+":generateContent";
-    headers["x-goog-api-key"]=ASK.key;
-    body={system_instruction:{parts:[{text:sys}]},
-      contents:ASK.msgs.map(function(m){ return {role:m.role==="assistant"?"model":"user", parts:[{text:m.text}]}; })};
-  }
-  return fetch(url,{method:"POST", headers:headers, body:JSON.stringify(body)}).then(function(r){
-    return r.json().catch(function(){ return null; }).then(function(j){
-      if(!r.ok) throw new Error(askFail(r,j));
-      if(!j) throw new Error(L("The provider sent an empty reply.","供應商回傳空白。"));
-      var text="", raw=null;
-      if(p==="claude"){
-        if(j.stop_reason==="refusal") throw new Error(L("The assistant declined to answer this one. Try asking it another way.","助理拒絕回答這個問題，請換個方式問。"));
-        text=(j.content||[]).filter(function(b){ return b.type==="text"; }).map(function(b){ return b.text; }).join("\n");
-        raw=j.content;
-        if(j.stop_reason==="max_tokens") text+=L("\n(The answer was cut short.)","\n（回答被截斷。）");
-      } else if(p==="openai"){
-        text=(j.choices && j.choices[0] && j.choices[0].message && j.choices[0].message.content) || "";
-      } else {
-        var c=j.candidates && j.candidates[0];
-        text=((c && c.content && c.content.parts)||[]).map(function(x){ return x.text||""; }).join("");
-      }
-      if(!text) throw new Error(L("The provider answered with no text.","供應商沒有回傳文字。"));
-      return {text:text, raw:raw, model:model};
-    });
-  });
-}
-function askSend(){
-  var box=$("#ask-q"), q=box ? box.value.trim() : "";
-  if(ASK.busy || ASK.blocked || !q) return;
-  if(!ASK.key){ ASK.err=L("Paste your API key first.","請先貼上 API 金鑰。"); askPaint(); return; }
-  ASK.msgs.push({role:"user", text:q}); box.value=""; ASK.busy=true; ASK.err=""; askPaint();
-  askCall().then(function(a){ ASK.msgs.push({role:"assistant", text:a.text, raw:a.raw, rawModel:a.model}); })
-    .catch(function(e){
-      ASK.msgs.pop(); if(box && !box.value) box.value=q;        /* the question goes back in the box, unsent */
-      ASK.err = e instanceof TypeError ? L("Could not reach the provider. Check the internet connection.","無法連上供應商，請檢查網路。") : e.message; })
-    .then(function(){ ASK.busy=false; askPaint(); });
-}
-function askPaint(){
-  var log=$("#ask-log"); if(!log) return;
-  var h = ASK.msgs.length ? "" : '<p class="ask-empty">'+L("Ask anything about this screen. For example: “Is my reactor okay right now?”, “What does fouling ratio mean?”, “Why is the green light still off?”",
-                                                           "關於這個畫面，什麼都可以問。例如：「我的反應器現在正常嗎？」、「堵塞比是什麼意思？」、「為什麼綠光還沒開？」")+'</p>';
-  ASK.msgs.forEach(function(m){ h+='<div class="ask-m '+(m.role==="user"?"me":"ai")+'"><b>'+(m.role==="user"?L("You","你"):L("Assistant","助理"))+'</b><div>'+esc(m.text)+'</div></div>'; });
-  if(ASK.busy) h+='<div class="ask-m ai"><b>'+L("Assistant","助理")+'</b><div class="ask-wait">'+L("Thinking…","思考中…")+'</div></div>';
-  if(ASK.err) h+='<p class="ask-err" role="alert">'+esc(ASK.err)+'</p>';
-  log.innerHTML=h; log.scrollTop=log.scrollHeight;
-  var b=$("#ask-send"); if(b) b.disabled=ASK.busy||ASK.blocked;
-}
+var askBuilt=null;
 function renderAsk(){
-  var v=$("#v-ask"); if(ASK.built===LANG) return;       /* built once per language; ticks must not wipe a half-typed question */
-  ASK.built=LANG;
-  var P=ASK.P[ASK.prov];
+  var v=$("#v-ask"); if(askBuilt===LANG) return;        /* built once per language; ticks must not wipe a half-typed question */
+  askBuilt=LANG;
   v.innerHTML='<div class="grid g2 ask-grid">'+
-    '<div class="card"><div class="card-hd"><h2>'+L("Ask the twin","問問孿生")+'</h2><button class="btn sm" id="ask-clear">'+L("Clear chat","清除對話")+'</button></div><div class="card-bd">'+
-      '<div class="ask-log" id="ask-log" aria-live="polite"></div>'+
-      '<div class="ask-row"><textarea id="ask-q" rows="2" aria-label="'+L("Your question","你的問題")+'" placeholder="'+L("Type a question","輸入問題")+'"'+(ASK.blocked?" disabled":"")+'></textarea>'+
-      '<button class="btn pri" id="ask-send">'+L("Ask","發問")+'</button></div>'+
-      (ASK.blocked?'<p class="note" style="margin-top:8px">'+L("The chat is switched off on the iGEM wiki, which allows no request to an outside server. Open this file from the team repository to use it.","iGEM wiki 不允許連線到外部伺服器，因此這裡關閉聊天。請從團隊程式庫開啟此檔案使用。")+'</p>':'')+
-    '</div></div>'+
-    '<div class="card"><div class="card-hd"><h2>'+L("Your AI provider","你的 AI 供應商")+'</h2></div><div class="card-bd"><div class="fields">'+
-      '<label class="field">'+L("Provider","供應商")+'<select id="ask-prov">'+Object.keys(ASK.P).map(function(k){ return '<option value="'+k+'"'+(k===ASK.prov?" selected":"")+'>'+ASK.P[k].n+'</option>'; }).join("")+'</select></label>'+
-      '<label class="field">'+L("Model","模型")+'<input id="ask-model" type="text" spellcheck="false" autocomplete="off" value="'+esc(askModel())+'"></label>'+
-      '<label class="field" style="grid-column:1/-1">'+L("API key","API 金鑰")+'<input id="ask-key" type="password" autocomplete="off" spellcheck="false" placeholder="'+P.ph+'" value="'+esc(ASK.key)+'"></label></div>'+
-      '<p class="small" style="margin-top:8px">'+L("The key stays in this browser tab and is sent only to the provider you pick. It is not saved, and it is gone when the tab closes. Your provider bills you for each question.",
-                                                   "金鑰只留在這個瀏覽器分頁，只會送到你選的供應商。它不會被儲存，關閉分頁後即消失。每次提問由你的供應商計費。")+'</p>'+
-      '<p class="small">'+L("With each question the assistant is sent the readings, warnings and advice now on screen. It can explain them. It cannot switch the light or the valve.",
-                            "每次提問，助理會收到畫面上目前的讀值、警告與建議。它可以解釋，但不能切換燈光或閥門。")+'</p>'+
+    '<div class="card"><div class="card-hd"><h2>'+L("Ask the twin","問問孿生")+'</h2></div><div class="card-bd">'+
+      '<div class="ask-log" id="ask-log"><p class="ask-empty">'+L("Ask anything about this screen. For example: “Is my reactor okay right now?”, “What does fouling ratio mean?”, “Why is the green light still off?”",
+                                                                 "關於這個畫面，什麼都可以問。例如：「我的反應器現在正常嗎？」、「堵塞比是什麼意思？」、「為什麼綠光還沒開？」")+'</p></div>'+
+      '<div class="ask-row"><textarea id="ask-q" rows="2" aria-label="'+L("Your question","你的問題")+'" placeholder="'+L("Type a question","輸入問題")+'"></textarea>'+
+      '<button class="btn pri" id="ask-send" type="button" disabled>'+L("Ask","發問")+'</button></div>'+
+      '<p class="note" style="margin-top:8px">'+L("Not connected in this version.","此版本尚未連線。")+'</p>'+
     '</div></div></div>';
-  $("#ask-send").addEventListener("click", askSend);
-  $("#ask-clear").addEventListener("click", function(){ ASK.msgs=[]; ASK.err=""; askPaint(); });
-  $("#ask-q").addEventListener("keydown", function(e){ if(e.key==="Enter" && !e.shiftKey && !e.isComposing){ e.preventDefault(); askSend(); } });
-  $("#ask-key").addEventListener("input", function(e){ ASK.key=e.target.value.trim(); });
-  $("#ask-model").addEventListener("change", function(e){ var m=e.target.value.trim(); if(m) lsSet("releaf.ask.model."+ASK.prov, m); else e.target.value=askModel(); });
-  $("#ask-prov").addEventListener("change", function(e){
-    ASK.prov=e.target.value; lsSet("releaf.ask.prov",ASK.prov); ASK.key=""; ASK.err="";   /* a key belongs to one provider */
-    ASK.built=null; renderAsk(); });
-  askPaint();
 }
 
 var RENDER={today:renderToday, map:renderMap, twin:renderTwin, weather:renderWeather, data:renderData, ask:renderAsk, setup:renderSetup};
@@ -2346,7 +2196,7 @@ function showView(v){
   Object.keys(RENDER).forEach(function(k){ $("#v-"+k).hidden = k!==v; });
   renderAll(); window.scrollTo(0,0);
 }
-var lastBeat=0, lastWx=0;
+var lastBeat=0;
 function tick(){
   if(S.mode==="demo"){
     var dtH=CFG.speed/3600, n=Math.max(1,Math.min(60,Math.round(CFG.speed/60)));
@@ -2356,7 +2206,6 @@ function tick(){
   leafDemo(); BLAST=blastEval(); evalAlarms();
   LAST_D=decide(); autoAct(LAST_D); logRow();
   if(S.link.on && Date.now()-lastBeat>2000){ lastBeat=Date.now(); sendToBoard(); }
-  if(Date.now()-lastWx>30*60*1000){ lastWx=Date.now(); wxFetch(); }
   renderAll();
 }
 
@@ -2405,7 +2254,6 @@ document.addEventListener("click", function(e){
   else if(t.hasAttribute("data-refit")){ GT.reset(); audit("operator",L("Growth model restarted","生長模型重啟"),""); renderAll(); }
   else if(t.hasAttribute("data-restart")){ startRun("demo"); renderAll(); }
   else if(t.hasAttribute("data-link")) toggleLink();
-  else if(t.hasAttribute("data-wx")){ wxFetch(); }
   else if(t.id==="link-btn") showView("setup");
   else if(d.dwin){ S.dataWin = d.dwin==="all" ? "all" : +d.dwin; renderAll(); }
   else if(t.id==="stop") safeState();
@@ -2425,15 +2273,13 @@ document.addEventListener("change", function(e){
   if(e.target.type!=="text" && !isFinite(v)) return;
   CFG[k]=v; saveCfg();
   audit("operator",L("Setting ","設定 ")+k+" = "+v,"");
-  if(k==="lat"||k==="lon"){ WX.src="none"; wxFetch(); }
   if(k==="odScale"||k==="transferSd"||k==="sigmaY"){ BANK.cache=null; GT.fit(); }
   e.target.blur(); renderAll();
 });
 
 applyStatic();
 startRun("demo");
-wxSnapshot(); WX.src="none";
-wxFetch(); lastWx=Date.now();
+wxSnapshot();
 tick();
 setInterval(tick, 1000);
 })();
