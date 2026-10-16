@@ -21,6 +21,11 @@
 //     Those files are local test copies: git-ignored, never deployed. Anywhere else the
 //     page plays the WebGL story until the Video Universe URLs are put in, so a deploy
 //     made before the swap still has a working hero.
+//   a Video Universe file URL (static.igem.org/peertube/) -> the WebGL story. iGEM serves
+//     those files only to its own player (video.igem.org): a direct request gets 403
+//     "Embed this video with the player from https://video.igem.org" on every host,
+//     igem.wiki included (checked 16 Oct 2026), so the clip can never load and the hero
+//     would sit frozen on its poster.
 //   anything else (an absolute URL)                      -> the clip.
 window.HeroMode = (function () {
   "use strict";
@@ -39,6 +44,8 @@ window.HeroMode = (function () {
     const dev = location.protocol === "file:" ||
       /^(localhost|127\.0\.0\.1|\[::1\]|.*\.localhost|.*\.test)$/.test(location.hostname);
     if ((local(a) || local(b)) && !dev) return "live3d";
+    const blocked = function (u) { return /^(https?:)?\/\/static\.igem\.org\/peertube\//i.test(u); };
+    if (blocked(a) || blocked(b)) return "live3d";
     return "video";
   }
 

@@ -41,6 +41,17 @@
   Array.prototype.forEach.call(figs, function (fig) {
     var video = fig.querySelector("video");
     if (!video) return;
+    /* 16 Oct 2026: a Video Universe file URL is refused (403) to everything but iGEM's own
+       player, so the clip can never load. Then the card is its poster alone: no tall
+       scroll track to pin an image that never moves. */
+    var ds = fig.dataset;
+    if (/^(https?:)?\/\/static\.igem\.org\/peertube\//i.test(ds.srcDesktop || "")) {
+      video.removeAttribute("loop");
+      video.preload = "none";
+      video.poster = portrait.matches ? ds.posterPhone : ds.posterDesktop;
+      fig.classList.add("is-still");
+      return;
+    }
     if (canScroll && fig.querySelector(".sp-clip__frame")) scrolly(fig, video); else simple(fig, video);
   });
 
