@@ -5,9 +5,8 @@
 
      1  first visual   Farmer Chen's farm on top and a render of the housed
                        reactor under it, found with the pointer (the spotlight)
-    1b  chapters       a dot rail in the right margin, one dot per section
-                       kicker: which beat you are in, and a way to jump. Wide
-                       screens only
+    (1b, the chapters dot rail in the right margin, was retired 18 Oct
+                       at the owner's word; the nav card is the map)
      2  problem        01 the threat, 02 the gap, 03 the hour and the five
                        demands they earn, on white. home-problem.css holds
                        their shared frame, and each has its own sheet:
@@ -78,7 +77,7 @@ a { color: var(--leaf-700); text-underline-offset: .18em; }
 :root {
   --ink:        #070b09;
   --sig-green:  #35e08a;
-  --sig-dim:    #1b7f4d;   /* the chapters rail's current dot on white */
+  --sig-dim:    #1b7f4d;   /* the 520 nm darkened for white grounds */
   /* The 520 nm, darkened for PAPER. #35e08a is 1.7:1 on white, which is not
      readable at any size, so anything on the white half of the page that has
      to mean "the green light" uses this instead: same hue, 5.4:1 on white,
@@ -92,12 +91,12 @@ a { color: var(--leaf-700); text-underline-offset: .18em; }
 .band { padding: var(--sp-8) 0; }
 .band__inner { max-width: var(--max); margin: 0 auto; padding: 0 var(--sp-5); }
 @media (min-width: 640px) { .band__inner { padding: 0 var(--sp-6); } }
-/* THE RAIL GUTTER. From 1180px the chapters rail (1b) is fixed in the right
-   margin, and below about 1345px that margin is narrower than the rail. Every
-   column on the page (.band__inner here, .pb-inner in home-problem.css, the
-   reactor's --pad-x in home-reactor.css) pads by this one value, so the
-   sections keep one left edge and all of them clear the rail: 64px from the
-   window edge until the page's own margin is wider than that. */
+/* THE SIDE GUTTER (the rail's, once: the chapters rail that lived in the
+   right margin was retired 18 Oct). Every column on the page (.band__inner
+   here, .pb-inner in home-problem.css, the reactor's --pad-x in
+   home-reactor.css) still pads by this one value, so the sections keep one
+   left edge: 64px from the window edge until the page's own margin is wider
+   than that. */
 @media (min-width: 1180px) {
   :root { --rail-gutter: max(var(--sp-6), calc(64px - max(0px, (100vw - var(--max)) / 2))); }
   .band__inner { padding-inline: var(--rail-gutter); }
@@ -303,87 +302,6 @@ html.hl .hero__frame--farm img.is-in { opacity: 1; }
 }
 @media print {
   .hero__lens, .hero__label { display: none; }
-}
-
-/* ========================================================= 1b  CHAPTERS === */
-/* A dot rail in the right margin. It has to survive white paper, the ink of
-   the reactor and the vision, and a photograph, so it carries its own blurred
-   pill rather than a colour chosen for one of them.
-
-   ONLY THE CURRENT CHAPTER SPEAKS. Ten labels sitting open in the margin are
-   a second navigation bar competing with the real one; ten dots and one
-   name are a position indicator. The rest arrive on hover and on focus, so a keyboard
-   reader gets the same page a mouse does.
-
-   It appears after the hero and hides itself below 1180px, where the margin it
-   lives in does not exist. */
-
-.chapters {
-  position: fixed; z-index: 30;
-  right: clamp(.5rem, 1.1vw, 1rem); top: 50%; transform: translateY(-50%);
-  opacity: 0; pointer-events: none;
-  transition: opacity .35s ease;
-}
-.chapters.is-shown { opacity: 1; pointer-events: auto; }
-/* a Tab into the rail shows it, in the hero and with scripting off too, so
-   focus never lands on a link nobody can see */
-.chapters:focus-within { opacity: 1; pointer-events: auto; }
-@media (max-width: 1179px) { .chapters { display: none; } }
-
-.chapters ol {
-  display: flex; flex-direction: column; gap: .1rem;
-  margin: 0; padding: .45rem .3rem; list-style: none;
-  border: 1px solid rgb(120 140 130 / .22); border-radius: 999px;
-  background: rgb(255 255 255 / .62);
-  -webkit-backdrop-filter: blur(10px) saturate(1.2);
-          backdrop-filter: blur(10px) saturate(1.2);
-  box-shadow: 0 8px 24px -18px rgb(7 11 9 / .8);
-}
-.chapters a {
-  position: relative; display: flex; align-items: center; justify-content: center;
-  width: 1.35rem; height: 1.35rem; text-decoration: none;
-}
-/* the dot */
-.chapters i {
-  width: .42rem; height: .42rem; border-radius: 50%;
-  background: var(--gray-400);
-  transition: background .2s, transform .2s;
-}
-.chapters a:hover i { background: var(--leaf-700); transform: scale(1.35); }
-.chapters [aria-current] i { background: var(--sig-dim); transform: scale(1.5); }
-
-/* the label, which rides out to the left of its own dot */
-.chapters span {
-  position: absolute; right: calc(100% + .3rem);
-  padding: .22rem .6rem; border-radius: 999px;
-  background: rgb(7 11 9 / .86); color: var(--white);
-  font-size: .6875rem; font-weight: 650; letter-spacing: .02em; white-space: nowrap;
-  opacity: 0; transform: translateX(4px); pointer-events: none;
-  transition: opacity .18s ease, transform .18s ease;
-}
-.chapters a:hover span, .chapters a:focus-visible span { opacity: 1; transform: none; }
-/* The chapter you are in names itself WHILE THE PAGE IS MOVING, and gets out
-   of the way when you stop to read. Left open permanently it sits on the
-   right-hand column of the big picture; shown only on hover it is not a
-   position indicator at all. Scrolling is exactly the moment you want it. */
-/* It is a pill of its own, not bare text, so where it passes over the column
-   it reads as an overlay rather than printing onto the words under it. */
-.chapters.is-moving [aria-current] span {
-  opacity: 1; transform: none;
-  background: rgb(255 255 255 / .94); color: var(--leaf-900);
-  font-weight: 700;
-  box-shadow: 0 0 0 1px rgb(120 140 130 / .22), 0 4px 14px -6px rgb(7 11 9 / .45);
-}
-.chapters.is-moving.on-ink [aria-current] span {
-  background: rgb(7 11 9 / .9); color: var(--white);
-  box-shadow: 0 0 0 1px rgb(255 255 255 / .16), 0 4px 14px -6px rgb(0 0 0 / .8);
-}
-.chapters.on-ink i { background: rgb(255 255 255 / .38); }
-.chapters.on-ink [aria-current] i { background: var(--sig-green); }
-.chapters.on-ink ol { background: rgb(7 11 9 / .42); border-color: rgb(255 255 255 / .16); }
-
-@media (prefers-reduced-motion: reduce) {
-  .chapters, .chapters i, .chapters span { transition: none; }
 }
 
 /* ========================================================== 4  SYNBIO ===== */

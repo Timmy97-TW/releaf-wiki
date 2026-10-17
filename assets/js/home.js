@@ -10,11 +10,11 @@
      2  reactor     wakes the WebGL reactor before it is needed
      3  parts       point at a demand card, its parts light in the WebGL reactor
      5  ihp tabs    the five demands and the objection as tabs over one panel
-     6  chapters    marks the chapter the reader is in on the right-hand rail
      7  scene       the five demands become the labels round the reactor
      8  threat      the map's three frames, walked by the scroll
-     (4 doors was retired on 28 September 2026 with the section it drove;
-     the numbers of the others were kept.)
+     (4 doors was retired on 28 September 2026 with the section it drove,
+     and 6 chapters on 18 October with the dot rail; the numbers of the
+     others were kept.)
 
    Elsewhere: the model
    itself (home-reactor.js, loaded before this file), the big picture's one
@@ -677,108 +677,6 @@
     list.hidden = false;
     sec.classList.add("is-tabbed");
     select(0, false);
-  })();
-
-  /* ═══════════════════════════════════════════════════════ 6  CHAPTERS ══ */
-  /* Marks which chapter the reader is in, and keeps the rail readable over
-     whatever is behind it. Both jobs are read-only: the links are in the
-     markup and work without this.
-
-     WHICH CHAPTER. The one whose section has crossed a line a third of the way
-     down the window, which is where a reader is actually looking, rather than
-     the topmost visible one, which would hand the mark on too early (the
-     reactor section, pinned, is nearly two screens tall).
-
-     LIGHT OR DARK. The page changes ground four times and the rail sits over
-     all of it, so rather than hard-coding which sections are ink, it asks what
-     is actually painted behind the rail: the first element under that point
-     with an opaque background decides. Add a dark section later and this keeps
-     working with no edit here. */
-
-  (function chapters() {
-    var rail = document.getElementById("chapters");
-    var hero = document.querySelector(".hero");
-    if (!rail) return;
-
-    var links = [].slice.call(rail.querySelectorAll("a"));
-    var marks = links.map(function (a) {
-      return document.querySelector(a.getAttribute("href"));
-    });
-
-    var current = null, ink = null, shown = null, still = 0;
-
-    function luminance(bg) {
-      var m = /rgba?\(([\d.]+)[,\s]+([\d.]+)[,\s]+([\d.]+)(?:[,/\s]+([\d.]+))?/.exec(bg || "");
-      if (!m || (m[4] !== undefined && Number(m[4]) < 0.5)) return null;   /* see-through: keep looking */
-      return (0.299 * +m[1] + 0.587 * +m[2] + 0.114 * +m[3]) / 255;
-    }
-
-    function onInk(box) {
-      if (!document.elementsFromPoint) return false;
-      var stack = document.elementsFromPoint(box.left + box.width / 2, box.top + box.height / 2);
-      for (var i = 0; i < stack.length; i++) {
-        if (rail.contains(stack[i])) continue;
-        var l = luminance(window.getComputedStyle(stack[i]).backgroundColor);
-        if (l !== null) return l < 0.5;
-      }
-      return false;
-    }
-
-    // Read phase: which chapter, and what is painted behind the rail. Below
-    // 1180 px the rail is display: none and has no ground to read, so the hit
-    // test is skipped there and on-ink keeps its last value.
-    function measure() {
-      var y = window.scrollY;
-      var m = { show: !hero || y > hero.offsetHeight * 0.6 };
-      if (!m.show) return m;
-
-      var line = window.innerHeight * 0.34;
-      var at = 0;
-      // a chapter that lives inside a pinned stage (the map's last two
-      // stops, How ReLEAF works) says where it is on its runway itself
-      // (__chapterTop, home-threat.js and home-story.js)
-      marks.forEach(function (el, i) {
-        if (!el) return;
-        var top = el.__chapterTop ? el.__chapterTop() : el.getBoundingClientRect().top;
-        if (top <= line) at = i;
-      });
-      m.at = at;
-      var box = rail.getBoundingClientRect();
-      m.dark = box.width ? onInk(box) : ink;
-      return m;
-    }
-
-    // Write phase: only what changed.
-    function update(m) {
-      if (m.show !== shown) { shown = m.show; rail.classList.toggle("is-shown", m.show); }
-      if (!m.show) return;
-
-      if (m.at !== current) {
-        current = m.at;
-        links.forEach(function (a, i) {
-          if (i === m.at) a.setAttribute("aria-current", "true");
-          else a.removeAttribute("aria-current");
-        });
-      }
-
-      if (m.dark !== ink) { ink = m.dark; rail.classList.toggle("on-ink", m.dark); }
-    }
-
-    /* the current chapter names itself while the page is moving and the name
-       fades once the reader settles, so it never sits on the figure beside it */
-    function moving() {
-      if (!rail.classList.contains("is-moving")) rail.classList.add("is-moving");
-      window.clearTimeout(still);
-      still = window.setTimeout(function () {
-        rail.classList.remove("is-moving");
-      }, 1100);
-      homeFrame.request();
-    }
-
-    homeFrame.add(measure, update);
-    window.addEventListener("scroll", moving, { passive: true });
-    window.addEventListener("resize", homeFrame.request);
-    update(measure());
   })();
 
   /* ═══════════════════════════════════════════ 7  DEMANDS INTO THE ANSWER ══ */
