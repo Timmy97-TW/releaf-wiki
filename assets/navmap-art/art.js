@@ -623,7 +623,7 @@
     root.innerHTML = '';
     var hereSec = PAGE[here] ? SEC[PAGE[here].section] : null;
     if (hereSec) { root.style.setProperty('--s-ink', hereSec.ink); root.style.setProperty('--glow', hereSec.line); }
-    head(root, '', 'Explore around ' + (PAGE[here] ? PAGE[here].name : 'ReLEAF'), '');
+    head(root, '', 'Explore ReLEAF', '');
     var stage = h('div', 'nma-stage'); root.appendChild(stage);
     var scroller = h('div', 'nma-scroll'); stage.appendChild(scroller);
     var inner = h('div', 'nma-inner'); scroller.appendChild(inner);
@@ -732,7 +732,7 @@
     root.innerHTML = '';
     var hereSec = SEC[PAGE[here].section];
     root.style.setProperty('--s-ink', hereSec.ink); root.style.setProperty('--glow', hereSec.line);
-    head(root, '', 'Explore around ' + PAGE[here].name, '');
+    head(root, '', 'Explore ReLEAF', '');
     var stage = h('div', 'nma-stage'); root.appendChild(stage);
     var scroller = h('div', 'nma-scroll'); stage.appendChild(scroller);
     var inner = h('div', 'nma-inner nma-inner--page'); scroller.appendChild(inner);

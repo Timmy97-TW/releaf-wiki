@@ -93,7 +93,7 @@
 
     root.classList.add('navmap');
     root.innerHTML = '';
-    var title = h('h2', 'nm-title', 'Explore our project');
+    var title = h('h2', 'nm-title', 'Explore ReLEAF');
     title.setAttribute('data-no-toc', '');
     root.appendChild(title);
     var cap = h('p', 'nm-caption');
@@ -224,13 +224,11 @@
     var home = standOf(here);
 
     var touch = window.matchMedia('(hover: none)').matches;
-    // The wiki tells no reader how to use a page, so the resting line says what
-    // the picture is and stops there.
-    var REST = links ? 'These pages connect to the one you are reading.'
-                     : 'Every page of ReLEAF is somewhere in this valley.';
+    // At rest the line is empty: the picture says what it is, and the caption
+    // speaks only for the place the reader is pointing at.
     function setCaption(pid) {
       cap.innerHTML = '';
-      if (!pid) { cap.appendChild(h('span', 'nm-rest', REST)); return; }
+      if (!pid) return;
       var p = PAGES[pid];
       cap.appendChild(h('strong', null, p.name));
       cap.appendChild(h('span', null, pid === here ? 'You are here.' : p.line));
