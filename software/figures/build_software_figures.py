@@ -64,6 +64,11 @@ def esc(t):
     return str(t).replace("&", "&amp;").replace("<", "&lt;").replace(">", "&gt;")
 
 
+def rich(t):
+    """esc(), with [i]...[/i] drawn italic. Species names are set that way."""
+    return re.sub(r"\[i\](.+?)\[/i\]", r'<tspan font-style="italic">\1</tspan>', esc(t))
+
+
 class Fig:
     def __init__(self, title, desc, w=880, h=440, bg="#ffffff"):
         self.w, self.h, self.o = w, h, []
@@ -78,7 +83,7 @@ class Fig:
         tr = f' transform="rotate({rot} {x:.1f} {y:.1f})"' if rot is not None else ""
         st = ' font-style="italic"' if italic else ""
         self.add(f'<text x="{x:.1f}" y="{y:.1f}" font-size="{size}" fill="{fill}" text-anchor="{anchor}" '
-                 f'font-weight="{weight}"{st}{tr}>{esc(t)}</text>')
+                 f'font-weight="{weight}"{st}{tr}>{rich(t)}</text>')
 
     def mock(self):
         self.add(f'<rect x="{self.w-178}" y="12" width="166" height="26" rx="3" fill="{AMBER1}" '
@@ -574,28 +579,31 @@ def fig_runs():
         f.text(box[0]-50, box[1]-22, t, 13, INK, weight=650)
         f.text(box[0]-50, box[1]-7, sub, 11, INK3)
     # run 1
-    head(boxes[0], "Run 1 · 6 June, prototype 260606, no stirring", "Hand-sampled; stopped by a leak at the pump")
+    head(boxes[0], "Run 1 · 6 June, prototype 260606, no stirring",
+         "[i]B. subtilis[/i] 168 WT; hand-sampled, stopped by a leak at the pump")
     ax = Axes(f, boxes[0], (0, 28), (0, 2.6), "Time (h)", "OD600", range(0, 29, 7), [0, 1, 2], ylab_dx=40)
     fl = [(r[0], r[2]) for r in r1 if r[2] is not None]; br = [(r[0], r[1]) for r in r1 if r[1] is not None]
     ax.line(*zip(*fl), SLATE, 1.4); ax.dots(*zip(*fl), SLATE, 2.6, "#fff")
     ax.line(*zip(*br), LEAF7, 1.4); ax.dots(*zip(*br), LEAF7, 2.6)
     # run 2
-    head(boxes[1], "Run 2 · 14 June, prototype 260614, stirred 200 rpm", "Hand-sampled, 37 °C")
+    head(boxes[1], "Run 2 · 14 June, prototype 260614, stirred 200 rpm",
+         "[i]B. subtilis[/i] 168 WT; hand-sampled, 37 °C")
     ax = Axes(f, boxes[1], (0, 7.5), (0, 1.0), "Time (h)", "OD600", range(0, 8, 1), [0, 0.5, 1.0], ylab_dx=40)
     fl = [(r[0]/60, r[1]) for r in r2]; br = [(r[0]/60, r[2]) for r in r2]
     ax.line(*zip(*fl), SLATE, 1.4); ax.dots(*zip(*fl), SLATE, 2.6, "#fff")
     ax.line(*zip(*br), LEAF7, 1.4); ax.dots(*zip(*br), LEAF7, 2.6)
     legend(f, boxes[0][0]+120, boxes[0][1]+30, [("Bioreactor", LEAF7, "dot"), ("Shake flask", SLATE, "ring")])
     # run 3
-    head(boxes[2], "Run 3 · 21 July to 8 August, 22 °C", "In-line photometer, no sample drawn, 434 h")
+    head(boxes[2], "Run 3 · 21 July to 8 August, 22 °C",
+         "[i]B. subtilis[/i] 168 WT; in-line photometer, no sample drawn, 434 h")
     ax = Axes(f, boxes[2], (0, 440), (0, 2.0), "Time (h)", "OD600 (in-line)", range(0, 441, 100), [0, 1, 2], ylab_dx=40)
     ax.band(243.0, 434.2, FAINT)
     ax.dots(t3[::4], o3[::4], LEAF2, 1.0)
     ax.line(a3h, a3o, LEAF7, 1.6)
     f.text(ax.X(250), ax.Y(1.88), "OD channel unreliable after 243 h (R2)", 10, INK3, italic=True)
     # run 4
-    head(boxes[3], "Run 4 · 1 to 6 September, 168 + constitutive ACCD, full module",
-         "In-line photometer, two logged files, 10 h unrecorded")
+    head(boxes[3], "Run 4 · 1 to 6 September, [i]B. subtilis[/i] 168",
+         "Constitutive ACCD, full module; two logged files, 10 h unrecorded")
     ax = Axes(f, boxes[3], (0, 120), (0, 4.2), "Time from first logged row (h)", "OD600 (in-line)",
               range(0, 121, 20), [0, 1, 2, 3, 4], ylab_dx=40)
     ax.band(gap0, gap1, AMBER1)
@@ -606,8 +614,8 @@ def fig_runs():
         ax.line(h, o, LEAF7, 1.6)
     f.text(ax.X(gap1)+4, ax.Y(0.25), f"not logged, {gap1-gap0:.1f} h", 10, AMBER, italic=True)
     # run 5
-    head(boxes[4], "Run 5 · 8 to 10 October, WB800 + constitutive ACCD, 72 LMH",
-         "In-line photometer, four logged files, bubbles in the flow cell")
+    head(boxes[4], "Run 5 · 8 to 10 October, [i]B. subtilis[/i] WB800, 72 LMH",
+         "Constitutive ACCD; four logged files, bubbles in the flow cell")
     ax = Axes(f, boxes[4], (0, 39), (0, 2.6), "Time from first logged row (h)", "OD600 (in-line)",
               range(0, 40, 6), [0, 1, 2], ylab_dx=40)
     ax.band(fail5, 39, FAINT)
@@ -618,8 +626,8 @@ def fig_runs():
     f.text(ax.X(38.4), ax.Y(2.44), f"reading breaks down after {fail5:.1f} h", 10, INK3, "end", italic=True)
     f.text(ax.X(38.4), ax.Y(2.22), "bubbles and a drifting reference", 10, INK3, "end", italic=True)
     # run 6
-    head(boxes[5], "Run 6 · 14 to 16 October, WB800 + constitutive ACCD, 36 LMH",
-         "In-line photometer with the acceptance gate, 42 h continuous")
+    head(boxes[5], "Run 6 · 14 to 16 October, [i]B. subtilis[/i] WB800, 36 LMH",
+         "Constitutive ACCD; acceptance gate on, 42 h continuous")
     ax = Axes(f, boxes[5], (0, 42), (0, 3.0), "Time from first logged row (h)", "OD600 (in-line)",
               range(0, 43, 6), [0, 1, 2, 3], ylab_dx=40)
     ax.band(lows6, 42, FAINT)
