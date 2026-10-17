@@ -359,7 +359,7 @@
     return !!svg && w * (window.devicePixelRatio || 1) > 936;
   }
   function srcOf(n) {
-    return vec && svgSkip.indexOf(n) < 0 ? svg + "p" + pad2(n) + ".svg" : png + "p" + pad2(n) + ".png";
+    return vec && svgSkip.indexOf(n) < 0 ? svg + "p" + pad2(n) + ".svg" : png + "p" + pad2(n) + ".webp";
   }
   function sources() {
     if (native || !pages.length) return;
@@ -377,7 +377,7 @@
       img.alt = "Page " + n + " of " + N; img.width = 935; img.height = 1210; img.decoding = "async"; img.draggable = false;
       img.addEventListener("error", function () {          // an SVG that fails: its PNG
         var s = this.getAttribute("src") || "";
-        if (/\.svg$/.test(s)) this.src = png + s.slice(s.lastIndexOf("/") + 1).replace(/\.svg$/, ".png");
+        if (/\.svg$/.test(s)) this.src = png + s.slice(s.lastIndexOf("/") + 1).replace(/\.svg$/, ".webp");
       });
       li.appendChild(img); ol.appendChild(li);
       pages.push({ li: li, img: img });
