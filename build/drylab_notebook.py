@@ -278,7 +278,7 @@ BRANCHES = [
 # the orange drafting mark like the late-August ones. What follows is what
 # the record alone cannot say: the kind and weight of each September node,
 # the handoffs after Felix's six, and the plan to the wiki freeze.
-TODAY = '2026-10-14'
+TODAY = '2026-10-17'
 FREEZE = '2026-10-21'
 LAST_PLAN_WEEK = '2026-10-17'   # the last weekend before the freeze
 
@@ -419,32 +419,24 @@ BACK_MORE = {
 # The plan to the freeze, pencilled in by week. The pages say what is left;
 # the week each item sits in is our proposal, so every one is drafted.
 PLAN = [
-    # Rewritten 14 October: the weeks of 3 and 10 October are written record now,
-    # so everything still open stands in the one week that is left.
-    ('2026-10-17', 'lpa', 'Measure photon flux, then run green against dark on the Level 2 strain',
-     'Every dose on that page is in lux, which is weighted for human vision; the run the Engineering page waits on '
-     'needs flux per well before it can mean anything. Pencilled in for 3 October, then for 10 October.'),
-    ('2026-10-17', 'reactor', 'Repeat the growth test at 22 \u00b0C, and write the proof-of-concept run',
-     'Prof. Chang\'s first ask from 4 September, and the single run that would put stress, sensor, green light, '
-     'protectant and the hydroponics plate on one page.'),
-    ('2026-10-17', 'twin', 'Move the pressure ceiling and the command watchdog into the rig firmware',
-     'The page names this as the precondition for any automation above tier 0.'),
+    # Rewritten 17 October: the week of 17 October is written record now, and
+    # what it leaves open is listed in that entry. What stands here is the work
+    # on lanes with nothing written in that week.
     ('2026-10-17', 'math', 'Close section 12, and publish the stress index as the contingency',
-     'The yield fit, the nine unrecorded constants, the salt-ladder conversion and the two disputed Hill constants; '
-     'and if the plant replicates do not arrive, the index goes up without a thin dose-response fit.'),
-    ('2026-10-17', 'gis', 'Take the routing map off OpenStreetMap and OSRM, and settle the crop',
-     'Nothing on the wiki may be fetched from a server outside iGEM, and the maps still answer the rice question '
-     'that 吳姿嫺 said is not the one being asked.'),
+     'The yield fit, the nine unrecorded constants, the salt-ladder conversion and the two disputed Hill '
+     'constants; and if the plant replicates do not arrive, the index goes up without a thin dose-response '
+     'fit.'),
+    ('2026-10-17', 'gis', 'Settle the crop the maps answer for',
+     'The routing map no longer calls any server outside iGEM, but the maps still answer the rice question '
+     'that the 12 October meeting said is not the one being asked.'),
     ('2026-10-17', 'photo', 'Say which build is the final slim design, and upload the STEP files',
-     'The unit read on 10 October has the beam splitter out as well as the lens, which the design-changes card on '
-     'the same page contradicts.'),
+     'The unit read on 10 October has the beam splitter out as well as the lens, which the design-changes '
+     'card on the same page contradicts.'),
     ('2026-10-17', 'hydro', 'Assembly section, drawings and print settings for the four STLs',
      'So the plate can be printed by someone who has not seen it.'),
     ('2026-10-17', 'protect', 'Scope or drop the unspecified engineering-direction runs',
-     'The layout document lists them without saying what they are; the page asks for a decision before the freeze.'),
-    ('2026-10-17', 'wiki', 'Port the remaining pages to iGEM\'s GitLab, and freeze on 21 October',
-     'Nine of the thirty-three addresses there carry real content; the rest are blank template pages, and the '
-     'freeze is 21 October at 23:00 Taiwan time.'),
+     'The layout document lists them without saying what they are; the page asks for a decision before the '
+     'freeze.'),
 ]
 
 RETURNS = [
@@ -489,7 +481,6 @@ def main():
             events.append({'date': rec['date'], 'w': w, 't': rec['event'], 'id': 'e-' + rec['date']})
         day['deliv'] = [dict(d, lane=o) for d, o in zip(rec['deliv'], owner)]
         week['days'].append(day)
-        ai_titles = [re.match(r'<b>(.*?)</b>\s*(.*)', r, re.S) for r in rec['results']] if rec['ai'] else []
         for i, p in enumerate(rec['pipes']):
             # An event (a symposium, a forum) is its own entry in the record
             # and a flag on the timeline; it does not add marks to the board.
@@ -503,11 +494,13 @@ def main():
             else:
                 f = felix.get(key, {})
                 node = {'p': p['lane'], 'w': w, 'k': f.get('k', 'work'), 'h': f.get('h', 1),
-                        'stage': p['stage'], 't': f.get('t', p['stage']), 's': f.get('s', ''),
+                        'stage': p['stage'],
+                        # A drafted week carries the stage as its board title: short, and in the
+                        # same voice as the rest of the record. Weeks the team wrote itself keep
+                        # the board's own one-line title.
+                        't': (p['stage'] if rec['ai'] and p['stage'] else f.get('t', p['stage'])),
+                        's': f.get('s', ''),
                         'ai': rec['ai'], 'deliv': [], 'dates': []}
-                if rec['ai'] and i < len(ai_titles) and ai_titles[i]:
-                    node['t'] = ai_titles[i].group(1)
-                    node['s'] = ai_titles[i].group(2)
                 entries.append(node)
                 by_key[key] = node
             node['dates'].append(rec['date'])
