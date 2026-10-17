@@ -384,10 +384,10 @@ body.doc-light .hwtoc__sub a.is-active { color: var(--w-tab); font-weight: 600; 
    Cycle intros, cards and folds
    -----------------------------------------------------------------------------
    Ported from assets/css/engage.css. Until 15 Oct 2026 a segmented control
-   here switched a record's design-build-test-learn cycles one at a time; the
-   owner found readers scrolled straight past the hidden ones, so every cycle
-   is now stacked on the page (4b, below) and the control and its code are
-   gone. What is left is what the cycles and the rest of the record share.
+   here switched a record's design-build-test-learn cycles one at a time; for
+   two days every cycle was stacked instead, and on 17 Oct the owner asked for
+   the clickable bar back. It lives in 4b, below. What is left here is what
+   the cycles and the rest of the record share.
 
    The house rule the rest of the wiki follows applies here too: the argument
    stays flat on the page and the evidence folds. A cycle's finding is never
@@ -561,82 +561,83 @@ body.hwreveal .doc-wrap .doc-map { display: none; }
 .doc figure[id],
 .doc .chap,
 .doc [id] > h3 { scroll-margin-top: calc(var(--nv-h, 68px) + 1.5rem); }
-/* Inside a set of prototypes the tab strip is pinned (.5rem off the nav),
-   so anything a link lands on in there starts under it. */
-.doc .cycles :is(.part, .sec, .cyc, .fig, .frame, figure[id], [id] > h3, [id]) {
-  scroll-margin-top: calc(var(--nv-h, 68px) + .5rem + 3.4rem + 1.25rem);
+/* Inside a group of prototypes the tab bar is pinned (.5rem off the nav, its
+   height measured into --cyc-bar-h by hwdoc.js), so anything a link lands on
+   in a prototype starts under it -- and a prototype's band lands exactly
+   where it sits under the bar. */
+.doc .has-tabs > .cyc,
+.doc .has-tabs > .cyc :is(.sec, .fig, .frame, figure[id], [id] > h3, [id]) {
+  scroll-margin-top: calc(var(--nv-h, 68px) + .5rem + var(--cyc-bar-h, 3.5rem) + var(--cyc-gap, 1.5rem));
 }
 
 
-/* ===================================================== 4b CYCLES =========
-   15 Oct 2026. One layout for every instrument's engineering cycles. Since
-   16 Oct the prototypes of a set sit in tabs (below); the card layout of
-   each prototype is unchanged.
+/* ========================================================== 4b THE CYCLES ==
+   17 Oct 2026. Every instrument's engineering cycles, behind a tab bar.
    -----------------------------------------------------------------------------
-   The owner: the tab bar "is not thought through enough because most people
-   will just scroll down without looking". So no prototype is behind a click.
-   Each one is a single card -- a band that says which prototype of how many
-   it is (the DBTL ring, the kicker, the title, the four stages as links) and
-   then its design, build, test and learn -- and between two cards a "Next"
-   cue says what comes. Over the set, a stepper (hwdoc.js) pins under the nav
-   while the reader is inside it. Markup: see hwdoc.js, part 4.
+   The owner: "bring back the horizontal bar that we click for the dbtl, don't
+   make it linear they can choose whether to skip or not." Each group of
+   prototypes has one bar, the digital twin page's segmented pill: a tab per
+   prototype, its number in a badge and its short name, the open one a dark
+   pill. One prototype shows at a time -- a band that says which it is (the
+   DBTL ring, the kicker, the title, the four stages as links) and then its
+   design, build, test and learn -- and a small "Next" at its foot opens the
+   one after it. The bar is sticky inside its own group only (hwdoc.js, part
+   4), so it leaves with the group and never stacks on another bar. With
+   JavaScript off, and in print, the prototypes are stacked as before.
    ========================================================================== */
 
-.cycles { position: relative; --cy-ink: var(--w-leaf-700, #23684a); }
+.cycles { position: relative; --cy-ink: var(--w-leaf-700, #23684a); --cyc-gap: 1.5rem; }
 .cyc {
   --dq-d: var(--w-leaf-900, #14402b); --dq-b: var(--w-leaf-700, #23684a); --dq-t: #2e7d5b; --dq-l: #1d6a62;
   margin: 0;
 }
+/* a shut tab stays shut whatever a page's own stylesheet says about display */
+.cycles .cyc[hidden] { display: none !important; }
 
-/* ---- the tabs over a set of prototypes (16 Oct 2026) --------------------------
-   One pill per prototype, outlined and filled in the section's banner colour
-   like every chapter control on the wiki. The strip pins under the nav while
-   the reader is inside its set and leaves with it. hwdoc.js builds it. */
-.cyc-set { position: relative; }
+/* ---- the bar ---------------------------------------------------------------- */
+/* where the bar sits when it is not pinned (hwdoc.js measures it) */
+.cyc-tabs__at { display: block; height: 0; }
 .cyc-tabs {
   position: sticky;
   top: calc(var(--nv-h, 68px) + .5rem);
   z-index: 6;
-  display: flex;
-  margin: 0 calc(-1 * var(--bleed, 0px)) 1.5rem;
-  pointer-events: none;
+  margin: 0 calc(-1 * var(--bleed, 0px)) var(--cyc-gap);
+  border-radius: 999px;
+  background: rgb(255 255 255 / .88);
+  -webkit-backdrop-filter: saturate(180%) blur(18px);
+          backdrop-filter: saturate(180%) blur(18px);
+  box-shadow: inset 0 0 0 1.5px var(--w-tab, #3f5a66), 0 10px 26px -18px rgb(14 22 28 / .5);
+  transition: box-shadow .3s ease, opacity .25s ease, transform .3s var(--ease), visibility 0s;
 }
-.cyc-tabs__track {
-  position: relative;
+.cyc-tabs.is-pinned { box-shadow: inset 0 0 0 1.5px var(--w-tab, #3f5a66), 0 16px 34px -16px rgb(14 22 28 / .42); }
+/* pinned while another group's bar is in view: it steps aside (hwdoc.js) */
+.cyc-tabs.is-away {
+  opacity: 0;
+  transform: translateY(-.6rem);
+  visibility: hidden;
+  pointer-events: none;
+  transition: box-shadow .3s ease, opacity .2s ease, transform .3s var(--ease), visibility 0s .2s;
+}
+.cyc-tabs__list {
+  position: relative;     /* the tabs' offsetParent: hwdoc.js centres the open one */
   display: flex;
-  flex: 1 1 auto;
   gap: 2px;
-  max-width: 100%;
   padding: 5px;
   overflow-x: auto;
+  overscroll-behavior-x: contain;
   scrollbar-width: none;
-  border-radius: 999px;
-  background: rgb(255 255 255 / .86);
-  -webkit-backdrop-filter: saturate(180%) blur(20px);
-          backdrop-filter: saturate(180%) blur(20px);
-  box-shadow: inset 0 0 0 1.5px var(--seg-ink, #3f5a66), 0 8px 24px -14px rgb(0 0 0 / .3);
-  pointer-events: auto;
+  border-radius: inherit;
 }
-.cyc-tabs__track::-webkit-scrollbar { display: none; }
-.cyc-tabs__thumb {
-  position: absolute;
-  top: 5px; bottom: 5px; left: 0;
-  width: 0;
-  border-radius: 999px;
-  background: var(--seg-ink, #3f5a66);
-  box-shadow: 0 3px 8px -2px rgb(0 0 0 / .18);
-  transition: transform .4s cubic-bezier(.2,.8,.2,1), width .4s cubic-bezier(.2,.8,.2,1);
-}
-.doc .cyc-tabs__btn {
-  position: relative;
-  z-index: 1;
-  display: inline-flex;
+.cyc-tabs__list::-webkit-scrollbar { display: none; }
+.doc .cyc-tab {
   flex: 1 0 auto;
+  display: inline-flex;
   align-items: center;
   justify-content: center;
-  gap: .45rem;
+  gap: .55rem;
+  min-height: 2.75rem;
   margin: 0;
-  padding: .66rem 1rem;
+  padding: .45rem 1.1rem .45rem .55rem;
   border: 0;
   border-radius: 999px;
   background: none;
@@ -644,32 +645,68 @@ body.hwreveal .doc-wrap .doc-map { display: none; }
   font-size: .9375rem;
   font-weight: 500;
   line-height: 1.2;
-  color: var(--w-ink-2, #3c4650);
+  letter-spacing: -.01em;
+  color: var(--w-ink-2, #424245);
   white-space: nowrap;
   cursor: pointer;
-  transition: color .25s ease;
+  -webkit-tap-highlight-color: transparent;
+  transition: background-color .3s var(--ease), color .2s ease, box-shadow .3s var(--ease);
 }
-.doc .cyc-tabs__btn > b {
-  display: inline-grid; place-items: center;
-  width: 1.45rem; height: 1.45rem;
+.doc .cyc-tab:hover { color: var(--w-tab, #3f5a66); background: rgb(63 90 102 / .07); }
+.doc .cyc-tab[aria-selected="true"] {
+  color: #fff;
+  font-weight: 600;
+  background: var(--w-tab, #3f5a66);
+  box-shadow: 0 3px 8px -2px rgb(0 0 0 / .22);
+}
+.doc .cyc-tab:focus-visible { outline: 2px solid var(--w-tab, #3f5a66); outline-offset: 2px; }
+/* the number, a small ring like the band's */
+.cyc-tab__n {
+  display: grid;
+  place-items: center;
+  flex: none;
+  width: 1.625rem;
+  height: 1.625rem;
   border-radius: 50%;
-  font-size: .75rem; font-weight: 700;
-  color: var(--seg-ink, #3f5a66);
-  box-shadow: inset 0 0 0 1.5px currentColor;
+  font-size: .8125rem;
+  font-weight: 700;
+  line-height: 1;
+  font-variant-numeric: tabular-nums;
+  color: var(--w-tab, #3f5a66);
+  background: var(--w-tab-pill, #e3eef2);
+  transition: background-color .3s ease, color .3s ease;
 }
-.doc .cyc-tabs__btn:hover { color: var(--seg-ink, #3f5a66); background: none; }
-.doc .cyc-tabs__btn[aria-selected="true"] { color: #fff; font-weight: 600; }
-.doc .cyc-tabs__btn[aria-selected="true"] > b { color: #fff; }
-.cyc-tabs__btn:focus-visible { outline: 2px solid var(--seg-ink, #3f5a66); outline-offset: 2px; }
-.cyc-tabs__track:not(.has-thumb) .cyc-tabs__btn[aria-selected="true"] { background: var(--seg-ink, #3f5a66); }
-.cyc-set > .cyc[hidden] { display: none !important; }
-.cycles .cyc-set > .cyc { margin-top: 0; }
-.cycles .cyc-group > .cyc-set { margin-top: 2.5rem; }
-@media (max-width: 700px) {
-  .cyc-tabs { margin-left: 0; margin-right: 0; }
-  .doc .cyc-tabs__btn { flex: 0 0 auto; padding: .55rem .8rem; font-size: .875rem; }
+.cyc-tab[aria-selected="true"] .cyc-tab__n { color: var(--w-tab, #3f5a66); background: #fff; }
+/* not written yet: the record's orange */
+.cyc-tab.is-todo .cyc-tab__n { color: #c2410c; background: #fff7f2; box-shadow: inset 0 0 0 1.5px #fdba8c; }
+.cyc-tab.is-todo[aria-selected="true"] .cyc-tab__n { background: #fff; box-shadow: none; }
+
+/* compact: the numbers, and the name of the prototype that is showing */
+.cyc-tabs.is-compact .cyc-tab:not([aria-selected="true"]) .cyc-tab__t { display: none; }
+.doc .cyc-tabs.is-compact .cyc-tab:not([aria-selected="true"]) { padding-left: .55rem; padding-right: .55rem; }
+/* a bar wider than the screen scrolls inside itself; its edges fade to say so */
+.cyc-tabs.is-scroll .cyc-tabs__list {
+  -webkit-mask-image: linear-gradient(90deg, transparent, #000 1rem, #000 calc(100% - 1.4rem), transparent);
+          mask-image: linear-gradient(90deg, transparent, #000 1rem, #000 calc(100% - 1.4rem), transparent);
 }
-@media (prefers-reduced-motion: reduce) { .cyc-tabs__thumb, .doc .cyc-tabs__btn { transition: none; } }
+@media (max-width: 600px) {
+  .doc .cyc-tab { min-height: 2.5rem; gap: .45rem; padding: .35rem .85rem .35rem .4rem; font-size: .875rem; }
+  .cyc-tab__n { width: 1.5rem; height: 1.5rem; font-size: .75rem; }
+}
+
+/* the prototype that was just picked slides in */
+.cycles .cyc.is-entering { animation: cyc-in .45s var(--ease) both; }
+@keyframes cyc-in { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: none; } }
+@media (prefers-reduced-motion: reduce) {
+  .cyc-tabs, .doc .cyc-tab, .cyc-tab__n { transition: none; }
+  .cycles .cyc.is-entering { animation: none; }
+}
+html:not(.js) .cyc-tabs { display: none; }
+/* on paper every prototype is there, in order */
+@media print {
+  .cyc-tabs, .cyc-tabs__at, .doc .cyc-next { display: none !important; }
+  .cycles .cyc[hidden] { display: block !important; }
+}
 
 /* ---- a prototype: one card, a band on top ---------------------------------- */
 /* Every selector starts `body.hwreveal .doc-wrap .doc .cycles`: the band is a
@@ -686,11 +723,14 @@ body.hwreveal .doc-wrap .doc .cycles .cyc > section.cyc__band {
 }
 body.hwreveal .doc-wrap .doc .cycles .cyc > section.cyc__band::after,
 body.hwreveal .doc-wrap .doc .cycles .cyc > section.cyc__band > .part-mark { display: none; }
-/* a prototype after the first opens with air, and the cue sits in it */
+/* stacked (no script, print), a prototype after the first opens with air */
 body.hwreveal .doc-wrap .doc .cycles .cyc + .cyc > section.cyc__band:first-child,
 body.hwreveal .doc-wrap .doc .cycles .cyc-group .cyc > section.cyc__band:first-child { margin-top: 0; }
 .cycles .cyc + .cyc, .cycles .cyc-group + .cyc-group { margin-top: 3.5rem; }
 .cycles .cyc-group > .cyc { margin-top: 2.5rem; }
+/* behind a bar, the one showing starts right under it */
+.doc .cycles .has-tabs > .cyc, .doc .cycles.has-tabs > .cyc { margin-top: 0; }
+@media print { .doc .cycles .has-tabs > .cyc + .cyc, .doc .cycles.has-tabs > .cyc + .cyc { margin-top: 3.5rem; } }
 
 /* the card under the band: every section after it, joined into one */
 body.hwreveal .doc-wrap .doc .cycles .cyc > section.sec:not(.cyc__band) {
@@ -711,8 +751,8 @@ body.hwreveal .doc-wrap .doc .cycles .cyc > section.cyc__band:last-of-type { bor
 body.hwreveal .doc-wrap .doc .cycles .cyc__band .dbtl-head :is(h2, h3, h4) {
   display: block;
   margin: 0; padding: 0; border: 0;
-  font-size: clamp(1.5rem, 1.15rem + 1.3vw, 2.125rem);
-  font-weight: 800; line-height: 1.1; letter-spacing: -.022em;
+  font-size: clamp(1.35rem, 1.05rem + .9vw, 1.75rem);   /* one step below the part's title (W6 R2, V16) */
+  font-weight: 750; line-height: 1.1; letter-spacing: -.022em;
   color: var(--w-leaf-900, #14402b);
   text-transform: none;
   text-wrap: balance;
@@ -845,6 +885,30 @@ body.hwreveal .doc-wrap .doc .cycles .cyc .iter-body > .dbtl-h:first-child { mar
   .doc .cycles .tablewrap > table td .todo { display: block; margin: .2rem 0 0; white-space: normal; }
 }
 
+/* ---- "Next" at the foot of a prototype ------------------------------------ */
+/* Made by hwdoc.js for every prototype but the last of its group: the way on
+   for a reader who would rather go in order, in the bar's slate. */
+.doc .cyc-next {
+  display: flex; justify-content: flex-end;
+  margin: 1rem calc(-1 * var(--bleed, 0px)) 0; padding: 0;
+}
+.doc .cyc-next a {
+  display: inline-flex; align-items: baseline; flex-wrap: wrap; justify-content: center; gap: .2rem .5rem;
+  max-width: 100%;
+  padding: .55rem 1.1rem;
+  border-radius: 999px;
+  background: #fff;
+  box-shadow: inset 0 0 0 1px rgb(63 90 102 / .28);
+  color: var(--w-ink-2);
+  font-size: .9375rem; line-height: 1.3; text-decoration: none; text-align: center;
+  transition: box-shadow .2s ease, color .2s ease, background-color .2s ease;
+}
+.doc .cyc-next a:hover, .doc .cyc-next a:focus-visible { background: var(--w-tab-pill, #e3eef2); box-shadow: inset 0 0 0 1.5px var(--w-tab, #3f5a66); }
+.doc .cyc-next a:focus-visible { outline: 2px solid var(--w-tab, #3f5a66); outline-offset: 2px; }
+.cyc-next__lead { font-size: .75rem; font-weight: 700; letter-spacing: .1em; text-transform: uppercase; color: var(--w-tab, #3f5a66); }
+.cyc-next__t { font-weight: 600; color: var(--w-ink); }
+.doc .cyc-next i { font-style: normal; font-weight: 700; color: var(--w-tab, #3f5a66); }
+@media (prefers-reduced-motion: reduce) { .doc .cyc-next a { transition: none; } }
 
 
 /* ============================================================ 5 THE READING ==
@@ -986,7 +1050,7 @@ body.hwreveal .doc-wrap .doc section.sec > .frames > figure {
   border-color: rgb(0 0 0 / .07);
   border-radius: 20px;
 }
-body.hwreveal .doc-wrap .doc section.sec > figure { margin: 1.5rem 0; }
+body.hwreveal .doc-wrap .doc section.sec > figure { margin: 1.5rem auto; }   /* narrow figures centred (W6 R2, V6) */
 body.hwreveal .doc-wrap .doc section.sec > .folds { margin-top: 1.25rem; }
 
 /* Panels that were pale on a white page are white on a pale card: the same
@@ -1019,3 +1083,174 @@ body.hwreveal .doc-wrap .doc section.sec:has(.syswalk) {
   border-radius: 0;
   background: none;
 }
+
+
+/* ======================================================= 6 AFTER THE TWIN ==
+   17 Oct 2026. A modest layout pass after the digital twin page
+   (releaf-wiki/software/), which the instructor polished and the owner holds
+   up as the clean one: "take some inspirations for layout ... still don't
+   change too much". The record keeps its own words (more of them than the
+   twin's), its fonts, its colours, the dark heroes, the Back button and the
+   Summary card. What it borrows is the twin's furniture:
+     - a part opens on its number in leaf green and its title in dark
+       forest, on one line, with a hairline under the pair and air above;
+     - the contents rail is quieter: no filled pill, the part being read in
+       dark forest with its number in green;
+     - tables sit in a white card with a tinted header and roomier rows;
+     - captions are set one way everywhere, smaller and quieter than the
+       text, as the twin's are.
+   Every rule is scoped like section 5's, so nothing reaches the stage.
+   ========================================================================== */
+
+/* ---- a part's heading: "5.  Calibration" -------------------------------- */
+/* The number is the part's own data-n, the one the rail shows, drawn in the
+   ::before the giant outlined numeral used to occupy (polish.css; the light
+   record had already put that one away). The "Part 5" kicker said the same
+   thing above the title, so it goes. The bioreactor's part 1 is the page's
+   title block (its h1) and keeps its own look. */
+body.hwreveal .doc-wrap .doc section.part:not(.br-overview) {
+  --part-size: clamp(1.65rem, 1.2rem + 1.45vw, 2.25rem);
+  flex-direction: row;
+  flex-wrap: wrap;
+  align-items: baseline;
+  justify-content: flex-start;
+  padding-bottom: 1rem;
+  border-bottom: 1px solid var(--w-line, #e5e5e5);
+}
+body.hwreveal .doc-wrap .doc section.part:not(.br-overview)::before {
+  content: attr(data-n) ".";
+  position: static;
+  display: block;
+  flex: none;
+  min-width: 1.45em;
+  margin: 0 .5em 0 0;
+  transform: none;
+  font-family: inherit;
+  font-size: var(--part-size);
+  font-weight: 500;
+  line-height: 1.08;
+  letter-spacing: -.02em;
+  font-variant-numeric: tabular-nums;
+  color: var(--w-leaf-500, #4f9c6f);
+  -webkit-text-stroke: 0;
+  opacity: 1;
+  pointer-events: none;
+}
+body.hwreveal .doc-wrap .doc section.part:not(.br-overview) > .part-mark { display: none; }
+body.hwreveal .doc-wrap .doc section.part:not(.br-overview) > h2 {
+  flex: 1 1 0;
+  min-width: 0;
+  margin: 0;
+  font-size: var(--part-size);
+  color: var(--w-leaf-900, #14402b);
+}
+/* Anton's scan line runs along the hairline now, not under it */
+body.hwreveal .doc-wrap .doc section.part::after { bottom: -1px; }
+/* The air above a part replaces the rule that used to sit there. It must
+   outrank the photometer's `body.doc-light[data-instrument] ...
+   .part:first-of-type { margin-top: 0 }`, which every part matches, since
+   each is the first section in its chapter wrapper: until tonight the old
+   rule's padding hid that. */
+body.hwreveal .doc-wrap .doc .chap > section.part:not(.br-overview),
+body.hwreveal .doc-wrap .doc > section.part:not(.br-overview) {
+  margin-top: 5.5rem;
+  padding-top: 0;
+  border-top: 0;
+}
+body.hwreveal .doc-wrap .doc .chaps > .chap:first-child > section.part:first-of-type { margin-top: 0; }
+@media (max-width: 600px) {
+  body.hwreveal .doc-wrap .doc .chap > section.part:not(.br-overview),
+  body.hwreveal .doc-wrap .doc > section.part:not(.br-overview) { margin-top: 4rem; }
+  body.hwreveal .doc-wrap .doc section.part:not(.br-overview)::before { min-width: 0; margin-right: .4em; }
+}
+
+/* ---- the contents rail, quieter ------------------------------------------ */
+/* The twin's "On this page": a small-capital label, a plain numbered list,
+   and the part being read picked out by weight and colour, not a filled
+   pill. Behaviour is hwdoc.js's, unchanged: the current part still unfolds
+   its sub-headings and the rail still follows the reader. */
+body.doc-light .doc-nav .doc-nav-label {
+  font-family: var(--sans, inherit);
+  font-size: .6875rem;
+  font-weight: 650;
+  letter-spacing: .16em;
+  color: var(--w-ink-3, #6e6e73);
+}
+body.doc-light .doc-nav .hwtoc__h { color: #5f6b74; }
+body.doc-light .doc-nav .hwtoc__no { color: #a3adb4; font-weight: 500; }
+/* the page's rail links are flex rows (style.css), so a one-digit number
+   would pull its label left of a two-digit one's: a fixed column keeps the
+   labels in line */
+.doc-nav .hwtoc__no { flex: none; min-width: 1.05rem; }
+body.doc-light .doc-nav .hwtoc__h:hover { color: var(--w-leaf-900, #14402b); background: rgb(20 64 43 / .04); }
+body.doc-light .doc-nav .hwtoc__sec.is-here > .hwtoc__h {
+  color: var(--w-leaf-900, #14402b);
+  font-weight: 650;
+  background: none;
+}
+body.doc-light .doc-nav .hwtoc__sec.is-here > .hwtoc__h .hwtoc__no { color: var(--w-leaf-500, #4f9c6f); font-weight: 650; }
+body.doc-light .doc-nav .hwtoc__sub a:hover,
+body.doc-light .doc-nav .hwtoc__sub a.is-active { color: var(--w-leaf-900, #14402b); }
+
+/* ---- tables in a white card ---------------------------------------------- */
+/* The twin's: a hairline card with rounded corners, a tinted header row and
+   rows with room between them, so a table reads as one object, the way the
+   record's figures already do. Ours keeps the team's leaf tint and sentence
+   case in the header: the headers carry units, and capitals would turn mL
+   into ML. (DiOPAL's `.plain` only drops a corner bracket, so it is
+   included.) The photometer's tables sit in a card of their own
+   (.tablewrap, its page's CSS) and are left as they are. */
+body.doc-light .doc-wrap .doc .sec .table-scroll:has(> table) {
+  border: 1px solid var(--w-line, #e5e5e5);
+  border-radius: 14px;
+  background: #fff;
+}
+body.doc-light .doc-wrap .doc .sec .table-scroll:has(> table) > table { margin: 0; }
+body.doc-light .doc-wrap .doc .sec .table-scroll:has(> table) > table :is(th, td) { padding-left: 1rem; padding-right: 1rem; }
+body.doc-light .doc-wrap .doc .sec .table-scroll:has(> table) > table td { padding-top: .8rem; padding-bottom: .8rem; }
+body.doc-light .doc-wrap .doc .sec .table-scroll:has(> table) > table > tbody > tr:last-child > td { border-bottom: 0; }
+/* a table's own caption is inside the card now, so it takes the cells' inset */
+body.doc-light .doc-wrap .doc .sec .table-scroll:has(> table) > table > caption { padding: .8rem 1rem .55rem; }
+
+/* ---- captions, one way everywhere ---------------------------------------- */
+body.doc-light .doc-wrap .doc figcaption {
+  font-size: .875rem;
+  line-height: 1.55;
+  color: var(--w-ink-2, #424245);
+}
+body.doc-light .doc-wrap .doc figcaption > b { color: var(--w-ink, #1d1d1f); }
+
+/* ---- a track's way back to the cycle map ---------------------------------- */
+/* on the bioreactor it was the browser's own blue; the photometer's rule,
+   shared */
+.doc .cyc-group > p.to-map { margin: 1.25rem 0 0; font-size: .9375rem; }
+body.doc-light .doc .cyc-group > p.to-map a {
+  color: var(--w-link, #23684a);
+  text-decoration: underline;
+  text-decoration-thickness: 1px;
+  text-underline-offset: 2.7px;
+}
+
+/* ==========================================================================
+   7. W6 visual review (17 Oct 2026, overnight; dev/night-logs/2026-10-17-overnight/REVIEW-visual.md). Each rule was
+   checked before/after in headless Chrome on the photometer and the bioreactor.
+   ========================================================================== */
+/* V5: over the light record the dark menu is a solid strip, not a fade with the record's text showing through */
+body.doc-light .sitenav--dark.is-scrolled .sitenav__bar::before { height: var(--nv-h, 68px); background: rgb(8 10 14 / .94); }
+
+/* V14: on a phone, a fold's note goes under its title instead of squeezing it into a narrow column */
+@media (max-width: 600px) {
+  .doc .fold > summary { flex-wrap: wrap; row-gap: .2rem; }
+  .doc .fold > summary .fold__t { flex: 1 1 100%; }
+  .doc .fold > summary .fold__sub { margin-left: 0; white-space: normal; }
+}
+
+/* V17: the summary's number strip sits on the card's floor, level with the foot of the Results list */
+@media (min-width: 980px) {
+  .hwsum__inner { align-items: stretch; }
+  .hwsum__story { grid-row: 1 / span 2; display: flex; flex-direction: column; }
+  .hwsum__story > .hwsum__spec { margin-top: auto; padding-top: var(--sp-5, 2rem); }
+}
+
+/* V18: a to-do block is as wide as the cards and figures around it (it was capped at 68ch) */
+body.hwreveal .doc-wrap .doc section.sec > p.todo { max-width: none; }

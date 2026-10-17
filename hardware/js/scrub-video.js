@@ -149,6 +149,10 @@ window.ScrubVideo = function (opt) {
       poster.src = s.poster;
     }
     if (!s.src || !clip) { fail("no clip"); return; }
+    // A Video Universe clip plays in iGEM's own player (js/vu-embed.js): since 16 Oct 2026
+    // its files answer 403 to any page but that player, so they cannot be fetched or set as
+    // a src. The player answers through this same <video>, so the scrub below is unchanged.
+    if (window.VUEmbed && VUEmbed.is(s.src)) { VUEmbed.bind(video, s.src, { scrub: true, aspect: clip.w / clip.h }); return; }
     // Whole file into memory when the host allows it (CORS). A host that does not
     // gets the URL directly; the browser streams it and seeks with range requests.
     const direct = function () { if (token === loadToken) { video.src = s.src; video.load(); } };
@@ -226,18 +230,62 @@ window.ScrubVideo = function (opt) {
 
   /* --------------------------------------------------------------- the scrub */
   let curP = 0, want = 0, seeking = false, seekT0 = 0, seekedAt = 0;
-  const stats = { seeks: 0, seekMs: 0, seekMax: 0, frames: 0 };
+  const stats = { seeks: 0, seekMs: 0, seekMax: 0, frames: 0, plays: 0, stops: 0 };
   function frameOf(p) { return Math.max(0, Math.min(N - 1, Math.round(p * (N - 1)))); }
   // Middle of the frame's display interval: a seek to the exact boundary can land on
   // the frame before it after the container's timebase rounding.
   function timeOf(i) { return (i + 0.5) / FPS; }
   function kick(first) {
     if (!ok || failed) return;
+    if (pmode === "play" && !first) return;
     if (seeking && !first) return;
     const cur = Math.round(video.currentTime * FPS - 0.5);
-    if (!first && cur === want && shown) return;
+    if (!first && !pForce && cur === want && shown) return;
+    pForce = false;
     seeking = true; seekT0 = performance.now();
     video.currentTime = timeOf(want);
+  }
+
+  /* ------------------------------------------------- playing along (Video Universe) */
+  // 17 Oct 2026. In iGEM's player (js/vu-embed.js) every frame is a seek through postMessage, one per 26 ms at
+  // most. While the scroll runs forward the clip PLAYS at the scroll's rate instead (0.25-16x, pulled toward the
+  // scroll's frame), as the photometer's Slim pop-out does (photometer/js/sp-clip.js); when the scroll stops or
+  // turns back it pauses and makes one exact seek. Where the player is between its reports (every 0.5 s) is
+  // carried forward at the rate in force. Only for the player: a clip from a plain file seeks in ~5 ms.
+  let pmode = "seek", prate = 1, pAnchor = 0, pAt = 0, pRep = 0, pRateAt = 0, pForce = false;
+  let vt = 0, lastDrawP = -1, lastDrawAt = 0;
+  function vuS() { return video.__vu || null; }
+  function pPos(now) {
+    const S = vuS();
+    if (S && S.rep && S.rep.at > pRep && S.rep.at > pAt) { pRep = S.rep.at; pAnchor = S.rep.pos; pAt = S.rep.at; }
+    return pAnchor + prate * Math.max(0, now - pAt) / 1000;
+  }
+  function pSetRate(r, now) {
+    if (pmode === "play") { pAnchor = pPos(now); pAt = Math.max(pAt, now); }
+    prate = Math.max(0.25, Math.min(16, r)); pRateAt = now;
+    try { video.playbackRate = prate; } catch (e) { /* the old rate stays */ }
+  }
+  function pStart(now) {
+    pAnchor = video.currentTime; pAt = now + 90; pRep = now;
+    pmode = "play"; stats.plays++;
+    pSetRate(vt, now);
+    const pr = video.play();
+    if (pr && pr.catch) pr.catch(function () { pmode = "seek"; pForce = true; });
+  }
+  function pStop() { pmode = "seek"; video.pause(); seeking = false; pForce = true; stats.stops++; }
+  // true when this frame is played along; false when the seek path should run
+  function follow(now) {
+    const wantT = timeOf(want), dur = video.duration || N / FPS;
+    if (pmode === "seek") {
+      if (ok && shown && !failed && !seeking && !reduced && vt > 0.6 && wantT < dur - 0.6 &&
+          Math.abs(wantT - video.currentTime) < 2.5) { pStart(now); return true; }
+      return false;
+    }
+    const e = wantT - pPos(now);
+    if ((vt < 0.25 && e < 0.1) || e < -0.6 || e > 3 || wantT >= dur - 0.3) { pStop(); return false; }
+    const r = vt + e / 0.35;
+    if (Math.abs(r - prate) > 0.2 * prate && now - pRateAt > 200) pSetRate(r, now);
+    return true;
   }
 
   /* -------------------------------------------------------------- live layers */
@@ -605,8 +653,15 @@ window.ScrubVideo = function (opt) {
     const which = pick();
     if (which !== kind) load(which);
     if (stage.clientWidth !== lastW || stage.clientHeight !== lastH) { lastW = stage.clientWidth; lastH = stage.clientHeight; layout(); }
+    // the scroll's speed, in clip seconds a second (smoothed), for playing along
+    const now = performance.now();
+    if (lastDrawAt) {
+      const dt = (now - lastDrawAt) / 1000;
+      if (dt > 0 && dt < 0.25) vt += ((p - lastDrawP) * (N - 1) / FPS / dt - vt) * 0.35;
+    }
+    lastDrawP = p; lastDrawAt = now;
     want = frameOf(p);
-    kick();
+    if (!(vuS() && follow(now))) kick();
     for (let i = 0; i < layers.length; i++) layers[i].draw(p, t);
     breathe(t);
   }
@@ -625,7 +680,10 @@ window.ScrubVideo = function (opt) {
       // it has not fired a quarter second after the seek) the seek itself is trusted
       return cur === want && (!hasRVFC || presented === want || performance.now() - seekedAt > 250);
     },
-    frame: function () { return { want: want, current: Math.round(video.currentTime * FPS - 0.5), presented: presented, kind: kind }; },
+    frame: function () {
+      const ct = pmode === "play" ? pPos(performance.now()) : video.currentTime;
+      return { want: want, current: Math.round(ct * FPS - 0.5), presented: presented, kind: kind, mode: pmode, rate: prate };
+    },
     stats: stats, video: video, failed: function () { return failed; },
   };
 

@@ -169,3 +169,15 @@
     if (history.replaceState) history.replaceState(null, "", a.getAttribute("href"));
   });
 })();
+
+// 17 Oct 2026: the opening scene's route line sits in the Back button's row, to its right (css/record-edit.css):
+// --bb-r is the button's right edge in the stage, measured once its font is in and on every resize.
+(function () {
+  const stage = document.querySelector(".story .story-stage");
+  const bb = stage && stage.querySelector(".backbtn--stage");
+  if (!bb) return;
+  function set() { if (bb.offsetWidth) stage.style.setProperty("--bb-r", (bb.offsetLeft + bb.offsetWidth) + "px"); }
+  set();
+  window.addEventListener("resize", set);
+  if (document.fonts && document.fonts.ready) document.fonts.ready.then(set);
+})();

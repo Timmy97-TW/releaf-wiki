@@ -135,7 +135,10 @@ window.HERO = (function () {
       const w = L.w || 160, x0 = side > 0 ? lx + 8 : lx - 8 - w;
       lx += Math.max(16, Math.min(M.W - 16 - w, x0)) - x0;
       const yTop = ly - (L.nMid || 20);
-      ly += Math.max(port ? 100 : 80, Math.min(M.H - (L.hgt || 50) - 16, yTop)) - yTop;
+      // (17 Oct 2026: labels start at 118 px on a desk (was 80) and 152 px in portrait (was 100), below the route line,
+      // which now runs beside the Back button on a desk and under the Back and Skip row on a phone, css/record-edit.css;
+      // the same in js/story.js)
+      ly += Math.max(port ? 152 : 118, Math.min(M.H - (L.hgt || 50) - 16, yTop)) - yTop;
       // V4's applyLabels from here on
       const e = ss(0, 1, a), te = e;     // (V4 round 4b, QA 5 / visual 10: the text and its leader fade on one curve)
       const x = side > 0 ? lx + 8 : lx - 8 - L.w, y = ly - L.nMid + (1 - te) * 5;
@@ -153,7 +156,7 @@ window.HERO = (function () {
       [L.rh, L.r, L.dt].forEach(function (ci) { ci.setAttribute("cx", ax.toFixed(1)); ci.setAttribute("cy", ay.toFixed(1)); ci.style.opacity = ring.toFixed(3); });
       // the edge pointer of an off-screen next stop: clamped to the stage's own safe frame
       if (r.length > 9 && r[9] > 0.003) {
-        const cx = Math.max(64, Math.min(M.W - 64, (r[10] - M.x0) * M.k)), cy = Math.max(112, Math.min(M.H - 170, (r[11] - M.y0) * M.k));
+        const cx = Math.max(64, Math.min(M.W - 64, (r[10] - M.x0) * M.k)), cy = Math.max(port ? 160 : 112, Math.min(M.H - 170, (r[11] - M.y0) * M.k));
         L.cv.style.opacity = r[9].toFixed(3);
         L.cv.setAttribute("transform", "translate(" + cx.toFixed(1) + "," + cy.toFixed(1) + ") rotate(" + (r[12] * 180 / Math.PI).toFixed(1) + ")");
       } else L.cv.style.opacity = "0";

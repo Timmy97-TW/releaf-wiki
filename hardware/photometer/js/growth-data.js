@@ -34,7 +34,10 @@
 // record, not from the numbers: prototype 2's run ended early when medium leaked at the pump (3.2,
 // Test); prototype 3's plateau was OD600 ~0.8–0.9 for the reactor after ~2 h and ~0.6–0.8 for the flask after
 // ~4.5 h (3.3, Test). If the raw data disagrees with those, the record's text needs a look as well.
+// 17 Oct 2026: part 2 is numbered as in the owner's edit doc (pp. 42-48), with its DBTL 1 and 2 merged (the owner:
+// "they are the same thing"): DBTL 1 is the 22 °C run of 6-10 June (growth_c1), DBTL 2 the 14 June run at 37 °C
+// (growth_c2).
 window.BIO_GROWTH = {
-  growth_c1: { unit: "h", csv: null },     // prototype 2, 22 °C (room temperature), 6 June 2026
-  growth_c2: { unit: "min", csv: null }    // prototype 3, 37 °C, 14 June 2026
+  growth_c1: { unit: "h", csv: null },     // DBTL 1, 22 °C: prototypes I-0606 and I-0610, 6-10 June 2026 (27 h)
+  growth_c2: { unit: "min", csv: null }    // DBTL 2, 37 °C: prototype II-0614, 14 June 2026
 };

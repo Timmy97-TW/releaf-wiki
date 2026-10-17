@@ -1512,7 +1512,7 @@ body.doc-light .od-event text { fill: #c1392a; }
 
   /* The opening's right-hand column. The title holds the left, the instrument
      the middle; without this the right third of the first frame is empty.
-     Every number here is already on the wiki page — 600 nm, the 0.2 mm cell,
+     Every number here is already on the wiki page — 600 nm, the 2 mm cell,
      the 400 h run (section 3.3's own heading; the 336 h is the traced portion
      of it) and the 2,132 points logged. Quoting 336 here put two different
      run lengths on one page — this column and act 6's title. */
@@ -2116,12 +2116,9 @@ body.doc-light .doc-wrap section.sec > ol.files { max-width: none; }
 #sec13 .frames { grid-template-columns: repeat(2, minmax(0, 1fr)); }
 @media (max-width: 620px) { #sec13 .frames { grid-template-columns: 1fr; } }
 
-/* ---- 1.1: the costs are one note above the table; in it, a muted dash ---- */
+/* ---- 11.1: a cost not on record (or shared) is muted. Until 16 Oct 2026 every cost was blank and a phone's
+   cards hid them; the costs are filled in now, so each card shows unit cost, qty and total as labelled pairs ---- */
 .doc table.bom-doc td.nc { color: #6b7580; }
-@media (max-width: 620px) {
-  /* every cost is blank, so a phone's cards carry the part and its specification only */
-  body.doc-light .doc table.bom-doc tbody td.nc { display: none; }
-}
 
 /* ---- Figure 1: the drawing starts at the top of its plate, the legend is
    names only (the descriptions are in 9.1), the photo is a thumbnail ---- */
@@ -2991,11 +2988,23 @@ body[data-instrument="photometer"] .doc-wrap > .hwsum { margin-top: clamp(1.25re
    paragraph after them the same breathing room as after a figure. */
 #filter-gates { margin-bottom: 1.25rem; }
 
-/* The seven-column dashboard-snapshot table in 5.3 (the long-term run): on a phone it scrolls
-   sideways inside its own frame rather than breaking its headers mid-word. */
+/* The seven-column dashboard-snapshot table in 3.5 (the long-term run): on a phone each snapshot stacks as a small
+   grid with its own labels, as 6.1 does, instead of cutting 3 of its 7 columns off (W6 R2, V10). */
 @media (max-width: 640px) {
-  .doc .cycles .tablewrap > table.pm-snap { min-width: 540px; }
-  .doc .cycles .tablewrap > table.pm-snap :is(th, td) { white-space: nowrap; overflow-wrap: normal; }
+  .doc .cycles .tablewrap > table.pm-snap { min-width: 0; }
+  .doc table.pm-snap thead { display: none; }
+  .doc table.pm-snap, .doc table.pm-snap tbody { display: block; width: 100%; }
+  .doc table.pm-snap tr { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: .45rem .75rem; padding: .75rem 0; border-bottom: 1px solid var(--pm-hair, rgba(15, 19, 25, .12)); }
+  .doc table.pm-snap tr:last-child { border-bottom: 0; }
+  .doc .cycles .tablewrap > table.pm-snap tr > * { display: block; padding: 0; border: 0; background: none; text-align: left; white-space: nowrap; }
+  .doc table.pm-snap th[scope="row"] { grid-column: 1 / -1; }
+  .doc table.pm-snap td::before { display: block; margin-bottom: .1rem; font-family: var(--mono); font-size: 11px; font-weight: 600; letter-spacing: .08em; text-transform: uppercase; color: var(--pm-ink-2, #4b5563); }
+  .doc table.pm-snap td:nth-child(2)::before { content: "Points"; }
+  .doc table.pm-snap td:nth-child(3)::before { content: "OD600"; }
+  .doc table.pm-snap td:nth-child(4)::before { content: "Sample (lx)"; }
+  .doc table.pm-snap td:nth-child(5)::before { content: "Reference (lx)"; }
+  .doc table.pm-snap td:nth-child(6)::before { content: "Ratio"; }
+  .doc table.pm-snap td:nth-child(7)::before { content: "Rejected"; }
 }
 
 /* ---- the opening title, toward the middle (15 Oct 2026) ------------------
@@ -3066,3 +3075,181 @@ body.doc-light .doc .pm-cycle .frame#fig-bench { max-width: 30rem; margin: 1rem 
 body.doc-light .doc .cyc-group > p.to-map a {
   color: var(--w-link, #23684a); text-decoration: underline; text-decoration-thickness: 1px; text-underline-offset: 2.7px;
 }
+
+/* =====================================================================
+   17 Oct 2026 (overnight, W1): the page rebuilt to the owner's edit doc, pp. 41-79.
+   Page-scoped; nothing here touches ../css/* or ../js/*. Delete a block to revert it.
+   ===================================================================== */
+
+/* --- 1 Overview: the doc's title line, its subtitle, then its two paragraphs --- */
+body.hwreveal .doc-wrap .doc .pm-overview .pm-sublede {
+  margin: .4rem 0 1.5rem; font-style: italic; font-size: 1.05rem; line-height: 1.5; color: var(--pm-ink-2, #4b5563);
+}
+
+/* --- photo strips: V1's three build photos and the Slim's four, each one figure with one caption.
+   The Slim's columns follow the photos' shapes (4:3, 4:3, 3:4, 3:4), so the four stand at one height. --- */
+.doc figure.pm-strip { margin: 1.2rem 0 1.5rem; }
+.pm-strip__row { display: grid; gap: .6rem; align-items: start; }
+.pm-strip--v1 .pm-strip__row { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+.pm-strip--slim .pm-strip__row { grid-template-columns: 16fr 16fr 9fr 9fr; }
+body.doc-light .doc .pm-strip .frame-img { aspect-ratio: auto; height: auto; }
+.doc .pm-strip .frame-img img { display: block; width: 100%; height: auto; object-fit: contain; }
+@media (max-width: 700px) {
+  .pm-strip--slim .pm-strip__row { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
+/* a landscape build photo inside a cycle, narrower than the column (DBTL 2's set-up, DBTL 3's incubator) */
+body.doc-light .doc .pm-cycle .frame#fig-c1-setup,
+body.doc-light .doc .pm-cycle .frame#fig-c2-build { max-width: 32rem; margin: 1rem auto 1.4rem; }
+body.doc-light .doc .pm-cycle :is(#fig-c1-setup, #fig-c2-build) .frame-img { aspect-ratio: auto; height: auto; }
+.doc .pm-cycle :is(#fig-c1-setup, #fig-c2-build) .frame-img img { display: block; width: 100%; height: auto; }
+/* the doc's sketches keep their width (DBTL 1's is small; DBTL 3's is tall) */
+#fig-c1-sketch { max-width: 300px; }
+
+/* --- the long run's data link (the doc's "Data:" line) --- */
+.doc .sec p.pm-data { margin: .4rem 0 1.4rem; font-size: .9rem; }
+
+/* --- 5.3: the two new SiO2 charts (the doc's 0-1 OD chart and the Pro against the BioDrop) --- */
+.cal-svg .fitl { stroke-dasharray: 5 4; stroke-width: 1.5; }
+.cal-svg .z { stroke: var(--dim); opacity: .55; }
+.cal-svg .note.fq { font-weight: 650; }
+.cal-svg .note.sm { font-size: 10.5px; font-weight: 500; }
+#fig-cal-identity { max-width: 30rem; margin-left: auto; margin-right: auto; }
+/* the SiO2 charts are SVG in a .frame: the frame's default portrait well (3:4, made for phone photos) left a tall
+   empty area under each one (flagged on 16 Oct). They take their own height, on white. */
+body.doc-light .doc .frame .frame-img:has(> svg.cal-svg) { aspect-ratio: auto; height: auto; background: #fff; padding: .4rem .3rem .2rem; }
+
+/* --- 6 Final Designs (the edit doc, pp. 64-68) --------------------------------------------------- */
+/* the Pro vs Slim table: the property names in the first column, the two builds side by side */
+.doc table.pm-vs th[scope="row"] { width: 26%; }
+.doc table.pm-vs thead th:not(:first-child) { color: var(--pm-ink, #1d1d1f); font-weight: 700; }
+.doc table.pm-vs td { color: var(--pm-ink, #1d1d1f); }
+
+/* the specification list beside the 3D viewer (W2's .fd-pair lays the two out) */
+.doc .pm-final__specs h4 { margin: 0 0 .7rem; }
+.doc .pm-final__specs .folds { margin-top: 1rem; }
+
+/* 6.2.1-6.3.4: the numbered blocks inside 6.2 and 6.3, on hairlines */
+.doc .pm-sub { margin-top: 2.2rem; padding-top: 1.4rem; border-top: 1px solid var(--pm-hair, rgba(15, 19, 25, .12)); }
+.doc .pm-sub > h4 { margin: 0 0 1rem; }
+.doc h5.pm-h5 { margin: 1.6rem 0 .5rem; font-size: 1rem; }
+
+/* the requirement -> how-it-is-met tables */
+.doc table.pm-req th[scope="row"] { width: 30%; }
+.doc table.pm-req td { color: var(--pm-ink, #1d1d1f); }
+
+/* the "Why 600 nm?" fold's spectrum keeps a readable size */
+.doc .fold .pm-fold-fig { max-width: 30rem; margin: 1.2rem auto .4rem; }
+
+/* 7.3: the firmware's download card, waiting for its file */
+.pm-dl { display: grid; grid-template-columns: 3rem minmax(0, 1fr) auto; gap: 1rem; align-items: center; margin: .6rem 0 .8rem; padding: 1rem 1.1rem; border: 1px solid var(--pm-hair, rgba(15, 19, 25, .12)); border-radius: 14px; background: #fff; }
+.pm-dl__ic { display: grid; place-items: center; width: 3rem; height: 3rem; border-radius: 10px; font-family: var(--mono); font-weight: 700; color: var(--w-leaf-700, #23684a); background: var(--pm-leaf-50, #f4f9f6); }
+.doc .pm-dl__tx b { display: block; color: var(--pm-ink, #1d1d1f); }
+.doc .pm-dl__tx p { margin: .2rem 0 0; font-size: .88rem; line-height: 1.5; }
+.pm-dl__btn { padding: .45rem .9rem; border-radius: 999px; font-size: .82rem; font-weight: 600; color: #9aa3ad; border: 1px dashed #c9cfd6; }
+@media (max-width: 520px) { .pm-dl { grid-template-columns: 2.6rem minmax(0, 1fr); } .pm-dl__btn { grid-column: 2; justify-self: start; } }
+
+/* 10.1: the Slim's parts list; 10.2: its two files on Google Drive */
+.doc table.pm-slimbom tr.pm-slimbom__grp th { padding-top: 1rem; font-family: var(--mono); font-size: .64rem; letter-spacing: .12em; text-transform: uppercase; color: var(--pm-ink-2, #4b5563); }
+.doc table.pm-slimbom tr.pm-slimbom__grp th span { font-family: var(--sans); letter-spacing: 0; text-transform: none; font-weight: 500; }
+.doc table.pm-slimbom tbody th[scope="row"] { white-space: nowrap; }
+.doc h4.pm-files-h { margin: 1.8rem 0 .6rem; }
+ul.pm-ext-files { list-style: none; margin: 0 0 .6rem; padding: 0; display: flex; flex-wrap: wrap; gap: .6rem; }
+.doc ul.pm-ext-files li { margin: 0; }
+.doc ul.pm-ext-files li::before { content: none; }
+.doc ul.pm-ext-files a { display: inline-flex; align-items: baseline; gap: .5rem; padding: .5rem .9rem; border: 1px solid var(--pm-hair, rgba(15, 19, 25, .14)); border-radius: 999px; background: #fff; font-weight: 600; }
+.doc ul.pm-ext-files a span { font-size: .78rem; font-weight: 500; color: var(--pm-ink-2, #4b5563); }
+
+/* phones: the Pro-vs-Slim table, the requirement tables and the Slim's parts list stack, row by row, instead of
+   scrolling sideways inside their frame (each cell names its column) */
+@media (max-width: 620px) {
+  .doc table.pm-vs thead, .doc table.pm-req thead, .doc table.pm-slimbom thead { display: none; }
+  .doc table.pm-vs, .doc table.pm-vs tbody, .doc table.pm-req, .doc table.pm-req tbody,
+  .doc table.pm-slimbom, .doc table.pm-slimbom tbody { display: block; width: 100%; }
+  .doc table.pm-vs tr { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: .25rem 1rem; padding: .75rem 0; border-bottom: 1px solid var(--pm-hair, rgba(15, 19, 25, .12)); }
+  .doc table.pm-vs tr > * { display: block; width: auto; padding: 0; border: 0; background: none; }
+  .doc table.pm-vs th[scope="row"] { grid-column: 1 / -1; width: auto; }
+  .doc table.pm-vs td::before, .doc table.pm-slimbom td[data-k="Qty"]::before, .doc table.pm-slimbom td[data-k="Unit cost"]::before {
+    content: attr(data-k); display: block; margin-bottom: .1rem;
+    font-family: var(--mono); font-size: .62rem; font-weight: 600; letter-spacing: .1em; text-transform: uppercase; color: var(--pm-ink-2, #4b5563);
+  }
+  .doc table.pm-req tr { display: block; padding: .75rem 0; border-bottom: 1px solid var(--pm-hair, rgba(15, 19, 25, .12)); }
+  .doc table.pm-req tr > * { display: block; width: auto; padding: 0; border: 0; background: none; }
+  .doc table.pm-req th[scope="row"] { width: auto; margin-bottom: .25rem; }
+  .doc table.pm-slimbom tr { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: .2rem 1rem; padding: .65rem 0; border-bottom: 1px solid var(--pm-hair, rgba(15, 19, 25, .12)); }
+  .doc table.pm-slimbom tr > * { display: block; width: auto; padding: 0; border: 0; background: none; text-align: left; }
+  .doc table.pm-slimbom tbody th[scope="row"], .doc table.pm-slimbom td[data-k="What it is"], .doc table.pm-slimbom tr.pm-slimbom__grp th { grid-column: 1 / -1; white-space: normal; }
+  .doc table.pm-slimbom tr.pm-slimbom__grp { border-bottom: 0; padding-bottom: 0; }
+}
+/* phones: the two wide SiO2 charts (5.3) keep a legible size and scroll sideways inside their frame */
+@media (max-width: 620px) {
+  body.doc-light .doc .frame .frame-img:has(> svg.cal-svg[viewBox^="0 0 760"]) { overflow-x: auto; -webkit-overflow-scrolling: touch; }
+  .doc .frame .frame-img > svg.cal-svg[viewBox^="0 0 760"] { min-width: 540px; }
+}
+@media (max-width: 620px) {
+  /* this sheet's old rule gives every table a 560px floor (line ~453); the stacked ones need none */
+  .doc table.pm-vs, .doc table.pm-req, .doc table.pm-slimbom { min-width: 0; }
+}
+@media (max-width: 620px) {
+  body.doc-light .doc-wrap .doc :is(table.pm-vs, table.pm-req, table.pm-slimbom) tr > * { border: 0; box-shadow: none; }
+}
+/* W2's figures in part 6: air between a figure's caption and the doc's paragraph under it */
+.doc .pm-sub > figure:is(.fdo, .xs), .doc #final-intro > figure.fsz { margin-bottom: 1.5rem; }
+
+/* ==========================================================================
+   W6 visual review (17 Oct 2026, overnight; dev/night-logs/2026-10-17-overnight/REVIEW-visual.md, V-numbers)
+   ========================================================================== */
+/* V7: the spec tables (6.1, 6.2.4, 6.3.4, the readings tables, the Slim parts list) in the BOM's and bioreactor's card */
+body.doc-light .doc .tablewrap > table.spec > caption {
+  font: 600 .86rem/1.4 var(--sans); letter-spacing: 0; text-transform: none; color: var(--pm-ink, #1d1d1f);
+}
+@media (min-width: 621px) {
+  body.doc-light .doc .tablewrap:has(> table.spec) { border-radius: 14px; }
+  body.doc-light .doc .tablewrap > table.spec :is(th, td) { padding-left: 1rem; padding-right: 1rem; }
+  body.doc-light .doc .tablewrap > table.spec > caption { padding: .8rem 1rem .55rem; }
+}
+
+/* V8: the equation keys and table notes (p.eq-key) are footnotes again; section 5's prose rule set them as body text */
+body.hwreveal .doc-wrap .doc section.sec > p.eq-key { max-width: none; margin: .9rem 0 1.25rem; font-size: .875rem; line-height: 1.55; color: var(--w-ink-2, #424245); }
+body.hwreveal .doc-wrap .doc section.sec > p.eq-key:last-child { margin-bottom: 0; }
+
+/* V9: the second square SiO2 chart at the first one's size */
+#fig-cal-simplified { max-width: 30rem; margin-left: auto; margin-right: auto; }
+
+/* V11: on a phone polish.css floors every .doc dt to an 11 px tracked label; the two 6.1 decisions are headlines */
+@media (max-width: 700px) {
+  body.doc-light .doc dl.verdict dt { font-size: 1rem !important; letter-spacing: 0 !important; line-height: 1.35; }
+}
+
+/* V13: amber means "missing" on this wiki: the 6.x.y numbers take the part's colour, the 3.1 spacing labels ink */
+body.hwreveal .doc-wrap .doc .sec h4 > i { color: var(--pl, var(--w-leaf-700)); font-weight: 650; }
+body.doc-light .doc .specgrid h4 { font-size: .6875rem !important; color: var(--w-ink-3, #6e6e73) !important; }
+body.doc-light .doc .specgrid > div::before { background: color-mix(in srgb, var(--pl, #23684a) 45%, transparent); }
+
+/* V14 (desk too): in the narrow specifications column beside a 3D viewer, a fold's note goes under its title */
+.doc .pm-final__specs .fold > summary { flex-wrap: wrap; row-gap: .2rem; }
+.doc .pm-final__specs .fold > summary .fold__t { flex: 1 1 100%; }
+.doc .pm-final__specs .fold > summary .fold__sub { margin-left: 0; white-space: normal; }
+
+/* V19: the 10.2 design-file cards: the text column fills its card (short entries wrapped one word per line) */
+.doc .sec ol.files > li > .fb { flex: 1 1 auto; }
+
+/* V20: an orange "to add" chip in a table cell stays on one line */
+body.doc-light .doc-wrap table td .todo { white-space: nowrap; }
+
+/* V21: on a phone a chart key's fit equation goes under its series name instead of breaking the name */
+@media (max-width: 600px) {
+  .doc .bc-key { flex-wrap: wrap; row-gap: 0; }
+  .doc .bc-key em { flex-basis: 100%; margin-left: 1.35rem; }
+}
+
+/* V22: the two wide SiO2 charts scroll sideways on a phone; say so, as the diagrams do */
+@media (max-width: 620px) {
+  .doc .frame:has(svg.cal-svg[viewBox^="0 0 760"]) > figcaption::before {
+    content: "Swipe the chart sideways to see all of it"; display: block; margin: 0 0 .4rem;
+    font: 600 11px/1.3 var(--mono, ui-monospace, monospace); letter-spacing: .12em; text-transform: uppercase; color: var(--w-ink-3, #6e6e73);
+  }
+}
+
+/* V24: the hero's corner brackets clear the Back/Skip row on a phone and the Skip / "Jump to" pills on a desk */
+@media (min-width: 761px) { .story .hero-frame i.hf-bl, .story .hero-frame i.hf-br { bottom: 64px; } }
+@media (max-width: 760px) { .story .hero-frame i.hf-tl, .story .hero-frame i.hf-tr { top: 124px; } }

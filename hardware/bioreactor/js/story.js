@@ -2212,7 +2212,9 @@
       const L = LBL[o.id], w = L.w || 160, x0 = o.side > 0 ? o.lx + 8 : o.lx - 8 - w;
       const xc = Math.max(16, Math.min(W - 16 - w, x0));
       o.lx += xc - x0;
-      const yTop = o.ly - (L.nMid || 20), yc = Math.max(port ? 100 : 80, Math.min(H - (L.hgt || 50) - 16, yTop));
+      // (17 Oct 2026, wiki copy: labels start at 118 px on a desk (was 80) and 152 px in portrait (was 100), under the route line; see
+      // css/record-edit.css. A re-sync from dev/bioreactor-hero/v4 must keep this.)
+      const yTop = o.ly - (L.nMid || 20), yc = Math.max(port ? 152 : 118, Math.min(H - (L.hgt || 50) - 16, yTop));
       o.ly += yc - yTop;
     });
     return out;

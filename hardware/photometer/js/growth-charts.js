@@ -23,7 +23,7 @@
 // data goes in js/growth-data.js instead, which this file prefers, and these stay as the fallback.
 window.GROWTH_TRACED = {
   // p15_1.png (prototype 2, 22 °C, hours)
-  growth_c1: {"flask":[[0.5,0.189],[1.0,0.207],[1.5,0.208],[2.0,0.229],[2.5,0.346],[3.0,0.314],[3.5,0.308],[4.0,0.376],[4.5,0.444],[5.0,0.556],[5.5,0.699],[6.0,0.812],[6.5,0.988],[7.0,1.132],[24.0,2.168],[25.0,2.462],[26.0,2.402]],"bioreactor":[[0.0,0.172],[0.5,0.11],[1.0,0.102],[1.5,0.196],[2.0,0.131],[2.5,0.177],[3.0,0.165],[3.5,0.112],[4.0,0.124],[4.5,0.135],[5.0,0.126],[5.5,0.124],[6.0,0.083],[6.5,0.132],[7.0,0.113],[24.0,0.196],[25.0,0.342],[26.0,0.369],[27.0,0.304]]},
+  growth_c1: {"flask":[[0.0,0.172],[0.5,0.189],[1.0,0.207],[1.5,0.208],[2.0,0.229],[2.5,0.346],[3.0,0.314],[3.5,0.308],[4.0,0.376],[4.5,0.444],[5.0,0.556],[5.5,0.699],[6.0,0.812],[6.5,0.988],[7.0,1.132],[24.0,2.168],[25.0,2.462],[26.0,2.402]],"bioreactor":[[0.0,0.172],[0.5,0.11],[1.0,0.102],[1.5,0.196],[2.0,0.131],[2.5,0.177],[3.0,0.165],[3.5,0.112],[4.0,0.124],[4.5,0.135],[5.0,0.126],[5.5,0.124],[6.0,0.083],[6.5,0.132],[7.0,0.113],[24.0,0.196],[25.0,0.342],[26.0,0.369],[27.0,0.304]]},
   // p17_1.png (prototype 3, 37 °C, minutes)
   growth_c2: {"flask":[[0,0.121],[15,0.13],[42,0.154],[62,0.171],[79,0.226],[96,0.225],[113,0.258],[130,0.297],[145,0.38],[161,0.408],[180,0.438],[197,0.584],[212,0.536],[229,0.605],[245,0.641],[263,0.76],[278,0.831],[295,0.634],[314,0.622],[336,0.571],[353,0.686],[370,0.674],[387,0.656],[406,0.817],[425,0.73]],"bioreactor":[[0,0.162],[15,0.148],[42,0.136],[62,0.175],[79,0.261],[96,0.389],[113,0.518],[130,0.766],[145,0.895],[161,0.784],[180,0.832],[197,0.862],[212,0.874],[229,0.937],[245,0.879],[263,0.883],[278,0.819],[295,0.841],[314,0.74],[336,0.763],[353,0.916],[370,0.826],[387,0.811],[406,0.876],[425,0.843]]}
 };
@@ -102,13 +102,13 @@ window.GROWTH_TRACED = {
 
   // ---------- the charts ----------
   const CHARTS = {
-    // Bacteria growth, prototypes 2 and 3: read by touch. growth() gives the raw data or the traced series.
+    // Bacteria growth, DBTL 1 (22 °C) and DBTL 2 (37 °C): read by touch. growth() gives the raw data or the traced series.
     "growth-c1": function () {
       const g = growth("growth_c1", "h");
       if (!g) return null;
       return {
         interactive: true, source: g.source, unit: "h",
-        aria: "Bacteria growth, prototype 2: OD600 against time in hours for the bioreactor and a flask control",
+        aria: "Bacteria growth, DBTL 1: OD600 against time in hours for the bioreactor and a flask control",
         x: { min: 0, max: reach(g, 0, 5, 30), step: 5, dp: 0, label: "Time (h)" },
         y: { min: 0, max: reach(g, 1, 0.5, 3), step: 0.5, dp: 1, label: "OD600" },
         series: [
@@ -119,7 +119,9 @@ window.GROWTH_TRACED = {
         // at the pump. Final OD600 readings were 0.304 in the tube and 0.48 in the medium reservoir". The bioreactor
         // series' last point is that final tube reading (0.304 in the trace), so the mark stands on it. Content doc
         // v5, DBTL 1, 1.3 Test: the same.
-        notes: [{ type: "end", k: 0, text: "Run ended early: medium leaked at the pump", short: ["Run ended early:", "leak at the pump"] }]
+        // 17 Oct: the doc's DBTL 1 and 2 are one 22 °C cycle (the owner); the run's last point is at 27 h, when the
+        // pump failed ("This test ran for a period of 27 total hours before the pump failed on us as well").
+        notes: [{ type: "end", k: 0, text: "Run ended at 27 h: the pump failed", short: ["Ended at 27 h:", "pump failed"] }]
       };
     },
     "growth-c2": function () {
@@ -127,7 +129,7 @@ window.GROWTH_TRACED = {
       if (!g) return null;
       return {
         interactive: true, source: g.source, unit: "min",
-        aria: "Bacteria growth, prototype 3: OD600 against time in minutes for the bioreactor and a flask control at 37 degrees C",
+        aria: "Bacteria growth, DBTL 2: OD600 against time in minutes for the bioreactor and a flask control at 37 degrees C",
         x: { min: 0, max: reach(g, 0, 100, 500), step: 100, dp: 0, label: "Time (min)" },
         y: { min: 0, max: reach(g, 1, 0.2, 1), step: 0.2, dp: 1, label: "OD600" },
         series: [
@@ -293,14 +295,11 @@ window.GROWTH_TRACED = {
     plot.setAttribute("aria-label", o.aria + ". Arrow keys step through the readings.");
     const read = mk("div", "bc-read");
     read.setAttribute("aria-hidden", "true");
-    // the record's honesty tag (css/explore.css), then where the numbers come from
-    const src = mk("p", "bc-src");
-    src.innerHTML = '<span class="xp-tag measured">Measured</span> ' + (traced
-      ? "Traced from the team’s chart, each value ±0.02 OD600 · raw data to come"
-      : "The team’s raw data");
+    // 17 Oct 2026: no provenance line under the chart (the owner: remove "Measured · Traced from the team's chart ...
+    // raw data to add")
     const say = mk("p", "bc-live");
     say.setAttribute("aria-live", "polite");
-    el.appendChild(legend); el.appendChild(plot); el.appendChild(src); el.appendChild(say);
+    el.appendChild(legend); el.appendChild(plot); el.appendChild(say);
 
     let g = null, svg = null, xh = null;
     function render() {
@@ -308,7 +307,7 @@ window.GROWTH_TRACED = {
       g = plotSvg(o, st);
       plot.innerHTML = g.svg;
       // the readout sits in the plot's empty top-left corner; on a phone it is a line under the plot
-      if (g.narrow) el.insertBefore(read, src); else plot.appendChild(read);
+      if (g.narrow) el.insertBefore(read, say); else plot.appendChild(read);   // on a phone: the line under the plot
       svg = plot.firstChild;
       xh = svg.querySelector(".bc-xh");
       el.classList.toggle("is-narrow", g.narrow);
