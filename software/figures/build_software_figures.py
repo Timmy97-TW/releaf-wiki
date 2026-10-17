@@ -8,7 +8,7 @@ Run from the wiki root. Writes:
   assets/img/software/fig-r2-photometer.svg   R2, Inline photometer to biodrop.xlsx
   assets/img/software/fig-r3-run434.svg       R3, out/sentinel_series.json + out/sentinel.json
   assets/img/software/fig-r4-run0902.svg      R4, record_20260906_090304.csv (= 20260906 test4 photometer.csv)
-  assets/img/software/fig-runs-168.svg        Runs 1-4, the two test xlsx, test3 csv, both test4 csv
+  assets/img/software/fig-runs-168.svg        Runs 1-6, from ~/Downloads/B. Sub Growth Tests/round N
   assets/img/software/fig-e1..e4-*.svg        MOCK templates for the evidence package (no data)
   software/figures/numbers.json               every number quoted on the page, with its source file
 
@@ -30,11 +30,14 @@ ap.add_argument("--downloads", default=str(pathlib.Path.home() / "Downloads"))
 ap.add_argument("--only-runs", action="store_true", help="redraw fig-runs-168.svg only")
 ap.add_argument("--only-r2", action="store_true", help="redraw the two R2 calibration figures only")
 ap.add_argument("--only-r6", action="store_true", help="redraw fig-r6-leafair.svg only")
+ap.add_argument("--growth", default=str(pathlib.Path.home() / "Downloads" / "B. Sub Growth Tests"),
+                help="folder holding one sub-folder per bioreactor run (round 1 .. round 6)")
 ap.add_argument("--leaf", default=str(pathlib.Path.home() / "Documents/Claude/Projects/Releaf_Wiki/drafts"
                                      / "2026-10-12 student drafts" / "Drylab" / "Digital Twin"),
                 help="folder holding the three 1010Temp_*.csv leaf-sensor logs")
 args = ap.parse_args()
 PROJECT, DL, LEAF = pathlib.Path(args.project), pathlib.Path(args.downloads), pathlib.Path(args.leaf)
+GROWTH = pathlib.Path(args.growth)
 MODEL_OUT = PROJECT / "Math Model" / "releaf-model" / "out"
 OUT = WIKI / "assets" / "img" / "software"
 OUT.mkdir(parents=True, exist_ok=True)
@@ -456,19 +459,61 @@ def _xlsx_rows(path, sheet=None):
     return [r for r in ws.iter_rows(min_row=2, values_only=True) if r and r[0] is not None]
 
 
+def _round_dir(n):
+    """Each bioreactor run has its own folder under --growth; fall back to ~/Downloads."""
+    d = GROWTH / f"round {n}"
+    return d if d.is_dir() else DL
+
+
+def _round_file(n, name):
+    p = _round_dir(n) / name
+    return p if p.exists() else DL / name
+
+
+def _rig_log(n):
+    """Every record_*.csv of a run on one clock: (t hours, OD, flags, path list, file starts)."""
+    paths = sorted(_round_dir(n).glob("record_*.csv"))
+    t, od, fl, starts, rows_n = [], [], [], [], 0
+    t0 = None
+    for p in paths:
+        with open(p, newline="") as fh:
+            rows = list(csv.DictReader(fh))
+        rows_n += len(rows)
+        t0 = t0 or _iso(rows[0]["timestamp_start"])
+        starts.append(((_iso(rows[0]["timestamp_start"])-t0).total_seconds()/3600,
+                       (_iso(rows[-1]["timestamp_end"])-t0).total_seconds()/3600))
+        for r in rows:
+            v = r.get("od600_reported") or r["od600_au"]
+            if r["od600_valid"].strip().lower() != "true" or not v:
+                continue
+            t.append((_iso(r["timestamp_start"])-t0).total_seconds()/3600)
+            od.append(float(v))
+            fl.append(r.get("od600_flags", ""))
+    return np.array(t), np.array(od), fl, paths, starts, rows_n, t0
+
+
+def _expfit(t, y):
+    """Least squares on log OD: returns growth rate, intercept, standard error, R squared."""
+    t, ly = np.asarray(t, float), np.log(np.asarray(y, float))
+    r, a = np.polyfit(t, ly, 1)
+    res = ly - (a + r*t)
+    se = float(np.sqrt((res @ res)/(len(t)-2) / ((t-t.mean()) @ (t-t.mean()))))
+    return float(r), float(a), se, float(1 - (res @ res)/(((ly-ly.mean()) @ (ly-ly.mean()))))
+
+
 def fig_runs():
-    """Every B. subtilis 168 OD600 run on BR-01, June to September 2026, on one sheet."""
-    r1 = _xlsx_rows(DL / "260610 test1 no stir.xlsx")                       # time (h), Bioreactor, Flask
-    r2 = _xlsx_rows(DL / "260614, test 2 stir.xlsx", "260614")               # time (min), Flask, Bioreactor
+    """Every OD600 run on BR-01, June to October 2026, on one sheet."""
+    r1 = _xlsx_rows(_round_file(1, "260610 test1 no stir.xlsx"))              # time (h), Bioreactor, Flask
+    r2 = _xlsx_rows(_round_file(2, "260614, test 2 stir.xlsx"), "260614")     # time (min), Flask, Bioreactor
     t3, o3 = [], []
-    with open(DL / "0721, test3 20 day.csv", newline="") as fh:
+    with open(_round_file(3, "0721, test3 20 day.csv"), newline="") as fh:
         rows3 = list(csv.DictReader(fh))
     for r in rows3:
         if r["reading_valid"] == "True" and r["od600"]:
             t3.append(float(r["elapsed_hours"])); o3.append(float(r["od600"]))
     parts, t0 = [], None
     for name in ("20260902 test4 photometer.csv", "20260906 test4 photometer.csv"):
-        with open(DL / name, newline="") as fh:
+        with open(_round_file(4, name), newline="") as fh:
             rows = list(csv.DictReader(fh))
         t0 = t0 or _iso(rows[0]["timestamp_start"])
         tt = [((_iso(r["timestamp_start"])-t0).total_seconds()/3600, float(r["od600_au"])) for r in rows
@@ -478,8 +523,27 @@ def fig_runs():
     gap1 = (parts[1][2]-t0).total_seconds()/3600
     span4 = (parts[1][3]-t0).total_seconds()/3600
     a3h, a3o = _hourly(t3, o3)
-    rec("runs", "~/Downloads: 260610 test1 no stir.xlsx; 260614, test 2 stir.xlsx (sheet 260614); "
-        "0721, test3 20 day.csv; 20260902 + 20260906 test4 photometer.csv",
+
+    # -- run 5, 8 to 10 October: four files, and the reading breaks down part way
+    t5, o5, f5, p5, s5, n5, t5_0 = _rig_log(5)
+    peak5 = float(o5[t5 < 9].max())
+    fail5 = float(t5[(t5 > 9) & (o5 < 0.10)][0])          # first window the trace falls away
+    h5, m5 = _hourly(t5, o5, 0.5)
+    late5 = (t5 > fail5)
+    # -- run 6, 14 to 16 October: one clock, clean to the point the sample beam is lost
+    t6, o6, f6, p6, s6, n6, t6_0 = _rig_log(6)
+    lows6 = float(t6[[i for i, f in enumerate(f6) if "low_s" in f and t6[i] > 24][0]])
+    h6, m6 = _hourly(t6, o6, 0.25)
+    w = (h6 >= 1.5) & (h6 <= 6.5)
+    r6_, a6_, se6, rsq6 = _expfit(h6[w], m6[w])
+    lin = np.polyfit(h6[w], m6[w], 1)
+    sse_lin = float(((m6[w] - np.polyval(lin, h6[w]))**2).sum())
+    sse_exp = float(((m6[w] - np.exp(a6_ + r6_*h6[w]))**2).sum())
+    od6_at = {int(k): float(m6[h6 >= k][0]) for k in (7, 12, 18, 24, 30, 37)}
+
+    rec("runs", "~/Downloads/B. Sub Growth Tests: round 1 260610 test1 no stir.xlsx; round 2 260614, test 2 stir.xlsx "
+        "(sheet 260614); round 3 0721, test3 20 day.csv; round 4 both test4 photometer.csv; "
+        "round 5 four record_2026100*.csv; round 6 record_20261014_105625.csv + record_20261015_110749.csv",
         run1_end_h=float(r1[-1][0]), run1_bioreactor_max=max(r[1] for r in r1 if r[1] is not None),
         run1_flask_max=max(r[2] for r in r1 if r[2] is not None),
         run2_end_h=float(r2[-1][0])/60, run2_bioreactor_max=max(r[2] for r in r2),
@@ -488,14 +552,24 @@ def fig_runs():
         run4_partA_rows=parts[0][1], run4_partA_start=parts[0][2].isoformat(), run4_partA_end=parts[0][3].isoformat(),
         run4_partA_last_od=float(parts[0][4][-1][1]),
         run4_gap_h=gap1-gap0, run4_partB_rows=parts[1][1], run4_partB_start=parts[1][2].isoformat(),
-        run4_partB_first_od=float(parts[1][4][0][1]), run4_partB_end=parts[1][3].isoformat(), run4_span_h=span4)
+        run4_partB_first_od=float(parts[1][4][0][1]), run4_partB_end=parts[1][3].isoformat(), run4_span_h=span4,
+        run5_files=len(p5), run5_rows=n5, run5_start=t5_0.isoformat(), run5_span_h=float(s5[-1][1]),
+        run5_logged_h=float(sum(b-a for a, b in s5)), run5_first_od=float(o5[0]), run5_peak_od_first9h=peak5,
+        run5_fail_h=fail5, run5_late_sd=float(o5[late5].std()), run5_late_median=float(np.median(o5[late5])),
+        run6_files=len(p6), run6_rows=n6, run6_start=t6_0.isoformat(), run6_span_h=float(s6[-1][1]),
+        run6_first_od=float(m6[0]), run6_od_at_h=od6_at, run6_lowsignal_h=lows6,
+        run6_last_reported=float(o6[-1]), run6_rate_h1=r6_, run6_rate_se=se6, run6_rate_r2=rsq6,
+        run6_doubling_min=float(math.log(2)/r6_*60), run6_fit_window_h=[1.5, 6.5],
+        run6_sse_linear=sse_lin, run6_sse_exponential=sse_exp)
 
-    f = Fig("Every B. subtilis 168 OD600 run on BR-01, June to September 2026",
-            "Four panels. Run 1 and run 2: hand-sampled OD600 in the reactor against a shake flask. "
-            "Run 3: 434 hours of in-line OD600 at 22 °C. Run 4: in-line OD600 in two logged parts with a 10-hour gap.",
-            880, 640)
+    f = Fig("Every B. subtilis OD600 run on BR-01, June to October 2026",
+            "Six panels. Run 1 and run 2: hand-sampled OD600 in the bioreactor against a shake flask. "
+            "Run 3: 434 hours of in-line OD600 at 22 °C. Run 4: in-line OD600 in two logged parts with a 10-hour gap. "
+            "Run 5: the reading breaks down after ten hours. Run 6: 42 hours of continuous in-line OD600.",
+            880, 960)
     BW, BH = 330, 190
-    boxes = [(80, 46, BW, BH), (510, 46, BW, BH), (80, 366, BW, BH), (510, 366, BW, BH)]
+    boxes = [(80, 46, BW, BH), (510, 46, BW, BH), (80, 366, BW, BH),
+             (510, 366, BW, BH), (80, 686, BW, BH), (510, 686, BW, BH)]
     def head(box, t, sub):
         f.text(box[0]-50, box[1]-22, t, 13, INK, weight=650)
         f.text(box[0]-50, box[1]-7, sub, 11, INK3)
@@ -518,7 +592,7 @@ def fig_runs():
     ax.band(243.0, 434.2, FAINT)
     ax.dots(t3[::4], o3[::4], LEAF2, 1.0)
     ax.line(a3h, a3o, LEAF7, 1.6)
-    f.text(ax.X(250), ax.Y(1.88), "OD channel unreliable after 243 h (R3)", 10, INK3, italic=True)
+    f.text(ax.X(250), ax.Y(1.88), "OD channel unreliable after 243 h (R2)", 10, INK3, italic=True)
     # run 4
     head(boxes[3], "Run 4 · 1 to 6 September, 168 + constitutive ACCD, full module",
          "In-line photometer, two logged files, 10 h unrecorded")
@@ -531,8 +605,35 @@ def fig_runs():
         h, o = _hourly(tt[:, 0], tt[:, 1], 0.5 if tt[-1, 0] < 5 else 1.0)
         ax.line(h, o, LEAF7, 1.6)
     f.text(ax.X(gap1)+4, ax.Y(0.25), f"not logged, {gap1-gap0:.1f} h", 10, AMBER, italic=True)
-    f.text(80-50, 626, "Lines: hourly medians of the in-line reading (half-hourly in run 4's first file). "
-           "Panels have their own axes; run 1 and 2 are hand samples.", 10.5, INK3)
+    # run 5
+    head(boxes[4], "Run 5 · 8 to 10 October, WB800 + constitutive ACCD, 72 LMH",
+         "In-line photometer, four logged files, bubbles in the flow cell")
+    ax = Axes(f, boxes[4], (0, 39), (0, 2.6), "Time from first logged row (h)", "OD600 (in-line)",
+              range(0, 40, 6), [0, 1, 2], ylab_dx=40)
+    ax.band(fail5, 39, FAINT)
+    ax.dots(t5[::6], o5[::6], LEAF2, 1.0)
+    ax.line(h5, m5, LEAF7, 1.6)
+    for a, _ in s5[1:]:
+        ax.vline(a, INK3, "3 3", 1.0)
+    f.text(ax.X(38.4), ax.Y(2.44), f"reading breaks down after {fail5:.1f} h", 10, INK3, "end", italic=True)
+    f.text(ax.X(38.4), ax.Y(2.22), "bubbles and a drifting reference", 10, INK3, "end", italic=True)
+    # run 6
+    head(boxes[5], "Run 6 · 14 to 16 October, WB800 + constitutive ACCD, 36 LMH",
+         "In-line photometer with the acceptance gate, 42 h continuous")
+    ax = Axes(f, boxes[5], (0, 42), (0, 3.0), "Time from first logged row (h)", "OD600 (in-line)",
+              range(0, 43, 6), [0, 1, 2, 3], ylab_dx=40)
+    ax.band(lows6, 42, FAINT)
+    ax.dots(t6[::2], o6[::2], LEAF2, 1.2)
+    ax.line(h6, m6, LEAF7, 1.6)
+    tf = np.arange(1.0, 7.4, 0.1)
+    ax.line(tf, np.exp(a6_ + r6_*tf), RUST, 1.6, "5 3")
+    f.text(ax.X(9.2), ax.Y(0.62), f"fitted r = {r6_:.3f} h⁻¹", 10.5, RUST, weight=600)
+    f.text(ax.X(9.2), ax.Y(0.40), f"over 1.5 to 6.5 h (doubling {math.log(2)/r6_*60:.0f} min)", 10, INK3, italic=True)
+    f.text(ax.X(lows6)-7, ax.Y(1.42), "sample beam lost,", 10, INK3, "end", italic=True)
+    f.text(ax.X(lows6)-7, ax.Y(1.20), "reading steps off scale", 10, INK3, "end", italic=True)
+    f.text(80-50, 946, "Lines: medians of the in-line reading (hourly in runs 3 and 4, half-hourly in run 5, "
+           "quarter-hourly in run 6). Panels have their own axes; runs 1 and 2 are hand samples. "
+           "Grey: readings the twin does not use.", 10.5, INK3)
     f.save("fig-runs-168.svg")
 
 
