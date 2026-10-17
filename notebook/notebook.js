@@ -3,11 +3,13 @@
    -----------------------------------------------------------------------------
    The page works without it: with JavaScript off every month is on the
    page in order, each with its Open PDF and Download links, and the
-   plant notebook follows them.
+   plant notebook's three records follow them.
 
-   One job. Month tabs: one month at a time under a segmented control. A
-   month's viewer gets its src only when it is on screen, since a file is
-   up to 4 MB. The open month is kept in the URL hash (#july).
+   One job. Segmented controls: one panel at a time. The page has two of
+   them, the wet lab months and the plant notebook's three kinds of record,
+   and each runs on its own. A panel's viewer gets its src only when it is
+   on screen, since a file is up to 7 MB. The open panel is kept in the URL
+   hash (#july, #plant-meetings).
    ========================================================================== */
 (function () {
   "use strict";
@@ -16,13 +18,6 @@
   var $$ = function (s, r) { return Array.prototype.slice.call((r || document).querySelectorAll(s)); };
 
   document.body.classList.add("js");
-
-  var root = $("[data-mtabs]");
-  if (!root) return;
-  var bar = $(".mtabs__bar", root);
-  var ink = $(".mtabs__ink", bar);
-  var tabs = $$("[role=tab]", bar);
-  var panels = tabs.map(function (t) { return document.getElementById(t.getAttribute("aria-controls")); });
 
   /* ---- viewer loading -------------------------------------------------- */
   var seen = typeof IntersectionObserver === "function" ? new IntersectionObserver(function (es) {
@@ -40,52 +35,61 @@
   $$(".pdfbox iframe[data-src]").forEach(function (f) { if (seen) seen.observe(f); else load(f); });
 
   /* ---- tabs ------------------------------------------------------------ */
-  function place() {
-    var t = tabs.filter(function (x) { return x.getAttribute("aria-selected") === "true"; })[0];
-    if (!t || !ink) return;
-    ink.style.width = t.offsetWidth + "px";
-    ink.style.transform = "translateX(" + t.offsetLeft + "px)";
-  }
+  function rail(root) {
+    var bar = $(".mtabs__bar", root);
+    var ink = $(".mtabs__ink", bar);
+    var tabs = $$("[role=tab]", bar);
+    var panels = tabs.map(function (t) { return document.getElementById(t.getAttribute("aria-controls")); });
 
-  function select(i, opts) {
-    opts = opts || {};
-    tabs.forEach(function (t, k) {
-      var on = k === i;
-      t.setAttribute("aria-selected", on ? "true" : "false");
-      t.tabIndex = on ? 0 : -1;
-      if (panels[k]) panels[k].hidden = !on;
-    });
-    place();
-    if (opts.focus) tabs[i].focus();
-    if (opts.hash !== false && panels[i] && history.replaceState) {
-      history.replaceState(null, "", "#" + panels[i].id);
+    function place() {
+      var t = tabs.filter(function (x) { return x.getAttribute("aria-selected") === "true"; })[0];
+      if (!t || !ink) return;
+      ink.style.width = t.offsetWidth + "px";
+      ink.style.transform = "translateX(" + t.offsetLeft + "px)";
     }
-  }
 
-  tabs.forEach(function (t, i) {
-    t.addEventListener("click", function () { select(i); });
-    t.addEventListener("keydown", function (e) {
-      var k = null;
-      if (e.key === "ArrowRight") k = (i + 1) % tabs.length;
-      else if (e.key === "ArrowLeft") k = (i - 1 + tabs.length) % tabs.length;
-      else if (e.key === "Home") k = 0;
-      else if (e.key === "End") k = tabs.length - 1;
-      if (k !== null) { e.preventDefault(); select(k, { focus: true }); }
+    function select(i, opts) {
+      opts = opts || {};
+      tabs.forEach(function (t, k) {
+        var on = k === i;
+        t.setAttribute("aria-selected", on ? "true" : "false");
+        t.tabIndex = on ? 0 : -1;
+        if (panels[k]) panels[k].hidden = !on;
+      });
+      place();
+      if (opts.focus) tabs[i].focus();
+      if (opts.hash !== false && panels[i] && history.replaceState) {
+        history.replaceState(null, "", "#" + panels[i].id);
+      }
+    }
+
+    tabs.forEach(function (t, i) {
+      t.addEventListener("click", function () { select(i); });
+      t.addEventListener("keydown", function (e) {
+        var k = null;
+        if (e.key === "ArrowRight") k = (i + 1) % tabs.length;
+        else if (e.key === "ArrowLeft") k = (i - 1 + tabs.length) % tabs.length;
+        else if (e.key === "Home") k = 0;
+        else if (e.key === "End") k = tabs.length - 1;
+        if (k !== null) { e.preventDefault(); select(k, { focus: true }); }
+      });
     });
-  });
 
-  function fromHash() {
-    var id = location.hash.slice(1);
-    var i = panels.map(function (p) { return p && p.id; }).indexOf(id);
-    return i;
+    /* -1 when the hash names a panel on the other rail, or no panel at all */
+    function fromHash() {
+      var id = location.hash.slice(1);
+      return panels.map(function (p) { return p && p.id; }).indexOf(id);
+    }
+
+    var start = fromHash();
+    root.classList.add("is-ready");
+    select(start < 0 ? 0 : start, { hash: false });
+    if (start >= 0) requestAnimationFrame(function () { root.scrollIntoView({ block: "start" }); });
+    window.addEventListener("resize", place);
+    if (document.fonts && document.fonts.ready) document.fonts.ready.then(place);
+    window.addEventListener("hashchange", function () { var i = fromHash(); if (i >= 0) select(i, { hash: false }); });
   }
 
-  var start = fromHash();
-  root.classList.add("is-ready");
-  select(start < 0 ? 0 : start, { hash: false });
-  if (start >= 0) requestAnimationFrame(function () { root.scrollIntoView({ block: "start" }); });
-  window.addEventListener("resize", place);
-  if (document.fonts && document.fonts.ready) document.fonts.ready.then(place);
-  window.addEventListener("hashchange", function () { var i = fromHash(); if (i >= 0) select(i, { hash: false }); });
+  $$("[data-mtabs]").forEach(rail);
 
 })();
