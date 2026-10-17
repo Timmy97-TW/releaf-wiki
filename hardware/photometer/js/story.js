@@ -828,7 +828,7 @@
   function buildCulture() {
     const b = A.cuvBox, size = b.getSize(new THREE.Vector3());
     // The cell is 76 mm long and 4 mm tall, and the fluid inside it is a thin
-    // horizontal layer — the 0.2 mm the page quotes is the depth the light
+    // horizontal layer — the 2 mm the page quotes is the depth the light
     // crosses, not the size of the body. Drawn at 0.9 mm so it survives being
     // looked at from 15 mm away; the storyboard's ledger says so.
     const CHAN_H = 0.9;
@@ -1436,7 +1436,7 @@
       if (v > 0.004) out.push({ mesh: mesh, label: label, sub: sub, a: v, side: side });
     }
     // Rim only, no tag. Each of these acts names its part in the caption
-    // already -- "a cuvette 0.2 mm thick", "a single amber LED at
+    // already -- "a cuvette 2 mm thick", "a single amber LED at
     // 600 nm", "a focusing lens gathers it", "a 45 degree beamsplitter" -- and
     // the tag was repeating those words back three lines away. The rim is the
     // half that was doing work: it says which of the things on screen the

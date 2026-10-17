@@ -42,8 +42,11 @@
     // preload="none" in the markup keeps the file off the wire until now; it
     // also means a new src alone never fetches, so ask for it explicitly
     video.preload = "auto";
-    video.src = px < 1200 && video.dataset.srcSmall ? video.dataset.srcSmall : video.dataset.src;
-    video.load();
+    const src = px < 1200 && video.dataset.srcSmall ? video.dataset.srcSmall : video.dataset.src;
+    // A Video Universe film plays in iGEM's own player (js/vu-embed.js): its files answer 403
+    // to any other page since 16 Oct 2026. The player answers through this <video>.
+    if (window.VUEmbed && VUEmbed.is(src)) VUEmbed.bind(video, src, { fit: "cover", loop: true });
+    else { video.src = src; video.load(); }
     // Play only once the browser expects to play through without stopping to buffer (HAVE_ENOUGH_DATA). Starting on
     // the first metadata let the opening move run, stall and catch up while the rest of the file was still arriving.
     function whenBuffered() {

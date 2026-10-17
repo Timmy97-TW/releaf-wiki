@@ -540,6 +540,8 @@
     if (it.href.charAt(0) === "#") {
       const el = document.querySelector(it.href);
       if (el) {
+        // a prototype behind a shut tab opens first (hwdoc.js), or there is nothing to scroll to
+        if (window.hwdocReveal) window.hwdocReveal(el);
         el.scrollIntoView({ behavior: reduced ? "auto" : "smooth", block: "start" });
         // move focus too, or a keyboard user is left where they were
         el.setAttribute("tabindex", "-1");

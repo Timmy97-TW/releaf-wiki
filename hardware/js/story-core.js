@@ -5,10 +5,19 @@
 // here is about turning a scroll offset into a stable p, putting the right
 // caption on screen, and giving the offline frame rig a synchronous way in.
 //
-// Why a spring: a raw scroll offset lands the frame exactly where the wheel
+// Why a filter: a raw scroll offset lands the frame exactly where the wheel
 // left it, which on a trackpad means the animation stutters with the fingers.
-// A critically damped spring keeps a constant small lag at a steady speed and
-// settles without overshoot, so the motion reads as weight rather than lag.
+// 17 Oct 2026: three first-order lags in a row (28 ms each, integrated in 2 ms
+// substeps), the filter the bioreactor's opening (V4, its js/story-core-v4.js)
+// has used since 10 Oct, replace the critically damped spring at 7 rad/s. The
+// owner on the scroll animations: "it looks very behind". Measured with wheel
+// input at 1400 px/s (dev/night-logs/2026-10-17-overnight/w3/): the spring held
+// the picture 282 ms (median) behind the scroll and took 0.5 s to settle after
+// it; the chain reaches 90 % of a step in 0.15 s, keeps about 84 ms of lag at a
+// steady speed, never overshoots and never runs backwards while the scroll
+// runs forwards (a chain of first-order lags is monotone), and a step in the
+// scroll still reaches the frame with continuous acceleration, so a wheel's
+// notches do not show.
 window.Story = function (cfg) {
   "use strict";
 
@@ -106,23 +115,21 @@ window.Story = function (cfg) {
     return Math.max(0, Math.min(1, -r.top / span));
   }
 
-  let p = targetP(), vel = 0, last = performance.now(), running = false, visible = true, raf = 0;
-  // 7 rad/s. It was 16, then 10, now 7: tighter than this and the camera tracks
-  // a wheel's stepped deltas closely enough to show them. A critically damped
-  // step peaks at omega/e times the step, so dropping 10 to 7 takes 30% off the
-  // fastest frame of a scroll; it settles in about 0.6 s rather than 0.4 and
-  // still reads as weight rather than lag.
-  const OMEGA = 7;
+  let p = targetP(), vel = 0, last = performance.now(), running = false, visible = true, raf = 0, l1 = p, l2 = p;
+  // (until 17 Oct 2026: a critically damped spring at 7 rad/s, which had come
+  // down from 16 and 10 so that a wheel's stepped deltas would not show; see the
+  // note at the top for why the lag chain replaced it)
+  const TAU = 0.028, SUB = 0.002;
 
   function step(now) {
     const dt = Math.min(0.05, (now - last) / 1000); last = now;
     const t = targetP();
-    if (reduced) { p = t; vel = 0; }
+    if (reduced) { p = t; l1 = t; l2 = t; vel = 0; }
     else {
-      // critically damped: x'' = -2*w*x' - w^2*(x - target)
-      const a = -2 * OMEGA * vel - OMEGA * OMEGA * (p - t);
-      vel += a * dt; p += vel * dt;
-      if (Math.abs(p - t) < 1e-5 && Math.abs(vel) < 1e-4) { p = t; vel = 0; }
+      const p0 = p, n = Math.max(1, Math.ceil(dt / SUB)), k = 1 - Math.exp(-(dt / n) / TAU);
+      for (let i = 0; i < n; i++) { l1 += (t - l1) * k; l2 += (l1 - l2) * k; p += (l2 - p) * k; }
+      vel = dt > 0 ? (p - p0) / dt : 0;
+      if (Math.abs(p - t) < 1e-6 && Math.abs(l1 - t) < 1e-6 && Math.abs(l2 - t) < 1e-6) { p = t; l1 = t; l2 = t; vel = 0; }
     }
     draw(p, now / 1000, dt);
     raf = (running && visible) ? requestAnimationFrame(step) : 0;
@@ -182,7 +189,7 @@ window.Story = function (cfg) {
     // gets, and diffs the two.
     renderAt: function (pp, clock) {
       stop();
-      p = Math.max(0, Math.min(1, pp)); vel = 0;
+      p = Math.max(0, Math.min(1, pp)); vel = 0; l1 = p; l2 = p;
       draw(p, clock !== undefined ? clock : (cfg.captureClock === undefined ? 12.5 : cfg.captureClock), 0);
     },
     resume: function () { start(); },

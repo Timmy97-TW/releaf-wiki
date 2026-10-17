@@ -2828,6 +2828,8 @@
       onScroll(); draw();
     },
     step: step, p: function () { return p; }, dust: dust,
+    // (17 Oct 2026) the model is in and the first frame drawn: ../../js/hero-mode.js takes its stand-in poster away
+    ready: function () { return ready; },
     scene: scene, camera: camera, root: root
   };
 })();

@@ -7,7 +7,7 @@
 // how the series were traced and checked), and each of the two files draws only its own hosts.
 window.PM_TRACED = {
   // p28_1.png (Test 2 against TiO2 mass, mg)
-  tio2_t2_mass: {"releaf":[[1,0.066],[2,0.102],[3,0.141],[4,0.172],[6,0.227],[7,0.25],[8,0.287],[9,0.315],[10,0.346],[15,0.486],[25,0.793],[30,0.946],[35,1.102],[40,1.245],[45,1.392],[50,1.55],[55,1.696],[60,1.836]],"biodrop":[[1,0.034],[2,0.068],[3,0.095],[4,0.127],[6,0.194],[7,0.226],[8,0.25],[9,0.284],[10,0.34],[15,0.468],[20,0.637],[25,0.796],[30,0.951],[35,1.13],[40,1.272],[45,1.438],[50,1.581],[55,1.741],[60,1.927]],"biodropExcluded":[[5,0.262]]},
+  tio2_t2_mass: {"releaf":[[1,0.066],[2,0.102],[3,0.141],[4,0.172],[6,0.227],[7,0.25],[8,0.287],[9,0.315],[10,0.346],[15,0.486],[20,0.637],[25,0.793],[30,0.946],[35,1.102],[40,1.245],[45,1.392],[50,1.55],[55,1.696],[60,1.836]],"biodrop":[[1,0.034],[2,0.068],[3,0.095],[4,0.127],[6,0.194],[7,0.226],[8,0.25],[9,0.284],[10,0.34],[15,0.468],[20,0.637],[25,0.796],[30,0.951],[35,1.13],[40,1.272],[45,1.438],[50,1.581],[55,1.741],[60,1.927]],"biodropExcluded":[[5,0.262]]},
   // p29_1.png (Test 2 agreement: [Bio-Drop, ReLEAF])
   tio2_t2_identity: {"pairs":[[0.035,0.066],[0.068,0.102],[0.095,0.141],[0.127,0.172],[0.194,0.227],[0.227,0.25],[0.25,0.286],[0.284,0.315],[0.34,0.345],[0.468,0.486],[0.637,0.637],[0.796,0.793],[0.951,0.946],[1.13,1.102],[1.272,1.245],[1.438,1.392],[1.581,1.55],[1.741,1.696],[1.927,1.835]]}
 };
@@ -142,8 +142,8 @@ window.PM_TRACED = {
         (T1_EXCLUDED.indexOf(mass) >= 0 ? open : keep).push(p);
       });
       return {
-        aria: "Test 1: BioDrop OD600 against ReLEAF photometer OD600 for TiO2 suspensions from 2 to 41 mg, with a least-squares line and the line of identity",
-        x: { min: 0, max: 2.5, step: 0.5, dp: 1, label: "ReLEAF photometer OD600 (raw)", short: "ReLEAF OD600 (raw)" },
+        aria: "Test 1: BioDrop OD600 against Pro photometer OD600 for TiO2 suspensions from 2 to 41 mg, with a least-squares line and the line of identity",
+        x: { min: 0, max: 2.5, step: 0.5, dp: 1, label: "Pro photometer OD600 (raw)", short: "Pro OD600 (raw)" },
         y: { min: 0, max: 2.5, step: 0.5, dp: 1, label: "BioDrop OD600" },
         identity: true,
         series: [{ name: "Test 1, 2–41 mg", cls: "s-photo", pts: keep, open: open, fit: fit(keep),
@@ -156,11 +156,11 @@ window.PM_TRACED = {
       const t = TRACED.tio2_t2_mass;
       if (!t) return null;
       return {
-        aria: "Test 2: OD600 of the ReLEAF photometer and the BioDrop against TiO2 mass added, each with its own least-squares line",
+        aria: "Test 2: OD600 of the Pro photometer and the BioDrop against TiO2 mass added, each with its own least-squares line",
         x: { min: 0, max: 60, step: 10, dp: 0, label: "TiO₂ added (mg)" },
         y: { min: 0, max: 2, step: 0.5, dp: 1, label: "OD600" },
         series: [
-          { name: "ReLEAF photometer", cls: "s-photo", pts: t.releaf, fit: fit(t.releaf) },
+          { name: "Pro photometer", cls: "s-photo", pts: t.releaf, fit: fit(t.releaf) },
           { name: "BioDrop", cls: "s-ref", shape: "square", pts: t.biodrop, open: t.biodropExcluded || [],
             fit: fit(t.biodrop), openName: "BioDrop, excluded (breaks monotonicity)" }
         ]
@@ -172,9 +172,9 @@ window.PM_TRACED = {
       const t = TRACED.tio2_t2_identity;
       if (!t) return null;
       return {
-        aria: "Test 2: ReLEAF photometer OD600 against BioDrop OD600 with the line of identity",
+        aria: "Test 2: Pro photometer OD600 against BioDrop OD600 with the line of identity",
         x: { min: 0, max: 2, step: 0.5, dp: 1, label: "BioDrop OD600" },
-        y: { min: 0, max: 2, step: 0.5, dp: 1, label: "ReLEAF photometer OD600 (raw)", short: "ReLEAF OD600 (raw)" },
+        y: { min: 0, max: 2, step: 0.5, dp: 1, label: "Pro photometer OD600 (raw)", short: "Pro OD600 (raw)" },
         identity: true,
         series: [{ name: "Test 2", cls: "s-photo", pts: t.pairs, fit: fit(t.pairs) }]
       };

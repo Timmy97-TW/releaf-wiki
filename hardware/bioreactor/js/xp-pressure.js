@@ -18,15 +18,22 @@
        the setup; the pinch valve is fitted near the Out-Lumen end (4.3, 5.1,
        6.2). The alarms are designed and have not been validated with an
        induced leak or breach (6.2, 7.2).
+     - the owner's answers of 16 Oct 2026 (missing-info B10): (a) the valve that
+       regulates the pressure is the one in the diagram, clamping the end of
+       the lumen tube, past the Out-Lumen tap; (b) the four taps are right as
+       drawn; (c) the In-Shell port is not capped: the two shell ports form a
+       loop, and the loop branches out to the harvest line; (d) whether the
+       harvest pump runs at a set flow is not known; (e) no alarm thresholds
+       are set yet.
    Everything else is a MODEL with illustrative numbers: a peristaltic pump
    holds the loop flow, the valve adds a pressure drop downstream of the
-   Out-Lumen tap (the record has a pinch valve near each lumen end, 4.3; the
-   model drives the Out-Lumen one and leaves the other open, and where each
-   transducer taps the line relative to the valves is not on record), the
-   wall passes liquid in proportion to TMP (Darcy) through a
-   resistance that a cake raises as liquid is filtered, a breach opens a short
-   circuit to the shell, a leak drains the Out-Lumen fitting. The low-TMP rule
-   (TMP below half of what the valve setting should give) is the model's own.
+   Out-Lumen tap, the wall passes liquid in proportion to TMP (Darcy) through a
+   resistance that a cake raises as liquid is filtered, the shell loop carries
+   what crosses the wall from the Out-Shell port round to the In-Shell port and
+   its branch takes the excess out through a plain outlet line (an assumption:
+   (d)), a breach opens a short circuit to the shell, a leak drains the
+   Out-Lumen fitting. The low-TMP rule (TMP below half of what the valve
+   setting should give) is the model's own and illustrative: (e).
 
    Uses window.XP (../js/xp-kit.js): XP.loop pauses off screen and in hidden tabs;
    with reduced motion every change lands at once (no rolling, no drips in
@@ -268,10 +275,17 @@
         p.x = XP.clamp(p.x, L.mx0 + L.hw + 2, L.mx1 - L.hw - 2);
         p.y = XP.clamp(p.y, L.my0 + 2, L.my1 - 2);
         if (Math.abs(p.x - tx) < 5 && p.y < L.my0 + 6) { p.st = 1; p.x = tx; p.y = L.my0; }
-      } else if (p.st === 1) {                                // up the Out-Shell line to the harvest branch
+      } else if (p.st === 1) {                                // up the Out-Shell port into the shell loop
         p.y -= dt * 40;
-        if (p.y <= L.hy) { p.st = 2; p.y = L.hy; }
-      } else {                                                // along the harvest line, out of the picture
+        // at the loop: most of it out along the branch to harvest, some round the loop and back into the shell
+        if (p.y <= L.hy) { p.st = p.kind === 1 && Math.random() < 0.4 ? 3 : 2; p.y = L.hy; }
+      } else if (p.st === 3) {                                // round the loop, to the In-Shell port
+        p.x -= dt * 60;
+        if (p.x <= L.sIn) { p.x = L.sIn; p.st = 4; }
+      } else if (p.st === 4) {                                // down the In-Shell port, back into the shell space
+        p.y += dt * 40;
+        if (p.y >= L.my0 + 4) { p.st = 0; p.life = 0; p.ox = (Math.random() - 0.5) * (L.mx1 - L.mx0) * 0.5; }
+      } else {                                                // along the harvest branch, out of the picture
         p.x += dt * 60;
         if (p.x > out) continue;
       }
@@ -486,8 +500,18 @@
     else { text(ctx, "to", W - 4, L.y + 21, { size: 11, weight: 500, color: C.ink3, align: "right" });
            text(ctx, "reservoir", W - 4, L.y + 34, { size: 11, weight: 500, color: C.ink3, align: "right" }); }
 
-    // the harvest line, off the Out-Shell line
-    tube(L.sOut, L.hy, W - 6, L.hy, C.shellTube, C.shellFill);
+    // the shell loop (the owner, 16 Oct: the In-Shell port is not capped; the shell ports form a loop, then branch
+    // out): out of the Out-Shell port, back over the module into the In-Shell port, and the branch to harvest
+    var shellLines = function (w, col) {
+      ctx.lineCap = "round"; ctx.lineJoin = "round"; ctx.lineWidth = w; ctx.strokeStyle = col;
+      ctx.beginPath(); ctx.moveTo(L.sOut, L.my0); ctx.lineTo(L.sOut, L.hy); ctx.lineTo(L.sIn, L.hy); ctx.lineTo(L.sIn, L.my0); ctx.stroke();
+      ctx.beginPath(); ctx.moveTo(L.sOut, L.hy); ctx.lineTo(W - 6, L.hy); ctx.stroke();
+    };
+    shellLines(7, C.shellTube); shellLines(4, C.shellFill);
+    var chX = L.sIn + (L.sOut - L.sIn) * 0.3;                 // the loop runs back toward the In-Shell port
+    ctx.beginPath(); ctx.moveTo(chX + 3, L.hy - 3.4); ctx.lineTo(chX - 1.6, L.hy); ctx.lineTo(chX + 3, L.hy + 3.4);
+    ctx.lineWidth = 1.5; ctx.strokeStyle = C.shell; ctx.stroke();
+    text(ctx, "shell loop", (L.sIn + L.sOut) / 2, L.hy - 7, { size: 11, weight: 500, color: C.ink3, align: "center" });
     arrow(W - 2, L.hy, 1, C.shellTube);
     text(ctx, "to harvest", W - 4, L.hy - 9, { size: 11, weight: 500, color: C.ink3, align: "right" });
 

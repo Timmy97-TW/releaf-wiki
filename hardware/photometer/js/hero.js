@@ -140,9 +140,10 @@ window.HERO = (function () {
       }
       // reference top right, sample under it, the ratio on its own below —
       // projecting all three put them on top of each other at every framing
-      park(readouts.ref, w - (narrow ? 140 : 250), narrow ? 26 : 96, roA);
-      park(readouts.sample, w - (narrow ? 140 : 250), narrow ? 92 : 168, roA);
-      park(readouts.ratio, w - (narrow ? 165 : 292), narrow ? 168 : 262, ratioA);
+      // phone positions clear of the site menu and the Back/Skip row (W6 R2, V3); the ratio box sits under Back
+      park(readouts.ref, w - (narrow ? 140 : 250), narrow ? 128 : 96, roA);
+      park(readouts.sample, w - (narrow ? 140 : 250), narrow ? 192 : 168, roA);
+      park(readouts.ratio, narrow ? 14 : w - 292, narrow ? 128 : 262, ratioA);
     } else {
       [readouts.sample, readouts.ref, readouts.ratio].forEach(function (el) {
         el.style.opacity = "0"; el.style.visibility = "hidden";

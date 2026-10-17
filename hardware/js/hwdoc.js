@@ -8,15 +8,16 @@
                 sub-headings that unfold under it. The pill follows the reader
                 down the page; only that section is unfolded. The hand-written
                 <ol> in the page is the no-script fallback and is replaced here.
-     2. landing a link (or a URL) pointing into a shut fold opens it first and
-                then goes there.
+     2. landing a link (or a URL) pointing into a prototype whose tab is not
+                showing, or into a shut fold, opens it first and then goes there.
      3. aim     a jump re-measures once the page stops moving, so it lands on
                 its target even when what it passed on the way grew.
-     4. cycles  a record's design-build-test-learn prototypes, one tab per
-                prototype over each set (16 Oct 2026; between 15 and 16 Oct
-                they were stacked under a sticky stepper).
+     4. cycles  a record's design-build-test-learn prototypes, one group at a
+                time behind a horizontal tab bar the reader clicks, in any order
+                (17 Oct 2026; it replaced the 15 Oct stacked prototypes and
+                their sticky stepper, and brings back the tabs they replaced).
 
-   With JavaScript off every prototype is on the page, one after another, every fold works on its own,
+   With JavaScript off every prototype is on the page, every fold works on its own,
    and the written <ol> is the contents list, so nothing is reachable only by
    clicking. Load after ../js/polish.js:
      <script src="../js/hwdoc.js"></script>
@@ -76,11 +77,28 @@
     return t.replace(/¶$/, "").replace(/^\d+(\.\d+)*\s*/, "");
   }
 
-  /* A heading or a part inside a cycle that is not showing must not appear in
-     the rail, and -- the part that bites -- must not be counted as scrolled
-     past either: a hidden element's rect is all zeros, so `top <= line` is
-     true for every one of them and the last cycle always wins. */
+  /* A heading or a part inside a cycle that is not showing must not be
+     counted as scrolled past: a hidden element's rect is all zeros, so
+     `top <= line` is true for every one of them and the last cycle always
+     wins. */
   function visible(el) { return !!(el.offsetParent || el.getClientRects().length); }
+
+  /* The edit doc's sidebars name every prototype of a set of cycles, the ones
+     behind a tab that is not showing included, and a click on one opens its
+     tab (landing, below). So a heading hidden only because its prototype's
+     tab is shut is listed; one hidden for any other reason -- inside a shut
+     fold, or in a set that is itself out of sight -- is not. Listing is all
+     this changes: `mark()` still asks `visible()`, for the reason above. */
+  function listed(h) {
+    if (visible(h)) return true;
+    var panel = h.closest && h.closest(".cyc[role=tabpanel]");
+    if (!panel || !panel.hidden || !visible(panel.parentNode)) return false;
+    for (var n = h.parentNode; n && n !== panel; n = n.parentNode) {
+      if (n.tagName === "DETAILS" && !n.open) return false;
+      if (n.hidden || getComputedStyle(n).display === "none") return false;
+    }
+    return true;
+  }
 
   function buildToc() {
     nav = nav || $(".doc-nav");
@@ -109,7 +127,7 @@
       a.href = L.href;
       var n = document.createElement("span");
       n.className = "hwtoc__no";
-      n.textContent = L.no;
+      n.textContent = String(parseInt(L.no, 10) || L.no);
       var t = document.createElement("span");
       t.className = "hwtoc__lab";
       t.textContent = L.text;
@@ -130,8 +148,7 @@
       var subs = [];
       if (part.dataset.subs !== "none") scope.forEach(function (s) {
         $$("h3", s).forEach(function (h) {
-          /* a prototype in a shut tab is still listed; its link opens the tab */
-          if (!visible(h) && !h.closest(".cyc-set > .cyc")) return;
+          if (!listed(h)) return;
           var holder = h.closest("section.sec, section.part") || h.parentNode;
           var id = holder.id || h.id;
           if (!id) return;
@@ -153,7 +170,9 @@
          one, or the sidebar and the page disagree about what section 5 is */
       var num = parseInt(part.dataset.n, 10);
       if (!num) num = i + 1 + lead.length;
-      n.textContent = (num < 10 ? "0" : "") + num;
+      /* plain, as the twin's "On this page" numbers them and as each part's
+         own heading now does ("5.", hwdoc.css 6); until 17 Oct "05" */
+      n.textContent = String(num);
       var t = document.createElement("span");
       t.className = "hwtoc__lab";
       t.textContent = h2.dataset.toc || label(h2);
@@ -251,7 +270,7 @@
   function land(hash, jump) {
     var t = targetOf(hash);
     if (!t) return;
-    openCycle(t);
+    reveal(t);
     for (var n = t; n && n !== document.body; n = n.parentNode) {
       if (n.tagName === "DETAILS" && !n.open) n.open = true;
     }
@@ -294,6 +313,7 @@
     if (!visible(h.t)) { hold = null; return; }
     var want = parseFloat(getComputedStyle(h.t).scrollMarginTop) || 0;
     var off = h.t.getBoundingClientRect().top - want;
+    if (Math.abs(off) > 1.5 * window.innerHeight) { hold = null; return; }   // the reader has moved on (W6 R2, V25)
     var root = document.scrollingElement || document.documentElement;
     var to = Math.max(0, Math.min(root.scrollHeight - window.innerHeight, window.scrollY + off));
     if (Math.abs(to - window.scrollY) < 4) {
@@ -315,26 +335,38 @@
     hold = null;
   }
 
-  /* ---- 4. cycles as horizontal tabs --------------------------------------- */
-  /* 16 Oct 2026, Timmy: the record reads straight down, but every set of
-     design-build-test-learn prototypes sits in horizontal tabs. (Anton's
-     15 Oct stepper stacked them all; this puts the tabs back on top of his
-     markup, which is unchanged.)
+  /* ---- 4. the cycles: a tab bar over each group ----------------------------- */
+  /* 17 Oct 2026. The owner: "bring back the horizontal bar that we click for
+     the dbtl, don't make it linear they can choose whether to skip or not."
+     It replaces the 15 Oct layout, which stacked every prototype with a
+     sticky stepper over the set.
 
-     Markup, the same on all four instrument pages:
-       <div class="cycles" data-cycles aria-label="...">
-         [<div class="cyc-group" data-group="..."> intro section, then its .cyc ... </div>]
-         <div class="cyc" data-step="Vertical">              (one per prototype)
-           <section class="sec cyc__band" id="cyc2"> ring, kick, title, stage list </section>
-           <section class="sec cyc__body"> the four stages </section>
-         </div> ...
+     Each group of prototypes -- a `.cyc-group`, or the whole set when it has
+     no groups -- gets one bar: the digital twin page's segmented pill, a tab
+     per prototype with its number and its short name (data-step). A click
+     shows that prototype, its band and its four stages, and hides the group's
+     others; nothing forces an order. The bar sits right above the group's
+     first prototype, after the group's own introduction, and is sticky inside
+     the group alone, so it leaves with the group and never stacks on another
+     group's bar. At the foot of each prototype a small "Next" opens the one
+     after it, for a reader who would rather go in order. A group of one
+     prototype has nothing to switch and gets no bar.
+
+     Markup, the same on all four instrument pages (unchanged since 15 Oct):
+       <div class="cycles" data-cycles [data-noun="DBTL"] aria-label="...">
+         [<div class="cyc-group" data-group="Growth" data-group-name="Bacterial Growth">]
+           [<section class="sec"> the group's introduction </section>]
+           <div class="cyc [is-todo]" data-step="Vertical">       (one per prototype)
+             <section class="sec cyc__band" id="cyc2"> ring, kick, title, stage list </section>
+             <section class="sec cyc__body"> the four stages </section>
+           </div> ...
+         [</div>]
        </div>
-     Each run of sibling .cyc elements (a group's, or the set's own) is
-     wrapped in a .cyc-set with a tab strip over it; a run of one gets no
-     strip. With JavaScript off nothing is wrapped or hidden. A link to
-     anything inside a shut prototype opens its tab first (land(), above). */
+     With JavaScript off, and in print, every prototype is on the page,
+     stacked, as before. A link, the rail, the cycle map or a URL pointing into
+     a prototype that is not showing opens its tab first (land(), above). */
 
-  var tabsets = [];
+  var sets = [], uid = 0;
 
   function mk(tag, cls, text) {
     var e = document.createElement(tag);
@@ -344,114 +376,216 @@
   }
 
   function cycles(root) {
-    var runs = [];
-    $$(".cyc[data-step]", root).forEach(function (c) {
-      var last = runs[runs.length - 1];
-      if (last && last[last.length - 1].parentNode === c.parentNode &&
-          last[last.length - 1].nextElementSibling === c) last.push(c);
-      else runs.push([c]);
+    var steps = $$(".cyc[data-step]", root);
+    if (!steps.length) return;
+    var groups = [];
+    steps.forEach(function (s) {
+      var g = s.parentNode.closest("[data-group]");
+      if (!g || !root.contains(g)) g = root;
+      var grp = null;
+      groups.forEach(function (x) { if (x.el === g) grp = x; });
+      if (!grp) { grp = { el: g, steps: [] }; groups.push(grp); }
+      grp.steps.push(s);
     });
     var noun = root.dataset.noun || "Prototype";
-    runs.forEach(function (steps) {
-      if (steps.length < 2) return;
-      var set = mk("div", "cyc-set");
-      steps[0].parentNode.insertBefore(set, steps[0]);
-      var bar = mk("div", "cyc-tabs");
-      var track = mk("div", "cyc-tabs__track");
-      track.setAttribute("role", "tablist");
-      var g = steps[0].parentNode.closest("[data-group]");
-      track.setAttribute("aria-label", (g ? (g.dataset.groupName || g.dataset.group) + ", " : "") +
-                         (root.getAttribute("aria-label") || noun + "s"));
-      var thumb = mk("span", "cyc-tabs__thumb");
-      thumb.setAttribute("aria-hidden", "true");
-      track.appendChild(thumb);
-      bar.appendChild(track);
-      set.appendChild(bar);
-      var ts = { set: set, track: track, thumb: thumb, steps: steps, btns: [], cur: -1 };
-      steps.forEach(function (s, i) {
-        set.appendChild(s);
-        if (!s.id) s.id = (root.id || "cyc") + "-" + tabsets.length + "-" + (i + 1);
-        s.setAttribute("role", "tabpanel");
-        var b = mk("button", "cyc-tabs__btn");
-        b.type = "button";
-        b.id = s.id + "-tab";
-        b.setAttribute("role", "tab");
-        b.setAttribute("aria-controls", s.id);
-        s.setAttribute("aria-labelledby", b.id);
-        /* the prototype's own number, from its band ("Prototype 2"): a set
-           whose first prototype is not on the page starts at 2 */
-        var kick = $(".dbtl-kick", s), m = kick && /(\d+)/.exec(kick.textContent);
-        var no = m ? m[1] : String(i + 1);
-        var n = mk("b", null, no);
-        n.setAttribute("aria-hidden", "true");
-        var name = (s.dataset.step || "").replace(/\s+/g, " ").trim();
-        var lab = mk("span", "cyc-tabs__lab");
-        lab.innerHTML = name ? s.dataset.step : noun + " " + no;
-        b.setAttribute("aria-label", noun + " " + no + (name ? ": " + lab.textContent : ""));
-        b.appendChild(n); b.appendChild(lab);
-        b.addEventListener("click", function () { show(ts, i, true); });
-        b.addEventListener("keydown", function (e) {
-          var k = e.key, j = -1;
-          if (k === "ArrowRight") j = (i + 1) % steps.length;
-          else if (k === "ArrowLeft") j = (i - 1 + steps.length) % steps.length;
-          else if (k === "Home") j = 0;
-          else if (k === "End") j = steps.length - 1;
-          if (j < 0) return;
-          e.preventDefault();
-          show(ts, j, true);
-          ts.btns[j].focus();
-        });
-        track.appendChild(b);
-        ts.btns.push(b);
+    root.classList.add("is-tabbed");
+    groups.forEach(function (g) { if (g.steps.length > 1) tabs(root, g, noun); });
+  }
+
+  function tabs(root, g, noun) {
+    var k = ++uid;
+    var first = g.steps[0];
+    var name = g.el === root ? (root.getAttribute("aria-label") || noun + "s")
+                             : (g.el.dataset.groupName || g.el.dataset.group || noun + "s");
+
+    /* where the bar sits when it is not pinned: the bar's own rect moves
+       while it is sticky, this one does not */
+    var at = mk("span", "cyc-tabs__at");
+    at.setAttribute("aria-hidden", "true");
+    var bar = mk("div", "cyc-tabs");
+    var tl = mk("div", "cyc-tabs__list");
+    tl.setAttribute("role", "tablist");
+    tl.setAttribute("aria-label", name);
+    bar.appendChild(tl);
+
+    var set = { root: root, grp: g.el, at: at, bar: bar, list: tl, items: [], cur: -1, compact: false };
+
+    g.steps.forEach(function (s, i) {
+      var n = i + 1;
+      var step = (s.dataset.step || "").replace(/\s+/g, " ").trim();
+      var todo = s.classList.contains("is-todo");
+      var b = mk("button", "cyc-tab" + (todo ? " is-todo" : ""));
+      b.type = "button";
+      b.id = "cyc-tab-" + k + "-" + n;
+      if (!s.id) s.id = "cyc-panel-" + k + "-" + n;
+      b.setAttribute("role", "tab");
+      b.setAttribute("aria-controls", s.id);
+      /* the whole name for a screen reader, and as the tooltip when the bar
+         is too narrow to print every name */
+      b.setAttribute("aria-label", noun + " " + n + (step ? ": " + step : "") + (todo ? ", not written yet" : ""));
+      var badge = mk("b", "cyc-tab__n", String(n));
+      badge.setAttribute("aria-hidden", "true");
+      var lab = mk("span", "cyc-tab__t", step || noun + " " + n);
+      lab.setAttribute("aria-hidden", "true");
+      b.appendChild(badge); b.appendChild(lab);
+      tl.appendChild(b);
+
+      s.setAttribute("role", "tabpanel");
+      s.setAttribute("aria-labelledby", b.id);
+      set.items.push({ el: s, btn: b, n: n, step: step, target: $(".cyc__band[id]", s) || s });
+
+      b.addEventListener("click", function () { select(set, i, true); });
+      b.addEventListener("keydown", function (e) { keys(set, i, e); });
+    });
+
+    /* "Next" at the foot of each prototype but the last: an ordinary link to
+       the next one's band, so land() opens its tab and doc.js takes the reader
+       there, the way any link into a shut prototype does */
+    set.items.forEach(function (it, i) {
+      var nx = set.items[i + 1];
+      if (!nx) return;
+      var p = mk("p", "cyc-next");
+      var a = mk("a");
+      a.href = "#" + nx.target.id;
+      a.appendChild(mk("span", "cyc-next__lead", "Next"));
+      a.appendChild(mk("span", "cyc-next__t", noun + " " + nx.n + (nx.step ? " · " + nx.step : "")));
+      var ar = mk("i", null, "→");
+      ar.setAttribute("aria-hidden", "true");
+      a.appendChild(ar);
+      p.appendChild(a);
+      it.el.appendChild(p);
+    });
+
+    first.parentNode.insertBefore(at, first);
+    first.parentNode.insertBefore(bar, first);
+    g.el.classList.add("has-tabs");
+
+    /* open on whichever prototype the URL points into, else the first */
+    var start = 0, t = targetOf(location.hash);
+    set.items.forEach(function (it, i) { if (t && (it.el === t || it.el.contains(t))) start = i; });
+    sets.push(set);
+    select(set, start, false);
+    fit(set);
+  }
+
+  /* show prototype i of a set. `user` is a click or a key on the bar itself,
+     and the new prototype slides in. Either way a reader inside the group,
+     under the pinned bar, is taken to the top of the new prototype rather
+     than left somewhere in its middle. */
+  function select(set, i, user) {
+    if (i === set.cur) return false;
+    var first = set.cur < 0;
+    /* measured before the switch: hiding a long prototype can shorten the
+       page under the reader, and then they would no longer look inside */
+    var inside = !first && pinned(set);
+    set.cur = i;
+    set.items.forEach(function (it, j) {
+      var on = j === i;
+      it.btn.setAttribute("aria-selected", on ? "true" : "false");
+      it.btn.tabIndex = on ? 0 : -1;
+      it.el.hidden = !on;
+      if (on && user && !reduce) {
+        it.el.classList.remove("is-entering");
+        void it.el.offsetWidth;
+        it.el.classList.add("is-entering");
+      }
+    });
+    if (first) return true;
+    if (set.compact) fit(set); else into(set);
+    if (inside) settle(set);
+    mark();
+    paintAll();
+    return true;
+  }
+
+  function keys(set, i, e) {
+    var n = set.items.length, j = -1;
+    if (e.key === "ArrowRight") j = (i + 1) % n;
+    else if (e.key === "ArrowLeft") j = (i - 1 + n) % n;
+    else if (e.key === "Home") j = 0;
+    else if (e.key === "End") j = n - 1;
+    if (j < 0) return;
+    e.preventDefault();
+    select(set, j, true);
+    set.items[j].btn.focus({ preventScroll: true });
+  }
+
+  /* the bar's pinned top, from hwdoc.css, and whether the reader is inside
+     the group with the bar pinned over what they are reading */
+  function stickTop(set) { return parseFloat(getComputedStyle(set.bar).top) || navH() + 8; }
+  function pinned(set) {
+    var top = stickTop(set);
+    return set.at.getBoundingClientRect().top < top - 1 &&
+           set.grp.getBoundingClientRect().bottom > top + set.bar.offsetHeight;
+  }
+  /* bring the bar back to its own place, just under the nav, so the
+     prototype now showing starts right under it */
+  function settle(set) {
+    var d = set.at.getBoundingClientRect().top - stickTop(set);
+    if (d < -1) window.scrollTo({ top: Math.max(0, window.scrollY + d), behavior: "instant" });
+  }
+
+  /* open the prototype that holds `t`, if its tab is shut. A reader inside
+     the group (the bar pinned) is first taken to the top of it (select()),
+     so whatever the link then glides to is measured from there and not from
+     a page that just changed height under them. */
+  function reveal(t) {
+    var opened = null;
+    sets.forEach(function (set) {
+      set.items.forEach(function (it, i) {
+        if (it.el.hidden && (it.el === t || it.el.contains(t)) && select(set, i, false)) opened = set;
       });
-      tabsets.push(ts);
-      root.classList.add("has-tabs");
-      show(ts, 0, false);
+    });
+    return opened;
+  }
+  window.hwdocReveal = function (t) { return !!(t && reveal(t)); };
+
+  /* Every name when they all fit; when they do not (a phone, a long set),
+     the numbers alone and the name of the prototype that is showing. If even
+     that is too wide the bar scrolls inside itself, its edges fading. */
+  function fit(set) {
+    var bar = set.bar, tl = set.list;
+    bar.classList.remove("is-compact", "is-scroll");
+    var over = tl.scrollWidth > tl.clientWidth + 1;
+    set.compact = over;
+    bar.classList.toggle("is-compact", over);
+    set.items.forEach(function (it) {
+      if (over) it.btn.title = it.btn.getAttribute("aria-label"); else it.btn.removeAttribute("title");
+    });
+    bar.classList.toggle("is-scroll", tl.scrollWidth > tl.clientWidth + 1);
+    if (bar.offsetHeight) set.grp.style.setProperty("--cyc-bar-h", bar.offsetHeight + "px");
+    into(set);
+    paintAll();
+  }
+
+  /* a bar that scrolls keeps the open tab in view; only the bar moves */
+  function into(set) {
+    var tl = set.list;
+    if (tl.scrollWidth <= tl.clientWidth + 1 || set.cur < 0) return;
+    var b = set.items[set.cur].btn;
+    var x = b.offsetLeft - (tl.clientWidth - b.offsetWidth) / 2;
+    tl.scrollTo({ left: Math.max(0, x), behavior: "auto" });
+  }
+
+  /* Two groups' bars are never on screen together (the 14 Oct edit doc:
+     "Horizontal navbars never overlap"). Sticky inside its own group a bar
+     cannot stack on another, but on the photometer the growth bar, pinned and
+     on its way out, and the Pro bar coming in shared the screen for a
+     moment. So a pinned bar steps aside while another group's bar is in view
+     at its own place, and comes back when that one has gone. */
+  function paintAll() {
+    var vh = window.innerHeight;
+    var home = sets.map(function (s) {
+      var t = s.at.getBoundingClientRect().top;
+      return t >= stickTop(s) - 1 && t < vh;
+    });
+    sets.forEach(function (s, i) {
+      var stuck = s.at.getBoundingClientRect().top < stickTop(s) - 1;
+      var other = home.some(function (h, j) { return h && j !== i; });
+      s.bar.classList.toggle("is-away", stuck && other);
+      s.bar.classList.toggle("is-pinned", pinned(s));
     });
   }
-
-  function place(ts) {
-    var b = ts.btns[ts.cur];
-    if (!b || !b.offsetWidth) return;
-    ts.thumb.style.width = b.offsetWidth + "px";
-    ts.thumb.style.transform = "translateX(" + b.offsetLeft + "px)";
-    ts.track.classList.add("has-thumb");
-  }
-
-  function show(ts, i, user) {
-    if (i === ts.cur) return;
-    ts.cur = i;
-    ts.steps.forEach(function (s, k) {
-      var on = k === i;
-      s.hidden = !on;
-      ts.btns[k].setAttribute("aria-selected", on ? "true" : "false");
-      ts.btns[k].tabIndex = on ? 0 : -1;
-    });
-    place(ts);
-    /* the strip scrolls inside itself, never the page */
-    var b = ts.btns[i];
-    if (ts.track.scrollWidth > ts.track.clientWidth + 1) {
-      var x = b.offsetLeft + b.offsetWidth / 2 - ts.track.clientWidth / 2;
-      ts.track.scrollTo({ left: Math.max(0, x), behavior: reduce || !user ? "auto" : "smooth" });
-    }
-    /* a reader who switched from far down a long prototype goes back to the
-       top of the one they chose; one already at the top stays put */
-    if (user) {
-      var top = ts.set.getBoundingClientRect().top;
-      var line = navH() + 12;
-      if (top < line - 4) window.scrollTo({ top: window.scrollY + top - line, behavior: "instant" });
-    }
-    if (list) mark();
-  }
-
-  /* open the tab holding `el`, if it is in a shut one */
-  function openCycle(el) {
-    tabsets.forEach(function (ts) {
-      ts.steps.forEach(function (s, k) { if (s.hidden && s.contains(el)) show(ts, k, false); });
-    });
-  }
-
-  function placeAll() { tabsets.forEach(place); }
 
   /* ---- start -------------------------------------------------------------- */
 
@@ -476,11 +610,16 @@
           var top = t.getBoundingClientRect().top;
           /* only if the page has moved under us; a reader who has already
              scrolled away since load is left where they are */
-          if (Math.abs(top - navH() - 20) > 40 && window.scrollY > 0) land(want, true);
+          if (Math.abs(top - parseFloat(getComputedStyle(t).scrollMarginTop || 0)) > 40 && window.scrollY > 0) land(want, true);
         });
       });
     }
-    window.addEventListener("hashchange", function () { land(location.hash, false); });
+    /* a hash typed into the address bar, or Back to one: the browser has
+       already tried to scroll to it, which does nothing if its tab was shut */
+    window.addEventListener("hashchange", function () {
+      var t = targetOf(location.hash);
+      land(location.hash, !!t && !visible(t));
+    });
     document.addEventListener("click", function (e) {
       var a = e.target.closest && e.target.closest('a[href^="#"]');
       if (!a) return;
@@ -503,13 +642,13 @@
     function onScroll() {
       if (queued) return;
       queued = true;
-      requestAnimationFrame(function () { queued = false; mark(); });
+      requestAnimationFrame(function () { queued = false; mark(); paintAll(); });
     }
     window.addEventListener("scroll", onScroll, { passive: true });
     window.addEventListener("scroll", rest, { passive: true });
     window.addEventListener("resize", onScroll, { passive: true });
-    if (tabsets.length) {
-      var refit = placeAll;
+    if (sets.length) {
+      var refit = function () { sets.forEach(fit); };
       window.addEventListener("resize", refit, { passive: true });
       window.addEventListener("load", refit);
       if (document.fonts && document.fonts.ready) document.fonts.ready.then(refit);

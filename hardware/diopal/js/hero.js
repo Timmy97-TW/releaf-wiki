@@ -176,6 +176,10 @@ window.HERO = (function () {
     // next shot after the tubes had gone back into the rack.
     const dutyLines = ramp(p, B4 - 0.02, B4 + 0.03) * (1 - ramp(p, B5 - 0.055, B5 - 0.022));
     drawDuty(dutyLines, clock, vis);
+    // (17 Oct 2026) in portrait the traces run across the top band, where a phone's Skip button sits
+    // (../../js/hero-mode.js): it steps aside while they are up
+    const busy = dutyLines > 0.01 && duty.clientHeight > duty.clientWidth * 1.05;
+    if (busy !== stage.classList.contains("hm-busy-tr")) stage.classList.toggle("hm-busy-tr", busy);
 
     /* --- the closing line --- */
     const endEl = document.getElementById("endline");
