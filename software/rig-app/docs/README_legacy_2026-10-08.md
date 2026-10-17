@@ -1,141 +1,144 @@
-# 中空纖維薄膜過濾 — 整合監控系統
+# Hollow-Fiber Membrane Filtration — Integrated Monitoring System
 
 **Arduino UNO Q + Arduino App Lab**
-OD600 光度計 · 壓力監測 · 流速監測 · 蠕動／隔膜幫浦控制 · **pH 監測 · STS3215 夾閥收樣** · 連續資料記錄
+OD600 photometer · pressure monitoring · flow-rate monitoring · peristaltic / diaphragm pump control · **pH monitoring · STS3215 pinch-valve sample collection** · continuous data logging
 
-單一 sketch（MCU 韌體）+ 單一 Python App（Linux 側）+ 單一 Web UI。
-本文件涵蓋**硬體規格、接線、電源設計、軟體架構與版本沿革**。
+A single sketch (MCU firmware) + a single Python App (Linux side) + a single Web UI.
+This document covers the **hardware specifications, wiring, power design, software architecture and version history**.
 
-最後更新：2026-10-03 ｜ 程式版本：**v3.6** ｜ 常數檔版本：`rig-v2-integrated` / `2026-10-03a`
+Last updated: 2026-10-03 | Program version: **v3.6** | Constants file version: `rig-v2-integrated` / `2026-10-03a`
 
-> **v3 新增內容集中在 [§12 pH 監測與夾閥（v3）](#12-ph-監測與夾閥v3)**；本文件其他章節只在腳位表、Bridge 介面、CSV 欄位、版本表處同步更新。
+> **The v3 additions are concentrated in [§12 pH Monitoring and Pinch Valve (v3)](#12-ph-monitoring-and-pinch-valve-v3)**; the other sections of this document were only updated where the pin table, Bridge interface, CSV columns and version table are concerned.
 
 ---
 
-## 目錄
+## Table of Contents
 
-| 章節 | 內容 |
+| Section | Contents |
 |---|---|
-| [0. 系統總覽](#0-系統總覽) | 三層架構、**現況 vs 規劃對照表** |
-| [1. 硬體規格](#1-硬體規格) | 元件清單、量測規格、換算式 |
-| [2. 腳位配置](#2-腳位配置) | 完整腳位表、UNO Q 腳位能力、已知地雷 |
-| [3. 接線](#3-接線) | 各子系統逐一接線指示 |
-| [4. 電源系統](#4-電源系統) | 電力預算、三軌架構、接地策略 |
-| [5. 軟體架構](#5-軟體架構) | 資料流、Bridge 介面、訊息協定 |
-| [6. 資料記錄](#6-資料記錄) | CSV 欄位、落盤機制、取檔方式 |
-| [7. 校正](#7-校正) | 三種校正、存檔還原、手動輸入 |
-| [8. 部署與操作](#8-部署與操作) | 部署步驟、首次啟動順序 |
-| [9. 版本沿革](#9-版本沿革) | 前身專案與 v1→v2.3 的每一次改版 |
-| [10. 疑難排解](#10-疑難排解) | |
-| [11. 已知限制與待辦](#11-已知限制與待辦) | |
-| [12. pH 監測與夾閥（v3）](#12-ph-監測與夾閥v3) | 接線、安全設計、操作流程、Bridge 介面 |
+| [0. System Overview](#0-system-overview) | Three-tier architecture, **current state vs. planned comparison table** |
+| [1. Hardware Specifications](#1-hardware-specifications) | Component list, measurement specs, conversion formulas |
+| [2. Pin Assignment](#2-pin-assignment) | Full pin table, UNO Q pin capabilities, known pitfalls |
+| [3. Wiring](#3-wiring) | Step-by-step wiring instructions for each subsystem |
+| [4. Power System](#4-power-system) | Power budget, three-rail architecture, grounding strategy |
+| [5. Software Architecture](#5-software-architecture) | Data flow, Bridge interface, message protocol |
+| [6. Data Logging](#6-data-logging) | CSV columns, flush-to-disk mechanism, retrieving files |
+| [7. Calibration](#7-calibration) | Three calibrations, save/restore, manual entry |
+| [8. Deployment and Operation](#8-deployment-and-operation) | Deployment steps, first start-up sequence |
+| [9. Version History](#9-version-history) | Predecessor projects and every revision from v1 to v2.3 |
+| [10. Troubleshooting](#10-troubleshooting) | |
+| [11. Known Limitations and To-Do](#11-known-limitations-and-to-do) | |
+| [12. pH Monitoring and Pinch Valve (v3)](#12-ph-monitoring-and-pinch-valve-v3) | Wiring, safety design, operating procedure, Bridge interface |
 
 ---
 
-## 0. 系統總覽
+## 0. System Overview
 
-### 0.1 三層架構
+### 0.1 Three-Tier Architecture
 
 ```
-┌─── MCU (STM32U585, Zephyr) ─────┐   ┌─── Linux/MPU (Qualcomm, Debian) ───┐   ┌─ 瀏覽器 ─┐
-│ • OD600 非阻塞量測狀態機         │   │ • Bridge RPC 客戶端                 │   │          │
-│ • 壓力 100Hz 取樣 + 滑動視窗統計 │◀─▶│ • 聚合取樣（中位數/平均）           │◀─▶│ Web UI   │
-│ • 流量脈衝中斷計數               │   │ • 衍生參數 / 趨勢 / 穩態 / 告警     │ws│ 純操作   │
-│ • 幫浦 PWM 輸出                  │   │ • CSV 記錄（每視窗落盤）            │   │ 介面     │
-│ • 即時性自我診斷                 │   │ • 校正值保存與還原                  │   │          │
+┌─── MCU (STM32U585, Zephyr) ─────┐   ┌─── Linux/MPU (Qualcomm, Debian) ───┐   ┌─ Browser ┐
+│ • OD600 non-blocking state       │   │ • Bridge RPC client                 │   │          │
+│   machine                        │   │                                     │   │          │
+│ • Pressure 100Hz sampling +      │◀─▶│ • Aggregated sampling (median/mean) │◀─▶│ Web UI   │
+│   sliding-window statistics      │   │                                     │ws│ operator │
+│ • Flow pulse interrupt counting  │   │ • Derived params / trends / steady  │   │ interface│
+│                                  │   │   state / alarms                    │   │ only     │
+│ • Pump PWM output                │   │ • CSV logging (flushed per window)  │   │          │
+│ • Real-time self-diagnostics     │   │ • Calibration save and restore      │   │          │
 └──────────────────────────────────┘   └─────────────────────────────────────┘   └──────────┘
-        時間關鍵、決定性工作                 狀態、檔案、可調參數、網頁服務         顯示與操作
+   Time-critical, deterministic work      State, files, tunable params, web service   Display & control
 ```
 
-**關鍵設計原則：記錄完全在板子上進行。** 瀏覽器只是操作介面，關掉它、電腦休眠、甚至整台電腦關機都不會中斷記錄。詳見 [§6.2](#62-落盤與中斷接續)。
+**Key design principle: logging happens entirely on the board.** The browser is only an operator interface; closing it, putting the PC to sleep or even shutting the PC down completely will not interrupt logging. See [§6.2](#62-flushing-to-disk-and-resuming-after-interruption).
 
-### 0.2 現況 vs 規劃（重要）
+### 0.2 Current State vs. Planned (Important)
 
-硬體已經走在程式前面，這張表是目前最需要同步的東西：
+The hardware is already ahead of the software; this table is the thing that most needs to be kept in sync right now:
 
-| 子系統 | 硬體狀態 | 程式支援 | 備註 |
+| Subsystem | Hardware status | Software support | Notes |
 |---|---|---|---|
-| OD600（2× BH1750 + LED） | ✅ 已接線 | ✅ 完整支援 | |
-| 壓力變送器 | ✅ **4 顆已接線** | ⚠️ **只讀 3 顆**（A0–A2） | 第 4 顆需接 A3，程式待擴充 |
-| 流速計 | ✅ **2 顆已接線** | ⚠️ **只讀 1 顆**（D2） | 第 2 顆規劃接 D4，程式待擴充 |
-| 幫浦（L298N） | ✅ **2 顆已接線** | ⚠️ **只驅動 1 顆** | 第 2 顆為隔膜幫浦，程式待擴充 |
-| pH 探頭 | ✅ | ✅ **v3**（v3.1 起只監測記錄） | pH → A4（見 §12）；KOH 加鹼控制已移除 |
-| STS3215 夾閥 | ✅ | ✅ **v3** | Serial1（D0/D1），手動開／關 + MCU 端安全放開 |
-| 繼電器 ×3（12V 裝置） | 📋 規劃中 | ❌ 未支援 | D7 / D5 / A5（A4 已給 pH；D5 需等幫浦腳位搬遷） |
-| 專用電源板 | 📋 規劃中 | — | 見 [§4](#4-電源系統) |
+| OD600 (2× BH1750 + LED) | ✅ Wired | ✅ Fully supported | |
+| Pressure transmitters | ✅ **4 wired** | ⚠️ **Only 3 read** (A0–A2) | The 4th must go to A3; software extension pending |
+| Flow meters | ✅ **2 wired** | ⚠️ **Only 1 read** (D2) | The 2nd is planned for D4; software extension pending |
+| Pumps (L298N) | ✅ **2 wired** | ⚠️ **Only 1 driven** | The 2nd is the diaphragm pump; software extension pending |
+| pH probe | ✅ | ✅ **v3** (monitoring and logging only since v3.1) | pH → A4 (see §12); KOH base dosing control removed |
+| STS3215 pinch valve | ✅ | ✅ **v3** | Serial1 (D0/D1), manual open/close + MCU-side safety release |
+| Relays ×3 (12V devices) | 📋 Planned | ❌ Not supported | D7 / D5 / A5 (A4 is now used by pH; D5 must wait for the pump pin relocation) |
+| Dedicated power board | 📋 Planned | — | See [§4](#4-power-system) |
 
-> **目前 12V 3A 的變壓器不足以支撐完整配置**，詳見 [§4.1 電力預算](#41-電力預算)。
+> **The current 12V 3A power adapter is not sufficient for the full configuration**; see [§4.1 Power Budget](#41-power-budget).
 
 ---
 
-## 1. 硬體規格
+## 1. Hardware Specifications
 
-### 1.1 主控
+### 1.1 Main Controller
 
-| 項目 | 規格 |
+| Item | Specification |
 |---|---|
-| 開發板 | Arduino UNO Q（ABX00162 / ABX00173） |
-| MCU | STM32U585，跑 Zephyr，負責時間關鍵工作 |
-| MPU | Qualcomm Dragonwing，跑 Debian，負責 App 與網頁 |
-| 邏輯電壓 | **3.3V**（注意：多數腳位非 5V 容忍） |
-| 供電選項 | USB-C VBUS 5V/3A ｜ VIN 7–24V ｜ 5V_SYS 5V/3A |
-| 開發環境 | Arduino App Lab |
-| 需裝 Sketch Library | **Arduino_RouterBridge**（僅此一個） |
-| 需裝 Brick | **WebUI - HTML**（`arduino:web_ui`） |
+| Development board | Arduino UNO Q (ABX00162 / ABX00173) |
+| MCU | STM32U585, runs Zephyr, handles time-critical work |
+| MPU | Qualcomm Dragonwing, runs Debian, handles the App and the web UI |
+| Logic voltage | **3.3V** (note: most pins are not 5V tolerant) |
+| Power options | USB-C VBUS 5V/3A | VIN 7–24V | 5V_SYS 5V/3A |
+| Development environment | Arduino App Lab |
+| Required Sketch Library | **Arduino_RouterBridge** (this one only) |
+| Required Brick | **WebUI - HTML** (`arduino:web_ui`) |
 
-### 1.2 感測器
+### 1.2 Sensors
 
-| 元件 | 數量 | 介面 | 規格 |
+| Component | Qty | Interface | Specification |
 |---|---|---|---|
-| BH1750（GY-302）光感測器 | 2 | I2C | sample = `0x5C`（ADDR→3V3）、reference = `0x23`（ADDR→GND）；連續高解析模式，~120ms 轉換 |
-| 壓力變送器 | 4 | 類比 0–5V | 三線式（V+/GND/訊號），**5V 供電**，0–1 MPa = 0–10 bar，比例式輸出 |
-| ZJ-TM02 流量計 | 2 | 脈衝 | 霍爾式，5V 供電，訊號高電平 4.7V（需分壓） |
+| BH1750 (GY-302) light sensor | 2 | I2C | sample = `0x5C` (ADDR→3V3), reference = `0x23` (ADDR→GND); continuous high-resolution mode, ~120ms conversion |
+| Pressure transmitter | 4 | Analog 0–5V | Three-wire (V+/GND/signal), **5V supply**, 0–1 MPa = 0–10 bar, ratiometric output |
+| ZJ-TM02 flow meter | 2 | Pulse | Hall-effect, 5V supply, signal high level 4.7V (requires a voltage divider) |
 
-### 1.3 致動器
+### 1.3 Actuators
 
-| 元件 | 數量 | 驅動 | 規格 |
+| Component | Qty | Driver | Specification |
 |---|---|---|---|
-| 琥珀色 LED（OD600 光源） | 1 | 2N2222 低邊開關 | ~8.5 mA，脈衝式（只在量測 burst 期間點亮） |
-| 蠕動幫浦 | 1 | L298N ch.A | **12V / 10W（≈0.83A）**，可雙向 |
-| 隔膜幫浦 | 1 | L298N ch.B | **6–12V / 1A（12V 時 12W）**，**單向不逆轉** |
-| 繼電器模組 | 3（規劃） | GPIO | 切換 3 個 12V 直流裝置 |
+| Amber LED (OD600 light source) | 1 | 2N2222 low-side switch | ~8.5 mA, pulsed (lit only during the measurement burst) |
+| Peristaltic pump | 1 | L298N ch.A | **12V / 10W (≈0.83A)**, bidirectional |
+| Diaphragm pump | 1 | L298N ch.B | **6–12V / 1A (12W at 12V)**, **one direction only, not reversible** |
+| Relay module | 3 (planned) | GPIO | Switches three 12V DC devices |
 
-### 1.4 薄膜模組常數
+### 1.4 Membrane Module Constants
 
-定義於 `python/constants.json`（`config_version: rig-v2-integrated`）：
+Defined in `python/constants.json` (`config_version: rig-v2-integrated`):
 
-| 參數 | 值 |
+| Parameter | Value |
 |---|---|
-| 有效膜面積 | 0.02 m² |
-| 纖維數 | 11 |
-| 纖維內徑 | 1.0 mm |
-| 纖維長度 | 0.60 m |
-| 孔徑 | 0.2 µm |
-| 最大工作體積 | 2.0 L |
-| 操作溫度（假設） | 22 °C |
+| Effective membrane area | 0.02 m² |
+| Number of fibers | 11 |
+| Fiber inner diameter | 1.0 mm |
+| Fiber length | 0.60 m |
+| Pore size | 0.2 µm |
+| Maximum working volume | 2.0 L |
+| Operating temperature (assumed) | 22 °C |
 
-> 組態（管路／接頭／三通／流通池）一旦變更，`provisional_constants` 裡標記的常數全部作廢，請更新 `config_version` 並重新標定。
+> Once the configuration (tubing / fittings / tees / flow cell) changes, all constants flagged in `provisional_constants` become invalid; update `config_version` and recalibrate.
 
-### 1.5 量測規格與換算式
+### 1.5 Measurement Specifications and Conversion Formulas
 
-**壓力**
-
-```
-V_pin   = (ADC / 1023) × 3.3V           ADC 為 16 點過取樣平均後的浮點數
-V_sensor = V_pin / 0.6                   還原分壓（10kΩ + 15kΩ）
-bar      = (V_sensor / 5.0) × 10.0       0–5V 對應 0–10 bar
-最終值   = bar − offset                  offset 由歸零校正取得
-```
-
-取樣鏈：100 Hz 取樣（每次內含 16 點過取樣降噪）→ 1 秒滑動視窗 → 每 200 ms 統計 peak / trough / mean_raw / 脈動頻率 → Python 端對 mean_raw 做低通濾波（α = 0.3）。
-
-**流量**
+**Pressure**
 
 ```
-flow (mL/min) = (脈衝頻率Hz × 60 / PULSES_PER_LITER) × 1000
-PULSES_PER_LITER = 2580  （大孔版本，F = 43×Q）
-                 = 5160  （小孔版本，F = 86×Q，需改 sketch）
-去彈跳：兩脈衝間隔 < 500 µs 者忽略
+V_pin   = (ADC / 1023) × 3.3V           ADC is a float averaged from 16-point oversampling
+V_sensor = V_pin / 0.6                   undo the voltage divider (10kΩ + 15kΩ)
+bar      = (V_sensor / 5.0) × 10.0       0–5V maps to 0–10 bar
+final    = bar − offset                  offset obtained from zero calibration
+```
+
+Sampling chain: 100 Hz sampling (each sample includes 16-point oversampling for noise reduction) → 1-second sliding window → peak / trough / mean_raw / pulsation frequency computed every 200 ms → the Python side applies a low-pass filter to mean_raw (α = 0.3).
+
+**Flow**
+
+```
+flow (mL/min) = (pulse frequency Hz × 60 / PULSES_PER_LITER) × 1000
+PULSES_PER_LITER = 2580  (large-orifice version, F = 43×Q)
+                 = 5160  (small-orifice version, F = 86×Q, requires a sketch change)
+Debounce: pulses spaced < 500 µs apart are ignored
 ```
 
 **OD600**
@@ -143,1004 +146,1005 @@ PULSES_PER_LITER = 2580  （大孔版本，F = 43×Q）
 ```
 OD600 = log10(blankRatio / ratio) × pathLengthFactor
 ratio = (lit_sample − dark_sample) / (lit_ref − dark_ref)
-pathLengthFactor = 5.0   （1.0 cm 參考光程 / 0.2 cm 流通池光程）
+pathLengthFactor = 5.0   (1.0 cm reference path length / 0.2 cm flow-cell path length)
 ```
 
-單次量測流程：4 筆暗電流（LED 關）→ LED 亮 + 60 ms 穩定 → 16 筆亮燈 burst（丟前 2 筆）→ MAD 離群值剔除（K = 3.0）→ 拒收率 > 50% 則重試一次。單次耗時約 2.7 秒，**以非阻塞狀態機執行**（見 [§9](#9-版本沿革) v1/v2）。
+Single-measurement sequence: 4 dark-current readings (LED off) → LED on + 60 ms settling → 16-reading lit burst (first 2 discarded) → MAD outlier rejection (K = 3.0) → retry once if the rejection rate is > 50%. A single measurement takes about 2.7 seconds and **runs as a non-blocking state machine** (see [§9](#9-version-history) v1/v2).
 
-**單位基準**：壓力 **bar**、流速 **mL/min**、OD600 **AU**。psi / MPa 僅在畫面顯示時即時換算，不影響記錄值。
+**Base units**: pressure **bar**, flow rate **mL/min**, OD600 **AU**. psi / MPa are converted on the fly only for display and do not affect the logged values.
 
-### 1.6 安全門檻
+### 1.6 Safety Thresholds
 
-| 參數 | 警告 | 嚴重 |
+| Parameter | Warning | Critical |
 |---|---|---|
-| TMP | 0.4 bar | **0.5 bar**（collapse pressure 絕對上限） |
-| TMP 瞬時谷值 | −0.02 bar（疑似轉負，shell→lumen 倒流） | — |
+| TMP | 0.4 bar | **0.5 bar** (absolute collapse-pressure limit) |
+| TMP instantaneous trough | −0.02 bar (suspected negative TMP, shell→lumen backflow) | — |
 | dTMP/dt | 0.01 bar/min | 0.02 bar/min |
-| 剪切率 | 6000 s⁻¹ | — |
-| ΔP 相對基準線 | — | 2.5× |
-| R 相對基準線 | 2.0× | — |
+| Shear rate | 6000 s⁻¹ | — |
+| ΔP relative to baseline | — | 2.5× |
+| R relative to baseline | 2.0× | — |
 
 ---
 
-## 2. 腳位配置
+## 2. Pin Assignment
 
-### 2.1 完整腳位表
+### 2.1 Full Pin Table
 
-| 腳位 | MCU | 目前用途 | 規劃用途 | 特性 |
+| Pin | MCU | Current use | Planned use | Characteristics |
 |---|---|---|---|---|
-| **D2** | PB3 | 流速計 1 訊號 | 同左 | EXTI3 |
-| **D3** | PB0 | OD600 LED（經 2N2222） | 同左 | ~PWM（此處僅數位用） |
-| **D4** | PA12 | — | **流速計 2 訊號** | EXTI12 |
-| D5 | PA11 | 幫浦1 IN1 | **保留**（真 PWM） | ~PWM, TIM1_CH4 |
-| D6 | PB1 | 幫浦1 IN2 | **保留**（真 PWM） | ~PWM, TIM3_CH4 |
-| **D7** | PB2 | —（v3 曾給 KOH 幫浦，v3.1 已移除） | **繼電器 1** | EXTI2 |
-| **D8** | PB4 | — | **幫浦1 IN1** | 非 PWM |
-| **D9** | PB8 | **幫浦1 ENA（PWM）** | 同左 | ~PWM, TIM4_CH3 |
-| **D10** | PB9 | — | **幫浦2 ENB（PWM）** | ~PWM, TIM4_CH4 |
-| **D11** | PB15 | — | **幫浦2 IN4** | ~PWM（互補通道，當數位用） |
-| **D12** | PB14 | — | **幫浦1 IN2** | 非 PWM，SPI2_MISO |
-| **D13** | PB13 | — | **幫浦2 IN3** | 非 PWM，SPI2_SCK；**UNO Q 的 D13 沒接 LED** |
-| **A0** | PA4 | 壓力 Feed | 同左 | ADC，**非 5V 容忍** |
-| **A1** | PA5 | 壓力 Retentate | 同左 | ADC，**非 5V 容忍** |
-| **A2** | PA6 | 壓力 Permeate | 同左 | ADC |
-| **A3** | PA7 | — | **壓力變送器 4** | ADC |
-| **A4** | PC1 | **pH 探頭訊號（v3）** | 同左 | ADC / I2C3_SDA |
-| **A5** | PC0 | — | **繼電器 3**（若啟用 DS18B20 則給 DS18B20，繼電器 3 改 D6） | ADC / I2C3_SCL |
-| **D20/D21** | PB11/PB10 | I2C2 SDA/SCL → BH1750 ×2 | 同左 | |
-| **D0/D1** | PB7/PB6 | **STS3215 夾閥（Serial1, 1 Mbps, 經 Waveshare Serial Bus Servo Driver Board，跳線 A，RX→RX / TX→TX）（v3）** | 同左 | USART1；Zephyr 0.55+ 的 `Serial1` |
+| **D2** | PB3 | Flow meter 1 signal | Same | EXTI3 |
+| **D3** | PB0 | OD600 LED (via 2N2222) | Same | ~PWM (used as digital only here) |
+| **D4** | PA12 | — | **Flow meter 2 signal** | EXTI12 |
+| D5 | PA11 | Pump 1 IN1 | **Reserved** (true PWM) | ~PWM, TIM1_CH4 |
+| D6 | PB1 | Pump 1 IN2 | **Reserved** (true PWM) | ~PWM, TIM3_CH4 |
+| **D7** | PB2 | — (used for the KOH pump in v3, removed in v3.1) | **Relay 1** | EXTI2 |
+| **D8** | PB4 | — | **Pump 1 IN1** | Non-PWM |
+| **D9** | PB8 | **Pump 1 ENA (PWM)** | Same | ~PWM, TIM4_CH3 |
+| **D10** | PB9 | — | **Pump 2 ENB (PWM)** | ~PWM, TIM4_CH4 |
+| **D11** | PB15 | — | **Pump 2 IN4** | ~PWM (complementary channel, used as digital) |
+| **D12** | PB14 | — | **Pump 1 IN2** | Non-PWM, SPI2_MISO |
+| **D13** | PB13 | — | **Pump 2 IN3** | Non-PWM, SPI2_SCK; **D13 on the UNO Q has no LED attached** |
+| **A0** | PA4 | Pressure Feed | Same | ADC, **not 5V tolerant** |
+| **A1** | PA5 | Pressure Retentate | Same | ADC, **not 5V tolerant** |
+| **A2** | PA6 | Pressure Permeate | Same | ADC |
+| **A3** | PA7 | — | **Pressure transmitter 4** | ADC |
+| **A4** | PC1 | **pH probe signal (v3)** | Same | ADC / I2C3_SDA |
+| **A5** | PC0 | — | **Relay 3** (if DS18B20 is enabled, A5 goes to the DS18B20 and relay 3 moves to D6) | ADC / I2C3_SCL |
+| **D20/D21** | PB11/PB10 | I2C2 SDA/SCL → BH1750 ×2 | Same | |
+| **D0/D1** | PB7/PB6 | **STS3215 pinch valve (Serial1, 1 Mbps, via Waveshare Serial Bus Servo Driver Board, jumper A, RX→RX / TX→TX) (v3)** | Same | USART1; `Serial1` on Zephyr 0.55+ |
 
-**v3.1 之後的規劃**：繼電器 2 原本的 A4 已給 pH，改接幫浦腳位搬遷（IN1/IN2 → D8/D12）後空出來的 **D5**。繼電器 1 仍是 D7。
+**Plan after v3.1**: relay 2's original pin A4 is now used by pH, so relay 2 moves to **D5**, which becomes free after the pump pin relocation (IN1/IN2 → D8/D12). Relay 1 stays on D7.
 
-### 2.2 UNO Q 腳位能力備忘
+### 2.2 UNO Q Pin Capability Notes
 
-依官方 datasheet（ABX00162/ABX00173）的 JDIGITAL / JANALOG 腳位表：
+Based on the JDIGITAL / JANALOG pin tables in the official datasheet (ABX00162/ABX00173):
 
-- **PWM（`~` 標記）只有 6 支**：D3、D5、D6、D9、D10、D11。與傳統 UNO 相同。
-- **D11 是 TIM1_CH3N（互補輸出）**，部分核心版本對 N 通道的處理會反相，當 PWM 用要實測；當數位用沒問題。
-- **D9 / D10 同屬 TIM4 的不同通道**，兩路 PWM 同頻率、各自獨立責任週期，是驅動兩顆馬達的標準配置。
-- **外部中斷按腳位號碼共用 EXTI 線**（不分 Port）。目前佔用 EXTI3（D2）與 EXTI12（D4）；要加第三個脈衝輸入請避開這兩個號碼，例如 D7（EXTI2）或 A3（EXTI7）。
-- **A0 / A1 明確標示非 5V 容忍**，其餘 3.3V 腳位也應假設不耐 5V ⇒ **所有 5V 訊號都必須分壓**。
+- **There are only 6 PWM pins (marked `~`)**: D3, D5, D6, D9, D10, D11. Same as the classic UNO.
+- **D11 is TIM1_CH3N (complementary output)**; some core versions invert N channels, so test it on hardware before using it as PWM. Using it as digital is fine.
+- **D9 / D10 are different channels of the same TIM4**, so the two PWM outputs share the same frequency with independent duty cycles — the standard setup for driving two motors.
+- **External interrupts share EXTI lines by pin number** (regardless of port). EXTI3 (D2) and EXTI12 (D4) are currently in use; to add a third pulse input, avoid those two numbers, e.g. use D7 (EXTI2) or A3 (EXTI7).
+- **A0 / A1 are explicitly marked as not 5V tolerant**, and the other 3.3V pins should also be assumed not to tolerate 5V ⇒ **every 5V signal must go through a voltage divider**.
 
-### 2.3 已知地雷：`pinMode()` + `analogWrite()`
+### 2.3 Known Pitfall: `pinMode()` + `analogWrite()`
 
-UNO Q 的 Zephyr 核心有一個已知問題：**先呼叫 `pinMode()` 會讓該腳位的 `analogWrite()` 失效（輸出 0V），但 `digitalWrite()` 照常運作**。
+The UNO Q Zephyr core has a known issue: **calling `pinMode()` first makes `analogWrite()` on that pin stop working (output 0V), while `digitalWrite()` still works normally**.
 
 ```cpp
-pinMode(PUMP_ENA_PIN, OUTPUT);     // ← 這行會破壞 D9 的 PWM
+pinMode(PUMP_ENA_PIN, OUTPUT);     // ← this line breaks PWM on D9
 analogWrite(PUMP_ENA_PIN, pumpPwm);
 ```
 
-**修法**：PWM 腳位不要呼叫 `pinMode()`，`analogWrite()` 自己會設定腳位。`setup()` 中仍應呼叫一次 `analogWrite(ENA, 0)`，確保開機是 0% 責任週期。
+**Fix**: do not call `pinMode()` on PWM pins; `analogWrite()` configures the pin itself. `setup()` should still call `analogWrite(ENA, 0)` once to make sure the duty cycle is 0% at power-up.
 
-> v3.2 曾移除 D9 的 `pinMode()`；v3.3 排錯期間恢復成舊版寫法（舊版在實機上幫浦正常）。
+> v3.2 removed `pinMode()` from D9; during v3.3 troubleshooting it was restored to the old code (with which the pump worked correctly on real hardware).
 
 ---
 
-## 3. 接線
+## 3. Wiring
 
-> **所有接線作業前先斷電。** 建議順序：GND → 訊號線 → 電源線 → 最後才接致動器負載。
+> **Disconnect power before doing any wiring.** Recommended order: GND → signal wires → power wires → actuator loads last.
 
-### 3.1 OD600 光學
+### 3.1 OD600 Optics
 
-**LED 驅動（低邊 NPN 開關）**
+**LED driver (low-side NPN switch)**
 
 ```
 UNO Q D3 ──[1.2kΩ]──┬── 2N2222 Base
-                     └──[10kΩ]── GND      （下拉，避免浮接誤導通）
+                     └──[10kΩ]── GND      (pull-down, prevents false turn-on when floating)
 
-5V ──[330Ω]── LED 陽極
-              LED 陰極 ── 2N2222 Collector
+5V ──[330Ω]── LED anode
+              LED cathode ── 2N2222 Collector
                           2N2222 Emitter ── GND
 ```
 
-韌體與開關元件無關（MOSFET、BJT、光耦皆可），只需要 `digitalWrite(D3, HIGH/LOW)`。
+The firmware does not depend on the switching device (MOSFET, BJT or optocoupler all work); it only needs `digitalWrite(D3, HIGH/LOW)`.
 
 **BH1750 ×2**
 
-| GY-302 | 接到 | 備註 |
+| GY-302 | Connect to | Notes |
 |---|---|---|
-| VCC | 5V（或 3.3V） | 模組自帶穩壓器 |
-| GND | 乾淨地 | |
+| VCC | 5V (or 3.3V) | The module has its own regulator |
+| GND | Clean ground | |
 | SDA | D20 | |
 | SCL | D21 | |
-| ADDR（sample） | 3V3 | → 位址 `0x5C` |
-| ADDR（reference） | GND | → 位址 `0x23` |
+| ADDR (sample) | 3V3 | → address `0x5C` |
+| ADDR (reference) | GND | → address `0x23` |
 
-> **建議改用 3.3V 供電**：部分 GY-302 模組的 I2C 上拉電阻接到 VCC，若以 5V 供電會把 5V 加到 UNO Q 的 I2C 腳上（非 5V 容忍）。用 3.3V 供電可完全消除這個風險。
+> **Powering from 3.3V is recommended**: on some GY-302 modules the I2C pull-up resistors are tied to VCC, so powering them from 5V puts 5V on the UNO Q's I2C pins (not 5V tolerant). Powering from 3.3V eliminates this risk entirely.
 
-### 3.2 壓力變送器 ×4
+### 3.2 Pressure Transmitters ×4
 
-每一顆都要**各自獨立**一組分壓：
-
-```
-變送器 V+  ── 5V 類比軌（見 §4）
-變送器 GND ── 乾淨地
-變送器 訊號 ──┬──[10kΩ]──┬── A0 / A1 / A2 / A3
-              │          │
-             (訊號)    [15kΩ]
-                         │
-                        GND
-```
-
-分壓比 0.6：5V 滿刻度 → 3.0V，落在 3.3V ADC 範圍內。建議在每個接頭旁加 100 nF 陶瓷電容到地。
-
-通道對應：**A0 = Feed、A1 = Retentate、A2 = Permeate、A3 = 第四點（程式待擴充）**。
-
-### 3.3 流速計 ×2
+Each transmitter needs **its own separate** voltage divider:
 
 ```
-感測器 紅(VCC) ── 5V
-感測器 黑(GND) ── 乾淨地
-感測器 黃(訊號) ──┬──[10kΩ]──┬── D2（流速計 1）/ D4（流速計 2）
-                  │          │
-                 (訊號)    [20kΩ]
-                            │
-                           GND
+Transmitter V+     ── 5V analog rail (see §4)
+Transmitter GND    ── clean ground
+Transmitter signal ──┬──[10kΩ]──┬── A0 / A1 / A2 / A3
+                     │          │
+                  (signal)    [15kΩ]
+                                │
+                               GND
 ```
 
-分壓把 4.7V 高電平降到約 3.1V。**D2 和 D4 都不是 5V 容忍腳位，分壓不能省。**
+Divider ratio 0.6: 5V full scale → 3.0V, within the 3.3V ADC range. Adding a 100 nF ceramic capacitor to ground next to each connector is recommended.
 
-### 3.4 L298N + 兩顆幫浦
+Channel mapping: **A0 = Feed, A1 = Retentate, A2 = Permeate, A3 = fourth point (software extension pending)**.
 
-**訊號線（7 條）**
+### 3.3 Flow Meters ×2
+
+```
+Sensor red (VCC)      ── 5V
+Sensor black (GND)    ── clean ground
+Sensor yellow (signal) ──┬──[10kΩ]──┬── D2 (flow meter 1) / D4 (flow meter 2)
+                         │          │
+                      (signal)    [20kΩ]
+                                    │
+                                   GND
+```
+
+The divider brings the 4.7V high level down to about 3.1V. **Neither D2 nor D4 is 5V tolerant, so the divider cannot be omitted.**
+
+### 3.4 L298N + Two Pumps
+
+**Signal wires (7)**
 
 ```
 UNO Q                      L298N
 ─────                      ─────
- D9  ──────────────────▶   ENA      幫浦1 PWM 調速
- D8  ──────────────────▶   IN1      幫浦1 方向
- D12 ──────────────────▶   IN2      幫浦1 方向
- D10 ──────────────────▶   ENB      幫浦2 PWM 調速
- D13 ──────────────────▶   IN3      幫浦2 方向
- D11 ──────────────────▶   IN4      幫浦2 方向
- GND ──────────────────▶   GND      共地，絕對必接
+ D9  ──────────────────▶   ENA      Pump 1 PWM speed control
+ D8  ──────────────────▶   IN1      Pump 1 direction
+ D12 ──────────────────▶   IN2      Pump 1 direction
+ D10 ──────────────────▶   ENB      Pump 2 PWM speed control
+ D13 ──────────────────▶   IN3      Pump 2 direction
+ D11 ──────────────────▶   IN4      Pump 2 direction
+ GND ──────────────────▶   GND      Common ground, absolutely required
 ```
 
-少了共地那條，PWM 與方向訊號沒有共同參考電位，行為完全隨機——這是最常被漏掉、也最容易讓人以為「板子壞了」的一條線。
+Without the common ground wire, the PWM and direction signals have no shared reference potential and the behavior is completely random — this is the wire most often forgotten, and the one most likely to make people think "the board is broken".
 
-UNO Q 是 3.3V 邏輯，L298N 輸入高準位門檻約 2.3V，3.3V 直驅沒問題。
+The UNO Q uses 3.3V logic; the L298N's input high threshold is about 2.3V, so driving it directly at 3.3V is fine.
 
-**電源與輸出**
+**Power and outputs**
 
-| L298N | 接到 |
+| L298N | Connect to |
 |---|---|
-| 12V | 12V 髒軌（**直接從電源端子拉，不要經過小電源模組**） |
-| GND | 12V 電源 − ＋ UNO Q GND |
-| 5V | 見下方跳線說明 |
-| OUT1 / OUT2 | 幫浦 1（蠕動）馬達兩端 |
-| OUT3 / OUT4 | 幫浦 2（隔膜）馬達兩端 |
+| 12V | 12V dirty rail (**run directly from the power supply terminals, not through the small power module**) |
+| GND | 12V supply − + UNO Q GND |
+| 5V | See the jumper notes below |
+| OUT1 / OUT2 | Pump 1 (peristaltic) motor terminals |
+| OUT3 / OUT4 | Pump 2 (diaphragm) motor terminals |
 
-**跳線設定**
+**Jumper settings**
 
-| 跳線 | 動作 | 原因 |
+| Jumper | Action | Reason |
 |---|---|---|
-| ENA | **拔掉** | 留著會把 ENA 綁在 5V，MCU 的 PWM 失效 |
-| ENB | **拔掉** | 同上 |
-| 5V-EN | **拔掉**，然後從 UNO Q 或 5V 軌接一條線**進**模組的 5V 腳 | 見下 |
+| ENA | **Remove** | If left in, it ties ENA to 5V and the MCU's PWM has no effect |
+| ENB | **Remove** | Same as above |
+| 5V-EN | **Remove**, then run a wire from the UNO Q or the 5V rail **into** the module's 5V pin | See below |
 
-> **5V-EN 這點常被誤解**：跳線**留著**時，模組用板上 78M05 從 12V 產生 5V，5V 腳是**輸出**（不要接東西進去）；跳線**拔掉**時，穩壓器停用，5V 腳變成**輸入**，**必須**外部餵 5V 進去，否則整片模組的邏輯沒電。
-> **絕對不要用模組的 5V 輸出去餵 UNO Q**（電流不足）。
+> **5V-EN is commonly misunderstood**: with the jumper **left in**, the module uses its onboard 78M05 to generate 5V from 12V, and the 5V pin is an **output** (do not feed anything into it); with the jumper **removed**, the regulator is disabled and the 5V pin becomes an **input**, so 5V **must** be supplied externally, otherwise the module's logic has no power.
+> **Never use the module's 5V output to power the UNO Q** (insufficient current).
 
-**必要的保護**
+**Required protection**
 
 ```
 ENA ──┬── UNO Q D9          ENB ──┬── UNO Q D10
       └──[10kΩ]── GND             └──[10kΩ]── GND
 ```
 
-MCU 從上電到 `setup()` 跑完之間這兩支腳浮接，L298N 可能讀成 HIGH 讓幫浦先噴一下。兩顆電阻就擋掉了。
+From MCU power-up until `setup()` has finished, these two pins float, and the L298N may read them as HIGH and give the pump a brief burst. Two resistors prevent this.
 
-**隔膜幫浦的方向**：接線保留雙向能力，但隔膜幫浦內部有單向止回閥，反轉時液體不會倒流，馬達是在對著關閉的止回閥做功，容易堵轉發熱。程式應預設鎖在正轉，反轉加一層確認。
+**Diaphragm pump direction**: the wiring keeps bidirectional capability, but the diaphragm pump has internal one-way check valves; when reversed, liquid does not flow backward and the motor works against closed check valves, which easily leads to stalling and overheating. The software should lock it to forward by default and require an extra confirmation for reverse.
 
-**散熱與壓降**：L298N 是達林頓 BJT 橋，壓降約 1.4–2.5V，12V 進去馬達實際只拿到約 9.5–10.6V。以實際幫浦（蠕動 12V/10W、隔膜 6–12V/1A，合計 1.83A）計算，這段壓降吃掉約 **3.7W 純發熱**，**兩顆連續運轉必須裝散熱片**；蠕動幫浦的扭力也因此掉約 30%。完整分析與 MOSFET 驅動的替代方案見 [§4.1](#41-電力預算)。
+**Heat dissipation and voltage drop**: the L298N is a Darlington BJT bridge with a voltage drop of about 1.4–2.5V, so with 12V in, the motor actually gets only about 9.5–10.6V. With the actual pumps (peristaltic 12V/10W, diaphragm 6–12V/1A, 1.83A total), this drop burns about **3.7W purely as heat**, so **a heatsink is mandatory when both pumps run continuously**; the peristaltic pump's torque also drops by about 30% as a result. See [§4.1](#41-power-budget) for the full analysis and the MOSFET driver alternative.
 
-### 3.5 繼電器 ×3（規劃）
+### 3.5 Relays ×3 (Planned)
 
-| 控制腳 | 繼電器 | 負載 |
+| Control pin | Relay | Load |
 |---|---|---|
-| D7 | 繼電器 1 | 12V 裝置 A |
-| A4 | 繼電器 2 | 12V 裝置 B |
-| A5 | 繼電器 3 | 12V 裝置 C |
+| D7 | Relay 1 | 12V device A |
+| A4 | Relay 2 | 12V device B |
+| A5 | Relay 3 | 12V device C |
 
-**兩個坑：**
+**Two pitfalls:**
 
-1. **UNO Q 是 3.3V 邏輯，很多 5V 繼電器模組觸發不了。** 請選明確支援 3.3V 觸發的光耦合模組（低電位觸發通常可以），或自己用 MOSFET 驅動。**買之前確認**。
-2. **建議用 12V 線圈的模組**，把約 210 mA 的線圈電流從吃緊的 5V 軌移到 12V 軌。若模組有 `VCC` / `JD-VCC` 跳線，拔掉跳線、`JD-VCC` 餵 12V、`VCC` 餵邏輯電壓。
+1. **The UNO Q uses 3.3V logic, and many 5V relay modules cannot be triggered by it.** Choose an optocoupled module that explicitly supports 3.3V triggering (active-low trigger usually works), or drive it yourself with a MOSFET. **Confirm before buying.**
+2. **A module with 12V coils is recommended**, moving the roughly 210 mA of coil current from the tight 5V rail to the 12V rail. If the module has a `VCC` / `JD-VCC` jumper, remove the jumper, feed 12V to `JD-VCC` and the logic voltage to `VCC`.
 
-每組接點負載各自加保險絲；感性負載加 RC 緩衝或飛輪二極體。
+Fuse each contact load separately; add an RC snubber or flyback diode for inductive loads.
 
 ---
 
-## 4. 電源系統
+## 4. Power System
 
-### 4.1 電力預算
+### 4.1 Power Budget
 
-> **⚠️ 本節已於 2026-09-20 修正。** 舊版把 UNO Q 的 **5V/3A（15W）電源規格當成實際耗電**，估成 19W，整整高估了 6–10 倍，連帶把變壓器建議推到 8–10A。實際耗電見下。
+> **⚠️ This section was corrected on 2026-09-20.** The previous version treated the UNO Q's **5V/3A (15W) supply specification as its actual power consumption**, estimating 19W — an overestimate of a full 6–10×, which in turn pushed the power adapter recommendation up to 8–10A. Actual consumption is shown below.
 
-**UNO Q 本身的耗電**（Arduino 官方論壇實測，牆插端量測、WiFi 開啟、無外接周邊）：
+**Power consumption of the UNO Q itself** (measured on the official Arduino forum, at the wall plug, WiFi on, no external peripherals):
 
-| 狀態 | 實測功耗 | 換算 5V 側電流 |
+| State | Measured power | Equivalent current on the 5V side |
 |---|---|---|
-| 閒置 | 0.5 W | ~0.1 A |
-| 一般負載（模擬壓力測試） | 1.9 W | ~0.4 A |
-| Geekbench 多核 | 2.5 W | ~0.5 A |
-| HPL 滿載（實務上碰不到） | 3.5 W | ~0.7 A |
+| Idle | 0.5 W | ~0.1 A |
+| Typical load (simulated stress test) | 1.9 W | ~0.4 A |
+| Geekbench multi-core | 2.5 W | ~0.5 A |
+| HPL full load (not reached in practice) | 3.5 W | ~0.7 A |
 
-datasheet 要求的 **5V/3A** 是板子向 USB-C PD 協商的**供電契約**，不是消耗量——那 3A 的餘裕是留給 WiFi 突發、顯示器初始化，以及使用者掛在 USB host 埠上的周邊。本系統的負載型態（web server + Bridge RPC 常駐，沒有影像運算）落在 **1.5–2.5W** 這一檔。
+The **5V/3A** required by the datasheet is the **supply contract** the board negotiates over USB-C PD, not its consumption — that 3A of headroom is reserved for WiFi bursts, display initialization and peripherals the user hangs off the USB host port. This system's load profile (web server + Bridge RPC running continuously, no image processing) falls in the **1.5–2.5W** class.
 
-> **本機實測**：在電源線上串接功率計，**OD600 量測期間**量到 UNO Q **＋一台 7 吋外接螢幕**總功耗約 **5W**。扣掉螢幕典型的 2–3W，UNO Q 本身約 2–3W，與上表一致。
+> **Local measurement**: with a power meter in series on the power cord, the total consumption of the UNO Q **plus a 7-inch external display** **during OD600 measurement** was about **5W**. Subtracting the display's typical 2–3W leaves about 2–3W for the UNO Q itself, consistent with the table above.
 
-**量測涵蓋範圍**
+**Measurement coverage**
 
-| 項目 | 狀態 |
+| Item | Status |
 |---|---|
-| 開機與顯示器初始化 | ✅ **已監測，全程未超過 5W** |
-| WiFi 發射突發 | ✅ **不適用——本系統不使用 WiFi**（PC 經 USB 連線取得操作介面） |
-| OD600 量測期間 | ✅ 5W（本表的量測條件） |
-| 幫浦運轉 | 不適用——幫浦不由 UNO Q 供電，兩者之間只有 PWM 控制線 |
+| Boot and display initialization | ✅ **Monitored; never exceeded 5W at any point** |
+| WiFi transmit bursts | ✅ **Not applicable — this system does not use WiFi** (the PC reaches the operator interface over USB) |
+| During OD600 measurement | ✅ 5W (the measurement condition of this table) |
+| Pump operation | Not applicable — the pumps are not powered by the UNO Q; only PWM control lines connect them |
 
-datasheet 之所以要求 5V/3A，理由明寫是「防止 **WiFi 突發**與**顯示器初始化**期間的電壓下陷」。**這兩個情境在本系統裡一個不存在、一個已實測過**，所以那 3A 的餘裕在這套組態下沒有對應的負載。
+The datasheet's stated reason for requiring 5V/3A is "to prevent voltage sag during **WiFi bursts** and **display initialization**". **In this system one of these scenarios does not exist and the other has been measured**, so that 3A of headroom has no corresponding load in this configuration.
 
-> ### 結論：UNO Q 這一路可以按 5W 定量編列
-> 不是「2–3W 典型值加上未知峰值」，而是**含 7 吋螢幕、含開機瞬間、上限 5W**（5V 側約 1A，或 12V 側經降壓約 0.47A）。
-> [§4.5](#45-保護元件清單) 在 5V 軌的 220µF + 10µF 仍然保留——去耦電容很便宜，而且對付的是本來就該擋的高頻雜訊——但它不再是撐住供電的關鍵元件。
+> ### Conclusion: the UNO Q branch can be budgeted at a fixed 5W
+> Not "a typical 2–3W plus an unknown peak", but **a 5W ceiling including the 7-inch display and including the boot transient** (about 1A on the 5V side, or about 0.47A on the 12V side through the buck converter).
+> The 220µF + 10µF on the 5V rail in [§4.5](#45-protection-component-list) are still kept — decoupling capacitors are cheap and deal with high-frequency noise that should be blocked anyway — but they are no longer the critical component holding up the supply.
 
-**全系統電力預算（修正後）**
+**System-wide power budget (corrected)**
 
-兩顆幫浦的銘牌值已知，**12V 側的預算因此收斂了**：
+With the nameplate ratings of both pumps now known, **the 12V-side budget has converged**:
 
-| 負載 | 軌 | 依據 | 電流 | 12V 側功率 |
+| Load | Rail | Basis | Current | Power on 12V side |
 |---|---|---|---|---|
-| **UNO Q ＋ 7 吋螢幕** | 5V | **實測上限** | ~1 A @5V | **5 W → 0.47 A**（經降壓，η≈88%）|
-| 4× 壓力變送器 | 5V | 估 | ~40 mA | 0.2 W |
-| 2× 流速計 | 5V | 估 | ~20 mA | 0.1 W |
-| OD600 LED | 5V | 估（脈衝式） | ~9 mA | 0.05 W |
-| L298N 邏輯 | 5V | 估 | ~50 mA | 0.3 W |
-| 3× 繼電器線圈（5V 版） | 5V | 估 | ~210 mA | 1.2 W |
-| **幫浦 1（蠕動）** | 12V | **銘牌 12V / 10W** | **0.83 A** | **10 W** |
-| **幫浦 2（隔膜）** | 12V | **銘牌 6–12V / 1A** | **1.0 A** | **12 W** |
-| L298N 壓降損耗 | — | 1.83A × ~2V | — | **~3.7 W**（純發熱） |
-| 3× 12V 裝置 | 12V | **唯一未知** | ? | ? |
+| **UNO Q + 7-inch display** | 5V | **Measured ceiling** | ~1 A @5V | **5 W → 0.47 A** (via buck converter, η≈88%)|
+| 4× pressure transmitters | 5V | Estimate | ~40 mA | 0.2 W |
+| 2× flow meters | 5V | Estimate | ~20 mA | 0.1 W |
+| OD600 LED | 5V | Estimate (pulsed) | ~9 mA | 0.05 W |
+| L298N logic | 5V | Estimate | ~50 mA | 0.3 W |
+| 3× relay coils (5V version) | 5V | Estimate | ~210 mA | 1.2 W |
+| **Pump 1 (peristaltic)** | 12V | **Nameplate 12V / 10W** | **0.83 A** | **10 W** |
+| **Pump 2 (diaphragm)** | 12V | **Nameplate 6–12V / 1A** | **1.0 A** | **12 W** |
+| L298N voltage-drop loss | — | 1.83A × ~2V | — | **~3.7 W** (pure heat) |
+| 3× 12V devices | 12V | **The only unknown** | ? | ? |
 
-**已知部分合計約 33 W（2.8 A @ 12V）**，尚未計入三個繼電器裝置。
+**The known portion totals about 33 W (2.8 A @ 12V)**, not yet including the three relay-switched devices.
 
-組成比例：兩顆幫浦連同 L298N 的損耗佔 **26 W（約 78%）**，UNO Q ＋螢幕佔 **5 W（15%）**，其餘感測器與邏輯合計不到 2 W。
+Breakdown: the two pumps together with the L298N losses account for **26 W (about 78%)**, the UNO Q + display for **5 W (15%)**, and all remaining sensors and logic together for less than 2 W.
 
-> ### ⚠️ 12V 3A（36W）＝ 93% 負載率，不能用
-> 33W ÷ 36W = 92.6%。連續運轉的變壓器不該超過 **80% 負載率**（發熱、壽命、輸出下垂），而且這還沒算三個繼電器裝置——只要它們合計超過約 0.25A 就直接爆表。
+> ### ⚠️ 12V 3A (36W) = 93% load factor, not usable
+> 33W ÷ 36W = 92.6%. A power adapter in continuous operation should not exceed an **80% load factor** (heat, lifetime, output droop), and this does not yet include the three relay-switched devices — if they draw more than about 0.25A combined, the budget is blown outright.
 >
-> **建議 12V 5A（60W）**：負載率 56%，留給三個 12V 裝置約 2A 的空間，足夠絕大多數電磁閥／小風扇／加熱片。若三個裝置合計超過 1A，上 6A（72W）。**8A 以上沒有必要。**
+> **12V 5A (60W) is recommended**: 56% load factor, leaving about 2A for the three 12V devices, which is enough for the vast majority of solenoid valves / small fans / heater pads. If the three devices draw more than 1A combined, go to 6A (72W). **8A or more is unnecessary.**
 >
-> **啟動衝擊另外處理。** 有刷直流馬達的堵轉電流是額定的 3–6 倍，隔膜幫浦啟動瞬間可能瞬間吃到 3–6A。但那是毫秒級瞬態，正解是三軌圖裡的 2200–4700µF 儲能電容，加上韌體把幫浦 PWM 從 0 斜升到目標值（約 200–500 ms）——**不是靠放大變壓器**。見 [§11](#11-已知限制與待辦)。
+> **Handle start-up inrush separately.** The stall current of a brushed DC motor is 3–6× its rated current, so the diaphragm pump may momentarily draw 3–6A at start-up. But that is a millisecond-scale transient; the correct solution is the 2200–4700µF reservoir capacitor in the three-rail diagram, plus firmware that ramps the pump PWM from 0 to the target value (over about 200–500 ms) — **not a bigger power adapter**. See [§11](#11-known-limitations-and-to-do).
 
-> ### ⚠️ L298N 的壓降現在是個實質問題，不只是註腳
-> L298N 是達林頓 BJT 橋，**總壓降約 1.4–2.5V**。接上實際的幫浦之後：
+> ### ⚠️ The L298N voltage drop is now a real problem, not just a footnote
+> The L298N is a Darlington BJT bridge with a **total voltage drop of about 1.4–2.5V**. With the actual pumps connected:
 >
-> | | 銘牌 | 經 L298N 實際拿到 | 後果 |
+> | | Nameplate | Actually received through the L298N | Consequence |
 > |---|---|---|---|
-> | 蠕動幫浦 | 12V / 10W | **~10V / ~7W** | 扭力掉約 30%，帶膜組背壓時可能轉不動或流量不足 |
-> | 隔膜幫浦 | 6–12V / 1A | **~10V** | 仍在範圍內，但揚程與流量都打折 |
+> | Peristaltic pump | 12V / 10W | **~10V / ~7W** | Torque drops by about 30%; against the membrane module's back-pressure it may fail to turn or deliver too little flow |
+> | Diaphragm pump | 6–12V / 1A | **~10V** | Still within range, but head and flow are both reduced |
 >
-> 同時這 ~3.7W 全部變成 L298N 的熱，**兩顆連續運轉一定要散熱片**。
+> At the same time, all of this ~3.7W becomes heat in the L298N, so **a heatsink is mandatory when both pumps run continuously**.
 >
-> **改用 MOSFET 驅動可以一次解決三件事**（壓降、發熱、散熱片）。以 DRV8871（3.6A，單通道，RDS(on) 合計約 0.3Ω）為例，1A 時壓降只有 0.3V，幫浦能拿到 11.7V，損耗 0.3W。代價是介面從 ENA/IN1/IN2 三支腳變成 IN1/IN2 兩支腳（直接對其中一支下 PWM），韌體要改——但腳位反而更省。BTS7960 餘裕更大但體積也大。
+> **Switching to a MOSFET driver solves three things at once** (voltage drop, heat, heatsink). Taking the DRV8871 (3.6A, single channel, total RDS(on) about 0.3Ω) as an example, the drop at 1A is only 0.3V, the pump gets 11.7V and the loss is 0.3W. The cost is that the interface changes from three pins (ENA/IN1/IN2) to two pins (IN1/IN2, with PWM applied directly to one of them), so the firmware must change — but it actually uses fewer pins. The BTS7960 has more headroom but is also larger.
 
-### 4.2 三軌架構
-
-```
-  12V 5A 變壓器（已知負載 2.8A ＝ 56% 負載率）
-        │
-    [主保險絲 6.3A]
-        │
-    [反接保護 + 470µF]
-        │
-        ├────────────────▶ 12V 髒軌（大電流、會跳動）
-        │                  ├─ L298N 12V（兩顆幫浦）        [4A 保險絲]
-        │                  ├─ 繼電器 1/2/3 → 12V 裝置      [各自保險絲]
-        │                  └─ 2200–4700µF 儲能電容（吸收馬達啟動衝擊）
-        │
-        ├──[1A]──▶ UNO Q 的 VIN（7–24V，讓它自己降壓）★
-        │
-        ├──[2A]──▶ 3A 同步整流降壓模組 ──▶ 5V 數位軌
-        │                                  ├─ 2× 流速計
-        │                                  ├─ OD600 LED
-        │                                  ├─ L298N 邏輯 5V
-        │                                  └─ 繼電器模組
-        │
-        └──[0.5A]──▶ AMS1117 線性模組 + LC 濾波 ──▶ 5V 類比軌 ★★
-                                                    └─ 4× 壓力變送器（只有這個）
-```
-
-★ **UNO Q 走 VIN 而不是 5V**，理由有二（注意：修正耗電數字後，這兩個理由的**主次對調了**）：
-1. **開發時 USB-C 插著，若同時從 5V_SYS 灌電，兩個電源會在同一條軌上打架。** datasheet 明講 USB-C VBUS 與 7–24V 降壓的 5V 輸出是 diode-OR 併到系統 5V 匯流排，走 VIN 就完全避開這個問題。**這是現在的主要理由。**
-2. 手上的 AMS1117 模組仍然供不了 UNO Q——即使實測需求只有 ~1A（含螢幕），線性穩壓在 12V→5V 下也要耗散 **7W**，SOT-223 無散熱片撐不住（見 [§4.3](#43-ams1117-模組的正確用途)）。結論不變，只是理由從「電流差了 3 倍」變成「散熱差了一個數量級」。
-
-★★ **為什麼壓力變送器要獨立一條線性 5V**
-
-變送器是三線式 0–5V，這類幾乎都是**比例式（ratiometric）輸出**——輸出電壓正比於供電電壓，**供電雜訊會 1:1 變成壓力雜訊**。
+### 4.2 Three-Rail Architecture
 
 ```
-穩態判定門檻 0.003 bar ÷ 滿量程 10 bar = 0.03% FS
-0.03% × 5V = 1.5 mV   ← 供電雜訊必須低於這個數字
+  12V 5A power adapter (known load 2.8A = 56% load factor)
+        │
+    [Main fuse 6.3A]
+        │
+    [Reverse-polarity protection + 470µF]
+        │
+        ├────────────────▶ 12V dirty rail (high current, fluctuating)
+        │                  ├─ L298N 12V (two pumps)            [4A fuse]
+        │                  ├─ Relays 1/2/3 → 12V devices       [individual fuses]
+        │                  └─ 2200–4700µF reservoir capacitor (absorbs motor start-up inrush)
+        │
+        ├──[1A]──▶ UNO Q VIN (7–24V, let it do its own step-down) ★
+        │
+        ├──[2A]──▶ 3A synchronous buck module ──▶ 5V digital rail
+        │                                         ├─ 2× flow meters
+        │                                         ├─ OD600 LED
+        │                                         ├─ L298N logic 5V
+        │                                         └─ Relay modules
+        │
+        └──[0.5A]──▶ AMS1117 linear module + LC filter ──▶ 5V analog rail ★★
+                                                           └─ 4× pressure transmitters (nothing else)
 ```
 
-降壓模組的輸出漣波動輒 20–50 mV，**光是漣波本身就超標十倍以上**（本系統不用 WiFi，所以少了突發負載階躍這個加乘因素，但 20–50 mV vs 1.5 mV 的差距不需要它也足夠致命）。**線性穩壓的輸出雜訊比降壓模組低一到兩個數量級**，12V→5V 在 40 mA 下只損耗 0.28W，不用散熱片。
+★ **The UNO Q is powered via VIN rather than 5V**, for two reasons (note: after correcting the power consumption figures, **the order of importance of these two reasons has swapped**):
+1. **During development the USB-C cable is plugged in; if power is also fed into 5V_SYS at the same time, the two supplies fight on the same rail.** The datasheet states plainly that USB-C VBUS and the 5V output of the 7–24V buck converter are diode-ORed onto the system 5V bus; going through VIN avoids this problem entirely. **This is now the main reason.**
+2. The AMS1117 module on hand still cannot power the UNO Q — even though the measured requirement is only ~1A (including the display), a linear regulator going from 12V to 5V would have to dissipate **7W**, which a SOT-223 without a heatsink cannot handle (see [§4.3](#43-correct-use-of-the-ams1117-module)). The conclusion is unchanged; only the reason has changed from "3× short on current" to "an order of magnitude short on heat dissipation".
 
-這是整塊電源板裡**投資報酬率最高的一個元件**——目前軟體端做的 100 Hz 過取樣、中位數、EMA、30 秒聚合，很大一部分是在補償這件事。
+★★ **Why the pressure transmitters get their own linear 5V supply**
 
-### 4.3 AMS1117 模組的正確用途
+The transmitters are three-wire 0–5V devices, and almost all such devices have a **ratiometric output** — the output voltage is proportional to the supply voltage, so **supply noise turns 1:1 into pressure noise**.
 
-手上的多路輸出小板（DC-IN 母座 + 滑動開關 + AMS1117 SOT-223）是**線性**穩壓，不是降壓。線性穩壓的損耗 =（壓差 × 電流），全部變成熱：
+```
+Steady-state detection threshold 0.003 bar ÷ full scale 10 bar = 0.03% FS
+0.03% × 5V = 1.5 mV   ← supply noise must be below this figure
+```
 
-| 輸出電流 | 損耗（12V→5V） | SOT-223 溫升（θJA ≈ 60–100 °C/W） |
+Buck module output ripple is commonly 20–50 mV, so **the ripple alone exceeds the limit by more than ten times** (this system does not use WiFi, so the aggravating factor of burst load steps is absent, but the 20–50 mV vs 1.5 mV gap is fatal enough without it). **A linear regulator's output noise is one to two orders of magnitude lower than a buck module's**, and 12V→5V at 40 mA dissipates only 0.28W, so no heatsink is needed.
+
+This is the **component with the highest return on investment** on the entire power board — much of what the software currently does (100 Hz oversampling, median, EMA, 30-second aggregation) is compensating for this problem.
+
+### 4.3 Correct Use of the AMS1117 Module
+
+The multi-output small board on hand (DC-IN jack + slide switch + AMS1117 SOT-223) is a **linear** regulator, not a buck converter. A linear regulator's loss = (voltage difference × current), all of which turns into heat:
+
+| Output current | Loss (12V→5V) | SOT-223 temperature rise (θJA ≈ 60–100 °C/W) |
 |---|---|---|
 | 40 mA | 0.28 W | +17~28 °C ✅ |
-| 150 mA | 1.05 W | +63~105 °C ⚠️ 燙手 |
-| 300 mA | 2.1 W | +126~210 °C ❌ 過熱保護 |
-| **~1 A（UNO Q ＋螢幕實測）** | **7 W** | ❌ 遠超過 SOT-223 無散熱片的能力 |
-| 3A（datasheet 的 PD 契約值） | 21 W | 直接燒毀 |
+| 150 mA | 1.05 W | +63~105 °C ⚠️ too hot to touch |
+| 300 mA | 2.1 W | +126~210 °C ❌ thermal shutdown |
+| **~1 A (UNO Q + display, measured)** | **7 W** | ❌ far beyond what a SOT-223 without a heatsink can handle |
+| 3A (datasheet PD contract value) | 21 W | Burns out immediately |
 
-**結論：這塊板只能用在 5V 類比軌（4 顆變送器，約 40 mA）**，正好是上面 ★★ 需要的角色。不要拿它供 UNO Q，也不要把幫浦／繼電器的 12V 從它的排針取（DC 母座與板上走線通常只有 2A 上下）。
+**Conclusion: this board can only be used for the 5V analog rail (4 transmitters, about 40 mA)**, which is exactly the role required by ★★ above. Do not use it to power the UNO Q, and do not take the 12V for the pumps / relays from its header pins (the DC jack and onboard traces are usually only good for around 2A).
 
-> **已知異常**：實測標示 3.3V 的排針輸出 12V。在釐清之前**不要接任何東西**到這塊板上。
-> 排查步驟：① 空載只接 12V，把**每一支**排針對 GND 量一遍（絲印常讓人從錯的一端數起）；② 切換滑動開關再量一次；③ 確認板上是否真有兩顆 `AMS1117-5.0` 與 `AMS1117-3.3`（缺料是常態）；④ 若兩顆都在，那顆 3.3V 可能已失效短路（線性穩壓最常見的失效模式）。
-> **本系統其實不需要板外 3.3V**，最省事的做法是確認 5V 那組正確後，把 3.3V 那組當作不存在並用膠帶封住。
+> **Known anomaly**: the header pin labeled 3.3V was measured outputting 12V. **Do not connect anything** to this board until this is resolved.
+> Troubleshooting steps: ① unloaded, with only 12V connected, measure **every** header pin against GND (the silkscreen often leads people to count from the wrong end); ② flip the slide switch and measure again; ③ confirm whether the board actually carries both an `AMS1117-5.0` and an `AMS1117-3.3` (missing parts are common); ④ if both are present, the 3.3V one may have failed short (the most common failure mode of linear regulators).
+> **This system does not actually need an off-board 3.3V**; the simplest approach is to confirm the 5V group is correct, then treat the 3.3V group as nonexistent and tape it over.
 
-### 4.4 接地策略 ★
+### 4.4 Grounding Strategy ★
 
-**這是最容易毀掉資料品質的地方。**
+**This is the easiest place to ruin data quality.**
 
-幫浦的回流電流是安培級、而且被 PWM 斬成方波。若與感測器共用一段地線，那段銅線上的 I×R 壓降會直接疊加在 0–5V 訊號上——症狀是**壓力讀值隨幫浦 PWM 起伏**，而且很容易被誤認為流體脈動。
+The pumps' return current is ampere-level and chopped into square waves by PWM. If it shares a stretch of ground wire with the sensors, the I×R drop across that copper is superimposed directly on the 0–5V signals — the symptom is **pressure readings that rise and fall with the pump PWM**, which is easily mistaken for fluid pulsation.
 
 ```
-        ┌──── 髒地（粗線 1.5mm²）──── L298N GND / 繼電器負載回流 / 馬達回流
+        ┌──── Dirty ground (thick wire 1.5mm²) ──── L298N GND / relay load return / motor return
   PSU   │
-  GND ──┤◀── 唯一的交會點（星狀接地）
+  GND ──┤◀── the single meeting point (star ground)
         │
-        └──── 乾淨地（獨立走線）──── UNO Q GND / 4× 變送器 GND / 流速計 GND / BH1750 GND
+        └──── Clean ground (separate trace) ──── UNO Q GND / 4× transmitter GND / flow meter GND / BH1750 GND
 ```
 
-**絕對不要**把感測器的 GND 接到 L298N 的 GND 端子上，即使它們最後都回到同一個電源。
+**Never** connect the sensor GNDs to the L298N's GND terminal, even though they all ultimately return to the same supply.
 
-若使用六 pin 的電源模組（`12V+ ×2 / 5V+ ×2 / GND ×2`），六個 pin 是**電源來源**而不是「每個負載一個 pin」，扇出靠洞洞板上的匯流排：
+If a six-pin power module is used (`12V+ ×2 / 5V+ ×2 / GND ×2`), the six pins are **power sources**, not "one pin per load"; fan-out is done with bus bars on the perfboard:
 
-| Pin | 用途 |
+| Pin | Use |
 |---|---|
-| 12V+ (1) | 12V 髒軌匯流排 |
-| 12V+ (2) | 乾淨支路 → 5V 類比軌的線性穩壓器輸入（獨立走線） |
-| 5V+ (1) | UNO Q（若採 5V 供電方案） |
-| 5V+ (2) | 5V 數位軌匯流排 |
-| GND (1) | **髒地** |
-| GND (2) | **乾淨地** |
+| 12V+ (1) | 12V dirty-rail bus |
+| 12V+ (2) | Clean branch → input of the 5V analog-rail linear regulator (separate trace) |
+| 5V+ (1) | UNO Q (if using the 5V supply option) |
+| 5V+ (2) | 5V digital-rail bus |
+| GND (1) | **Dirty ground** |
+| GND (2) | **Clean ground** |
 
-洞洞板上用兩條 1.5mm² 單芯銅線分別做髒地與乾淨地匯流排，兩條地**只在電源輸入端交會一次**。
+On the perfboard, use two 1.5mm² solid copper wires as the dirty-ground and clean-ground buses respectively; the two grounds **meet only once, at the power input**.
 
-### 4.5 保護元件清單
+### 4.5 Protection Component List
 
-| 位置 | 元件 | 為什麼 |
+| Location | Component | Why |
 |---|---|---|
-| 總輸入 | 保險絲 6.3A（配 5A 變壓器）+ 反接保護（P-MOSFET 理想二極體或串聯蕭特基） | 接反一次就能燒掉整套 |
-| 總輸入 | 470–1000 µF 電解 + 100 nF 陶瓷 | 穩住輸入 |
-| 12V 馬達匯流排 | **2200–4700 µF**，盡量靠近 L298N | 吸收啟動衝擊，避免拉垮 5V 軌 |
-| 5V 數位軌 | 220 µF + 10 µF 陶瓷（靠近 UNO Q） | UNO Q 的突發負載 |
-| 5V 類比軌 | 10 µH + 100 µF（LC 低通）+ 每個感測器接頭旁 100 nF | 見 §4.2 的 1.5 mV 分析 |
-| 5V_SYS 入口 | 5.6V TVS | 降壓模組卸載過衝時保護 UNO Q |
-| ENA / ENB | 各一顆 10 kΩ 下拉 | 開機瞬間幫浦不亂轉 |
-| 每個繼電器接點負載 | 各自保險絲 + 感性負載加 RC 緩衝 | 接點壽命與 EMI |
+| Main input | 6.3A fuse (with the 5A adapter) + reverse-polarity protection (P-MOSFET ideal diode or series Schottky) | One reversed connection can burn out the whole setup |
+| Main input | 470–1000 µF electrolytic + 100 nF ceramic | Stabilizes the input |
+| 12V motor bus | **2200–4700 µF**, as close to the L298N as possible | Absorbs start-up inrush so it does not drag down the 5V rail |
+| 5V digital rail | 220 µF + 10 µF ceramic (close to the UNO Q) | Burst loads from the UNO Q |
+| 5V analog rail | 10 µH + 100 µF (LC low-pass) + 100 nF next to each sensor connector | See the 1.5 mV analysis in §4.2 |
+| 5V_SYS input | 5.6V TVS | Protects the UNO Q from buck-module overshoot on load release |
+| ENA / ENB | One 10 kΩ pull-down each | Pumps do not spin randomly at power-up |
+| Each relay contact load | Individual fuse + RC snubber for inductive loads | Contact life and EMI |
 
-### 4.6 組裝後的測試順序
+### 4.6 Post-Assembly Test Sequence
 
-1. **只接變壓器**，量三條軌：12V、5V 數位、5V 類比。5V 應在 4.9–5.2V。
-2. **只接 UNO Q**，跑一段時間看 5V 有無下陷（含開機與螢幕初始化，已實測上限 5W）。
-3. 接感測器，**幫浦不動**，看「壓力脈動診斷」面板的 peak/trough 範圍。**記下這個數字，這是基準雜訊。**
-4. **啟動幫浦**，再看同一個數字。明顯變大 → 接地有問題，回去檢查星狀接地。
-5. 最後才接繼電器負載，一個一個接，每接一個都看 12V 有沒有掉。
+1. **Connect only the power adapter** and measure the three rails: 12V, 5V digital, 5V analog. The 5V rails should be 4.9–5.2V.
+2. **Connect only the UNO Q**, run it for a while and check whether 5V sags (including boot and display initialization; measured ceiling 5W).
+3. Connect the sensors, **pumps off**, and look at the peak/trough range in the "Pressure pulsation diagnostics" panel. **Write this number down; it is the baseline noise.**
+4. **Start the pumps** and look at the same number again. Noticeably larger → there is a grounding problem; go back and check the star ground.
+5. Connect the relay loads last, one at a time, checking after each one whether the 12V rail drops.
 
-> 第 3、4 步的對照是整個測試裡最有價值的一步——能在開始跑實驗之前就告訴你接地做對了沒有。
+> Comparing steps 3 and 4 is the most valuable part of the whole test — it tells you whether the grounding is right before you start running experiments.
 
-### 4.7 待確認數字
+### 4.7 Figures Still to Be Confirmed
 
-**唯一還缺的數字**
+**The only figures still missing**
 
-- [ ] **三個 12V 繼電器裝置各自的電流** ← 這是現在唯一擋住變壓器定案的項目
-- [ ] AMS1117 模組每一支排針的實際輸出電壓（標示 3.3V 實測 12V，見 [§4.3](#43-ams1117-模組的正確用途)）
+- [ ] **The current of each of the three 12V relay-switched devices** ← this is now the only item blocking the final power adapter choice
+- [ ] The actual output voltage of every header pin on the AMS1117 module (labeled 3.3V, measured 12V; see [§4.3](#43-correct-use-of-the-ams1117-module))
 
-**可做可不做**
+**Optional**
 
-- [ ] 幫浦帶膜組背壓時的實際電流（銘牌值已足以定規格；實測只是確認是否明顯低於額定，可用來判斷 L298N 壓降是否真的造成流量不足）
-- [ ] 隔膜幫浦的啟動衝擊峰值（會影響儲能電容的選值，但軟啟動做了之後這個數字就不那麼重要）
+- [ ] Actual pump current against the membrane module's back-pressure (the nameplate values are enough to set the spec; measuring only confirms whether it is noticeably below rating, which can show whether the L298N drop really causes insufficient flow)
+- [ ] Peak start-up inrush of the diaphragm pump (affects the choice of reservoir capacitor, but once soft start is implemented this figure matters much less)
 
-**已結案**
+**Closed**
 
-- [x] ~~UNO Q 本身的耗電~~ → 已實測，含 7 吋螢幕、含開機與初始化全程，**上限 5W**；本系統不使用 WiFi（[§4.1](#41-電力預算)）
-- [x] ~~幫浦額定功率~~ → 銘牌值：蠕動 **12V / 10W**，隔膜 **6–12V / 1A**
+- [x] ~~Power consumption of the UNO Q itself~~ → measured, including the 7-inch display and the whole boot and initialization period, **5W ceiling**; this system does not use WiFi ([§4.1](#41-power-budget))
+- [x] ~~Pump rated power~~ → nameplate values: peristaltic **12V / 10W**, diaphragm **6–12V / 1A**
 
 ---
 
-## 5. 軟體架構
+## 5. Software Architecture
 
-### 5.1 資料流
+### 5.1 Data Flow
 
 ```
-        MCU (sketch.ino)                  Linux/MPU (main.py)                 瀏覽器 (index.html)
-  ┌──────────────────────────┐      ┌────────────────────────────────┐    ┌──────────────────┐
-  │ 壓力 100Hz → 每200ms統計 ─┼notify▶ on_pressure_update → 低通濾波  ┼─ws─▶ pressure_update  │
-  │ 流量 中斷計數 → 每1s彙總 ─┼◀call─┤ push_flow_loop (1Hz)           ┼─ws─▶ flow_update      │
-  │ OD600 狀態機 → 每次量完 ──┼notify▶ on_od600_update                ┼─ws─▶ od600_update     │
-  │ 幫浦 analogWrite ────────┼◀call─┤ set_pump_pwm / direction / stop ◀ws─┤ 套用 / 緊急停止  │
-  │ 即時性診斷 ──────────────┼◀call─┤ poll_mcu_diag (5s)             ┼─ws─▶ mcu_diag         │
-  └──────────────────────────┘      │ derive_loop (1Hz) 衍生 / 告警   ┼─ws─▶ derived_update   │
-                                     │ aggregate_loop (每視窗) 聚合    ┼─ws─▶ aggregate_update │
-                                     │   └─ 錄製中就寫一列 CSV         ┼─ws─▶ record_status    │
-                                     └────────────────────────────────┘    └──────────────────┘
+        MCU (sketch.ino)                  Linux/MPU (main.py)                  Browser (index.html)
+  ┌───────────────────────────────┐      ┌─────────────────────────────────────┐    ┌──────────────────┐
+  │ Pressure 100Hz → stats/200ms ─┼notify▶ on_pressure_update → low-pass filter ┼─ws─▶ pressure_update  │
+  │ Flow IRQ count → summary/1s  ─┼◀call─┤ push_flow_loop (1Hz)                ┼─ws─▶ flow_update      │
+  │ OD600 state machine → each   ─┼notify▶ on_od600_update                     ┼─ws─▶ od600_update     │
+  │   completed measurement       │      │                                     │    │                  │
+  │ Pump analogWrite ─────────────┼◀call─┤ set_pump_pwm / direction / stop     ◀ws─┤ Apply / E-stop   │
+  │ Real-time diagnostics ────────┼◀call─┤ poll_mcu_diag (5s)                  ┼─ws─▶ mcu_diag         │
+  └───────────────────────────────┘      │ derive_loop (1Hz) derived / alarms  ┼─ws─▶ derived_update   │
+                                         │ aggregate_loop (per window) aggreg. ┼─ws─▶ aggregate_update │
+                                         │   └─ writes a CSV row if recording  ┼─ws─▶ record_status    │
+                                         └─────────────────────────────────────┘    └──────────────────┘
 ```
 
-**背景執行緒**（全部包在 `_run_forever()` 的例外保護裡，見 [§9](#9-版本沿革) v2.1）：
+**Background threads** (all wrapped in the exception protection of `_run_forever()`; see [§9](#9-version-history) v2.1):
 
-| 執行緒 | 週期 | 職責 |
+| Thread | Period | Responsibility |
 |---|---|---|
-| `push_flow_loop` | 1 s | 輪詢流量並廣播 |
-| `od600_poll_loop` | 5 s | OD600 狀態補值、blank 更新、MCU 診斷、開發者模式逾時保護 |
-| `derive_loop` | 1 s | 衍生參數、趨勢、穩態偵測、**安全告警** |
-| `aggregate_loop` | 每視窗 | 聚合、廣播、寫 CSV 一列 |
-| `record_status_loop` | 1 s | 錄製秒數、定時收尾 |
+| `push_flow_loop` | 1 s | Polls flow and broadcasts it |
+| `od600_poll_loop` | 5 s | OD600 status catch-up, blank update, MCU diagnostics, developer-mode timeout protection |
+| `derive_loop` | 1 s | Derived parameters, trends, steady-state detection, **safety alarms** |
+| `aggregate_loop` | Per window | Aggregation, broadcast, writes one CSV row |
+| `record_status_loop` | 1 s | Recording elapsed seconds, timed finalization |
 
-### 5.2 MCU Bridge 介面（全部 String → String）
+### 5.2 MCU Bridge Interface (all String → String)
 
-| 函式 | 說明 |
+| Function | Description |
 |---|---|
-| `get_flow_data()` | `"頻率Hz,流量mL/min,累積mL"` |
-| `zero_calibrate()` | 壓力三通道歸零（void） |
-| `set_pump_pwm(pwm)` / `set_pump_direction(1\|0)` / `stop_pump()` / `get_pump_status()` | 幫浦 |
+| `get_flow_data()` | `"frequencyHz,flow mL/min,cumulative mL"` |
+| `zero_calibrate()` | Zero the three pressure channels (void) |
+| `set_pump_pwm(pwm)` / `set_pump_direction(1\|0)` / `stop_pump()` / `get_pump_status()` | Pump |
 | `get_od_data()` | `"od600,lux_sample,lux_ref,bubble_pct,valid,blank_set,meas_seq,age_ms,busy"` |
 | `get_blank_info()` | `"blank_set,blank_lux_sample,blank_lux_ref,blank_ratio"` |
-| `calibrate_blank()` / `trigger_measurement()` | 排入一次量測，回 `"queued"` 或 `"busy"` |
-| `set_dev_mode(on)` / `get_dev_readings()` | 開發者模式（LED 對光） |
-| `set_measure_interval_sec(s)` / `get_measure_interval_sec()` | OD600 量測間隔 |
-| `set_path_length_factor(f)` / `get_path_length_factor()` | 光程長校正係數 |
-| `set_blank_manual(a)` / `clear_blank()` | 手動指定／清除空白基準（v2.2） |
-| `set_pressure_offsets(a)` / `get_pressure_offsets()` | 手動指定／讀回壓力零點（v2.2） |
+| `calibrate_blank()` / `trigger_measurement()` | Queue one measurement; returns `"queued"` or `"busy"` |
+| `set_dev_mode(on)` / `get_dev_readings()` | Developer mode (LED alignment) |
+| `set_measure_interval_sec(s)` / `get_measure_interval_sec()` | OD600 measurement interval |
+| `set_path_length_factor(f)` / `get_path_length_factor()` | Path-length correction factor |
+| `set_blank_manual(a)` / `clear_blank()` | Manually set / clear the blank reference (v2.2) |
+| `set_pressure_offsets(a)` / `get_pressure_offsets()` | Manually set / read back the pressure zero points (v2.2) |
 | `get_diag()` | `"loop_max_us,pressure_samples_last_sec,od_state,reinit_step,uptime_ms"` |
-| `get_ph_status()` / `get_ph_config()` / `set_ph_config(kv)` | pH 狀態與校正值（v3，`key=value` 格式，見 §12.4） |
-| `ph_calibrate(7\|4)` | pH 兩點校正（v3） |
-| `valve_open()` / `valve_close()` / `valve_goto_raw(pos)` / `valve_torque(1\|0)` | 夾閥動作（v3） |
-| `valve_get_status()` / `valve_get_config()` / `valve_set_config(kv)` / `valve_clear_fault()` / `valve_rescan()` | 夾閥狀態與設定（v3） |
+| `get_ph_status()` / `get_ph_config()` / `set_ph_config(kv)` | pH status and calibration values (v3, `key=value` format, see §12.4) |
+| `ph_calibrate(7\|4)` | pH two-point calibration (v3) |
+| `valve_open()` / `valve_close()` / `valve_goto_raw(pos)` / `valve_torque(1\|0)` | Pinch valve actions (v3) |
+| `valve_get_status()` / `valve_get_config()` / `valve_set_config(kv)` / `valve_clear_fault()` / `valve_rescan()` | Pinch valve status and settings (v3) |
 
-**主動推送**：`on_pressure_update`（每 200 ms，12 個統計值）、`on_od600_update`（每次量測完成）、`on_ph_update`（每秒，v3）、`on_valve_update`（每秒＋狀態改變時，v3）。
+**Active push**: `on_pressure_update` (every 200 ms, 12 statistics), `on_od600_update` (each time a measurement completes), `on_ph_update` (every second, v3), `on_valve_update` (every second + on state change, v3).
 
-v3 新增的函式用 `Bridge.provide_safe` 註冊（回呼在 `loop()` 的時間片執行），既有函式維持 `provide`。
+Functions added in v3 are registered with `Bridge.provide_safe` (the callback runs in a time slice of `loop()`); existing functions keep using `provide`.
 
-### 5.3 聚合取樣
+### 5.3 Aggregated Sampling
 
-壓力 5 Hz、流速 1 Hz、OD600 30 秒一次——三個訊號節奏差很多，而且壓力／流速本來就疊著幫浦的週期性脈動。
+Pressure at 5 Hz, flow rate at 1 Hz, OD600 once every 30 seconds — the three signals have very different rhythms, and pressure / flow rate are inherently overlaid with the pump's periodic pulsation.
 
-**取樣視窗**（預設 30 秒，介面可改 5 秒–24 小時）內持續收集，視窗結束時取一次中位數或平均，作為：
-1. 畫面上壓力／流速卡片的數值
-2. 三張曲線圖各自的一個點（**同一個 X 座標**，三個訊號永遠對齊）
-3. 錄製 CSV 的一列
+Data is collected continuously within the **sampling window** (default 30 seconds, adjustable in the UI from 5 seconds to 24 hours); at the end of each window a median or mean is taken once and used as:
+1. The value on the pressure / flow-rate cards on screen
+2. One point on each of the three charts (**the same X coordinate**, so the three signals always line up)
+3. One row of the recording CSV
 
-**取樣時長三者共用**：改這個值時後端會同時把 MCU 的 OD600 量測間隔設成一樣。
+**The sampling duration is shared by all three**: when this value is changed, the backend also sets the MCU's OD600 measurement interval to the same value.
 
-| 聚合方式 | 適合 |
+| Aggregation method | Suited for |
 |---|---|
-| **中位數**（預設） | 對氣泡、單次雜訊尖峰最健全 |
-| 平均 | 週期性脈動的峰谷互相抵銷，物理上更接近「這段時間的平均壓力」 |
+| **Median** (default) | Most robust against bubbles and single noise spikes |
+| Mean | Peaks and troughs of periodic pulsation cancel out; physically closer to "the average pressure over this period" |
 
-> **安全用的快速路徑沒有被平均掉。** TMP 瞬時峰值／谷值告警、collapse pressure 保護仍吃 MCU 每 200 ms 的原始統計值（`derive_loop` 每秒跑一次），不會被 30 秒的平均蓋掉——那正是當初把壓力改成 100 Hz 高頻取樣要解決的問題。每一列 CSV 的 `pressure_tmp_peak_bar` / `pressure_tmp_trough_bar` 記的也是**該視窗內最壞的一次**。
+> **The fast safety path is not averaged away.** The TMP instantaneous peak / trough alarms and the collapse-pressure protection still use the MCU's raw statistics every 200 ms (`derive_loop` runs once per second) and are not masked by the 30-second average — that is exactly the problem that switching pressure to 100 Hz high-frequency sampling was meant to solve. The `pressure_tmp_peak_bar` / `pressure_tmp_trough_bar` in each CSV row also record **the worst single value within that window**.
 
-**衍生參數用聚合後的值重算**：`R = ΔP_net / Q` 這種比值，「先平均分子分母再相除」與「先相除再平均」不同，前者才是該時段的代表值。
+**Derived parameters are recomputed from the aggregated values**: for ratios such as `R = ΔP_net / Q`, "average numerator and denominator first, then divide" differs from "divide first, then average"; the former is the representative value for the period.
 
-### 5.4 衍生參數
+### 5.4 Derived Parameters
 
-僅使用目前硬體有的訊號（p_in / p_out / p_perm / q_feed）：
+Uses only the signals available on the current hardware (p_in / p_out / p_perm / q_feed):
 
-| 參數 | 公式 / 意義 |
+| Parameter | Formula / meaning |
 |---|---|
 | ΔP | p_in − p_out |
-| ΔP_blank | 管路空白模型 = slope × Q + intercept |
-| ΔP_net | ΔP − ΔP_blank（模組淨壓降） |
-| **R** | ΔP_net / Q（水力阻力，**日常監控主指標**） |
+| ΔP_blank | Tubing blank model = slope × Q + intercept |
+| ΔP_net | ΔP − ΔP_blank (net pressure drop across the module) |
+| **R** | ΔP_net / Q (hydraulic resistance, **the main day-to-day monitoring metric**) |
 | TMP | (p_in + p_out)/2 − p_perm |
-| TMP 均勻度 | ΔP_net / TMP |
-| 剪切率 | 4Q_fiber / (π r³) |
-| 剪切應力 | ΔP_net × 1e5 × r / (2L) |
-| n_eff | 由瞬時 R 反推的有效纖維數（單點估計，僅供參考） |
-| dTMP/dt、d²TMP/dt² | 線性迴歸斜率與其二階導數 |
-| 穩態偵測 | P_in、P_out、Q 在 60 秒內斜率與殘差同時達標 |
+| TMP uniformity | ΔP_net / TMP |
+| Shear rate | 4Q_fiber / (π r³) |
+| Shear stress | ΔP_net × 1e5 × r / (2L) |
+| n_eff | Effective number of fibers back-calculated from the instantaneous R (single-point estimate, for reference only) |
+| dTMP/dt, d²TMP/dt² | Linear-regression slope and its second derivative |
+| Steady-state detection | Slopes and residuals of P_in, P_out and Q over 60 seconds all meet their criteria simultaneously |
 
-**目前硬體無法計算**（缺滲透流量計 / 溫度感測器 / 線下取樣）：flux、conversion、篩分係數 S、tmp_corrected、flux_25c。
+**Cannot be computed on the current hardware** (missing permeate flow meter / temperature sensor / offline sampling): flux, conversion, sieving coefficient S, tmp_corrected, flux_25c.
 
-> 第二顆流速計若裝在 permeate 側，**flux 與 conversion 就能算了**——那是規格書裡一直標著「缺滲透流量計所以不計算」的兩個量。
+> If the second flow meter is installed on the permeate side, **flux and conversion become computable** — those are the two quantities the specification has always marked as "not computed because there is no permeate flow meter".
 
 ---
 
-## 6. 資料記錄
+## 6. Data Logging
 
-### 6.1 CSV 欄位（v4.0 起 73 欄：v3.7 新增欄位見 §13，v3.8 加 `temp_src`，v4.0 衍生參數見 §15）
+### 6.1 CSV Columns (73 columns since v4.0: columns added in v3.7 see §13, v3.8 adds `temp_src`, v4.0 derived parameters see §15)
 
-| 欄位 | 說明 |
+| Column | Description |
 |---|---|
-| `window_index` | 第幾個取樣視窗 |
-| `elapsed_s` | 視窗結束時的錄製秒數（暫停期間不計入） |
-| `timestamp_start` / `timestamp_end` | 視窗起訖時間 |
-| `window_sec` | 實際涵蓋秒數 |
-| **`gap_s`** | 距上一列結束的間隔。正常≈0；中斷（App/板子重開）後會誠實標出缺口 |
-| `agg_method` | `median` / `mean`（事後不用猜） |
-| `n_samples_pressure` / `n_samples_flow` | 實際聚合筆數。壓力應接近 `window_sec × 5`，明顯偏少代表 MCU 沒正常送資料 |
-| `partial` | 1 = 收尾時不足一整個視窗的最後一列 |
+| `window_index` | Index of the sampling window |
+| `elapsed_s` | Recording seconds at the end of the window (paused time not counted) |
+| `timestamp_start` / `timestamp_end` | Window start and end time |
+| `window_sec` | Seconds actually covered |
+| **`gap_s`** | Gap since the end of the previous row. Normally ≈0; after an interruption (App/board restart) the gap is honestly recorded |
+| `agg_method` | `median` / `mean` (no guessing afterwards) |
+| `n_samples_pressure` / `n_samples_flow` | Number of samples actually aggregated. Pressure should be close to `window_sec × 5`; noticeably fewer means the MCU was not sending data normally |
+| `partial` | 1 = the final row at finalization, covering less than a full window |
 | `od600_au` | OD600 |
-| `od600_lux_sample` / `_lux_ref` / `_bubble_pct` | OD600 原始診斷值 |
-| `od600_valid` / `od600_blank_set` | 該次量測是否有效、是否已校正空白 |
-| `od600_age_s` / `od600_new` | 這筆 OD600 多舊 / 是否對應一次新量測 |
-| `flow_mlmin` / `flow_freq_hz` | 流速（視窗聚合值） |
-| `flow_total_ml` | 累積量（取視窗結束時的值） |
-| `pressure_feed_bar` / `_retentate_bar` / `_permeate_bar` / `_tmp_bar` | 壓力（濾波後再聚合） |
-| `pressure_tmp_peak_bar` / `_trough_bar` | **視窗內最壞的一次**（非聚合值） |
-| `pressure_cycle_freq_hz` | 脈動頻率粗估 |
-| `pump_pwm` / `pump_forward` | 幫浦狀態 |
-| `ph` / `ph_temp_c` | pH（視窗聚合值）與補償用溫度（v3） |
-| `ph_state` | WARMUP / OK / PROBE_ERROR（v3.1）；探頭異常期間的讀值不計入 `ph` |
-| `valve_state` | `open` / `closed` / `jog`（v3） |
-| **`valve_closed_frac`** | 這個視窗裡夾閥不在「開」的時間比例 0–1。**分析膜性能時用 `valve_closed_frac == 0` 篩掉收樣本期間的列**（v3） |
-| `valve_pos` | 伺服實際位置（v3） |
-| `delta_p_bar` / `delta_p_net_bar` / `R_bar_per_mlmin` | 衍生參數（用聚合值重算） |
-| `shear_rate_s1` / `shear_stress_pa` / `tmp_uniformity` / `n_eff_from_dp` | 衍生參數 |
-| `dtmp_dt_bar_per_min` / `d2tmp_dt2` / `steady` | 趨勢與穩態 |
-| `config_version` / `constants_version` | 當時使用的常數版本 |
+| `od600_lux_sample` / `_lux_ref` / `_bubble_pct` | OD600 raw diagnostic values |
+| `od600_valid` / `od600_blank_set` | Whether that measurement was valid, whether the blank has been calibrated |
+| `od600_age_s` / `od600_new` | How old this OD600 value is / whether it corresponds to a new measurement |
+| `flow_mlmin` / `flow_freq_hz` | Flow rate (window aggregate) |
+| `flow_total_ml` | Cumulative volume (value at the end of the window) |
+| `pressure_feed_bar` / `_retentate_bar` / `_permeate_bar` / `_tmp_bar` | Pressure (filtered, then aggregated) |
+| `pressure_tmp_peak_bar` / `_trough_bar` | **The worst single value within the window** (not an aggregate) |
+| `pressure_cycle_freq_hz` | Rough estimate of the pulsation frequency |
+| `pump_pwm` / `pump_forward` | Pump status |
+| `ph` / `ph_temp_c` | pH (window aggregate) and the temperature used for compensation (v3) |
+| `ph_state` | WARMUP / OK / PROBE_ERROR (v3.1); readings taken while the probe is faulty are not included in `ph` |
+| `valve_state` | `open` / `closed` / `jog` (v3) |
+| **`valve_closed_frac`** | Fraction of time 0–1 within this window during which the pinch valve was not "open". **When analyzing membrane performance, use `valve_closed_frac == 0` to filter out rows from sample-collection periods** (v3) |
+| `valve_pos` | Actual servo position (v3) |
+| `delta_p_bar` / `delta_p_net_bar` / `R_bar_per_mlmin` | Derived parameters (recomputed from aggregated values) |
+| `shear_rate_s1` / `shear_stress_pa` / `tmp_uniformity` / `n_eff_from_dp` | Derived parameters |
+| `dtmp_dt_bar_per_min` / `d2tmp_dt2` / `steady` | Trends and steady state |
+| `config_version` / `constants_version` | Constants versions in use at the time |
 
-**檔案大小**：30 秒一列，72 小時約 8600 列（幾百 KB）。取樣時長改成 5 秒則列數 ×6。
+**File size**: one row every 30 seconds, about 8600 rows in 72 hours (a few hundred KB). Changing the sampling duration to 5 seconds multiplies the row count by 6.
 
-### 6.2 落盤與中斷接續
+### 6.2 Flushing to Disk and Resuming After Interruption
 
-| 舊行為（v2.2 以前） | 現在（v2.3） |
+| Old behavior (v2.2 and earlier) | Now (v2.3) |
 |---|---|
-| 整場放在記憶體，**停止時才寫檔** | **每個視窗一產生就寫進 CSV**（append + flush + fsync） |
-| 停電／當機／重開 = 整場歸零 | 最壞只失去還沒結束的那一個視窗 |
-| 中斷後那份錄製就沒了 | **自動接續同一個檔案**（`recording_state.json` 記錄進度） |
-| 72 小時的錄製整包留在 RAM | 記憶體用量與錄製長度脫鉤 |
+| The whole run was held in memory and **written to file only on stop** | **Each window is written to the CSV as soon as it is produced** (append + flush + fsync) |
+| Power loss / crash / restart = the entire run is lost | At worst only the window that has not yet finished is lost |
+| After an interruption, that recording was gone | **Automatically resumes the same file** (`recording_state.json` tracks progress) |
+| A 72-hour recording stayed entirely in RAM | Memory usage is decoupled from recording length |
 
-**接續行為**：`elapsed_s` 依真實經過時間累計（不從 0 重來）；中斷長度記在下一列的 `gap_s`；`window_index` 接著數；定時錄製若在中斷期間已到期會直接收尾。
+**Resume behavior**: `elapsed_s` keeps accumulating according to real elapsed time (it does not restart from 0); the length of the interruption is recorded in the next row's `gap_s`; `window_index` continues counting; if a timed recording expired during the interruption, it is finalized immediately.
 
-### 6.3 取檔方式
+### 6.3 Retrieving Files
 
-1. 介面「數據紀錄」面板的**「板子上的錄製檔」**按鈕 → 列出所有錄製檔直接下載
-2. 停止錄製時自動下載（走 HTTP 端點 `/download/recording`）
-3. 直接去板子的 `python/recordings/` 資料夾拿
+1. The **"Recordings on the board"** button in the UI's "Data logging" panel → lists all recording files for direct download
+2. Automatic download when recording stops (via the HTTP endpoint `/download/recording`)
+3. Take them directly from the board's `python/recordings/` folder
 
-**錄製進行中檔案就已存在且持續長大**，隨時可以先抓一份來看，不用等錄完。
+**The file already exists and keeps growing while recording is in progress**, so you can grab a copy to look at at any time without waiting for the recording to finish.
 
 ---
 
-## 7. 校正
+## 7. Calibration
 
-### 7.1 三種校正
+### 7.1 Three Calibrations
 
-| 校正 | 何時做 | 存在哪 |
+| Calibration | When to do it | Where it is stored |
 |---|---|---|
-| **壓力歸零** | 系統完全洩壓（大氣壓）時 | MCU RAM（重開即失） |
-| **OD600 空白（blank）** | 流通池裝乾淨培養基時 | MCU RAM（重開即失） |
-| **R / ΔP / TMP 基準線** | 系統穩定運轉時 | Python 記憶體（App 重啟即失） |
+| **Pressure zeroing** | When the system is fully depressurized (atmospheric pressure) | MCU RAM (lost on restart) |
+| **OD600 blank** | When the flow cell is filled with clean medium | MCU RAM (lost on restart) |
+| **R / ΔP / TMP baselines** | When the system is running stably | Python memory (lost when the App restarts) |
 
-### 7.2 自動存檔與還原
+### 7.2 Automatic Save and Restore
 
-每次校正成功都寫到 `python/calibration_state.json`（Linux 側，MCU 重開不影響）。偵測到 MCU 重開就自動推回去，兩個管道：
+Every successful calibration is written to `python/calibration_state.json` (Linux side, unaffected by MCU restarts). When an MCU restart is detected, the values are pushed back automatically, via two paths:
 
-1. App 啟動時，MCU 看起來是「乾淨的剛開機狀態」（沒有 blank **且**三個 offset 都是 0）
-2. 執行中 `get_diag` 回報的 MCU uptime 突然變小
+1. At App start-up, the MCU appears to be in a "clean freshly booted state" (no blank **and** all three offsets are 0)
+2. During operation, the MCU uptime reported by `get_diag` suddenly decreases
 
-**持續提醒**：只要目前生效的空白基準或壓力零點**不是現場量出來的**（還原或手動輸入），畫面上方持續顯示黃色橫幅，直到重新做一次真正的校正。還原的零點是否仍成立取決於現場狀況（溫度漂移、管路有沒有動過），系統不該假裝那跟剛校正完一樣可信。
+**Persistent reminder**: as long as the blank reference or pressure zero points currently in effect **were not measured on site** (restored or entered manually), a yellow banner stays at the top of the screen until a genuine calibration is done again. Whether a restored zero point is still valid depends on the on-site conditions (temperature drift, whether the tubing has been touched), and the system should not pretend it is as trustworthy as a fresh calibration.
 
-> 光程長係數與基準線**不觸發**黃色提示——它們是幾何常數與參考值，還原本來就是正確行為，拿去洗版只會讓真正重要的提示被忽略。來源仍顯示在「校正值管理」表格裡。
+> The path-length factor and the baselines **do not trigger** the yellow notice — they are geometric constants and reference values, so restoring them is the correct behavior anyway, and flooding the screen with notices would only cause the truly important ones to be ignored. Their source is still shown in the "Calibration value management" table.
 
-### 7.3 手動輸入
+### 7.3 Manual Entry
 
-「校正值管理」面板可直接輸入自己記錄的數值：
+In the "Calibration value management" panel you can directly enter values you have recorded yourself:
 
-- **OD600 空白基準**：只填 `blank ratio` 就夠（唯一參與計算的值）；也可只填 sample 與 reference 兩個 lux，系統自動算比值。兩個 lux 只影響顯示。
-- **壓力零點 offset**：feed / retentate / permeate 三格，單位 bar。
-- **「讀回目前生效的值」**按鈕會把 MCU 現在真正在用的值讀回填入欄位，方便抄下來備份。**建議每次正式校正完就抄一次。**
+- **OD600 blank reference**: filling in only `blank ratio` is enough (it is the only value used in the calculation); alternatively, fill in only the sample and reference lux values and the system computes the ratio. The two lux values affect only the display.
+- **Pressure zero offsets**: three fields for feed / retentate / permeate, in bar.
+- The **"Read back the values currently in effect"** button reads back the values the MCU is actually using now and fills them into the fields, so they can be copied down as a backup. **It is recommended to copy them down after every formal calibration.**
 
-### 7.4 仍會遺失的東西
+### 7.4 What Is Still Lost
 
-- **錄製中的最後一個未完成視窗**（其餘已落盤）
-- **累積流量 `flow_total_ml`**：MCU 重開後歸零
-- **曲線圖歷史**：只存在瀏覽器記憶體
+- **The last unfinished window of a recording in progress** (everything else has been flushed to disk)
+- **Cumulative flow `flow_total_ml`**: reset to zero after an MCU restart
+- **Chart history**: exists only in browser memory
 
-（v3 的 pH 校正點、夾閥設定另存在 `ph_valve_state.json`，MCU 重開會自動推回，見 §12.5。）
+(The v3 pH calibration points and pinch valve settings are stored separately in `ph_valve_state.json` and are pushed back automatically after an MCU restart; see §12.5.)
 
 ---
 
-## 8. 部署與操作
+## 8. Deployment and Operation
 
-### 8.1 檔案結構
+### 8.1 File Structure
 
 ```
-app.yaml                       # 宣告 arduino:web_ui brick
-sketch/sketch.ino              # MCU 端韌體
-python/main.py                 # Linux/MPU 端 App
-python/constants.json          # 標定常數（必須與 main.py 同資料夾）
-python/requirements.txt        # 刻意留空
-python/recordings/             # 錄製 CSV（自動建立）
-python/calibration_state.json  # 校正值存檔（自動建立）
-python/recording_state.json    # 進行中錄製的進度標記（自動建立／刪除）
-python/ph_valve_state.json     # v3: pH 校正點、夾閥設定（自動建立）
-python/recordings/valve_events.csv  # v3: 每次「夾閉→放開」一列
-sketch/sketch.yaml             # v3: 宣告 SCServo (1.0.2) 函式庫
+app.yaml                       # declares the arduino:web_ui brick
+sketch/sketch.ino              # MCU-side firmware
+python/main.py                 # Linux/MPU-side App
+python/constants.json          # calibration constants (must be in the same folder as main.py)
+python/requirements.txt        # intentionally left empty
+python/recordings/             # recording CSVs (created automatically)
+python/calibration_state.json  # saved calibration values (created automatically)
+python/recording_state.json    # progress marker for the recording in progress (created / deleted automatically)
+python/ph_valve_state.json     # v3: pH calibration points, pinch valve settings (created automatically)
+python/recordings/valve_events.csv  # v3: one row per "close -> release" cycle
+sketch/sketch.yaml             # v3: declares the SCServo (1.0.2) library
 assets/index.html              # Web UI
-assets/libs/                   # socket.io.min.js + arduino.js（App Lab 自動放置）
+assets/libs/                   # socket.io.min.js + arduino.js (placed automatically by App Lab)
 ```
 
-### 8.2 部署步驟
+### 8.2 Deployment Steps
 
-1. App Lab 左側 **Add Brick** → 加入 `WebUI - HTML`
-2. 左側 **Add sketch library** → 安裝 `Arduino_RouterBridge`
-3. 依 [§2](#2-腳位配置)、[§3](#3-接線) 確認接線，燒錄 `sketch/sketch.ino`
-4. `python/main.py` 與 `python/constants.json` 放進專案的 `python/` 資料夾（**必須同一層**）
-5. `assets/index.html` 放進 `assets/`
-6. 瀏覽器連 `http://<板子IP>:7000`（本系統不使用 WiFi，PC 經 USB 網路介面連線；若改用 WiFi 或有線網路，位址取得方式不同但 port 一樣）
+1. In App Lab, left side, **Add Brick** → add `WebUI - HTML`
+2. Left side, **Add sketch library** → install `Arduino_RouterBridge`
+3. Check the wiring against [§2](#2-pin-assignment) and [§3](#3-wiring), then flash `sketch/sketch.ino`
+4. Put `python/main.py` and `python/constants.json` into the project's `python/` folder (**they must be at the same level**)
+5. Put `assets/index.html` into `assets/`
+6. Point the browser at `http://<board IP>:7000` (this system does not use WiFi; the PC connects via the USB network interface. If WiFi or wired Ethernet is used instead, the address is obtained differently but the port is the same)
 
-> **port 必須是 7000**——那是 WebUI Brick 的 `brick_config.yaml` 寫死、實際被轉發出來的 port。在 `main.py` 改成別的 port 只會在容器內綁起來，外面連不進去（會看到「拒絕連線」）。
+> **The port must be 7000** — that is the port hard-coded in the WebUI Brick's `brick_config.yaml` and actually forwarded out. Changing it to another port in `main.py` only binds it inside the container, and it cannot be reached from outside (you will see "connection refused").
 
-**獨立運作**：App Lab 有「Run at startup」選項（先按它、再按 RUN），之後板子自己開機就會跑這個 App，不需要電腦。長時間實驗請用**獨立 5V/12V 電源**，不要靠電腦 USB 供電——電腦休眠時 USB 供電可能被切斷。
+**Standalone operation**: App Lab has a "Run at startup" option (press it first, then press RUN); after that the board runs this App by itself on boot, without a PC. For long experiments use an **independent 5V/12V power supply** instead of relying on the PC's USB power — USB power may be cut when the PC goes to sleep.
 
-### 8.3 首次啟動順序
+### 8.3 First Start-Up Sequence
 
-1. 看 App Lab Console 的 `[boot]` 訊息，確認 I2C 掃到 `0x23` 與 `0x5C`、兩顆感測器 init 都 OK
-2. 確認每秒都有 `[diag] loop_max_us=... pressure_samples_last_sec=.../100`
-3. 系統完全洩壓下按 **歸零校正**
-4. 流通池裝入乾淨培養基，按 **校正空白（Blank）**，約 3 秒後生效
-5. 需要對光時用 **開發者模式**（LED 恆亮 + 即時 sample/reference 比值，理論值約 10:1）
-6. PWM 拉桿 0–255 直接輸出（v3.1 已移除無效區間），拉完按 **套用**；新幫浦的最低可轉 PWM 請自行實測
+1. Look at the `[boot]` messages in the App Lab Console and confirm that the I2C scan found `0x23` and `0x5C` and that both sensors initialized OK
+2. Confirm that `[diag] loop_max_us=... pressure_samples_last_sec=.../100` appears every second
+3. With the system fully depressurized, press **Zero calibration**
+4. Fill the flow cell with clean medium and press **Calibrate blank (Blank)**; it takes effect after about 3 seconds
+5. When optical alignment is needed, use **Developer mode** (LED constantly on + real-time sample/reference ratio, theoretically about 10:1)
+6. The PWM slider outputs 0–255 directly (the dead zone was removed in v3.1); after moving it press **Apply**. Measure the minimum PWM at which the new pump turns yourself
 
-### 8.4 曲線圖行為（v3.8 起）
+### 8.4 Chart Behavior (since v3.8)
 
-**版面（v3.9，v3.10 調整）**：三欄 —— 第 1 欄「生長相關參數」（OD600／pH／溫度合併為一個單元），第 2 欄「壓力與衍生分析」（壓力曲線、衍生參數、穩態偵測；基準值手動輸入、指標說明、壓力脈動診斷收在可展開區塊），第 3 欄操作面板（數據紀錄、幫浦（含流速數值）、夾閥、pH 探頭校正、取樣設定、演算法切換、工程模式、校正值管理）。螢幕寬度 < 1280 px 時曲線併成一欄，< 860 px 全部一欄。
+**Layout (v3.9, adjusted in v3.10)**: three columns — column 1 "Growth-related parameters" (OD600 / pH / temperature combined into one unit), column 2 "Pressure and derived analysis" (pressure chart, derived parameters, steady-state detection; manual baseline entry, metric explanations and pressure pulsation diagnostics are in expandable sections), column 3 the control panels (data logging, pump (including the flow-rate value), pinch valve, pH probe calibration, sampling settings, algorithm selection, engineering mode, calibration value management). When the screen width is < 1280 px the charts merge into one column; at < 860 px everything is in one column.
 
-- **流速曲線**：點幫浦面板的流速數值開啟浮動視窗（✕ 關閉、Esc 或點背景也可關），曲線邏輯與其他圖相同（完整歷史壓縮）。
-- **PWM 輸入格**：與拉桿雙向同步，超出 0–255 會自動夾回；按「套用」或在輸入格按 Enter 送出。
-- **工程模式**：OD600 空白校正／立即量測／光程係數，加上 LED 對光（原「開發者模式」）。
-- **收合面板（v3.10）**：pH 探頭校正、取樣設定、演算法切換、工程模式、校正值管理預設只顯示標題，點標題展開。
-- **語言（v3.10）**：預設英文，右上角可切換正體中文；選擇記在該瀏覽器。
-- **校正值管理的 pH（v3.10）**：表格列出 pH 7.00／4.01 的原始電壓與校正溫度；可手動輸入套用（`ph_set_calibration`），會存檔並在 MCU 重開後推回。「讀回目前生效的值」也會把 pH 值填進輸入格。
+- **Flow-rate chart**: click the flow-rate value in the pump panel to open a floating window (close with ✕, Esc or by clicking the background); the chart logic is the same as for the other charts (full history, compressed).
+- **PWM input box**: synchronized both ways with the slider; values outside 0–255 are clamped automatically; send with "Apply" or by pressing Enter in the input box.
+- **Engineering mode**: OD600 blank calibration / measure now / path-length factor, plus LED alignment (formerly "Developer mode").
+- **Collapsible panels (v3.10)**: pH probe calibration, sampling settings, algorithm selection, engineering mode and calibration value management show only their title by default; click the title to expand.
+- **Language (v3.10)**: English by default; can be switched to Traditional Chinese at the top right; the choice is remembered in that browser.
+- **pH in calibration value management (v3.10)**: the table lists the raw voltages and calibration temperatures for pH 7.00 / 4.01; they can be entered manually and applied (`ph_set_calibration`), are saved, and are pushed back after an MCU restart. "Read back the values currently in effect" also fills the pH values into the input boxes.
 
-- **不再滾動、不再自動清空**：從 App 啟動（或按「⟲ 重設曲線」）起的所有資料都保留，X 軸＝起點 → 現在，整段壓縮進圖寬；開始／停止錄製也不會清空。
-- X 軸顯示時鐘時間（HH:MM；超過 20 小時加上日期）。錄製開始／停止／接續會畫紅色／灰色虛線標記。
-- 歷史存在 Python 端，重新整理網頁或從另一台電腦打開，曲線都還在（Python 重啟才會清空）。
-- 「⟲ 重設曲線」只清顯示用的歷史，所有已連線的網頁一起重設；**不影響 CSV 與錄製中的檔案**。
-- 點數超過 6000 就把相鄰兩點合併（取平均），30 秒視窗約 50 小時後才開始合併；**資料缺口永遠畫成斷線**，合併時不跨缺口。
-- 時間一律用板子（Linux）的時鐘，瀏覽器時鐘不準也不影響。
-- 數值每個取樣視窗才更新一次是正常的；「取樣設定」面板有倒數。
+- **No more scrolling, no more automatic clearing**: all data since App start-up (or since pressing "⟲ Reset charts") is kept; the X axis = start → now, with the whole span compressed into the chart width; starting / stopping a recording does not clear it either.
+- The X axis shows clock time (HH:MM; the date is added beyond 20 hours). Recording start / stop / resume is marked with red / gray dashed lines.
+- The history is stored on the Python side, so the charts are still there after reloading the web page or opening it from another PC (they are cleared only when Python restarts).
+- "⟲ Reset charts" clears only the display history, for all connected web pages at once; **it does not affect the CSV or the file being recorded**.
+- When the number of points exceeds 6000, adjacent pairs of points are merged (averaged); with a 30-second window merging starts only after about 50 hours; **data gaps are always drawn as breaks in the line**, and merging never spans a gap.
+- Time always comes from the board's (Linux) clock, so an inaccurate browser clock has no effect.
+- It is normal for values to update only once per sampling window; the "Sampling settings" panel has a countdown.
 
 ---
 
-## 9. 版本沿革
+## 9. Version History
 
-### 9.1 前身專案
+### 9.1 Predecessor Projects
 
-本系統由三個獨立專案合併而成：
+This system was formed by merging three independent projects:
 
-| 前身 | 內容 |
+| Predecessor | Contents |
 |---|---|
-| **OD600 光度計** | BH1750 ×2 + 脈衝 LED，MAD 氣泡剔除，blank 校正，開發者模式（LED 對光），WebUI Brick 儀表板 |
-| **流速 + 壓力監測** | ZJ-TM02 流量計、三通道壓力、衍生參數、穩態偵測、手動錄製。自身歷經 v1–v13 演進（v11 改為 100 Hz 高頻取樣 + peak/trough 統計；v13 把 ΔP-Q 掃描改成定時平均取值） |
-| **幫浦控制** | L298N PWM + 方向、最小有效 PWM 保護、套用制 |
+| **OD600 photometer** | BH1750 ×2 + pulsed LED, MAD bubble rejection, blank calibration, developer mode (LED alignment), WebUI Brick dashboard |
+| **Flow rate + pressure monitoring** | ZJ-TM02 flow meter, three-channel pressure, derived parameters, steady-state detection, manual recording. It went through its own evolution from v1 to v13 (v11 switched to 100 Hz high-frequency sampling + peak/trough statistics; v13 changed the ΔP-Q sweep to timed averaging) |
+| **Pump control** | L298N PWM + direction, minimum effective PWM protection, apply-to-commit operation |
 
-### 9.2 整合版版本表
+### 9.2 Integrated Version Table
 
-| 版本 | 日期 | 動到的檔案 | 需重燒韌體 | 重點 |
+| Version | Date | Files changed | Firmware reflash required | Highlights |
 |---|---|---|---|---|
-| **v1** | 2026-09-01 | 全部（新建） | ✅ | 三專案合併；OD600 改非阻塞狀態機；刪除自動實驗；只保留 PWM；新版面 |
-| **v2** | 2026-09-01 | 全部 | ✅ | 修掉三個阻塞成因；新增聚合取樣；`loop_max_us` 診斷 |
-| **v2.1** | 2026-09-01 | `main.py`、`index.html` | ❌ | 背景執行緒例外保護；重連後畫面不再像卡住 |
-| **v2.2** | 2026-09-01 | 全部 | ✅ | 校正值自動存檔／還原／手動輸入 |
-| **v2.3** | 2026-09-06 | `main.py`、`index.html` | ❌ | 每視窗立刻落盤；中斷自動接續；HTTP 下載；新增 `gap_s` 欄位 |
-| **v3** | 2026-10-02 | 全部 + `sketch.yaml` | ✅ | 併入 pH/KOH 控制（A4/D7）與 STS3215 夾閥（Serial1）；ADC 解析度統一；CSV +9 欄；夾閥事件紀錄（見 §12） |
-| **v3.8.2** | 2026-10-05 | `sketch.ino`、`main.py` | ✅ | DS18B20 不在 setup() 初始化（改為開機 5 秒後於 loop() 搜尋），避免 1-Wire 出問題時 Bridge 函式來不及註冊；1-Wire 時序預設不關中斷（`DS_IRQ_LOCK`） |
-| **v3.9.0** | 2026-10-06 | `sketch.ino`、`main.py` | ✅ | DS18B20 改用 Zephyr GPIO 開汲極直接存取（只設定一次）：實機發現 `pinMode()` 每次重新設定腳位要數十 µs，1-Wire 時序來不及，造成「第一次有回應、之後沒有回應」與 loop 20 ms 以上；設定失敗時退回舊寫法 |
-| **v4.5** | 2026-10-06 | `index.html` | ❌ | 頁面主標題改為「ReLeaf Perfusion Hollow Fiber Bioreactor ver. 4.5」（版本自動帶入） |
-| **v3.10.0 / v4.4 / v4.6** | 2026-10-06 | `sketch.ino`、`main.py`、`index.html` | ✅ | 幫浦啟動助推：從停止啟動時先以助推 PWM（預設 255）跑 500 ms 再降回目標 PWM，解決「PWM 要 200 才轉得動、但需要的流速在 150」；可選停轉自動再助推（流量計 3 秒無脈衝、夾閥開啟時、最多 3 次）；設定存檔、MCU 重開機自動還原、納入校正值輸出／輸入 |
-| **v3.10.1** | 2026-10-06 | `sketch.ino`、`main.py`(只改 EXPECTED_FW) | ✅ | DS18B20：D8 開汲極同時開內部上拉當備援；找不到感測器時印出 1-Wire 電氣診斷(外部上拉 / 內部上拉 / 拉低 / presence 波形)並指出可能原因；新增 Bridge `ds_diag` |
-| **v3.10.2 / v4.5 / v4.7** | 2026-10-06 | `sketch.ino`、`main.py`、`index.html` | ✅ | DS18B20 記錄：每次重新搜尋(10 秒)都印一行結果，原因改變或約每分鐘附完整診斷；找到後每 30 秒印溫度；網頁溫度區新增「溫度計診斷／立即重新搜尋」按鈕。修正 v3.10.1 的 FW_VERSION 仍顯示 v3.10.0 |
-| **v4.6 / v4.8** | 2026-10-06 | `main.py`、`index.html` | ❌ | ΔP–Q 掃描：自動依序跑多個 PWM，每點穩定後記錄 ΔP_friction 與流量，擬合 ΔP = a·Q + b·Q²（二次與線性、R²、殘差），確認後套用；量測點與擬合結果存檔並納入校正值輸出／輸入 |
-| **v4.7 / v4.9** | 2026-10-06 | `main.py`、`index.html` | ❌ | 所有溫度輸入（pH 補償溫度、標準液溫度、手動校正溫度）預設使用溫度計，讀不到才改手動；新增「操作參數輸入」：Q_L 來源（流量計／手動）、手動 Q_L、Q_perm（含收集量÷時間計算）、培養體積；Q_L 設定納入校正值輸出／輸入 |
-| **v3.10.3 / v4.7.1 / v4.9.1** | 2026-10-06 | `sketch.ino`、`main.py`、`index.html` | ✅ | DS18B20「第一次找到、之後讀不到」：1-Wire 位元時槽改用開機時校正的空迴圈延遲（不依賴 delayMicroseconds／系統計時器精度）；每次讀取失敗印出原因（no_presence、all_0xFF、crc+原始位元組、85.0 °C）；診斷加上時序實測值；Bridge `ds_timing`（spin／busy／cal） |
-| **v4.7.2 / v4.9.2** | 2026-10-06 | `main.py`、`index.html` | ❌ | ΔP–Q 掃描新增「掃描順序」，預設由高 PWM 到低 PWM（低 PWM 時幫浦已在運轉，不必從靜止起動），可改回由低到高 |
-| **v4.10 / v4.11** | 2026-10-08 | `main.py`、`index.html` | ❌ | 錄製區新增「💾 中途存檔」：錄製（或暫停）中可按，把目前為止的 CSV 複製成 `原檔名_checkpoint_時間.csv` 並自動下載，錄製不中斷；網頁檢查 main.py 版本改為逐段比較（4.10 > 4.9） |
-| **v3.10.7 / v4.9.1 / v4.10.1** | 2026-10-08 | `sketch.ino`、`main.py`、`index.html` | ✅ | **移除 MCU 自動重開**：實機測試 v3.10.6 的軟體重開（SYSRESETREQ）後 MCU 沒有再接回 Bridge（無新的 [boot]、壓力推送停止），只能停止 App 或斷電恢復。保留：呼叫排隊、斷線偵測與紅色橫幅、Serial Monitor `[rpc]` 統計與警告、狀態／重新同步、壓力測試、模擬 Python 端斷線；Python 會主動送 en=0 關閉舊韌體的自動重開 |
-| **v3.10.6 / v4.9 / v4.10** | 2026-10-08 | `sketch.ino`、`main.py`、`index.html` | ✅ | 指令通道自我恢復：MCU 原本有收到 Python 呼叫、之後連續 60 秒（可調）都沒收到 → 自動軟體重開（等同 reset，電源不中斷）；Python 偵測到重開後推回校正值與設定並恢復幫浦 PWM／方向；每小時最多自動重開 2 次；App 正常停止時關閉此功能。工程模式新增「MCU 連線與自我恢復」：狀態、重新同步、watchdog 設定、壓力測試、模擬 Python 端斷線、模擬 MCU 收不到指令 |
-| **v3.10.5 / v4.8** | 2026-10-08 | `sketch.ino`、`main.py` | ✅ | 電腦休眠喚醒後「Python→MCU 指令全部沒反應、MCU 資料照常推送」：Python 端所有 MCU 呼叫改為排隊（一次一個、逾時 5 s），連續 3 次失敗即在 Console 與網頁紅色橫幅顯示；MCU 端全部 Bridge 函式改用 provide_safe（在 loop() 執行，不再跑在 500 byte 堆疊的 Bridge 背景執行緒）；Serial Monitor 每 30 秒印出收到的 Python 呼叫數，30 秒完全沒收到會警告 |
-| **v3.10.4** | 2026-10-07 | `sketch.ino`、`main.py`(只改 EXPECTED_FW) | ✅ | 新板（Zephyr 核心 1.0.0）空板執行時 Python 全部 `not available`：Bridge 函式改在 setup() 一開始註冊（原本在 I2C 掃描與夾閥 Ping 之後）；I2C 只探測 0x23／0x5C；開機印出各步驟耗時 |
-| **v4.4** | 2026-10-06 | `index.html` | ❌ | 離線預覽（about:srcdoc / file:// 或缺 libs）時以替身 WebUI 運作，不再整頁失效，並提示改開板子網址 |
-| **v4.3** | 2026-10-06 | `main.py`、`index.html` | ❌ | 排錯：網頁 JS 錯誤直接顯示在畫面下方紅框；狀態列顯示 UI 與 main.py 版本，main.py 過舊時顯示提示；規格管理欄位在收到板子資料前也先畫出來 |
-| **v4.2** | 2026-10-06 | `index.html` | ❌ | 移除「指標說明」單元，改為各指標本身可點擊（事件委派，含 OD600 卡、穩態徽章、ρgh）；狀態列顯示 UI 版本以確認瀏覽器載入的是新檔 |
-| **v4.1** | 2026-10-06 | `main.py`、`index.html`、`constants.json` | ❌ | 校正值「輸出／輸入」（.json，可勾選套用項目）；新增「規格管理」單元（模組幾何、體積、流體、運轉目標、告警門檻、自檢參數，可由幾何算 A／V_lumen）；膜過濾監測各參數點擊顯示意義與正常範圍 |
-| **v4.0** | 2026-10-06 | `main.py`、`index.html`、`constants.json` | ❌ | 依 HFM_bioreactor_UI_spec.md 重新設計衍生參數：TMP_out（含波谷嚴格版）、ΔP_friction 比值（扣 ρgh）、γ（壓力）、γ_ratio、J／L_p／D（需 Q_perm）、次要診斷參數；停泵自檢量 ρgh；新告警清單；堵塞指標／L_p 趨勢圖與 P_out 瞬時波形；CSV 73 欄 |
-| **v3.8.4** | 2026-10-06 | `sketch.ino`、`main.py`、`index.html` | ✅ | setup() 第一步先把幫浦腳位拉低（避免 MCU 卡在 Bridge 時 L298N 輸入浮接、幫浦自行運轉）；內建 LED 開機診斷燈；MCU 無回應橫幅加入上電順序提示 |
-| **v3.8.3** | 2026-10-05 | `sketch.ino`、`main.py` | ✅ | 全域 `String valveLoopbackResult` 改為 char 陣列（當時誤判為「無 [boot]」的原因；實際原因是上電順序，見 §10.00）。建議仍避免在 sketch 宣告有解構子的全域物件 |
-| **v3.10** | 2026-10-05 | `index.html`、`main.py` | ❌ | OD600／pH／溫度合併為「生長相關參數」；校正值管理加入 pH 兩點校正電壓與校正溫度（可手動輸入）；pH 探頭校正／取樣設定／演算法切換／工程模式／校正值管理預設收合；預設英文，可切換正體中文（記在瀏覽器） |
-| **v3.9** | 2026-10-05 | `index.html` | ❌ | 介面改為三欄（曲線｜曲線｜操作）；PWM 可直接輸入；流速數值移到幫浦面板，點擊開啟流速曲線浮動視窗；OD600 控制＋LED 對光合併為「工程模式」；壓力曲線與衍生分析合併 |
-| **v3.8.1** | 2026-10-05 | `sketch.ino`、`sketch.yaml`、`main.py` | ✅ | 修正 `OneWire.h: No such file`：DS18B20 改用內嵌 1-Wire 驅動，不再依賴外部函式庫 |
-| **v3.8** | 2026-10-05 | `sketch.ino`、`sketch.yaml`、`main.py`、`index.html` | ✅ | 壓力分壓比改為 15k/22k（0.5946）並丟棄換腳位後首筆 ADC；DS18B20 溫度（D8，讀不到自動改用手動溫度）；新增溫度曲線；曲線圖改為完整歷史壓縮顯示＋「重設曲線」按鈕；CSV 增 `temp_src`（59 欄） |
-| **v3.7** | 2026-10-04 | `sketch.ino`、`main.py`、`index.html`、`constants.json` | ✅ | 取樣／分析演算法可切換（依演算法檢討報告，見 §13）；CSV 增為 58 欄（G-4 多統計量＋`alg_profile`） |
-| **v3.6** | 2026-10-03 | `sketch.ino`、`main.py`、`index.html` | ✅ | 夾閥設定新增 D0–D1 迴路測試（驗證 UNO Q 端 Serial1 收發） |
-| **v3.5** | 2026-10-03 | `sketch.ino`、`main.py`、`index.html` | ✅ | 夾閥「盲送測試」（廣播 ID、8 種鮑率，不需回應）；修正掃描提示把換鮑率雜訊誤判為「有收到資料」 |
-| **v3.4** | 2026-10-03 | `sketch.ino`、`main.py`、`index.html` | ✅ | pH 手動補償溫度與標準液溫度；伺服自動掃描（8 種鮑率 × ID 0–253）與鮑率設定；匯流排收到位元組數診斷 |
-| **v3.3** | 2026-10-03 | `sketch.ino`、`main.py`、`index.html` | ✅ | 排錯：網頁偵測 `assets/libs/` 缺檔；Python 追蹤網頁訊息與幫浦指令；D9 恢復舊版 `pinMode()` 寫法 |
-| **v3.2** | 2026-10-03 | `sketch.ino`、`main.py`、`index.html` | ✅ | 排錯版：移除 `Serial.begin()`（新核心上會重複啟動 Bridge）；D9 不再 `pinMode()`；開機同步改背景執行緒；MCU 連線狀態與韌體版本顯示；`ENABLE_PH` / `ENABLE_VALVE` 開關 |
-| **v3.1** | 2026-10-03 | 全部 | ✅ | 換幫浦：移除 PWM 無效區間；拿掉 KOH 加鹼控制，pH 只監測記錄（D7 釋出）；CSV 改為 +6 欄 |
+| **v1** | 2026-09-01 | All (new) | ✅ | Merged the three projects; OD600 changed to a non-blocking state machine; automated experiments removed; only PWM kept; new layout |
+| **v2** | 2026-09-01 | All | ✅ | Fixed three causes of blocking; added aggregated sampling; `loop_max_us` diagnostics |
+| **v2.1** | 2026-09-01 | `main.py`, `index.html` | ❌ | Exception protection for background threads; the screen no longer appears frozen after reconnecting |
+| **v2.2** | 2026-09-01 | All | ✅ | Calibration values automatically saved / restored / manually entered |
+| **v2.3** | 2026-09-06 | `main.py`, `index.html` | ❌ | Each window flushed to disk immediately; automatic resume after interruption; HTTP download; new `gap_s` column |
+| **v3** | 2026-10-02 | All + `sketch.yaml` | ✅ | Merged in pH/KOH control (A4/D7) and the STS3215 pinch valve (Serial1); unified ADC resolution; CSV +9 columns; pinch valve event log (see §12) |
+| **v3.8.2** | 2026-10-05 | `sketch.ino`, `main.py` | ✅ | DS18B20 is no longer initialized in setup() (instead searched for in loop() 5 seconds after boot), so that a 1-Wire problem cannot prevent the Bridge functions from being registered in time; 1-Wire timing no longer disables interrupts by default (`DS_IRQ_LOCK`) |
+| **v3.9.0** | 2026-10-06 | `sketch.ino`, `main.py` | ✅ | DS18B20 switched to direct Zephyr GPIO open-drain access (configured only once): on real hardware it was found that `pinMode()` takes tens of µs every time it reconfigures the pin, which breaks 1-Wire timing and caused "responds the first time, no response afterwards" and loop times of 20 ms or more; falls back to the old method if configuration fails |
+| **v4.5** | 2026-10-06 | `index.html` | ❌ | Page main title changed to "ReLeaf Perfusion Hollow Fiber Bioreactor ver. 4.5" (version inserted automatically) |
+| **v3.10.0 / v4.4 / v4.6** | 2026-10-06 | `sketch.ino`, `main.py`, `index.html` | ✅ | Pump start-up kick: when starting from standstill, first run at the kick PWM (default 255) for 500 ms, then drop back to the target PWM, solving "the pump needs PWM 200 to start turning, but the required flow rate is at 150"; optional automatic re-kick on stall (no flow meter pulses for 3 seconds, only while the pinch valve is open, at most 3 times); settings are saved, restored automatically after an MCU restart, and included in calibration value export / import |
+| **v3.10.1** | 2026-10-06 | `sketch.ino`, `main.py` (only EXPECTED_FW changed) | ✅ | DS18B20: D8 open-drain with the internal pull-up also enabled as a backup; when no sensor is found, prints 1-Wire electrical diagnostics (external pull-up / internal pull-up / pull-low / presence waveform) and points out likely causes; new Bridge `ds_diag` |
+| **v3.10.2 / v4.5 / v4.7** | 2026-10-06 | `sketch.ino`, `main.py`, `index.html` | ✅ | DS18B20 logging: prints one line of results on every re-search (10 seconds), with full diagnostics attached when the cause changes or about once a minute; once found, prints the temperature every 30 seconds; new "Thermometer diagnostics / re-search now" button in the web UI's temperature area. Fixed v3.10.1's FW_VERSION still showing v3.10.0 |
+| **v4.6 / v4.8** | 2026-10-06 | `main.py`, `index.html` | ❌ | ΔP–Q sweep: automatically runs through multiple PWM values in sequence, records ΔP_friction and flow at each point once stable, fits ΔP = a·Q + b·Q² (quadratic and linear, R², residuals), applies after confirmation; measurement points and fit results are saved and included in calibration value export / import |
+| **v4.7 / v4.9** | 2026-10-06 | `main.py`, `index.html` | ❌ | All temperature inputs (pH compensation temperature, buffer solution temperature, manual calibration temperature) use the thermometer by default and switch to manual only when it cannot be read; new "Operating parameter input": Q_L source (flow meter / manual), manual Q_L, Q_perm (including calculation from collected volume ÷ time), culture volume; Q_L settings included in calibration value export / import |
+| **v3.10.3 / v4.7.1 / v4.9.1** | 2026-10-06 | `sketch.ino`, `main.py`, `index.html` | ✅ | DS18B20 "found the first time, unreadable afterwards": 1-Wire bit slots now use a busy-loop delay calibrated at boot (independent of delayMicroseconds / system timer accuracy); each read failure prints its cause (no_presence, all_0xFF, crc + raw bytes, 85.0 °C); diagnostics include measured timing values; Bridge `ds_timing` (spin / busy / cal) |
+| **v4.7.2 / v4.9.2** | 2026-10-06 | `main.py`, `index.html` | ❌ | ΔP–Q sweep gains a "Sweep order" option, defaulting to high PWM → low PWM (at low PWM the pump is already running and does not need to start from standstill); can be switched back to low → high |
+| **v4.10 / v4.11** | 2026-10-08 | `main.py`, `index.html` | ❌ | New "💾 Checkpoint save" in the recording area: available while recording (or paused), it copies the CSV so far to `<original-name>_checkpoint_<time>.csv` and downloads it automatically without interrupting the recording; the web UI's main.py version check now compares segment by segment (4.10 > 4.9) |
+| **v3.10.7 / v4.9.1 / v4.10.1** | 2026-10-08 | `sketch.ino`, `main.py`, `index.html` | ✅ | **Automatic MCU restart removed**: in real-hardware testing, after v3.10.6's software restart (SYSRESETREQ) the MCU did not reconnect to the Bridge (no new [boot], pressure pushes stopped), and recovery was only possible by stopping the App or cutting power. Kept: call queuing, disconnect detection with the red banner, Serial Monitor `[rpc]` statistics and warnings, status / resync, stress test, simulated Python-side disconnect; Python actively sends en=0 to disable the automatic restart in older firmware |
+| **v3.10.6 / v4.9 / v4.10** | 2026-10-08 | `sketch.ino`, `main.py`, `index.html` | ✅ | Command channel self-recovery: if the MCU had been receiving Python calls and then receives none for 60 consecutive seconds (adjustable) → automatic software restart (equivalent to reset, power not interrupted); after Python detects the restart it pushes back the calibration values and settings and restores the pump PWM / direction; at most 2 automatic restarts per hour; the feature is disabled when the App stops normally. Engineering mode gains "MCU connection and self-recovery": status, resync, watchdog settings, stress test, simulated Python-side disconnect, simulated MCU not receiving commands |
+| **v3.10.5 / v4.8** | 2026-10-08 | `sketch.ino`, `main.py` | ✅ | After the PC wakes from sleep, "no Python→MCU command gets any response, while MCU data keeps being pushed normally": all MCU calls on the Python side are now queued (one at a time, 5 s timeout), and 3 consecutive failures are shown in the Console and as a red banner in the web UI; on the MCU side all Bridge functions now use provide_safe (run in loop(), no longer on the Bridge background thread with its 500-byte stack); the Serial Monitor prints the number of Python calls received every 30 seconds and warns if none at all are received for 30 seconds |
+| **v3.10.4** | 2026-10-07 | `sketch.ino`, `main.py` (only EXPECTED_FW changed) | ✅ | On a new board (Zephyr core 1.0.0), running with nothing attached, Python reported `not available` for everything: Bridge functions are now registered at the very start of setup() (previously after the I2C scan and pinch valve Ping); I2C probes only 0x23 / 0x5C; boot prints the time taken by each step |
+| **v4.4** | 2026-10-06 | `index.html` | ❌ | In offline preview (about:srcdoc / file:// or missing libs) the page runs with a stand-in WebUI instead of failing entirely, and suggests opening the board's URL instead |
+| **v4.3** | 2026-10-06 | `main.py`, `index.html` | ❌ | Troubleshooting: web page JS errors are shown directly in a red box at the bottom of the screen; the status bar shows the UI and main.py versions, with a notice when main.py is too old; spec management fields are drawn even before board data arrives |
+| **v4.2** | 2026-10-06 | `index.html` | ❌ | Removed the "Metric explanations" unit; instead each metric itself is clickable (event delegation, including the OD600 card, steady-state badge and ρgh); the status bar shows the UI version to confirm that the browser loaded the new file |
+| **v4.1** | 2026-10-06 | `main.py`, `index.html`, `constants.json` | ❌ | Calibration value "export / import" (.json, with selectable items to apply); new "Spec management" unit (module geometry, volumes, fluid, operating targets, alarm thresholds, self-test parameters; A / V_lumen can be computed from the geometry); each membrane filtration monitoring parameter can be clicked to show its meaning and normal range |
+| **v4.0** | 2026-10-06 | `main.py`, `index.html`, `constants.json` | ❌ | Derived parameters redesigned according to HFM_bioreactor_UI_spec.md: TMP_out (including a strict trough-based version), ΔP_friction ratio (with ρgh subtracted), γ (pressure), γ_ratio, J / L_p / D (require Q_perm), secondary diagnostic parameters; pump-stopped self-test measures ρgh; new alarm list; fouling indicator / L_p trend charts and P_out instantaneous waveform; CSV 73 columns |
+| **v3.8.4** | 2026-10-06 | `sketch.ino`, `main.py`, `index.html` | ✅ | The first step of setup() pulls the pump pins low (prevents the L298N inputs from floating and the pump from running by itself while the MCU is stuck in Bridge); built-in LED boot diagnostic indicator; power-up order hint added to the "MCU not responding" banner |
+| **v3.8.3** | 2026-10-05 | `sketch.ino`, `main.py` | ✅ | The global `String valveLoopbackResult` changed to a char array (at the time this was wrongly thought to be the cause of "no [boot]"; the actual cause was the power-up order, see §10.00). It is still recommended to avoid declaring global objects with destructors in the sketch |
+| **v3.10** | 2026-10-05 | `index.html`, `main.py` | ❌ | OD600 / pH / temperature combined into "Growth-related parameters"; calibration value management adds the pH two-point calibration voltages and calibration temperature (manual entry possible); pH probe calibration / sampling settings / algorithm selection / engineering mode / calibration value management collapsed by default; English by default, switchable to Traditional Chinese (remembered in the browser) |
+| **v3.9** | 2026-10-05 | `index.html` | ❌ | UI changed to three columns (charts | charts | controls); PWM can be typed in directly; flow-rate value moved to the pump panel, click to open a floating flow-rate chart window; OD600 controls + LED alignment combined into "Engineering mode"; pressure chart and derived analysis combined |
+| **v3.8.1** | 2026-10-05 | `sketch.ino`, `sketch.yaml`, `main.py` | ✅ | Fixed `OneWire.h: No such file`: DS18B20 now uses an embedded 1-Wire driver and no longer depends on external libraries |
+| **v3.8** | 2026-10-05 | `sketch.ino`, `sketch.yaml`, `main.py`, `index.html` | ✅ | Pressure divider ratio changed to 15k/22k (0.5946) and the first ADC reading after a pin switch is discarded; DS18B20 temperature (D8, automatically falls back to the manual temperature when it cannot be read); new temperature chart; charts changed to a compressed full-history display + "Reset charts" button; CSV adds `temp_src` (59 columns) |
+| **v3.7** | 2026-10-04 | `sketch.ino`, `main.py`, `index.html`, `constants.json` | ✅ | Selectable sampling / analysis algorithms (per the algorithm review report, see §13); CSV increased to 58 columns (G-4 multiple statistics + `alg_profile`) |
+| **v3.6** | 2026-10-03 | `sketch.ino`, `main.py`, `index.html` | ✅ | Pinch valve settings gain a D0–D1 loopback test (verifies Serial1 transmit/receive on the UNO Q side) |
+| **v3.5** | 2026-10-03 | `sketch.ino`, `main.py`, `index.html` | ✅ | Pinch valve "blind move test" (broadcast ID, 8 baud rates, no response needed); fixed the scan hint misinterpreting baud-rate-switch noise as "data received" |
+| **v3.4** | 2026-10-03 | `sketch.ino`, `main.py`, `index.html` | ✅ | pH manual compensation temperature and buffer solution temperature; automatic servo scan (8 baud rates × ID 0–253) and baud rate setting; diagnostic of bytes received on the bus |
+| **v3.3** | 2026-10-03 | `sketch.ino`, `main.py`, `index.html` | ✅ | Troubleshooting: the web UI detects missing files in `assets/libs/`; Python traces web messages and pump commands; D9 reverted to the old `pinMode()` code |
+| **v3.2** | 2026-10-03 | `sketch.ino`, `main.py`, `index.html` | ✅ | Troubleshooting build: removed `Serial.begin()` (on the new core it starts the Bridge a second time); D9 no longer calls `pinMode()`; boot synchronization moved to a background thread; MCU connection status and firmware version display; `ENABLE_PH` / `ENABLE_VALVE` switches |
+| **v3.1** | 2026-10-03 | All | ✅ | Pump replaced: PWM dead zone removed; KOH base dosing control removed, pH is monitored and logged only (D7 freed); CSV changed to +6 columns |
 
-### 9.3 各版詳細說明
+### 9.3 Detailed Notes per Version
 
-#### v1 — 三專案合併（2026-09-01）
+#### v1 — Merging the Three Projects (2026-09-01)
 
-**最重要的改動：OD600 量測改成非阻塞狀態機。**
+**The most important change: OD600 measurement became a non-blocking state machine.**
 
-原本 `doMeasurement()` 用 `delay(SAMPLE_PERIOD_MS)` 一路把 4 筆暗電流 + 16 筆亮燈 burst 跑完，單次量測把 `loop()` 卡住約 2.7 秒（遇重試超過 5 秒）。只有 OD600 時無所謂，合併後這段期間：
+Originally `doMeasurement()` used `delay(SAMPLE_PERIOD_MS)` to run straight through the 4 dark-current readings + 16-reading lit burst, so a single measurement blocked `loop()` for about 2.7 seconds (more than 5 seconds when a retry occurred). That did not matter with OD600 alone, but after the merge, during that time:
 
-1. 壓力的 100 Hz 滑動視窗少掉 2–3 秒取樣 → peak/trough/mean 統計被截斷，collapse pressure 保護與 TMP 轉負偵測出現盲區
-2. 流量的 1 秒節拍被拉長
-3. **Bridge 服務被延遲 → 幫浦「緊急停止」可能要等 2–3 秒才被處理**（安全問題）
+1. The pressure 100 Hz sliding window lost 2–3 seconds of samples → peak/trough/mean statistics were truncated, leaving blind spots in collapse-pressure protection and negative-TMP detection
+2. The 1-second flow tick was stretched
+3. **Bridge service was delayed → a pump "emergency stop" might take 2–3 seconds to be processed** (a safety issue)
 
-改成 `loop()` 裡用 `millis()` 排程的狀態機：
+It was changed to a state machine scheduled with `millis()` inside `loop()`:
 
 ```
-OD_IDLE ──(到量測時間/收到 trigger)──▶ OD_DARK ──(收滿4筆)──▶ OD_WARMUP
-   ▲                                                              │
-   └────── 統計 + 需要時重試一次 ◀──── OD_LIT ◀──(LED穩定60ms)────┘
+OD_IDLE ──(measurement time reached / trigger received)──▶ OD_DARK ──(4 readings collected)──▶ OD_WARMUP
+   ▲                                                                                              │
+   └────── statistics + one retry if needed ◀──── OD_LIT ◀──(LED stable 60ms)─────────────────────┘
 ```
 
-量測邏輯本身（暗電流扣除、MAD 剔除、重試、log10、I2C 失效偵測）與原版完全相同，只是「一次跑完」改成「分次跑」。連帶 `calibrate_blank()` 從同步改成排入一次量測，約 3 秒後由 MCU 主動 notify。
+The measurement logic itself (dark-current subtraction, MAD rejection, retry, log10, I2C failure detection) is exactly the same as the original; only "run it all at once" became "run it in steps". As a consequence, `calibrate_blank()` changed from synchronous to queuing one measurement, with the MCU actively sending a notify about 3 seconds later.
 
-**其他變更**：刪除 ΔP-Q 自動掃描與跳線/中空纖維對照檔；刪除幫浦流速閉環控制（蠕動幫浦的流量脈動會讓 P 控制器震盪）；記錄改成含 OD600 + 幫浦 PWM 的單一 CSV；新版面（左 2/3 曲線圖、右 1/3 控制面板）。
+**Other changes**: removed the automatic ΔP-Q sweep and the jumper/hollow-fiber lookup file; removed closed-loop pump flow-rate control (the flow pulsation of the peristaltic pump makes the P controller oscillate); logging changed to a single CSV including OD600 + pump PWM; new layout (left 2/3 charts, right 1/3 control panels).
 
-**順手修掉的舊 bug**：`rawToBar(int)` 把 16 點過取樣的小數截掉了（`readBlockAveragedBar()` 傳進去的是浮點數），等於降噪效果被打折，解析度退回 1 個 ADC count ≈ 0.0054 bar。改成 `rawToBar(float)`。副作用：讀值會略高約半個 ADC count（~0.003 bar），**建議重新歸零校正**。
+**Old bug fixed along the way**: `rawToBar(int)` truncated the fractional part of the 16-point oversampling (`readBlockAveragedBar()` passes in a float), which effectively undermined the noise reduction and dropped the resolution back to 1 ADC count ≈ 0.0054 bar. Changed to `rawToBar(float)`. Side effect: readings are slightly higher by about half an ADC count (~0.003 bar); **re-zeroing is recommended**.
 
-#### v2 — 狀態機做對了，但底下的呼叫還是阻塞的（2026-09-01）
+#### v2 — The State Machine Was Right, but the Calls Underneath Were Still Blocking (2026-09-01)
 
-v1 之後**壓力與流速在 OD600 取樣期間仍會停擺**。三個成因：
+After v1, **pressure and flow rate still stalled during OD600 sampling**. Three causes:
 
-**(1) `readLightLevel()` 裡的忙等迴圈 ← 主因**
+**(1) The busy-wait loop in `readLightLevel()` ← main cause**
 
 ```cpp
 if (requestFrom(addr, 2) != 2) return -1;
-while (available() < 2) { if (millis() - start > 200) return -1; }   // 忙等最多 200ms
+while (available() < 2) { if (millis() - start > 200) return -1; }   // busy-wait up to 200ms
 ```
 
-`requestFrom()` 在同步 Wire 實作裡回來時整筆傳輸已完成，正常情況那個 `while` 一次都不會轉——但只要感測器有一次沒正常回應就原地空轉最多 200 ms。一次量測 20 筆 × 2 顆感測器，**最壞把 `loop()` 卡死 8 秒**。
-→ 逾時縮到 **3 ms**（2 bytes @100kHz 只需不到 1 ms），逾時當作讀取失敗回傳 −1，交給上層既有的 I2C 失效偵測處理。
+In a synchronous Wire implementation, the whole transfer is already complete when `requestFrom()` returns, so normally that `while` never iterates even once — but if the sensor fails to respond properly even once, it spins in place for up to 200 ms. One measurement is 20 readings × 2 sensors, so **in the worst case `loop()` is frozen for 8 seconds**.
+→ The timeout was cut to **3 ms** (2 bytes @100kHz take less than 1 ms); a timeout is treated as a read failure returning −1 and handed to the existing upper-level I2C failure detection.
 
-**(2) I2C 失效時的重新初始化**：`begin()` 內含 `delay(10)+delay(180)`，兩顆都失敗就是 380 ms，而且掛在每次量測的收尾流程上。
-→ 拆成 `powerOn()` / `setContinuousHRes()`，由 `reinitTick()` 用 `millis()` 分段推進。
+**(2) Re-initialization on I2C failure**: `begin()` contains `delay(10)+delay(180)`, so if both sensors fail that is 380 ms, and it was attached to the wrap-up of every measurement.
+→ Split into `powerOn()` / `setContinuousHRes()`, advanced step by step by `reinitTick()` using `millis()`.
 
-**(3) Python 在 Bridge 回呼裡發同步 RPC**：`on_od600_update()` 裡直接呼叫 `refresh_blank_info()`（內含同步 `Bridge.call`），把整條 Bridge 鏈路佔住——而壓力 notify 與流量輪詢走的正是同一條。
-→ 回呼只設旗標，實際讀取交給 `od600_poll_loop`。
+**(3) Python issuing synchronous RPCs inside a Bridge callback**: `on_od600_update()` directly called `refresh_blank_info()` (which contains a synchronous `Bridge.call`), occupying the entire Bridge link — and the pressure notify and flow polling go over that very same link.
+→ The callback now only sets a flag, and the actual read is handed to `od600_poll_loop`.
 
-**新增即時性診斷**：MCU 每秒印 `[diag] loop_max_us=... pressure_samples_last_sec=.../100`，網頁狀態列同步顯示，異常轉紅。
+**New real-time diagnostics**: the MCU prints `[diag] loop_max_us=... pressure_samples_last_sec=.../100` every second, the web status bar shows the same, and turns red on anomalies.
 
-| 值 | 正常 | 不正常代表 |
+| Value | Normal | Abnormal means |
 |---|---|---|
-| `loop_max_us` | 幾百 µs | 上萬 µs = 有人在 `loop()` 裡阻塞 |
-| `pressure_samples_last_sec` | 接近 100 | 明顯偏低 = 被卡掉的取樣筆數 |
+| `loop_max_us` | A few hundred µs | Tens of thousands of µs = something is blocking in `loop()` |
+| `pressure_samples_last_sec` | Close to 100 | Noticeably low = number of samples dropped due to blocking |
 
-**新增聚合取樣**（見 [§5.3](#53-聚合取樣)）；CSV 改成一個視窗一列。
+**New aggregated sampling** (see [§5.3](#53-aggregated-sampling)); the CSV changed to one row per window.
 
-#### v2.1 — 背景執行緒例外保護（2026-09-01）
+#### v2.1 — Exception Protection for Background Threads (2026-09-01)
 
-背景迴圈原本直接 `threading.Thread(target=fn)` 丟出去，外面沒有 try/except。只要丟出一次未處理的例外，那條執行緒就**永久**消失，而且死得很安靜：網頁不會斷線、其他訊息照常跑，只有那一路停止更新——症狀正是「畫面卡住、重新連線也救不回來、只有重啟 App 才會好」。
+The background loops were originally launched directly with `threading.Thread(target=fn)`, with no try/except around them. A single unhandled exception made that thread disappear **permanently**, and it died very quietly: the web page did not disconnect and other messages kept flowing; only that one stream stopped updating — the symptom was exactly "the screen is frozen, reconnecting does not help, only restarting the App fixes it".
 
-- 每條背景執行緒包進 `_run_forever()`：印出完整 traceback 並在 1 秒後自動重啟
-- 某個視窗完全沒收到壓力資料時會**出聲**（Console 警告 + 網頁紅字），不再安靜跳過
-- 重連後卡片先跟著 200 ms 瞬時值走，直到第一個真正屬於這次連線的視窗結束
-- 倒數改用後端算的剩餘秒數；重連到進行中的錄製時，曲線圖 X 軸原點用 `elapsed_sec` 推回真正的錄製起點
+- Every background thread is wrapped in `_run_forever()`: it prints the full traceback and restarts automatically after 1 second
+- When a window receives no pressure data at all, the system **speaks up** (Console warning + red text in the web UI) instead of silently skipping it
+- After reconnecting, the cards first follow the 200 ms instantaneous values until the first window that genuinely belongs to this connection ends
+- The countdown now uses the remaining seconds computed by the backend; when reconnecting to a recording in progress, the chart's X-axis origin is moved back to the true recording start using `elapsed_sec`
 
-#### v2.2 — 校正值的保存與還原（2026-09-01）
+#### v2.2 — Saving and Restoring Calibration Values (2026-09-01)
 
-OD600 空白基準、壓力零點 offset、光程長係數全部存在 MCU RAM，一重開就回到預設值。實驗跑到一半遇到重開機時，「把流通池換回乾淨培養基重新校正」「整套系統洩壓重新歸零」實務上根本做不到——樣品還在裡面。
+The OD600 blank reference, pressure zero offsets and path-length factor were all stored in MCU RAM and reverted to defaults on every restart. When a restart happens in the middle of an experiment, "refill the flow cell with clean medium and recalibrate" or "depressurize the whole system and re-zero" is simply impossible in practice — the sample is still inside.
 
-新增自動存檔（`calibration_state.json`）、自動還原、持續提醒、手動輸入，以及 MCU 端 4 個新 Bridge 函式（`set_blank_manual` / `clear_blank` / `set_pressure_offsets` / `get_pressure_offsets`）與 `get_diag` 尾端的 `uptime_ms`。詳見 [§7](#7-校正)。
+Added automatic saving (`calibration_state.json`), automatic restore, persistent reminders, manual entry, plus 4 new Bridge functions on the MCU side (`set_blank_manual` / `clear_blank` / `set_pressure_offsets` / `get_pressure_offsets`) and `uptime_ms` at the end of `get_diag`. See [§7](#7-calibration).
 
-#### v2.3 — 讓「板子獨立記錄」名符其實（2026-09-06）
+#### v2.3 — Making "the Board Logs Independently" Actually True (2026-09-06)
 
-記錄本來就跑在板子的 Linux 側，與瀏覽器無關——但**資料列整場放在記憶體、只有停止時才寫檔**，代表「板子獨立記錄」其實只在正常收尾時成立。
+Logging always ran on the board's Linux side, independent of the browser — but **the data rows for the whole run were kept in memory and written to file only on stop**, which meant "the board logs independently" only held when the run was wrapped up normally.
 
-改成每個視窗一產生就落盤（append + flush + fsync）、中斷後自動接續同一份檔、新增 HTTP 下載端點與錄製檔清單、CSV 新增 `gap_s` 欄位、曲線圖遇缺口畫成斷線。詳見 [§6.2](#62-落盤與中斷接續)。
+Changed to flush each window to disk as soon as it is produced (append + flush + fsync), automatically resume the same file after an interruption, add an HTTP download endpoint and a list of recording files, add the `gap_s` column to the CSV, and draw gaps in the charts as breaks in the line. See [§6.2](#62-flushing-to-disk-and-resuming-after-interruption).
 
-### 9.4 已刪除的功能
+### 9.4 Removed Features
 
-| 已刪除 | 影響 / 替代做法 |
+| Removed | Impact / alternative |
 |---|---|
-| ΔP-Q 自動掃描實驗 | `blank_slope` / `blank_intercept` / `module_slope_net` 改為手動維護 `constants.json`。仍可用「錄製 + 手動調 PWM」取得資料後自行擬合 |
-| 跳線/中空纖維對照檔 | `calibration_library.json` 不再產生或讀取。舊檔裡的係數可手動抄回 `constants.json` |
-| 幫浦流速閉環控制（P 控制器） | 只保留 PWM 直接控制。原本就因蠕動幫浦的流量脈動而震盪，實務上不可靠 |
+| Automatic ΔP-Q sweep experiment | `blank_slope` / `blank_intercept` / `module_slope_net` are now maintained manually in `constants.json`. You can still obtain the data with "recording + manually adjusting PWM" and fit it yourself |
+| Jumper/hollow-fiber lookup file | `calibration_library.json` is no longer generated or read. Coefficients in old files can be copied back into `constants.json` manually |
+| Closed-loop pump flow-rate control (P controller) | Only direct PWM control is kept. It already oscillated because of the peristaltic pump's flow pulsation and was unreliable in practice |
 
-**保留**：OD600 開發者模式、blank 校正與立即量測、壓力歸零、基準線與相對告警、穩態偵測、脈動診斷、雙語介面（中/英）。
+**Kept**: OD600 developer mode, blank calibration and measure-now, pressure zeroing, baselines and relative alarms, steady-state detection, pulsation diagnostics, bilingual UI (Chinese/English).
 
 ---
 
-## 10. 疑難排解
+## 10. Troubleshooting
 
-> **MCU 完全沒回應（沒有 `[boot]`、`method not available`），連空板也一樣**：拔掉 UNO Q 的 USB-C，等 10 秒以上再插回去，開機完成後再執行 App。重新執行 App 不會重開 Linux 端的 Bridge 服務，它卡住時只有完全斷電才能恢復（2026-10-06 實測）。
+> **The MCU does not respond at all (no `[boot]`, `method not available`), even with nothing attached**: unplug the UNO Q's USB-C, wait at least 10 seconds, plug it back in, and run the App only after boot has finished. Re-running the App does not restart the Bridge service on the Linux side; when it hangs, only a full power cycle recovers it (verified on 2026-10-06).
 
-### 10.00 上電順序（2026-10-05 實機確認）
+### 10.00 Power-Up Order (Confirmed on Real Hardware 2026-10-05)
 
-**先插 UNO Q 的 USB、等 Serial Monitor 出現 `[boot]` 之後，才打開 12 V 等外部電源。**
-外部電源先通電時，夾閥驅動板（D0）、流量計、壓力變送器、L298N 等的訊號會經由腳位倒灌到尚未上電的 MCU，MCU 開機異常：Serial Monitor 完全沒有 `[boot]`、Python 端所有 Bridge 函式都是 `method ... not available`，看起來像 sketch 壞掉，其實程式正常（空板可正常執行）。
-硬體改善（選做）：每條「外部裝置 → UNO Q」的訊號線串 1 kΩ 限流（壓力線已有 15 kΩ）；或用同一個電源開關/繼電器讓外部電源在 UNO Q 開機後才導通；L298N 的 5 V 端子不要接到 UNO Q。
+**Plug in the UNO Q's USB first and wait until `[boot]` appears in the Serial Monitor before switching on the 12 V and other external supplies.**
+If the external supplies are powered first, signals from the pinch valve driver board (D0), flow meters, pressure transmitters, L298N, etc. back-feed through the pins into the not-yet-powered MCU and the MCU boots abnormally: the Serial Monitor shows no `[boot]` at all and every Bridge function on the Python side reports `method ... not available`. It looks as if the sketch is broken, but the program is actually fine (it runs normally with nothing attached).
+Hardware improvements (optional): put a 1 kΩ current-limiting resistor in series on every "external device → UNO Q" signal line (the pressure lines already have 15 kΩ); or use a single power switch/relay so that the external supplies are switched on only after the UNO Q has booted; do not connect the L298N's 5 V terminal to the UNO Q.
 
-**開機診斷燈（v3.8.4，板上內建 LED）**：快閃 2 下＝sketch 開始執行；接著恆亮＝正在等 Bridge；熄滅後再閃 3 下＝Bridge 已連上。完全不閃＝sketch 沒被載入；停在恆亮＝卡在 Bridge.begin()。
+**Boot diagnostic indicator (v3.8.4, onboard built-in LED)**: 2 quick flashes = sketch has started; then steady on = waiting for the Bridge; off followed by 3 more flashes = Bridge connected. No flashing at all = the sketch was not loaded; stays steady on = stuck in Bridge.begin().
 
-### 10.0 感測器全部不動、幫浦／夾閥都按不動（v3.2 / v3.3）
+### 10.0 No Sensor Updates, Pump / Pinch Valve Buttons Do Nothing (v3.2 / v3.3)
 
-**先確認 `assets/libs/` 有沒有這兩個檔案：`socket.io.min.js`、`arduino.js`。**
-它們是 App Lab 的 WebUI Brick 放進去的，**本專案的 zip 裡本來就沒有**。用新 zip 建立 App（而不是覆蓋舊 App 的檔案）時它們不會跟著過來，結果是：MCU 與 Python 的 Console 一切正常、Bridge 連線正常，但網頁收不到任何讀值、按鈕也送不出任何指令（Python Console 看不到任何 `[ui] <-`）。修法：把舊版 App 的 `assets/libs/` 整個複製過來，或在 App Lab 把 WebUI - HTML Brick 移除後重新加入。v3.3 起網頁偵測到缺檔會直接顯示紅色提示。
+**First check whether `assets/libs/` contains these two files: `socket.io.min.js` and `arduino.js`.**
+They are placed there by App Lab's WebUI Brick and **are not included in this project's zip in the first place**. When an App is created from a new zip (rather than overwriting the files of an old App), they do not come along, with the result that the MCU and Python Consoles look completely normal and the Bridge connection is fine, but the web page receives no readings and the buttons send no commands (no `[ui] <-` appears in the Python Console). Fix: copy the whole `assets/libs/` from the old App, or remove the WebUI - HTML Brick in App Lab and add it again. Since v3.3 the web page shows a red notice directly when it detects missing files.
 
-v3.3 的 Python Console 會印出網頁送來的每個指令（`[ui] <- set_pump_pwm {...}`）、送給 MCU 的結果（`[pump] -> MCU set_pump_pwm(200) 回應 200`），並每 10 秒印一次送往網頁的訊息數量。依此判斷卡在哪一段：
+In v3.3 the Python Console prints every command sent from the web page (`[ui] <- set_pump_pwm {...}`), the result of sending it to the MCU (`[pump] -> MCU set_pump_pwm(200) response 200`), and every 10 seconds the number of messages sent to the web page. Use these to determine where things are stuck:
 
-| Python Console | MCU Console | 卡在 |
+| Python Console | MCU Console | Stuck at |
 |---|---|---|
-| 沒有 `[ui] <-` | — | 網頁 → Python（多半是上面的 libs 缺檔，或瀏覽器 F12 Console 有錯誤） |
-| 有 `[ui] <-`，`[pump] -> ... 失敗` | 沒有 `[pump] set pwm` | Python → MCU（Bridge） |
-| 有 `[pump] -> ... 回應 200` | 有 `[pump] set pwm=200` | 指令已到 MCU，問題在 L298N／電源／接線 |
+| No `[ui] <-` | — | Web page → Python (usually the missing libs above, or an error in the browser's F12 Console) |
+| `[ui] <-` present, `[pump] -> ...` reports a failure | No `[pump] set pwm` | Python → MCU (Bridge) |
+| `[pump] -> ...` reports MCU responded 200 | `[pump] set pwm=200` present | The command reached the MCU; the problem is in the L298N / power / wiring |
 
-這幾乎都是 **Python ↔ MCU 的 Bridge 不通**。v3.2 起網頁狀態列會顯示「MCU：● 正常（v3.2）」或紅色橫幅「MCU 沒有回應」，依下面順序排查：
+This is almost always a **broken Python ↔ MCU Bridge**. Since v3.2 the web status bar shows "MCU: ● OK (v3.2)" or a red banner "MCU not responding"; troubleshoot in this order:
 
-1. **狀態列的韌體版本**：顯示 `v3.2` 才代表新 sketch 真的在 MCU 上跑。顯示「舊版 sketch」或黃色版本不符橫幅 → sketch 沒有成功重新上傳（App Lab 編譯錯誤會在下方 Console 顯示）。
-2. **MCU 的 Serial Monitor**（App Lab 下方，MCU 那一頁）：應依序看到
-   `[boot] 整合版 sketch v3.2 啟動中 ... Bridge.begin=OK` → `[boot] step: OD600/flow/pressure/pump init done` → `[boot] step: valve init ...` → `[boot] step: core Bridge functions registered` → `[boot] step: v3 Bridge functions registered` → `[boot] entering loop()`，之後每秒一行 `[diag]`。停在哪一步，問題就在那一步之後的初始化。
-   完全沒有任何 `[boot]` → sketch 沒有載入成功（看 Console 是否有 `Undefined symbol` / llext 載入錯誤），或 Bridge 沒起來。
-3. **二分法**：把 `sketch.ino` 開頭的 `ENABLE_VALVE` 改成 `0` 重新上傳；仍然不動再把 `ENABLE_PH` 也改成 `0`。哪一個關掉之後恢復，問題就在那個子系統。
-4. **Python 端 Console**：`[mcu] !! MCU 沒有回應: ...` 會寫出逾時或錯誤原因；`[startup] MCU 同步結束, 花了 N s` 告訴你開機同步有沒有卡住。
-5. 拔掉 D0/D1 上的伺服驅動板再試一次，排除匯流排／接線問題（D0/D1 也是 Zephyr 的開機 console UART）。
+1. **Firmware version in the status bar**: only `v3.2` means the new sketch is actually running on the MCU. If it shows "old sketch" or a yellow version-mismatch banner → the sketch was not successfully re-uploaded (App Lab compile errors appear in the Console at the bottom).
+2. **The MCU's Serial Monitor** (bottom of App Lab, MCU tab): you should see, in order,
+   `[boot] integrated sketch v3.2 starting ... Bridge.begin=OK` → `[boot] step: OD600/flow/pressure/pump init done` → `[boot] step: valve init ...` → `[boot] step: core Bridge functions registered` → `[boot] step: v3 Bridge functions registered` → `[boot] entering loop()`, followed by one `[diag]` line per second. Wherever it stops, the problem is in the initialization right after that step.
+   No `[boot]` at all → the sketch did not load successfully (check the Console for `Undefined symbol` / llext load errors), or the Bridge did not start.
+3. **Bisection**: change `ENABLE_VALVE` at the top of `sketch.ino` to `0` and re-upload; if it still does not work, also change `ENABLE_PH` to `0`. Whichever one restores operation when disabled is the subsystem with the problem.
+4. **Python-side Console**: `[mcu] !! MCU not responding: ...` states the timeout or error cause; `[startup] MCU sync finished, took N s` tells you whether the boot synchronization got stuck.
+5. Disconnect the servo driver board from D0/D1 and try again to rule out bus / wiring problems (D0/D1 is also Zephyr's boot console UART).
 
-v3.2 已修正的兩個疑似成因：
+Two suspected causes fixed in v3.2:
 
-- **`Serial.begin(9600)` 移除**：新版核心（0.55+）的 `Serial` 是 RouterBridge `Monitor` 的別名，`Serial.begin()` 會先把 Bridge 啟動，接著 `Bridge.begin()` 又對 bridge 執行緒正在使用的 mutex 重新初始化，可能讓 Bridge 卡死——症狀正是「感測器全部不更新、所有按鈕沒反應」。STS3215test 沒有這一行，所以同一塊板子跑它正常。
-- **D9 `pinMode()` 移除**：§2.3 的已知地雷，會讓幫浦 PWM 輸出 0V。
+- **`Serial.begin(9600)` removed**: on the new core (0.55+), `Serial` is an alias for the RouterBridge `Monitor`; `Serial.begin()` starts the Bridge first, and then `Bridge.begin()` re-initializes a mutex that the bridge thread is already using, which can deadlock the Bridge — the symptom being exactly "no sensor updates and no button responds". STS3215test does not have this line, which is why it runs fine on the same board.
+- **D9 `pinMode()` removed**: the known pitfall from §2.3, which makes the pump PWM output 0V.
 
-**Q: 重新連線後畫面卡住，數字都不動**
-依序看三處：① 頁面下方「壓力脈動診斷」有沒有在跳（200 ms 更新，不受聚合影響）——有在跳代表資料正常，只是卡片與曲線圖每個視窗才更新；② 狀態列的 MCU 診斷（5 秒更新）；③ App Lab Console 有沒有 Python traceback（v2.1 起會自動重啟並印出）。
+**Q: After reconnecting, the screen is frozen and no numbers change**
+Check three places in order: ① whether the "Pressure pulsation diagnostics" at the bottom of the page is updating (200 ms updates, not affected by aggregation) — if it is, the data is fine and the cards and charts simply update once per window; ② the MCU diagnostics in the status bar (5-second updates); ③ whether there is a Python traceback in the App Lab Console (since v2.1 it restarts automatically and prints it).
 
-**Q: 壓力/流速在 OD600 取樣時停擺**
-v2 已修掉三個成因。先確認跑的是 v2 韌體：Console 每秒應有 `[diag]` 那行。接著看 `loop_max_us`（應為幾百 µs）與 `pressure_samples_last_sec`（應接近 100）。
+**Q: Pressure / flow rate stall during OD600 sampling**
+v2 fixed the three causes. First confirm that v2 firmware is running: the Console should show the `[diag]` line every second. Then check `loop_max_us` (should be a few hundred µs) and `pressure_samples_last_sec` (should be close to 100).
 
-**Q: 電腦休眠期間看起來沒資料**
-① 多半只是畫面缺口（曲線圖歷史只在瀏覽器記憶體），CSV 應該是完整的——直接打開板子上的檔案確認；② 板子是否跟著斷電（靠電腦 USB 供電時很常見）；③ App 是否被停掉（用 App Lab 的 Run at startup）。
+**Q: There seems to be no data while the PC was asleep**
+① Usually it is just a gap in the display (chart history lives only in browser memory) and the CSV should be complete — open the file on the board directly to confirm; ② check whether the board lost power too (common when powered from the PC's USB); ③ check whether the App was stopped (use App Lab's Run at startup).
 
-**Q: 重開機後校正值全不見**
-v2.2 起會自動還原。若是從舊版升上來還沒有存檔，用 [§7.3](#73-手動輸入) 手動填回。
+**Q: All calibration values are gone after a restart**
+Since v2.2 they are restored automatically. If you upgraded from an old version and nothing has been saved yet, fill them back in manually per [§7.3](#73-manual-entry).
 
-**Q: 畫面上的數字 30 秒才跳一次**
-那是聚合取樣的正常行為。「取樣設定」面板有倒數；想看即時反應請看「壓力脈動診斷」。
+**Q: The numbers on screen only change every 30 seconds**
+That is the normal behavior of aggregated sampling. The "Sampling settings" panel has a countdown; for real-time response, look at "Pressure pulsation diagnostics".
 
-**Q: 網頁連不上 / 「拒絕連線」**
-port 要用 7000，不是 8080。
+**Q: Cannot reach the web page / "connection refused"**
+Use port 7000, not 8080.
 
-**Q: 版面出來了但數值一直是 `--`**
-通常是 MCU 沒起來或 Bridge 名稱對不上。看 Console 的 `[boot] Bridge ready` 與 `[flow]` / `[od600]` 訊息。
+**Q: The layout appears but the values stay at `--`**
+Usually the MCU did not start or the Bridge names do not match. Check the Console for `[boot] Bridge ready` and the `[flow]` / `[od600]` messages.
 
-**Q: Console 只看到 `entering loop()`，看不到 `[boot]`**
-某些 App Lab 版本會漏掉 `setup()` 期間的 Monitor 訊息（Console 還沒接上）。這行 canary 就是為了分辨這件事。
+**Q: The Console only shows `entering loop()`, not `[boot]`**
+Some App Lab versions drop the Monitor messages printed during `setup()` (the Console is not attached yet). This canary line exists precisely to tell these cases apart.
 
-**Q: OD600 一直是 0 / 沒變化**
-確認有沒有按過「校正空白」。沒有 blank 時 OD600 不會更新為有意義的值。
+**Q: OD600 stays at 0 / does not change**
+Check whether "Calibrate blank" has been pressed. Without a blank, OD600 is not updated to a meaningful value.
 
-**Q: 幫浦嗡嗡叫但不轉**
-PWM 太低、扭力不足。v3.1 起系統不再自動把低 PWM 夾回 0（換了幫浦），請實測新幫浦的最低可轉 PWM 並避開以下的值，長時間嗡鳴會讓馬達發熱。
+**Q: The pump hums but does not turn**
+PWM too low, insufficient torque. Since v3.1 (pump replaced) the system no longer automatically clamps low PWM values to 0; measure the minimum PWM at which the new pump turns and avoid values below it — prolonged humming makes the motor heat up.
 
-**Q: 壓力/流速看起來有規律抖動**
-蠕動幫浦的脈動，屬正常。「壓力脈動診斷」會顯示峰值/谷值範圍與 `cycle_freq_hz`。規格書要求先用示波器實測 shell 側真實脈動頻率，量到後回頭調整 sketch 的 `PRESSURE_WINDOW_MS`（需涵蓋 2–3 個脈動週期）與 `PRESSURE_WINDOW_UPDATE_MS`。
+**Q: Pressure / flow rate show regular fluctuations**
+Pulsation from the peristaltic pump; this is normal. "Pressure pulsation diagnostics" shows the peak/trough range and `cycle_freq_hz`. The specification requires first measuring the true pulsation frequency on the shell side with an oscilloscope, and then adjusting the sketch's `PRESSURE_WINDOW_MS` (must cover 2–3 pulsation cycles) and `PRESSURE_WINDOW_UPDATE_MS` accordingly.
 
-**Q: 壓力讀值隨幫浦 PWM 起伏**
-接地問題，不是流體脈動。見 [§4.4 接地策略](#44-接地策略-)。
-
----
-
-## 11. 已知限制與待辦
-
-### 程式待擴充（硬體已就位）
-
-- [ ] **第 4 顆壓力變送器**（A3）：`sketch.ino` 的 `PressureChannel`、payload 格式、`main.py` 的 `PRESSURE_CHANNELS`、CSV 欄位、UI 卡片
-- [ ] **第 2 顆流速計**（D4）：第二組中斷計數與 Bridge 函式、`flow2_*` CSV 欄位、UI
-- [ ] **第 2 顆幫浦**（D10/D13/D11）：第二組 Bridge 函式、`pump2_*` 狀態與訊息、UI 面板（隔膜幫浦預設鎖正轉）
-- [ ] **3 個繼電器**（v3 起改為 D5/D6/A5，需先完成幫浦腳位搬遷）：GPIO 控制、UI 開關、CSV 狀態欄位
-- [ ] 幫浦腳位搬遷（IN1/IN2 從 D5/D6 → D8/D12）並同步更新韌體常數
-- [ ] 移除 PWM 腳位的 `pinMode()`（見 [§2.3](#23-已知地雷pinmode--analogwrite)；v3.2 試過，v3.3 排錯期間先恢復）
-- [ ] **幫浦 PWM 軟啟動**：從 0 斜升到目標值（約 200–500 ms）而不是一步到位，消掉馬達啟動衝擊。比放大變壓器便宜得多（見 [§4.1](#41-電力預算)）
-
-### 若第二顆流速計裝在 permeate 側
-
-即可解鎖規格書裡一直標著「缺滲透流量計所以不計算」的量：**flux（通量）**與 **conversion（轉化率）**。
-
-### 硬體待辦
-
-- [ ] **12V 5A 變壓器**（依幫浦銘牌值算出已知負載 2.8A；舊版誤估 UNO Q 耗電而寫成 8–10A，見 [§4.1](#41-電力預算)）
-- [ ] 評估把 L298N 換成 MOSFET 驅動（DRV8871 ×2 或 BTS7960 ×2）：回收約 2V 壓降與 3.7W 發熱，蠕動幫浦拿回約 30% 扭力，並免去散熱片。需同步改韌體介面（ENA/IN1/IN2 → IN1/IN2）
-- [ ] AMS1117 模組的排針電壓排查（標示 3.3V 實測 12V）
-- [ ] 電源板焊接（三軌 + 星狀接地 + 保護元件）
-- [ ] ENA / ENB 下拉電阻
-- [ ] L298N 散熱片
-- [ ] [§4.7](#47-待確認數字) 的四個待測電流
-
-### 結構性限制
-
-- **錄製中的最後一個未完成視窗**在斷電時會失去（其餘已落盤）
-- **累積流量**在 MCU 重開後歸零
-- **曲線圖歷史**只存在瀏覽器記憶體
-- `zeroCalibrate()` 仍是阻塞的（32 筆 × 5 ms ≈ 160 ms），但屬使用者觸發的一次性動作，可接受
-- 溫度感測器缺席：所有黏度／理論斜率都用 `temp_operating_c = 22°C` 的假設值
+**Q: Pressure readings rise and fall with the pump PWM**
+A grounding problem, not fluid pulsation. See [§4.4 Grounding Strategy](#44-grounding-strategy-).
 
 ---
 
-## 12. pH 監測與夾閥（v3）
+## 11. Known Limitations and To-Do
 
-v3 把兩個獨立專案併進來：`ph_control_koh.ino`（pH）與 `STS3215test`（匯流排伺服）。後者在這裡當作 **retentate 出口的夾閥**：夾住管子 → 流體改走膜壁 → TMP 上升 → permeate 側流出樣本。
+### Software Extensions Pending (Hardware Already in Place)
 
-> **v3.1（2026-10-03）**：KOH 加鹼控制已移除，pH 只監測、校正與記錄；D7 不再使用。加鹼版的完整程式碼（劑量模型、用量上限、FAULT 邏輯）保留在 v3 的檔案裡，日後要恢復可以從那裡拿回來。
+- [ ] **4th pressure transmitter** (A3): `PressureChannel` in `sketch.ino`, payload format, `PRESSURE_CHANNELS` in `main.py`, CSV columns, UI card
+- [ ] **2nd flow meter** (D4): second interrupt counter and Bridge functions, `flow2_*` CSV columns, UI
+- [ ] **2nd pump** (D10/D13/D11): second set of Bridge functions, `pump2_*` status and messages, UI panel (diaphragm pump locked to forward by default)
+- [ ] **3 relays** (changed to D5/D6/A5 since v3; requires the pump pin relocation first): GPIO control, UI switches, CSV status columns
+- [ ] Pump pin relocation (IN1/IN2 from D5/D6 → D8/D12) with the firmware constants updated accordingly
+- [ ] Remove `pinMode()` from PWM pins (see [§2.3](#23-known-pitfall-pinmode--analogwrite); tried in v3.2, temporarily restored during v3.3 troubleshooting)
+- [ ] **Pump PWM soft start**: ramp from 0 to the target value (over about 200–500 ms) instead of jumping straight there, eliminating the motor start-up inrush. Much cheaper than a bigger power adapter (see [§4.1](#41-power-budget))
 
-### 12.1 接線
+### If the Second Flow Meter Is Installed on the Permeate Side
 
-**pH 探頭（DFRobot Gravity pH V2 PRO, SEN0169-V2）**
+This unlocks the quantities the specification has always marked as "not computed because there is no permeate flow meter": **flux** and **conversion**.
+
+### Hardware To-Do
+
+- [ ] **12V 5A power adapter** (known load of 2.8A calculated from the pumps' nameplate ratings; the old version misestimated the UNO Q's consumption and specified 8–10A, see [§4.1](#41-power-budget))
+- [ ] Evaluate replacing the L298N with a MOSFET driver (DRV8871 ×2 or BTS7960 ×2): recovers about 2V of voltage drop and 3.7W of heat, gives the peristaltic pump back about 30% torque, and eliminates the heatsink. Requires a matching change to the firmware interface (ENA/IN1/IN2 → IN1/IN2)
+- [ ] Troubleshoot the header pin voltages of the AMS1117 module (labeled 3.3V, measured 12V)
+- [ ] Solder the power board (three rails + star ground + protection components)
+- [ ] ENA / ENB pull-down resistors
+- [ ] L298N heatsink
+- [ ] The four currents still to be measured in [§4.7](#47-figures-still-to-be-confirmed)
+
+### Structural Limitations
+
+- **The last unfinished window of a recording in progress** is lost on power failure (everything else has been flushed to disk)
+- **Cumulative flow** is reset to zero after an MCU restart
+- **Chart history** exists only in browser memory
+- `zeroCalibrate()` is still blocking (32 readings × 5 ms ≈ 160 ms), but it is a one-off user-triggered action, so this is acceptable
+- No temperature sensor: all viscosities / theoretical slopes use the assumed value `temp_operating_c = 22°C`
+
+---
+
+## 12. pH Monitoring and Pinch Valve (v3)
+
+v3 merges in two independent projects: `ph_control_koh.ino` (pH) and `STS3215test` (bus servo). The latter serves here as the **pinch valve on the retentate outlet**: pinch the tube → flow is diverted through the membrane wall → TMP rises → a sample flows out on the permeate side.
+
+> **v3.1 (2026-10-03)**: KOH base dosing control has been removed; pH is only monitored, calibrated and logged; D7 is no longer used. The full code of the base dosing version (dosing model, usage limits, FAULT logic) is kept in the v3 files and can be retrieved from there if it needs to be restored later.
+
+### 12.1 Wiring
+
+**pH probe (DFRobot Gravity pH V2 PRO, SEN0169-V2)**
 
 ```
-探頭板 OUT ──[類比隔離模組（建議）]──▶ UNO Q A4
-探頭板 VCC ── 3.3V 或 5V（依板子；輸出 0–3.0V，不超過 A4 的 3.3V）
-探頭板 GND ── GND
+Probe board OUT ──[analog isolation module (recommended)]──▶ UNO Q A4
+Probe board VCC ── 3.3V or 5V (depending on the board; output 0–3.0V, does not exceed A4's 3.3V)
+Probe board GND ── GND
 ```
 
-原本程式接 A0，但 A0 已是壓力 Feed，所以改到 **A4**。隔離模組可以擋掉蠕動幫浦／L298N 經由培養液與共地耦合進來的雜訊。
+The original program used A0, but A0 is already the Feed pressure, so it was moved to **A4**. The isolation module blocks noise from the peristaltic pump / L298N coupled in through the culture medium and the shared ground.
 
-**DS18B20（選用，預設停用）**：接 A5（4.7kΩ 上拉到 3.3V），並把 `sketch.ino` 最上方的 `PH_USE_DS18B20` 改成 `1`、安裝 OneWire + DallasTemperature。沒裝時溫度補償固定用 `PH_FIXED_TEMP_C = 37 °C`。
+**DS18B20 (optional, disabled by default)**: connect to A5 (4.7kΩ pull-up to 3.3V), change `PH_USE_DS18B20` at the top of `sketch.ino` to `1`, and install OneWire + DallasTemperature. Without it, temperature compensation uses the fixed `PH_FIXED_TEMP_C = 37 °C`.
 
-**STS3215 夾閥（經 Waveshare Serial Bus Servo Driver Board / Bus Servo Adapter (A)）**
+**STS3215 pinch valve (via Waveshare Serial Bus Servo Driver Board / Bus Servo Adapter (A))**
 
 ```
-UNO Q D0 (RX) ──── 驅動板 RX      ← 注意：Waveshare 標示是 RX 接 RX、TX 接 TX（不交叉）
-UNO Q D1 (TX) ──── 驅動板 TX
-UNO Q GND     ──── 驅動板 GND     ← 必接，共地
-驅動板 跳線帽 ── 放在「A」（UART 控制模式；B 是 USB 模式）
-驅動板 電源（DC5521 或綠色端子）── 與 STS3215 規格相同的電壓（12V 版就給 12V）
-驅動板 伺服埠 ──── STS3215
+UNO Q D0 (RX) ──── Driver board RX      ← note: Waveshare labels it RX to RX, TX to TX (not crossed)
+UNO Q D1 (TX) ──── Driver board TX
+UNO Q GND     ──── Driver board GND     ← required, common ground
+Driver board jumper cap ── set to "A" (UART control mode; B is USB mode)
+Driver board power (DC5521 or green terminal) ── same voltage as the STS3215 spec (12V for the 12V version)
+Driver board servo port ──── STS3215
 ```
 
-- Waveshare 的板子 TX/RX 是以「外部主控」的角度標示，所以照字面 **RX→RX、TX→TX** 接；接成交叉會完全沒回應（網頁上會顯示「伺服離線」）。
-- 跳線帽一定要在 **A**；放在 B 時板子走 USB，D0/D1 的訊號不會到伺服。
-- 驅動板的電源電壓必須等於伺服的額定電壓，**不要**從 UNO Q 取電。
-- Waveshare 文件沒有寫 UART 邏輯準位；官方範例是 ESP32（3.3V），UNO Q 也是 3.3V，直接接應該可以。
-- 軟體設定與 STS3215test 相同：`Serial1`、1 Mbps、伺服 ID 預設 1（改 ID 請繼續用 STS3215test 的 `change_id` 模式，改 ID 時匯流排上只能接一顆）。
+- Waveshare labels the board's TX/RX from the point of view of the "external host controller", so wire them literally **RX→RX, TX→TX**; wiring them crossed gives no response at all (the web UI will show "servo offline").
+- The jumper cap must be on **A**; on B the board uses USB and the signals on D0/D1 do not reach the servo.
+- The driver board's supply voltage must equal the servo's rated voltage; **do not** take power from the UNO Q.
+- The Waveshare documentation does not state the UART logic level; the official example uses an ESP32 (3.3V), and the UNO Q is also 3.3V, so a direct connection should work.
+- Software settings are the same as STS3215test: `Serial1`, 1 Mbps, servo ID 1 by default (to change the ID, keep using STS3215test's `change_id` mode, with only one servo on the bus while changing the ID).
 
-### 12.2 ADC 解析度統一（重要）
+### 12.2 Unified ADC Resolution (Important)
 
-`analogReadResolution()` 是全域設定。原 pH 程式設 14-bit，原壓力程式假設 10-bit（`ADC_MAX = 1023`）——直接合併會讓壓力讀值全部放大 16 倍。v3 改成共用一個 `ADC_BITS = 14`，壓力換算的 `ADC_MAX` 跟著它算。壓力零點 offset 的單位是 bar，與解析度無關，**存檔的 offset 照樣可用**；但第一次燒錄後仍建議在洩壓狀態下看一下壓力是否接近 0。
+`analogReadResolution()` is a global setting. The original pH program set 14-bit, while the original pressure program assumed 10-bit (`ADC_MAX = 1023`) — merging them directly would scale all pressure readings up by 16×. v3 switches to a single shared `ADC_BITS = 14`, and `ADC_MAX` for the pressure conversion is derived from it. The pressure zero offset is in bar and independent of resolution, so **saved offsets remain usable**; still, after the first flash it is recommended to check that the pressure reads close to 0 when depressurized.
 
-`VREF = 3.3` 也是兩者共用：實測 3V3 腳位電壓後填入，同時改善 pH 與壓力的絕對準度。
+`VREF = 3.3` is also shared by both: measure the actual 3V3 pin voltage and enter it, which improves the absolute accuracy of both pH and pressure.
 
-### 12.3 pH 量測與夾閥安全設計
+### 12.3 pH Measurement and Pinch Valve Safety Design
 
-**pH（v3.1）**
+**pH (v3.1)**
 
-- 每 500 ms 一筆讀值：256 筆過取樣（非阻塞分段，每圈 `loop()` 只讀 32 筆）→ 溫度補償 → 突變需連續 3 次確認 → EMA 濾波，與原程式相同
-- 狀態：`WARMUP`（還沒有第一筆）、`OK`、`PROBE_ERROR`（讀值超出 2–12，探頭沒接／線斷／校正錯）。異常只是標記與告警，不影響其他功能，該段讀值不寫進 CSV 的 `ph`
-- 兩點校正不需要先暫停（已沒有加鹼動作）；校正後立刻用新斜率重算目前讀值（修正原程式校正後 `phFiltered = NAN` 會被判成故障的問題）
+- One reading every 500 ms: 256-sample oversampling (non-blocking and segmented, only 32 samples read per `loop()` pass) → temperature compensation → sudden changes require 3 consecutive confirmations → EMA filter, same as the original program
+- States: `WARMUP` (no first reading yet), `OK`, `PROBE_ERROR` (reading outside 2–12: probe disconnected / broken wire / bad calibration). An error only produces a flag and an alarm and does not affect other functions; readings from that period are not written to the CSV's `ph`
+- Two-point calibration does not require pausing first (there is no base dosing action any more); after calibration the current reading is immediately recomputed with the new slope (fixing the original program's issue where `phFiltered = NAN` after calibration was judged as a fault)
 
-**夾閥（全部在 MCU）**
+**Pinch valve (all on the MCU)**
 
-| 觸發條件 | 動作 |
+| Trigger condition | Action |
 |---|---|
-| TMP 瞬時峰值 > `tmp_limit`（預設 0.5 bar）或 Feed 峰值 > `feed_limit`（預設 1.0 bar），連續 2 個 200 ms 視窗 | 放開 + 鎖存 FAULT |
-| 夾閉時間 > `max_close_s`（預設 900 s） | 放開 + 鎖存 FAULT |
-| 伺服溫度 ≥ 60 °C | 放開 + 鎖存 FAULT |
-| 夾閉中伺服連續 3 次沒回應 | 鎖存 FAULT（放不開也要讓人知道），重新上線時自動走到「開」 |
-| 幫浦緊急停止 | 放開（不鎖 FAULT） |
-| MCU 開機 | 一律走到「開」 |
+| TMP instantaneous peak > `tmp_limit` (default 0.5 bar) or Feed peak > `feed_limit` (default 1.0 bar), for 2 consecutive 200 ms windows | Release + latch FAULT |
+| Closed time > `max_close_s` (default 900 s) | Release + latch FAULT |
+| Servo temperature ≥ 60 °C | Release + latch FAULT |
+| Servo fails to respond 3 times in a row while closed | Latch FAULT (even if it cannot release, people must be told); automatically moves to "open" when it comes back online |
+| Pump emergency stop | Release (FAULT not latched) |
+| MCU boot | Always moves to "open" |
 
-FAULT 狀態下拒絕夾閉，必須在網頁按「解除」。TMP 用的是瞬時峰值 `(Feed_peak + Retentate_peak)/2 − Permeate_trough`，與 Python 端 `tmp_peak` 定義相同。
+In the FAULT state closing is refused; "Clear" must be pressed in the web UI. TMP uses the instantaneous peak `(Feed_peak + Retentate_peak)/2 − Permeate_trough`, the same definition as `tmp_peak` on the Python side.
 
-伺服 I/O 只在 `loop()` 裡做；SCServo 的逾時從預設 100 ms 降到 8 ms，伺服離線時不會把壓力 100 Hz 取樣卡住。
+Servo I/O is done only inside `loop()`; the SCServo timeout was reduced from the default 100 ms to 8 ms so that an offline servo does not stall the 100 Hz pressure sampling.
 
-### 12.4 Bridge 介面格式
+### 12.4 Bridge Interface Format
 
-pH 與夾閥的函式一律用 `key=value,key=value`，欄位增減不會讓舊的解析程式錯位。`set_*_config` 只改有給的 key，整組驗證通過才一次套用，失敗回 `rejected:<原因>`。
+pH and pinch valve functions all use `key=value,key=value`, so adding or removing fields does not misalign older parsers. `set_*_config` changes only the keys provided, applies them all at once only if the whole set passes validation, and returns `rejected:<reason>` on failure.
 
 ```
 get_ph_status   → ph=7.012,v=1.4931,t=37.0,state=OK
@@ -1151,253 +1155,254 @@ valve_get_config→ id=1,open=2048,closed=2700,speed=1500,acc=50,torque_limit=10
                   tmp_limit=0.500,feed_limit=1.000
 ```
 
-### 12.5 設定的保存與還原
+### 12.5 Saving and Restoring Settings
 
-`python/ph_valve_state.json` 存 pH 校正點與夾閥設定。
+`python/ph_valve_state.json` stores the pH calibration points and pinch valve settings.
 
-- **網頁上存過的值優先於 sketch 預設值**。MCU 重開（`get_diag` 的 uptime 變小）時自動推回。想回到 sketch 預設值，刪掉這個檔案再重開 App。
-- 從 v3 升級上來時，舊檔裡的加鹼參數與 KOH 用量會被忽略，只取 `v7` / `v4` / `cal_temp`。
-- 夾閥第一次啟動（還沒有存檔）時，用 `constants.json` 的 `valve` 區塊當初始值（安全上限、ID、速度、扭力）；開／夾閉位置一定要在網頁上實測設定。
+- **Values saved from the web UI take precedence over the sketch defaults**. They are pushed back automatically when the MCU restarts (the uptime in `get_diag` decreases). To return to the sketch defaults, delete this file and restart the App.
+- When upgrading from v3, the base dosing parameters and KOH usage in the old file are ignored; only `v7` / `v4` / `cal_temp` are taken.
+- On the pinch valve's first start (no saved file yet), the `valve` block of `constants.json` is used as the initial values (safety limits, ID, speed, torque); the open / closed positions must be measured and set in the web UI.
 
-### 12.6 首次操作流程
+### 12.6 First-Time Operating Procedure
 
-**夾閥**
-1. 網頁「夾閥設定」→「關扭力」→ 用手把夾頭轉到剛好把管子夾扁 →「目前位置記為夾閉」
-2. 轉回完全不壓管的位置 →「目前位置記為開」→「開扭力」
-3. （可選）調低扭力上限，在不漏夾的前提下減少夾管力道與伺服發熱
-4. 幫浦運轉中按「夾閉」，看 TMP 上升與 permeate 出液；收夠了按「放開」
-5. 每次「夾閉→放開」會寫一列到 `recordings/valve_events.csv`（時長、期間 TMP 平均/峰值、Feed 峰值、放開原因、對應的錄製檔名）
+**Pinch valve**
+1. Web UI "Pinch valve settings" → "Torque off" → turn the clamp by hand until it just flattens the tube → "Record current position as closed"
+2. Turn it back to a position that does not press the tube at all → "Record current position as open" → "Torque on"
+3. (Optional) Lower the torque limit to reduce the pinching force and servo heating while still sealing fully
+4. With the pump running, press "Close" and watch TMP rise and permeate flow out; when enough has been collected, press "Release"
+5. Each "close → release" cycle writes one row to `recordings/valve_events.csv` (duration, mean/peak TMP during the period, Feed peak, release reason, corresponding recording file name)
 
 **pH**
-1. 探頭泡 pH 7.00 標準液 →「記為 pH 7.00」；泡 pH 4.01 →「記為 pH 4.01」
-2. 探頭裝回反應器；讀值與溫度會每個取樣視窗寫進 CSV
+1. Immerse the probe in pH 7.00 buffer → "Record as pH 7.00"; immerse in pH 4.01 → "Record as pH 4.01"
+2. Put the probe back in the reactor; the reading and temperature are written to the CSV every sampling window
 
-### 12.7 告警與分析
+### 12.7 Alarms and Analysis
 
-- 系統告警：pH 10 秒無資料／探頭異常、夾閥 FAULT／離線／夾閉中
-- **夾閉期間與放開後 60 秒**（`valve.alert_settle_sec`），ΔP／R／dTMP/dt／d²TMP 這類積垢趨勢告警暫停——收樣本本來就會讓它們劇變。TMP 絕對上限類告警不受影響
-- 壓力與 pH 曲線圖上，夾閥夾閉的視窗以淡紫色底色標示
-- 分析膜性能（R、穩態）時，用 CSV 的 `valve_closed_frac == 0` 篩掉收樣本期間
+- System alarms: pH no data for 10 seconds / probe error, pinch valve FAULT / offline / closed
+- **While closed and for 60 seconds after release** (`valve.alert_settle_sec`), fouling-trend alarms such as ΔP / R / dTMP/dt / d²TMP are suspended — collecting a sample inherently makes them change drastically. Absolute TMP limit alarms are not affected
+- On the pressure and pH charts, windows during which the pinch valve was closed are marked with a light purple background
+- When analyzing membrane performance (R, steady state), use the CSV's `valve_closed_frac == 0` to filter out sample-collection periods
 
-### 12.8 已知限制
+### 12.8 Known Limitations
 
-- `docs/` 底下的 PDF 與 PPTX 尚未更新到 v3 / v3.1
-- `Serial.begin(9600)` 仍保留；新版 Zephyr 平台上 `Serial` 走 Bridge，與 `Serial1`（夾閥）無衝突
-- DS18B20 的 OneWire 讀取本身是 bit-bang，每次約佔用數 ms（已改成非阻塞轉換，不再卡 750 ms）
-- 夾閥只有開／關兩個位置；若日後要「部分夾閉控制 TMP」，MCU 端已有 `valve_goto_raw`，可以在 Python 端加閉迴路
+- The PDFs and PPTX under `docs/` have not yet been updated to v3 / v3.1
+- `Serial.begin(9600)` is still kept; on the new Zephyr platform `Serial` goes through the Bridge and does not conflict with `Serial1` (pinch valve)
+- The DS18B20 OneWire read itself is bit-banged and takes a few ms each time (conversion is now non-blocking, so it no longer stalls for 750 ms)
+- The pinch valve has only two positions, open / closed; if "partial closing to control TMP" is wanted later, the MCU side already has `valve_goto_raw`, so a closed loop can be added on the Python side
 
-### 12.9 v3.4：pH 手動溫度與伺服自動掃描
+### 12.9 v3.4: pH Manual Temperature and Automatic Servo Scan
 
-**pH 補償溫度**：沒裝 DS18B20 時，網頁「pH 探頭校正」可輸入培養液溫度，按「套用溫度」立即生效，並存在 `ph_valve_state.json`（MCU 重開自動推回）。兩點校正時另填「標準液溫度」（通常是室溫），作為校正溫度記錄；不影響培養液的補償溫度。
+**pH compensation temperature**: without a DS18B20, the culture medium temperature can be entered in the web UI's "pH probe calibration"; pressing "Apply temperature" takes effect immediately and saves it in `ph_valve_state.json` (pushed back automatically after an MCU restart). For two-point calibration, also fill in the "Buffer solution temperature" (usually room temperature), which is recorded as the calibration temperature; it does not affect the culture medium compensation temperature.
 
-**伺服自動掃描**：「夾閥設定 → 找不到伺服？自動掃描」
+**Automatic servo scan**: "Pinch valve settings → Servo not found? Auto scan"
 
-- 快速掃描（約 1 秒）：8 種鮑率各送一次廣播 Ping。匯流排上只有一顆伺服時，它會回報自己的 ID。
-- 完整掃描（約 30 秒）：8 種鮑率 × ID 0–253 逐一 Ping，可找到多顆。
-- 找到後按「使用」→ 寫入 ID 與鮑率並存檔，夾閥立即用新設定重新連線。
-- 掃描完會依「收到的位元組數」給提示：
-  - **一個位元組都沒收到** → 硬體問題（驅動板電源、跳線 A、RX/TX、共地、伺服線），不是 ID 問題。
-  - **有收到但解析不出** → TX/RX 接反導致讀回自己送出的資料、匯流排上有其他裝置、或接觸不良。
-- 狀態列平時也會顯示鮑率與匯流排累計收到的位元組數，離線時可直接判斷有沒有任何回應。
-- SCServo 逾時由 8 ms 放寬到 15 ms。
+- Quick scan (about 1 second): sends one broadcast Ping at each of 8 baud rates. With only one servo on the bus, it reports its own ID.
+- Full scan (about 30 seconds): Pings 8 baud rates × ID 0–253 one by one, and can find multiple servos.
+- Once found, press "Use" → the ID and baud rate are written and saved, and the pinch valve immediately reconnects with the new settings.
+- After the scan, a hint is given based on the "number of bytes received":
+  - **Not a single byte received** → hardware problem (driver board power, jumper A, RX/TX, common ground, servo cable), not an ID problem.
+  - **Bytes received but not parseable** → TX/RX swapped so the board reads back its own transmitted data, another device on the bus, or a poor contact.
+- The status bar also normally shows the baud rate and the cumulative number of bytes received on the bus, so when offline you can tell directly whether there was any response at all.
+- The SCServo timeout was relaxed from 8 ms to 15 ms.
 
-**盲送測試（v3.5）**：「夾閥設定 → 盲送移動」對廣播 ID 254 在 8 種鮑率各送一次「開扭力＋移動」。廣播寫入依協定不回應，所以不管伺服 ID、RX 線是否正常：
-- **伺服有轉** → D1/TX、驅動板、電源都正常，問題在回應路徑（D0/RX、TX/RX 接反）。
-- **伺服不動** → 問題在 D1/TX、跳線帽、驅動板電源或伺服線。
+**Blind move test (v3.5)**: "Pinch valve settings → Blind move" sends "torque on + move" to broadcast ID 254 once at each of the 8 baud rates. By protocol, broadcast writes get no response, so regardless of the servo ID and whether the RX line works:
+- **The servo moves** → D1/TX, the driver board and power are all fine; the problem is in the response path (D0/RX, TX/RX swapped).
+- **The servo does not move** → the problem is in D1/TX, the jumper cap, the driver board power or the servo cable.
 
-自動掃描每換一次鮑率會讀到 1 個雜訊位元組，v3.5 起每個鮑率 ≤ 2 bytes 仍判定為「完全沒有回應」。
+The automatic scan reads 1 noise byte every time it switches baud rate; since v3.5, ≤ 2 bytes per baud rate is still judged as "no response at all".
 
-**D0–D1 迴路測試（v3.6）**：拔掉驅動板，用一條線把 D0 接 D1，按「D0–D1 迴路測試」。在 115200 與 1 Mbps 各送 64 個位元組，看能否收回：收得回來代表 UNO Q 端正常，問題在驅動板／電源／電壓準位／伺服；收不回來代表 UNO Q 端 D0/D1 有問題。
+**D0–D1 loopback test (v3.6)**: disconnect the driver board, connect D0 to D1 with a wire, and press "D0–D1 loopback test". It sends 64 bytes at both 115200 and 1 Mbps and checks whether they come back: if they do, the UNO Q side is fine and the problem is in the driver board / power / voltage levels / servo; if not, D0/D1 on the UNO Q side has a problem.
 
 
 
-## 13. 演算法切換（v3.7）
+## 13. Algorithm Selection (v3.7)
 
-依《演算法檢討報告》的備用方案，網頁「演算法切換」面板可即時切換，設定存在 `ph_valve_state.json` 的 `algorithms`，MCU 重開機後自動回推。預設值全部等同舊版（legacy）。
+Following the fallback options in the "Algorithm Review Report", the web UI's "Algorithm selection" panel allows switching on the fly; the settings are stored under `algorithms` in `ph_valve_state.json` and pushed back automatically after an MCU restart. All defaults are equivalent to the old version (legacy).
 
-| 項目 | 選項 | 對應報告 | 執行位置 |
+| Item | Options | Report reference | Runs on |
 |---|---|---|---|
-| 流速頻率 | `gate`（閘門計數，預設）／`reciprocal`（倒數計時，低頻解析度高） | C-1 | MCU |
-| OD600 去離群 | `mad`（預設）／`qn`／`biweight`（Tukey c=4.685）／`upper`（單邊，只剔除過低值，氣泡遮光） | E-1/E-2/E-5/E-3 | MCU |
-| 分析資料來源 | `ema`（預設）／`raw`（分析路徑不經 EMA，消除相位延遲） | F-1 | Python |
-| 聚合統計 | 中位數／平均／`trimmed10`（10% 截尾平均）／`hodges_lehmann` | G-2/G-3 | Python |
-| 穩態判定 | `legacy`（預設）／`ci`（斜率 + t·SE < 門檻，且 10 次中 8 次通過才判穩） | H-1 + H-3 | Python |
-| 曲率 | `legacy`（兩段斜率差）／`quadfit`（二次擬合 2a） | H-8 | Python |
+| Flow-rate frequency | `gate` (gated counting, default) / `reciprocal` (reciprocal timing, higher resolution at low frequency) | C-1 | MCU |
+| OD600 outlier removal | `mad` (default) / `qn` / `biweight` (Tukey c=4.685) / `upper` (one-sided, rejects only low values, i.e. bubble shadowing) | E-1/E-2/E-5/E-3 | MCU |
+| Analysis data source | `ema` (default) / `raw` (analysis path bypasses the EMA, eliminating phase lag) | F-1 | Python |
+| Aggregate statistic | Median / mean / `trimmed10` (10% trimmed mean) / `hodges_lehmann` | G-2/G-3 | Python |
+| Steady-state criterion | `legacy` (default) / `ci` (slope + t·SE < threshold, and steady only when 8 of 10 checks pass) | H-1 + H-3 | Python |
+| Curvature | `legacy` (difference of two slopes) / `quadfit` (quadratic fit 2a) | H-8 | Python |
 
-- `ci` 模式使用 120 s 視窗、門檻 0.002 bar/min（流速 5 mL/min²），因為 60 s 視窗下斜率標準誤約 1.3×10⁻³，0.001 門檻幾乎永遠過不了。可在 `constants.json → algorithms` 調整。
-- CSV 新增 `tmp_sd/iqr/min/max_bar`、`feed_sd_bar`、`flow_sd/iqr/min/max_mlmin`（G-4）與 `alg_profile`（記錄該列使用的演算法組合），共 58 欄。
-- 未實作：A-4/A-5、§3 硬體類項目；H-9/H-10（Hermia 模型、通量）需 permeate 側流速計。
-
-
-## 14. 壓力分壓與 DS18B20 溫度（v3.8）
-
-**壓力分壓**：變送器輸出 → 15 kΩ → 中點接 A0/A1/A2 → 22 kΩ → GND，比例 22/37 = 0.5946，5 V 在腳位上是 2.97 V。程式裡是 `DIV_R_TOP_KOHM` / `DIV_R_BOTTOM_KOHM`，換電阻只改這兩個數字（建議填實測阻值）。每次讀壓力前先丟一筆 ADC（源阻抗約 8.9 kΩ，換腳位後第一筆會被上一通道拉偏）；建議每個類比腳位對 GND 並 100 nF。燒錄後請洩壓並重新「壓力歸零」。
-
-**DS18B20**：VDD→3.3 V、GND→GND、DQ→D8，DQ 與 3.3 V 之間 4.7 kΩ 上拉（一般 5% 電阻即可；轉接板若已內建就不要再加）。需要 App Lab 平台 0.54.1 以上（修正了 `delayMicroseconds()`）。v3.8.1 起 1-Wire 驅動內嵌在 sketch 裡，**不需要安裝任何函式庫**（v3.8 依賴 OneWire／DallasTemperature，App Lab 沒有自動安裝而編譯失敗）。
-
-- 開機找感測器，沒找到每 10 秒重找一次（可熱插）；每秒讀一次，非阻塞。
-- 讀到 -127（斷線）、85.0（未完成轉換）或超出 -10–100 °C 算失敗；連續 3 次失敗改用 pH 面板的手動溫度，讀值恢復後自動切回。
-- 溫度同時用於 pH 補償，CSV 的 `ph_temp_c`（0.01 °C）與 `temp_src`（ds18b20／manual）記錄每列實際用了哪個來源。
-- 完全不用 DS18B20：把 `PH_USE_DS18B20` 改成 0。
+- `ci` mode uses a 120 s window and a threshold of 0.002 bar/min (flow rate 5 mL/min²), because with a 60 s window the standard error of the slope is about 1.3×10⁻³, so a 0.001 threshold would almost never be met. Adjustable in `constants.json → algorithms`.
+- The CSV adds `tmp_sd/iqr/min/max_bar`, `feed_sd_bar`, `flow_sd/iqr/min/max_mlmin` (G-4) and `alg_profile` (records the algorithm combination used for that row), 58 columns in total.
+- Not implemented: A-4/A-5, the §3 hardware items; H-9/H-10 (Hermia model, flux) require a permeate-side flow meter.
 
 
-## 15. HFM 衍生參數（v4.0，依 `HFM_bioreactor_UI_spec.md`）
+## 14. Pressure Divider and DS18B20 Temperature (v3.8)
 
-通道對應：Feed = **P_in**（模組底部）、Retentate = **P_out**（模組頂部）、Permeate = **P_s**（shell 取樣 luer，與 P_out 等高）、流量計 = **Q_L**。衍生參數一律以 kPa 顯示。
+**Pressure divider**: transmitter output → 15 kΩ → midpoint to A0/A1/A2 → 22 kΩ → GND, ratio 22/37 = 0.5946, so 5 V becomes 2.97 V at the pin. In the code these are `DIV_R_TOP_KOHM` / `DIV_R_BOTTOM_KOHM`; when changing resistors, change only these two numbers (entering the measured resistance is recommended). One ADC reading is discarded before each pressure read (source impedance is about 8.9 kΩ, so the first reading after switching pins is pulled toward the previous channel); adding 100 nF from each analog pin to GND is recommended. After flashing, depressurize and redo "Pressure zeroing".
 
-**第一層（常駐大字）**：TMP_out = P_out − P_s（小字為最近 3 秒 P_out 波谷 − P_s）；ΔP 比值 = ΔP_friction ／ 基準（ΔP_friction = (P_in − P_out) − ρgh，基準 = a·Q + b·Q²）；γ（壓力）= τ_w/μ；γ_ratio = γ（壓力）／γ（流量）；J、L_p、D（需 Q_perm）；液位（未裝感測器）。
+**DS18B20**: VDD→3.3 V, GND→GND, DQ→D8, with a 4.7 kΩ pull-up between DQ and 3.3 V (an ordinary 5% resistor is fine; do not add another if the adapter board already has one). Requires App Lab platform 0.54.1 or later (which fixed `delayMicroseconds()`). Since v3.8.1 the 1-Wire driver is embedded in the sketch, so **no library needs to be installed** (v3.8 depended on OneWire / DallasTemperature, which App Lab did not install automatically, causing a compile failure).
 
-**第二層（趨勢）**：γ_ratio 與 ΔP 比值同圖（虛線 1.0／1.3）、L_p 趨勢（虛線初始值／70%）、P_out 瞬時波形（最近 60 秒、波谷 vs P_s）。
-
-**第三層（診斷，可展開）**：TMP_mean、TMP_in、TMP 不均勻度、R_t、P_s、τ_w（附「遠低於細胞損傷閾值」註記）、τ_shell、Re、ΔP_friction、ΔP 讀數、dTMP/dt、γ_flow。
-
-**告警**：TMP_out ≤ 0（嚴重）、波谷 − P_s ≤ 0（嚴重）、ΔP 比值 > 1.3、γ_ratio > 1.3、L_p < 70% 初始值、P_s 比自檢時高 > 2 kPa；保留 TMP 絕對上限。夾閥夾閉期間與放開後 60 秒暫停堵塞類告警。舊版的 R／ΔP 倍數、剪切率 > 6000、dTMP/dt、d²TMP/dt² 告警已移除。
-
-**開機自檢（ρgh）**：「重力 offset 自檢與設定」→ 停泵 → 開始自檢。等 10 秒 → 記錄 30 秒 → 斜率 ≤ 0.15 kPa/min 才算平台（否則最多等 3 分鐘）→ ρgh = 平均 (P_in − P_out)，同時記下 P_s 參考值；與前次差 > 10% 或 P_s 偏離 0 會提示檢查導壓管氣泡／零點。結果存檔，App 重啟後沿用。**注意**：若先前在充滿液體、停泵狀態下做過「壓力歸零」，靜水柱已被扣掉，ρgh 會接近 0，這是正常的。
-
-**Q_perm**：電子秤安裝前可在設定中手動輸入（收集瓶秤重自行計算，g/min ≈ mL/min）；之後 J、L_p、D、R_t、τ_shell 才會出現。L_p 初始值在第一次算得出時自動記錄，可重設。
-
-**常數**：`constants.json` 的 `hfm` 區塊（A = 200 cm²、n_eff = 11、d_i = 0.1 cm、L = 60 cm、V_shell = 36 mL、V_culture = 1 L、μ = 0.7 cP、告警門檻、自檢參數）。ΔP–Q 基準預設 a = 0.02615 kPa/(mL/min)（= 130 mL/min 時 3.4 kPa），可在網頁修改或「以目前狀態設為 ΔP 基準」。
+- The sensor is searched for at boot; if not found, it is searched for again every 10 seconds (hot-pluggable); it is read once per second, non-blocking.
+- A reading of -127 (disconnected), 85.0 (conversion not completed) or outside -10–100 °C counts as a failure; after 3 consecutive failures the manual temperature from the pH panel is used, switching back automatically once readings recover.
+- The temperature is also used for pH compensation; the CSV's `ph_temp_c` (0.01 °C) and `temp_src` (ds18b20 / manual) record which source each row actually used.
+- To not use the DS18B20 at all: change `PH_USE_DS18B20` to 0.
 
 
-## 16. 校正值輸出／輸入、規格管理、參數說明（v4.1）
+## 15. HFM Derived Parameters (v4.0, per `HFM_bioreactor_UI_spec.md`)
 
-**輸出校正值**：校正值管理 →「⬇ 輸出校正值」，下載 `calibration_YYYYMMDD_HHMMSS.json`，內容為 MCU 目前生效的 OD600 空白／壓力零點／光程長、pH 兩點校正、ρgh／ΔP–Q 基準／Q_perm／L_p 初始值、規格、夾閥設定。
-**輸入校正值**：「⬆ 輸入校正值」→ 選檔 → 勾選要套用的區段 → 套用。OD600 空白與壓力零點寫入 MCU 後來源標為「手動輸入」（會出現黃色提示）；ρgh 與 ΔP–Q 基準標為「由檔案匯入」。只接受本系統輸出的檔案（`format = hfm-bioreactor-calibration`）。
+Channel mapping: Feed = **P_in** (module bottom), Retentate = **P_out** (module top), Permeate = **P_s** (shell sampling luer, at the same height as P_out), flow meter = **Q_L**. Derived parameters are always displayed in kPa.
 
-**規格管理**（校正值管理下方）：衍生參數所需的規格，分為模組幾何、體積、流體性質、運轉目標、告警門檻、開機自檢參數。修改後立即生效並存進 `ph_valve_state.json`（`specs`），App 重啟沿用；與 `constants.json` 預設不同的欄位標 ●；「由幾何計算 A 與 V_lumen」用 A = n·π·d·L、V = n·π·d²/4·L 填入（需再按套用）；「恢復預設」清除所有覆寫。
+**Tier 1 (always shown, large font)**: TMP_out = P_out − P_s (small text: P_out trough over the last 3 seconds − P_s); ΔP ratio = ΔP_friction / baseline (ΔP_friction = (P_in − P_out) − ρgh, baseline = a·Q + b·Q²); γ (pressure) = τ_w/μ; γ_ratio = γ (pressure) / γ (flow); J, L_p, D (require Q_perm); liquid level (no sensor installed).
 
-**參數說明**（v4.2 起取代「指標說明」單元）：膜過濾監測的每個大字格與診斷卡片、OD600 目前值卡片、穩態徽章、ρgh 文字都可點擊（或鍵盤 Enter），浮動視窗顯示目前值、意義、正常範圍／判準；範圍中的門檻會跟著規格管理的設定變動。Esc 或點背景關閉。
+**Tier 2 (trends)**: γ_ratio and ΔP ratio on the same chart (dashed lines at 1.0 / 1.3), L_p trend (dashed lines at initial value / 70%), P_out instantaneous waveform (last 60 seconds, trough vs P_s).
+
+**Tier 3 (diagnostics, expandable)**: TMP_mean, TMP_in, TMP non-uniformity, R_t, P_s, τ_w (with a note "far below the cell damage threshold"), τ_shell, Re, ΔP_friction, ΔP reading, dTMP/dt, γ_flow.
+
+**Alarms**: TMP_out ≤ 0 (critical), trough − P_s ≤ 0 (critical), ΔP ratio > 1.3, γ_ratio > 1.3, L_p < 70% of initial value, P_s more than 2 kPa above its self-test value; the absolute TMP limit is kept. Fouling-type alarms are suspended while the pinch valve is closed and for 60 seconds after release. The old R / ΔP multiple, shear rate > 6000, dTMP/dt and d²TMP/dt² alarms have been removed.
+
+**Start-up self-test (ρgh)**: "Gravity offset self-test and settings" → stop the pump → start the self-test. Wait 10 seconds → record for 30 seconds → counts as a plateau only if the slope is ≤ 0.15 kPa/min (otherwise waits up to 3 minutes) → ρgh = mean of (P_in − P_out), and the P_s reference value is recorded at the same time; a difference of > 10% from the previous result, or P_s deviating from 0, prompts a check of the pressure lines for bubbles / the zero point. The result is saved and reused after an App restart. **Note**: if "Pressure zeroing" was previously done with the system full of liquid and the pump stopped, the hydrostatic column has already been subtracted and ρgh will be close to 0; this is normal.
+
+**Q_perm**: until an electronic scale is installed, it can be entered manually in the settings (weigh the collection bottle and calculate it yourself, g/min ≈ mL/min); only then do J, L_p, D, R_t and τ_shell appear. The L_p initial value is recorded automatically the first time it can be computed, and can be reset.
+
+**Constants**: the `hfm` block of `constants.json` (A = 200 cm², n_eff = 11, d_i = 0.1 cm, L = 60 cm, V_shell = 36 mL, V_culture = 1 L, μ = 0.7 cP, alarm thresholds, self-test parameters). The ΔP–Q baseline defaults to a = 0.02615 kPa/(mL/min) (= 3.4 kPa at 130 mL/min); it can be changed in the web UI or via "Set current state as ΔP baseline".
 
 
-## 17. 幫浦啟動助推（v3.10.0 / v4.4 / v4.6）
+## 16. Calibration Value Export / Import, Spec Management, Parameter Explanations (v4.1)
 
-**問題**：蠕動幫浦靜止時有靜摩擦（滾輪壓管 + 齒輪箱），L298N 又會吃掉約 2 V，因此低 PWM 起不動；但一旦轉起來，所需力矩較小，PWM 150 就能維持。
+**Export calibration values**: Calibration value management → "⬇ Export calibration values" downloads `calibration_YYYYMMDD_HHMMSS.json`, containing the MCU's currently effective OD600 blank / pressure zero points / path length, pH two-point calibration, ρgh / ΔP–Q baseline / Q_perm / L_p initial value, specs, and pinch valve settings.
+**Import calibration values**: "⬆ Import calibration values" → choose a file → tick the sections to apply → Apply. After the OD600 blank and pressure zero points are written to the MCU, their source is marked "Manual entry" (the yellow notice will appear); ρgh and the ΔP–Q baseline are marked "Imported from file". Only files exported by this system are accepted (`format = hfm-bioreactor-calibration`).
 
-**做法（MCU 端）**：`setPumpSpeed()` 偵測「PWM 從 0 變成 > 0」且目標 < 助推 PWM 時，先輸出助推 PWM，`kick_ms` 後在 `loop()` 的 `pumpTick()` 降回目標值。運轉中改 PWM 不會再助推；目標 ≥ 助推 PWM 時也不助推。
+**Spec management** (below calibration value management): the specs required by the derived parameters, grouped into module geometry, volumes, fluid properties, operating targets, alarm thresholds and start-up self-test parameters. Changes take effect immediately and are saved in `ph_valve_state.json` (`specs`), persisting across App restarts; fields that differ from the `constants.json` defaults are marked ●; "Compute A and V_lumen from geometry" fills them in using A = n·π·d·L, V = n·π·d²/4·L (Apply must still be pressed); "Restore defaults" clears all overrides.
 
-| 設定 | 預設 | 範圍 | 說明 |
+**Parameter explanations** (replacing the "Metric explanations" unit since v4.2): every large-figure tile and diagnostic card in membrane filtration monitoring, the OD600 current-value card, the steady-state badge and the ρgh text are clickable (or keyboard Enter); a floating window shows the current value, meaning and normal range / criteria; thresholds in the ranges follow the spec management settings. Close with Esc or by clicking the background.
+
+
+## 17. Pump Start-Up Kick (v3.10.0 / v4.4 / v4.6)
+
+**Problem**: at standstill the peristaltic pump has static friction (rollers pressing the tube + gearbox), and the L298N eats about 2 V on top of that, so it cannot start at low PWM; but once turning, it needs less torque and PWM 150 is enough to keep it going.
+
+**Approach (MCU side)**: when `setPumpSpeed()` detects "PWM changes from 0 to > 0" and the target is below the kick PWM, it first outputs the kick PWM, and after `kick_ms` the `pumpTick()` in `loop()` drops it back to the target value. Changing the PWM while running does not kick again; no kick is applied when the target ≥ the kick PWM.
+
+| Setting | Default | Range | Description |
 |---|---|---|---|
-| en | 1 | 0/1 | 啟用啟動助推 |
-| pwm | 255 | 1–255 | 助推 PWM |
-| ms | 500 | 0–5000 | 助推時間 |
-| stall | 0 | 0/1 | 停轉自動再助推：PWM>0 但流量計連續 3 秒無脈衝 → 再助推一次，最多 3 次（停止後重新啟動才歸零）；夾閥非「開啟」狀態時不做 |
+| en | 1 | 0/1 | Enable start-up kick |
+| pwm | 255 | 1–255 | Kick PWM |
+| ms | 500 | 0–5000 | Kick duration |
+| stall | 0 | 0/1 | Automatic re-kick on stall: PWM>0 but no flow meter pulses for 3 consecutive seconds → kick once more, at most 3 times (counter resets only after stopping and restarting); not done when the pinch valve is not in the "open" state |
 
-- Bridge：`get_pump_kick`、`set_pump_kick("en=1,pwm=255,ms=500,stall=0")`；`get_pump_status` 格式不變（`pwm,dir`）。
-- Python：訊息 `pump_get_kick` / `pump_set_kick` / `pump_kick`；存在 `ph_valve_state.json` 的 `pump_kick`，MCU 重開機時自動推回；校正值輸出／輸入多一個 `pump_kick` 區段。
-- 網頁：幫浦面板下方「啟動助推」摺疊區。
-- **調整建議**：先用預設值；若 150 啟動仍偶爾卡住，把助推時間加到 800–1000 ms。若流量計可靠，可開「停轉自動再助推」。助推期間的瞬間流量較高，對壓力敏感的實驗可降低助推 PWM（例如 220）。
+- Bridge: `get_pump_kick`, `set_pump_kick("en=1,pwm=255,ms=500,stall=0")`; the `get_pump_status` format is unchanged (`pwm,dir`).
+- Python: messages `pump_get_kick` / `pump_set_kick` / `pump_kick`; stored under `pump_kick` in `ph_valve_state.json` and pushed back automatically when the MCU restarts; calibration value export / import gains a `pump_kick` section.
+- Web UI: "Start-up kick" collapsible section below the pump panel.
+- **Tuning advice**: start with the defaults; if starting at 150 still occasionally sticks, increase the kick duration to 800–1000 ms. If the flow meter is reliable, "Automatic re-kick on stall" can be enabled. The instantaneous flow is higher during the kick, so for pressure-sensitive experiments the kick PWM can be lowered (e.g. 220).
 
-## 18. DS18B20 1-Wire 診斷（v3.10.1）
+## 18. DS18B20 1-Wire Diagnostics (v3.10.1)
 
-找不到感測器時，Serial Monitor 會多印一行：
+When no sensor is found, the Serial Monitor prints an extra line:
 
 ```
-[ds18b20] 診斷: pin=D8 port=gpio@... idx=4 mode=fast ext=0 int=1 drive=0 pres_start_us=15 pres_len_us=120 intpull=1 => 外部 4.7k 上拉沒有作用 ...
+[ds18b20] diag: pin=D8 port=gpio@... idx=4 mode=fast ext=0 int=1 drive=0 pres_start_us=15 pres_len_us=120 intpull=1 => external 4.7k pull-up has no effect ...
 ```
 
-| 欄位 | 意義 | 正常 |
+
+| Field | Meaning | Normal |
 |---|---|---|
-| ext | 關掉內部上拉、放開匯流排後的電位 | 1 |
-| int | 開內部上拉後的電位 | 1 |
-| drive | 拉低時讀到的電位 | 0 |
-| pres_start_us / pres_len_us | reset 後 presence pulse 開始時間／長度 | 15–60 / 60–240（-1 = 沒有） |
+| ext | Level with the internal pull-up off and the bus released | 1 |
+| int | Level with the internal pull-up on | 1 |
+| drive | Level read while pulling low | 0 |
+| pres_start_us / pres_len_us | Start time / length of the presence pulse after reset | 15–60 / 60–240 (-1 = none) |
 
-判讀：`ext=0,int=1` → 外部 4.7 kΩ 沒接上；`ext=0,int=0` → DQ 被拉到 GND（接線錯、VDD/GND 接反會發燙）；`ext=1` 但 `pres=-1` → 上拉正常但感測器沒回應（DQ 沒接到 D8、VDD 沒電、沒共地）。
+Interpretation: `ext=0,int=1` → the external 4.7 kΩ is not connected; `ext=0,int=0` → DQ is pulled to GND (wiring error; VDD/GND swapped will get hot); `ext=1` but `pres=-1` → the pull-up is fine but the sensor does not respond (DQ not connected to D8, no power on VDD, no common ground).
 
-接線（防水探頭常見色碼，請以賣家標示為準）：紅 = VDD → 3.3 V；黑 = GND → GND；黃（或白）= DQ → D8；4.7 kΩ 接在 DQ 與 3.3 V 之間。D8 = STM32 PB4。
+Wiring (common color code for waterproof probes; follow the seller's labeling): red = VDD → 3.3 V; black = GND → GND; yellow (or white) = DQ → D8; 4.7 kΩ between DQ and 3.3 V. D8 = STM32 PB4.
 
-**v3.10.2 起**：找不到感測器時每 10 秒自動重新搜尋，每次都會印 `[ds18b20] 搜尋 #N: ...`；失敗原因改變或約每 1 分鐘附一行完整診斷；找到後印「找到感測器」，之後每 30 秒印一次溫度。網頁溫度區的「溫度計診斷／立即重新搜尋」按鈕會即時顯示診斷結果並立刻重新搜尋（不用等 10 秒）。
+**Since v3.10.2**: when no sensor is found, a new search runs automatically every 10 seconds, each printing `[ds18b20] search #N: ...`; when the failure cause changes, or about once a minute, a full diagnostic line is attached; once found, it prints "sensor found" and then prints the temperature every 30 seconds. The "Thermometer diagnostics / re-search now" button in the web UI's temperature area shows the diagnostic result immediately and re-searches right away (no need to wait 10 seconds).
 
-**感測器 VDD 請接 UNO Q 的 3.3 V**（與 4.7 kΩ 上拉同一個 3.3 V），不要接在總電源那一側：感測器沒供電時會把 DQ 拉低（診斷顯示 `ext=0 int=0`），且 3.3 V 會經上拉電阻倒灌進感測器。
+**Connect the sensor's VDD to the UNO Q's 3.3 V** (the same 3.3 V as the 4.7 kΩ pull-up), not to the main power supply side: an unpowered sensor pulls DQ low (the diagnostics show `ext=0 int=0`), and 3.3 V back-feeds into the sensor through the pull-up resistor.
 
-## 19. ΔP–Q 掃描（main.py v4.6 / 網頁 v4.8，不需重新燒錄）
+## 19. ΔP–Q Sweep (main.py v4.6 / Web UI v4.8, No Reflash Needed)
 
-位置：膜過濾監測 →「重力 offset 自檢與設定」最下方。
+Location: Membrane filtration monitoring → bottom of "Gravity offset self-test and settings".
 
-1. 準備：壓力歸零 → 停泵做 ρgh 自檢 → 乾淨的膜、夾閥放開。
-2. 填 PWM 點（2–10 個，例如 `120, 150, 180, 210, 240`）、掃描順序（預設由高到低）、每點穩定時間（預設 20 s）、記錄時間（預設 30 s），按「開始掃描」。
-3. 每一點：設定 PWM → 等穩定 → 記錄 ΔP_total = P_in − P_out（5 Hz 壓力快照平均）與流量（1 Hz）→ ΔP_friction = ΔP_total − ρgh。
-4. 完成後恢復掃描前的 PWM；途中手動改 PWM 或緊急停止會中止，且不會把幫浦開回去。
-5. 顯示量測表、散佈圖、二次與線性擬合（過原點）、R² 與殘差；二次項為負時建議用線性。按「套用二次／線性擬合」才寫入 `dp_a`、`dp_b`。
+1. Preparation: pressure zeroing → stop the pump and do the ρgh self-test → clean membrane, pinch valve released.
+2. Enter the PWM points (2–10 of them, e.g. `120, 150, 180, 210, 240`), the sweep order (default high to low), the settling time per point (default 20 s) and the recording time (default 30 s), then press "Start sweep".
+3. For each point: set PWM → wait to settle → record ΔP_total = P_in − P_out (average of 5 Hz pressure snapshots) and flow (1 Hz) → ΔP_friction = ΔP_total − ρgh.
+4. When finished, the PWM from before the sweep is restored; manually changing the PWM or an emergency stop during the sweep aborts it, and the pump is not switched back on.
+5. Shows the measurement table, scatter plot, quadratic and linear fits (through the origin), R² and residuals; when the quadratic term is negative, linear is recommended. `dp_a` and `dp_b` are written only when "Apply quadratic / linear fit" is pressed.
 
-存檔與輸出／輸入（`hfm` 區段）：`dp_a`、`dp_b`、`dp_source`、`dp_at`，以及
-- `dp_points`：每點 `pwm`、`q`、`q_sd`、`dp_total_kpa`、`dpf`、`dpf_sd`、`n_p`、`n_q`、`warn`
-- `dp_fit`：`linear`／`quadratic`（a、b、r2、rms_kpa）、`recommended`、`model`（實際套用）、`q_range`、`rho_gh_kpa`（掃描當時的 ρgh）、`settle_s`、`measure_s`
+Saved and exported / imported (`hfm` section): `dp_a`, `dp_b`, `dp_source`, `dp_at`, plus
+- `dp_points`: for each point `pwm`, `q`, `q_sd`, `dp_total_kpa`, `dpf`, `dpf_sd`, `n_p`, `n_q`, `warn`
+- `dp_fit`: `linear` / `quadratic` (a, b, r2, rms_kpa), `recommended`, `model` (the one actually applied), `q_range`, `rho_gh_kpa` (ρgh at the time of the sweep), `settle_s`, `measure_s`
 
-`dp_total_kpa` 有保留，之後若 ρgh 重測，可用 `dp_total_kpa − 新 ρgh` 重新擬合。
+`dp_total_kpa` is kept, so if ρgh is re-measured later, the data can be refitted using `dp_total_kpa − new ρgh`.
 
-## 20. 溫度預設用溫度計、操作參數輸入（main.py v4.7 / 網頁 v4.9，不需重新燒錄）
+## 20. Thermometer as Default Temperature Source, Operating Parameter Input (main.py v4.7 / Web UI v4.9, No Reflash Needed)
 
-**溫度欄位**：pH 補償溫度、標準液溫度、校正值管理的校正溫度，旁邊都有「使用溫度計」勾選框。溫度計正常時預設勾選，欄位自動填入即時溫度（藍色、唯讀）；讀不到溫度計時自動取消勾選並改為手動輸入。
-- pH 補償溫度：勾選時 MCU 本來就用溫度計補償，「套用溫度」按鈕隱藏；取消勾選可修改讀不到溫度計時的手動備援溫度。
-- 標準液溫度：用溫度計時，溫度計探頭要和 pH 探頭一起放進標準液。
-- 校正溫度：按「讀回目前生效的值」時會自動取消勾選，顯示當時校正的溫度。
+**Temperature fields**: the pH compensation temperature, buffer solution temperature and the calibration temperature in calibration value management each have a "Use thermometer" checkbox next to them. When the thermometer is working it is checked by default and the field is filled automatically with the live temperature (blue, read-only); when the thermometer cannot be read, it is unchecked automatically and switches to manual entry.
+- pH compensation temperature: when checked, the MCU already compensates using the thermometer and the "Apply temperature" button is hidden; uncheck it to change the manual fallback temperature used when the thermometer cannot be read.
+- Buffer solution temperature: when using the thermometer, its probe must be placed in the buffer together with the pH probe.
+- Calibration temperature: pressing "Read back the values currently in effect" automatically unchecks it and shows the temperature at the time of calibration.
 
-**操作參數輸入**（膜過濾監測區，數值方塊下方）：
-| 欄位 | 用途 | 存在哪裡 |
+**Operating parameter input** (membrane filtration monitoring area, below the value tiles):
+| Field | Purpose | Stored in |
 |---|---|---|
-| Q_L 來源（流量計／手動） | 手動時所有衍生參數（γ、Re、ΔP 比值、τ）用手動 Q_L | `hfm.q_l_mode` |
-| 手動 Q_L（mL/min） | 同上 | `hfm.q_l_manual` |
-| Q_perm（mL/min） | J、L_p、D；可用「收集量（g）÷ 時間（min）」計算 | `hfm.q_perm_mlmin` |
-| 培養體積 V（L） | D | `specs.v_culture_l` |
+| Q_L source (flow meter / manual) | When manual, all derived parameters (γ, Re, ΔP ratio, τ) use the manual Q_L | `hfm.q_l_mode` |
+| Manual Q_L (mL/min) | Same as above | `hfm.q_l_manual` |
+| Q_perm (mL/min) | J, L_p, D; can be calculated from "collected amount (g) ÷ time (min)" | `hfm.q_perm_mlmin` |
+| Culture volume V (L) | D | `specs.v_culture_l` |
 
-以上都會存檔，並包含在校正值輸出／輸入（`hfm`、`specs` 區段）。衍生參數多一個 `q_l_src`（meter／manual）。ΔP–Q 掃描一律使用流量計讀值。
+All of the above are saved and included in calibration value export / import (`hfm`, `specs` sections). The derived parameters gain a `q_l_src` (meter / manual). The ΔP–Q sweep always uses the flow meter reading.
 
-## 21. DS18B20 時序（v3.10.3）
+## 21. DS18B20 Timing (v3.10.3)
 
-現象：開機找得到感測器（reset/presence 正常），之後讀值一直失敗。reset 的時序容忍度大，但寫 1／讀取的位元時槽要 <15 µs 的精度；若 `delayMicroseconds()`（= `k_busy_wait()`）在個位數微秒不準，就會寫錯指令、讀錯資料。
+Symptom: the sensor is found at boot (reset/presence normal), but reads keep failing afterwards. Reset timing is very tolerant, but the write-1 / read bit slots need < 15 µs precision; if `delayMicroseconds()` (= `k_busy_wait()`) is inaccurate at single-digit microseconds, wrong commands are written and wrong data is read.
 
-v3.10.3 起，1-Wire 位元時槽改用「校正空迴圈」：第一次搜尋時用 `millis()` 量 50 ms 內空迴圈跑幾圈，換算每微秒幾圈（約多花 0.1 秒，只做一次）。開機會印：
+Since v3.10.3, 1-Wire bit slots use a "calibrated busy loop": on the first search, `millis()` is used to count how many busy-loop iterations run in 50 ms, converted into iterations per microsecond (costs about 0.1 seconds extra, done only once). At boot it prints:
 
 ```
-[ds18b20] 時序校正: 空迴圈 NN 圈/µs, delayMicroseconds(6) 實測 X µs, 空迴圈 6 µs 實測 Y µs, 使用 空迴圈
+[ds18b20] timing calibration: busy loop NN iterations/µs, delayMicroseconds(6) measured X µs, busy loop 6 µs measured Y µs, using busy loop
 ```
 
-X 若遠大於 6（例如 30），就證實是系統計時器精度的問題。讀取失敗時每次印 `[ds18b20] 讀取失敗 #N: 原因`：
-| 原因 | 意義 |
+If X is far greater than 6 (e.g. 30), the system timer accuracy is confirmed as the problem. Each read failure prints `[ds18b20] read failure #N: <cause>`:
+| Cause | Meaning |
 |---|---|
-| `convert:no_presence(1/2)`、`read:no_presence(…)` | reset 沒回應（1 = 線被拉低，2 = 沒有 presence） |
-| `all_0xFF` / `all_0x00` | 讀到的全是 1 / 0：感測器沒在回資料（多半是指令沒被正確接收） |
-| `crc …/…` | 資料有回來但有位元錯（時序或雜訊），附 9 個原始位元組 |
-| `85.0C(...)` | 讀到上電預設值：轉換指令沒被收到 |
+| `convert:no_presence(1/2)`, `read:no_presence(…)` | No response to reset (1 = line pulled low, 2 = no presence) |
+| `all_0xFF` / `all_0x00` | Everything read is 1 / 0: the sensor is not returning data (usually the command was not received correctly) |
+| `crc …/…` | Data came back but with bit errors (timing or noise); the 9 raw bytes are attached |
+| `85.0C(...)` | Read the power-on default value: the convert command was not received |
 
-## 22. 指令通道中斷（v3.10.5 / main.py v4.8）
+## 22. Command Channel Outage (v3.10.5 / main.py v4.8)
 
-現象：電腦休眠喚醒後，網頁的壓力仍在更新，但流量停住、幫浦與夾閥按了沒反應；Serial Monitor 數值正常。
+Symptom: after the PC wakes from sleep, pressure in the web UI keeps updating, but flow freezes and the pump and pinch valve buttons do nothing; values in the Serial Monitor are normal.
 
-原因分析：壓力、pH、OD600、夾閥狀態都是 MCU **主動推送**（Bridge.notify）；流量、幫浦、夾閥指令、校正讀取則是 Python **呼叫** MCU（Bridge.call）。只有後者壞掉，代表「Linux → MCU」的指令通道卡住。觸發點是瀏覽器重新連線：網頁一次送出十幾個要求，其中多個同時呼叫 MCU，加上背景每秒的流量輪詢。
+Root-cause analysis: pressure, pH, OD600 and pinch valve status are all **actively pushed** by the MCU (Bridge.notify); flow, pump, pinch valve commands and calibration reads are Python **calling** the MCU (Bridge.call). Only the latter failing means the "Linux → MCU" command channel is stuck. The trigger is the browser reconnecting: the web page sends a dozen or so requests at once, several of which call the MCU simultaneously, on top of the per-second flow polling in the background.
 
-修正：
-- Python：所有 `Bridge.call` 經過排隊層（`_QueuedBridge`），一次只送一個；預設逾時 5 s（zero_calibrate 15 s、ds_diag 8 s）；連續 3 次失敗 → Console 印 `[mcu] !! MCU 收不到指令…`、網頁紅色橫幅；恢復時印 `[mcu] 指令通道恢復`。
-- MCU：全部 Bridge 函式改用 `provide_safe`，在 loop() 中依序執行，不再與 loop() 同時存取變數，也不再跑在 Bridge 背景執行緒（堆疊只有 500 byte）。
-- MCU：Serial Monitor 每 30 秒印 `[rpc] 最近 30 秒收到 Python 呼叫 N 次`；原本有呼叫、之後 30 秒為 0 會印警告。
+Fix:
+- Python: every `Bridge.call` goes through a queuing layer (`_QueuedBridge`) that sends only one at a time; default timeout 5 s (zero_calibrate 15 s, ds_diag 8 s); 3 consecutive failures → the Console prints `[mcu] !! MCU not receiving commands…` and the web UI shows a red banner; on recovery it prints `[mcu] command channel restored`.
+- MCU: all Bridge functions now use `provide_safe` and run sequentially inside loop(), so they no longer access variables concurrently with loop() and no longer run on the Bridge background thread (whose stack is only 500 bytes).
+- MCU: the Serial Monitor prints `[rpc] received N Python calls in the last 30 s` every 30 seconds; if calls had been arriving and then there are 0 for 30 seconds, it prints a warning (`[rpc] !! no calls received at all within 30 s…`).
 
-判讀：
-| Serial Monitor | Python Console | 意義 |
+Interpretation:
+| Serial Monitor | Python Console | Meaning |
 |---|---|---|
-| `[rpc] … N 次`（N 約 30） | 無錯誤 | 正常 |
-| `[rpc] !! 30 秒內完全沒收到…` | `[mcu] !! MCU 收不到指令` | 指令在 Linux 端（router）就沒送到 MCU：停止再啟動 App；不行就拔電 10 秒 |
-| `[rpc] … N 次`（N > 0） | `[mcu] !! MCU 收不到指令` | MCU 有收到但回應沒回來：把兩邊 log 貼給維護者 |
+| `[rpc]` call-count line, N calls (N about 30) | No errors | Normal |
+| `[rpc] !!` warning: no calls at all within 30 seconds | `[mcu] !!` "MCU is not receiving commands" | Commands are not reaching the MCU from the Linux side (router): stop and restart the App; if that fails, unplug power for 10 seconds |
+| `[rpc]` call-count line, N calls (N > 0) | `[mcu] !!` "MCU is not receiving commands" | The MCU receives the calls but the responses do not come back: send both logs to the maintainer |
 
-## 23. MCU 自我恢復與驗證（v3.10.6 / main.py v4.9 / 網頁 v4.10）
+## 23. MCU Self-Recovery and Verification (v3.10.6 / main.py v4.9 / Web UI v4.10)
 
-> **v3.10.7 起已移除自動重開**：實機證實 UNO Q 軟體重開後 MCU 不會接回 Bridge。以下內容僅保留作為紀錄；「模擬 MCU 收不到指令」與 watchdog 設定已從網頁移除。
+> **Automatic restart has been removed since v3.10.7**: real-hardware testing confirmed that after a software restart of the UNO Q, the MCU does not reconnect to the Bridge. The content below is kept for the record only; "Simulate MCU not receiving commands" and the watchdog settings have been removed from the web UI.
 
-**機制**：Python 每秒呼叫 MCU（讀流量）。MCU 記錄最後一次收到呼叫的時間；若「原本有收到」且連續超過判定秒數（預設 60 s）都沒收到，MCU 印出警告後自行重開（Cortex-M SYSRESETREQ，電源不中斷）。重開後需等 Python 再次呼叫才會重新武裝，所以通道若仍不通不會反覆重開。Python 由 get_diag 的 uptime 變小偵測到重開 → 推回校正值、pH、夾閥、啟動助推設定 → 照重開前的設定恢復幫浦方向與 PWM（原本停止就維持停止）→ 重新設定 watchdog（最近一小時重開 ≥ 2 次就關閉，只警告）。App 正常停止時 atexit 會先關閉 watchdog（盡力而為）。
+**Mechanism**: Python calls the MCU every second (to read flow). The MCU records the time of the last call received; if it "had been receiving calls" and then receives none for longer than the threshold (default 60 s), the MCU prints a warning and restarts itself (Cortex-M SYSRESETREQ, power not interrupted). After a restart it is re-armed only once Python calls again, so if the channel is still broken it will not restart repeatedly. Python detects the restart via the decreased uptime in get_diag → pushes back the calibration values, pH, pinch valve and start-up kick settings → restores the pump direction and PWM to the pre-restart settings (if it was stopped, it stays stopped) → re-configures the watchdog (if there have been ≥ 2 restarts in the last hour, it is disabled and only warns). When the App stops normally, atexit first disables the watchdog (best effort).
 
-**硬體建議**：L298N 的 ENA、IN1、IN2 各加 10 kΩ 下拉到 GND，確保 MCU 重開那幾秒腳位懸空時幫浦一定是停的。
+**Hardware recommendation**: add a 10 kΩ pull-down to GND on each of the L298N's ENA, IN1 and IN2, so that the pump is guaranteed to be stopped while the pins float during the few seconds of an MCU restart.
 
-**位置**：工程模式 → 「MCU 連線與自我恢復」（展開時每 3 秒更新狀態）。
+**Location**: Engineering mode → "MCU connection and self-recovery" (status updates every 3 seconds while expanded).
 
-**驗證步驟**（先只接 USB，再接 L298N 不接馬達，再用清水）：
-| 測試 | 操作 | 通過標準 |
+**Verification steps** (first with only USB connected, then with the L298N connected but no motor, then with clean water):
+| Test | Procedure | Pass criterion |
 |---|---|---|
-| 壓力測試 | 同時呼叫數 50 → 壓力測試 | 50/50 成功；Console 無 `MCU 收不到指令`；之後幫浦、夾閥可操作 |
-| 模擬 Python 端斷線 | 按下後等 30 s | 約 3 s 內紅色橫幅與 `[mcu] !! MCU 收不到指令`；30 s 後 `[mcu] 指令通道恢復`、橫幅消失 |
-| 模擬 MCU 收不到指令 | 先設幫浦 PWM 150，按下並確認 | 判定秒數後 Serial Monitor `[rpc] !! … 自動重新啟動 MCU` → 新的 `[boot]`；約 10 s 內 Console `[pump] MCU 重開: 恢復幫浦 PWM 150` 與校正值還原；流量回到原值；夾閥回到「開」 |
-| 幫浦停止時重開 | 幫浦 PWM 0 時做上一項 | 重開後幫浦維持停止 |
-| 每小時上限 | 一小時內做第 3 次 | Console `暫停自動重開`；狀態列自動恢復顯示「關」 |
-| 重新同步 | 按「重新同步」 | 顯示「已重新讀回並同步所有設定」 |
-| 實境 | 電腦休眠 10 分鐘再喚醒，重複 5 次 | 每次喚醒後流量更新、幫浦可操作 |
+| Stress test | Concurrent calls 50 → Stress test | 50/50 succeed; no "MCU is not receiving commands" message in the Console; afterwards the pump and pinch valve can be operated |
+| Simulate Python-side disconnect | Press it and wait 30 s | Within about 3 s, the red banner and the `[mcu] !!` "MCU is not receiving commands" message; after 30 s, `[mcu]` "command channel restored" and the banner disappears |
+| Simulate MCU not receiving commands | First set pump PWM to 150, press it and confirm | After the threshold, the Serial Monitor shows `[rpc] !! … automatically restarting MCU` → a new `[boot]`; within about 10 s the Console shows `[pump] MCU restarted: restoring pump PWM 150` and the calibration values are restored; flow returns to its previous value; the pinch valve returns to "open" |
+| Restart while the pump is stopped | Do the previous test with pump PWM 0 | After the restart the pump stays stopped |
+| Hourly limit | Do it a 3rd time within one hour | The Console reports that automatic restart is paused; the status bar automatically shows "Off" again |
+| Resync | Press "Resync" | Shows "All settings have been read back and synchronized" |
+| Real-world | Put the PC to sleep for 10 minutes and wake it, repeated 5 times | After each wake, flow updates and the pump can be operated |
 

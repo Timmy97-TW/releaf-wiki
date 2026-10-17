@@ -1,471 +1,713 @@
 # ReLeaf Perfusion Hollow Fiber Bioreactor
 
-Arduino UNO Q（App Lab）上的中空纖維灌流生物反應器監控 App：OD600、流速、三點壓力與膜過濾衍生參數、pH、溫度、蠕動幫浦、STS3215 夾閥，以及板上 CSV 錄製。
+Monitoring and control App for a hollow-fiber membrane perfusion bioreactor on the Arduino UNO Q (App Lab): OD600, flow rate, three-point pressure and membrane-filtration derived parameters, pH (with **automatic base dosing**), temperature, peristaltic pump, **base pump**, STS3215 pinch valve plus **shell sampling valve / feed valve**, **0.7 bar pressure protection**, and on-board CSV and **raw data** recording.
 
-| 檔案 | 目前版本 | 位置 |
+> **Language note:** this is the English edition: code, comments, runtime log/error messages and this README contain no Chinese text. The web UI is bilingual (since v6.1): English by default, with a switch to Traditional Chinese at the top right; the Chinese text lives only in the page's translation table. A separate Chinese edition (Chinese logs, bilingual web UI, Chinese README, same program logic) is delivered alongside.
+
+| Component | Current version | Location |
 |---|---|---|
-| MCU 韌體 | **v3.10.9** | `sketch/sketch.ino` |
-| Python 後端 | **v4.12** | `python/main.py` |
-| 網頁介面 | **v4.13** | `assets/index.html` |
-| 常數設定 | 2026-10-08 | `python/constants.json` |
+| MCU firmware | **v4.2.2** | `sketch/sketch.ino` |
+| Python backend | **v6.2.2** | `python/main.py`, `python/growth_rate.py`, `python/ph_control.py`, `python/photometer_algos.py`, `python/od_gate.py`, `python/raw_logger.py` |
+| Web UI | **v6.2.2** | `assets/index.html` |
+| Constants | 2026-10-16-v6 | `python/constants.json` |
+| Offline tools | v6.0 | `tools/replay_raw.py`, `tools/replay_od.py`, `tools/sim_ph_control.py` |
+| PC simulation tests | v6.0 | `tools/tests/` (firmware, backend, web UI; see §16) |
 
-> 本文件描述「現在的系統」。2026-10-08 以前逐版累積的舊版說明保留在 `docs/README_legacy_2026-10-08.md`；完整版本歷史另見 Claude Docs「ReLeaf 灌流中空纖維生物反應器 — 版本歷史」。
-
----
-
-## 目錄
-
-1. [系統概觀](#1-系統概觀)
-2. [檔案結構與需求](#2-檔案結構與需求)
-3. [硬體與接線](#3-硬體與接線)
-4. [電氣安全規則（必讀）](#4-電氣安全規則必讀)
-5. [部署與開機](#5-部署與開機)
-6. [首次設定流程](#6-首次設定流程)
-7. [網頁介面](#7-網頁介面)
-8. [量測與計算](#8-量測與計算)
-9. [安全保護機制](#9-安全保護機制)
-10. [資料記錄](#10-資料記錄)
-11. [設定的存檔、輸出與輸入](#11-設定的存檔輸出與輸入)
-12. [MCU 與 Python 的通訊](#12-mcu-與-python-的通訊)
-13. [疑難排解](#13-疑難排解)
-14. [已知限制與待辦](#14-已知限制與待辦)
-15. [版本沿革（摘要）](#15-版本沿革摘要)
+> **New in v6.2.2:** the feed pump is **single-direction**. On the board IN3 (D12) never goes high, so everything on the second pump (feed run, base dosing) now drives IN4 (D13), the old "reverse"; IN3 stays low. The direction / reverse buttons and the IN3 / IN4 swap are gone. If the liquid flows the wrong way, swap the two motor wires on OUT3 / OUT4. Firmware v4.2.2 and main.py v6.2.2 must be updated together.
+>
+> **New in v6.2.1:** fix for a feed pump that runs in reverse but not forward (IN3 = D12): the firmware writes the direction pins last and re-asserts them every 200 ms, the feed pump panel has a **Wiring check** (hold IN3 / IN4 / ENB high, read the pin level back) and an **IN3 / IN4 swap** fallback (§3.5b). The pump column is regrouped: **Feed valve & feed pump** in one panel, **Pinch valve & shell sampling valve** in another. Firmware v4.2.1 and main.py v6.2.1 must be updated together.
+>
+> **New in v6.2:** the second L298N pump is now the **feed pump**: it sits right below the main pump with its own PWM, forward / reverse and stop, and what it pumps is chosen by the feed valve (§3.5b, §7.5b). Manual base dosing and the base dosing settings moved into automatic pH control; manual dosing only works while the feed valve is set to **Base**. Firmware v4.2.0 and main.py v6.2 must be updated together.
+>
+> **New in v6.1:** PC layout rearranged (OD600 + pH | pressure | pump & valves), temperature folded into the pH panel, **specific growth rate μ** on the OD600 panel (§7.1, §8.3).
+>
+> **New in v6.0: see §16** (base pump and automatic pH, shell sampling valve and feed valve, 0.7 bar pressure protection, two layouts: PC view / local display).
+> **In v6.0 the firmware and the Python backend must be updated together** (main.py v6.2.2 checks for firmware version v4.2.2).
+> **v6.0 has not yet been flashed and tested on real hardware**: the firmware, backend and web UI have all been run on a PC against a simulated MCU and simulated sensor signals (§16.6). For the first bring-up on the board, follow the order in §16.5.
+> **v5.1 changed the default OD600 estimator from upper to mad; you must take a new blank after upgrading.**
+> The older version-by-version documentation accumulated before 2026-10-08 is kept in `docs/README_legacy_2026-10-08.md`.
 
 ---
 
-## 1. 系統概觀
+## Contents
+
+1. [System overview](#1-system-overview)
+2. [File structure and requirements](#2-file-structure-and-requirements)
+3. [Hardware and wiring](#3-hardware-and-wiring)
+4. [Electrical safety rules (must read)](#4-electrical-safety-rules-must-read)
+5. [Deployment and boot](#5-deployment-and-boot)
+6. [First-time setup procedure](#6-first-time-setup-procedure)
+7. [Web UI](#7-web-ui)
+8. [Measurements and calculations](#8-measurements-and-calculations)
+9. [Safety protection mechanisms](#9-safety-protection-mechanisms)
+10. [Data recording](#10-data-recording)
+11. [Saving, exporting and importing settings](#11-saving-exporting-and-importing-settings)
+12. [Communication between MCU and Python](#12-communication-between-mcu-and-python)
+13. [Troubleshooting](#13-troubleshooting)
+14. [Known limitations and to-do](#14-known-limitations-and-to-do)
+15. [Version history (summary)](#15-version-history-summary)
+16. [v6.0 new features and first bring-up on the board](#16-v60-new-features-and-first-bring-up-on-the-board)
+
+---
+
+## 1. System overview
+
+Since v5.0 **the MCU is responsible only for sensor sampling, pump and pinch valve control, and the safety interlocks; all conversions, filtering, statistics and algorithms run in Python on the Linux side**. Every raw reading sent by the MCU is stored in full while recording.
 
 ```
-┌──────────── Arduino UNO Q ────────────────────────────────────────┐
-│  MCU（STM32U585, Zephyr）          Linux（Debian, Docker）          │
-│  sketch.ino                         python/main.py  ── WebUI :7000 ─┼─▶ 瀏覽器
-│   ├ 100 Hz 壓力取樣、統計            ├ 聚合取樣、衍生參數、告警        │
-│   ├ OD600 狀態機、流量計數            ├ CSV 錄製（板上 recordings/）   │
-│   ├ pH、DS18B20                      ├ 校正值與設定的存檔／還原        │
-│   ├ 幫浦 PWM、啟動助推               └ ΔP–Q 掃描、測試工具            │
-│   └ 夾閥與所有安全連鎖                                                │
-│          ▲  Bridge（arduino-router）                                  │
-└──────────┼────────────────────────────────────────────────────────┘
+┌──────────── Arduino UNO Q ────────────────────────────────────────────────────┐
+│  MCU (STM32U585, Zephyr)                Linux (Debian, Docker)                 │
+│  sketch.ino v4.0.0                      python/main.py v5.1 ── WebUI :7000 ────┼─▶ browser
+│   ├ pressure 100 Hz ADC sums ─on_p_raw──▶ ├ bar conversion, zero, 1 s stats, TMP│
+│   ├ flow pulse counting ─────on_flow_raw▶ ├ gate / reciprocal count, exact     │
+│   │                                       │   window flow                      │
+│   ├ BH1750 raw counts ───────on_od_raw──▶ ├ OD600 8 algorithms, blank          │
+│   │  + I2C hang auto-recovery             │                                    │
+│   ├ pH ADC sums, DS18B20 ────on_aux_raw─▶ ├ pH conversion, temp comp., filter  │
+│   ├ pump PWM, kick-start                  ├ HFM derived params, steady, alarms │
+│   └ pinch valve + interlocks (10 ms)      ├ aggregate CSV (one row per window) │
+│          ▲  Bridge (115200 bps)           └ raw data recordings/<rec>_raw/     │
+└──────────┼────────────────────────────────────────────────────────────────────┘
 ```
 
-MCU 與 Python 之間有兩個方向：
-
-| 方向 | 用途 |
+| Direction | Content |
 |---|---|
-| MCU **主動推送**（`Bridge.notify`） | 壓力（每 200 ms）、流量（每秒）、pH 與溫度（每秒）、OD600（每次量測完）、夾閥狀態 |
-| Python **呼叫** MCU（`Bridge.call`） | 幫浦與夾閥指令、校正、設定、診斷（每 5 s）；流量只在沒收到推送時（舊韌體）才輪詢 |
+| MCU **pushes** (`Bridge.notify`) | `on_p_raw` (a batch of 20 pressure samples every 200 ms), `on_flow_raw` (every second), `on_aux_raw` (every second: pH, temperature, pump status), `on_od_raw` (every OD attempt), `on_valve_update` (every second) |
+| Python **calls** the MCU (`Bridge.call`) | Pump, pinch valve, OD trigger / LED alignment / re-initialisation, pressure zero offsets for the safety interlocks, measurement interval, diagnostics (every 5 s) |
 
-所有安全保護（夾閥自動放開、幫浦急停）都在 MCU 上執行，Linux、Python 或網頁當掉也有效。
-
-**感測資料全部由 MCU 主動推送**（v3.10.9 起流量也是）。因此即使「Python → MCU」的指令通道斷掉，壓力、流量、pH、溫度、OD600、夾閥狀態都會繼續寫進 CSV；斷線期間只是無法操作幫浦與夾閥。資料由板上的 Python 寫檔，與瀏覽器是否開著無關。
+- All safety protection (automatic pinch valve release, pump emergency stop) still runs on the MCU and stays effective if Linux or the web UI hangs.
+- All sensor data is pushed by the MCU, so data keeps being recorded even if the Python → MCU command channel is down.
+- Calibration values (pressure zero offsets, OD blank, path-length factor, pH calibration) are stored on the Linux side and **are not lost when the MCU reboots**.
 
 ---
 
-## 2. 檔案結構與需求
+## 2. File structure and requirements
 
 ```
-app.yaml                 App 名稱「ReLeaf Perfusion HFB」，宣告 arduino:web_ui brick
-sketch/sketch.ino        MCU 韌體
-sketch/sketch.yaml       需要的函式庫：SCServo (1.0.2)
-python/main.py           後端
-python/constants.json    常數（膜模組規格、門檻、夾閥預設）
-python/requirements.txt  空檔即可
-assets/index.html        網頁
-assets/libs/             由 WebUI brick 自動放入（socket.io、arduino.js）
-README.md                本文件
-docs/                    舊版說明、技術文件
+app.yaml                 App name "ReLeaf Perfusion HFB"; declares the arduino:web_ui brick
+sketch/sketch.ino        MCU firmware
+sketch/sketch.yaml       Required library: SCServo (1.0.2)
+python/main.py           Backend
+python/photometer_algos.py  OD600 algorithms (same as inline photometer v1.2.0; shared with tools/replay_od.py)
+python/raw_logger.py     Raw data logger
+python/growth_rate.py    Specific growth rate mu from ln(OD600) (v6.1)
+python/constants.json    Constants (algorithm parameters, thresholds, pinch valve defaults; conversion constants come from MCU get_config())
+tools/replay_raw.py      Recompute pressure / flow / pH time series from raw data (runs on a PC, needs only Python 3.8+)
+tools/replay_od.py       Re-run the 8 OD600 algorithms on raw readings
+python/requirements.txt  May be empty
+assets/index.html        Web UI
+assets/libs/             Placed automatically by the WebUI brick (socket.io, arduino.js)
+README.md                This document
+docs/                    Legacy documentation, technical documents
 ```
 
-執行後在 `python/` 底下自動產生：
+Generated automatically under `python/` at runtime:
 
-| 檔案 | 內容 |
+| File | Content |
 |---|---|
-| `calibration_state.json` | OD600 blank、壓力零點、光程係數 |
-| `ph_valve_state.json` | pH 校正、夾閥設定、演算法、HFM 狀態（ρgh、ΔP–Q）、規格覆寫、幫浦助推等 |
-| `recordings/*.csv` | 錄製檔與中途存檔 |
-| `recording_state.json` | 錄製進度標記（中斷後接續用） |
+| `calibration_state.json` | OD600 blank (one per each of the 8 algorithms), pressure zero offsets, path-length factor, with source tags |
+| `ph_valve_state.json` | pH calibration (converted on the Linux side since v5.0), pinch valve settings, algorithms, HFM state (ρgh, ΔP–Q), spec overrides, pump kick-start, etc. |
+| `recordings/*.csv` | Recording files and checkpoints |
+| `recordings/<recording>_raw/` | v5.0 raw data (§10.2) |
+| `recording_state.json` | Recording progress marker (used to resume after an interruption) |
 
-**需求**
+**Requirements**
 
-- Arduino App Lab；板子核心 `arduino:zephyr`（新板為 1.0.0，舊板 0.90.0 皆已實測）
-- MCU 函式庫：`Arduino_RouterBridge`（App Lab 自帶）、`SCServo 1.0.2`（sketch.yaml 會加入）
-- 不需要 OneWire：DS18B20 驅動已內嵌
+- Arduino App Lab; board core `arduino:zephyr` (1.0.0 on new boards; 0.90.0 on old boards; both tested)
+- MCU libraries: `Arduino_RouterBridge` (bundled with App Lab), `SCServo 1.0.2` (added by sketch.yaml)
+- OneWire is not needed: the DS18B20 driver is built in
 
 ---
 
-## 3. 硬體與接線
+## 3. Hardware and wiring
 
-> UNO Q 的 MCU 腳位是 **3.3 V 邏輯**，請一律視為**不耐 5 V**。所有外部訊號進入前都要確認 ≤ 3.3 V。
+> The UNO Q MCU pins use **3.3 V logic**; always treat them as **not 5 V tolerant**. Confirm that every external signal is ≤ 3.3 V before it enters the board.
 
-### 3.1 腳位表
+### 3.1 Pin table
 
-| 腳位 | 用途 | 方向 | 備註 |
+| Pin | Function | Direction | Notes |
 |---|---|---|---|
-| D0 / D1 | STS3215 夾閥（Serial1，1 Mbps） | RX / TX | 經 Waveshare Bus Servo Adapter (A) |
-| D2 | ZJ-TM02 流量計 | 輸入（中斷） | 訊號須分壓到 ≤ 3.3 V |
-| D3 | OD600 LED（經 2N2222） | 輸出 | 1.2 kΩ 到基極 |
-| D5 / D6 | L298N IN1 / IN2（幫浦方向） | 輸出 | |
-| D7 | 空 | — | 規劃：外部電源繼電器 |
-| D8 | DS18B20 溫度計 DQ | 開汲極 | 4.7 kΩ 上拉到 **UNO Q 3.3 V** |
-| D9 | L298N ENA（幫浦 PWM） | 輸出 | |
-| A0 | 壓力 Feed = **Lumen in**（P_in） | 類比 | 15 k／22 k 分壓 |
-| A1 | 壓力 Retentate = Lumen out（P_out） | 類比 | 同上 |
-| A2 | 壓力 Permeate = Shell（P_s） | 類比 | 同上 |
-| A4 | pH 探頭（DFRobot SEN0169-V2） | 類比 | 建議經類比隔離模組 |
-| SDA / SCL | BH1750 ×2（OD600） | I2C | sample `0x5C`、reference `0x23` |
+| D0 / D1 | STS3215 bus (Serial1, 1 Mbps): pinch valve ID 1, shell sampling valve ID 2, feed valve ID 3 | RX / TX | Via a Waveshare Bus Servo Adapter (A); all three servos in parallel on the same bus |
+| D2 | ZJ-TM02 flow meter | Input (interrupt) | Signal must be divided down to ≤ 3.3 V |
+| D3 | OD600 LED (via 2N2222) | Output | 1.2 kΩ to the base |
+| D4 | DS18B20 thermometer DQ (moved from D8 in v4.1.1) | Open drain | 4.7 kΩ pull-up to **UNO Q 3.3 V** |
+| D5 / D6 | Unused | — | |
+| D7 | Unused | — | Planned: external power relay |
+| **D8 / D9 / D10** | L298N **IN1 / ENA (PWM) / IN2** (main pump) | Output | **D8–D13 are six consecutive pins** (v4.1.1), three pins per pump |
+| **D11 / D12 / D13** | L298N **ENB (PWM) / IN3 / IN4** (feed pump) | Output | D11 is PWM-capable; D12 / D13 are plain outputs for direction |
+| A0 | Pressure Feed = **Lumen in** (P_in) | Analog | 15 k / 22 k divider |
+| A1 | Pressure Retentate = Lumen out (P_out) | Analog | Same as above |
+| A2 | Pressure Permeate = Shell (P_s) | Analog | Same as above |
+| A4 | pH probe (DFRobot SEN0169-V2) | Analog | Analog isolation module recommended |
+| SDA / SCL | BH1750 ×2 (OD600) | I2C | sample `0x5C`, reference `0x23` |
 
-### 3.2 壓力變送器 ×3
+### 3.2 Pressure transmitters ×3
 
-變送器 12 V 供電，輸出 0–5 V 對應 0–10 bar。每一顆各自一組分壓：
+The transmitters are powered from 12 V and output 0–5 V for 0–10 bar. Each has its own voltage divider:
 
 ```
-變送器訊號 ──[15 kΩ]──┬── A0 / A1 / A2
-                      [22 kΩ]
-                       │
-                      GND        比例 0.5946：5 V → 2.97 V
+transmitter signal ──[15 kΩ]──┬── A0 / A1 / A2
+                             [22 kΩ]
+                              │
+                             GND        ratio 0.5946: 5 V → 2.97 V
 ```
 
-換電阻只要改 sketch 的 `DIV_R_TOP_KOHM`、`DIV_R_BOTTOM_KOHM`。建議用電表量實際阻值填入。
+If you change the resistors, only update `DIV_R_TOP_KOHM` and `DIV_R_BOTTOM_KOHM` in the sketch. Measure the actual resistances with a multimeter and enter those values.
 
-### 3.3 流量計（ZJ-TM02）
+### 3.3 Flow meter (ZJ-TM02)
 
-5 V 供電，訊號經分壓後接 D2，脈衝高電位須 ≤ 3.3 V。`PULSES_PER_LITER = 2580`（大孔版本；小孔版本改 5160）。
+Powered from 5 V; the signal goes to D2 through a divider, and the pulse high level must be ≤ 3.3 V. `PULSES_PER_LITER = 2580` (large-bore version; use 5160 for the small-bore version).
 
 ### 3.4 OD600
 
 ```
-D3 ──[1.2 kΩ]──┬── 2N2222 基極
+D3 ──[1.2 kΩ]──┬── 2N2222 base
               [10 kΩ]── GND
-5 V ──[330 Ω]── LED ── 集極；射極 ── GND
+5 V ──[330 Ω]── LED ── collector; emitter ── GND
 ```
 
-BH1750（GY-302）×2：SDA/SCL 接 UNO Q；ADDR 接 3V3 為 sample（`0x5C`），接 GND 為 reference（`0x23`）。**建議 VCC 接 3.3 V**，避免模組的上拉電阻把 SDA/SCL 拉到 5 V。
+BH1750 (GY-302) ×2: SDA/SCL to the UNO Q; ADDR to 3V3 for sample (`0x5C`), to GND for reference (`0x23`). **Powering VCC from 3.3 V is recommended** so that the module's pull-up resistors do not pull SDA/SCL up to 5 V.
 
-### 3.5 蠕動幫浦（L298N）
+### 3.5 Peristaltic pump (L298N)
 
 ```
-UNO Q D9 ──[1 kΩ]── ENA（跳線帽拔掉後，與 5V 不導通的那根針）
-UNO Q D5 ──[1 kΩ]── IN1
-UNO Q D6 ──[1 kΩ]── IN2
-UNO Q GND ───────── GND（只共地，不走馬達電流）
+UNO Q D8  ──[1 kΩ]── IN1
+UNO Q D9  ──[1 kΩ]── ENA (with the jumper cap removed, the pin NOT connected to 5V)
+UNO Q D10 ──[1 kΩ]── IN2
+UNO Q GND ───────── GND (common ground only; no motor current)
 
-ENA、IN1、IN2 各加 10 kΩ 到 GND（下拉：MCU 重開或腳位懸空時幫浦一定停止）
+Add 10 kΩ from each of ENA, IN1, IN2 to GND (pull-down: the pump always stops when the MCU reboots or the pins float)
 
-12 V(+) ──┬────────┬──── L298N +12V        470 µF（≥25 V，注意極性）
-       [470µF]  [100nF]                    100 nF 陶瓷
+12 V(+) ──┬────────┬──── L298N +12V        470 µF (≥25 V, mind the polarity)
+       [470µF]  [100nF]                    100 nF ceramic
 12 V(−) ──┴────────┴──── L298N GND
 ```
 
-- **5V 跳線保留**（模組自己由 12 V 產生邏輯 5 V），**+5V 端子空著不接**，絕不接到 UNO Q。
-- **ENA 跳線帽一定要拔掉**。用電表確認：與 +5V 端子導通的是 5 V 針，另一根才是 ENA。
-- 馬達電流直接回 12 V 電源，不要經過 UNO Q 的 GND。
-- 12 V 電源不可超過 12 V（模組穩壓器上限）。
+- **Keep the 5V jumper** (the module generates its own 5 V logic supply from 12 V); **leave the +5V terminal unconnected**, and never connect it to the UNO Q.
+- **The ENA jumper cap must be removed.** Check with a multimeter: the pin connected to the +5V terminal is the 5 V pin; the other one is ENA.
+- Motor current returns directly to the 12 V supply; do not route it through the UNO Q GND.
+- The 12 V supply must not exceed 12 V (limit of the module's regulator).
 
-### 3.6 pH 探頭
-
-DFRobot SEN0169-V2，OUT → A4（建議經類比隔離模組），輸出 0–3.0 V。
-
-### 3.7 DS18B20 溫度計（防水探頭）
+### 3.5b Feed pump (second channel of the same L298N; base pump until v6.1)
 
 ```
-UNO Q 3.3V ──┬──────────── 紅（VDD）
+UNO Q D11 ──[1 kΩ]── ENB (remove the ENB jumper cap as well)
+UNO Q D12 ──[1 kΩ]── IN3
+UNO Q D13 ──[1 kΩ]── IN4
+Add 10 kΩ from each of ENB, IN3, IN4 to GND
+Feed pump connects to OUT3 / OUT4
+```
+
+**Since v4.2.2 the feed pump runs in one direction only: IN4 high, IN3 low** (IN3 = D12 does not go high on the board, so the old "forward" is not used). The feed run and base dosing pulses both use this direction. If the liquid flows the wrong way, swap the two motor wires on OUT3 / OUT4. (v4.2.0–v4.2.1: forward = IN3 high, reverse = IN4 high.)
+
+**Runs in reverse but not forward (v6.2.1):** reverse working means ENB (D11), IN4 (D13), the 12 V supply and the motor are fine, and IN3 (D12) never goes high. Open **Feed valve & feed pump → Wiring check**:
+
+1. Press **IN3 (D12) high** (held for the time in "Hold", default 10 s, then switched off automatically). Measure the UNO Q header pin **D12** against GND: it should read about 3.3 V. Then measure the **IN3** terminal on the L298N.
+2. 3.3 V on D12 but not on IN3: the ribbon cable or its connector. No voltage on D12, and the read-back line shows `IN3 (D12) = LOW`: the board does not drive D12.
+3. **IN3 + ENB (forward, full speed)** runs the motor forward without the direction logic, as a cross-check.
+4. Result on the real board: D12 cannot be used (and the ribbon cable only reaches D8–D13), so v4.2.2 drives the pump on IN4 only (see above). The v6.2.1 **Swap IN3 / IN4** option and the **IN3 + ENB** button were removed again in v6.2.2.
+
+Firmware v4.2.1 also writes ENB first and IN3 / IN4 last and re-asserts the IN levels every 200 ms, because D12 (PB14) is also a timer output (TIM1_CH2N) in the UNO Q device tree and a PWM write elsewhere could hand the pin back to the timer. If that was the cause, forward works after flashing v4.2.1 without any rewiring.
+
+**If the pump does not turn (v6.1 and earlier):** the firmware only ran this pump as a base dosing pulse, and only while the feed valve (servo ID 3) was online and confirmed at the **Base** position, so with the feed valve missing, on another ID or not at Base, nothing moved even with correct wiring (the Serial Monitor printed nothing and the web UI showed "feed valve not confirmed at base position"). Since v4.2.0 the feed pump runs from its own panel without needing the feed valve; it only refuses while the feed valve is online and **fully closed**. If it still does not turn at PWM 255: check that the ENB jumper cap is removed, the motor supply (12 V) is connected to the L298N and its GND is shared with the UNO Q GND.
+
+### 3.6 pH probe
+
+DFRobot SEN0169-V2, OUT → A4 (an analog isolation module is recommended), output 0–3.0 V.
+
+### 3.7 DS18B20 thermometer (waterproof probe)
+
+```
+UNO Q 3.3V ──┬──────────── red (VDD)
            [4.7 kΩ]
-UNO Q D8 ────┴──────────── 黃／白（DQ）
-UNO Q GND ──────────────── 黑（GND）
+UNO Q D4 ────┴──────────── yellow / white (DQ)
+UNO Q GND ──────────────── black (GND)
 ```
 
-- 防水探頭內部**沒有**上拉電阻，4.7 kΩ 必須自己加；電阻是 DQ 對 **3.3 V**，不是對 GND。
-- VDD 與上拉都接 **UNO Q 的 3.3 V**，不要接供電板。感測器沒電時會把 DQ 拉低並造成倒灌。
-- 色碼以賣家標示為準。VDD／GND 接反會發燙損壞。
+- The waterproof probe has **no** internal pull-up; you must add the 4.7 kΩ yourself. The resistor goes from DQ to **3.3 V**, not to GND.
+- Connect both VDD and the pull-up to **the UNO Q 3.3 V**, not to the power distribution board. An unpowered sensor pulls DQ low and causes back-feeding.
+- Follow the seller's color code. Swapping VDD / GND makes the sensor overheat and fail.
 
-### 3.8 STS3215 夾閥
+### 3.8 STS3215 pinch valve
 
 ```
-UNO Q D0 (RX) ──[1 kΩ]── 驅動板 RX     Waveshare 標示：RX→RX、TX→TX（不交叉）
-UNO Q D1 (TX) ──[1 kΩ]── 驅動板 TX
-UNO Q GND ────────────── 驅動板 GND
-驅動板跳線：A（UART 模式）；電源 = 伺服額定電壓（12 V 版給 12 V）
+UNO Q D0 (RX) ──[1 kΩ]── driver board RX     Waveshare labels: RX→RX, TX→TX (not crossed)
+UNO Q D1 (TX) ──[1 kΩ]── driver board TX
+UNO Q GND ────────────── driver board GND
+Driver board jumper: A (UART mode); power = servo rated voltage (12 V for the 12 V version)
 ```
 
-實測驅動板 TX／RX 為 3.3 V 邏輯。驅動板有自己的電源，UNO Q 沒電時它仍會經 D0／D1 送電，所以要串電阻並遵守上電順序。
+The driver board TX / RX were measured to be 3.3 V logic. The driver board has its own supply and still feeds current through D0 / D1 when the UNO Q is unpowered, so use series resistors and follow the power-up sequence.
+
+### 3.9 Shell sampling valve and feed valve (STS3215 ×2, v6.0)
+
+The two new servos are **in parallel with the pinch valve on the same bus** (same driver board, same baud rate). All STS3215 servos ship as **ID 1**, the same as the pinch valve, so on first wiring you must change the IDs one servo at a time:
+
+1. Power off, connect only new servo A (unplug the pinch valve first), power on, and in the web UI go to **Sampling & feed valves (STS3215) → Valve setup (positions / servo ID) → Change servo ID (new servos ship as ID 1)** and change 1 to **2** (shell sampling valve).
+2. Power off, swap in new servo B and likewise change 1 to **3** (feed valve).
+3. Power off and reconnect all three. The ID is stored in the servo EEPROM and is not lost on power-off.
+
+| Valve | ID | Closed | Second position | Third position | After boot |
+|---|---|---|---|---|---|
+| Shell sampling valve | 2 | 315° (3584) | To sensor 270° (3072) | Fully open: sensor + collection bottle 0° (0) | To sensor (or the state the user last selected) |
+| Feed valve | 3 | 315° (3584) | Base 270° (3072) | External feed 180° (2048) | Closed (or the state the user last selected; "Base" is not restored) |
+
+Angle conversion: position = angle ÷ 360 × 4096. If the actual mounting is off, in **Valve setup** use **Torque off (turn by hand)** to turn it by hand or **Move** to approach the position, then press **Save position**.
 
 ---
 
-## 4. 電氣安全規則（必讀）
+## 4. Electrical safety rules (must read)
 
-2026-10 已燒毀兩塊 UNO Q（3.3 V 對 GND 短路、板背電源晶片發熱）。程式碼經逐行檢查，無法造成這種損壞；原因在外部電壓或電流進入 UNO Q。以下規則全部適用：
+Two UNO Q boards were destroyed in 2026-10 (3.3 V shorted to GND, power IC on the back of the board overheating). The code was checked line by line and cannot cause this kind of damage; the cause is external voltage or current entering the UNO Q. All of the following rules apply:
 
-1. **任何改線前，所有電源（12 V、供電板、UNO Q）都要先斷電。** 不在通電時插拔、不「先插新線再拔舊線」。
-2. **UNO Q 的 3.3 V、5 V、VIN 腳只往外供電給小負載**（溫度計、上拉電阻），絕不與供電板、L298N 或任何外部電源相接。
-3. **上電順序**：先 UNO Q（USB-C），等 Serial Monitor 出現 `[boot] … entering loop()`，再開 12 V 與供電板；關機反過來。外部電源先開會從訊號腳倒灌，使 MCU 無法開機，長期可能燒毀。
-4. **每條訊號線串限流電阻**：D0、D1、D5、D6、D9 各 1 kΩ；D2、A0–A2、A4 各 4.7 kΩ。即使線上意外出現 5 V／12 V，電流也被限制。
-5. **所有進入 UNO Q 的訊號 ≤ 3.3 V**。接新板前，拔掉 UNO Q、打開所有外部電源，用電表量每條線：
-   - D0、D2、SDA、SCL、A0–A4：≤ 3.3 V
-   - 原本接 UNO Q 3.3 V／5 V／VIN 的線：0 V
-   - 量到 3 V 以上的線，並接 1 kΩ 到 GND 再量；電壓幾乎不掉代表推得出電流，要特別處理。
-6. **L298N**：見 §3.5（拔 ENA 跳線、+5V 空接、12 V 端並電容、10 kΩ 下拉、星狀接地）。
-7. **液體**：系統有培養液，檢查麵包板與接線附近沒有液體或乾掉的鹽漬。
-8. **新板第一次只接 USB** 跑 `mcu_selftest`，正常後再一組一組接回周邊，每接一組重開一次確認。
+1. **Before any rewiring, power everything off (12 V, power distribution board, UNO Q).** Never plug or unplug while powered, and never "plug in the new wire before removing the old one".
+2. **The UNO Q 3.3 V, 5 V and VIN pins only supply small loads outward** (thermometer, pull-up resistors) and must never be connected to the power distribution board, the L298N or any external supply.
+3. **Power-up sequence**: first the UNO Q (USB-C); wait until the Serial Monitor shows `[boot] … entering loop()`, then switch on 12 V and the power distribution board; reverse the order when shutting down. Switching external power on first back-feeds through the signal pins, prevents the MCU from booting, and can destroy it over time.
+4. **Put a current-limiting resistor in series with every signal line**: 1 kΩ each on D0, D1, D8–D13; 4.7 kΩ each on D2, A0–A2, A4. Even if 5 V / 12 V accidentally appears on a line, the current is limited.
+5. **Every signal entering the UNO Q must be ≤ 3.3 V.** Before connecting a new board, unplug the UNO Q, switch on all external supplies and measure every line with a multimeter:
+   - D0, D2, SDA, SCL, A0–A4: ≤ 3.3 V
+   - Lines that used to go to the UNO Q 3.3 V / 5 V / VIN: 0 V
+   - For any line reading 3 V or more, put 1 kΩ to GND across it and measure again; if the voltage barely drops, the line can source real current and needs special handling.
+6. **L298N**: see §3.5 (remove the ENA jumper, leave +5V unconnected, capacitors on the 12 V input, 10 kΩ pull-downs, star grounding).
+7. **Liquids**: the system contains culture medium; check that there is no liquid or dried salt residue near the breadboard and wiring.
+8. **On a new board, first connect only USB** and run `mcu_selftest`; once it passes, reconnect the peripherals one group at a time, rebooting after each group to confirm.
 
-**根本解法（待實作）**：外部電源由 MCU 控制的繼電器或負載開關供電（D7），MCU 開機完成後才通電，UNO Q 斷電時外部電源也一起斷。
+**Root fix (to be implemented)**: power the external supplies through a relay or load switch controlled by the MCU (D7), so they are switched on only after the MCU has finished booting and are cut together with the UNO Q.
 
 ---
 
-## 5. 部署與開機
+## 5. Deployment and boot
 
-1. App Lab → Import App → 選完整 App zip（或整檔取代 `sketch.ino`、`main.py`、`index.html`，不要複製貼上片段）。
-2. 執行。App Lab 輸出視窗應看到 `SCServo` 被加入、`Sketch uses … bytes`、燒錄完成。
-3. Serial Monitor 應依序出現：
+1. App Lab → Import App → select the complete App zip (or replace `sketch.ino`, `main.py` and `index.html` as whole files; do not copy and paste fragments).
+2. Run. The App Lab output window should show `SCServo` being added, `Sketch uses … bytes`, and the upload completing.
+3. The Serial Monitor should show, in order:
    ```
-   [boot] 整合版 sketch v3.10.8 啟動中 … Bridge.begin=OK
-   [boot] t=… ms: Bridge 函式已註冊, 接著初始化感測器
-   [boot] I2C 檢查花了 … ms
+   [boot] ReLeaf sketch v4.0.0 (raw acquisition) starting, Bridge.begin=OK
+   [boot] step: core Bridge functions registered
+   [boot]   sample    0x5C: ok (0 ms)        ← ok / nak (no device at the address) / timeout (bus hung)
+   [boot]   reference 0x23: ok (0 ms)
+   [boot] BH1750 (MTreg 69, H-res mode 2) sample=OK reference=OK
+   [boot] ready (raw acquisition: on_p_raw / on_flow_raw / on_od_raw / on_aux_raw)
    [boot] entering loop()
+   [diag] loop_max_us=… p_samples/s=100 pskip=0 pbatch=… …   ← one line every 10 seconds
    ```
-4. 瀏覽器開 `http://<板子 IP>:7000`（不要用檔案預覽）。換檔後按 Ctrl+Shift+R，確認狀態列顯示「MCU：正常（v3.10.8）」、`main.py v4.11`、`UI v4.12`。
-5. 開機後 LED 燈號：快閃 2 下 → 恆亮（連接 Bridge）→ 熄滅後閃 3 下（初始化完成）。完全不閃 = sketch 沒載入；停在恆亮 = 卡在 Bridge。
+4. Open `http://<board IP>:7000` in a browser (do not use the file preview). After replacing files press Ctrl+Shift+R and confirm that the status bar shows "MCU: ● OK (v4.0.0)", `main.py v5.1` and `UI v5.1`.
+5. LED pattern after boot: 2 quick blinks → steady on (connecting to Bridge) → off, then 3 blinks (initialisation complete). No blinking at all = sketch not loaded; stuck at steady on = stuck at Bridge.
 
-**MCU 完全沒回應（沒有 `[boot]`、Python 顯示 `method … not available`）**：拔掉 UNO Q 的 USB-C，等 10 秒以上再插回。重新執行 App 不會重開 Linux 端的 Bridge 服務。
-
----
-
-## 6. 首次設定流程
-
-新組管路、換膜或換板子後依序做：
-
-1. **壓力歸零**：洩壓（通大氣）狀態下按「壓力歸零」。
-2. **ρgh 自檢**：停泵（PWM 0）→「開始自檢」。等 10 s 流動衰減、記錄 30 s，讀數須為平台（≤ 0.15 kPa/min）。
-3. **ΔP–Q 掃描**：乾淨的膜、夾閥放開 → 填 PWM 點 → 開始掃描 → 檢查結果後套用擬合（§7.3）。
-4. **pH 校正**：pH 7.00 → pH 4.01 標準液，溫度預設用溫度計（溫度計要一起放進標準液）。
-5. **夾閥位置**：移動伺服到剛好夾住管子 →「目前位置記為夾閉」；開的位置同理。
-6. **操作參數**：確認 Q_L 來源、Q_perm、培養體積（§7.2）。
-7. **輸出校正值**備份（§11）。
+**MCU not responding at all (no `[boot]`, Python shows `method … not available`)**: unplug the UNO Q USB-C, wait at least 10 seconds and plug it back in. Re-running the App does not restart the Bridge service on the Linux side.
 
 ---
 
-## 7. 網頁介面
 
-三欄版面：生長參數｜壓力與膜過濾監測｜控制。預設英文，可切換正體中文（記在瀏覽器）。帶「ⓘ」或可點擊的數值會跳出說明（意義與正常範圍）。
+**First bring-up check on the board (v5.0 not yet tested on real hardware)**
 
-### 7.1 生長相關參數
+1. Serial Monitor `[diag]` lines: `p_samples/s` should be close to 100 and `pskip` should not keep increasing.
+2. The Python Console should not show `on_p_raw parse failed`; it should show `[mcu] firmware version: v4.2.0` without the version-mismatch warning `!! differs from … expected by main.py`.
+3. Pressure values in the web UI move and the flow rate roughly matches reality; under **Engineering mode → MCU link status & tests**, the diagnostics show no steadily increasing `p_dropped_batches` (it increases when Bridge bandwidth is insufficient; see §12).
+4. Record for 1 minute and stop; under **Recordings on the board** press **raw data**, and you should see `pressure_*.csv.gz`, `flow_*`, `aux_*`, `od_raw.csv`, `events.csv`, `meta.json`.
 
-- **OD600**：每 30 s 自動量測一次（可在取樣設定調整），可在工程模式校正 blank。
-- **pH**：每秒更新；溫度補償預設使用溫度計，讀不到才用手動溫度。
-- **溫度**：DS18B20 讀值、來源（溫度計／手動）、狀態；「溫度計診斷／立即重新搜尋」按鈕。讀不到時 Serial Monitor 每 10 s 印一行 `[ds18b20] 搜尋 #N: 原因`，正常時每 30 s 印溫度。
+## 6. First-time setup procedure
 
-### 7.2 壓力與膜過濾監測
+After assembling new tubing, changing the membrane or changing the board, do the following in order:
 
-- 數值方塊：TMP_out、ΔP 比值、γ_ratio、剪切率、L_p、J、D 等（§8.4）。
-- **操作參數輸入**：Q_L 來源（流量計／手動）與手動 Q_L、Q_perm（可用「收集量 g ÷ 時間 min」計算）、培養體積 V。
-- 趨勢圖：堵塞指標（γ_ratio、ΔP 比值）、L_p；P_out 瞬時波形。
-- 「重力 offset 自檢與設定」：ρgh 自檢、手動 ρgh／a／b／Q_perm、以目前狀態設為 ΔP 基準（單點縮放）、ΔP–Q 掃描。
-
-### 7.3 ΔP–Q 掃描
-
-- 填 2–10 個 PWM 點、掃描順序（預設**由高到低**，避免低 PWM 從靜止起動不穩）、每點穩定時間（20 s）與記錄時間（30 s）。
-- 每點記錄 ΔP_total = P_in − P_out 與流量，ΔP_friction = ΔP_total − ρgh。
-- 擬合過原點的二次 `a·Q + b·Q²` 與線性 `a·Q`，顯示 R² 與殘差；b < 0 時建議線性。按「套用」才寫入。
-- 掃描結束恢復原本的 PWM；途中手動改 PWM 或急停會中止，且不會把幫浦開回去。
-- 量測點與擬合結果（含 `dp_total_kpa`，ρgh 重測後可重新擬合）都會存檔並可輸出。
-
-### 7.4 蠕動幫浦
-
-- PWM 拉桿或輸入格只是預覽，按「套用」才送出；切換方向或急停會先把 PWM 歸零。急停同時放開夾閥。
-- 流速卡片點一下開啟流速即時曲線。
-- **啟動助推**：從停止啟動時先以助推 PWM（預設 255）跑 500 ms 再降回目標值，解決低 PWM 起動不了的問題。選用「停轉自動再助推」：流量計 3 s 無脈衝時再助推一次，最多 3 次，夾閥未開時不做。
-
-### 7.5 夾閥（STS3215）
-
-夾閉／放開、已夾閉時間、即時 TMP、FAULT 與「解除」、事件紀錄（每次夾閉的時長、TMP 平均／峰值、放開原因）。夾閥設定包含開／夾閉位置、**TMP 上限**、**Lumen in 上限與判斷依據**、最長夾閉時間、扭力、速度、伺服 ID 與鮑率、自動掃描、D0–D1 迴路測試。
-
-### 7.6 資料記錄
-
-開始、暫停、停止並存檔、**中途存檔**、定時錄製、板子上的錄製檔清單（§10）。
-
-### 7.7 其他面板（預設收合）
-
-- **取樣設定**：取樣視窗長度、聚合方式（中位數／平均）。
-- **pH 探頭校正**、**校正值管理**（含輸出／輸入、手動輸入 pH 兩點校正值）、**規格管理**（膜模組幾何、體積、流體性質、告警門檻）。
-- **演算法切換**：流量、OD600 估計、分析來源、聚合、穩態、曲率。
-- **工程模式**：OD600 blank／立即量測／光程係數、LED 對光模式（強制恆亮與即時比值）、**MCU 連線狀態與測試**（§12）。
+0. **When upgrading from v4.x**: the OD600 sensor setting changed to MTreg 69 + high-resolution mode 2 (photometer v1.2.0), so **old blanks no longer apply; take a new blank** (the old value is applied initially but flagged with a yellow notice). Pressure zero offsets and pH calibration values are kept.
+1. **Pressure zeroing**: with the system vented (open to atmosphere), press **Zero calibrate** (v5.0: Python collects 3 seconds of raw data, averages it, then pushes it to the MCU for the safety interlocks).
+2. **ρgh self-test**: stop the pump (PWM 0) → **Start self-test**. It waits 10 s for the flow to decay and records 30 s; the reading must be a plateau (≤ 0.15 kPa/min). **Redo this every time the module is re-mounted**: ρgh is set by the vertical height difference between the two ends; tilted inside the incubator (about 40–50 cm) it is about 3.9–4.9 kPa, not the 5.9 kPa of a fully vertical module.
+3. **ΔP–Q sweep**: clean membrane, pinch valve open → enter the PWM points → **Start sweep** → review the result and apply the fit (§7.3).
+4. **pH calibration**: pH 7.00 → pH 4.01 buffer; the temperature defaults to the thermometer (put the thermometer into the buffer as well). v5.0 uses the average voltage of the last 5 seconds as the calibration point; the buffer temperature at the pH 4.01 point is the calibration temperature for the slope.
+5. **Pinch valve positions**: move the servo until it just pinches the tube → **Save current as "pinched"**; same for the open position.
+6. **Operating parameters**: check the Q_L source, Q_perm and culture volume (§7.2).
+7. **Export calibration** as a backup (§11).
 
 ---
 
-## 8. 量測與計算
+## 7. Web UI
 
-單位基準：壓力 **bar**（衍生參數用 kPa）、流速 **mL/min**、OD600 **AU**。
+Two layouts can be selected at the top right (remembered by the browser; you can also force one by adding `?mode=local` or `?mode=pc` to the URL):
 
-### 8.1 壓力
+- **Desktop** (PC view), v6.1 layout in three columns:
+  - **Left**: OD600 (chart on top, value cards below it, the specific growth rate μ next to the current OD600), then pH (chart, then current pH / temperature / probe voltage), then **pH meter calibration & adjustment** (open by default; it holds probe calibration, automatic pH control and the base pump, and shows the automatic pH state in its header when collapsed).
+  - **Middle**: pressure and derived analysis; the pressure-protection limit sits in the toolbar; the four pressure cards and the max-pressure status bar sit below the chart.
+  - **Right**: main pump, **feed valve & feed pump** (v6.2.1), **pinch valve & shell sampling valve** (v6.2.1), data recording (with **Sampling settings** and **Algorithm selection** folded inside it), then the collapsed **Calibration values & specs**. **Engineering mode** is folded at the bottom of the OD600 panel.
+- **Local 1024×600** (local display): for the 7-inch touch screen attached to the board. The page does not scroll; the bottom is split into five tabs (**Monitor**, **pH / Temp**, **Pumps / Valves**, **Record**, **Settings**), with enlarged buttons.
+
+The local display has a **key-value bar** at the top (v6.1: the PC view has none, its panels show the same values), sized by priority: **OD600 > max pressure > pH > temperature = flow**. The red line on the max-pressure bar is the pressure protection limit; tapping any cell jumps to the corresponding panel (in local mode it switches to the corresponding tab). When pressure protection trips, a red banner with a **Clear pressure trip** button appears above the bar and is visible on every tab.
+
+The web UI starts in English; the language switch at the top right changes it to Traditional Chinese and back (remembered by the browser). Messages that come from the backend (fault reasons, log lines) stay in English in either language. Values marked "ⓘ" or clickable values open an explanation (meaning and normal range).
+
+### 7.1 Growth-related parameters
+
+- **OD600**: measured automatically every 30 s (adjustable in the sampling settings); the blank can be calibrated in engineering mode.
+- **pH**: updated every second; temperature compensation uses the thermometer by default and falls back to the manual temperature only when the thermometer cannot be read.
+- **Specific growth rate μ** (v6.1): second card below the OD600 chart, in h⁻¹, with doubling time, R² and the number of points in the fit window. Computed by the backend (§8.3); the fit window, minimum points and minimum OD are set at the bottom of **OD600 gating layer**.
+- **Temperature** (v6.1: inside the pH panel): tap the **Temp (compensation)** card to open the temperature trend, the DS18B20 status and source (thermometer / manual), the **manual temperature** input (used when the thermometer cannot be read) and **Probe diagnostics / rescan now**. When the sensor cannot be read, the Serial Monitor prints `[ds18b20] search #N: <reason>` every 10 s; when it works, the temperature is printed every 30 s.
+
+### 7.2 Pressure and membrane filtration monitoring
+
+- **Derived parameter monitoring table** (v6.0, expandable): when collapsed, the header shows L_p, TMP_in, γ_ratio and the number of warning / critical items; when expanded, one table lists the key indicators (L_p, TMP_in, TMP_out, γ_ratio, ΔP ratio, shear rate, J) and the secondary / diagnostic parameters (§8.4). Abnormal rows are highlighted yellow / red; click a row name to open its explanation.
+- **Operating inputs**: Q_L source (flow meter / manual) and manual Q_L, Q_perm (can be computed with **Q_perm from collected amount ÷ time**, g ÷ min), culture volume V.
+- Trend charts: clogging indicators (γ_ratio, ΔP ratio), L_p; instantaneous P_out waveform.
+- **Gravity-offset self-test & settings**: ρgh self-test, manual ρgh / a / b / Q_perm, **Set current state as ΔP baseline** (single-point scaling), ΔP–Q sweep.
+
+### 7.3 ΔP–Q sweep
+
+- Enter 2–10 PWM points, the sweep order (default **high to low**, to avoid unstable starts from rest at low PWM), the settle time per point (20 s) and the record time (30 s).
+- Each point records ΔP_total = P_in − P_out and the flow; ΔP_friction = ΔP_total − ρgh.
+- Fits a quadratic through the origin `a·Q + b·Q²` and a linear `a·Q`, showing R² and residuals; linear is recommended when b < 0. Nothing is written until you press **Apply**.
+- After the sweep the original PWM is restored; manually changing the PWM or an emergency stop aborts the sweep and does not turn the pump back on.
+- Measured points and the fit result (including `dp_total_kpa`, so the fit can be redone after ρgh is re-measured) are saved and can be exported.
+
+### 7.4 Peristaltic pump
+
+- The PWM slider or input box is only a preview; nothing is sent until you press **Apply**. Changing direction or pressing **Emergency Stop** first sets the PWM to zero. Emergency stop also releases the pinch valve.
+- Click the flow-rate card to open the live flow-rate chart.
+- **Kick-start**: when starting from stop, the pump first runs at the kick PWM (default 255) for 500 ms, then drops back to the target value; this solves pumps not starting at low PWM. Optional **Re-kick on stall**: if the flow meter sees no pulses for 3 s, kick once more, up to 3 times; not done while the pinch valve is not open.
+
+### 7.5 Pinch valve (STS3215)
+
+Pinch / release, pinched time, live TMP, FAULT and **Clear**, event log (duration of each pinch, TMP mean / peak, release reason). The pinch valve settings include the open / pinched positions, **TMP limit**, **Lumen in limit and basis**, maximum pinch time, torque, speed, servo ID and baud rate, auto-scan, and the D0–D1 loopback test.
+
+### 7.5b Pressure protection, sampling and feed valves, base pump, automatic pH (v6.0)
+
+(v6.1: automatic pH control is inside **pH meter calibration & adjustment**; v6.2: the second pump is the feed pump in the pump column, and manual dosing / dosing settings are part of automatic pH control.)
+
+- **Pressure protection** (v6.1: in the pressure panel toolbar): limit setting (default 0.70 bar), live max-pressure bar, trip count, **Clear pressure trip** (§9.3).
+- **Feed valve & feed pump** (v6.2.1, right below the main pump): the feed valve's three state buttons (Closed / Base / External feed, with position / temperature / load), then the feed pump (single direction, v6.2.2): PWM slider / input, **Apply** and **Stop**. The pump will not start while the feed valve is fully closed; automatic pH pauses while it runs. **Wiring check** (folded): hold IN3 or IN4 high for a few seconds, pin read-back (§3.5b).
+- **Pinch valve & shell sampling valve** (v6.2.1): the pinch valve controls, then the shell sampling valve's three state buttons. Since v6.2 the feed valve's **Base** position can be selected by hand (needed for manual dosing). **Sampling & feed valve setup (positions / servo ID)** (at the bottom of this panel): move to a raw position, torque off / on, **Save current position as** a given state, ID / speed / acceleration, **Change servo ID**.
+- **Manual dosing & base dosing settings** (v6.2: inside automatic pH control): dosing state, seconds used this hour, **Manual dose (s, 0.1–10)** (only while the feed valve is set to Base and the feed pump is stopped; the valve is not turned automatically any more), dosing PWM and hourly limit.
+- **Automatic pH control**: **Enable automatic base dosing** (asks for confirmation), target pH, start deadband, high pH alarm, dose length per dose, advanced steady-state criteria and limits; state, doses this hour, pH change after the last pulse, **Clear FAULT** (§9.4).
+
+### 7.6 Data recording
+
+**Start Recording**, **Pause**, **Stop & Save**, **Save checkpoint**, **Timed Recording**, and the **Recordings on the board** list (§10).
+
+### 7.7 Other panels (collapsed by default)
+
+- **Sampling Settings**: sampling window length, aggregation method (median / mean).
+- **pH probe calibration**, **Calibration Values** (including export / import and manual entry of the two pH calibration points), **Specifications** (membrane module geometry, volumes, fluid properties, alarm thresholds).
+- **Algorithm selection**: flow, OD600 estimator, analysis source, aggregation, steady state, curvature.
+- **Engineering mode**: OD600 blank / **Measure Now** / path-length factor, **LED alignment** mode (LED forced on with live ratio), **MCU link status & tests** (§12).
+
+---
+
+## 8. Measurements and calculations
+
+Since v5.0 everything is computed in Python (`python/main.py`); the MCU only sends raw counts. Base units: pressure **bar** (kPa for derived parameters), flow rate **mL/min**, OD600 **AU**.
+
+### 8.1 Pressure
 
 ```
-V_pin    = ADC / (2^14 − 1) × 3.3 V        （14-bit，16 點過取樣，丟棄換通道後第一筆）
-V_sensor = V_pin / 0.5946
-bar      = V_sensor / 5.0 × 10.0 − offset
+MCU:    one sample every 10 ms = after switching channel, discard one reading + sum of 16 ADC readings (14-bit, 0~262128); three channels in turn
+Python: bar = sum / 16 / (2^14 − 1) × VREF / divider ratio / 5 V × 10 bar − zero offset
 ```
 
-100 Hz 取樣 → 1 s 滑動視窗 → 每 200 ms 統計 peak／trough／mean／脈動頻率並推送。
+- The conversion constants (VREF 3.3, divider ratio 22/37, ADC resolution, oversampling count) are provided by MCU `get_config()`; if you change the resistors, only change `DIV_R_TOP_KOHM` and `DIV_R_BOTTOM_KOHM` in the sketch.
+- For each batch (200 ms), peak / trough / mean / pulsation frequency over the last 1 s are computed; once the pulsation frequency f is measured, the window is automatically lengthened to 3 / f seconds (at most 5 s) so that it covers several cycles.
+- **TMP peak / trough use the same instant**: (Feed + Retentate)/2 − Permeate (v4.x combined the extremes of each channel separately). Strict TMP_out = minimum of the same-instant P_out − P_s over the last 3 s.
+- The mean additionally gets an EMA (α = 0.3) for display; the analysis source now defaults to `raw`, without EMA.
+- Zero offsets are stored on the Linux side; the same set of zero offsets is pushed to the MCU for the safety interlocks.
 
-### 8.2 流量
+### 8.2 Flow
 
-`flow (mL/min) = 脈衝頻率 × 60 / 2580 × 1000`；兩脈衝間隔 < 500 µs 視為彈跳。
+Every second the MCU sends: pulse count, time from the first to the last pulse, cumulative pulses. Python:
 
-### 8.3 OD600
+- Gate count = pulses ÷ 1 s; reciprocal count = (pulses − 1) ÷ first-to-last interval (default; much more precise at low flow).
+- **Flow for an aggregation window = total pulses in the window ÷ total time**, without the ±1-pulse quantisation of a 1 s gate (at 130 mL/min one pulse = 23 mL/min).
+- Pulses per liter are in `constants.json → flow.pulses_per_liter` (large bore 2580, small bore 5160), so changing the flow meter does not require reflashing the MCU.
 
-`OD600 = log10(blankRatio / ratio) × pathLengthFactor`，ratio = (sample 亮 − 暗)／(ref 亮 − 暗)；pathLengthFactor 預設 5.0。每次量測：4 筆暗電流 → LED 亮 60 ms → 16 筆 burst → MAD 剔除氣泡 → 拒收 > 50% 重試一次，全程非阻塞。
+### 8.3 OD600 (ported from inline photometer v1.2.0)
 
-### 8.4 膜過濾衍生參數（kPa）
+- MCU: each measurement takes 4 dark readings → LED on for 60 ms → 16 lit readings; both BH1750s are fixed at MTreg 69 + high-resolution mode 2 (0.5 lx/count). **Hardware-level self-repair stays on the MCU**: all lit readings identical (stuck) → reset the I2C controller immediately and retry within the same measurement; read failure → non-blocking re-initialisation; sensors that failed at boot are retried automatically every 10 s; 3 consecutive I2C transactions ≥ 50 ms → pause that sensor for 2 s. Engineering mode also has a **Re-initialise light sensors** button.
+- Python: 8 algorithms (mad, qn, biweight, upper, mean, median, p75, p90) are computed simultaneously on every measurement, each with its own blank; the OD600 estimator in **Algorithm selection** determines the displayed value and validity (default `upper`), and all 8 are written to the CSV. If the bubble fraction (share of readings more than 5% below the upper envelope P90) exceeds half, all algorithms are judged invalid and a new measurement is taken immediately.
+- **Specific growth rate μ** (v6.1, `python/growth_rate.py`): least-squares slope of ln(OD600 reported value) against time over the last `window_min` minutes (default 60), using only readings the OD gate accepted and above `min_od` (default 0.02). It is shown once there are at least `min_points` readings (6) spanning `min_span_min` minutes (15). Doubling time = ln 2 / μ. The window restarts after a declared operation, a confirmed level shift, a new blank / estimator / path-length factor or a gate reset, so a dilution step does not appear as negative growth. Defaults are in `constants.json → od600.growth_rate`; values changed in the web UI are saved to `ph_valve_state.json`. The window starts empty after the App restarts.
+- `OD600 = log10(blank S/R ÷ current S/R) × path-length factor` (default 5.0 = 1 cm / 0.2 cm). Single-beam mode (`constants.json → od600.optical_mode = single`) uses only the sample sensor.
 
-| 參數 | 定義 |
+### 8.4 Membrane filtration derived parameters (kPa)
+
+| Parameter | Definition |
 |---|---|
-| TMP_out | P_out − P_s；嚴格版用最近數秒 P_out 波谷 − P_s |
-| ΔP_friction | (P_in − P_out) − ρgh（扣除垂直模組水柱） |
-| ΔP 比值 | ΔP_friction ÷ (a·Q + b·Q²) |
-| τ_w | ΔP_friction × d ÷ (4L) |
-| γ_pressure | τ_w ÷ μ |
-| γ_flow | 8v ÷ d（約 Q × 15.4） |
-| γ_ratio | γ_pressure ÷ γ_flow（主要堵塞指標） |
-| J、L_p、D | J（LMH）由 Q_perm 與膜面積；L_p = J ÷ TMP_mean（長期主判據）；D = Q_perm × 0.06 ÷ V |
-| 其他 | Re、TMP_in、TMP 不均勻度、R_t、τ_shell |
+| TMP_out | P_out − P_s; the strict version uses the minimum of the same-instant P_out − P_s over the last 3 s |
+| TMP_in | P_in − (P_s + ρgh) |
+| TMP_mean | **(TMP_in + TMP_out)/2 = (P_in + P_out)/2 − P_s − ρgh/2** (v5.0 fix: v4.x did not subtract ρgh/2) |
+| ΔP_friction | (P_in − P_out) − ρgh (subtracts the water column of the height difference between the two ends) |
+| ΔP ratio | ΔP_friction ÷ (a·Q + b·Q²) |
+| τ_w, γ_pressure | ΔP_friction × d ÷ (4L); τ_w ÷ μ |
+| γ_flow, γ_ratio | 8v ÷ d; γ_pressure ÷ γ_flow |
+| μ | **v5.0: when spec `mu_from_temp` = 1 and the DS18B20 has a reading, μ = viscosity of water at that temperature × `mu_water_factor`**; otherwise the fixed `mu_cp`. CSV column `mu_cp_used` |
+| J, L_p, D, R_t, τ_shell | Based on manual Q_perm; L_p = J ÷ TMP_mean. **The initial L_p value is captured only at steady state; changing Q_perm re-captures it** |
 
-Q_L 預設來自流量計，可改手動。比值類參數在 Q_L < 10 mL/min 時不計算。
+Q_L comes from the flow meter by default and can be switched to manual. Ratio-type parameters are not computed when Q_L < 10 mL/min or when the flow data is stale.
 
-**告警**：TMP_out ≤ 0（倒流風險）、P_out 波谷 − P_s ≤ 0、ΔP 比值 > 1.3、γ_ratio > 1.3、L_p < 初始值 70%、P_s 無故上升 > 2 kPa。夾閥夾閉時會暫停與夾閉直接相關的告警。
+**Alarms**: TMP_out ≤ 0, strict TMP_out ≤ 0, **instantaneous TMP peak > 0.5 bar, instantaneous TMP trough (minus ρgh/2) < −0.02 bar (restored in v5.0)**, TMP_mean > 50 kPa, ΔP ratio > 1.3, γ_ratio > 1.3, L_p < 70% of the initial value, P_s more than 2 kPa above the self-test value. Clogging-type alarms are suspended while the pinch valve is pinched and for 60 s after release.
 
-### 8.5 pH 與溫度
+ΔP–Q sweep fit: linear is recommended when the quadratic term is negative, there are fewer than 4 points, or the adjusted R² of the quadratic is no better than the linear fit.
 
-每 500 ms 一筆（256 點過取樣、非阻塞），Nernst 斜率依溫度補償，突變需連續 3 次確認，EMA 濾波。讀值超出 2–12 標記 PROBE_ERROR，不寫入 CSV 的 pH。
+### 8.5 pH and temperature
+
+- MCU: every 500 ms, sum 256 ADC readings; read the DS18B20 raw value (1/16 °C) once per second.
+- Python: voltage = sum ÷ 256 ÷ (2^14 − 1) × 3.3 V; temperature from the DS18B20 (status OK, read within 5 s, −10~100 °C, not 85.0), otherwise the manual temperature; `pH = 7 + (V − V7) × 2.99/(V7 − V4) × (T_cal + 273.15)/(T + 273.15)`; a jump > 0.5 must be seen 3 times in a row, then EMA (α = 0.2). Values outside 2–12 are flagged PROBE_ERROR and not written to the pH column of the CSV.
 
 ---
 
-## 9. 安全保護機制
+## 9. Safety protection mechanisms
 
-全部在 MCU 執行，不依賴 Linux 或網頁。
+All run on the MCU and do not depend on Linux or the web UI.
 
-### 9.1 夾閥自動放開
+### 9.1 Automatic pinch valve release
 
-| 觸發條件（夾閉中） | 動作 |
+| Trigger (while pinched) | Action |
 |---|---|
-| **Lumen in（P_in, A0）> `feed_limit`**（預設 **0.5 bar**），連續 2 個 200 ms 視窗（約 0.4 s） | 放開 + 鎖存 FAULT |
-| TMP 瞬時峰值 > `tmp_limit`（預設 0.5 bar），連續 2 個視窗 | 放開 + 鎖存 FAULT |
-| 夾閉時間 > `max_close_s`（預設 900 s） | 放開 + 鎖存 FAULT |
-| 伺服溫度 ≥ 60 °C | 放開 + 鎖存 FAULT |
-| 夾閉中伺服連續 3 次沒回應 | 鎖存 FAULT；重新上線時自動走到「開」 |
-| 幫浦急停 | 放開（不鎖 FAULT） |
-| MCU 開機 | 一律走到「開」 |
+| **Lumen in (P_in, A0) > `feed_limit`** (default **0.5 bar**) for **5 consecutive 10 ms samples (50 ms)** | Release + latch FAULT |
+| Same-instant TMP = (Feed + Retentate)/2 − Permeate > `tmp_limit` (default 0.5 bar) for 5 consecutive samples | Release + latch FAULT |
+| Pinch time > `max_close_s` (default 900 s) | Release + latch FAULT |
+| Servo temperature ≥ 60 °C | Release + latch FAULT |
+| Servo does not respond 3 times in a row while pinched | Latch FAULT; moves to "open" automatically when it comes back online |
+| Pump emergency stop | Release (no FAULT latch) |
+| MCU boot | Always moves to "open" |
 
-- Lumen in 判斷依據可選：**瞬時峰值**（預設，較保守，含蠕動幫浦脈動）或**平均值**（最近 1 秒滑動視窗的平均，較不會因脈動誤觸）。在「夾閥設定」修改。
-- 觸發時 Serial Monitor 印 `[valve] !! 壓力過高, 自動放開夾閥: Lumen in peak 0.549 bar > 0.50`，網頁顯示 FAULT，事件紀錄寫入放開原因。
-- FAULT 狀態下拒絕夾閉，必須先排除原因再按「解除」。
-- 舊存檔中的 Lumen in 上限若仍是舊預設 1.0 bar，升級後第一次啟動會自動改成 0.5 bar（只做一次；之後自己改的值不再變動）。
+- Firmware v4.0.0: every 10 ms sample is checked, and the valve is released after 5 consecutive samples over the limit. v3.10.x used "peak of a 1 s sliding window, 2 consecutive 200 ms windows", but adjacent windows overlapped by 80%, so a single 10 ms noise spike could trigger it.
+- The Lumen in basis is selectable: **instantaneous value** (default, 5 consecutive samples) or **mean of the last 1 second** (less prone to false triggers from pulsation). Change it under **Valve settings (open/closed positions, speed, safety limits)** (UI options: **Instantaneous peak (stricter)** / **Mean**).
+- On a trigger the Serial Monitor prints `[valve] !! pressure too high, pinch valve auto-released: Lumen in 0.549 bar > 0.50`, the web UI shows FAULT, and the release reason is written to the event log.
+- In the FAULT state pinching is refused; remove the cause first, then press **Clear**.
+- If an old saved Lumen in limit is still the old default of 1.0 bar, it is changed automatically to 0.5 bar on the first start after the upgrade (done only once; values you change yourself afterwards are left alone).
 
-### 9.2 幫浦
+### 9.2 Pumps
 
-開機第一步把 D9／D5／D6 拉低；急停把 PWM 歸零並放開夾閥。硬體上建議再加 10 kΩ 下拉（§3.5）。
+The first boot step drives D8–D13 all low; emergency stop stops both pumps and releases the pinch valve. In hardware, adding 10 kΩ pull-downs is recommended (§3.5).
 
----
+### 9.3 Pressure protection (v6.0, runs on the MCU, effective whether the pinch valve is open or closed)
 
-## 10. 資料記錄
-
-- 錄製完全在板子上進行：每個取樣視窗（預設 30 s）結束就立即寫入並 fsync 到 `python/recordings/record_YYYYMMDD_HHMMSS.csv`。電腦休眠、關瀏覽器、甚至 App 重啟都不會中斷；App 重啟後自動接續同一個檔，`gap_s` 欄標出中斷時間。
-- **中途存檔**：錄製或暫停中按「💾 中途存檔」，把到目前為止的 CSV 複製成 `原檔名_checkpoint_YYYYMMDD_HHMMSS.csv` 並自動下載，錄製不中斷。
-- 讀不到的資料留空，不會以 0 寫入（例如流量既沒有推送、輪詢也失敗時，該視窗的流量欄為空白，網頁流速卡片變淡）。
-- 下載：停止時自動下載；或從「板子上的錄製檔」清單（HTTP 端點 `/download/recording?name=…`）。
-
-**CSV 欄位（73 欄）**
-
-| 群組 | 欄位 |
+| Trigger | Action |
 |---|---|
-| 視窗 | window_index, elapsed_s, timestamp_start, timestamp_end, window_sec, gap_s, agg_method, n_samples_pressure, n_samples_flow, partial |
-| OD600 | od600_au, od600_lux_sample, od600_lux_ref, od600_bubble_pct, od600_valid, od600_blank_set, od600_age_s, od600_new |
-| 流量 | flow_mlmin, flow_freq_hz, flow_total_ml |
-| 壓力 | pressure_feed_bar, pressure_retentate_bar, pressure_permeate_bar, pressure_tmp_bar, pressure_tmp_peak_bar, pressure_tmp_trough_bar, pressure_cycle_freq_hz |
-| 幫浦／pH／夾閥 | pump_pwm, pump_forward, ph, ph_temp_c, temp_src, ph_state, valve_state, valve_closed_frac, valve_pos |
-| 衍生參數 | delta_p_bar, rho_gh_kpa, tmp_out_kpa, tmp_out_min_kpa, dp_friction_kpa, dp_ratio, tau_w_pa, gamma_pressure_s1, gamma_flow_s1, gamma_ratio, re, tmp_mean_kpa, tmp_in_kpa, tmp_nonuniformity, ps_kpa, q_perm_mlmin, j_lmh, lp_lmh_bar, d_actual_h, rt_m1, tau_shell_min |
-| 趨勢與穩態 | dtmp_dt_bar_per_min, d2tmp_dt2, steady |
-| 視窗內離散 | tmp_sd_bar, tmp_iqr_bar, tmp_min_bar, tmp_max_bar, feed_sd_bar, flow_sd_mlmin, flow_iqr_mlmin, flow_min_mlmin, flow_max_mlmin |
-| 追溯 | alg_profile, config_version, constants_version |
+| **Any one** of Feed / Retentate / Permeate **> limit** (default **0.70 bar**) for **5 consecutive 10 ms samples (50 ms)** | Stop the main pump, stop the base pump, release the pinch valve, latch |
 
-夾閥事件另存 `recordings/valve_events.csv`。
+- While latched, the MCU rejects `set_pump_pwm` (> 0), and the web UI pump panel shows the reason.
+- **Clear pressure trip** succeeds only when the pressure has fallen back below the limit; after clearing, the main pump **stays stopped** and you must press **Apply** again.
+- An MCU reboot clears the MCU-side latch, but the Python side keeps the latch (the pump is not turned back on automatically and the alarm does not disappear); the user still has to clear it.
+- The limit can be changed in the web UI (0.1–5.0 bar); it is saved and pushed back after an MCU reboot. The v4.0.0 pinch valve interlock (§9.1) is kept; both coexist.
+
+### 9.4 Base pump and automatic pH (v6.0)
+
+MCU-side interlocks (effective even if Linux hangs):
+- The pump runs only when the feed valve is **in the Base position and has arrived there**; if the feed valve leaves the position or goes offline during dosing, the pump stops immediately.
+- Single pulse 0.1–10 s (hard limit); hourly cumulative run-time limit (default 60 s, adjustable 0–600 s).
+- It does not run while pressure protection is latched; emergency stop stops it as well.
+
+Python side (`ph_control.py`, pure logic, once per second):
+- pH < target − deadband → feed valve to Base → dose for `pulse_s` seconds → wait at least `settle_min_s` and until the pH slope over the last `steady_window_s` is < `steady_slope_per_min` (wait at most `settle_max_s`) → if pH ≥ target, finish and return the feed valve to its previous state; otherwise dose again.
+- If pH rises by less than `min_response_ph` for `no_response_n` consecutive pulses → **FAULT** (base solution used up, tubing blocked); the feed valve is returned, and you must press **Clear FAULT**.
+- Invalid pH reading, pressure protection latched, or feed valve offline → pause; re-evaluate after recovery. Hourly dose-count limit `max_doses_h`.
+- pH > the high alarm value only raises an alarm (the system has no acid dosing).
+- Every event is written to `recordings/ph_dose_events.csv` and to the events of the raw data.
 
 ---
 
-## 11. 設定的存檔、輸出與輸入
+## 10. Data recording
 
-所有設定在修改時自動存檔；MCU 重開（uptime 變小）時 Python 自動推回校正值、pH、夾閥、助推設定，並把幫浦恢復成重開前的方向與 PWM。
+- Recording happens entirely on the board: at the end of each sampling window (default 30 s) the row is written and fsynced immediately to `python/recordings/record_YYYYMMDD_HHMMSS.csv`. Sleeping the PC, closing the browser, or even restarting the App does not interrupt it; after an App restart it resumes the same file automatically, and the `gap_s` column marks the interruption.
+- **Checkpoint**: while recording or paused, press **💾 Save checkpoint** to copy the CSV so far to `<original-name>_checkpoint_YYYYMMDD_HHMMSS.csv` and download it automatically; recording is not interrupted.
+- Data that cannot be read is left empty, never written as 0 (for example, when flow was neither pushed nor successfully polled, the flow columns for that window are blank and the flow-rate card in the web UI is dimmed).
+- Download: automatically on stop, or from the **Recordings on the board** list (HTTP endpoint `/download/recording?name=…`).
 
-「校正值管理」→「輸出校正值」產生 `.json`；「輸入校正值」可勾選要套用的區段：
+### 10.1 Aggregate CSV (one row per sampling window, 109 columns)
 
-| 區段 | 內容 |
+| Group | Columns |
 |---|---|
-| mcu_calibration | OD600 blank、壓力零點、光程係數 |
-| ph_config | pH 7／4 電壓、校正溫度、手動溫度 |
-| hfm | ρgh、P_s 參考、ΔP–Q a／b 與來源、ΔP–Q 量測點與擬合、Q_perm、L_p 初始值、Q_L 來源與手動值 |
-| specs | 膜模組幾何、體積、流體性質、告警門檻 |
-| valve_config | 開／夾閉位置、TMP 上限、Lumen in 上限與判斷依據、最長夾閉、扭力、速度、ID、鮑率（換機台時通常不要勾） |
-| pump_kick | 啟動助推設定 |
+| Window | window_index, elapsed_s, timestamp_start, timestamp_end, window_sec, gap_s, agg_method, n_samples_pressure, n_samples_flow, partial |
+| OD600 | od600_au, od600_lux_sample, od600_lux_ref, od600_bubble_pct, od600_valid, od600_blank_set, od600_age_s, od600_new, od600_alg, od600_bubble_frac_pct, od600_flags, od600_reported, od600_p90, od600_gate_accepted, od600_gate_reason, od600_gate_d_disc, od600_gate_d_jump, od600_gate_pending, **od600_mu_per_h, od600_mu_r2** (v6.1 specific growth rate and fit R², blank while collecting), od_mad … od_p90 (8 algorithms) |
+| Flow | flow_mlmin (total pulses in the window ÷ time), flow_freq_hz, flow_total_ml, flow_pulses |
+| Pressure | pressure_feed_bar, pressure_retentate_bar, pressure_permeate_bar, pressure_tmp_bar, pressure_tmp_peak_bar, pressure_tmp_trough_bar, pressure_cycle_freq_hz |
+| Pump / pH / pinch valve | pump_pwm, pump_forward, ph, ph_temp_c, temp_src, ph_state, valve_state, valve_closed_frac, valve_pos |
+| v6.0 | shell_valve, feed_valve (state at the end of the window; offline is written as offline), **feed_pump_pwm, feed_pump_forward** (v6.2, feed pump PWM 0–255 and direction 1 / 0 at the end of the window), base_pulses, base_pulse_ms (number of base doses and total milliseconds in this window), ph_ctrl_state, ph_target (blank when disabled), p_trip (1 = latched at some point in this window), p_max_bar (maximum of the 1 s peaks of the three channels) |
+| Derived parameters | delta_p_bar, rho_gh_kpa, tmp_out_kpa, tmp_out_min_kpa, dp_friction_kpa, dp_ratio, tau_w_pa, gamma_pressure_s1, gamma_flow_s1, gamma_ratio, re, tmp_mean_kpa, tmp_in_kpa, tmp_nonuniformity, ps_kpa, q_perm_mlmin, j_lmh, lp_lmh_bar, d_actual_h, rt_m1, tau_shell_min, mu_cp_used |
+| Trend and steady state | dtmp_dt_bar_per_min, d2tmp_dt2, steady |
+| Dispersion within the window | tmp_sd_bar, tmp_iqr_bar, tmp_min_bar, tmp_max_bar, feed_sd_bar, flow_sd_mlmin, flow_iqr_mlmin, flow_min_mlmin, flow_max_mlmin |
+| Traceability | alg_profile, p_raw_dropped (pressure batches missed in this window), raw_dir, config_version, constants_version |
 
----
+Pinch valve events are saved separately to `recordings/valve_events.csv`; base dosing events to `recordings/ph_dose_events.csv`. The CSV column definition exists only in `main.py` (`CSV_HEADER` / `_row_to_csv_line`); the web UI no longer builds its own CSV. The raw data gains an `avalve` stream (the MCU's raw text for the two new valves), and the `aux` stream gains three trailing columns `base_on, base_left_ms, ptrip`.
 
-## 12. MCU 與 Python 的通訊
+### 10.2 Raw data (v5.0)
 
-**呼叫排隊**：Python 對 MCU 的所有呼叫經 `_QueuedBridge` 一次送一個，預設逾時 5 s（壓力歸零 15 s、溫度計診斷 8 s）。避免瀏覽器重新連線（例如電腦休眠喚醒）時大量呼叫同時擠進 MCU。MCU 端全部 Bridge 函式以 `provide_safe` 在 `loop()` 中依序執行。
+While recording, `recordings/<recording-name>_raw/` is also written; every raw value sent by the MCU is kept, so any algorithm can be re-run afterwards:
 
-**斷線偵測**：連續 3 次呼叫失敗 → Console 印 `[mcu] !! MCU 收不到指令…`、網頁紅色橫幅；恢復時印 `[mcu] 指令通道恢復`。Serial Monitor 每 30 s 印 `[rpc] 最近 30 秒收到 Python 呼叫 N 次`（正常約 30）；原本有呼叫、30 s 內為 0 會警告。
-
-**工程模式 →「MCU 連線狀態與測試」**：通道狀態、最後成功時間、呼叫與失敗次數、韌體、MCU 開機時間；「重新同步」；「壓力測試」（同時送出 N 個讀取呼叫，應全部成功）；「模擬 Python 端斷線 30 秒」（應出現紅色橫幅並自動恢復）。
-
-> MCU 自動重開（watchdog）曾於 v3.10.6 加入，實機測試證實 UNO Q 軟體重開後 MCU 不會接回 Bridge，已於 v3.10.7 移除。通道中斷時請人工停止再啟動 App，仍不行就斷電 10 秒。
-
----
-
-## 13. 疑難排解
-
-| 症狀 | 原因 | 處理 |
+| File | Content | Volume |
 |---|---|---|
-| 沒有 `[boot]`、Python 全部 `method … not available` | Bridge 卡住、sketch 沒載入、外部電源先開造成倒灌 | 拔 USB-C 10 s 再插；確認上電順序；只接 USB 跑 `mcu_selftest` |
-| 新板空板也 `not available`，但 selftest 正常 | 舊版在 I2C 掃描／夾閥 Ping 之後才註冊函式 | v3.10.4 起已修正（先註冊）；至少等 30 s 再判斷 |
-| 幫浦／夾閥按了沒反應、紅色橫幅（資料仍在更新） | Linux → MCU 指令通道卡住 | 資料照常記錄（v3.10.9 起流量也是）；要操作時停止再啟動 App（幫浦會停、夾閥回到開，記錄自動接續） |
-| 網頁所有按鈕沒反應、紅框 `WebUI is not defined` | 用檔案預覽開啟網頁 | 改開 `http://<板子 IP>:7000` |
-| 狀態列「MCU 上跑的不是這一版 sketch」 | main.py 與 sketch 版本不一致 | 兩者一起換並重新燒錄 |
-| `OneWire.h` / `SCServo.h: No such file` | App Lab 沒安裝 sketch.yaml 的函式庫 | OneWire 已不需要；SCServo 在 App 的函式庫加入 |
-| 溫度計找不到，診斷 `ext=0 int=0` | DQ 被拉到 GND：上拉電阻接錯、感測器沒電或接反 | 4.7 kΩ 接 DQ 與 3.3 V；VDD 接 UNO Q 3.3 V |
-| 溫度計 `ext=1` 但沒有 presence | 感測器沒接上或卡住 | 確認 DQ 接 D8、共地；感測器斷電重接；用 `ds18b20_test` App 獨立測試 |
-| 幫浦 PWM 低時不轉 | 靜摩擦 | 啟動助推（預設已開） |
-| 壓力讀值偏差約 1% | 分壓比與實際電阻不符 | 量實際阻值填入 sketch |
-| 夾閥常因 Lumen in 自動放開 | 峰值含幫浦脈動 | 改用「平均值」判斷，或適度提高上限 |
-| STS3215 掃描不到 | 跳線、接線、電源 | 跳線 A、RX→RX／TX→TX、共地；用自動掃描與 D0–D1 迴路測試 |
-| 板子燒毀（3.3 V 對 GND 短路） | 外部電壓進入 UNO Q | 見 §4，換板前必須量測全部線路 |
+| `meta.json` | Complete state at the start of recording: firmware / backend versions, MCU conversion constants, pressure zero offsets, OD blanks (8 algorithms), path-length factor, pH calibration, HFM state, specs, algorithms, pump, pinch valve settings | — |
+| `events.csv` | Events that affect the conversion: zeroing, blank, pH calibration, algorithm change, Q_perm, ρgh self-test, ΔP–Q baseline, pump / pinch valve commands, MCU reboot, data gaps (`*_gap`), sensor re-initialisation | Rare |
+| `pressure_YYYYMMDD_HH.csv(.gz)` | epoch_s, mcu_ms, batch_seq, feed_sum, retentate_sum, permeate_sum (sum of 16 ADC readings, **zero offset not subtracted**) | 100 rows/s |
+| `flow_…` | epoch_s, mcu_ms, seq, window_ms, pulses, span_us, total_pulses | 1 row/s |
+| `aux_…` | epoch_s, mcu_ms, seq, ph_samples (sum:count:time;…), ds_state, t_raw16, t_age_ms, ds_err, pump_pwm, pump_fwd, pump_kick | 1 row/s |
+| `valve_…` | epoch_s, MCU raw text | 1 row/s |
+| `od_raw.csv` | For each attempt, 4 dark + 16 lit readings (raw counts of both channels; same format as the inline photometer); at the start of recording, the raw readings of the most recent blank are written first | 1–2 rows per measurement |
 
-**獨立測試 App**：`mcu_selftest`（空板確認 MCU 與 Bridge）、`ds18b20_test`（D8／D7 兩種驅動方式測溫度計並讀 ROM 碼）。
+- Pressure / flow / aux / pinch valve files rotate hourly and are gzipped in the background after the hour changes (about 1/4 the size); flush every 1 s, fsync every 5 s (a power loss loses at most about 5 s of raw data; the aggregate CSV is still fsynced on every row). Uncompressed 100 Hz pressure is about 300 MB per day, about 80 MB compressed.
+- The recording section of the web UI shows the raw data size and the free disk space; below 2 GB it warns, below 500 MB it stops raw data logging (the aggregate CSV continues). The thresholds are in `constants.json → raw_logging`.
+- Raw data keeps being logged while recording is paused (events are tagged `record_pause`/`record_resume`); when the App restarts and resumes recording, the same folder is reused.
+- Download: the **raw data** button on each row of **Recordings on the board** opens the file list (HTTP `/raw?dir=…`).
+
+**Offline recomputation (runs on a PC, needs only Python 3.8+)**
+
+```bash
+python3 tools/replay_raw.py recordings/record_20261014_154649_raw                    # one row per 1 s
+python3 tools/replay_raw.py <raw folder> --interval 0.1 --start 10:00 --end 10:05    # view the pump pulsation waveform
+python3 tools/replay_raw.py <raw folder> --offsets 0.2996,0.2496,0.0200               # use a different set of zero offsets
+python3 tools/replay_od.py  <raw folder>/od_raw.csv --reference 0.80                  # 8 OD algorithms + Hampel
+```
+
+`replay_raw.py` applies the zero offsets and pH calibration in effect at the correct points in time according to `events.csv`; `replay_od.py` uses the same `photometer_algos.py` as the App.
+
+## 11. Saving, exporting and importing settings
+
+All settings are saved automatically when changed; when the MCU reboots (uptime decreases), Python automatically pushes back the calibration values, pH, pinch valve and kick-start settings, and restores the pump to the direction and PWM it had before the reboot.
+
+**Calibration Values** → **Export calibration** produces a `.json`; **Import calibration** lets you tick which sections to apply:
+
+| Section | Content |
+|---|---|
+| mcu_calibration | OD600 blank, pressure zero offsets, path-length factor |
+| ph_config | pH 7 / 4 voltages, calibration temperature, manual temperature |
+| hfm | ρgh, P_s reference, ΔP–Q a / b and source, ΔP–Q measured points and fit, Q_perm, initial L_p, Q_L source and manual value |
+| specs | Membrane module geometry, volumes, fluid properties, alarm thresholds |
+| valve_config | Open / pinched positions, TMP limit, Lumen in limit and basis, maximum pinch time, torque, speed, ID, baud rate (usually leave unticked when moving to another rig) |
+| pump_kick | Kick-start settings |
 
 ---
 
-## 14. 已知限制與待辦
+## 12. Communication between MCU and Python
 
-- 外部電源繼電器（D7）尚未實作；上電順序仍需人工遵守。
-- 硬體保護（串聯電阻、L298N 下拉、BH1750 改 3.3 V）需在新板上完成並量測驗證。
-- 夾閥 STS3215 在原板上尚未成功偵測，需依正確上電順序重測。
-- 收集瓶電子秤尚未安裝：J、L_p、D 依手動 Q_perm。
-- 液位／槽重感測與補料閉迴路未實作。
-- Python 端的錯誤訊息只有中文。
-- 低流速時流量計的閘門計數有量化誤差。
+**Call queueing**: all Python calls to the MCU go through `_QueuedBridge`, one at a time, with a default timeout of 5 s (15 s for pressure zeroing, 8 s for thermometer diagnostics). This prevents a flood of simultaneous calls into the MCU when the browser reconnects (for example after the PC wakes from sleep). On the MCU side, all Bridge functions are registered with `provide_safe` and run sequentially in `loop()`.
 
----
+**Disconnect detection**: 3 consecutive failed calls → the Console prints `[mcu] !! MCU not receiving commands…` and the web UI shows a red banner; on recovery it prints `[mcu] command channel restored`. The Serial Monitor prints `[rpc] !! no Python calls for 30 s …` when Python calls stop, and `[rpc] Python calls resumed` when they come back.
 
-## 15. 版本沿革（摘要）
+**Engineering mode → MCU link status & tests**: channel state, last successful time, call and failure counts, firmware, MCU uptime; **Resync**; **Stress test** (sends N read calls at once; all should succeed); **Simulate Python-side outage 30 s** (the red banner should appear and clear automatically).
 
-| 韌體／後端／網頁 | 日期 | 重點 |
+> Automatic MCU reboot (watchdog) was added in v3.10.6; hardware testing showed that after a software reboot the UNO Q MCU does not reconnect to Bridge, so it was removed in v3.10.7. If the channel is interrupted, stop and restart the App manually; if that does not help, remove power for 10 seconds.
+
+**v5.0 bandwidth**: the UNO Q Bridge runs at 115200 bps (about 11 KB/s, shared with Monitor.print). Raw pressure data is hex-encoded at about 360 bytes per batch of 20 samples, about 1.8 KB/s; everything else is a few hundred bytes per second, and routine logs were reduced to one line every 10 seconds. Every batch has a sequence number; when Python detects a gap it is counted in `p_dropped_batches` (web UI raw data status, CSV `p_raw_dropped`, `pressure_gap` in `events.csv`). If batches keep being dropped on real hardware, Bridge can be raised to 460800 bps (there is a method on the Arduino forum, but App Lab updates may overwrite it).
+
+## 13. Troubleshooting
+
+| Symptom | Cause | Fix |
 |---|---|---|
-| v3.10.9／v4.12／v4.13 | 2026-10-08 | 流量改由 MCU 主動推送（指令通道斷掉時照常記錄）；讀不到時留空不記 0；網頁流量過期時變淡 |
-| v3.10.8／v4.11／v4.12 | 2026-10-08 | 夾閉時 Lumen in > 0.5 bar 自動放開（峰值／平均可選）；舊 1.0 bar 預設自動遷移；新版 README |
-| v3.10.7／v4.10／v4.11 | 2026-10-08 | 中途存檔；網頁版本比較改為逐段 |
-| v3.10.7／v4.9.1／v4.10.1 | 2026-10-08 | 移除 MCU 自動重開（實機證實不可靠） |
-| v3.10.5／v4.8 | 2026-10-08 | Python 呼叫排隊、斷線偵測；MCU 全部 provide_safe；`[rpc]` 統計 |
-| v3.10.4 | 2026-10-07 | 開機先註冊 Bridge 函式；I2C 只探測兩個位址（核心 1.0.0 新板） |
-| v3.10.1–v3.10.3 | 2026-10-06 | DS18B20 內部上拉備援、1-Wire 電氣診斷、每 10 s 重試記錄、時序校正 |
-| v4.6–v4.9.2 | 2026-10-06 | ΔP–Q 掃描（預設由高到低）、溫度預設用溫度計、操作參數輸入 |
-| v3.10.0／v4.4 | 2026-10-06 | 幫浦啟動助推 |
-| v4.0–v4.5 | 2026-10-06 | 依 HFM UI 規格重新設計衍生參數；校正值輸出／輸入、規格管理、參數說明視窗、主標題 |
-| v3.8–v3.9.0 | 2026-10-05/06 | 15 k／22 k 分壓、DS18B20（D8）、完整歷史曲線、三欄版面、上電順序處理 |
-| v3–v3.7 | 2026-10-02/04 | 併入 pH 與 STS3215 夾閥、14-bit ADC、演算法切換 |
-| v1–v2.3 | 2026-09 | OD600、流速＋壓力、幫浦三專案合併；非阻塞 OD600；聚合取樣、落盤與中斷接續 |
+| No `[boot]`, every Python call gives `method … not available` | Bridge hung, sketch not loaded, back-feeding because external power was switched on first | Unplug USB-C for 10 s and plug back in; check the power-up sequence; connect only USB and run `mcu_selftest` |
+| `not available` even on a new bare board, but selftest passes | Old versions registered functions only after the I2C scan / pinch valve ping | Fixed since v3.10.4 (functions registered first); wait at least 30 s before judging |
+| Pump / pinch valve buttons do nothing, red banner (data still updating) | Linux → MCU command channel hung | Data keeps being recorded (including flow since v3.10.9); to operate, stop and restart the App (the pump stops, the pinch valve returns to open, recording resumes automatically) |
+| No button in the web UI works, red box `WebUI is not defined` | Web UI opened via file preview | Open `http://<board IP>:7000` instead |
+| Status bar shows `MCU is not running this sketch version` | main.py and sketch versions do not match | Replace both together and reflash |
+| `OneWire.h` / `SCServo.h: No such file` | App Lab did not install the libraries in sketch.yaml | OneWire is no longer needed; add SCServo to the App's libraries |
+| Thermometer not found, diagnostics `ext=0 int=0` | DQ pulled to GND: pull-up resistor wired wrong, sensor unpowered or wired backwards | 4.7 kΩ between DQ and 3.3 V; VDD to UNO Q 3.3 V |
+| Thermometer `ext=1` but no presence | Sensor not connected or hung | Check DQ on D4 and common ground; power-cycle the sensor; test it standalone with the `ds18b20_test` App |
+| Feed pump runs in reverse but not forward | IN3 (D12) never goes high on the board | Since v4.2.2 the pump only uses IN4; swap the motor wires on OUT3 / OUT4 if the flow direction is wrong |
+| Pump does not turn at low PWM | Static friction | Kick-start (enabled by default) |
+| Pressure readings off by about 1% | Divider ratio does not match the actual resistors | Measure the actual resistances and enter them in the sketch |
+| Pinch valve often released automatically because of Lumen in | Peak includes pump pulsation | Switch the basis to **Mean**, or raise the limit moderately |
+| STS3215 not found by scan | Jumper, wiring, power | Jumper A, RX→RX / TX→TX, common ground; use auto-scan and the D0–D1 loopback test |
+| Board destroyed (3.3 V shorted to GND) | External voltage entered the UNO Q | See §4; measure all lines before replacing the board |
+| OD600 reading drops to 0 or freezes and only recovers after a reboot (v4.x) | BH1750 still answers I2C after a reset but has left measurement mode, or the I2C controller is hung | v5.0 detects this and resets I2C automatically; if the Console keeps showing `sensor stuck`, check the GY-302 3.3 V supply (add 10 µF + 100 nF close to it), I2C wire length and jumper-wire contacts |
+| Web UI shows `MCU is not running this sketch version`, pressure frozen | v5.0 main.py with v3.10.x firmware (or the other way round) | Replace both together and reflash |
+| `p_dropped_batches` keeps increasing | Insufficient Bridge bandwidth or loop blocked | Check `loop_max_us` and `pskip` in `[diag]`; see §12 |
+
+**Standalone test Apps**: `mcu_selftest` (checks the MCU and Bridge on a bare board), `ds18b20_test` (older versions test on D8 / D7; since v4.1.1 the thermometer is on D4, so change that App's pin to 4 before testing).
+
+---
+
+## 14. Known limitations and to-do
+
+- The v6.0 base pump, the two new valves and pressure protection have only been simulated on a PC and not yet connected to real hardware.
+- Automatic pH can only add base; high pH is not handled (no acid or CO₂ dosing).
+- The pinch valve **Quick scan (~1 s)** uses a broadcast ping, so replies collide when several servos are on the bus; once the new valves are online, use **Full scan (~30 s)** or enter the ID directly. **Blind move** (broadcast) is refused while the new valves are online because all three would move together.
+- The external power relay (planned on D7) is not implemented yet; the power-up sequence must still be followed manually.
+- The hardware protection (series resistors, L298N pull-downs, BH1750 on 3.3 V) must be completed on the new board and verified by measurement.
+- The STS3215 pinch valve has not yet been detected successfully on the original board; retest with the correct power-up sequence.
+- The collection-bottle scale is not installed yet: J, L_p and D are based on manual Q_perm (in that case L_p only reflects changes in TMP).
+- Level / tank-weight sensing and closed-loop feeding are not implemented.
+- v5.0 has not yet been flashed and tested on real hardware; the actual drop rate of 100 Hz raw pressure at Bridge 115200 bps is still to be confirmed.
+- No calibration curve between OD600 readings and spectrophotometer OD600 exists yet (the light source is an amber LED and the sensor is a wide-angle illuminance meter, non-linear at high OD); one can be built with `replay_od.py` on a dilution series.
+- If a transmitter is not at the height of its port (P_s and P_out not at the same height), TMP_out needs an additional height correction.
+
+---
+
+## 15. Version history (summary)
+
+| Firmware / backend / web UI | Date | Highlights |
+|---|---|---|
+| **v4.2.2 / v6.2.2 / v6.2.2** | 2026-10-16 | Feed pump single-direction on IN4 (IN3 = D12 does not drive on the board); direction buttons and IN3 / IN4 swap removed |
+| v4.2.1 / v6.2.1 / v6.2.1 | 2026-10-16 | Feed pump forward fix (IN pins written last and re-asserted), wiring check with pin read-back, IN3 / IN4 swap; feed valve + feed pump and pinch valve + shell sampling valve each merged into one panel |
+| v4.2.0 / v6.2 / v6.2 | 2026-10-16 | Second pump becomes the feed pump (continuous PWM, forward / reverse, under the main pump); manual dosing only while the feed valve is on Base; feed valve Base selectable; CSV adds feed_pump_pwm, feed_pump_forward |
+| v4.1.1 / v6.1 / v6.1 | 2026-10-16 | PC layout rearranged; temperature folded into the pH panel; pressure-protection limit moved into the pressure panel; specific growth rate μ (OD600 panel, 2 new CSV columns, adjustable window) |
+| v4.1.1 / v6.0 / v6.0 | 2026-10-16 | L298N moved to consecutive pins D8–D13 (IN1, ENA, IN2, ENB, IN3, IN4); DS18B20 moved to D4 |
+| v4.1.0 / v6.0 / v6.0 | 2026-10-16 | Base pump (L298N second channel) and automatic pH control; shell sampling valve and feed valve (STS3215 ID 2 / 3); 0.7 bar three-channel pressure protection (in any valve state); two layouts (PC view / local display 1024×600), key-value bar, derived parameter monitoring table; fixed BUG-01 (web UI building the CSV), BUG-02 (pressure sampling stalled during valve diagnostics), BUG-03 (batch dt overflow); fixed the v5.1 bug where `ui` was not yet created when the web page loaded, aborting the whole script |
+| **v4.0.0 / v5.1 / v5.1** | 2026-10-14 | Gate layer added after the OD600 estimator (`od_gate.py`): default estimator changed to mad; dispersion gate (\|OD−OD_p90\|), jump gate (compared with the last accepted value), a new level is accepted (with an alert) only after confirm_n consecutive consistent readings, reports the median of the last 3 accepted values, stall alert, **Declare operation (dilution / inoculation)** button; thresholds are pre-registered in `meta.json` before the run and can be recomputed afterwards with `replay_od.py --gate-*`. UI revised according to the derived-parameter review in the documentation: backflow alarm evaluated only while collecting (when closed, compared against −ΔP_f/2 instead), γ upper limit changed to 11,000 s⁻¹ (laminar-model limit, not a biological limit), Re > 2000 notice, Q_perm entered as collected volume / time, τ_shell and TMP non-uniformity shown conditionally |
+| **v4.0.0 / v5.0 / v5.0** | 2026-10-14 | MCU only samples and controls; all algorithms moved to Python; raw data logging and offline recomputation tools; ported photometer v1.2.0's BH1750 stuck detection and automatic I2C reset (fixes light-sensor dropouts); 8 OD algorithms; safety interlocks now evaluated per 10 ms sample; per section 4 of the documentation, fixed TMP_mean, μ(T), flow quantisation, TMP peak/trough alarms, initial L_p, ΔP–Q model selection, pH calibration temperature |
+| v3.10.9 / v4.12 / v4.13 | 2026-10-08 | Flow now pushed by the MCU (still recorded when the command channel is down); unreadable values left empty instead of 0; flow dimmed in the web UI when stale |
+| v3.10.8 / v4.11 / v4.12 | 2026-10-08 | Automatic release when Lumen in > 0.5 bar while pinched (peak / mean selectable); old 1.0 bar default migrated automatically; new README |
+| v3.10.7 / v4.10 / v4.11 | 2026-10-08 | Checkpoints; web UI version comparison now segment by segment |
+| v3.10.7 / v4.9.1 / v4.10.1 | 2026-10-08 | Removed automatic MCU reboot (shown unreliable on hardware) |
+| v3.10.5 / v4.8 | 2026-10-08 | Python call queueing, disconnect detection; all MCU functions provide_safe; `[rpc]` statistics |
+| v3.10.4 | 2026-10-07 | Register Bridge functions first at boot; I2C probes only two addresses (core 1.0.0 new boards) |
+| v3.10.1–v3.10.3 | 2026-10-06 | DS18B20 internal pull-up fallback, 1-Wire electrical diagnostics, retry logging every 10 s, timing calibration |
+| v4.6–v4.9.2 | 2026-10-06 | ΔP–Q sweep (default high to low), temperature defaults to the thermometer, operating inputs |
+| v3.10.0 / v4.4 | 2026-10-06 | Pump kick-start |
+| v4.0–v4.5 | 2026-10-06 | Derived parameters redesigned per the HFM UI spec; calibration export / import, specification management, parameter help dialogs, main title |
+| v3.8–v3.9.0 | 2026-10-05/06 | 15 k / 22 k dividers, DS18B20 (D8), full history charts, three-column layout, power-up sequence handling |
+| v3–v3.7 | 2026-10-02/04 | Merged in pH and the STS3215 pinch valve, 14-bit ADC, algorithm selection |
+| v1–v2.3 | 2026-09 | Merged three projects (OD600, flow rate + pressure, pump); non-blocking OD600; aggregated sampling, writing to disk and resuming after interruption |
+
+---
+
+## 16. v6.0 new features and first bring-up on the board
+
+See `CHANGELOG_v6.0.md` for the detailed changes.
+
+### 16.1 Division of responsibilities (kept and enforced)
+
+- **MCU**: only raw sampling, actuators, I2C self-repair and the safety interlocks (pressure protection, base dosing interlock, pinch valve interlock). No algorithms.
+- **Python**: all algorithms (conversion, derived parameters, OD gate, automatic pH decisions), saving and recording. No synchronous `Bridge.call` inside Bridge notify callbacks.
+- **Web UI**: only displays and sends commands; it does not build CSVs or make control decisions.
+
+### 16.2 New MCU Bridge functions
+
+| Function | Description |
+|---|---|
+| `get_pressure_protect` / `set_pressure_protect("limit=0.70")` / `pressure_trip_clear` | Pressure protection |
+| `base_pump_pulse("ms")` / `base_pump_stop` / `get_base_status` / `set_base_config("pwm=..,max_s_h=..")` | Base dosing pulse on channel B |
+| `set_feed_pump("pwm=..,dir=1\|0")` | Feed pump continuous run (v4.2.0) |
+| `chb_pin_test("in3=..,in4=..,enb=..,ms=..")` | Wiring check: hold the channel B pins HIGH / LOW for up to 30 s (v4.2.1) |
+| `av_set("w,s")` / `av_goto_raw("w,pos")` / `av_torque("w,on")` / `av_get_status` / `av_get_config` / `av_set_config(...)` | Shell sampling valve (w=0) and feed valve (w=1) |
+| `servo_set_id("old,new")` | Change servo ID (writes EEPROM) |
+| notify `on_avalve_update`, `on_safety`; `on_aux_raw` gains `bon,bpwm,bleft,bhour,bmaxh,bcnt,bwhy,ptrip,plim` | |
+
+### 16.3 New saved items (`ph_valve_state.json`)
+
+`avalve_config`, `avalve_desired`, `pressure_protect`, `base_pump`, `ph_ctrl`. Calibration export / import also includes these (the automatic pH "enabled" flag is not carried in the file).
+
+### 16.4 Defaults I chose for you (editable in the web UI)
+
+| Item | Default | Rationale |
+|---|---|---|
+| L298N pins | D8 IN1, D9 ENA, D10 IN2, D11 ENB, D12 IN3, D13 IN4 | You specified consecutive pins D8–D13; of D8–D13 only D9, D10 and D11 support PWM, so ENA goes on D9 and ENB on D11, three pins per pump; the L298N header order is ENA IN1 IN2 IN3 IN4 ENB, so the wires must cross and a single ribbon cable cannot be used directly; the thermometer therefore moved from D8 to D4 |
+| New valve IDs | shell 2, feed 3 | The pinch valve is 1 |
+| Pressure protection | 0.70 bar, 50 ms | Your specification; same debounce as the existing interlock |
+| Automatic pH | Target 7.00, start below 6.95, dose 5 s, wait at least 60 s, slope < 0.02 pH/min counts as steady, at most 12 doses per hour, FAULT after 3 consecutive doses with no response | 5 s comes from your specification; the rest is conservative to avoid overdosing |
+| Base dosing hourly limit (MCU) | 60 s | 12 doses × 5 s; the MCU-side last line of defence |
+| Boot state | shell to sensor, feed closed | Keeps measuring, no accidental feeding |
+
+### 16.5 First bring-up on the board
+
+1. Wire with the power off following the rules in §4 (feed pump §3.5b, new valves §3.9). **Change the IDs of the new valves one at a time** first.
+2. Flash `sketch.ino` (v4.2.2); the Serial Monitor should show `[avalve] shell ID 2 online -> sensor` and `[avalve] feed ID 3 online -> closed`.
+3. Start the App; the top right of the web UI should show `UI v6.2.2 · main.py v6.2.2` and MCU firmware v4.2.2.
+4. First test **without tubing**: under **Feed valve & feed pump** and **Pinch valve & shell sampling valve** switch through the three states of each valve one by one and confirm the angles reached; recalibrate the positions if they are off.
+5. Feed pump without the valve first: in **Feed valve & feed pump** set PWM 150 and **Apply**, check it turns, then **Reverse** and **Stop**. Then set the feed valve to **Base**, put the tubing into the base bottle and use a manual dose of 1 s (**Manual dose (s, 0.1–10)** = 1, then **Dose once**) to check direction and flow.
+6. Pressure protection: temporarily lower the limit (e.g. 0.2 bar), run the main pump slowly, and confirm that the pump stops, the pinch valve is released and the red banner appears in the web UI; then set the limit back to 0.70 and clear the trip.
+7. Enable automatic pH only at the very end (asks for confirmation).
+
+### 16.6 PC simulation tests (`tools/tests/`)
+
+| Test | Command | Content |
+|---|---|---|
+| Firmware | `cd tools/tests/hostsim && g++ -std=c++17 -O1 -I. -o sim sim.cpp && ./sim` | Builds `sketch.ino` as a PC program with fake Arduino / Bridge / servos: sampling rate, batch dt, pressure protection, base dosing interlock, feed pump (forward / reverse, closed-valve and trip interlocks), valves, ID change; 39 checks in total |
+| Firmware (board build) | `cd tools/tests/hostsim && python3 arduino_proto.py ../../../sketch/sketch.ino /tmp/sketch_proto.ino && sed "s#../../../sketch/sketch.ino#/tmp/sketch_proto.ino#" sim.cpp > /tmp/sim_proto.cpp && g++ -std=c++17 -fsyntax-only -I. /tmp/sim_proto.cpp` | Emulates the Arduino builder, which inserts auto-generated function prototypes above the first function; catches signatures that use a type declared later in the sketch (plain g++ does not) |
+| Automatic pH logic | `python3 tools/sim_ph_control.py` | Vessel model: normal, no-response FAULT, invalid pH, hourly limit, pH already high, feed valve offline |
+| Backend integration | `cd tools/tests/pysim && python3 test_v6.py` | Loads the whole `main.py` with a fake `arduino` module: valves, feed pump, manual dosing only on Base, automatic base dosing (pauses while the feed pump runs), pressure protection (including MCU reboot), CSV columns, calibration file, recording; 46 checks in total |
+| Web UI | `cd tools/tests/pysim && python3 capture.py msgs.json`, then `cd ../uitest && node run.js ../pysim/msgs.json shots` | Feeds simulated backend data into the web UI, takes 1024×600 and desktop screenshots, checks for JS errors |
