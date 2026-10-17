@@ -1,166 +1,58 @@
-/* ReLEAF navigation map.
-   Two pictures share this file:
-     .nm-page  the page map at the foot of a subpage: the page you are on in the
-               middle, the pages it builds on to its left, the pages it leads to
-               on its right, each with the reason for the link.
-     .nm-all   the whole wiki as a ring: 27 pages in five sections, every link
-               drawn; point at a page and its neighbours light while the rest dim.
-   White ground, the wiki's section colours, no tints. Colours come from
-   NAVMAP_DATA via inline custom properties (--s-ink, --s-line, --s-pill). */
+/* ReLEAF navigation picture, prototype 2. Sits at the foot of a page, right on
+   top of the footer, so the valley's ground meets the footer's edge. */
 
 .navmap {
-  --nm-ink: #171717; --nm-ink-2: #404040; --nm-ink-3: #6b6b6b;
-  --nm-line: #e5e5e5; --nm-line-2: #d4d4d4; --nm-white: #fff;
-  --nm-max: 1120px; --nm-pad: 20px;
-  --nm-ease: cubic-bezier(.2, .7, .2, 1);
-  max-width: var(--nm-max);
-  margin: 72px auto 56px;   /* room between the map and whatever closes the page */
-  padding: 0 var(--nm-pad);
+  --nm-ink: #1d1d1f; --nm-ink-2: #424245; --nm-ink-3: #6b6b6b; --nm-lime: #9bd14b;
+  max-width: var(--max, 1280px);
+  margin: 72px auto 0;
+  padding: 0 var(--sp-5, 20px);
   box-sizing: border-box;
-  color: var(--nm-ink);
-  font-family: inherit;
-  -webkit-font-smoothing: antialiased;
 }
-.navmap *, .navmap *::before, .navmap *::after { box-sizing: border-box; }
-@media (min-width: 640px) { .navmap { --nm-pad: 24px; } }
+@media (min-width: 640px) { .navmap { padding: 0 var(--sp-6, 24px); } }
+.navmap .nm-title { font-size: clamp(1.4rem, 2.2vw, 1.9rem); letter-spacing: -.015em; margin: 0 0 4px; color: inherit; }
+.navmap .nm-stage { position: relative; }
+.navmap svg { display: block; width: 100%; height: auto; border-radius: 22px 22px 0 0; }
 
-/* ---- head ---- */
-.navmap .nm-head { display: flex; align-items: baseline; justify-content: space-between; gap: 16px; flex-wrap: wrap; margin: 0 0 22px; }
-.navmap .nm-eyebrow { margin: 0 0 4px; font-size: 12px; font-weight: 600; letter-spacing: .08em; text-transform: uppercase; color: var(--s-ink, var(--nm-ink-3)); }
-.navmap .nm-title { margin: 0; font-size: clamp(1.45rem, 2.3vw, 1.9rem); line-height: 1.15; letter-spacing: -.02em; font-weight: 650; color: var(--nm-ink); }
-.navmap .nm-sub { margin: 0; font-size: 15px; line-height: 1.5; color: var(--nm-ink-3); max-width: 46ch; }
+.navmap .nm-spot { cursor: pointer; outline: none; transition: opacity .25s; }
+.navmap .nm-spot.nm-is-here { cursor: default; }
+.navmap .nm-hit { fill: #000; fill-opacity: 0; }
+.navmap .nm-veil { fill: #fbfaf2; fill-opacity: .2; pointer-events: none; }
+.navmap .nm-art { filter: url(#nm-rest); }
+.navmap .nm-spot.nm-focal .nm-art { filter: url(#nm-focal); }
+/* things not linked from this page: part of the painting, faded, not clickable */
+.navmap .nm-off { filter: saturate(.45) opacity(.6); pointer-events: none; }
+.navmap .nm-spot.nm-on .nm-art { filter: url(#nm-hover); }
+.navmap .nm-spot:focus-visible .nm-art { filter: url(#nm-hover); }
 
-/* ======================================================================
-   The page map
-   ====================================================================== */
-.nm-page .nm-board { position: relative; display: grid; grid-template-columns: minmax(0, 1fr) 232px minmax(0, 1fr); gap: 0 56px; align-items: center; }
-.nm-page .nm-wires { position: absolute; inset: 0; width: 100%; height: 100%; overflow: visible; pointer-events: none; }
-.nm-page .nm-wire { fill: none; stroke: var(--s-line); stroke-width: 1.5; opacity: .5; transition: opacity .25s var(--nm-ease), stroke-width .25s var(--nm-ease); }
-.nm-page .nm-wire.nm-lit { opacity: 1; stroke-width: 2.5; stroke: var(--s-ink); }
-.nm-page .nm-wire.nm-next { stroke-dasharray: none; }
-.nm-page .nm-wires marker path { fill: var(--s-line); }
-.nm-page .nm-wires .nm-lit + marker path { fill: var(--s-ink); }
-.nm-page .nm-wires .nm-dot { fill: var(--nm-white); stroke: var(--s-line); stroke-width: 1.5; transition: stroke .25s; }
-.nm-page .nm-wires .nm-dot.nm-lit { stroke: var(--s-ink); fill: var(--s-ink); }
+/* the name tag over whatever is pointed at */
+.navmap .nm-tag { position: absolute; z-index: 4; transform: translate(-50%, -100%) translateY(4px); white-space: nowrap; pointer-events: none;
+  padding: 4px 11px; border-radius: 999px; background: rgba(29, 29, 31, .84); color: #fff;
+  font-size: 13px; font-weight: 600; letter-spacing: -.005em; line-height: 1.35;
+  -webkit-backdrop-filter: blur(6px); backdrop-filter: blur(6px);
+  opacity: 0; transition: opacity .15s, transform .15s; }
+.navmap .nm-tag.nm-below { transform: translate(-50%, 0) translateY(-4px); }
+.navmap .nm-tag.nm-show { opacity: 1; transform: translate(-50%, -100%); }
+.navmap .nm-tag.nm-below.nm-show { transform: translate(-50%, 0); }
 
-.nm-page .nm-lane { min-width: 0; }
-.nm-page .nm-lane__h { display: flex; align-items: baseline; gap: 8px; margin: 0 0 10px; font-size: 12px; font-weight: 600; letter-spacing: .08em; text-transform: uppercase; color: var(--nm-ink-3); }
-.nm-page .nm-lane__h b { font-weight: 500; color: var(--nm-ink-3); opacity: .7; }
-.nm-page .nm-lane.nm-out .nm-lane__h { justify-content: flex-start; }
-.nm-page .nm-lane ul { list-style: none; margin: 0; padding: 0; display: grid; gap: 8px; }
+/* the mascot, standing on his feet at the point given */
+.navmap .nm-guy { position: absolute; z-index: 3; height: auto; pointer-events: none;
+  transform: translate(-50%, -94%); transition-property: left, top, width; transition-timing-function: linear; }
+.navmap .nm-guy.nm-turn { transform: translate(-50%, -94%) scaleX(-1); }
 
-/* a linked page */
-.navmap .nm-card { position: relative; display: grid; grid-template-columns: 34px minmax(0, 1fr); gap: 12px; align-items: center;
-  padding: 9px 12px 9px 10px; min-height: 60px; border-radius: 14px; border: 1px solid var(--nm-line); background: var(--nm-white);
-  color: var(--nm-ink); text-decoration: none; transition: border-color .2s var(--nm-ease), box-shadow .2s var(--nm-ease), transform .2s var(--nm-ease); }
-.navmap .nm-card:hover, .navmap .nm-card:focus-visible, .navmap .nm-card.nm-lit { border-color: var(--s-ink); box-shadow: 0 1px 0 var(--s-ink) inset, 0 0 0 1px var(--s-ink); outline: none; }
-.navmap .nm-card:focus-visible { box-shadow: 0 0 0 3px var(--s-pill), 0 0 0 1px var(--s-ink); }
-.navmap .nm-card__icon { width: 34px; height: 34px; border-radius: 10px; display: grid; place-items: center; background: var(--s-pill); color: var(--s-ink); transition: background .2s, color .2s; }
-.navmap .nm-card__icon svg { width: 18px; height: 18px; fill: currentColor; }
-.navmap .nm-card:hover .nm-card__icon, .navmap .nm-card.nm-lit .nm-card__icon { background: var(--s-ink); color: #fff; }
-.navmap .nm-card__text { display: grid; gap: 1px; min-width: 0; }
-.navmap .nm-card__name { display: flex; align-items: center; gap: 8px; font-size: 15px; font-weight: 600; line-height: 1.25; letter-spacing: -.005em; }
-.navmap .nm-card__why { font-size: 13px; line-height: 1.35; color: var(--nm-ink-3); }
-.navmap .nm-card__why::first-letter { text-transform: uppercase; }
-.navmap .nm-next { flex: none; font-size: 10.5px; font-weight: 650; letter-spacing: .06em; text-transform: uppercase; line-height: 1; padding: 4px 7px 3px; border-radius: 999px; color: var(--s-ink); background: var(--s-pill); }
-.navmap .nm-card:hover .nm-next, .navmap .nm-card.nm-lit .nm-next { color: #fff; background: var(--s-ink); }
+/* the line between the title and the picture */
+.navmap .nm-caption { margin: 0; padding: 0 2px 16px; min-height: 1.6em; font-size: 15px; line-height: 1.55; color: var(--nm-ink-2); }
+.navmap .nm-caption strong { color: var(--nm-ink); margin-right: .5em; }
+.navmap .nm-caption .nm-rest { color: var(--nm-ink-3); }
 
-/* the page you are on */
-.nm-page .nm-hub { display: grid; }
-.nm-page .nm-hub__card { display: grid; gap: 6px; justify-items: start; padding: 20px 20px 18px; border-radius: 18px; background: var(--s-ink); color: #fff;
-  box-shadow: 0 10px 30px -14px color-mix(in srgb, var(--s-ink) 60%, transparent); }
-.nm-page .nm-hub__icon { width: 44px; height: 44px; border-radius: 13px; display: grid; place-items: center; background: rgba(255, 255, 255, .16); margin-bottom: 6px; }
-.nm-page .nm-hub__icon svg { width: 24px; height: 24px; fill: #fff; }
-.nm-page .nm-hub__eyebrow { font-size: 11px; font-weight: 600; letter-spacing: .09em; text-transform: uppercase; opacity: .8; }
-.nm-page .nm-hub__name { font-size: 20px; font-weight: 650; line-height: 1.15; letter-spacing: -.015em; }
-.nm-page .nm-hub__cap { font-size: 13.5px; line-height: 1.4; opacity: .85; }
-
+/* on a phone the valley keeps a readable size and scrolls sideways */
 @media (max-width: 760px) {
-  .nm-page .nm-board { grid-template-columns: 1fr; gap: 22px; }
-  .nm-page .nm-wires { display: none; }
-  .nm-page .nm-hub { order: -1; }
-  .nm-page .nm-hub__card { grid-template-columns: 44px 1fr; grid-template-areas: "i e" "i n" "i c"; column-gap: 14px; row-gap: 2px; padding: 16px; }
-  .nm-page .nm-hub__icon { grid-area: i; margin: 0; }
-  .nm-page .nm-hub__eyebrow { grid-area: e; } .nm-page .nm-hub__name { grid-area: n; } .nm-page .nm-hub__cap { grid-area: c; }
+  .navmap .nm-scroll { overflow-x: auto; overscroll-behavior-x: contain; scrollbar-width: none; border-radius: 14px 14px 0 0;
+    margin: 0 calc(-1 * var(--sp-5, 20px)); }
+  .navmap .nm-scroll::-webkit-scrollbar { display: none; }
+  .navmap .nm-stage { width: 880px; }
+  .navmap svg { border-radius: 0; }
+  .navmap .nm-caption { font-size: 14px; min-height: 3.2em; }
 }
-
-/* ======================================================================
-   The whole wiki
-   ====================================================================== */
-.nm-all .nm-allgrid { display: grid; grid-template-columns: minmax(0, 1.25fr) minmax(280px, .85fr); gap: 32px 40px; align-items: start; }
-.nm-all .nm-ring { position: relative; }
-.nm-all .nm-ring svg { display: block; width: 100%; height: auto; overflow: visible; font-family: inherit; }
-.nm-all .nm-ring a { text-decoration: none; outline: none; }
-
-.nm-all .nm-edge { fill: none; stroke: #171717; stroke-width: 1; opacity: .08; transition: opacity .3s var(--nm-ease), stroke-width .3s var(--nm-ease); }
-.nm-all .nm-edge.nm-here { stroke: var(--s-line); opacity: .45; }
-.nm-all[data-lit] .nm-edge { opacity: .035; stroke: #171717; }
-.nm-all[data-lit] .nm-edge.nm-lit { stroke: var(--s-ink); stroke-width: 1.75; opacity: .95; }
-
-.nm-all .nm-arc { fill: none; stroke: var(--s-line); stroke-width: 3; opacity: .55; transition: opacity .3s; }
-.nm-all[data-lit] .nm-arc { opacity: .18; }
-.nm-all[data-lit] .nm-arc.nm-lit { opacity: 1; }
-.nm-all .nm-secname { font-size: 13px; font-weight: 650; letter-spacing: .12em; text-transform: uppercase; fill: var(--s-ink); paint-order: stroke; stroke: #fff; stroke-width: 6px; stroke-linejoin: round; transition: opacity .3s; }
-.nm-all[data-lit] .nm-secname { opacity: .35; }
-.nm-all[data-lit] .nm-secname.nm-lit { opacity: 1; }
-
-.nm-all .nm-node { cursor: pointer; transition: opacity .3s var(--nm-ease); }
-.nm-all .nm-node circle.nm-dot { fill: var(--s-line); stroke: #fff; stroke-width: 2.5; transition: r .2s var(--nm-ease), fill .2s; }
-.nm-all .nm-node circle.nm-halo { fill: none; stroke: var(--s-ink); stroke-width: 1.5; opacity: 0; transition: opacity .2s; }
-.nm-all .nm-node circle.nm-hit { fill: transparent; stroke: none; }
-.nm-all .nm-node text { font-size: 19px; font-weight: 500; fill: var(--nm-ink-2); letter-spacing: -.005em; transition: fill .2s, font-weight .2s; }
-.nm-all .nm-node.nm-is-here circle.nm-halo { opacity: 1; }
-.nm-all .nm-node.nm-is-here text { font-weight: 650; fill: var(--s-ink); }
-.nm-all[data-lit] .nm-node { opacity: .22; }
-.nm-all[data-lit] .nm-node.nm-lit { opacity: 1; }
-.nm-all .nm-node.nm-lit circle.nm-dot, .nm-all .nm-node:hover circle.nm-dot, .nm-all .nm-node:focus-visible circle.nm-dot { fill: var(--s-ink); }
-.nm-all .nm-node.nm-lit text { fill: var(--s-ink); }
-.nm-all .nm-node.nm-active text, .nm-all .nm-node:hover text { font-weight: 650; }
-.nm-all .nm-node.nm-active circle.nm-halo, .nm-all .nm-node:focus-visible circle.nm-halo { opacity: 1; }
-.nm-all .nm-node.nm-active circle.nm-dot { r: 9; }
-
-.nm-all .nm-centre { text-anchor: middle; pointer-events: none; }
-.nm-all .nm-centre .nm-c1 { font-size: 28px; font-weight: 650; letter-spacing: -.015em; fill: var(--nm-ink); }
-.nm-all .nm-centre .nm-c2 { font-size: 16px; fill: var(--nm-ink-3); }
-.nm-all .nm-centre .nm-c3 { font-size: 13px; font-weight: 600; letter-spacing: .08em; text-transform: uppercase; fill: var(--s-ink, var(--nm-ink-3)); }
-
-/* the panel beside the ring: the active page and its links */
-.nm-all .nm-panel { display: grid; gap: 14px; align-content: start; }
-.nm-all .nm-chips { display: flex; flex-wrap: wrap; gap: 6px; margin: 0; padding: 0; list-style: none; }
-.nm-all .nm-chip { display: inline-flex; align-items: center; gap: 7px; padding: 5px 11px 5px 8px; border-radius: 999px; border: 1px solid var(--nm-line); background: #fff; font: inherit; font-size: 12.5px; font-weight: 600; color: var(--nm-ink-2); cursor: default; transition: border-color .2s, background .2s, color .2s; }
-.nm-all .nm-chip::before { content: ""; width: 9px; height: 9px; border-radius: 50%; background: var(--s-line); }
-.nm-all .nm-chip:hover, .nm-all .nm-chip.nm-lit { border-color: var(--s-ink); color: var(--s-ink); background: var(--s-pill); }
-.nm-all .nm-focus { display: grid; gap: 12px; min-height: 420px; align-content: start; padding: 16px 16px 14px; border-radius: 18px; border: 1px solid var(--nm-line); background: #fff; }
-.nm-all .nm-focus__head { display: grid; grid-template-columns: 38px 1fr; gap: 12px; align-items: center; }
-.nm-all .nm-focus__icon { width: 38px; height: 38px; border-radius: 11px; display: grid; place-items: center; background: var(--s-ink); color: #fff; }
-.nm-all .nm-focus__icon svg { width: 20px; height: 20px; fill: currentColor; }
-.nm-all .nm-focus__eyebrow { display: block; font-size: 11px; font-weight: 600; letter-spacing: .08em; text-transform: uppercase; color: var(--s-ink); }
-.nm-all .nm-focus__name { display: block; font-size: 17px; font-weight: 650; letter-spacing: -.01em; line-height: 1.2; color: var(--nm-ink); }
-.nm-all .nm-focus__cap { font-size: 13px; color: var(--nm-ink-3); }
-.nm-all .nm-focus__lane { display: grid; gap: 4px; }
-.nm-all .nm-focus__lane h4 { margin: 2px 0 4px; font-size: 11px; font-weight: 600; letter-spacing: .08em; text-transform: uppercase; color: var(--nm-ink-3); }
-.nm-all .nm-row { display: grid; grid-template-columns: 22px 1fr; gap: 10px; align-items: center; padding: 6px 8px; margin: 0 -8px; border-radius: 10px; color: var(--nm-ink); text-decoration: none; transition: background .15s; }
-.nm-all .nm-row:hover, .nm-all .nm-row.nm-lit { background: var(--s-pill); }
-.nm-all .nm-row__icon { width: 22px; height: 22px; border-radius: 7px; display: grid; place-items: center; background: var(--s-pill); color: var(--s-ink); }
-.nm-all .nm-row:hover .nm-row__icon, .nm-all .nm-row.nm-lit .nm-row__icon { background: var(--s-ink); color: #fff; }
-.nm-all .nm-row__icon svg { width: 13px; height: 13px; fill: currentColor; }
-.nm-all .nm-row__t { display: grid; line-height: 1.25; min-width: 0; }
-.nm-all .nm-row__name { font-size: 14px; font-weight: 600; display: flex; align-items: center; gap: 8px; }
-.nm-all .nm-row__why { font-size: 12.5px; color: var(--nm-ink-3); }
-.nm-all .nm-row__why::first-letter { text-transform: uppercase; }
-.nm-all .nm-row .nm-next { font-size: 10px; padding: 3px 6px 2px; }
-
-@media (max-width: 900px) {
-  .nm-all .nm-allgrid { grid-template-columns: 1fr; }
-}
-@media (max-width: 640px) {
-  .nm-all .nm-node text { display: none; }
-  .nm-all .nm-node circle.nm-dot { r: 11; }
-  .nm-all .nm-node.nm-active circle.nm-dot { r: 13; }
-  .nm-all .nm-secname { font-size: 17px; }
-  .nm-all .nm-centre .nm-c1 { font-size: 34px; } .nm-all .nm-centre .nm-c2 { font-size: 19px; } .nm-all .nm-centre .nm-c3 { font-size: 16px; }
-}
-
 @media (prefers-reduced-motion: reduce) {
-  .navmap *, .navmap *::before, .navmap *::after { transition: none !important; }
+  .navmap * { transition: none !important; }
 }
