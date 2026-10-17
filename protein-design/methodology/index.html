@@ -186,13 +186,12 @@
 
         <h3 id="background">Background</h3>
 
-        <p>Computational tools can provide great insights into protein engineering whilst acting as key decision-making engines for wet lab work, but the process can be oversimplified with convenient instead of thorough analysis of inputs and outputs, and the lack of a project-integrated, tailored methodology.</p>
+        <p>Computational tools give real insight into protein engineering and act as decision-making engines for wet lab work, but the process is easy to oversimplify: convenient analysis of inputs and outputs in place of thorough analysis, and no methodology tailored to the project it serves.</p>
 
-        <p>The outputs of these tools are highly dependent on the quality of inputs, parameters, and underlying assumptions. This problem is aggravated when it comes to simulating the behaviour of short, disordered peptides such as <i>Brassica oleracea</i> Plant Elicitor Peptide 4 (BoPEP4), one of our three protectants, among Late Embryogenesis Abundant protein 14 (LEA14), 1-aminocyclopropane-1-carboxylate deaminase (ACC deaminase). A successful protein engineering workflow requires not only utilising computational methods, but also understanding how and why these tools generate their predictions.</p>
+        <p>Their outputs depend heavily on the quality of inputs, parameters and underlying assumptions, and that dependence is worse for short, disordered peptides such as <i>Brassica oleracea</i> Plant Elicitor Peptide 4 (BoPEP4), one of our three protectants alongside Late Embryogenesis Abundant protein 14 (LEA14) and 1-aminocyclopropane-1-carboxylate deaminase (ACC deaminase). A workflow that holds up has to account for how and why these tools generate their predictions, not merely run them.</p>
 
         <p>Our docking methodology aims to predict and evaluate the formation of the ternary signaling complex consisting of the plasma membrane receptor-like kinase PEPR1, the co-receptor kinase BAK1, and the Brassica-derived peptide ligand BoPEP4. Addressing the challenges associated with interpreting computational predictions, we designed our workflow based on the principles of integrative structural biology established by Alexandre Bonvin, Professor of Computational Structural Biology at Utrecht University. His research on computational approaches for the characterisation of biomolecular interactions and the development of various Bonvin Lab software tools provided the foundation for our protein design strategy.</p>
 
-        <p>In the following sections, we aim to justify the process we used to choose our protectants, the preparation which went into the creation of docking inputs, the use of the HADDOCK 2.4 docking software, and the compilation of finalised evidence via evaluation tools and modelling, strengthening evidence through the OpenMM Molecular Dynamics tool run on Google Colab.</p>
 
         <figure class="fig fig--chart wide">
           <div class="fig__frame">
@@ -222,7 +221,7 @@
 
             <p>We focused particularly on BoPEP4, while using the better-characterised, receptor interaction verified, <i>Arabidopsis thaliana</i> Pep system as a structural and functional reference.</p>
 
-            <p>Rather than assuming that the most extensively characterised Arabidopsis peptide AtPEP1 would automatically be the optimal engineering target, we examined its various features and characteristics before making a decision. AtPEP1 primarily was known to combat biotic stress, while our project direction looked for a peptide that could combat measurable abiotic stress, an issue well detected by weather data, sensors, dissimilar to the detection of living things. Additionally, drought stress, which after analysis was proven to be prominent in Taiwan, was directly signalled by BoPEP4, increasing its value in the project. This focus on abiotic stress also allows us to evaluate the protectant through direct plant phenotypes, such as root length and biomass. By comparison, assays for biotic stress would require characterisation of interactions between the plant and another living organism, introducing additional variables that make the protectant's effects more difficult to isolate and quantify.</p>
+            <p>We did not assume that the most extensively characterised Arabidopsis peptide AtPEP1 would automatically be the best engineering target, and examined its various features and characteristics before making a decision. AtPEP1 primarily was known to combat biotic stress, while our project direction looked for a peptide that could combat measurable abiotic stress, an issue well detected by weather data, sensors, dissimilar to the detection of living things. Additionally, drought stress, which after analysis was proven to be prominent in Taiwan, was directly signalled by BoPEP4, increasing its value in the project. This focus on abiotic stress also allows us to evaluate the protectant through direct plant phenotypes, such as root length and biomass. By comparison, assays for biotic stress would require characterisation of interactions between the plant and another living organism, introducing additional variables that make the protectant's effects more difficult to isolate and quantify.</p>
 
             <p>Lastly, the comparatively variable N-terminal region of BoPEP4, alongside its highly conserved C-terminal PEP motif (SSG-x<sub>2</sub>-G-x<sub>2</sub>-N), provides an opportunity for targeted N-terminal mutations while preserving the conserved core of PEP activity. Using the relatively less-studied BoPEP4 as our starting scaffold further allows us to investigate previously less-characterised sequence variants.</p>
             </div>
@@ -232,7 +231,7 @@
             <div class="fold__body">
             <p>We applied a similar comparative approach to the LEA (Late embryogenesis abundant) protein/peptide family, but the analysis required a different structural perspective. LEA proteins are commonly associated with abiotic-stress responses and can exhibit substantial intrinsic disorder. Unlike compact globular proteins, some LEA proteins can lack a single stable three-dimensional structure under normal conditions and may adopt different conformations depending on their environment or binding partners.</p>
 
-            <p>We therefore distinguished between ordered/globular proteins and intrinsically disordered LEA proteins (IDPs) when considering computational modeling. This distinction was important because mutation methods designed for stable folded proteins cannot necessarily be interpreted in the same way for highly disordered peptides, while both types of molecules exist in the LEA family.</p>
+            <p>We therefore distinguished between ordered/globular proteins and intrinsically disordered LEA proteins (IDPs) when considering computational modelling. This distinction was important because mutation methods designed for stable folded proteins cannot necessarily be interpreted in the same way for highly disordered peptides, while both types of molecules exist in the LEA family.</p>
 
             <p>Of the molecules in the LEA family, we selected the ordered/globular protein LEA14, with its demonstrated protection against drought, salinity, and osmotic stress. Firstly, we aimed to select an ordered protein because LEA14's defined three-dimensional structure provides a stable scaffold for protein-protein interactions involved in molecular stabilisation. Unlike BoPEP4, whose function depends on highly specific recognition of the PEPR receptor and the BAK1 co-receptor, LEA14 does not rely on recognition of a single dedicated receptor to exert its protective effects. Instead, its stabilisation function can involve interactions with various cellular proteins, making a larger, structured protein better suited to investigating how structural features influence molecular protection under abiotic stress. By contrast, an intrinsically disordered LEA could exert broader, less target-specific protective effects through molecular-shield mechanisms.</p>
 
@@ -264,19 +263,16 @@
           <details class="fold fold--case">
             <summary>Tang et al.</summary>
             <div class="fold__body">
-        <p>Tang et al. provided an important structural reference for the interaction between AtPEP1 and its receptor. The reported structure showed how the peptide adopts an extended binding conformation within the receptor complex.</p>
+        <p>Tang et al. resolved the AtPEP1 and receptor structure, and showed the peptide binding in an extended conformation. That is why our docking inputs treat BoPEP4 as a set of possible conformational states and not as one rigid structure, and it is the reference we read the receptor-binding interface against.</p>
 
-        <p>This was particularly important for our modeling strategy because a peptide should not necessarily be represented as a single rigid structure. Instead, its possible conformational states need to be considered before docking.</p>
 
-        <p>The structural information from Tang et al. therefore informed both our peptide conformer generation and our interpretation of the receptor-binding interface.</p>
             </div>
           </details>
           <details class="fold fold--case">
             <summary>Yu et al.</summary>
             <div class="fold__body">
-        <p>We also reviewed Yu et al. to examine broader strategies for designing and engineering plant-derived peptides. This literature helped contextualise our engineering axes and supported the use of sequence modifications such as truncation and residue substitution as exploratory approaches.</p>
+        <p>Yu et al. covers broader strategies for designing and engineering plant-derived peptides. It supported truncation and residue substitution as exploratory axes, and we used it to identify the modifications that would produce interpretable changes, since not every mutation is equally informative.</p>
 
-        <p>Rather than treating every mutation as equally informative, we used the literature to identify modifications that could produce interpretable changes in peptide sequence or structure.</p>
             </div>
           </details>
           <details class="fold fold--case">
@@ -286,17 +282,14 @@
 
         <h5>Truncation series</h5>
 
-        <p>A truncation series progressively removes portions of a peptide sequence. By comparing variants of different lengths, we can investigate whether a particular region is necessary for the expected interaction.</p>
+        <p>A truncation series progressively removes portions of a peptide sequence, so comparing variants of different lengths shows whether a particular region is necessary for the expected interaction. <a href="../sprints/#the-truncation-ladder">Truncation</a> was therefore both an engineering strategy and a mechanistic probe for us.</p>
 
-        <p>For our workflow, <a href="../sprints/#the-truncation-ladder">truncation</a> was therefore treated as both an engineering strategy and a mechanistic probe.</p>
 
         <h5>Alanine scan</h5>
 
-        <p>Alanine scanning provides a systematic approach for evaluating individual residues. Selected residues are replaced with alanine while maintaining a relatively simple side chain.</p>
+        <p><a href="../sprints/#the-alanine-scan">Alanine scanning</a> evaluates individual residues systematically, replacing selected ones with alanine while maintaining a relatively simple side chain. The purpose is diagnostic: individual substitutions identify residues whose side-chain properties may be important for receptor recognition or structural stability. Together with truncation, it is the conceptual foundation of our later mutation-design workflow.</p>
 
-        <p>The purpose is not simply to create &ldquo;better&rdquo; peptides. Instead, individual substitutions can help identify residues whose side-chain properties may be important for receptor recognition or structural stability.</p>
 
-        <p>Together, truncation and <a href="../sprints/#the-alanine-scan">alanine scanning</a> provided a conceptual foundation for our later mutation-design workflow.</p>
             </div>
           </details>
         </div>
@@ -317,21 +310,19 @@
 
         <p>Dr. Brophy works in Bioengineering at Stanford on the mechanisms of environmental stress resilience, and her interview shaped several decisions beyond the choice of ACC deaminase recorded above. When asked how to apply the logic of stress sensors and protectant synthesis for plants to tolerate heat and salinity, she recommended an OR-gate architecture. Her guidance on gate selection was to work backward from the application needs, since we should &ldquo;<i>select a logic gate that is activated under the conditions you care about</i>&rdquo; rather than starting from circuit design first. She pointed us towards 2 and 3 input logic gates in <i>E. coli</i> as a resource for identifying which combinations of architecture would fit.</p>
 
-        <p>Significantly, her ACC deaminase recommendation was scoped towards drought and heat, not confirmed for salinity specifically, and she did not make a direct claim about ACC deaminase's effectiveness under salinity stress. Thus, we followed with further research into the OR-gate suggesting extending to both heat and salinity.</p>
+        <p>Her ACC deaminase recommendation was scoped towards drought and heat, not confirmed for salinity specifically, and she did not make a direct claim about ACC deaminase's effectiveness under salinity stress. We therefore researched the OR-gate further, to see whether it extends to both heat and salinity.</p>
 
         <h3 id="sequence-alignment">Protectant families: sequence alignment</h3>
 
-        <p>After identifying our candidate protectants, we compared their sequences and structural characteristics to determine which analyses could provide useful engineering information. Because ReLEAF ultimately produces the protectants through engineered <i>Bacillus subtilis</i>, sequence-level analysis provided an initial way to evaluate conservation, variability, and potential engineering sites before moving into structural modeling.</p>
+        <p>After identifying our candidate protectants we compared their sequences and structural characteristics, to find which analyses would give useful engineering information. Sequence-level analysis was the cheapest first pass at conservation, variability and potential engineering sites, before any structural modelling.</p>
 
         <h4>Pep sequence alignment</h4>
 
-        <p>Multiple AtPEP sequences were aligned to identify shared amino acids and conserved sequence patterns. The alignment was used as a qualitative guide for distinguishing potentially functionally constrained regions from more variable regions.</p>
+        <p>Multiple AtPEP sequences were aligned to identify shared amino acids and conserved patterns, as a qualitative guide to which regions are functionally constrained and which vary. Comparing those patterns with BoPEP4 gave both halves of the engineering brief at once: residues conserved between BoPEP4 and the characterised AtPEPs are features to preserve, and the positions where they differ are candidates for mutation and truncation.</p>
 
-        <p>We then compared these patterns with BoPEP4. Conserved residues shared between BoPEP4 and characterised AtPEPs were treated as features worth preserving during engineering, while sequence differences provided candidate positions for subsequent mutation and truncation experiments.</p>
 
         <p>This analysis was particularly relevant because PEP activity depends on a short receptor-binding sequence. The AtPEP1-PEPR1 structure provides a structural context for interpreting these conserved residues, especially within the C-terminal region that makes concentrated receptor contacts.</p>
 
-        <p>Sequence comparison therefore served as a bridge between natural sequence diversity and rational engineering: conserved regions suggested features to protect, while variable regions suggested positions where sequence modifications could be explored.</p>
 
         <details class="fold fold--res">
           <summary><span class="fold__k">Results</span> BoPEP4 alignment findings <span class="fold__sub">23 positions, 10 identical to AtPEP1</span></summary>
@@ -444,7 +435,7 @@
 
         <p>We identified a total of two receptors and one co-receptor in the BoPEP4 signalling complex. Firstly, PEPR1, a plant leucine-rich repeat receptor-like kinase (LRR-RK) found in <i>Arabidopsis thaliana</i> that acts as an innate immunity pattern recognition receptor, has an extracellular domain outlined in wwPDB structure 5GR8, chain A, which we used as our docking receptor structure input.</p>
 
-        <p>Given the structural similarity between PEPR1 and PEPR2, we considered PEPR2 as an alternative receptor. Although PEPR2 is more specific toward AtPEP ligands, whereas PEPR1 exhibits broader Pep recognition, we generated a PEPR2 structure using both AlphaFold3 and homology modeling through SWISS-MODEL, using PEPR1 as a structural reference. However, due to the greater structural confidence and availability of experimentally resolved structural information for PEPR1, we selected PEPR1 as the primary receptor for our docking simulations and used PEPR2 primarily as a complementary model.</p>
+        <p>Given the structural similarity between PEPR1 and PEPR2, we considered PEPR2 as an alternative receptor. Although PEPR2 is more specific toward AtPEP ligands, whereas PEPR1 exhibits broader Pep recognition, we generated a PEPR2 structure using both AlphaFold3 and homology modelling through SWISS-MODEL, using PEPR1 as a structural reference. However, due to the greater structural confidence and availability of experimentally resolved structural information for PEPR1, we selected PEPR1 as the primary receptor for our docking simulations and used PEPR2 primarily as a complementary model.</p>
 
         <p>Furthermore, the structure of the co-receptor BAK1 was obtained via the 4MN8 PDB structure, chain B. 4MN8 is the crystal structure of the plant immune receptor complex containing the leucine-rich repeat (LRR) ectodomains of FLS2 and BAK1 bound to the bacterial flagellin epitope flg22. We used this BAK1 structure because, at the molecular level, BAK1 functions as a shared LRR co-receptor for multiple plant immune receptors, including PEPRs. Its conserved LRR ectodomain provides the structural framework for receptor-co-receptor association, allowing the experimentally resolved BAK1 structure from 4MN8 to serve as a structural model for its participation in the PEPR1-BoPEP4 complex. Thus, while 4MN8 does not contain PEPR1, its resolved BAK1 ectodomain can be used as a structural input based on the conserved molecular architecture of BAK1-mediated receptor complex formation.</p>
 
@@ -586,7 +577,7 @@
 
         <p class="ai">Sampling was 1000 rigid-body, 200 semi-flexible and 200 water-refined models per run, with FCC clustering at a 0.60 cutoff, a minimum cluster size of 4, and the peptide set fully flexible. Confirmation-class runs, where the question was the cost of a single edit and not where the peptide docks, used reduced sampling of 40/10/10 on the same protocol. These settings were held constant across every binary run so that scores stay comparable within the series.</p>
 
-        <p>The resulting models were clustered according to structural similarity and evaluated using HADDOCK scoring and subsequent structural assessment. Rather than treating the highest-scoring structure as definitively correct, we retained structurally plausible clusters for comparison and downstream analysis. This allowed us to determine whether different peptide conformations converged on similar binding modes and provided candidate PEPR1-BoPEP4 interfaces for assembly of the complete signaling complex. A further explanation of our docking results analysis is detailed in later sections.</p>
+        <p>The resulting models were clustered according to structural similarity and evaluated using HADDOCK scoring and subsequent structural assessment. We did not treat the highest-scoring structure as definitively correct, and retained structurally plausible clusters for comparison and downstream analysis. This allowed us to determine whether different peptide conformations converged on similar binding modes and provided candidate PEPR1-BoPEP4 interfaces for assembly of the complete signaling complex. A further explanation of our docking results analysis is detailed in later sections.</p>
 
         <h3 id="ternary-docking">Threaded ternary docking</h3>
 
@@ -594,17 +585,16 @@
 
         <p>To construct this ternary model, we used our binary docking results as structural starting points instead of independently docking all three components simultaneously. A selected PEPR1-BoPEP4 complex was retained as the established interaction, after which the BAK1 ectodomain was introduced based on the receptor-co-receptor interface identified during our structural restraint-mapping process.</p>
 
-        <p>This threaded approach allowed us to preserve the molecular geometry of the previously modeled ligand-receptor interaction while searching for a BAK1 orientation that was compatible with the existing complex. The resulting ternary models were then assessed for steric clashes, interface plausibility, and consistency with the structural information used to define our restraints.</p>
+        <p>This threaded approach allowed us to preserve the molecular geometry of the previously modelled ligand-receptor interaction while searching for a BAK1 orientation that was compatible with the existing complex. The resulting ternary models were then assessed for steric clashes, interface plausibility, and consistency with the structural information used to define our restraints.</p>
 
         <p class="ai">Two properties of the procedure are recorded alongside it. The ternary run inherits its binary input, so an error in the peptide register would be carried into the assembly and would not be caught downstream, which is why the binary complex was validated against 5GR8 before any ternary run was spent on it. And the two restraint sets holding the assembly together have different provenance: the peptide-to-receptor set is contact-derived from a solved co-crystal, the BAK1-to-receptor set is transferred from 4MN8 by structural analogy. They are not equally certain, so the output is reported as a structural hypothesis consistent with the published heterodimerisation biochemistry, not as a residue-level prediction of the complex.</p>
 
         <h3 id="ai-cofolding">AI co-folding</h3>
 
-        <p class="ai">HADDOCK searches for a favourable arrangement under restraints we supply. An AI co-folding predictor builds the complex straight from sequence with no restraints at all, so the two methods fail for different reasons and agreement between them carries information. We ran AlphaFold&nbsp;3 through the AlphaFold Server, templates enabled, five models per seed, with nothing from the HADDOCK workflow entering the job: no restraints, no docked coordinates, no interface lists. The two tracks run in parallel, and a co-fold result is never used to seed a docking run.</p>
+        <p class="ai">HADDOCK searches for a favourable arrangement under restraints we supply; an AI co-folding predictor builds the complex straight from sequence with none, so the two fail for different reasons and agreement between them carries information. We ran AlphaFold&nbsp;3 through the AlphaFold Server, templates enabled, five models per seed, with nothing from the HADDOCK workflow entering the job. The two tracks run in parallel, and a co-fold result never seeds a docking run.</p>
 
-        <p class="ai">For each job we record ipTM for the interface, pTM for the model, the ranking score, and the chain-pair ipTM matrix with the interface PAE, because a single ipTM averages across every interface and one confident pair can hide a failed one. The two tracks are compared on interface residue identity and not on global RMSD, since two models can superpose poorly and still put the same residues in contact. Agreement is read as independent support, and disagreement marks a region to scrutinise, not a loss for either method.</p>
+        <p class="ai">We record ipTM, pTM, the ranking score and the chain-pair ipTM matrix with the interface PAE, since a single ipTM averages across every interface and one confident pair can hide a failed one. The tracks are compared on interface residue identity and not on global RMSD. Before any of it is trusted, solved complexes of the same class are run under identical settings and the acceptance threshold is fixed from what they return.</p>
 
-        <p class="ai">Confidence is calibrated before it is trusted. Solved complexes of the same class are predicted first under identical settings, checked that they reproduce the deposited interface and not merely that they score well, and the acceptance threshold is fixed from those values before the unknown target is run.</p>
 
         <aside class="callout callout--unproven">
           <b class="callout__label">Confidence is not activity</b>
@@ -618,7 +608,9 @@
       <section class="sec pl-4" id="flex">
         <h2 data-toc="Flex" data-graft="F">Flex: molecular dynamics</h2>
 
-        <p>Molecular Dynamics (MD) simulation is a fundamental computational methodology that uses statistical mechanics to evaluate the physical properties, structural stability, and mechanism of action of engineered proteins and peptides. By integrating Newtonian equations of motion, MD tracks the velocities, positions, and interactions between molecules over time. We applied this to our project to understand the translation and secretion efficiency of our protectants by analysing the interactions between different receptors.</p>
+        <p>Docking returns a pose. It cannot say whether that pose survives once the atoms are allowed to move, and every design decision above rests on poses that have only been scored, not watched. Flex is where that gets tested.</p>
+
+        <p>The work is nine all-atom trajectories, which include an AtPEP1 benchmark and an apo receptor control alongside the BoPEP4 constructs. It is reported in full on the <a href="../molecular-dynamics/">Molecular Dynamics</a> page: the systems and their parameters, what each run changed about the design, and the limits of a 30&nbsp;ns window.</p>
 
       </section>
 
