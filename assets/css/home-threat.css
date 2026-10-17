@@ -1,254 +1,311 @@
 /* =============================================================================
-   ReLeaf homepage: 01 THE THREAT. Rebuilt 1 Oct.
+   ReLeaf homepage: 01 THE THREAT. One map, the whole screen, on a light
+   ground; the scroll moves it from place to place and the words sit on it.
+   Neo's map (his 17 and 18 Oct homepage), light ("readable and judge
+   friendly"). 18 Oct (owner): on white, and seven stops: his six places,
+   then the protectants (it was a section; home-safe.css is no longer loaded,
+   and the hour is off the homepage with home-hour.css).
    -----------------------------------------------------------------------------
-   The head across the top; under it the text column (the current view's
-   caption and the farmers' line) beside the map. Below 900px it is one
-   column: head, map, text.
+   Seven stops (index.html), each a place, one layer of the map and a few
+   lines. home-threat.js draws the map live from vectors and a farmland mask
+   (sharp at every zoom): paper land on a grey-blue sea, the farmland as ink
+   in the layer's colour, the coast and the county borders as hairlines.
 
-   THREE FRAMES: vol, small, conv (7 Oct, owner: volatility, the
-   small-scale farms, and where the two overlap; no place names on the map).
-   Every frame-bound element carries data-v, and the checked radio shows the
-   ones that match, through :has(). Without :has() only the volatility frame
-   shows and the switch hides.
+   THE COLOURS. Each measure has its own family on the paper, palest for the
+   lowest class and deepest for the highest:
+     --tm-v1..5   climate volatility       sage, sand, ochre, orange, rust
+     --tm-n1..5   night temperature        blue, pale blue, sand, orange, red
+     --tm-a1..3   farmer age               pale slate, steel, deep slate
+     --tm-farm    all farmland             green
+   home-threat.js reads these properties, so a swatch in a key is exactly the
+   colour dense farmland of that class shows on the map.
 
-   THE SCROLL SEQUENCE (home.js piece 8, bottom of this sheet): .is-scrolly
-   makes .th-run a runway and .th-pin a sticky screen; the script ticks the
-   radio for the frame the scroll has reached. The switch is hidden until
-   .is-explore.
+   RESTING (no script, no WebGL 2, reduced motion, narrow or short screens):
+   the stops stand one under the other, each with a still of the map at its
+   view (.tm-still, threat-map-1..7.webp, rendered by
+   build/threat-stills.html from the same renderer).
+
+   LIVE (.is-live, home-threat.js): .tm-run is a runway and .tm-pin holds the
+   whole screen, under the fixed site nav. The script draws the map into .tm-map (a canvas, an SVG of
+   lines, the callouts and the locator) and marks the current stop (.is-on).
+   The words of a stop come in word by word (each word a span with its
+   index, --w).
    ========================================================================== */
 
-/* The one copy of the volatility ramp on the page: 01's map and key, and
-   03's five day cells (home-distance.css), read it. The raster was painted in
-   these hexes, so change them only with the images (build/threat-map.py,
-   then build/threat-farms.py).
-   Class breaks as on Geospatial Analysis, Figure 6 (formerly Figures 7 and 8): */
+/* The volatility ramp (home-hour.css read it while the hour was on the page). */
 :root {
   --vol-1: #eceadf;   /* 0.38 to 0.49 */
   --vol-2: #ddd8c2;   /* 0.49 to 0.60 */
   --vol-3: #cbbf98;   /* 0.60 to 0.71 */
   --vol-4: #c2984e;   /* 0.71 to 0.82 */
   --vol-5: #9a3d22;   /* 0.82 to 0.93 */
+  --th-land:  #f5f5f5;
+  --th-coast: #d4d4d4;
 }
-/* 01 only: the land without farmland and the coastline, painted into
-   threat-farms.webp too; keep equal to LAND and COAST in build/threat-farms.py */
-:root {
-  --th-land:  #f5f5f5;   /* = --gray-100 */
-  --th-coast: #d4d4d4;   /* = --gray-300 */
+.tm {
+  /* volatility: 0.38 0.49 0.60 0.71 0.82 0.93 */
+  --tm-v1: #b9c7b0; --tm-v2: #d8c890; --tm-v3: #e0a457; --tm-v4: #c96b35; --tm-v5: #9a3d22;
+  /* night temperature, °C: 20.5 24.2 25.4 25.9 26.5 27.3 */
+  --tm-n1: #6f93c4; --tm-n2: #a9bddb; --tm-n3: #e3d2b2; --tm-n4: #df9a60; --tm-n5: #b5452a;
+  /* average farmer age: 55, 56, 57 */
+  --tm-a1: #a9bccb; --tm-a2: #6d8fa8; --tm-a3: #2f5672;
+  --tm-farm: #4f8a3a;   /* 17 Oct: the painted valley's green (the plan, 4.4) */
+  --tm-hair: rgb(52 64 58 / .55);
+  --tm-sea: #ffffff;   /* 18 Oct (owner): the map sits on white (home-threat.js SEA) */
+  background-color: var(--white);   /* the chapters rail reads this */
+  color: var(--gray-700);
 }
+.tm .pb-index::after { content: none; }
+html.hl:not(.hero-in) .tm-still img { display: none; }
 
-.th { background: var(--white); }
-
-.th__grid { display: grid; grid-template-columns: minmax(0, 1fr); row-gap: var(--sp-6); }
-.th__head { max-width: 52rem; }
-.th__head .pb-title { max-width: 30ch; }
-.th__head .pb-lede { margin-bottom: 0; text-wrap: pretty; }
-@media (min-width: 900px) {
-  .th__grid {
-    grid-template-columns: minmax(0, 34rem) auto;
-    justify-content: space-between;
-    column-gap: clamp(2rem, 5vw, 5rem);
-    align-items: start;
-  }
-  .th__head { grid-column: 1; grid-row: 1; }
-  .th__text { grid-column: 1; grid-row: 2; }
-  .th-map   { grid-column: 2; grid-row: 1 / span 2; }
+/* ------------------------------------------------------------ the words --- */
+.tm-card .pb-title {
+  max-width: 17ch; margin: 0 0 var(--sp-6);
+  color: var(--leaf-900);
+  font-size: clamp(1.9rem, 1rem + 2.6vw, 3.25rem); line-height: 1.04; letter-spacing: -.022em;
 }
-@media (min-width: 1180px) {
-  .th__grid { padding-right: max(var(--sp-6), calc(5rem - (100vw - var(--max)) / 2)); }
+.tm-stops { list-style: none; margin: 0; padding: 0; }
+/* counted on the card and the place line: on the live map the list and the
+   stops have no box of their own (display: contents), and a counter needs one */
+.tm-card { counter-reset: tm; }
+.tm-where { counter-increment: tm; }
+.tm-where {
+  display: flex; align-items: center; gap: .7rem;
+  margin: 0 0 .8rem;
+  font-size: .72rem; font-weight: 650; letter-spacing: .16em; text-transform: uppercase;
+  color: var(--leaf-700);
 }
-@media (max-width: 899px) {
-  .th-map { order: 2; }
-  .th__text { order: 3; }
+.tm-where::before {
+  content: counter(tm, decimal-leading-zero);
+  font-variant-numeric: tabular-nums; letter-spacing: .06em;
+  color: var(--gray-500);
+  padding-right: .7rem; border-right: 1px solid rgb(0 0 0 / .18);
 }
-
-/* ------------------------------------------------ the view's words ------- */
-/* the three frames' words share one grid cell, so the column never jumps
-   as they change; the one that matches the checked layer shows */
-.th-steps { display: grid; }
-.th-view {
-  grid-area: 1 / 1;
-  opacity: 0; visibility: hidden; transform: translateY(.5rem);
-  transition: opacity .3s ease, transform .3s ease, visibility 0s linear .3s;
-}
-.th-view[data-v="vol"] { opacity: 1; visibility: visible; transform: none; transition-delay: .15s, .15s, 0s; }
-.th-view__say {
+.tm-say {
   margin: 0; max-width: 30rem;
-  font-size: clamp(1.0625rem, .95rem + .4vw, 1.3125rem);
-  line-height: 1.5; color: var(--gray-700);
+  font-size: clamp(1.0625rem, .96rem + .45vw, 1.3rem); line-height: 1.52;
+  color: #1f2522;
   text-wrap: pretty;
 }
-/* ------------------------------------------------------------- the map --- */
-.th-map { position: relative; margin: 0; display: grid; justify-items: center; row-gap: var(--sp-4); }
-.th-map__plate {
-  position: relative;
-  height: min(calc(var(--pb-screen) - 2 * var(--screen-pad) - 5rem), 40rem);
-  aspect-ratio: 840 / 1267;
-}
-.th-map__img { position: absolute; inset: 0; width: 100%; height: 100%; display: block; }
-/* The maps sit one screen under the hero, close enough that a slow line
-   fetches all three (290 kB) while the hero photograph is still coming. With
-   script they wait for it (or for the first scroll): html.hero-in, set in
-   index.html. A lazy image that is not rendered is not fetched. */
-html.hl:not(.hero-in) .th-map__img { display: none; }
 
-/* every view-bound picture starts hidden but volatility's (7 Oct: three
-   frames, vol, small, conv; the place labels on the map went) */
-.th-map__img[data-v] {
-  opacity: 0; visibility: hidden;
-  transition: opacity .5s ease, visibility 0s linear .5s;
+/* the layer's key, under its words: one swatch per class, each break or
+   class labelled under it */
+.tm-key {
+  display: grid; gap: .5rem; width: min(100%, 16rem);
+  margin: var(--sp-5) 0 0;
+  font-size: .6875rem; line-height: 1.2; color: var(--gray-600);
 }
-.th-map__img[data-v="vol"] { opacity: 1; visibility: visible; }
-@supports selector(:has(*)) {
-  .th:has(.th-views input:not([value="vol"]):checked) .th-map__img[data-v="vol"] { opacity: 0; visibility: hidden; transition: opacity .5s ease, visibility 0s linear .5s; }
-  .th:has(.th-views input:not([value="vol"]):checked) .th-view[data-v="vol"] { opacity: 0; visibility: hidden; transform: translateY(-.5rem); transition: opacity .3s ease, transform .3s ease, visibility 0s linear .3s; }
-.th:has(.th-views input[value="vol"]:checked) .th-key [data-v]:not([data-v~="vol"]) { display: none; }
-.th:has(.th-views input[value="small"]:checked) .th-map__img[data-v="small"] { opacity: 1; visibility: visible; transition-delay: 0s; }
-.th:has(.th-views input[value="small"]:checked) .th-view[data-v="small"] { opacity: 1; visibility: visible; transform: none; transition-delay: .15s, .15s, 0s; }
-.th:has(.th-views input[value="small"]:checked) .th-key [data-v]:not([data-v~="small"]) { display: none; }
-.th:has(.th-views input[value="conv"]:checked) .th-map__img[data-v="conv"] { opacity: 1; visibility: visible; transition-delay: 0s; }
-.th:has(.th-views input[value="conv"]:checked) .th-view[data-v="conv"] { opacity: 1; visibility: visible; transform: none; transition-delay: .15s, .15s, 0s; }
-.th:has(.th-views input[value="conv"]:checked) .th-key [data-v]:not([data-v~="conv"]) { display: none; }
-}
-@supports not selector(:has(*)) {
-  .th-views, .th-key [data-v]:not([data-v~="vol"]) { display: none; }
-}
+.tm-key b { font-size: .66rem; font-weight: 650; letter-spacing: .12em; text-transform: uppercase; color: var(--gray-700); }
+.tm-ramp { display: grid; grid-auto-flow: column; grid-auto-columns: 1fr; gap: 2px; height: .45rem; }
+.tm-ramp i { border-radius: 1px; background: var(--c); box-shadow: 0 0 0 .5px rgb(0 0 0 / .12); }
+.tm-ramp i:nth-child(1) { --c: var(--tm-v1); }
+.tm-ramp i:nth-child(2) { --c: var(--tm-v2); }
+.tm-ramp i:nth-child(3) { --c: var(--tm-v3); }
+.tm-ramp i:nth-child(4) { --c: var(--tm-v4); }
+.tm-ramp i:nth-child(5) { --c: var(--tm-v5); }
+.tm-ramp--n i:nth-child(1) { --c: var(--tm-n1); }
+.tm-ramp--n i:nth-child(2) { --c: var(--tm-n2); }
+.tm-ramp--n i:nth-child(3) { --c: var(--tm-n3); }
+.tm-ramp--n i:nth-child(4) { --c: var(--tm-n4); }
+.tm-ramp--n i:nth-child(5) { --c: var(--tm-n5); }
+.tm-ramp--a i:nth-child(1) { --c: var(--tm-a1); }
+.tm-ramp--a i:nth-child(2) { --c: var(--tm-a2); }
+.tm-ramp--a i:nth-child(3) { --c: var(--tm-a3); }
+/* the breaks: a tick and a figure on each, the end ones included */
+.tm-ticks { position: relative; height: 1.25rem; margin-top: -.2rem; font-variant-numeric: tabular-nums; }
+.tm-ticks span { position: absolute; top: 0; left: var(--at); transform: translateX(-50%); padding-top: .4rem; white-space: nowrap; }
+.tm-ticks span::before { content: ""; position: absolute; left: 50%; top: 0; width: 1px; height: .25rem; background: rgb(0 0 0 / .28); }
+.tm-ticks span:nth-child(1) { --at: 0%; }
+.tm-ticks span:nth-child(2) { --at: 20%; }
+.tm-ticks span:nth-child(3) { --at: 40%; }
+.tm-ticks span:nth-child(4) { --at: 60%; }
+.tm-ticks span:nth-child(5) { --at: 80%; }
+.tm-ticks span:nth-child(6) { --at: 100%; }
+/* classes, not breaks (age): each figure centred under its swatch */
+.tm-classes { display: grid; grid-auto-flow: column; grid-auto-columns: 1fr; gap: 2px; margin-top: -.2rem; text-align: center; font-variant-numeric: tabular-nums; }
+.tm-sw { width: 1.6rem; height: .45rem; border-radius: 1px; background: var(--tm-farm); box-shadow: 0 0 0 .5px rgb(0 0 0 / .12); }
 
-@media (prefers-reduced-motion: reduce) {
-  .th-map__img[data-v], .th-view, .th-views { transition: none !important; }
+/* ----------------------------------------------------- resting: stacked --- */
+.tm-map, .tm-prog { display: none; }
+.tm-stop {
+  display: grid; grid-template-columns: minmax(0, 1fr); gap: var(--sp-4);
+  padding: var(--sp-6) 0; border-top: 1px solid rgb(0 0 0 / .08);
 }
-
-/* the switch: a segmented control over the map, its name beside it */
-.th-views {
-  display: flex; flex-wrap: wrap; align-items: center; justify-content: center;
-  gap: .35rem .6rem;
-  margin: 0; padding: 0; border: 0;
-}
-.th-views__k {
-  float: left; margin-right: .25rem;
-  font-size: .6875rem; font-weight: 700; letter-spacing: .1em; text-transform: uppercase;
-  color: var(--gray-500);
-}
-.th-views label { position: relative; cursor: pointer; }
-.th-views input { position: absolute; inset: 0; margin: 0; opacity: 0; cursor: pointer; }
-.th-views span {
-  display: block; padding: .5rem .95rem; border-radius: 999px;
-  font-size: .8125rem; font-weight: 600; line-height: 1.2;
-  color: var(--leaf-900); background: var(--white);
-  box-shadow: inset 0 0 0 1px var(--gray-300);
-  transition: background-color .2s ease, color .2s ease, box-shadow .2s ease;
-}
-.th-views label:hover span { box-shadow: inset 0 0 0 1px var(--leaf-700); }
-.th-views input:checked + span { background: var(--leaf-900); color: var(--white); box-shadow: none; }
-.th-views input:focus-visible + span { outline: 2px solid var(--leaf-700); outline-offset: 2px; }
-
-/* ------------------------------------------------------------- the key --- */
-.th-key {
-  display: grid; gap: .3rem; align-content: start;
-  width: min(100%, 16rem);
-  font-size: var(--text-xs); line-height: 1.4; color: var(--gray-600);
-}
-.th-key__grp {
-  margin-bottom: .15rem;
-  font-size: .6875rem; font-weight: 700; letter-spacing: .08em; line-height: 1.35;
-  text-transform: uppercase; color: var(--gray-700);
-}
-.th-key__ramp {
-  display: grid; grid-auto-flow: column; grid-auto-columns: 1fr;
-  height: .625rem; border-radius: 2px; overflow: hidden;
-  box-shadow: inset 0 0 0 1px rgb(0 0 0 / .06);
-}
-.th-key__ramp i:nth-child(1) { background: var(--vol-1); }
-.th-key__ramp i:nth-child(2) { background: var(--vol-2); }
-.th-key__ramp i:nth-child(3) { background: var(--vol-3); }
-.th-key__ramp i:nth-child(4) { background: var(--vol-4); }
-.th-key__ramp i:nth-child(5) { background: var(--vol-5); }
-.th-key__ends { display: flex; justify-content: space-between; font-variant-numeric: tabular-nums; }
-.th-key__sw { display: flex; align-items: center; gap: .5rem; margin-top: .2rem; }
-.th-key__sw i {
-  flex: none; width: 1.5rem; height: .625rem; border-radius: 2px;
-  background: var(--th-land); box-shadow: inset 0 0 0 1px var(--th-coast);
-}
-.th-key__sw i.is-farm { background: var(--leaf-700); box-shadow: none; }
-
-/* wide: the key sits in the open sea at the top left of the plate */
-@media (min-width: 900px) {
-  .th-map { justify-items: stretch; }
-  /* round 4 (owner: the island looked squeezed). The plate keeps its own
-     width from its height and aspect ratio instead of stretching to the
-     column, and sits at the column's right edge. */
-  .th-map__plate { justify-self: end; width: auto; }
-  .th-key { position: absolute; top: 4rem; left: 0; width: min(12.5rem, 40%); }
-}
-@media (max-width: 899px) {
-  .th-map__plate { width: min(60vw, 22rem); height: auto; }
-}
-@media (max-width: 639px) {
-  .th-map__plate { width: min(80vw, 19rem); }
-}
-
-/* no short rule after the section index (house rule) */
-.th .pb-index::after { content: none; }
-
-/* ------------------------------------------------ round 2, 1 Oct -------- */
-
-
-/* ------------------------------------------- the scroll sequence, 7 Oct --- */
-/* The words: one sentence per frame, the line the reader takes away. The
-   frame's name used to sit over it as a kicker; it went on 8 Oct
-   (Jacquelyn) because the switch and the map key already carry it. */
-.th-view__say {
-  font-size: clamp(1.25rem, 1.02rem + .75vw, 1.75rem);
-  font-weight: 600; line-height: 1.32; letter-spacing: -.016em;
-  color: var(--leaf-900);
-  text-wrap: balance;
-}
-.th__text { display: grid; row-gap: var(--sp-5); }
-
-/* where the three frames are, while the sequence runs: three short bars,
-   the ones reached filled. Not a control; it gives way to the switch. */
-.th-prog { display: none; }
-.th.is-scrolly:not(.is-explore) .th-prog {
-  display: flex; gap: .375rem;
-}
-.th-prog i {
-  width: 2rem; height: 3px; border-radius: 2px;
-  background: var(--gray-200);
-  transition: background-color .3s ease;
-}
-.th-prog i.is-on { background: var(--leaf-700); }
-
-.th.is-scrolly { padding: 0; }
-.th.is-scrolly .th-run { height: calc(var(--pb-screen) + var(--th-run, 150svh)); }
-.th.is-scrolly .th-pin {
-  position: sticky; top: var(--pb-offset);
-  height: var(--pb-screen);
-  display: flex; align-items: center;
-  overflow: hidden;
-}
-.th.is-scrolly .th__grid { padding-block: var(--screen-pad); }
-
-/* the switch keeps its place while hidden, so nothing moves when it comes */
-.th-views { transition: opacity .45s ease, transform .45s ease, visibility 0s linear 0s; }
-.th.is-scrolly:not(.is-explore) .th-views {
-  opacity: 0; visibility: hidden; transform: translateY(-.375rem);
-  transition: opacity .2s ease, transform .2s ease, visibility 0s linear .2s;
-}
-
-/* narrow: head, map, words in one column; pinned, the map takes what the
-   words leave */
-@media (max-width: 899px) {
-  .th.is-scrolly .th__grid {
-    height: 100%;
-    display: flex; flex-direction: column; row-gap: var(--sp-4);
+.tm:not(.is-live) .tm-where { margin-bottom: 0; }
+@media (min-width: 760px) {
+  /* the words in the middle rows, centred on the still beside them */
+  .tm-stop {
+    grid-template-columns: minmax(0, 1fr) minmax(0, 26rem); grid-template-rows: 1fr auto auto auto 1fr;
+    column-gap: var(--sp-7); row-gap: 0;
   }
-  .th.is-scrolly .th-map {
-    flex: 1 1 0; min-height: 0;
-    grid-template-rows: auto minmax(0, 1fr) auto;
-  }
-  .th.is-scrolly .th-map__plate { height: 100%; width: auto; max-width: 100%; }
-  .th.is-scrolly .th-key { display: none; }
+  .tm-stop > .tm-head { grid-column: 1; grid-row: 2; margin-bottom: var(--sp-4); }
+  .tm-stop > .tm-body { grid-column: 1; grid-row: 3; }
+  .tm:not(.is-live) .tm-say { margin-top: var(--sp-4); }
+  .tm-still { grid-column: 2; grid-row: 1 / -1; }
 }
-@media (min-width: 900px) {
-  /* the map spans both rows; the head and the words sit together at the top */
-  .th.is-scrolly .th__grid { grid-template-rows: auto 1fr; row-gap: clamp(2rem, 6vh, 4rem); }
+.tm-still {
+  position: relative; overflow: hidden;
+  aspect-ratio: 4 / 3;
+  border-radius: calc(var(--radius) + 2px);
+  background: var(--tm-sea);
+  box-shadow: 0 0 0 1px rgb(0 0 0 / .06), 0 24px 60px -34px rgb(0 0 0 / .35);
 }
+.tm-still img { display: block; width: 100%; height: 100%; object-fit: cover; }
+
+/* ---------------------------------------------------------- live: pinned --- */
+.tm.is-live { padding: 0; }
+/* the stops' runway, then the exit (home-threat.js EXIT, in screens). About
+   55svh between two stops: six moves for seven stops */
+.tm.is-live .tm-run { height: calc(100svh + var(--tm-run, 330svh) + 80svh); }
+/* the held screen is see-through, so the map dissolves into the page's
+   white and its foot never shows as an edge; it keeps its layers to itself
+   (isolation) */
+.tm.is-live .tm-pin { background: transparent; isolation: isolate; }
+/* the hand-off (18 Oct): where the map is live, the question's scene (#dx)
+   starts 40% of a screen up, over the end of the map's exit, so the question
+   comes up as the map dissolves instead of after a stretch of empty white.
+   Its paper is white like the map's ground, so no edge shows */
+.tm.is-live + .dx { position: relative; z-index: 1; margin-top: -40svh; }
+/* the whole screen; the fixed site nav sits over its top */
+.tm.is-live .tm-pin { position: sticky; top: 0; height: 100svh; overflow: hidden; }
+.tm.is-live .tm-map { display: block; position: absolute; inset: 0; overflow: hidden; background: var(--tm-sea); }
+.tm-gl, .tm-vec { position: absolute; inset: 0; width: 100%; height: 100%; display: block; }
+.tm-vec { overflow: hidden; pointer-events: none; }
+.tm-vec path { fill: none; stroke-linejoin: round; stroke-linecap: round; }
+.tm-v-coast { stroke: var(--tm-hair); stroke-width: .75px; }
+.tm-v-border { stroke: rgb(52 64 58 / .2); stroke-width: .6px; }
+/* the focused place's outline: a hairline over a soft wider stroke (the
+   script sets the group's opacity as the camera arrives and leaves) */
+.tm-v-focus__wide { stroke: rgb(20 64 43 / .12); stroke-width: 5px; }
+.tm-v-focus__thin { stroke: rgb(20 64 43 / .85); stroke-width: 1.25px; }
+
+/* 18 Oct (owner: fewer gradients): no shade under the words. Each stop's
+   camera leaves the left of the screen to sea or bare land, and the words
+   keep a small paper halo of their own (.tm-card). */
+
+/* the callout: a ring on the place, a leader and a shelf, the name above
+   the shelf and its class below. The script picks the side (.is-left). */
+.tm-mark {
+  position: absolute; left: 0; top: 0; z-index: 1;
+  width: 0; height: 0; pointer-events: none;
+  will-change: transform;
+}
+.tm-mark__lead { position: absolute; overflow: visible; }
+.tm-mark__under { fill: rgb(255 255 255 / .75); }
+.tm-mark__ring { fill: none; stroke: var(--leaf-900); stroke-width: 1.5; }
+.tm-mark__core { fill: var(--leaf-900); }
+.tm-mark__lead path { fill: none; stroke: rgb(20 64 43 / .8); stroke-width: 1.1; stroke-dasharray: 1; stroke-dashoffset: 1; }
+.tm-mark__label {
+  position: absolute;
+  display: grid; gap: .55rem; white-space: nowrap;
+  /* a paper halo, so the label reads on any ground */
+  text-shadow: 0 0 2px #fff, 0 0 5px #fff, 0 0 12px rgb(255 255 255 / .9);
+}
+.tm-mark.is-left .tm-mark__label { text-align: right; }
+/* where no side leaves the label on clear ground (a narrow screen), it sits
+   on a plate of paper */
+.tm-mark.has-plate .tm-mark__label {
+  margin: -7px 0; padding: 7px 10px; border-radius: 6px; box-sizing: content-box;
+  background: rgb(255 255 255 / .92); box-shadow: 0 0 0 1px rgb(0 0 0 / .06), 0 10px 28px -12px rgb(0 0 0 / .3);
+}
+.tm-mark__label b { font-size: 1.0625rem; font-weight: 650; letter-spacing: -.012em; line-height: 1.1; color: var(--leaf-900); }
+.tm-mark__label span { font-size: .625rem; font-weight: 650; letter-spacing: .15em; line-height: 1.45; text-transform: uppercase; color: var(--gray-600); }
+.tm-mark { opacity: 0; transition: opacity .2s ease; }
+.tm-mark :is(.tm-mark__ring, .tm-mark__under) { transform-box: fill-box; transform-origin: center; transform: scale(.2); transition: transform .25s ease; }
+.tm-mark .tm-mark__label { opacity: 0; transition: opacity .2s ease; }
+.tm-mark.is-on { opacity: 1; transition: opacity .3s ease .1s; }
+.tm-mark.is-on :is(.tm-mark__ring, .tm-mark__under) { transform: none; transition: transform .6s cubic-bezier(.2, .9, .3, 1.25) .15s; }
+.tm-mark.is-on .tm-mark__lead path { stroke-dashoffset: 0; transition: stroke-dashoffset .65s cubic-bezier(.6, 0, .2, 1) .3s; }
+.tm-mark.is-on .tm-mark__label { opacity: 1; transition: opacity .5s ease .75s; }
+
+/* the locator: the whole island, small, with the view drawn on it */
+.tm-loc {
+  position: absolute; right: var(--sp-5); bottom: var(--sp-5); z-index: 2;
+  width: 3.4rem; aspect-ratio: 840 / 1267;
+  opacity: 0;
+}
+.tm-loc svg { display: block; width: 100%; height: 100%; overflow: visible; }
+.tm-loc__land { fill: rgb(0 0 0 / .06); }
+.tm-loc__seen { fill: rgb(20 64 43 / .55); }
+.tm-loc__coast { fill: none; stroke: rgb(0 0 0 / .32); stroke-width: .7px; }
+@media (min-width: 1180px) { .tm-loc { right: calc(var(--sp-5) + 4.5rem); } }
+
+/* the words over the map, on the left, below the nav */
+.tm.is-live .tm-inner {
+  position: relative; z-index: 2; height: 100%;
+  display: flex; flex-direction: column; justify-content: center;
+  padding-top: calc(var(--nav-h) + var(--sp-4)); padding-bottom: var(--sp-6);
+  pointer-events: none;
+}
+.tm.is-live .tm-card { width: min(31rem, 44%); pointer-events: auto; text-shadow: 0 0 16px rgb(255 255 255 / .85); }
+.tm.is-live .tm-stops { display: grid; }
+.tm.is-live .tm-stop { grid-area: 1 / 1; display: block; padding: 0; border: 0; visibility: hidden; }
+.tm.is-live .tm-stop.is-on { visibility: visible; }
+.tm.is-live .tm-still { display: none; }
+
+/* the entrance: the place name slides in, then the words rise in one by one,
+   then the key; leaving, everything fades quickly */
+.tm.is-live .tm-where, .tm.is-live .tm-key { opacity: 0; transform: translateY(.4rem); transition: opacity .2s ease, transform .2s ease; }
+.tm.is-live .tm-say .tm-w { display: inline-block; opacity: 0; transform: translateY(.55em); filter: blur(3px); transition: opacity .15s ease, transform .15s ease, filter .15s ease; }
+.tm.is-live .tm-stop.is-on .tm-where { opacity: 1; transform: none; transition: opacity .45s ease, transform .45s ease; }
+.tm.is-live .tm-stop.is-on .tm-say .tm-w {
+  opacity: 1; transform: none; filter: none;
+  transition: opacity .5s ease, transform .5s cubic-bezier(.2, .7, .2, 1), filter .5s ease;
+  transition-delay: calc(120ms + var(--w) * 22ms);
+}
+.tm.is-live .tm-stop.is-on .tm-key { opacity: 1; transform: none; transition: opacity .5s ease .6s, transform .5s ease .6s; }
+/* the key's swatches draw in left to right after the words */
+.tm.is-live .tm-ramp i, .tm.is-live .tm-sw { transform: scaleX(0); transform-origin: 0 50%; transition: transform .2s ease; }
+.tm.is-live .tm-stop.is-on .tm-ramp i, .tm.is-live .tm-stop.is-on .tm-sw { transform: none; transition: transform .45s cubic-bezier(.2, .7, .2, 1); }
+.tm.is-live .tm-stop.is-on .tm-ramp i:nth-child(1), .tm.is-live .tm-stop.is-on .tm-sw { transition-delay: .7s; }
+.tm.is-live .tm-stop.is-on .tm-ramp i:nth-child(2) { transition-delay: .76s; }
+.tm.is-live .tm-stop.is-on .tm-ramp i:nth-child(3) { transition-delay: .82s; }
+.tm.is-live .tm-stop.is-on .tm-ramp i:nth-child(4) { transition-delay: .88s; }
+.tm.is-live .tm-stop.is-on .tm-ramp i:nth-child(5) { transition-delay: .94s; }
+
+.tm.is-live .tm-prog { display: flex; gap: .375rem; margin: var(--sp-6) 0 0; }
+.tm-prog i { width: 1.6rem; height: 2px; border-radius: 2px; background: rgb(0 0 0 / .14); transition: background-color .3s ease; }
+.tm-prog i.is-on { background: var(--leaf-500); }
+
+@media print {
+  .tm.is-live .tm-run { height: auto; }
+  .tm.is-live .tm-pin { position: static; height: auto; }
+}
+
+/* ---------------------------------------------- a stop with its own heading --- */
+/* A stop may carry its own heading (.tm-head; 18 Oct, stop 7, the
+   protectants' old section title). While one of them is on, it takes the
+   section title's place: in the live card the titles share one row and the
+   stops' bodies (place, words, key) another, so each row is as tall as its
+   tallest and nothing moves when the stops swap. */
+.tm-head {
+  margin: 0;
+  font-family: var(--font-display); font-weight: 700;
+  font-size: clamp(1.55rem, .9rem + 1.9vw, 2.45rem); line-height: 1.08; letter-spacing: -.022em;
+  color: var(--leaf-900); text-wrap: balance; max-width: 18ch;
+}
+.tm.is-live .tm-card { display: grid; grid-template-columns: minmax(0, 1fr); align-content: center; }
+.tm.is-live .tm-card > .pb-title { grid-row: 1; grid-column: 1; align-self: end; transition: opacity .35s ease; }
+.tm.is-live .tm-stops, .tm.is-live .tm-stop { display: contents; }
+.tm.is-live .tm-stop > * { grid-column: 1; }
+.tm.is-live .tm-stop > .tm-head { grid-row: 1; align-self: end; margin-bottom: var(--sp-6); opacity: 0; transform: translateY(.4rem); transition: opacity .25s ease, transform .25s ease; }
+.tm.is-live .tm-stop > .tm-body { grid-row: 2; align-self: start; }
+.tm.is-live .tm-card > .tm-prog { grid-row: 3; }
+.tm.is-live .tm-stop > .tm-still, .tm.is-live .tm-stop > .visually-hidden { grid-row: 4; }
+.tm.is-live .tm-card.is-late > .pb-title { opacity: 0; }
+.tm.is-live .tm-stop.is-on > .tm-head { opacity: 1; transform: none; transition: opacity .45s ease .05s, transform .45s ease .05s; }
+/* display: contents leaves the stop no box, so its hiding falls to its children */
+.tm.is-live .tm-stop:not(.is-on) > * { visibility: hidden; }
+.tm.is-live .tm-stop.is-on > :not(.tm-still) { visibility: visible; }
+
+/* 17 Oct, after the exemplar study (EPFL, GreatBay-SCIE and MSP-Maastricht
+   lead each problem screen with one big figure): each place's own number,
+   large, with a short label; the words under it no longer repeat it. */
+.tm-num { margin: 0 0 .7rem; display: grid; gap: .2rem; }
+.tm-num b {
+  font-family: var(--font-display); font-weight: 800; letter-spacing: -.035em; line-height: .95;
+  font-size: clamp(2.6rem, 1.6rem + 3vw, 4.25rem); color: var(--leaf-900); font-variant-numeric: tabular-nums;
+}
+.tm-num span { font-size: clamp(.95rem, .9rem + .2vw, 1.05rem); line-height: 1.35; font-weight: 600; color: var(--gray-700); max-width: 34ch; }
+.tm.is-live .tm-num { opacity: 0; transform: translateY(.5rem); transition: opacity .2s ease, transform .2s ease; }
+.tm.is-live .tm-stop.is-on .tm-num { opacity: 1; transform: none; transition: opacity .5s ease .08s, transform .5s cubic-bezier(.2, .7, .2, 1) .08s; }

@@ -732,10 +732,15 @@
       var m = { show: !hero || y > hero.offsetHeight * 0.6 };
       if (!m.show) return m;
 
-      var line = y + window.innerHeight * 0.34;
+      var line = window.innerHeight * 0.34;
       var at = 0;
+      // a chapter that lives inside a pinned stage (the map's last two
+      // stops, How ReLEAF works) says where it is on its runway itself
+      // (__chapterTop, home-threat.js and home-story.js)
       marks.forEach(function (el, i) {
-        if (el && el.getBoundingClientRect().top + y <= line) at = i;
+        if (!el) return;
+        var top = el.__chapterTop ? el.__chapterTop() : el.getBoundingClientRect().top;
+        if (top <= line) at = i;
       });
       m.at = at;
       var box = rail.getBoundingClientRect();
@@ -798,7 +803,14 @@
        2.62 to 2.82  the name, ReLEAF
        2.74 to 2.94  the line under it
        2.84 to 3.06  each card's words open under its tag
-       3.00 to 3.10  the finished band, held
+       3.00 to 3.20  the finished band, held
+     18 Oct (owner): then the answer makes room for how it works.
+       3.15 to 3.45  the five cards and the line under the name fade
+       3.20 to 3.85  the reactor and its name glide into a left column
+       3.45 to 3.90  How ReLEAF works (#how) comes in on the right
+       3.90 to 6.60  the scroll plays its drawing (home-story.js, hosted on
+                     this runway from data-story-lead = 3.9)
+       6.60 to 6.85  its last frame, held
 
      The chips land exactly on the tags and are drawn like them (they share
      the proportions, home-demands.css), so at 2.47 the chips hand over to
@@ -828,6 +840,12 @@
     var lede = sol.querySelector(".rxs__lede");
     var model = document.getElementById("rx");
     var grid = document.getElementById("partlist");
+    // How ReLEAF works, hosted in this screen (home-story.js), and the parts
+    // of the answer that make room for it
+    var howSec = document.getElementById("how");
+    var howCard = howSec && howSec.querySelector(".st-card");
+    var inner = sol.querySelector(".rxs__inner");
+    var sides = [".rxs__side--l", ".rxs__side--r", ".rxs__wide"].map(function (q) { return sol.querySelector(q); });
     // the card tags, in the chips' order: Protective (under the model), On
     // demand and Automated (left), Biosafe and Monitored (right)
     var tags = [".rxs__wide", ".rxs__side--l > li:nth-child(1)", ".rxs__side--l > li:nth-child(2)",
@@ -836,7 +854,8 @@
       return el ? el.querySelector(".rxs-card__tag") : null;
     });
     if (!pin || !runwayEl || !paper || !row || !title || chips.length !== 5 ||
-        tags.indexOf(null) !== -1 || !stage || !head || !lede || !model || !grid) return;
+        tags.indexOf(null) !== -1 || !stage || !head || !lede || !model || !grid ||
+        !howSec || !howCard || !inner || sides.indexOf(null) !== -1) return;
     var rx = window.__homeRx;
 
     /* ---- without the scene: the chips come in one by one, once ---- */
@@ -855,10 +874,10 @@
     if (reduced || !window.matchMedia) return;
     // the runway in screens: the same number as .dx__runway's height in
     // home-demands.css
-    var RUN = 3.1;
+    var RUN = 6.85, LEAD = 3.9;
     var fits = window.matchMedia("(min-width: 980px) and (min-height: 640px)");
     var live = false, geo = null, navH = 68, parked = null, printing = false;
-    var moved = [title, kick, head, lede, model, sol, paper].concat(chips);
+    var moved = [title, kick, head, lede, model, sol, paper].concat(chips, sides);
     var cache = new Map();
 
     // write only what changed since the last frame
@@ -883,7 +902,8 @@
       dmd.style.removeProperty("--dmd-m");
       grid.style.removeProperty("--dx-card");
       grid.style.removeProperty("--dx-tag");
-      dx.classList.remove("is-early");
+      dx.style.removeProperty("--dx-how");
+      dx.classList.remove("is-early", "is-how");
       cache = new Map();
       park(false);
     }
@@ -899,6 +919,16 @@
         return { x: r.left - pr.left + r.width / 2, y: r.top - pr.top + r.height / 2, w: r.width };
       };
       geo = { run: Math.max(1, runwayEl.offsetHeight), from: chips.map(box), to: tags.map(box) };
+      // where the reactor goes: the middle of the room left of the card, as
+      // the card stands once it is in (hosted layout, --dx-how at 1)
+      howSec.classList.add("is-live", "is-hosted");
+      dx.style.setProperty("--dx-how", "1");
+      var cr = howCard.getBoundingClientRect(), ir = inner.getBoundingClientRect();
+      var left = ir.left + (parseFloat(window.getComputedStyle(inner).paddingLeft) || 0);
+      var mr = model.getBoundingClientRect(), lr = lede.getBoundingClientRect();
+      dx.style.removeProperty("--dx-how");
+      var dxm = (left + cr.left) / 2 - (mr.left + mr.width / 2);
+      geo.go = { x: dxm, yHead: lr.height * 0.55, yModel: -lr.height * 0.45 };
     }
 
     function decide() {
@@ -968,17 +998,26 @@
 
       // the reactor comes up from the middle of the five
       var r = easeOut(span(s, 2.35, 2.7));
+      // and later glides into the left column, with its name, as the cards
+      // and the line make way and How ReLEAF works comes in on the right
+      var go = inOut(span(s, 3.2, 3.85)), gx = g.go.x * go;
+      var out = easeOut(span(s, 3.15, 3.45)), hin = easeOut(span(s, 3.45, 3.9));
       put(model, "opacity", f3(r));
-      put(model, "transform", r >= 1 ? "none" : "scale(" + f3(0.85 + 0.15 * r) + ")");
+      put(model, "transform", go > 0 ? "translate(" + px(gx) + "," + px(g.go.yModel * go) + ") scale(" + f3(1 - 0.08 * go) + ")"
+                                     : r >= 1 ? "none" : "scale(" + f3(0.85 + 0.15 * r) + ")");
       // then its name, then the line under it, then the cards' words
       var h = easeOut(span(s, 2.62, 2.82)), l = easeOut(span(s, 2.74, 2.94));
       put(head, "opacity", f3(h));
-      put(head, "transform", h >= 1 ? "none" : "translateY(" + px(16 * (1 - h)) + ")");
-      put(lede, "opacity", f3(l));
+      put(head, "transform", go > 0 ? "translate(" + px(gx) + "," + px(g.go.yHead * go) + ")"
+                                    : h >= 1 ? "none" : "translateY(" + px(16 * (1 - h)) + ")");
+      put(lede, "opacity", f3(l * (1 - out)));
       put(lede, "transform", l >= 1 ? "none" : "translateY(" + px(12 * (1 - l)) + ")");
       var card = easeOut(span(s, 2.84, 3.06));
       put(grid, "--dx-card", f3(card));
       dx.classList.toggle("is-early", card < 0.6);
+      sides.forEach(function (el) { put(el, "opacity", out > 0 ? f3(1 - out) : ""); });
+      put(dx, "--dx-how", f3(hin));
+      dx.classList.toggle("is-how", out > 0.5);
 
       // the model's own loop is held until it is about to be seen, so the
       // hand-off has the frame to itself
@@ -1017,7 +1056,8 @@
     // chips are in, the answer at its finished frame
     function spot(id) {
       var top = dx.getBoundingClientRect().top + window.scrollY - navH;
-      return top + geo.run * (id === "demands" ? 1.25 / RUN : 1);
+      var at = id === "demands" ? 1.25 : id === "how" ? LEAD : 3.12;
+      return top + geo.run * at / RUN;
     }
     function go(id, how) {
       if (!live || !geo) return false;
@@ -1028,7 +1068,7 @@
       var a = e.target.closest && e.target.closest("a[href*='#']");
       if (!a || e.defaultPrevented || e.button !== 0 || e.metaKey || e.ctrlKey || e.shiftKey || e.altKey) return;
       var href = a.getAttribute("href"), id = href.slice(href.indexOf("#") + 1);
-      if (id !== "demands" && id !== "solution") return;
+      if (id !== "demands" && id !== "solution" && id !== "how") return;
       if (href.charAt(0) !== "#" && a.pathname !== location.pathname) return;
       if (go(id)) {
         e.preventDefault();
@@ -1037,7 +1077,7 @@
     });
     function fromHash(how) {
       var id = location.hash.slice(1);
-      if (id === "demands" || id === "solution") go(id, how);
+      if (id === "demands" || id === "solution" || id === "how") go(id, how);
     }
     window.addEventListener("hashchange", function () { fromHash("instant"); });
     // keyboard focus on a card, while the cards are not in yet: to the

@@ -1,0 +1,181 @@
+/* =============================================================================
+   ReLEAF homepage: 3b HOW RELEAF WORKS (#how). Neo's walkthrough from his
+   18 Oct homepage, after Lambert-GA's "The Varroa mite": one card whose
+   heading stays, one drawing that plays without a cut, one caption that
+   changes. Trimmed from his home-story.css to this one card (18 Oct, owner):
+   no subject column, no first face, no dive into the cell. No gradients:
+   every ground, card and part is one flat colour.
+   -----------------------------------------------------------------------------
+   RESTING (no script, or a screen under 560px tall): the card on the ink,
+   the drawing still in its overview and the captions as a numbered list.
+   LIVE (.is-live, home-story.js): the section holds one screen for its
+   runway (--st-len screens) and the card rises in (--st-in, 0 to 1).
+   ========================================================================== */
+
+.st {
+  position: relative;
+  padding: clamp(3rem, 8vh, 5rem) 0;
+  color: var(--st-ink);
+}
+/* the reactor's ink (home-reactor.css), so the answer runs on without a seam */
+.hw {
+  --st-card: #f8faf6; --st-line: rgb(20 64 43 / .12); --st-ink: #1f2522; --st-strong: var(--leaf-900);
+  --st-muted: #56605a; --st-accent: #23684a; --st-scene: #e7efe3; --st-halo: #e7efe3;
+  background-color: var(--ink);            /* the chapters rail reads this */
+}
+
+/* ------------------------------------------------------------ resting --- */
+.st__inner { display: grid; grid-template-columns: minmax(0, 1fr); justify-items: center; }
+.st-card {
+  width: 100%; max-width: 70rem; box-sizing: border-box;
+  background: var(--st-card); border: 1px solid var(--st-line); border-radius: 24px;
+  padding: clamp(1.25rem, 2.2vw, 2rem);
+}
+.st-kick {
+  margin: 0;
+  font-size: .72rem; font-weight: 700; letter-spacing: .15em; text-transform: uppercase; color: var(--st-accent);
+}
+.st-title {
+  margin: .35rem 0 0;
+  font-family: var(--font-display); font-size: clamp(1.5rem, 1.1rem + 1.2vw, 2.15rem);
+  font-weight: 720; line-height: 1.08; letter-spacing: -.022em; color: var(--st-strong); text-wrap: balance;
+}
+.st-context { margin: .5rem 0 0; max-width: 52ch; font-size: clamp(.95rem, .9rem + .2vw, 1.05rem); line-height: 1.5; color: var(--st-muted); text-wrap: pretty; }
+
+.st-scene { margin: var(--sp-4) 0; border-radius: 16px; overflow: hidden; background: var(--st-scene); }
+.st-svg { display: block; width: 100%; height: auto; aspect-ratio: 1260 / 660; }
+.st-caps { margin: 0; padding-left: 1.3rem; display: grid; row-gap: .6rem; font-size: 1rem; line-height: 1.55; color: var(--st-ink); }
+.st-caps li::marker { color: var(--st-accent); font-weight: 700; }
+/* what only the live scene shows: the labels, the flows, the other states */
+.st:not(.is-live) :is([data-k^="lab-"], [data-flow], [data-k="rays-red"], [data-k="leds-red"], [data-k="halo"],
+  [data-k="heat"], [data-k="beam"]) { display: none; }
+
+/* ------------------------------------------------------------- live ----- */
+.st.is-live { padding: 0; }
+.st.is-live .st__run { height: calc(100svh + var(--st-len, 3) * 100svh); }
+.st.is-live .st__stage {
+  position: sticky; top: 0; height: 100svh; overflow: clip;
+  padding-top: var(--nav-h, 68px); box-sizing: border-box;
+}
+.st.is-live .st__inner {
+  height: 100%; align-items: center;
+  padding-block: clamp(.75rem, 3svh, 2rem);
+  box-sizing: border-box;
+}
+/* the card's width follows its height: home-scenes.js frames each beat for
+   the drawing's own shape (about 1.9 : 1), so a card much wider than Neo's
+   column crops the top and foot of every beat */
+.st.is-live .st-card {
+  --st-h: min(46rem, calc(100svh - var(--nav-h, 68px) - clamp(1.5rem, 6svh, 4rem)));
+  height: var(--st-h); max-width: min(70rem, calc(var(--st-h) * 1.22));
+  display: grid; grid-template-rows: minmax(0, 1fr);
+  overflow: hidden;
+}
+.st.is-live .st-face--scene { display: grid; grid-template-rows: auto minmax(0, 1fr) auto; min-height: 0; }
+.st.is-live .st-scene { position: relative; min-height: 0; margin: var(--sp-4) 0 var(--sp-3); }
+.st.is-live .st-svg { position: absolute; inset: 0; width: 100%; height: 100%; aspect-ratio: auto; }
+.st.is-live .st-foot { display: grid; grid-template-columns: minmax(0, 1fr); align-items: start; }
+.st.is-live .st-caps { list-style: none; padding: 0; display: grid; min-height: calc(3 * 1.55em); font-size: clamp(1rem, .95rem + .2vw, 1.1rem); }
+.st.is-live .st-caps li { grid-area: 1 / 1; opacity: 0; max-width: 64ch; text-wrap: pretty; }
+/* the opening beat: the card rises into place out of the ink */
+.st.is-live[data-story-beat] .st__inner { opacity: var(--st-in, 1); transform: translateY(calc((1 - var(--st-in, 1)) * 5svh)); }
+
+/* HOSTED (.is-hosted, home-story.js): inside the question's scene (#dx,
+   home.js piece 7), over the answer, in the pin's one screen. The card
+   stands at the right of the column; the scene fades and slides it in with
+   --dx-how (0 to 1) as the reactor glides into the room left of it. Nothing
+   in it takes the pointer: the scroll is its only control */
+.st.is-live.is-hosted { position: absolute; inset: 0; z-index: 4; background: transparent; pointer-events: none; }
+.st.is-live.is-hosted .st__run { height: 100%; }
+.st.is-live.is-hosted .st__stage { position: static; height: 100%; padding-top: 0; }
+.st.is-live.is-hosted .st__inner { justify-items: end; }
+.st.is-live.is-hosted .st-card {
+  --st-h: min(46rem, calc(100svh - var(--nav-h, 68px) - clamp(1.5rem, 6svh, 4rem)));
+  max-width: min(62%, calc(var(--st-h) * 1.22));
+  opacity: var(--dx-how, 0); transform: translateX(calc((1 - var(--dx-how, 0)) * 3rem));
+  will-change: opacity, transform;
+}
+
+@media (max-width: 899px) {
+  .st.is-live .st-card { height: auto; max-height: calc(100svh - var(--nav-h, 68px) - 1.5rem); padding: 1rem 1.1rem; border-radius: 18px; }
+  .st.is-live .st-title { font-size: 1.35rem; }
+  .st.is-live .st-context { font-size: .9rem; }
+  .st.is-live .st-caps { font-size: .95rem; min-height: calc(4 * 1.55em); }
+  .st.is-live .st-face--scene { grid-template-rows: auto auto minmax(0, 1fr); }
+  .st.is-live .st-foot { grid-template-columns: minmax(0, 1fr); row-gap: .6rem; align-content: start; }
+  .st.is-live .st-scene { height: min(calc(100vw - 4.5rem), 46svh); }
+}
+
+@media print {
+  .st.is-live .st__run { height: auto; }
+  .st.is-live .st__stage { position: static; height: auto; }
+}
+
+/* ------------------------------------------------------ the drawings --- */
+.st-svg { overflow: hidden; }
+.st-svg [data-draw], .st-svg path[data-draw] { stroke-dasharray: 1; }
+.st-lab {
+  font-family: var(--font-body, "Inter", system-ui, sans-serif); font-size: 15px; font-weight: 600; letter-spacing: .01em;
+  fill: #2b3a32; paint-order: stroke; stroke: var(--st-halo); stroke-width: 5px; stroke-linejoin: round;
+}
+.st-lab--prot { fill: #a8661a; }
+.st-lab--red { fill: #c0442f; }
+.st-lab--green { fill: #35e08a; }
+
+/* the reactor */
+.rs-sky { fill: var(--st-scene); }
+.rs-soil { fill: #c49a6c; }
+.rs-soil-line { fill: none; stroke: #8f6a44; stroke-width: 3; }
+.rs-furrow { fill: none; stroke: rgb(120 86 52 / .3); stroke-width: 3; }
+.rs-sun { fill: #f2b544; }
+.rs-sunrays { fill: none; stroke: #f2b544; stroke-width: 5; stroke-linecap: round; }
+.rs-heat { fill: none; stroke: #e0a457; stroke-width: 3.5; stroke-linecap: round; }
+.rs-cloud { fill: #ffffff; stroke: #c3cfc6; stroke-width: 3; }
+.rs-stem { fill: none; stroke: #3f7a33; stroke-width: 6; stroke-linecap: round; }
+.rs-leaf { fill: #4f8a3a; }
+.rs-rib { fill: none; stroke: #346f2c; stroke-width: 2; stroke-linecap: round; }
+.rs-halo { fill: rgb(53 224 138 / .1); stroke: #35b06e; stroke-width: 3; stroke-dasharray: 10 9; }
+.rs-sensor rect { fill: #24302b; }
+.rs-ant { fill: none; stroke: #24302b; stroke-width: 3; stroke-linecap: round; }
+.rs-blink { fill: #35e08a; }
+.rs-sig { fill: none; stroke: #23684a; stroke-width: 3; stroke-linecap: round; }
+.rs-post { fill: none; stroke: #6d7a72; stroke-width: 6; }
+.rs-panel { fill: #26322c; }
+.rs-screen { fill: #f4f7f2; }
+.rs-g1, .rs-g2, .rs-g3 { fill: none; stroke-width: 10; }
+.rs-g1 { stroke: #8fc79a; } .rs-g2 { stroke: #e0a457; } .rs-g3 { stroke: #c96b35; }
+.rs-needle { fill: none; stroke: #1f2522; stroke-width: 4; stroke-linecap: round; }
+.rs-hub { fill: #1f2522; }
+.rs-hub--w { fill: #ffffff; }
+.rs-handle { fill: none; stroke: #26322c; stroke-width: 10; stroke-linecap: round; }
+.rs-case { fill: #f3f6f1; stroke: #26322c; stroke-width: 10; }
+.rs-ray { fill: rgb(53 224 138 / .24); }
+.rs-ray--red { fill: rgb(224 83 61 / .2); }
+.rs-lamp { fill: #3a4a42; }
+.rs-leds circle { fill: #8a968f; }
+.rs-leds--on circle { fill: #35e08a; }
+.rs-leds--red circle { fill: #e0533d; }
+.rs-tube { fill: none; stroke: #b8c7be; stroke-width: 12; stroke-linecap: round; stroke-linejoin: round; }
+.rs-none { fill: none; stroke: none; }
+.rs-perm { fill: none; stroke: #7fb0d2; stroke-width: 8; stroke-linecap: round; stroke-linejoin: round; }
+.rs-emit { fill: #5d8fb3; }
+.rs-cap { fill: #6d7a72; }
+.rs-glass { fill: rgb(255 255 255 / .7); stroke: #9fb3a8; stroke-width: 4; }
+.rs-broth { fill: #dfe6c9; }
+.rs-broth--on { fill: #c3e6c3; }
+.rs-stir { fill: #6d7a72; }
+.rs-rod { fill: #9fb5a6; }
+.rs-rod--on { fill: #2fa866; opacity: var(--on, 1); }
+.rs-rod--lit { fill: #2fa866; }
+.rs-dot { fill: #e8a33d; stroke: #b8741e; stroke-width: 1.5; }
+.rs-photo { fill: #3a4a42; }
+.rs-beam { fill: none; stroke: #f0a03c; stroke-width: 4; stroke-linecap: round; }
+.rs-pump { fill: #2f6fb0; }
+.rs-pumphead { fill: #ffffff; }
+.rs-arm { fill: none; stroke: #2f6fb0; stroke-width: 3; stroke-linecap: round; }
+.rs-roller { fill: #2f6fb0; }
+.rs-cart { fill: #fbfbf7; stroke: #9fb3a8; stroke-width: 4; }
+.rs-fibre { fill: none; stroke: #c4d2ca; stroke-width: 3; }
+.rs-pores { fill: none; stroke: #7fb0d2; stroke-width: 4; stroke-dasharray: 2 10; stroke-linecap: round; }
+.rs-drop { fill: #6aa6cf; }
+
