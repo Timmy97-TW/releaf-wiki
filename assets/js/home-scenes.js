@@ -9,15 +9,17 @@
    offsets from where the markup draws the part. frame() does what keyframes
    cannot: things that flow along a path, the cells' green.
 
-   THE REACTOR (one world, 1200 x 720, the field on the left, the machine on
-   the right, the permeate line running back along the ground):
-     0     the field in the heat; the leaf sensor and the forecast report
-     5.6   the stress index rises; the green lamp comes on over the culture
-     10.2  the cells make the protectant; the photometer reads them
-     14.6  the loop: the pump runs the culture through the membrane; the
-           cells go round, the protectant passes
-     19.6  the permeate runs back to the field and drips at the roots
-     24.8  the whole machine; red light switches the cells off
+   THE REACTOR (18 Oct, redrawn: one monoline schematic, 1200 x 680, the
+   field on the left, the controller in the middle, the machine on the
+   right, the permeate line running back under the ground). It draws itself
+   on first (0 to 3.4, in the order the story tells it), then plays:
+     0     the leaf sensor reads; its reading and the forecast run to the model
+     6     the index crosses the threshold; the call runs to the strip, which
+           lights one LED after another; the culture goes green
+     11    the cells make the protectant; the photometer reads them
+     16    the pump runs the loop; the cells go round, the protectant crosses
+     21    the permeate runs back along the ground and drips at the roots
+     26.6  the whole machine; red light switches the cells off
    THE CELL (1200 x 760, the membrane across the top, the DNA low down):
      0     ho1 and pcyA make the pigment from heme
      5     the pigment docks in CcaS; green light switches it on
@@ -57,74 +59,186 @@
   }
 
   /* ------------------------------------------------------- THE REACTOR --- */
+  // One drawing, 1200 x 680, drawn on in the order the story tells it
+  // (0 to 3: ground, field, forecast, controller, case, vessel, strip, loop,
+  // cartridge, permeate line), then played:
+  //   0     the leaf sensor reads; its reading and the forecast run to the model
+  //   6     the index crosses the threshold; the call runs to the strip; green
+  //   11    the cells make the protectant; the photometer reads them
+  //   16    the pump runs the loop; the cells go round, the protectant crosses
+  //   21    the permeate runs back along the ground to the roots
+  //   26.6  the whole machine; red light switches the cells off
+  function draw(t0, t1) {
+    var m = t0 + (t1 - t0) * 0.6;
+    return tr([[0, { a: 0, d: 0 }], [t0, { a: 0, d: 0 }], [m, { a: 1, d: 0.6 }, "out"], [t1, { a: 1, d: 1 }, "out"]]);
+  }
   var R = {
-    T0: 0.3, T1: 28,
-    beats: [5.6, 10.2, 14.6, 19.6, 24.8],
-    rests: [3.8, 9, 13.2, 18, 23.4, 27.4],
+    T0: 0, T1: 30,
+    beats: [6, 11, 16, 21, 26.6],
+    rests: [3.8, 9.2, 13.8, 18.8, 24.4, 29],
     cam: tr([
-      [0, { x: 230, y: 430, w: 600 }],
-      [3, { x: 250, y: 420, w: 640 }],
-      [5.8, { x: 390, y: 400, w: 760 }],
-      [7.6, { x: 640, y: 370, w: 860 }],
-      [10, { x: 735, y: 390, w: 560 }],
-      [12.6, { x: 745, y: 450, w: 430 }],
-      [14.8, { x: 880, y: 420, w: 640 }],
-      [18.4, { x: 940, y: 420, w: 620 }],
-      [20.8, { x: 760, y: 500, w: 960 }],
-      [23, { x: 300, y: 480, w: 640 }],
-      [25.6, { x: 590, y: 390, w: 1280 }],
-      [28, { x: 590, y: 390, w: 1280 }]
+      [0, { x: 600, y: 360, w: 1240 }],
+      [2.6, { x: 600, y: 360, w: 1240 }],
+      [4.2, { x: 270, y: 358, w: 720 }],
+      [5.6, { x: 330, y: 350, w: 740 }],
+      [7.4, { x: 450, y: 320, w: 640 }],
+      [9.6, { x: 700, y: 360, w: 680 }],
+      [12.2, { x: 775, y: 400, w: 460 }],
+      [15.4, { x: 790, y: 420, w: 480 }],
+      [17.6, { x: 950, y: 362, w: 600 }],
+      [20.4, { x: 990, y: 380, w: 580 }],
+      [22.4, { x: 1000, y: 500, w: 640 }],
+      [24.2, { x: 560, y: 540, w: 980 }, "sine"],
+      [25.8, { x: 250, y: 500, w: 600 }],
+      [27.4, { x: 600, y: 360, w: 1240 }],
+      [30, { x: 600, y: 360, w: 1240 }]
     ], { x: 0, y: 0, w: 1 }),
     parts: {
-      sun: tr([[0, { s: 1 }], [1.2, { s: 1.08 }], [2.4, { s: 1 }], [3.6, { s: 1.08 }], [4.8, { s: 1 }], [6, { s: 1.06 }], [7.2, { s: 1 }]]),
-      heat: tr([[0, { a: 0, y: 10 }], [0.6, { a: 1, y: 0 }], [4.6, { a: 1, y: -16 }], [5.6, { a: 0, y: -22 }]]),
-      cloud: tr([[0, { x: 0 }], [6, { x: 14 }, "sine"], [28, { x: 14 }]]),
-      blink: tr([[0, { a: 0 }], [0.8, { a: 0 }], [1, { a: 1 }], [1.4, { a: 0.2 }], [1.8, { a: 1 }], [2.2, { a: 0.2 }], [2.6, { a: 1 }], [3, { a: 0.25 }], [3.4, { a: 1 }], [5.8, { a: 1 }], [6.2, { a: 0 }]]),
-      sig1: tr([[0, { d: 0 }], [2.4, { d: 0 }], [4.4, { d: 1 }], [7.2, { d: 1, a: 1 }], [8, { a: 0 }]]),
-      sig2: tr([[0, { d: 0 }], [3, { d: 0 }], [4.8, { d: 1 }], [7.2, { d: 1, a: 1 }], [8, { a: 0 }]]),
-      needle: tr([[0, { r: -78 }], [4.4, { r: -78 }], [6.2, { r: 58 }, "out"], [25, { r: 58 }], [26.6, { r: -78 }]]),
-      "leds-on": tr([[0, { a: 0 }], [7.2, { a: 0 }], [7.8, { a: 1 }], [25, { a: 1 }], [25.5, { a: 0 }]]),
-      rays: tr([[0, { a: 0 }], [7.4, { a: 0 }], [8.4, { a: 1 }], [25, { a: 1 }], [25.6, { a: 0 }]]),
-      "leds-red": tr([[0, { a: 0 }], [25, { a: 0 }], [25.5, { a: 1 }]]),
-      "rays-red": tr([[0, { a: 0 }], [25.2, { a: 0 }], [26, { a: 1 }]]),
-      "broth-on": tr([[0, { a: 0 }], [8.4, { a: 0 }], [10.4, { a: 1 }], [25.6, { a: 1 }], [27, { a: 0.25 }]]),
-      stir: tr([[0, { r: 0 }], [8.6, { r: 0 }], [28, { r: 7000 }, "lin"]]),
-      rotor: tr([[0, { r: 0 }], [14.2, { r: 0 }], [28, { r: 2600 }, "lin"]]),
-      beam: tr([[0, { a: 0 }], [12, { a: 0 }], [12.3, { a: 1 }], [12.7, { a: 0.3 }], [13.1, { a: 1 }], [13.5, { a: 0.3 }], [13.9, { a: 1 }], [14.6, { a: 0 }]]),
-      halo: tr([[0, { a: 0, s: 0.9 }], [22.4, { a: 0, s: 0.9 }], [23.8, { a: 1, s: 1 }, "out"]]),
-      "lab-forecast": lab(1, 5.8),
-      "lab-sensor": lab(0.5, 5.8),
-      "lab-index": lab(4.4, 9.4),
-      "lab-lamp": lab(7.2, 11.6),
-      "lab-cells": lab(10.6, 14.6),
-      "lab-prot": lab(11.8, 14.6),
-      "lab-photo": lab(12, 14.6),
-      "lab-pump": lab(14.8, 19.4),
-      "lab-membrane": lab(15.2, 19.6),
-      "lab-pores": lab(16, 19.6),
-      "lab-stay": lab(16.4, 19.6),
-      "lab-perm": lab(19.8, 23.6),
-      "lab-roots": lab(21.2, 24.6),
-      "lab-off": tr([[0, { a: 0, y: 6 }], [25.2, { a: 0, y: 6 }], [25.7, { a: 1, y: 0 }, "out"]])
+      // the establishing draw-on
+      "grp-ground": draw(0.1, 1.2),
+      "grp-field": draw(0.3, 1.8),
+      "grp-forecast": draw(0.8, 1.9),
+      "grp-ctrl": draw(1.0, 2.1),
+      "grp-case": draw(1.1, 2.2),
+      "grp-vessel": draw(1.4, 2.4),
+      "grp-strip": draw(1.6, 2.3),
+      "grp-loop": draw(1.8, 2.8),
+      "grp-pump": draw(2.0, 2.6),
+      "grp-cart": draw(2.0, 2.8),
+      "grp-perm": draw(2.3, 3.4),
+      // 1  sense
+      blink: tr([[0, { a: 0 }], [2.8, { a: 0 }], [3, { a: 1 }], [3.4, { a: 0.15 }], [3.8, { a: 1 }], [4.2, { a: 0.15 }], [4.6, { a: 1 }], [5, { a: 0.15 }], [5.4, { a: 1 }], [6.4, { a: 1 }], [7, { a: 0 }]]),
+      "wire-sn": tr([[0, { d: 0, a: 1 }], [3.2, { d: 0 }], [4.4, { d: 1 }], [8.2, { d: 1, a: 1 }], [9, { a: 0.35 }]]),
+      fc: tr([[0, { d: 0 }], [3.4, { d: 0 }], [4.8, { d: 1 }]]),
+      "wire-fc": tr([[0, { d: 0, a: 1 }], [3.8, { d: 0 }], [5, { d: 1 }], [8.2, { d: 1, a: 1 }], [9, { a: 0.35 }]]),
+      // 2  predict, switch on
+      idx: tr([[0, { d: 0 }], [6.2, { d: 0 }], [8.2, { d: 1 }, "io"]]),
+      thrdot: tr([[0, { a: 0, s: 0.4 }], [7.7, { a: 0, s: 0.4 }], [8.1, { a: 1, s: 1 }, "out"], [26.8, { a: 1 }], [27.6, { a: 0 }]]),
+      thr: tr([[0, { a: 0 }], [1.6, { a: 0 }], [2.1, { a: 1 }]]),
+      "wire-lamp": tr([[0, { d: 0 }], [8.2, { d: 0 }], [9, { d: 1 }]]),
+      beam: tr([[0, { a: 0 }], [9.6, { a: 0 }], [10.6, { a: 1 }], [26.9, { a: 1 }], [27.5, { a: 0 }]]),
+      "beam-red": tr([[0, { a: 0 }], [27.2, { a: 0 }], [28, { a: 1 }]]),
+      "broth-on": tr([[0, { a: 0 }], [10.2, { a: 0 }], [12, { a: 1 }], [27.4, { a: 1 }], [29, { a: 0.3 }]]),
+      // 3  make
+      stir: tr([[0, { r: 0 }], [9.8, { r: 0 }], [30, { r: 6400 }, "lin"]]),
+      pbeam: tr([[0, { a: 0 }], [13.6, { a: 0 }], [13.9, { a: 1 }], [14.3, { a: 0.25 }], [14.7, { a: 1 }], [15.1, { a: 0.25 }], [15.5, { a: 1 }], [16.2, { a: 0 }]]),
+      // 4  separate
+      rotor: tr([[0, { r: 0 }], [15.8, { r: 0 }], [30, { r: 2400 }, "lin"]]),
+      "flow-loop": tr([[0, { a: 0 }], [16, { a: 0 }], [16.8, { a: 1 }], [21.4, { a: 1 }], [22.2, { a: 0 }]]),
+      pores: tr([[0, { a: 0 }], [17.6, { a: 0 }], [18.4, { a: 1 }], [26.6, { a: 1 }], [27.6, { a: 0.35 }]]),
+      // 5  deliver
+      "flow-perm": tr([[0, { a: 0 }], [21, { a: 0 }], [21.8, { a: 1 }], [26.4, { a: 1 }], [27.2, { a: 0 }]]),
+      halo: tr([[0, { a: 0, s: 0.92 }], [24.6, { a: 0, s: 0.92 }], [26, { a: 1, s: 1 }, "out"]]),
+      // the labels
+      "lab-forecast": lab(3.4, 6.2),
+      "lab-sensor": lab(2.9, 6.2),
+      "lab-index": lab(6.4, 10.2),
+      "lab-thr": lab(7.4, 10.2),
+      "lab-strip": lab(9.4, 12.6),
+      "lab-cells": lab(11.4, 16),
+      "lab-prot": lab(12.6, 16),
+      "lab-photo": lab(13.6, 16),
+      "lab-pump": lab(16.2, 21),
+      "lab-stay": lab(17.4, 21),
+      "lab-membrane": lab(16.8, 21.2),
+      "lab-pores": lab(17.6, 21.2),
+      "lab-perm": lab(21.2, 24.4),
+      "lab-roots": lab(23.6, 26.6),
+      "lab-off": tr([[0, { a: 0, y: 6, s: 1.3 }], [27.3, { a: 0, y: 6 }], [27.8, { a: 1, y: 0 }, "out"]])
+    },
+    setup: function (ctx) {
+      ctx.leds = {
+        on: [].slice.call(ctx.svg.querySelectorAll(".rw-leds--on")),
+        red: [].slice.call(ctx.svg.querySelectorAll(".rw-leds--red"))
+      };
+      ctx.flows = {};
+      [].forEach.call(ctx.svg.querySelectorAll("[data-flowel]"), function (p) {
+        ctx.flows[p.getAttribute("data-flowel")] = p;
+      });
     },
     frame: function (T, ctx) {
-      var on = sm((T - 8.3) / 1.4) * (1 - 0.7 * sm((T - 25.4) / 1.2));
+      // the green: on from 9.4, off from 27
+      var on = sm((T - 9.4) / 1.2) * (1 - sm((T - 26.9) / 0.7));
       ctx.svg.style.setProperty("--on", on.toFixed(3));
-      ride(ctx, T, "frod", 5, "loop", 14.4, 20, 0.11, true, false);
-      ride(ctx, T, "fdot", 6, "toout", 14.6, 20.2, 0.17, false, true);
-      ride(ctx, T, "pdot", 6, "perm", 19.4, 24.8, 0.2, false, true);
-      var A = win(T, 21, 25.2, 0.5);
-      for (var i = 1; i <= 3; i++) {
-        var f = frac((T - 21) * 0.9 + (i - 1) / 3);
-        ctx.place("drop" + i, { x: -3 * f, y: 38 * f * f, a: A * (1 - sm((f - 0.8) / 0.2)) * sm(f / 0.1) }, T);
+      // the strip lights one LED after another, top to bottom; red the same
+      var i, g, k, c;
+      for (g = 0; g < ctx.leds.on.length; g++) {
+        c = ctx.leds.on[g].children;
+        for (k = 0; k < c.length; k++) {
+          var v = sm((T - 9.2 - k * 0.09) / 0.35) * (1 - sm((T - 26.9 - k * 0.04) / 0.4));
+          c[k].style.opacity = v.toFixed(3);
+        }
+      }
+      for (g = 0; g < ctx.leds.red.length; g++) {
+        c = ctx.leds.red[g].children;
+        for (k = 0; k < c.length; k++) c[k].style.opacity = sm((T - 27.2 - k * 0.07) / 0.35).toFixed(3);
+      }
+      // the readings run to the model, the call runs to the strip
+      ride(ctx, T, "pulse", 1, "wire-sn", 3.6, 8.4, 0.5, false, true);
+      ride(ctx, T, "pulseB", 1, "wire-lamp", 8.4, 9.9, 0.8, false, true);
+      // what flows: dashes along the tubes, the cells round the loop, the
+      // protectant across the membrane and on to the roots
+      for (k in ctx.flows) ctx.flows[k].style.strokeDashoffset = (-(T * 46) % 400).toFixed(1);
+      ride(ctx, T, "frod", 5, "loop", 16.2, 22, 0.1, true, true);
+      ride(ctx, T, "fdot", 6, "toout", 16.6, 22.4, 0.15, false, true);
+      ride(ctx, T, "pdot", 6, "perm", 21.2, 27, 0.16, false, true);
+      var A = win(T, 23.4, 27, 0.5);
+      for (i = 1; i <= 3; i++) {
+        var f = frac((T - 23.4) * 0.9 + (i - 1) / 3);
+        ctx.place("drop" + i, { x: -2 * f, y: 40 * f * f, a: A * (1 - sm((f - 0.8) / 0.2)) * sm(f / 0.1) }, T);
       }
     }
   };
-  // the cells drift once the culture runs; three more come as it grows; the
-  // protectant appears among them
-  for (var i = 1; i <= 6; i++) R.parts["rod" + i] = tr([[0, { b: 0 }], [8.6, { b: 0 }], [9.6, { b: 1 }]]);
-  for (i = 7; i <= 9; i++) R.parts["rod" + i] = tr([[0, { a: 0, s: 0.3, b: 1 }], [11 + (i - 7) * 0.45, { a: 0, s: 0.3 }], [12 + (i - 7) * 0.45, { a: 1, s: 1 }, "out"]]);
-  for (i = 1; i <= 7; i++) R.parts["dot" + i] = tr([[0, { a: 0, s: 0, b: 1 }], [10.8 + i * 0.36, { a: 0, s: 0 }], [11.6 + i * 0.36, { a: 1, s: 1 }, "out"]]);
+  // the cells drift once the light is on; three more come as the culture
+  // grows; the protectant appears among them
+  for (var i = 1; i <= 6; i++) R.parts["rod" + i] = tr([[0, { b: 0 }], [10, { b: 0 }], [11.2, { b: 1 }]]);
+  for (i = 7; i <= 9; i++) R.parts["rod" + i] = tr([[0, { a: 0, s: 0.3, b: 1 }], [11.6 + (i - 7) * 0.5, { a: 0, s: 0.3 }], [12.6 + (i - 7) * 0.5, { a: 1, s: 1 }, "out"]]);
+  for (i = 1; i <= 7; i++) R.parts["dot" + i] = tr([[0, { a: 0, s: 0, b: 1 }], [12.2 + i * 0.36, { a: 0, s: 0 }], [13 + i * 0.36, { a: 1, s: 1 }, "out"]]);
+
+  /* THE FILM (hosted in #dx beside the real reactor, home-reactor.js). The
+     same drawing plays in the HUD; this also hands the 3D model a part to
+     frame and light at each beat, so the machine itself performs:
+       0     the whole machine, held square on, its strips dark: waiting
+       9.2   the strips, lit green, and the culture light
+       11.2  the culture vessel and the photometer beside it
+       16.2  the pump and the hollow-fibre cartridge
+       21.2  the product line and bottle
+       26.9  the whole machine; the strips go red, then dark
+     Above the film (T at its start) the model is given back to its idle
+     turn and to the demand cards. */
+  var SHOTS = [
+    [0,    { groups: null, yaw: 0, pitch: 0.16 }],
+    [9.0,  { groups: ["light", "reservoir"], fit: 1.32, yaw: 0.3, pitch: 0.1, lift: 0.08 }],
+    [11.2, { groups: ["reservoir", "photometer"], fit: 1.22, yaw: -0.22, pitch: 0.12 }],
+    [16.2, { groups: ["pump", "membrane"], fit: 1.42, yaw: -0.3, pitch: 0.18 }],
+    [21.2, { groups: ["harvest", "line-product"], fit: 1.28, yaw: 0.28, pitch: 0.06 }],
+    [26.9, { groups: null, yaw: 0, pitch: 0.16 }]
+  ];
+  var LIGHTS = [
+    [0, "", 0], [9.2, "light", 0], [11.2, "reservoir photometer", 0], [16.2, "pump membrane", 0],
+    [21.2, "harvest", 0], [26.9, "light", 0xe0533d], [29.0, "", 0]
+  ];
+  function pick(list, T) { var v = list[0]; for (var i = 0; i < list.length; i++) if (T >= list[i][0]) v = list[i]; return v; }
+  var filmWas = { shot: null, lit: null, strips: -1, on: false };
+  function film(T, ctx) {
+    var rx = window.__homeRx;
+    if (!rx || !rx.look) return;
+    if (T <= R.T0 + 0.02) {
+      if (filmWas.on) { filmWas.on = false; filmWas.shot = filmWas.lit = null; filmWas.strips = -1; rx.release(); rx.highlight([]); rx.strips(1); }
+      return;
+    }
+    filmWas.on = true;
+    var shot = pick(SHOTS, T);
+    if (shot !== filmWas.shot) { filmWas.shot = shot; rx.look(shot[1]); }
+    var lit = pick(LIGHTS, T);
+    if (lit !== filmWas.lit) { filmWas.lit = lit; rx.highlight(lit[1], lit[2]); }
+    var st = T < 9.2 ? 0.08 : T >= 29.4 ? 0.08 : 1;
+    if (st !== filmWas.strips) { filmWas.strips = st; rx.strips(st); }
+  }
+  R.hosted = {
+    T0: R.T0, T1: R.T1, beats: R.beats, rests: R.rests, cam: R.cam, parts: R.parts, setup: R.setup,
+    frame: function (T, ctx) { R.frame(T, ctx); film(T, ctx); }
+  };
   scenes.reactor = R;
 
   /* ---------------------------------------------------------- THE CELL --- */

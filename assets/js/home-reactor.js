@@ -33,6 +33,13 @@
        WebGL context, or a load that fails, adds .no-gl and the photograph
        simply stays. With scripting off neither is added, and the box is
        never empty.
+     · IT PLAYS THE FILM (18 Oct). How ReLEAF works (home-scenes.js, hosted
+       in the same screen) drives it through look(), release(), strips()
+       and a colour on highlight(): the camera is handed a part to frame
+       and eases there on the render loop, so a scrub of the page becomes a
+       glide; release() gives the view back to the idle turn. While the
+       page scales the canvas up (home.js piece 7), oversample() raises the
+       pixel ratio to match, so the bigger picture stays sharp.
      · IT EXPOSES highlight(), so the five demand cards around the model can
        light components up without a second copy of the picker. A lit set is
        painted in the signal green of the cards and everything else, the
@@ -129,7 +136,7 @@ window.__homeRx = (function () {
     });
   }
 
-  var renderer, scene, camera, TARGET, key, sig, cultureLight;
+  var renderer, scene, camera, TARGET, TARGET0, key, sig, cultureLight, over = 1;
   // HOME is square on to the case's open side: the reader looks straight
   // into the machine and every part of the loop is in front of them.
   // dist is set from the model's height once it is in.
@@ -160,7 +167,7 @@ window.__homeRx = (function () {
       giveUp();
     }, false);
 
-    renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+    renderer.setPixelRatio(Math.min(window.devicePixelRatio * over, 2));
     renderer.outputEncoding = THREE.sRGBEncoding;
     renderer.toneMapping = THREE.ACESFilmicToneMapping;
     renderer.toneMappingExposure = 1.05;
@@ -186,6 +193,7 @@ window.__homeRx = (function () {
     cultureLight = new THREE.PointLight(0x3ddc8b, 0, 0.5, 1.4);
     scene.add(cultureLight);
     SIG_COL = new THREE.Color(SIGNAL);
+    litColor = SIG_COL;
     return true;
   }
 
@@ -234,6 +242,10 @@ window.__homeRx = (function () {
   // reduced motion it is applied in one step.
   var SIGNAL = 0x3ddc8b;   // the circuit's 520 nm, and the cards' green
   var SIG_COL = null;      // THREE is not loaded yet; made in init()
+  var litColor = null;     // what a lit part is painted: the green, or what the film asks for
+  var litHex = 0;
+  var stripF = 1;          // the LED strips' own glow, 0 to 1 (the film darkens them before the switch-on)
+  var stripMats = new Set();
   var SIG_I = 0.30;        // the scene's green fill light
   var LIT = 0.5;           // emissive added to a lit part
   var TINT = 0.4;          // how far a lit part's own colour moves to the green
@@ -252,7 +264,7 @@ window.__homeRx = (function () {
   var litIds = [];
   // What the cards last asked for. A card can be pointed at while the model
   // is still loading; the request is kept and applied once it is ready.
-  var wantIds = [];
+  var wantIds = [], wantHex = 0;
   var shades = [];         // every material in the scene, with its own values
   var litMats = null;      // the lit materials (a Set), or null
   var unitMats = new Set();// every material of the machine itself
@@ -262,7 +274,9 @@ window.__homeRx = (function () {
 
   function applyHighlight() {
     if (!ready) return;
-    if (wantIds.join(" ") === litIds.join(" ")) return;
+    if (wantIds.join(" ") === litIds.join(" ") && litHex === wantHex) return;
+    litHex = wantHex;
+    litColor = litHex ? new THREE.Color(litHex) : SIG_COL;
     litIds.forEach(function (x) { paint(x, 0); });
     litIds = wantIds.slice();
     litIds.forEach(function (x) { paint(x, x === "unit" ? UNIT_LIT : LIT); });
@@ -300,16 +314,16 @@ window.__homeRx = (function () {
       }
       if (s.color) {
         m.color.copy(s.color);
-        if (lit) m.color.lerp(SIG_COL, !unit && s.glass ? GLASS_TINT : tint);
+        if (lit) m.color.lerp(litColor, !unit && s.glass ? GLASS_TINT : tint);
         else m.color.multiplyScalar(f);
       }
       // lit glass also reflects less of the studio, whose white would wash
       // its green out
       if (s.env !== undefined) m.envMapIntensity = s.env * (lit && !unit && s.glass ? GLASS_ENV : f);
-      if (s.ei !== undefined && !lit) m.emissiveIntensity = s.ei * f;
+      if (s.ei !== undefined && !lit) m.emissiveIntensity = s.ei * f * (s.strip ? stripF : 1);
     });
     if (sig) sig.intensity = SIG_I * (1 - 0.8 * dimNow);
-    if (cultureLight) cultureLight.intensity = GLOW_L * lightNow;
+    if (cultureLight) { cultureLight.intensity = GLOW_L * lightNow; cultureLight.color.copy(litColor); }
   }
 
   function entry(m) {
@@ -328,7 +342,7 @@ window.__homeRx = (function () {
         var m = o.material = o.material.clone();
         // more of the studio on the case and its fittings, or black on ink is a hole
         if (g.name === "case" || g.name === "fasteners" || g.name === "fixtures") m.envMapIntensity = 1.9;
-        if (g.name === "light") m.emissiveIntensity = 2.2;
+        if (g.name === "light") { m.emissiveIntensity = 2.2; stripMats.add(m); }
         if (m.transparent) { m.depthWrite = false; o.renderOrder = m.opacity > 0.45 ? 1 : 2; }
         unitMats.add(m);
         var e = entry(m);
@@ -353,6 +367,7 @@ window.__homeRx = (function () {
         additive: m.blending === THREE.AdditiveBlending,
         comp: glowOf.get(m) || null,
         unit: unitMats.has(m),
+        strip: stripMats.has(m),
         color: m.color ? m.color.clone() : null,
         glass: !!m.transparent && m.blending !== THREE.AdditiveBlending && m.opacity < 0.6,
         env: m.envMapIntensity,
@@ -373,7 +388,7 @@ window.__homeRx = (function () {
     (comps[id] || []).forEach(function (m) {
       var clear = m.glass && id !== "unit";
       if (strength > 0) {
-        m.mat.emissive.setHex(SIGNAL);
+        m.mat.emissive.copy(litColor);
         m.mat.emissiveIntensity = m.hex === 0 ? (clear ? GLASS_LIT : strength) : m.ei + strength;
         if (clear) m.mat.opacity = GLASS_OP;
       } else {
@@ -391,6 +406,72 @@ window.__homeRx = (function () {
     if (!o || !cultureLight) return;
     var b = new THREE.Box3().setFromObject(o);
     cultureLight.position.set(b.min.x - 0.03, b.min.y + (b.max.y - b.min.y) * 0.4, (b.min.z + b.max.z) / 2 + 0.05);
+  }
+
+  /* ---------- the film's camera ----------
+     look() names the groups to frame (or none for the whole machine), how
+     much room to leave round them (fit), and a turn of the camera from
+     square on (yaw, pitch). The pose is computed from the groups' boxes once
+     the model is in and eased to on the loop; release() eases back to the
+     machine's own view and then lets the idle turn have it again. */
+  var model = null, dist0 = 3, posed = false, want = null, wantKey = "", releasing = false;
+  var cur = { x: 0, y: 0, z: 0, dist: 3, yaw: HOME, pitch: 0.16 };
+  var boxCache = {};
+  function groupBox(names) {
+    if (!model) return null;
+    var out = null;
+    names.forEach(function (n) {
+      var b = boxCache[n];
+      if (!b) {
+        var o = model.getObjectByName(n);
+        if (!o) return;
+        b = boxCache[n] = new THREE.Box3().setFromObject(o);
+      }
+      out = out ? out.union(b.clone()) : b.clone();
+    });
+    return out;
+  }
+  function poseFor(spec) {
+    var t = TARGET0, d = dist0;
+    if (spec.groups && spec.groups.length) {
+      var b = groupBox(spec.groups);
+      if (b) {
+        var h = b.max.y - b.min.y, w = Math.max(b.max.x - b.min.x, b.max.z - b.min.z) * 1.15;
+        var need = Math.max(h, w / Math.max(0.5, camera.aspect));
+        d = Math.max(0.3, need / 2 / Math.tan(camera.fov * Math.PI / 360) * (spec.fit || 1.2));
+        t = b.getCenter(new THREE.Vector3());
+        t.y += (spec.lift || 0) * h;
+      }
+    }
+    return { x: t.x, y: t.y, z: t.z, dist: d, yaw: HOME + (spec.yaw || 0), pitch: spec.pitch === undefined ? 0.16 : spec.pitch };
+  }
+  function easePose(real) {
+    var e = Math.min(real, 0.5), f = 1 - Math.exp(-e * (releasing ? 4 : 5)), k, close = true;
+    for (k in cur) {
+      cur[k] += (want[k] - cur[k]) * f;
+      if (Math.abs(want[k] - cur[k]) > (k === "dist" ? 0.002 : 0.0025)) close = false;
+    }
+    // held, the machine still breathes: a slow sway of two degrees
+    TARGET.set(cur.x, cur.y, cur.z); dist = cur.dist; yaw = cur.yaw + (releasing ? 0 : 0.035 * Math.sin(clock * 0.45)); pitch = cur.pitch;
+    if (releasing && close) { posed = false; releasing = false; want = null; }
+  }
+  function look(spec) {
+    var key = JSON.stringify(spec || null);
+    if (key === wantKey && posed && !releasing) return;
+    wantKey = key;
+    if (!ready || !spec) return;
+    if (!posed) { cur = { x: TARGET.x, y: TARGET.y, z: TARGET.z, dist: dist, yaw: yaw, pitch: pitch }; posed = true; }
+    releasing = false;
+    want = poseFor(spec);
+    if (reduced) { easePose(100); render(); }
+  }
+  function release() {
+    if (!posed || releasing) { wantKey = ""; return; }
+    wantKey = "";
+    want = { x: TARGET0.x, y: TARGET0.y, z: TARGET0.z, dist: dist0, yaw: HOME, pitch: 0.16 };
+    releasing = true;
+    userHeld = false;
+    if (reduced) { easePose(100); render(); }
   }
 
   /* ---------- drive ---------- */
@@ -429,7 +510,7 @@ window.__homeRx = (function () {
     canvas.setPointerCapture(e.pointerId);
   });
   canvas.addEventListener("pointermove", function (e) {
-    if (!dragging) return;
+    if (!dragging || posed) return;
     if (!userHeld) {
       if (Math.abs(e.clientX - sx) + Math.abs(e.clientY - sy) <= 3) return;
       userHeld = true;
@@ -490,7 +571,8 @@ window.__homeRx = (function () {
       var dt = Math.min(0.05, real);                     // cap the step so a
       clock += dt;                                       // long park does not
       lastNow = now;                                     // spin the reactor
-      if (!dragging && !userHeld) turn(dt);
+      if (posed && want) easePose(real);
+      else if (!dragging && !userHeld) turn(dt);
       if (dimNow !== dimWant || lightNow !== lightWant) {
         // the fades run on real time, not the capped step, so a slow frame
         // rate does not leave the last card's light up for seconds
@@ -524,6 +606,7 @@ window.__homeRx = (function () {
       // leaves about a tenth of the height clear above the handle and below
       // the plinth, where 1.3 left a quarter.
       dist = (box.max.y - box.min.y) / 2 / Math.tan(camera.fov * Math.PI / 360) * 1.12;
+      dist0 = dist; TARGET0 = TARGET.clone(); model = root;
       buildStage(box);
       indexComponents(root);
       placeCultureLight(root);
@@ -579,10 +662,29 @@ window.__homeRx = (function () {
     // Monitored card points at the photometer and the vent together — so
     // this takes an id, a space-separated list of ids, or an array, and
     // lights the whole set.
-    highlight: function (id) {
+    highlight: function (id, hex) {
       wantIds = (id == null ? [] : (Array.isArray(id) ? id : String(id).split(/\s+/)))
                   .filter(Boolean);
+      wantHex = hex || 0;
       applyHighlight();
+    },
+    // the film (How ReLEAF works): see "the film's camera" above
+    look: look,
+    release: release,
+    // the LED strips' own glow, 0 to 1
+    strips: function (f) {
+      f = Math.max(0, Math.min(1, +f || 0));
+      if (f === stripF) return;
+      stripF = f;
+      if (ready) { shade(); if (reduced) render(); }
+    },
+    // the page scales the canvas up by f: draw it with that many more
+    // pixels, up to a ratio of 2 (a 2x display is already there)
+    oversample: function (f) {
+      f = Math.max(1, +f || 1);
+      if (f === over) return;
+      over = f;
+      if (renderer) { renderer.setPixelRatio(Math.min(window.devicePixelRatio * over, 2)); if (ready) render(); }
     },
   };
   return self;

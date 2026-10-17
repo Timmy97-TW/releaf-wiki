@@ -1,15 +1,18 @@
 /* =============================================================================
-   ReLEAF homepage: 3b HOW RELEAF WORKS (#how). Neo's walkthrough from his
-   18 Oct homepage, after Lambert-GA's "The Varroa mite": one card whose
-   heading stays, one drawing that plays without a cut, one caption that
-   changes. Trimmed from his home-story.css to this one card (18 Oct, owner):
-   no subject column, no first face, no dive into the cell. No gradients:
-   every ground, card and part is one flat colour.
+   ReLEAF homepage: 3b HOW RELEAF WORKS (#how). One card whose heading
+   stays, one drawing that plays without a cut, one caption that changes,
+   after Neo's 18 Oct walkthrough (Lambert-GA's "The Varroa mite"). Later
+   the same day (owner): the drawing is a monoline schematic on paper (the
+   rw- rules below) and, hosted beside the real reactor in #dx, the card is
+   a dark glass HUD (the end of this file). No gradients: every ground,
+   card and part is one flat colour; the only glows are blurred shapes.
    -----------------------------------------------------------------------------
    RESTING (no script, or a screen under 560px tall): the card on the ink,
-   the drawing still in its overview and the captions as a numbered list.
+   the drawing still in its overview and the captions as a numbered list,
+   each with its headline.
    LIVE (.is-live, home-story.js): the section holds one screen for its
    runway (--st-len screens) and the card rises in (--st-in, 0 to 1).
+   HOSTED (.is-hosted, inside #dx's screen): the HUD, at the right.
    ========================================================================== */
 
 .st {
@@ -20,7 +23,7 @@
 /* the reactor's ink (home-reactor.css), so the answer runs on without a seam */
 .hw {
   --st-card: #f8faf6; --st-line: rgb(20 64 43 / .12); --st-ink: #1f2522; --st-strong: var(--leaf-900);
-  --st-muted: #56605a; --st-accent: #23684a; --st-scene: #e7efe3; --st-halo: #e7efe3;
+  --st-muted: #56605a; --st-accent: #23684a; --st-scene: #fbfcf9; --st-halo: #fbfcf9;
   background-color: var(--ink);            /* the chapters rail reads this */
 }
 
@@ -42,13 +45,13 @@
 }
 .st-context { margin: .5rem 0 0; max-width: 52ch; font-size: clamp(.95rem, .9rem + .2vw, 1.05rem); line-height: 1.5; color: var(--st-muted); text-wrap: pretty; }
 
-.st-scene { margin: var(--sp-4) 0; border-radius: 16px; overflow: hidden; background: var(--st-scene); }
-.st-svg { display: block; width: 100%; height: auto; aspect-ratio: 1260 / 660; }
+.st-scene { margin: var(--sp-4) 0; border-radius: 16px; overflow: hidden; background: var(--st-scene); border: 1px solid var(--st-line); }
+.st-svg { display: block; width: 100%; height: auto; aspect-ratio: 1200 / 680; }
 .st-caps { margin: 0; padding-left: 1.3rem; display: grid; row-gap: .6rem; font-size: 1rem; line-height: 1.55; color: var(--st-ink); }
 .st-caps li::marker { color: var(--st-accent); font-weight: 700; }
 /* what only the live scene shows: the labels, the flows, the other states */
-.st:not(.is-live) :is([data-k^="lab-"], [data-flow], [data-k="rays-red"], [data-k="leds-red"], [data-k="halo"],
-  [data-k="heat"], [data-k="beam"]) { display: none; }
+.st:not(.is-live) :is([data-k^="lab-"], [data-flow], [data-k="beam"], [data-k="beam-red"], [data-k="halo"],
+  [data-k="blink"], [data-k="thrdot"], [data-k="pbeam"], [data-k="broth-on"], [data-k="pores"]) { display: none; }
 
 /* ------------------------------------------------------------- live ----- */
 .st.is-live { padding: 0; }
@@ -111,71 +114,158 @@
   .st.is-live .st__stage { position: static; height: auto; }
 }
 
-/* ------------------------------------------------------ the drawings --- */
-.st-svg { overflow: hidden; }
-.st-svg [data-draw], .st-svg path[data-draw] { stroke-dasharray: 1; }
+/* ------------------------------------------------------ the drawing ---- */
+/* A monoline schematic on paper: one ink for every outline, the 520 nm
+   green for whatever is lit, amber for the protectant, red for the off
+   signal. Nothing else has a colour. Every outline is a path with
+   pathLength="1" inside a [data-draw] group, so the scroll draws it on. */
+.st-svg { overflow: hidden; --on: 0; }
+.st-svg [data-draw] path { stroke-dasharray: 1; }
 .st-lab {
-  font-family: var(--font-body, "Inter", system-ui, sans-serif); font-size: 15px; font-weight: 600; letter-spacing: .01em;
-  fill: #2b3a32; paint-order: stroke; stroke: var(--st-halo); stroke-width: 5px; stroke-linejoin: round;
+  font-family: var(--font-body, "Inter", system-ui, sans-serif); font-size: 14px; font-weight: 600; letter-spacing: .01em;
+  fill: #1d3328; paint-order: stroke; stroke: var(--st-halo); stroke-width: 5px; stroke-linejoin: round;
 }
-.st-lab--prot { fill: #a8661a; }
+.st-lab--prot { fill: #a35f14; }
 .st-lab--red { fill: #c0442f; }
-.st-lab--green { fill: #35e08a; }
+.st-lab--green { fill: #0b7a46; }
 
-/* the reactor */
-.rs-sky { fill: var(--st-scene); }
-.rs-soil { fill: #c49a6c; }
-.rs-soil-line { fill: none; stroke: #8f6a44; stroke-width: 3; }
-.rs-furrow { fill: none; stroke: rgb(120 86 52 / .3); stroke-width: 3; }
-.rs-sun { fill: #f2b544; }
-.rs-sunrays { fill: none; stroke: #f2b544; stroke-width: 5; stroke-linecap: round; }
-.rs-heat { fill: none; stroke: #e0a457; stroke-width: 3.5; stroke-linecap: round; }
-.rs-cloud { fill: #ffffff; stroke: #c3cfc6; stroke-width: 3; }
-.rs-stem { fill: none; stroke: #3f7a33; stroke-width: 6; stroke-linecap: round; }
-.rs-leaf { fill: #4f8a3a; }
-.rs-rib { fill: none; stroke: #346f2c; stroke-width: 2; stroke-linecap: round; }
-.rs-halo { fill: rgb(53 224 138 / .1); stroke: #35b06e; stroke-width: 3; stroke-dasharray: 10 9; }
-.rs-sensor rect { fill: #24302b; }
-.rs-ant { fill: none; stroke: #24302b; stroke-width: 3; stroke-linecap: round; }
-.rs-blink { fill: #35e08a; }
-.rs-sig { fill: none; stroke: #23684a; stroke-width: 3; stroke-linecap: round; }
-.rs-post { fill: none; stroke: #6d7a72; stroke-width: 6; }
-.rs-panel { fill: #26322c; }
-.rs-screen { fill: #f4f7f2; }
-.rs-g1, .rs-g2, .rs-g3 { fill: none; stroke-width: 10; }
-.rs-g1 { stroke: #8fc79a; } .rs-g2 { stroke: #e0a457; } .rs-g3 { stroke: #c96b35; }
-.rs-needle { fill: none; stroke: #1f2522; stroke-width: 4; stroke-linecap: round; }
-.rs-hub { fill: #1f2522; }
-.rs-hub--w { fill: #ffffff; }
-.rs-handle { fill: none; stroke: #26322c; stroke-width: 10; stroke-linecap: round; }
-.rs-case { fill: #f3f6f1; stroke: #26322c; stroke-width: 10; }
-.rs-ray { fill: rgb(53 224 138 / .24); }
-.rs-ray--red { fill: rgb(224 83 61 / .2); }
-.rs-lamp { fill: #3a4a42; }
-.rs-leds circle { fill: #8a968f; }
-.rs-leds--on circle { fill: #35e08a; }
-.rs-leds--red circle { fill: #e0533d; }
-.rs-tube { fill: none; stroke: #b8c7be; stroke-width: 12; stroke-linecap: round; stroke-linejoin: round; }
-.rs-none { fill: none; stroke: none; }
-.rs-perm { fill: none; stroke: #7fb0d2; stroke-width: 8; stroke-linecap: round; stroke-linejoin: round; }
-.rs-emit { fill: #5d8fb3; }
-.rs-cap { fill: #6d7a72; }
-.rs-glass { fill: rgb(255 255 255 / .7); stroke: #9fb3a8; stroke-width: 4; }
-.rs-broth { fill: #dfe6c9; }
-.rs-broth--on { fill: #c3e6c3; }
-.rs-stir { fill: #6d7a72; }
-.rs-rod { fill: #9fb5a6; }
-.rs-rod--on { fill: #2fa866; opacity: var(--on, 1); }
-.rs-rod--lit { fill: #2fa866; }
-.rs-dot { fill: #e8a33d; stroke: #b8741e; stroke-width: 1.5; }
-.rs-photo { fill: #3a4a42; }
-.rs-beam { fill: none; stroke: #f0a03c; stroke-width: 4; stroke-linecap: round; }
-.rs-pump { fill: #2f6fb0; }
-.rs-pumphead { fill: #ffffff; }
-.rs-arm { fill: none; stroke: #2f6fb0; stroke-width: 3; stroke-linecap: round; }
-.rs-roller { fill: #2f6fb0; }
-.rs-cart { fill: #fbfbf7; stroke: #9fb3a8; stroke-width: 4; }
-.rs-fibre { fill: none; stroke: #c4d2ca; stroke-width: 3; }
-.rs-pores { fill: none; stroke: #7fb0d2; stroke-width: 4; stroke-dasharray: 2 10; stroke-linecap: round; }
-.rs-drop { fill: #6aa6cf; }
+.rw-paper { fill: var(--st-scene); }
+.rw-ground { fill: none; stroke: #1d3328; stroke-width: 2.5; }
+.rw-hatch { fill: none; stroke: rgb(29 51 40 / .22); stroke-width: 1.5; stroke-linecap: round; }
+.rw-stem { fill: none; stroke: #1d3328; stroke-width: 2.5; stroke-linecap: round; }
+.rw-leaf { fill: #e3f0e8; stroke: #1d3328; stroke-width: 1.75; stroke-linejoin: round; }
+.rw-rib { fill: none; stroke: #1d3328; stroke-width: 1.25; stroke-linecap: round; opacity: .55; }
+.rw-root { fill: none; stroke: #9aa8a0; stroke-width: 1.75; stroke-linecap: round; }
+.rw-sensor { fill: var(--st-scene); stroke: #1d3328; stroke-width: 2; stroke-linejoin: round; }
+.rw-ant { fill: none; stroke: #1d3328; stroke-width: 2; stroke-linecap: round; }
+.rw-blink { fill: #0b7a46; }
+.rw-led-glow { fill: #35e08a; opacity: .7; }
+.rw-tile, .rw-panel, .rw-case, .rw-strip, .rw-glass, .rw-cart, .rw-pumphead, .rw-photo, .rw-cap, .rw-handle {
+  fill: var(--st-scene); stroke: #1d3328; stroke-width: 2; stroke-linejoin: round; stroke-linecap: round;
+}
+.rw-case { stroke-width: 2.5; }
+.rw-cap, .rw-handle { fill: none; }
+.rw-glass { fill: none; }
+.rw-strip { fill: #e9eeea; }
+.rw-post { fill: none; stroke: #1d3328; stroke-width: 2.5; }
+.rw-axis { fill: none; stroke: #8a9a90; stroke-width: 1.25; }
+.rw-level { fill: none; stroke: #8a9a90; stroke-width: 1.25; }
+.rw-thr { fill: none; stroke: #c0442f; stroke-width: 1.5; stroke-dasharray: 5 5; }
+.rw-sun { fill: none; stroke: #1d3328; stroke-width: 1.75; stroke-linecap: round; }
+.rw-trace { fill: none; stroke: #1d3328; stroke-width: 2; stroke-linecap: round; }
+.rw-trace--idx { stroke: #0b7a46; stroke-width: 2.5; }
+.rw-thrdot { fill: #0b7a46; }
+.rw-wire { fill: none; stroke: #6b7a72; stroke-width: 1.75; stroke-linecap: round; }
+.rw-pulse { fill: #1d3328; }
+.rw-pulse--g { fill: #0b7a46; }
+.rw-beam { fill: rgb(53 224 138 / .17); }
+.rw-beam--red { fill: rgb(224 83 61 / .14); }
+.rw-leds circle { fill: #b9c3bd; }
+.rw-leds--on circle { fill: #35e08a; opacity: 0; }
+.rw-leds--red circle { fill: #e0533d; opacity: 0; }
+.rw-leds--glow { opacity: .6; }
+.rw-broth { fill: #eef3ec; }
+.rw-broth--on { fill: #cfe9d6; }
+.rw-stir { fill: #6b7a72; }
+.rw-rod { fill: #b9c3bd; }
+.rw-rod--on { fill: #2fa866; opacity: var(--on, 0); }
+.rw-rod--lit { fill: #2fa866; }
+.rw-dot { fill: #e8a33d; stroke: #b86d1c; stroke-width: 1.25; }
+.rw-tube { fill: none; stroke: #1d3328; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+.rw-none { fill: none; stroke: none; }
+.rw-flow { fill: none; stroke: #0b7a46; stroke-width: 3.5; stroke-linecap: round; stroke-linejoin: round; stroke-dasharray: 7 15; }
+.rw-flow--perm { stroke: #e8a33d; }
+.rw-pbeam { fill: none; stroke: #e8a33d; stroke-width: 3; stroke-linecap: round; }
+.rw-arm { fill: none; stroke: #1d3328; stroke-width: 1.5; stroke-linecap: round; }
+.rw-roller { fill: #1d3328; }
+.rw-fibre { fill: none; stroke: #c4d2ca; stroke-width: 1.5; }
+.rw-pores { fill: none; stroke: #0b7a46; stroke-width: 3.5; stroke-dasharray: 2 8; stroke-linecap: round; }
+.rw-perm { fill: none; stroke: #8a9a90; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+.rw-emit { fill: #1d3328; }
+.rw-drop { fill: #e8a33d; }
+.rw-halo { fill: rgb(53 224 138 / .08); stroke: #0b7a46; stroke-width: 2; stroke-dasharray: 8 8; }
 
+/* ------------------------------------------------------ the step rail -- */
+/* six words, one per caption; the current one is set in the accent. Only
+   live: at rest the captions are a numbered list already. */
+.st-steps { display: none; }
+.st.is-live .st-steps {
+  display: flex; flex-wrap: wrap; gap: .25rem 1.1rem; margin: 0 0 .55rem; padding: 0; list-style: none;
+  font-size: .72rem; font-weight: 700; letter-spacing: .12em; text-transform: uppercase; color: var(--st-muted);
+}
+.st.is-live .st-steps li { display: inline-flex; align-items: baseline; gap: .45rem; opacity: .55; transition: opacity .35s ease, color .35s ease; }
+.st.is-live .st-steps li::before { content: counter(st-step, decimal-leading-zero); counter-increment: st-step; font-variant-numeric: tabular-nums; font-weight: 600; letter-spacing: 0; opacity: .7; }
+.st.is-live .st-steps { counter-reset: st-step; }
+.st[data-beat="0"] .st-steps li:nth-child(1), .st[data-beat="1"] .st-steps li:nth-child(2), .st[data-beat="2"] .st-steps li:nth-child(3),
+.st[data-beat="3"] .st-steps li:nth-child(4), .st[data-beat="4"] .st-steps li:nth-child(5), .st[data-beat="5"] .st-steps li:nth-child(6) { opacity: 1; color: var(--st-accent); }
+@media (max-width: 899px) { .st.is-live .st-steps { gap: .2rem .8rem; font-size: .66rem; } }
+
+/* ------------------------------------------------------------ the HUD --- */
+/* HOSTED, the film: the card is a dark glass panel at the right of the
+   screen (a third of the column), the real reactor is the picture beside
+   it, and the drawing plays small inside the panel, on ink. The numeral and
+   the headline of each beat come in with its caption. */
+.st.is-live.is-hosted .st-card {
+  --st-card: rgb(255 255 255 / .05); --st-line: rgb(255 255 255 / .13); --st-ink: rgb(255 255 255 / .84);
+  --st-strong: #ffffff; --st-muted: rgb(255 255 255 / .58); --st-accent: var(--sig-green);
+  --st-scene: transparent; --st-halo: #0c1410;
+  max-width: 35%; height: var(--st-h);
+  padding: clamp(1.1rem, 2vw, 1.6rem) clamp(1.1rem, 2vw, 1.6rem) clamp(1rem, 1.8vw, 1.4rem);
+  -webkit-backdrop-filter: blur(16px); backdrop-filter: blur(16px);
+  color: var(--st-ink);
+}
+.st.is-live.is-hosted .st-title { font-size: clamp(1.25rem, 1rem + .7vw, 1.6rem); }
+.st.is-live.is-hosted .st-context { font-size: .92rem; max-width: none; }
+.st.is-live.is-hosted .st-scene { margin: var(--sp-3) 0 var(--sp-2); border: 0; border-radius: 0; background: transparent; }
+.st.is-live.is-hosted .st-caps { min-height: calc(5.2 * 1.5em); font-size: clamp(.95rem, .9rem + .15vw, 1.02rem); line-height: 1.5; }
+.st.is-live.is-hosted .st-caps li { max-width: none; }
+.st-num { display: none; }
+.st-h { font-weight: 700; color: var(--st-strong); }
+.st.is-live.is-hosted .st-num {
+  display: block; margin: 0 0 .15rem;
+  font-family: var(--font-display); font-size: .72rem; font-weight: 700; letter-spacing: .16em; color: var(--sig-green);
+  font-variant-numeric: tabular-nums;
+}
+.st.is-live.is-hosted .st-h {
+  display: block; margin: 0 0 .45rem;
+  font-family: var(--font-display); font-size: clamp(1.3rem, 1rem + .9vw, 1.75rem); font-weight: 720; line-height: 1.1; letter-spacing: -.02em; color: #fff;
+  text-wrap: balance;
+}
+.st.is-live.is-hosted .st-steps { color: rgb(255 255 255 / .55); margin-bottom: .7rem; }
+.st.is-live.is-hosted .st-steps li { opacity: .5; }
+
+/* the drawing on ink: pale lines, the green for whatever is lit */
+.st.is-hosted .rw-paper { fill: transparent; }
+.st.is-hosted :is(.rw-ground, .rw-stem, .rw-post, .rw-tube, .rw-trace, .rw-sun, .rw-ant, .rw-arm) { stroke: #d3e0d8; }
+.st.is-hosted :is(.rw-tile, .rw-panel, .rw-case, .rw-glass, .rw-cart, .rw-pumphead, .rw-photo, .rw-cap, .rw-handle, .rw-sensor) { fill: rgb(255 255 255 / .035); stroke: #d3e0d8; }
+.st.is-hosted :is(.rw-cap, .rw-handle, .rw-glass) { fill: none; }
+.st.is-hosted .rw-strip { fill: rgb(255 255 255 / .07); stroke: #d3e0d8; }
+.st.is-hosted .rw-leaf { fill: rgb(53 224 138 / .13); stroke: #bdd8c9; }
+.st.is-hosted .rw-rib { stroke: #bdd8c9; }
+.st.is-hosted .rw-hatch { stroke: rgb(211 224 216 / .22); }
+.st.is-hosted .rw-root { stroke: rgb(211 224 216 / .45); }
+.st.is-hosted :is(.rw-axis, .rw-level) { stroke: rgb(211 224 216 / .4); }
+.st.is-hosted .rw-wire { stroke: rgb(211 224 216 / .55); }
+.st.is-hosted :is(.rw-pulse, .rw-roller, .rw-emit, .rw-stir) { fill: #d3e0d8; }
+.st.is-hosted :is(.rw-blink, .rw-thrdot, .rw-pulse--g) { fill: var(--sig-green); }
+.st.is-hosted .rw-trace--idx { stroke: var(--sig-green); }
+.st.is-hosted :is(.rw-flow, .rw-pores, .rw-halo) { stroke: var(--sig-green); }
+.st.is-hosted .rw-flow--perm { stroke: #f0b454; }
+.st.is-hosted .rw-halo { fill: rgb(53 224 138 / .07); }
+.st.is-hosted .rw-beam { fill: rgb(53 224 138 / .15); }
+.st.is-hosted .rw-beam--red { fill: rgb(224 83 61 / .16); }
+.st.is-hosted .rw-broth { fill: rgb(255 255 255 / .06); }
+.st.is-hosted .rw-broth--on { fill: rgb(53 224 138 / .2); }
+.st.is-hosted .rw-rod { fill: rgb(211 224 216 / .35); }
+.st.is-hosted :is(.rw-rod--on, .rw-rod--lit) { fill: var(--sig-green); }
+.st.is-hosted .rw-leds circle { fill: rgb(211 224 216 / .3); }
+.st.is-hosted .rw-fibre { stroke: rgb(211 224 216 / .3); }
+.st.is-hosted .rw-perm { stroke: rgb(211 224 216 / .45); }
+.st.is-hosted .rw-dot { fill: #f0b454; stroke: #b86d1c; }
+.st.is-hosted .rw-drop { fill: #f0b454; }
+.st.is-hosted .rw-pbeam { stroke: #f0b454; }
+.st.is-hosted .rw-thr { stroke: #ff7a66; }
+.st.is-hosted .st-lab { fill: #eaf1ec; stroke: #0c1410; }
+.st.is-hosted .st-lab--green { fill: var(--sig-green); }
+.st.is-hosted .st-lab--prot { fill: #f0b454; }
+.st.is-hosted .st-lab--red { fill: #ff7a66; }

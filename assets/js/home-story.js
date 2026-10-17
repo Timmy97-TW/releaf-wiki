@@ -26,7 +26,9 @@
    screens from the moment it pins under the nav, and the drawing starts
    data-story-lead screens in; .is-hosted on the section, and the host moves
    and fades the card itself, so there is no opening beat. Otherwise the
-   section runs on its own runway as above.
+   section runs on its own runway as above. A scene may carry a second
+   definition for that case, def.hosted (same parts, its own camera and
+   frame): it plays while the section is hosted, the base one otherwise.
 
    THE SCENE. A scene is a time line T0..T1 in its own units (about one a
    second when played). Each part has a track of keyframes, [time, {x, y, r,
@@ -131,8 +133,9 @@
     [].forEach.call(svg.querySelectorAll("[data-path]"), function (p) {
       paths[p.getAttribute("data-path")] = { el: p, len: p.getTotalLength ? p.getTotalLength() : 0 };
     });
+    var base = def;
     var ctx = {
-      svg: svg, parts: parts, paths: paths,
+      sec: sec, svg: svg, parts: parts, paths: paths,
       along: function (name, f) {
         var p = paths[name];
         if (!p || !p.len) return { x: 0, y: 0 };
@@ -141,7 +144,12 @@
       },
       place: place
     };
-    if (def.setup) def.setup(ctx);
+    function adopt(d) {
+      if (d === def && d.__set) return;
+      def = d; tracks = def.parts || {}; cur = -1;
+      if (!d.__set) { d.__set = true; if (d.setup) d.setup(ctx); }
+    }
+    adopt(base);
 
     var live = false, shown = -1, target = 0, playing = false, last = 0, raf = 0, cur = -1;
     var zoom = 1, boxW = 1, boxH = 1, inWas = -1, introWas = -1, outWas = -1;
@@ -307,6 +315,7 @@
       beat = beat0 && !hosted;
       sec.classList.toggle("is-hosted", hosted);
       sec.classList.toggle("is-live", live);
+      adopt(hosted && base.hosted ? base.hosted : base);
       if (!live) {
         stop();
         ["--st-in", "--st-out", "--st-oute", "--st-intro"].forEach(function (p) { sec.style.removeProperty(p); });

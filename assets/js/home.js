@@ -805,9 +805,13 @@
        2.84 to 3.06  each card's words open under its tag
        3.00 to 3.20  the finished band, held
      18 Oct (owner): then the answer makes room for how it works.
-       3.15 to 3.45  the five cards and the line under the name fade
-       3.20 to 3.85  the reactor and its name glide into a left column
-       3.45 to 3.90  How ReLEAF works (#how) comes in on the right
+       3.15 to 3.45  the five cards, the line and the name fade
+       3.20 to 3.85  the reactor glides to the middle of the room left of
+                     the HUD and grows to most of the screen's height (the
+                     canvas is drawn with more pixels to match, so it stays
+                     sharp)
+       3.45 to 3.90  How ReLEAF works (#how) comes in on the right, a dark
+                     HUD beside the machine
        3.90 to 6.60  the scroll plays its drawing (home-story.js, hosted on
                      this runway from data-story-lead = 3.9)
        6.60 to 6.85  its last frame, held
@@ -919,16 +923,21 @@
         return { x: r.left - pr.left + r.width / 2, y: r.top - pr.top + r.height / 2, w: r.width };
       };
       geo = { run: Math.max(1, runwayEl.offsetHeight), from: chips.map(box), to: tags.map(box) };
-      // where the reactor goes: the middle of the room left of the card, as
-      // the card stands once it is in (hosted layout, --dx-how at 1)
+      // where the reactor goes: the middle of the room left of the HUD, as
+      // the HUD stands once it is in (hosted layout, --dx-how at 1), and as
+      // big as that room and the pin's height allow (the machine is about
+      // 1.1 x the canvas height across)
       howSec.classList.add("is-live", "is-hosted");
       dx.style.setProperty("--dx-how", "1");
       var cr = howCard.getBoundingClientRect(), ir = inner.getBoundingClientRect();
       var left = ir.left + (parseFloat(window.getComputedStyle(inner).paddingLeft) || 0);
-      var mr = model.getBoundingClientRect(), lr = lede.getBoundingClientRect();
+      var mr = model.getBoundingClientRect();
       dx.style.removeProperty("--dx-how");
-      var dxm = (left + cr.left) / 2 - (mr.left + mr.width / 2);
-      geo.go = { x: dxm, yHead: lr.height * 0.55, yModel: -lr.height * 0.45 };
+      var room = Math.max(1, cr.left - left - 16);
+      var k = Math.min(1.9, pr.height * 0.88 / Math.max(1, mr.height), room / Math.max(1, mr.height * 1.12));
+      geo.go = { x: (left + cr.left) / 2 - (mr.left + mr.width / 2),
+                 y: (pr.top + pr.height / 2) - (mr.top + mr.height / 2),
+                 k: Math.max(1, k) };
     }
 
     function decide() {
@@ -998,18 +1007,18 @@
 
       // the reactor comes up from the middle of the five
       var r = easeOut(span(s, 2.35, 2.7));
-      // and later glides into the left column, with its name, as the cards
-      // and the line make way and How ReLEAF works comes in on the right
-      var go = inOut(span(s, 3.2, 3.85)), gx = g.go.x * go;
+      // and later glides to the room left of the HUD and grows, as the
+      // cards, the line and the name make way and How ReLEAF works comes in
+      var go = inOut(span(s, 3.2, 3.85)), gx = g.go.x * go, gy = g.go.y * go, gk = 1 + (g.go.k - 1) * go;
       var out = easeOut(span(s, 3.15, 3.45)), hin = easeOut(span(s, 3.45, 3.9));
       put(model, "opacity", f3(r));
-      put(model, "transform", go > 0 ? "translate(" + px(gx) + "," + px(g.go.yModel * go) + ") scale(" + f3(1 - 0.08 * go) + ")"
+      put(model, "transform", go > 0 ? "translate(" + px(gx) + "," + px(gy) + ") scale(" + f3(gk) + ")"
                                      : r >= 1 ? "none" : "scale(" + f3(0.85 + 0.15 * r) + ")");
+      if (rx && rx.oversample) rx.oversample(go > 0 ? g.go.k : 1);
       // then its name, then the line under it, then the cards' words
       var h = easeOut(span(s, 2.62, 2.82)), l = easeOut(span(s, 2.74, 2.94));
-      put(head, "opacity", f3(h));
-      put(head, "transform", go > 0 ? "translate(" + px(gx) + "," + px(g.go.yHead * go) + ")"
-                                    : h >= 1 ? "none" : "translateY(" + px(16 * (1 - h)) + ")");
+      put(head, "opacity", f3(h * (1 - out)));
+      put(head, "transform", h >= 1 ? "none" : "translateY(" + px(16 * (1 - h)) + ")");
       put(lede, "opacity", f3(l * (1 - out)));
       put(lede, "transform", l >= 1 ? "none" : "translateY(" + px(12 * (1 - l)) + ")");
       var card = easeOut(span(s, 2.84, 3.06));
