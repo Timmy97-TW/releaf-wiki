@@ -1,35 +1,133 @@
 /* =============================================================================
    Contribution: the few things page.css and engage.css do not do.
    Since 10 October 2026 the page carries `engage` beside `contrib` and speaks
-   the Integrated Human Practices soft style (assets/css/engage.css): the seven
-   contributions open on a card grid, each one's spec is a white row list, the
-   plant protocol is a stack of folds and the lessons are tabbed chapters.
+   the Integrated Human Practices soft style (assets/css/engage.css).
+
+   18 October 2026, rebuilt around two things:
+     1. the board (.gl) that opens the page, one tile per contribution, which
+        switches the chapter rail under it instead of scrolling to it;
+     2. the chapter rail itself, so the six contributions are six horizontal
+        tabs and the page is one chapter tall instead of all six.
+   The hardware chapter carries a second, nested switch (the IHP side list)
+   for its four devices; its list is pinned below the chapter tabs, not under
+   the site nav, so the two pinned strips do not sit on top of each other.
    ========================================================================== */
 
-/* the seven contributions at a glance: a link card each, numbered in the title */
-.engage.contrib #our-contributions-at-a-glance .card { padding: 1.5rem 1.6rem 1.6rem; }
-.engage.contrib #our-contributions-at-a-glance .card h4 { margin: 0 0 .5rem; font-size: 1.1875rem; }
-.engage.contrib #our-contributions-at-a-glance .card h4 a { color: var(--ink); text-decoration: none; }
-.engage.contrib #our-contributions-at-a-glance .card h4 a:hover { color: var(--leaf); }
-.engage.contrib #our-contributions-at-a-glance .card p { margin: 0; font-size: .9375rem; }
+/* ------------------------------------------------------------- THE BOARD -- */
+/* A tile per contribution on a pale ground: the icon in the chapter's own
+   colour, the name, what you can take away, and one line of what it is. */
+
+.engage.contrib .gl {
+  display: grid;
+  gap: .5rem;
+  margin: var(--sp-5) 0 0;
+  padding: .5rem;
+  border-radius: 28px;
+  background: var(--well);
+  grid-template-columns: minmax(0, 1fr);
+}
+@media (min-width: 40rem) { .engage.contrib .gl { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+@media (min-width: 64rem) { .engage.contrib .gl { grid-template-columns: repeat(3, minmax(0, 1fr)); } }
+
+.engage.contrib a.gl__t {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  grid-template-rows: auto auto;
+  gap: .15rem .85rem;
+  padding: 1.05rem 1.2rem 1.15rem;
+  border-radius: 22px;
+  background: #fff;
+  color: inherit;
+  text-decoration: none;
+  transition: box-shadow .3s var(--ease), transform .3s var(--ease);
+}
+.engage.contrib a.gl__t:hover,
+.engage.contrib a.gl__t:focus-visible {
+  box-shadow: 0 16px 36px -20px rgb(0 0 0 / .3), 0 1px 4px -2px rgb(0 0 0 / .1);
+  transform: translateY(-2px);
+}
+.engage.contrib a.gl__t:focus-visible { outline: 2px solid var(--pl); outline-offset: 3px; }
+
+.engage.contrib .gl__ico {
+  grid-row: 1 / 3;
+  display: grid;
+  place-items: center;
+  width: 2.5rem; height: 2.5rem;
+  border-radius: 13px;
+  background: color-mix(in srgb, var(--pl) 11%, #fff);
+  color: var(--pl);
+}
+.engage.contrib .gl__ico svg { width: 1.25rem; height: 1.25rem; }
+.engage.contrib .gl__n {
+  align-self: end;
+  font-size: 1.0625rem; font-weight: 650; line-height: 1.2;
+  letter-spacing: -.016em;
+  color: var(--ink);
+}
+.engage.contrib .gl__k {
+  align-self: start;
+  font-size: .8125rem; font-weight: 500; line-height: 1.3;
+  color: var(--pl);
+}
+.engage.contrib .gl__w {
+  grid-column: 1 / -1;
+  margin: .7rem 0 0;
+  font-size: .875rem; line-height: 1.5;
+  color: var(--ink-3);
+}
+@media (min-width: 40rem) {
+  .engage.contrib .gl__w { grid-column: 2; margin-top: .5rem; }
+}
+/* the orange disclosure line under the board reads as a footnote */
+.engage.contrib .gl + .glnote { margin: var(--sp-4) 0 0; font-size: .8125rem; }
+html.ai-off .engage.contrib .gl + .glnote { color: var(--ink-3); }
+
+/* ----------------------------------------------------------- THE CHAPTERS -- */
+/* The number page.js prepends to each h2 becomes a small eyebrow over the
+   centred chapter title, the way Education's chapters carry theirs. */
+
+.engage.contrib .chap__title .sec__no {
+  display: block;
+  margin-bottom: .35rem;
+  font-size: .9375rem; font-weight: 600; letter-spacing: 0;
+  color: var(--pl);
+}
+/* a chapter opens straight into its own matter: no h2 above the rail */
+.engage.contrib .pagebody > .rail--seg { margin-top: var(--sp-6); }
+.engage.contrib .chap > h3 { margin-top: var(--sp-7); }
+.engage.contrib .chap > h3:first-of-type { margin-top: var(--sp-6); }
 
 /* figures and diagrams sit in a chart box on a pale ground */
-.engage.contrib .sec > .chartbox, .engage.contrib .chap > .chartbox { background: var(--well); }
+.engage.contrib .chap > .chartbox { background: var(--well); }
 .engage.contrib .chartbox .charts--1 { max-width: 48rem; }
-.engage.contrib .fold .chartbox { background: #fff; }
+.engage.contrib .fold .chartbox, .engage.contrib .app__panel .chartbox { background: var(--well); }
 
 /* the protocol folds carry long step lists and small tables */
 .engage.contrib .fold__body ul { margin: 0 0 var(--sp-3); padding-left: 1.15rem; }
 .engage.contrib .fold__body ul ul { margin: .35rem 0 0; }
 .engage.contrib .fold__body .tablewrap { margin: .75rem 0 1rem; }
 
-/* each contribution's spec rows: label in ink, value after it */
-.engage.contrib .sec > .findings { max-width: 52rem; }
-
-/* the lessons: six to eight rows a chapter, so give them the full width */
+/* each contribution's spec rows run the full width of the chapter */
 .engage.contrib .chap .findings { max-width: none; }
-.engage.contrib .chap > ul.findings { margin-top: 0; }
-@media (min-width: 64rem) { .engage.contrib .chap > ul.findings { grid-template-columns: 1fr 1fr; } }
+@media (min-width: 64rem) {
+  .engage.contrib .chap > ul.findings,
+  .engage.contrib .app__panel > ul.findings { grid-template-columns: 1fr 1fr; }
+}
+
+/* ------------------------------------------------- THE FOUR HARDWARE ITEMS -- */
+/* The nested side list sits below the chapter tabs, which are pinned first. */
+
+.engage.contrib .hw.rail--app { margin-top: var(--sp-6); }
+@media (min-width: 52rem) {
+  .engage.contrib .hw .app__list { top: calc(var(--nav-h) + 5.25rem); }
+}
+.engage.contrib .hw .app__panel > h4:first-child { margin-bottom: .5rem; }
+.engage.contrib .hw .app__panel .lede-c { margin-top: 0; }
+/* two of the four devices are photographed upright; cap them so one picture
+   never takes the whole panel */
+.engage.contrib .app__panel .chartbox .fig img { max-height: 24rem; width: auto; margin: 0 auto; }
+/* and the same for an upright figure in a chapter, such as the Taiwan maps */
+.engage.contrib .chap > .chartbox .fig img { max-height: 30rem; width: auto; margin: 0 auto; }
 
 /* the licence closes the page */
 .engage.contrib #open-resources .concl { margin-top: var(--sp-6); }
