@@ -522,13 +522,14 @@
   }
 
   function linksOf(slug) { return (D.links[slug] || []).filter(function (l) { return PAGE[l.to]; }); }
-  /* The three connections the data marks as this page's key ones. Hovering a
-     place lights those and nothing else: the full set, in and out, lit up to
-     sixteen other places at once and said nothing. */
-  function keyLinks(slug) {
+  /* The three connections the data marks as this page's key ones. They are
+     what a hover lights and what the caption lists: the full set, in and out,
+     lit up to sixteen other places at once and said nothing. */
+  function keyOf(slug) {
     var ls = linksOf(slug), k = ls.filter(function (l) { return l.key; });
-    return (k.length ? k : ls.slice(0, 3)).map(function (l) { return l.to; });
+    return k.length ? k : ls.slice(0, 3);
   }
+  function keyLinks(slug) { return keyOf(slug).map(function (l) { return l.to; }); }
   function neighbours(slug) {
     var set = {};
     linksOf(slug).forEach(function (l) { set[l.to] = true; });
@@ -676,7 +677,7 @@
       hd.appendChild(h('span', 'nma-cap__line', p.caption));
       cap.appendChild(hd);
       var ul = h('ul', 'nma-cap__links');
-      linksOf(slug).forEach(function (l) {
+      keyOf(slug).forEach(function (l) {
         var li = h('li'); var a = h('a'); a.href = c.href(l.to);
         var ls = SEC[PAGE[l.to].section]; a.style.setProperty('--s-ink', ls.ink); a.style.setProperty('--s-pill', ls.pill);
         a.appendChild(h('b', null, PAGE[l.to].name));
@@ -857,7 +858,7 @@
       tree: tree, pine: pine, bush: bush, person: person, house: house, hay: hay, fence: fence, pot: pot, flowers: flowers, tuft: tuft,
       roadPath: roadPath, slab: slab, pavilion: pavilion, mountains: mountains, treeline: treeline, farFields: farFields, defs: defs,
       beacon: beacon, lighting: lighting, keyboard: keyboard, layoutTags: layoutTags, tagFor: tagFor, placeGroup: placeGroup,
-      linksOf: linksOf, keyLinks: keyLinks, neighbours: neighbours, common: common, head: head, h: h, note: note, setSeed: function (v) { seed = v; } } };
+      linksOf: linksOf, keyOf: keyOf, keyLinks: keyLinks, neighbours: neighbours, common: common, head: head, h: h, note: note, setSeed: function (v) { seed = v; } } };
   function init() {
     // data-art="scene" belongs to scene.js; mounting it here would draw the page
     // road first and have the scene replace it a moment later.
