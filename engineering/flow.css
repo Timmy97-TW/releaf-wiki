@@ -1,0 +1,423 @@
+/* =============================================================================
+   ENGINEERING · the wet lab / dry lab flow web
+   -----------------------------------------------------------------------------
+   Written 18 October 2026 for the block at the top of the page. Everything
+   here is prefixed .flow__ so it cannot touch .sec, .cyc, .rail, .seg or .fig,
+   which the five tracks below own.
+
+   The idiom is the soft one the Integrated Human Practices page set and
+   assets/css/engage.css writes out: white ground, large radii, hairline rings
+   instead of borders, one diffuse shadow, generous gaps, no gradient anywhere
+   louder than a 7 % tint. Type, space, radius and the system font stack come
+   from assets/css/tokens.css; the shadow weights and the 28px card radius are
+   the engage.css card values.
+
+   Two colour families and nothing else: wet lab green and dry lab blue. Each
+   column sets --fl, every card, edge, chip and hand-off row inside it reads
+   --fl, and the selected state is a 7 % tint of the same ink. The orange of
+   class="ai" (nav.css --ai-ink) therefore always sits on white or near-white.
+
+   The edge layer is decorative: it carries no text, it is aria-hidden, and
+   flow.js draws it from the live node rectangles. It is not drawn when the
+   columns stack (below 52rem) or when scripts are off; in both cases one
+   hairline marks the seam between the halves and the hand-off list below the
+   web carries every label and every measurement.
+   ========================================================================== */
+
+.flow {
+  --fl-wet: #0E7A5F;
+  --fl-dry: #1C4E89;
+  --fl: var(--fl-wet);
+  --fl-ease: cubic-bezier(.32, .72, 0, 1);
+  --fl-shadow: 0 0 0 1px rgb(0 0 0 / .07), 0 16px 32px -28px rgb(0 0 0 / .45);
+  font-family: var(--font-body);
+}
+
+/* the block opens the page, so it closes on the page's own section rhythm */
+.flow + .sec { margin-top: var(--sp-8); }
+
+/* page.css indents and spaces every list inside a .sec, which is right for
+   prose and wrong for a web of cards; both of these are card grids, and the
+   gap does the spacing. fulllines.css governs the measure of the prose. */
+.flow .flow__col,
+.flow .flow__list { margin: 0; padding: 0; list-style: none; }
+.flow .flow__cell,
+.flow .flow__ho { margin: 0; }
+
+/* ================================================================= WEB == */
+
+.flow__web {
+  position: relative;
+  margin: var(--sp-6) 0 0;
+}
+
+.flow__edges {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  width: 100%;
+  height: 100%;
+  overflow: visible;
+  pointer-events: none;
+}
+
+.flow__grid {
+  display: grid;
+  gap: var(--sp-6);
+}
+
+.flow__side { position: relative; z-index: 1; min-width: 0; }
+.flow__side--wet { --fl: var(--fl-wet); }
+.flow__side--dry { --fl: var(--fl-dry); }
+
+.flow .flow__sidehead {
+  display: flex;
+  align-items: center;
+  gap: .5rem;
+  margin: 0 0 var(--sp-4);
+  font-size: .8125rem;
+  font-weight: 600;
+  letter-spacing: -.005em;
+  line-height: 1.2;
+  color: var(--fl);
+  text-transform: none;
+}
+.flow__sidehead i {
+  flex: none;
+  width: .5rem; height: .5rem;
+  border-radius: 50%;
+  background: var(--fl);
+}
+
+.flow__col {
+  display: grid;
+  gap: clamp(.75rem, 1.6vw, 1.5rem);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+/* ---- a node ------------------------------------------------------------ */
+
+.flow__cell {
+  position: relative;
+  z-index: 1;
+  margin: 0;
+  padding: 0 0 1.1rem;
+  border-radius: 22px;
+  background: #fff;
+  box-shadow: var(--fl-shadow);
+  transition: opacity .24s var(--fl-ease), box-shadow .24s var(--fl-ease),
+              background-color .24s var(--fl-ease);
+}
+
+.flow .flow__node {
+  display: flex;
+  align-items: center;
+  gap: .75rem;
+  width: 100%;
+  margin: 0;
+  padding: 1rem 1.2rem .7rem;
+  border: 0;
+  border-radius: 22px 22px 0 0;
+  background: none;
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+  transition: background-color .2s var(--fl-ease);
+}
+.flow .flow__node:hover { background: color-mix(in srgb, var(--fl) 5%, transparent); }
+.flow .flow__node:focus-visible { outline: 2px solid var(--fl); outline-offset: 2px; }
+
+.flow__name {
+  flex: 1 1 auto;
+  min-width: 0;
+  font-size: 1.0625rem;
+  font-weight: 650;
+  line-height: 1.25;
+  letter-spacing: -.016em;
+  color: var(--ink, #1d1d1f);
+}
+.flow__deg {
+  flex: none;
+  font-size: .75rem;
+  font-weight: 500;
+  color: var(--ink-3, #6e6e73);
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+.flow__chev {
+  flex: none;
+  width: .4375rem; height: .4375rem;
+  margin: 0 .1rem 0 -.1rem;
+  border-right: 1.6px solid var(--ink-3, #6e6e73);
+  border-bottom: 1.6px solid var(--ink-3, #6e6e73);
+  transform: rotate(-45deg);
+  transition: transform .26s var(--fl-ease), border-color .2s var(--fl-ease);
+}
+.flow__node:hover .flow__chev { border-color: var(--fl); }
+
+.flow .flow__gist,
+.flow .flow__open,
+.flow .flow__golink {
+  margin: 0;
+  padding: 0 1.2rem;
+}
+.flow .flow__gist {
+  font-size: .9375rem;
+  line-height: 1.6;
+  color: var(--ink-2, #424245);
+}
+.flow .flow__open {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: .45rem;
+  margin-top: .7rem;
+  font-size: .875rem;
+  line-height: 1.5;
+  color: var(--ink-2, #424245);
+}
+/* a declared gap is marked by the words, not by a third colour: the block
+   keeps to wet green and dry blue, so the chip is a neutral one */
+.flow__opentag {
+  flex: none;
+  padding: .12rem .5rem;
+  border-radius: 999px;
+  background: var(--well, #f5f5f7);
+  box-shadow: inset 0 0 0 1px rgb(0 0 0 / .07);
+  font-size: .75rem;
+  font-weight: 600;
+  color: var(--ink-2, #424245);
+}
+.flow .flow__golink { margin-top: .8rem; }
+.flow a.flow__go {
+  display: inline-flex;
+  align-items: center;
+  gap: .3rem;
+  font-size: .8125rem;
+  font-weight: 600;
+  color: var(--fl);
+  text-decoration: none;
+}
+.flow a.flow__go::after { content: "\2197"; font-weight: 500; }
+.flow a.flow__go:hover { text-decoration: underline; text-underline-offset: 3px; }
+.flow a.flow__go:focus-visible { outline: 2px solid var(--fl); outline-offset: 3px; border-radius: 4px; }
+
+/* ---- selection --------------------------------------------------------- */
+
+.flow[data-sel] .flow__cell { opacity: .55; }
+.flow[data-sel] .flow__cell.is-on,
+.flow[data-sel] .flow__cell.is-sel { opacity: 1; }
+
+.flow__cell.is-on {
+  box-shadow: 0 0 0 1.5px color-mix(in srgb, var(--fl) 42%, transparent),
+              0 16px 32px -26px rgb(0 0 0 / .45);
+}
+.flow__cell.is-sel {
+  background: color-mix(in srgb, var(--fl) 7%, #fff);
+  box-shadow: 0 0 0 1.75px var(--fl),
+              0 22px 40px -28px color-mix(in srgb, var(--fl) 65%, transparent);
+}
+.flow__cell.is-sel .flow__name { color: var(--fl); }
+.flow__cell.is-sel .flow__chev { transform: rotate(135deg); border-color: var(--fl); }
+.flow__cell.is-sel .flow__node:hover { background: none; }
+
+/* ---- edges ------------------------------------------------------------- */
+
+.flow__link { transition: opacity .26s var(--fl-ease); }
+.flow__line, .flow__head {
+  fill: none;
+  stroke: var(--fl-wet);
+  stroke-width: 1.25;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  transition: stroke-width .26s var(--fl-ease);
+}
+.flow__link[data-side="dry"] .flow__line,
+.flow__link[data-side="dry"] .flow__head { stroke: var(--fl-dry); }
+.flow__link { opacity: .45; }
+.flow[data-sel] .flow__link { opacity: .14; }
+.flow[data-sel] .flow__link.is-on { opacity: 1; }
+.flow[data-sel] .flow__link.is-on .flow__line,
+.flow[data-sel] .flow__link.is-on .flow__head { stroke-width: 2; }
+
+/* no script, or the columns stacked: the layer has nothing to draw, and one
+   hairline stands for the seam the edges cross. flow.js marks the block
+   is-live once it can draw, so the fallback needs nothing from any other
+   file and survives a script that never arrives. */
+.flow.is-stacked .flow__edges,
+.flow:not(.is-live) .flow__edges { display: none; }
+
+/* with no script a node heading cannot select anything, so it does not offer
+   to: the chevron and the hover tint go, and the words stay */
+.flow:not(.is-live) .flow__chev { display: none; }
+.flow:not(.is-live) .flow__node { cursor: default; }
+.flow:not(.is-live) .flow__node:hover { background: none; }
+
+/* ================================================================ LEGEND = */
+
+.flow .flow__legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: .4rem 1.4rem;
+  margin: var(--sp-5) 0 0;
+  max-width: none;
+  font-size: .8125rem;
+  line-height: 1.4;
+  color: var(--ink-3, #6e6e73);
+}
+.flow__key { display: inline-flex; align-items: center; gap: .45rem; }
+.flow__key i { flex: none; width: .5rem; height: .5rem; border-radius: 50%; background: var(--fl); }
+.flow__key--wet { --fl: var(--fl-wet); }
+.flow__key--dry { --fl: var(--fl-dry); }
+.flow__key--n { font-variant-numeric: tabular-nums; }
+
+/* ================================================================= PANEL = */
+
+.flow__panel {
+  margin: var(--sp-5) 0 0;
+  padding: clamp(1.25rem, .9rem + 1.6vw, 2rem);
+  border-radius: 28px;
+  background: var(--well, #f5f5f7);
+}
+
+.flow__panelbar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: .4rem 1rem;
+  margin: 0 0 1.1rem;
+}
+.flow .flow__panelhead {
+  margin: 0;
+  font-size: 1.0625rem;
+  font-weight: 650;
+  letter-spacing: -.014em;
+  line-height: 1.2;
+  color: var(--ink, #1d1d1f);
+  text-transform: none;
+}
+.flow .flow__status {
+  margin: 0;
+  max-width: none;
+  font-size: .8125rem;
+  font-weight: 500;
+  line-height: 1.4;
+  color: var(--ink-3, #6e6e73);
+  font-variant-numeric: tabular-nums;
+}
+.flow .flow__status:empty { display: none; }
+
+.flow__list {
+  display: grid;
+  gap: .75rem;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.flow__ho {
+  order: 2;
+  margin: 0;
+  padding: 1rem 1.15rem 1.05rem;
+  border-radius: 20px;
+  background: #fff;
+  box-shadow: 0 0 0 1px rgb(0 0 0 / .05);
+}
+.flow__ho[hidden] { display: none; }
+.flow__ho.is-send { order: 1; }
+.flow__ho.is-recv { order: 3; }
+
+.flow .flow__holine {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: .35rem .4rem;
+  margin: 0;
+  max-width: none;
+  font-size: .8125rem;
+  font-weight: 600;
+  line-height: 1.3;
+}
+.flow__hoend { color: var(--fl); }
+.flow__hoend--wet { --fl: var(--fl-wet); }
+.flow__hoend--dry { --fl: var(--fl-dry); }
+.flow__hoto { display: inline-flex; align-items: center; gap: .4rem; }
+.flow__hoarrow {
+  color: var(--ink-3, #6e6e73);
+  font-weight: 400;
+}
+.flow__hoarrow::before { content: "\2192"; }
+.flow__hodir {
+  padding: .1rem .5rem;
+  border-radius: 999px;
+  background: var(--well, #f5f5f7);
+  font-size: .6875rem;
+  font-weight: 600;
+  letter-spacing: .01em;
+  color: var(--ink-3, #6e6e73);
+}
+.flow__hodir:empty { display: none; }
+
+.flow .flow__holabel {
+  margin: .5rem 0 0;
+  font-size: 1rem;
+  font-weight: 600;
+  letter-spacing: -.012em;
+  line-height: 1.3;
+  color: var(--ink, #1d1d1f);
+}
+.flow .flow__hoev {
+  margin: .45rem 0 0;
+  font-size: .875rem;
+  line-height: 1.6;
+  color: var(--ink-2, #424245);
+}
+
+/* ============================================================== WIDTHS == */
+
+@media (min-width: 52rem) {
+  .flow__web { padding: 0 2.75rem; }
+  .flow__grid {
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+    gap: clamp(3rem, 9vw, 7.5rem);
+  }
+  .flow__list { grid-template-columns: 1fr 1fr; }
+  /* with no script the seam the edges would cross is marked once */
+  .flow:not(.is-live) .flow__web::before {
+    content: "";
+    position: absolute;
+    top: 2.5rem; bottom: .5rem; left: 50%;
+    width: 1px;
+    background: linear-gradient(180deg,
+      transparent,
+      color-mix(in srgb, var(--fl-wet) 30%, transparent) 12%,
+      color-mix(in srgb, var(--fl-dry) 30%, transparent) 88%,
+      transparent);
+  }
+}
+
+@media (min-width: 72rem) {
+  .flow__list { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+}
+
+/* ======================================================= REDUCED MOTION = */
+
+@media (prefers-reduced-motion: reduce) {
+  .flow__cell,
+  .flow .flow__node,
+  .flow__chev,
+  .flow__link,
+  .flow__line,
+  .flow__head { transition: none; }
+}
+
+/* ================================================================ PRINT = */
+
+@media print {
+  .flow__edges { display: none; }
+  .flow[data-sel] .flow__cell,
+  .flow[data-sel] .flow__link { opacity: 1; }
+  .flow__ho[hidden] { display: block !important; }
+  .flow__cell, .flow__ho, .flow__panel { box-shadow: none; background: #fff; }
+}
