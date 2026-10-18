@@ -9,10 +9,12 @@
    offsets from where the markup draws the part. frame() does what keyframes
    cannot: things that flow along a path, the cells' green.
 
-   THE REACTOR (18 Oct, redrawn: one monoline schematic, 1200 x 680, the
-   field on the left, the controller in the middle, the machine on the
-   right, the permeate line running back under the ground). It draws itself
-   on first (0 to 3.4, in the order the story tells it), then plays:
+   THE REACTOR (18 Oct: a painting after the design team's valley, 1200 x
+   680, written by build/how-art.py; the crop on the left, the controller
+   in the middle, the machine standing on the near field at the right, the
+   permeate line running back through the soil). It paints itself on first
+   (0 to 3.4, in the order the story tells it: the valley, the field, the
+   machine and its parts), then plays:
      0     the leaf sensor reads; its reading and the forecast run to the model
      6     the index crosses the threshold; the call runs to the strip, which
            lights one LED after another; the culture goes green
@@ -59,15 +61,22 @@
   }
 
   /* ------------------------------------------------------- THE REACTOR --- */
-  // One drawing, 1200 x 680, drawn on in the order the story tells it
-  // (0 to 3: ground, field, forecast, controller, case, vessel, strip, loop,
-  // cartridge, permeate line), then played:
+  // One drawing, 1200 x 680, painted on in the order the story tells it
+  // (0 to 3.4: ridge, plain, soil, crop, forecast, controller, case, vessel,
+  // strip, loop, pump, cartridge, permeate line), then played:
   //   0     the leaf sensor reads; its reading and the forecast run to the model
   //   6     the index crosses the threshold; the call runs to the strip; green
   //   11    the cells make the protectant; the photometer reads them
   //   16    the pump runs the loop; the cells go round, the protectant crosses
   //   21    the permeate runs back along the ground to the roots
   //   26.6  the whole machine; red light switches the cells off
+  // when each painted group wipes on (the story's order: the valley, the
+  // field, the forecast, the controller, the machine and its parts)
+  var WIPES = {
+    ridge: [0.0, 1.1], plain: [0.25, 1.5], soil: [0.5, 1.3], field: [0.9, 1.8], roots: [1.1, 1.7], forecast: [1.0, 1.6],
+    ctrl: [1.2, 2.1], "case": [1.1, 2.2], strip: [1.6, 2.3], vessel: [1.4, 2.4], vessel2: [1.4, 2.4],
+    pump: [2.0, 2.6], photo: [2.4, 2.8], cart: [2.0, 2.8], emit: [3.1, 3.5]
+  };
   function draw(t0, t1) {
     var m = t0 + (t1 - t0) * 0.6;
     return tr([[0, { a: 0, d: 0 }], [t0, { a: 0, d: 0 }], [m, { a: 1, d: 0.6 }, "out"], [t1, { a: 1, d: 1 }, "out"]]);
@@ -94,22 +103,15 @@
       [30, { x: 600, y: 360, w: 1240 }]
     ], { x: 0, y: 0, w: 1 }),
     parts: {
-      // the establishing draw-on
-      "grp-ground": draw(0.1, 1.2),
-      "grp-field": draw(0.3, 1.8),
-      "grp-forecast": draw(0.8, 1.9),
-      "grp-ctrl": draw(1.0, 2.1),
-      "grp-case": draw(1.1, 2.2),
-      "grp-vessel": draw(1.4, 2.4),
-      "grp-strip": draw(1.6, 2.3),
+      // the establishing paint-on: the painted groups wipe on under their
+      // brush-shaped clips (WIPES, in frame()); the tubes and the permeate
+      // line draw on as strokes
       "grp-loop": draw(1.8, 2.8),
-      "grp-pump": draw(2.0, 2.6),
-      "grp-cart": draw(2.0, 2.8),
+      "grp-cart": draw(2.3, 2.8),
       "grp-perm": draw(2.3, 3.4),
       // 1  sense
       blink: tr([[0, { a: 0 }], [2.8, { a: 0 }], [3, { a: 1 }], [3.4, { a: 0.15 }], [3.8, { a: 1 }], [4.2, { a: 0.15 }], [4.6, { a: 1 }], [5, { a: 0.15 }], [5.4, { a: 1 }], [6.4, { a: 1 }], [7, { a: 0 }]]),
       "wire-sn": tr([[0, { d: 0, a: 1 }], [3.2, { d: 0 }], [4.4, { d: 1 }], [8.2, { d: 1, a: 1 }], [9, { a: 0.35 }]]),
-      fc: tr([[0, { d: 0 }], [3.4, { d: 0 }], [4.8, { d: 1 }]]),
       "wire-fc": tr([[0, { d: 0, a: 1 }], [3.8, { d: 0 }], [5, { d: 1 }], [8.2, { d: 1, a: 1 }], [9, { a: 0.35 }]]),
       // 2  predict, switch on
       idx: tr([[0, { d: 0 }], [6.2, { d: 0 }], [8.2, { d: 1 }, "io"]]),
@@ -120,10 +122,10 @@
       "beam-red": tr([[0, { a: 0 }], [27.2, { a: 0 }], [28, { a: 1 }]]),
       "broth-on": tr([[0, { a: 0 }], [10.2, { a: 0 }], [12, { a: 1 }], [27.4, { a: 1 }], [29, { a: 0.3 }]]),
       // 3  make
-      stir: tr([[0, { r: 0 }], [9.8, { r: 0 }], [30, { r: 6400 }, "lin"]]),
+      stir: tr([[0, { r: 0, a: 0 }], [2.0, { a: 0 }], [2.4, { a: 1 }], [9.8, { r: 0 }], [30, { r: 6400 }, "lin"]]),
       pbeam: tr([[0, { a: 0 }], [13.6, { a: 0 }], [13.9, { a: 1 }], [14.3, { a: 0.25 }], [14.7, { a: 1 }], [15.1, { a: 0.25 }], [15.5, { a: 1 }], [16.2, { a: 0 }]]),
       // 4  separate
-      rotor: tr([[0, { r: 0 }], [15.8, { r: 0 }], [30, { r: 2400 }, "lin"]]),
+      rotor: tr([[0, { r: 0, a: 0 }], [2.2, { a: 0 }], [2.6, { a: 1 }], [15.8, { r: 0 }], [30, { r: 2400 }, "lin"]]),
       "flow-loop": tr([[0, { a: 0 }], [16, { a: 0 }], [16.8, { a: 1 }], [21.4, { a: 1 }], [22.2, { a: 0 }]]),
       pores: tr([[0, { a: 0 }], [17.6, { a: 0 }], [18.4, { a: 1 }], [26.6, { a: 1 }], [27.6, { a: 0.35 }]]),
       // 5  deliver
@@ -147,6 +149,13 @@
       "lab-off": tr([[0, { a: 0, y: 6, s: 1.3 }], [27.3, { a: 0, y: 6 }], [27.8, { a: 1, y: 0 }, "out"]])
     },
     setup: function (ctx) {
+      // the brush-shaped clips the painted groups wipe on under: the clip
+      // stands off its group by its own extent (data-w) and slides home
+      ctx.wipes = [];
+      [].forEach.call(ctx.svg.querySelectorAll("clipPath [data-k]"), function (p) {
+        var k = p.getAttribute("data-k").slice(3), t = WIPES[k];
+        if (t) ctx.wipes.push({ key: "wp-" + k, axis: p.getAttribute("data-axis") || "x", w: +p.getAttribute("data-w") || 1000, t0: t[0], t1: t[1] });
+      });
       ctx.leds = {
         on: [].slice.call(ctx.svg.querySelectorAll(".rw-leds--on")),
         red: [].slice.call(ctx.svg.querySelectorAll(".rw-leds--red"))
@@ -157,6 +166,12 @@
       });
     },
     frame: function (T, ctx) {
+      // the paint-on
+      for (var w = 0; w < ctx.wipes.length; w++) {
+        var wp = ctx.wipes[w], f = 1 - Math.pow(1 - sm((T - wp.t0) / (wp.t1 - wp.t0)), 2), o = {};
+        o[wp.axis] = wp.axis === "y" ? wp.w * (1 - f) : -wp.w * (1 - f);
+        ctx.place(wp.key, o, T);
+      }
       // the green: on from 9.4, off from 27
       var on = sm((T - 9.4) / 1.2) * (1 - sm((T - 26.9) / 0.7));
       ctx.svg.style.setProperty("--on", on.toFixed(3));
@@ -191,7 +206,7 @@
   };
   // the cells drift once the light is on; three more come as the culture
   // grows; the protectant appears among them
-  for (var i = 1; i <= 6; i++) R.parts["rod" + i] = tr([[0, { b: 0 }], [10, { b: 0 }], [11.2, { b: 1 }]]);
+  for (var i = 1; i <= 6; i++) R.parts["rod" + i] = tr([[0, { b: 0, a: 0 }], [2.0, { a: 0 }], [2.4, { a: 1 }], [10, { b: 0 }], [11.2, { b: 1 }]]);
   for (i = 7; i <= 9; i++) R.parts["rod" + i] = tr([[0, { a: 0, s: 0.3, b: 1 }], [11.6 + (i - 7) * 0.5, { a: 0, s: 0.3 }], [12.6 + (i - 7) * 0.5, { a: 1, s: 1 }, "out"]]);
   for (i = 1; i <= 7; i++) R.parts["dot" + i] = tr([[0, { a: 0, s: 0, b: 1 }], [12.2 + i * 0.36, { a: 0, s: 0 }], [13 + i * 0.36, { a: 1, s: 1 }, "out"]]);
 
