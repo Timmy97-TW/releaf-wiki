@@ -1,208 +1,198 @@
 /* =============================================================================
    ENGINEERING · the wet lab / dry lab flow web
    -----------------------------------------------------------------------------
-   Six areas, three exchanges, one screen. A row is a three-column grid: wet
-   card, the two arrows, dry card. The arrows are a rule and a head drawn by
-   this file inside the middle column, so nothing depends on where an element
-   happens to sit and no two arrows cross. Between the rows, two connectors run
-   down the wet column.
+   Six areas and three exchanges, close enough together that the back and forth
+   is the first thing read. A row is three columns: wet area, the two arrows,
+   dry area. Each arrow is a rule and a head drawn here inside the middle
+   column, one each way, so nothing depends on where an element sits and no two
+   arrows cross. Between the rows, the ties run down the two columns.
 
-   Selection adds .is-sel to a row and data-sel to the figure; everything
-   unselected drops back but stays legible. Below 60rem each row stacks and the
-   arrows point down and up instead of across.
+   Every area is a link, so the figure needs no script. Hovering or focusing a
+   row brings its own exchange forward; without a pointer nothing is lost.
 
    Loaded last in the head so it outranks fulllines.css, which sets the measure
-   for running prose and would otherwise widen the cards.
+   for running prose and would otherwise widen the figure.
    ========================================================================== */
 
 .flow {
   --fl-wet: #0e7a5f;
   --fl-dry: #1c4e89;
-  --fl-line: #d7dce3;
   --fl-ink: var(--ink, #1d1d1f);
-  --fl-ink-3: var(--ink-3, #6e6e73);
   --fl-ease: cubic-bezier(.32, .72, 0, 1);
-  margin-bottom: var(--sp-9, 4rem);
+  margin-bottom: var(--sp-8, 3rem);
 }
 
-.flow > h2 { margin-bottom: .35rem; }
-.flow > .lede { max-width: 62ch; }
+.flow > h2 { margin-bottom: .3rem; }
+.flow > .lede { max-width: 58ch; margin-bottom: 0; }
 
 .flow__fig {
   display: grid;
-  /* the same three columns the rows use, so each head sits over its column */
-  grid-template-columns: 1fr minmax(13rem, 17rem) 1fr;
-  gap: .5rem 1rem;
-  max-width: 1120px;
-  margin: 1.6rem auto 0;
+  grid-template-columns: minmax(0, 1fr) minmax(11rem, 16rem) minmax(0, 1fr);
+  gap: .25rem .6rem;
+  max-width: 60rem;
+  margin: 1.4rem auto 0;
 }
-.flow__head--wet { grid-column: 1 / 2; }
-.flow__head--dry { grid-column: 3 / 4; }
 
-/* ── the two column heads ─────────────────────────────────────────────── */
+/* ── column heads ─────────────────────────────────────────────────────── */
 .flow__head {
-  margin: 0;
-  font-size: .78rem;
+  margin: 0 0 .2rem;
+  font-size: .72rem;
   font-weight: 650;
-  letter-spacing: .09em;
+  letter-spacing: .1em;
   text-transform: uppercase;
 }
-.flow__head span { display: inline-flex; align-items: center; gap: .5rem; }
+.flow__head--wet { grid-column: 1 / 2; justify-self: end; color: var(--fl-wet); }
+.flow__head--dry { grid-column: 3 / 4; justify-self: start; color: var(--fl-dry); }
+.flow__head span { display: inline-flex; align-items: center; gap: .45rem; }
 .flow__head span::before {
   content: "";
-  width: .5rem; height: .5rem; border-radius: 50%;
+  width: .45rem; height: .45rem; border-radius: 50%;
   background: currentColor;
 }
-.flow__head--wet { color: var(--fl-wet); }
-.flow__head--dry { color: var(--fl-dry); }
 
-/* ── a row: card, arrows, card ────────────────────────────────────────── */
+/* ── a row: area, arrows, area ────────────────────────────────────────── */
 .flow__row {
   grid-column: 1 / -1;
   display: grid;
-  grid-template-columns: 1fr minmax(13rem, 17rem) 1fr;
+  /* the figure's own template, repeated rather than inherited with subgrid,
+     which is too new to rely on for a judge's browser */
+  grid-template-columns: minmax(0, 1fr) minmax(11rem, 16rem) minmax(0, 1fr);
+  gap: 0 .6rem;
   align-items: center;
-  gap: 0 1rem;
 }
-
-.flow__cell { display: flex; flex-direction: column; gap: .35rem; min-width: 0; }
-.flow__cell--wet { --fl: var(--fl-wet); }
-.flow__cell--dry { --fl: var(--fl-dry); }
 
 .flow__node {
   display: block;
-  width: 100%;
-  margin: 0;
-  padding: 1rem 1.15rem 1.05rem;
-  text-align: left;
-  font: inherit;
-  color: inherit;
-  background: #fff;
-  border: 0;
-  border-radius: 18px;
-  box-shadow: 0 0 0 1px rgb(0 0 0 / .06), 0 1px 2px rgb(0 0 0 / .04),
-              0 8px 24px -18px rgb(0 0 0 / .5);
-  cursor: pointer;
-  transition: background .22s var(--fl-ease), box-shadow .22s var(--fl-ease),
-              transform .22s var(--fl-ease), opacity .22s var(--fl-ease);
-}
-.flow__node:hover { background: color-mix(in srgb, var(--fl) 4%, #fff); }
-.flow__node:focus-visible { outline: 2px solid var(--fl); outline-offset: 3px; }
-
-.flow__name {
-  display: block;
-  font-size: 1.06rem;
+  padding: .72rem .95rem;
+  font-size: 1rem;
   font-weight: 650;
   letter-spacing: -.01em;
+  line-height: 1.2;
   color: var(--fl-ink);
+  text-decoration: none;
+  background: #fff;
+  border-radius: 14px;
+  box-shadow: 0 0 0 1px rgb(0 0 0 / .07), 0 6px 18px -16px rgb(0 0 0 / .6);
+  transition: box-shadow .2s var(--fl-ease), background .2s var(--fl-ease);
 }
-.flow__sum {
-  display: block;
-  margin-top: .3rem;
-  font-size: .9rem;
-  line-height: 1.45;
-}
-
-.flow__go {
-  align-self: start;
-  margin-left: 1.15rem;
-  font-size: .8rem;
+.flow__node--wet { --fl: var(--fl-wet); justify-self: end; }
+.flow__node--dry { --fl: var(--fl-dry); justify-self: start; }
+.flow__node::after {
+  content: " \2197";
+  font-size: .78em;
   font-weight: 600;
   color: var(--fl);
-  text-decoration: none;
 }
-.flow__go::after { content: " \2197"; }
-.flow__go:hover { text-decoration: underline; text-underline-offset: 3px; }
+.flow__node:hover, .flow__node:focus-visible {
+  background: color-mix(in srgb, var(--fl) 5%, #fff);
+  box-shadow: 0 0 0 1.5px var(--fl), 0 8px 22px -18px rgb(0 0 0 / .6);
+}
+.flow__node:focus-visible { outline: 2px solid var(--fl); outline-offset: 3px; }
 
-/* ── the arrows ───────────────────────────────────────────────────────── */
-.flow__xchg { display: flex; flex-direction: column; gap: 1.1rem; }
+/* ── the two arrows ───────────────────────────────────────────────────── */
+.flow__xchg {
+  display: flex;
+  flex-direction: column;
+  gap: .75rem;
+  padding: .1rem 0;
+}
 
 .flow__arrow {
   position: relative;
   margin: 0;
-  padding-bottom: .5rem;
+  padding-bottom: .35rem;
   text-align: center;
-  border-bottom: 1.5px solid var(--fl, var(--fl-line));
-  transition: border-color .22s var(--fl-ease), opacity .22s var(--fl-ease);
+  font-size: .76rem;
+  font-weight: 600;
+  line-height: 1.3;
+  color: var(--fl);
+  border-bottom: 1.5px solid var(--fl);
+  transition: border-color .2s var(--fl-ease), color .2s var(--fl-ease);
 }
 .flow__arrow::after {
   content: "";
   position: absolute;
-  bottom: -5.5px;
-  width: 9px; height: 9px;
-  border-top: 1.5px solid var(--fl, var(--fl-line));
-  border-right: 1.5px solid var(--fl, var(--fl-line));
+  bottom: -5px;
+  width: 8px; height: 8px;
+  border-top: 1.5px solid var(--fl);
+  border-right: 1.5px solid var(--fl);
 }
-.flow__arrow--w { --fl: var(--fl-dry); }        /* travels to the wet lab */
+.flow__arrow--w { --fl: var(--fl-dry); }          /* travels to the wet lab */
 .flow__arrow--w::after { left: 0; transform: rotate(-135deg); transform-origin: 60% 40%; }
-.flow__arrow--d { --fl: var(--fl-wet); }        /* travels to the dry lab */
+.flow__arrow--d { --fl: var(--fl-wet); }          /* travels to the dry lab */
 .flow__arrow--d::after { right: 0; transform: rotate(45deg); transform-origin: 40% 40%; }
 
-.flow__lab {
-  display: block;
-  font-size: .8rem;
-  line-height: 1.35;
-  font-weight: 600;
-}
-
-/* ── the two connectors down the wet column ───────────────────────────── */
-.flow__down {
-  grid-column: 1 / 2;
-  justify-self: start;
+/* ── the ties between rows ────────────────────────────────────────────── */
+.flow__tie {
   position: relative;
-  margin: .1rem 0 .1rem 2.2rem;
-  padding: .15rem 0 .15rem 1.1rem;
-  border-left: 1.5px solid var(--fl-wet);
+  margin: 0;
+  padding: .1rem 0 .1rem .85rem;
+  font-size: .72rem;
+  font-weight: 600;
+  line-height: 1.3;
 }
-.flow__down::after {
+.flow__tie--wet {
+  grid-column: 1 / 2;
+  justify-self: end;
+  color: var(--fl-wet);
+  border-left: 1.5px solid currentColor;
+  margin-right: 2.4rem;
+}
+.flow__tie--dry {
+  grid-column: 3 / 4;
+  justify-self: start;
+  color: var(--fl-dry);
+  border-left: 1.5px solid currentColor;
+  margin-left: 2.4rem;
+}
+.flow__tie::after {
   content: "";
   position: absolute;
-  left: -5.2px; bottom: -1px;
-  width: 8px; height: 8px;
-  border-right: 1.5px solid var(--fl-wet);
-  border-bottom: 1.5px solid var(--fl-wet);
+  left: -5px; bottom: -1px;
+  width: 7px; height: 7px;
+  border-right: 1.5px solid currentColor;
+  border-bottom: 1.5px solid currentColor;
   transform: rotate(45deg);
 }
-.flow__down .flow__lab { color: var(--fl-wet); }
 
-/* ── selection ────────────────────────────────────────────────────────── */
-.flow__fig[data-sel] .flow__row:not(.is-sel) { opacity: .5; }
-.flow__fig[data-sel] .flow__down { opacity: .5; }
-.flow__row.is-sel .flow__node { transform: translateY(-1px); }
-.flow__cell.is-sel .flow__node {
-  background: color-mix(in srgb, var(--fl) 7%, #fff);
-  box-shadow: 0 0 0 1.5px var(--fl), 0 10px 30px -20px rgb(0 0 0 / .55);
+/* ── the row under the pointer comes forward ──────────────────────────── */
+@media (hover: hover) {
+  .flow__fig:hover .flow__row:not(:hover) .flow__arrow { color: color-mix(in srgb, var(--fl) 55%, #fff); border-bottom-color: color-mix(in srgb, var(--fl) 40%, #fff); }
+  .flow__fig:hover .flow__row:not(:hover) .flow__arrow::after { border-color: color-mix(in srgb, var(--fl) 40%, #fff); }
+  .flow__row:hover .flow__arrow, .flow__row:focus-within .flow__arrow { border-bottom-width: 2px; }
 }
-.flow__row.is-sel .flow__arrow { border-bottom-width: 2px; }
 
 /* ── stacked ──────────────────────────────────────────────────────────── */
-@media (max-width: 60rem) {
-  .flow__fig { grid-template-columns: 1fr; gap: .4rem; max-width: 34rem; }
-  .flow__head--wet, .flow__head--dry { grid-column: 1 / -1; }
-  .flow__row { grid-template-columns: 1fr; gap: .55rem; }
-  .flow__xchg { flex-direction: column; gap: .55rem; padding: .1rem 0; }
+@media (max-width: 54rem) {
+  .flow__fig { grid-template-columns: minmax(0, 26rem); gap: .35rem; margin-left: 0; }
+  /* stacked, the heads would sit in a pile above the first card, so each
+     area carries its own side as a dot instead */
+  .flow__head { display: none; }
+  .flow__node { display: flex; align-items: center; gap: .5rem; }
+  .flow__node::before {
+    content: "";
+    flex: none;
+    width: .45rem; height: .45rem; border-radius: 50%;
+    background: var(--fl);
+  }
+  .flow__node::after { margin-left: auto; }
+  .flow__row { grid-template-columns: minmax(0, 1fr); gap: .4rem; }
+  .flow__node--wet, .flow__node--dry { justify-self: stretch; }
+  .flow__xchg { gap: .4rem; }
 
-  /* across becomes down and up: the rule runs beside the words */
+  /* across becomes down and up, the rule beside the words */
   .flow__arrow {
-    padding: .1rem 0 .1rem 1.1rem;
+    padding: .05rem 0 .05rem .85rem;
     text-align: left;
     border-bottom: 0;
     border-left: 1.5px solid var(--fl);
   }
   .flow__arrow::after { bottom: auto; }
-  .flow__arrow--d::after { right: auto; left: -5.2px; bottom: -1px; transform: rotate(135deg); }
-  .flow__arrow--w::after { left: -5.2px; top: -1px; transform: rotate(-45deg); }
-  .flow__down { margin-left: 1rem; }
+  .flow__arrow--d::after { right: auto; left: -5px; bottom: -1px; transform: rotate(135deg); }
+  .flow__arrow--w::after { left: -5px; top: -1px; transform: rotate(-45deg); }
+  .flow__tie--wet, .flow__tie--dry { grid-column: 1 / -1; justify-self: start; margin: 0 0 0 .9rem; }
 }
-
-/* ── no script: the figure is the same, minus the pointer affordances ──── */
-.flow:not(.is-live) .flow__node {
-  cursor: default;
-  box-shadow: 0 0 0 1px rgb(0 0 0 / .06);
-}
-.flow:not(.is-live) .flow__node:hover { background: #fff; }
 
 @media (prefers-reduced-motion: reduce) {
   .flow__node, .flow__arrow { transition: none; }
-  .flow__row.is-sel .flow__node { transform: none; }
 }
