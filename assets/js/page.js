@@ -344,7 +344,16 @@
         big.src = img.srcset ? img.src : (img.currentSrc || img.src);
         big.alt = img.alt;
         const c = img.closest("figure") && img.closest("figure").querySelector("figcaption");
-        cap.textContent = c ? c.textContent.replace(/¶$/, "") : "";
+        /* Engagement captions are split into a number and a legend; the page
+           hides the legend under a picture, so this is where it is read, with
+           its links and italics kept */
+        const legend = c && c.querySelector(".figlegend");
+        if (legend) {
+          const num = c.querySelector(".fignum");
+          cap.innerHTML = (num ? "<b>" + num.textContent + ".</b> " : "") + legend.innerHTML;
+        } else {
+          cap.textContent = c ? c.textContent.replace(/¶$/, "") : "";
+        }
         box.classList.add("is-open");
         document.body.style.overflow = "hidden";
         $(".lightbox__close", box).focus();
