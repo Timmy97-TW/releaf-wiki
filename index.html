@@ -187,7 +187,7 @@
       // "page" is DOMContentLoaded (the scripts). The sheets are not on the
       // 7 s cap: leaving before them would lift the white off a page that
       // cannot be drawn yet (SHEETS_MAX is the only limit on them).
-      var need = { art: false, word: false, fonts: false, farm: false, rx: false, page: false };
+      var need = { art: false, word: false, fonts: false, farm: false, page: false };
       var KEYS = Object.keys(need);
       var SHEETS_MAX = 15000, sheetsIn = false;
       function sheets() {
@@ -216,10 +216,8 @@
       word.src = DIR + "word.webp";
       if (d.fonts && d.fonts.ready) d.fonts.ready.then(function () { need.fonts = true; }); else need.fonts = true;
       d.addEventListener("DOMContentLoaded", function () { need.page = true; });
-      // the farm photograph, and the machine that stands in it: both are the
-      // first screen, and the hero's own script sets the machine's source
-      // once the farm is decoded (it must not share the line with it)
-      var farm = null, rx = null;
+      // the farm photograph is the first screen
+      var farm = null;
       function shot(sel, key) {
         if (need[key]) return null;
         var el = d.querySelector(sel);
@@ -228,7 +226,6 @@
       }
       function photos() {
         farm = shot(".hero__frame--farm img", "farm") || farm;
-        rx = shot(".hero__frame--reactor img", "rx") || rx;
       }
 
       function tick(now) {
@@ -263,6 +260,7 @@
         left = ended = true;
         try { sessionStorage.setItem("releaf-intro", "1"); } catch (e) { /* fine */ }
         L.classList.add("out");
+        if (w.__heroLdOut) w.__heroLdOut();   // the hero's intro plays as the white lifts
         w.setTimeout(function () {
           root.classList.remove("ld");
           L.remove();
@@ -280,7 +278,7 @@
   <link rel="stylesheet" href="assets/css/nav.css" />
   <link rel="stylesheet" href="assets/css/page.css" />
   <!-- ?v= on the homepage's own sheets and scripts: see the note above the scripts -->
-  <link rel="stylesheet" href="assets/css/home.css?v=20261018-how2" />
+  <link rel="stylesheet" href="assets/css/home.css?v=20261018-hero1" />
   <link rel="stylesheet" href="assets/css/home-problem.css?v=20261011-home21" />
   <link rel="stylesheet" href="assets/css/home-threat.css?v=20261018-neo4" />
   <link rel="stylesheet" href="assets/css/home-reactor.css?v=20261011-home21" />
@@ -288,7 +286,7 @@
   <link rel="stylesheet" href="assets/css/home-vision.css?v=20261011-home21" />
   <link rel="stylesheet" href="assets/css/home-voices.css?v=20261018-how2" />
   <!-- one sheet per section team, added 29 Sep; each is owned by one section -->
-  <link rel="stylesheet" href="assets/css/home-hero.css?v=20261011-home21" />
+  <link rel="stylesheet" href="assets/css/home-hero.css?v=20261018-hero3" />
   <link rel="stylesheet" href="assets/css/home-demands.css?v=20261018-neo1" />
   <link rel="stylesheet" href="assets/css/home-sponsors.css?v=20261011-home22" />
   <link rel="stylesheet" href="assets/css/home-explore.css?v=20261011-home21" />
@@ -330,29 +328,19 @@
 
   <!-- ═══════════════════════════════════════════════════ 1  FIRST VISUAL ═══ -->
   <header class="hero">
-    <!-- THE LIGHT (Neo's see-through, 29 Sep; rebuilt for smoothness 1 Oct).
-         The team on Farmer Chen's farm fills the screen. A soft light
-         follows the pointer across it: away from the machine it only dims
-         the field a little, and over the machine it opens onto a render of
-         the bench reactor standing among the people. Rest on the machine
-         and the light settles round all of it and names it. On a touch
-         screen a tap lights the field where it lands. Once per visit, after
-         the farm has had the screen to itself for a moment, the light makes
-         one pass on its own: in from the field, onto the machine, out.
+    <!-- THE FARM, AND NOTHING ELSE (18 Oct, owner: no light, no machine).
+         The team walking into Farmer Chen's field behind her fills the
+         screen. The intro is the photograph's own: it opens a little pushed
+         in toward the line and settles back while the white of the opening
+         lifts, then the claim rises word by word, then the project's title,
+         then Chen's words. On the way out the field drifts behind the page
+         and fades to white, which is the ground the map opens on, and the
+         map's first stop is this farm.
 
-         10 Oct: the machine is Anton's final design, the B2 carry case,
-         drawn from his CAD with a clear ground, so the farm shows through
-         its open side and the slots in its panel. It stands PORTRAIT, so the
-         frame is a tall centred column.
-
-         HOW IT STAYS SMOOTH. The light is one element, .hero__lens, with a
-         fixed soft-edged mask; home.js (piece 0) only ever moves and scales
-         it (and counter-moves its contents so the reactor stays still on the
-         page), through springs. Transform and opacity only, so the browser
-         never repaints the photograph while the light moves.
-
-         Without script, with reduced motion before any pointer, or in print,
-         the farm is whole; the reactor is read out by its alt text. -->
+         .is-pre (the start of the intro) is set by the script below, so
+         without script, or with reduced motion, the hero is simply there,
+         finished. The script also lets it in after 9 s whatever happens.
+         The scroll's drift is home.js piece 0. -->
     <div class="hero__frames" id="hero-spot">
       <div class="hero__frame hero__frame--farm">
         <picture data-defer>
@@ -368,66 +356,56 @@
           </picture>
         </noscript>
       </div>
-      <div class="hero__lens" id="hero-lens">
-        <div class="hero__lens-in">
-          <div class="hero__dim"></div>
-          <div class="hero__halo"></div>
-          <div class="hero__frame hero__frame--reactor">
-            <picture>
-              <source type="image/webp" data-srcset="assets/img/home/hero-b2-front-600.webp 600w, assets/img/home/hero-b2-front-900.webp 900w" sizes="(max-aspect-ratio: 2/3) 52vw, 28vh" />
-              <img data-src="assets/img/home/hero-b2-front-600.webp" width="600" height="884" decoding="async" alt="A 3D model of the ReLEAF bioreactor seen head on through its open side: a black carry case with a handle on top. Inside, from the top, are four dosing valves, the blue peristaltic pump and two smaller pumps on black decks, the white hollow-fibre cartridge at the right, and at the foot the culture vessel and the bottles, joined by clear silicone lines." />
-            </picture>
-          </div>
-        </div>
-      </div>
+      <div class="hero__veil" aria-hidden="true"></div>
     </div>
 
     <!-- The farm photograph fades in over its blurred stand-in when it is
          decoded (home.css, html.hl), so a slow line sees the field sharpen
-         rather than a half-drawn picture. The machine under the light is
-         only fetched after it, so the two never split the bandwidth: the
-         light cannot show the machine before the farm is there anyway. -->
+         rather than a half-drawn picture. The intro starts once the
+         photograph is in AND the opening's white has begun to lift (the
+         opening calls __heroLdOut), or at once where there is no opening. -->
     <script>
-      (function (d) {
-        var farm = d.querySelector(".hero__frame--farm img"), rack = d.querySelector(".hero__frame--reactor picture");
+      (function (d, w) {
+        var hero = d.querySelector(".hero"), farm = d.querySelector(".hero__frame--farm img");
+        var still = w.matchMedia && w.matchMedia("(prefers-reduced-motion: reduce)").matches;
+        var farmIn = false, ldOut = !d.documentElement.classList.contains("ld");
+        if (!still) hero.classList.add("is-pre");
+        function go() { hero.classList.add("is-on"); }
+        w.__heroLdOut = function () { ldOut = true; if (farmIn) go(); };
+        w.setTimeout(go, 9000);                          // never leave the words hidden
         // the farm's sources wait in data- attributes so that the opening's
         // drawing goes first; __heroGo has started (or now starts) their
         // download through preloads in <head>, and these pick it up
-        window.__heroGo();
+        w.__heroGo();
         [].forEach.call(d.querySelectorAll(".hero__frame--farm [data-srcset]"), function (s) { s.srcset = s.dataset.srcset; });
         farm.src = farm.dataset.src;
-        function machine() {
-          [].forEach.call(rack.querySelectorAll("[data-srcset]"), function (s) { s.srcset = s.dataset.srcset; });
-          var i = rack.querySelector("img[data-src]");
-          if (i) i.src = i.dataset.src;
-        }
         // the maps under the hero (home-threat.css) wait for this too, or
         // for the reader to scroll, whichever comes first
         function after() { d.documentElement.classList.add("hero-in"); }
         function shown() {
           farm.classList.add("is-in");
-          machine();
+          farmIn = true;
+          if (ldOut) go();
           after();
         }
-        window.addEventListener("scroll", after, { once: true, passive: true });
+        w.addEventListener("scroll", after, { once: true, passive: true });
         if (farm.complete && farm.currentSrc) shown();
         else {
           farm.addEventListener("load", function () { (farm.decode ? farm.decode() : Promise.resolve()).catch(function () {}).then(shown); }, { once: true });
           farm.addEventListener("error", shown, { once: true });
         }
-      })(document);
+      })(document, window);
     </script>
-    <noscript><style>.hero__frame--reactor, .hero__frame--farm picture[data-defer] { display: none; }</style></noscript>
+    <noscript><style>.hero__frame--farm picture[data-defer] { display: none; }</style></noscript>
 
     <div class="hero__inner">
       <div class="hero__head">
-        <h1 class="hero__claim">Every Farmer a Biomanufacturer</h1>
+        <h1 class="hero__claim"><span class="hero__w" style="--i:0"><span>Every</span></span> <span class="hero__w" style="--i:1"><span>Farmer</span></span> <span class="hero__w" style="--i:2"><span>a</span></span> <span class="hero__w" style="--i:3"><span>Biomanufacturer</span></span></h1>
         <p class="hero__caption"><span>Empowering future farmers to combat climate change with</span> <span>a Stress-Responsive Optogenetic Bioreactor for Precision Plant Protection</span></p>
       </div>
 
       <!-- Bottom right: Farmer Chen's words from the team's 21 July visit
-           to her farm, in plain type on the photograph. They step back while
-           the light rests on the machine. -->
+           to her farm, in plain type on the photograph. -->
       <div class="hero__foot">
         <blockquote class="hero__note">
           <p><span>As long as it benefits the plants and does not disrupt the balance of nature,</span>
@@ -1714,7 +1692,7 @@
        minutes, and an old home.js run against new markup breaks the page.
        Bump it on every deploy that changes one of them. -->
   <script src="assets/js/home-reactor.js?v=20261018-how1" defer fetchpriority="high"></script>
-  <script src="assets/js/home.js?v=20261018-how2" defer fetchpriority="high"></script>
+  <script src="assets/js/home.js?v=20261018-hero1" defer fetchpriority="high"></script>
   <!-- 18 Oct: Neo's map (01) and his walkthrough player (#how) with its
        scenes; the map runs on home.js's one frame, so it loads after it -->
   <script src="assets/js/home-threat.js?v=20261018-neo3" defer fetchpriority="low"></script>
