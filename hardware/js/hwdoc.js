@@ -1,5 +1,5 @@
 /* =============================================================================
-   ReLeaf hardware: the record's behaviour
+   ReLEAF hardware: the record's behaviour
    -----------------------------------------------------------------------------
    The four things hwdoc.css needs a script for, and nothing else:
 

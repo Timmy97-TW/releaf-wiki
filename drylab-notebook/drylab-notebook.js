@@ -1,5 +1,5 @@
 /* =============================================================================
-   ReLeaf: Dry Lab Notebook
+   ReLEAF: Dry Lab Notebook
    -----------------------------------------------------------------------------
    The mosaic, the season timeline and Felix Yu's board. On the board every
    pipeline is a lane, every week a row, newest at the top. A mark on a lane is that pipeline's page for that week. Lines between

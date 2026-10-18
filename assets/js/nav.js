@@ -1,5 +1,5 @@
 /* =============================================================================
-   ReLeaf site navigation renderer
+   ReLEAF site navigation renderer
    Reads NAV from assets/data/site-nav.js into <div id="site-nav">.
    No dependencies. Drop the two data files, nav.css and the div into any wiki page.
    ========================================================================== */
@@ -93,8 +93,8 @@
       '<div class="sitenav__bar">' +
         '<div class="sitenav__inner">' +
           '<a class="sitenav__brand" href="' + brandHref + '">' +
-            '<img class="sitenav__logo" src="' + logo + '" alt="ReLeaf team logo" />' +
-            '<span class="sitenav__word">ReLeaf</span>' +
+            '<img class="sitenav__logo" src="' + logo + '" alt="ReLEAF team logo" />' +
+            '<span class="sitenav__word">ReLEAF</span>' +
           "</a>" +
           '<div class="sitenav__tabs"></div>' +
           '<button class="sitenav__burger" aria-expanded="false" aria-label="Open menu">' +

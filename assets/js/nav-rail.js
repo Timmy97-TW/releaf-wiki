@@ -1,5 +1,5 @@
 /* =============================================================================
-   ReLeaf: the hovering left rail
+   ReLEAF: the hovering left rail
    -----------------------------------------------------------------------------
    Builds #nav-rail from two sources: the page's own <section class="sec" id>
    headings, and the NAV array in assets/data/site-nav.js. Page addresses stay
@@ -36,10 +36,10 @@
     /* ---- home mark ---- */
     var home = el("a", "rail__home");
     home.href = base || "./";
-    home.title = "ReLeaf home";
+    home.title = "ReLEAF home";
     var logo = document.createElement("img");
     logo.src = base + "assets/img/logo.png";
-    logo.alt = "ReLeaf";
+    logo.alt = "ReLEAF";
     home.appendChild(logo);
     spine.appendChild(home);
 
