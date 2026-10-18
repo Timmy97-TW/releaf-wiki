@@ -21,7 +21,7 @@ left, the forecast in the sky above it, the controller on a post in the
 middle, the machine standing at the right with its case open (LED strip on
 the inside wall, vessel, pump, hollow-fibre cartridge, photometer), and a
 cutaway of the soil along the foot of the picture where the permeate line
-runs back to a drip emitter at the roots.
+runs back to a drip emitter at the crop.
 
 WHAT THE FILM MOVES (home-story.js reads <g data-k>): the flows, pulses,
 cells, protectant, drops, LEDs, beams, traces and labels, the same parts
@@ -407,6 +407,21 @@ for pts in ([(230, GROUND), (222, 584), (206, 606)], [(230, GROUND), (238, 590),
     stroke(pts, 4, ROOTC, r=0.5, step=4, taper=0.6)
 end()
 
+# ==================================================================== HEAT --
+# 18 Oct (Jacquelyn): the first step shows the heat the crop is standing in.
+# A warm wash in the air over the field and shimmer rising off it, in her
+# palette; home-scenes.js brings both in under the first caption and takes
+# them off once the protectant reaches the crop.
+g('data-k="heat" transform="translate(0 0)"')
+poly(ell(228, 486, 212, 104, 26), AMBER, r=2.4, step=7, alpha=0.17)
+poly(ell(232, 500, 150, 72, 22), AMBER, r=2.0, step=6, alpha=0.13)
+# one off each canopy, rising into the air over the field
+for i, (x, y, h, w) in enumerate(((104, 502, 52, 7), (174, 468, 62, 9), (238, 452, 68, 10), (298, 474, 56, 8), (358, 508, 48, 7))):
+    pts = [(x + w * np.sin(j * 1.1 + i * 1.7), y - j * h / 6.0) for j in range(7)]
+    stroke(pts, 5.0, AMBER, r=0.6, step=5, alpha=0.7, taper=0.85)
+    stroke(pts, 2.0, AMBER_L, r=0.4, step=5, alpha=0.55, taper=0.85)
+end()
+
 # ================================================================= FORECAST --
 # the weather, drawn in the sky: a sun behind a cloud, its forecast wired to
 # the controller
@@ -582,7 +597,7 @@ LABELS = [
     ("lab-membrane", 1004, 338, "end", "", "hollow-fibre membrane"),
     ("lab-pores", 1004, 362, "end", "", "0.2 µm pores"),
     ("lab-perm", 1128, 500, "start", "st-lab--prot", "permeate"),
-    ("lab-roots", 262, 606, "start", "", "to the roots"),
+    ("lab-crop", 262, 606, "start", "", "to the crop"),
     ("lab-off", 662, 244, "start", "st-lab--red", "red light, 660 nm: off"),
 ]
 for k, x, y, anc, cls, text in LABELS:

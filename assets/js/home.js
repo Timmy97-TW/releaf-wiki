@@ -435,7 +435,13 @@
                      HUD beside the machine
        3.90 to 6.60  the scroll plays its drawing (home-story.js, hosted on
                      this runway from data-story-lead = 3.9)
-       6.60 to 6.85  its last frame, held
+       6.60 to 6.95  the HUD and the section's name go, all of them
+       6.72 to 7.10  the machine comes back to the middle of the screen and
+                     takes the room the card leaves
+       7.10 to 7.35  the whole machine alone, held
+     18 Oct (Jacquelyn): the last two are hers — the right-hand card and
+     "How ReLEAF works" disappear entirely at the end, and the machine
+     returns to the centre.
 
      The chips land exactly on the tags and are drawn like them (they share
      the proportions, home-demands.css), so at 2.47 the chips hand over to
@@ -499,7 +505,7 @@
     if (reduced || !window.matchMedia) return;
     // the runway in screens: the same number as .dx__runway's height in
     // home-demands.css
-    var RUN = 6.85, LEAD = 3.9;
+    var RUN = 7.35, LEAD = 3.9;
     var fits = window.matchMedia("(min-width: 980px) and (min-height: 640px)");
     var live = false, geo = null, navH = 68, parked = null, printing = false;
     var moved = [title, kick, head, lede, model, sol, paper].concat(chips, sides);
@@ -527,6 +533,7 @@
       dmd.style.removeProperty("--dmd-m");
       grid.style.removeProperty("--dx-card");
       grid.style.removeProperty("--dx-tag");
+      model.style.removeProperty("--rxui-k");
       dx.style.removeProperty("--dx-how");
       dx.classList.remove("is-early", "is-how");
       cache = new Map();
@@ -554,11 +561,19 @@
       var left = ir.left + (parseFloat(window.getComputedStyle(inner).paddingLeft) || 0);
       var mr = model.getBoundingClientRect();
       dx.style.removeProperty("--dx-how");
-      var room = Math.max(1, cr.left - left - 16);
+      // 18 Oct (Jacquelyn): "do not overlap the diagram and the CAD model",
+      // so the machine is measured against the room left of the card with a
+      // clear gap (it is about 1.12 x the canvas height across)
+      var room = Math.max(1, cr.left - left - 28);
       var k = Math.min(1.9, pr.height * 0.88 / Math.max(1, mr.height), room / Math.max(1, mr.height * 1.12));
+      // and where it goes once the card is gone: the middle of the screen,
+      // as big as the whole pin allows
+      var k2 = Math.min(1.9, pr.height * 0.92 / Math.max(1, mr.height), pr.width * 0.92 / Math.max(1, mr.height * 1.12));
       geo.go = { x: (left + cr.left) / 2 - (mr.left + mr.width / 2),
                  y: (pr.top + pr.height / 2) - (mr.top + mr.height / 2),
-                 k: Math.max(1, k) };
+                 k: Math.max(1, k),
+                 cx: (pr.left + pr.width / 2) - (mr.left + mr.width / 2) };
+      geo.go.k2 = Math.max(geo.go.k, k2);
     }
 
     function decide() {
@@ -630,12 +645,18 @@
       var r = easeOut(span(s, 2.35, 2.7));
       // and later glides to the room left of the HUD and grows, as the
       // cards, the line and the name make way and How ReLEAF works comes in
-      var go = inOut(span(s, 3.2, 3.85)), gx = g.go.x * go, gy = g.go.y * go, gk = 1 + (g.go.k - 1) * go;
+      // and at the end the card goes and it comes back to the middle
+      var go = inOut(span(s, 3.2, 3.85)), back = inOut(span(s, 6.72, 7.1));
+      var gx = (g.go.x + (g.go.cx - g.go.x) * back) * go, gy = g.go.y * go;
+      var gk = 1 + (g.go.k + (g.go.k2 - g.go.k) * back - 1) * go;
       var out = easeOut(span(s, 3.15, 3.45)), hin = easeOut(span(s, 3.45, 3.9));
+      var hout = ease(span(s, 6.6, 6.95));
       put(model, "opacity", f3(r));
       put(model, "transform", go > 0 ? "translate(" + px(gx) + "," + px(gy) + ") scale(" + f3(gk) + ")"
                                      : r >= 1 ? "none" : "scale(" + f3(0.85 + 0.15 * r) + ")");
-      if (rx && rx.oversample) rx.oversample(go > 0 ? g.go.k : 1);
+      // the field monitor on the machine keeps its own size inside that scale
+      put(model, "--rxui-k", f3(1 / Math.max(0.001, gk)));
+      if (rx && rx.oversample) rx.oversample(go > 0 ? Math.max(g.go.k, g.go.k2) : 1);
       // then its name, then the line under it, then the cards' words
       var h = easeOut(span(s, 2.62, 2.82)), l = easeOut(span(s, 2.74, 2.94));
       put(head, "opacity", f3(h * (1 - out)));
@@ -646,7 +667,7 @@
       put(grid, "--dx-card", f3(card));
       dx.classList.toggle("is-early", card < 0.6);
       sides.forEach(function (el) { put(el, "opacity", out > 0 ? f3(1 - out) : ""); });
-      put(dx, "--dx-how", f3(hin));
+      put(dx, "--dx-how", f3(hin * (1 - hout)));
       dx.classList.toggle("is-how", out > 0.5);
 
       // the model's own loop is held until it is about to be seen, so the

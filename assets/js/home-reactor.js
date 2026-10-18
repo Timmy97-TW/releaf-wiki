@@ -84,6 +84,7 @@ window.__homeRx = (function () {
     redraw: function () {},
     highlight: function () {},
     park: function () {},
+    ui: function () {},
     failed: true,
   };
 
@@ -639,6 +640,34 @@ window.__homeRx = (function () {
     });
   }
 
+  /* ---------- the field monitor ----------
+     18 Oct (Jacquelyn): a small software interface on the machine. It is
+     plain HTML inside #rx (index.html), so it rides the scene's transform
+     with the model and stays sharp; home.js writes --rxui-k so it keeps
+     its own size while the model is scaled up. The film hands it a reading
+     and a state at each beat (home-scenes.js); nothing else writes to it,
+     and with the panel missing this is a no-op. */
+  var monitor = (function () {
+    var el = document.getElementById("rxui");
+    if (!el) return function () {};
+    var num = el.querySelector("[data-rxui-num]"), say = el.querySelector("[data-rxui-state]");
+    var trace = el.querySelector("[data-rxui-trace]"), was = "";
+    return function (s) {
+      if (!s) { el.classList.remove("is-on"); was = ""; return; }
+      var v = Math.max(0, Math.min(1, s.index));
+      var key = s.state + "|" + v.toFixed(2) + "|" + s.tone + "|" + s.draw.toFixed(2);
+      if (key === was) return;
+      was = key;
+      el.classList.add("is-on");
+      num.textContent = v.toFixed(2);
+      say.textContent = s.state;
+      if (trace) trace.style.strokeDashoffset = (1 - Math.max(0, Math.min(1, s.draw))).toFixed(3);
+      el.classList.toggle("is-alert", s.tone === "alert");
+      el.classList.toggle("is-lit", s.tone === "green");
+      el.classList.toggle("is-off", s.tone === "off");
+    };
+  })();
+
   var self = {
     start: boot,
     isReady: function () { return ready; },
@@ -670,6 +699,9 @@ window.__homeRx = (function () {
       stripF = f;
       if (ready) { shade(); if (reduced) render(); }
     },
+    // the field monitor on the machine: a reading and a state, or null to
+    // take it off (the film does both)
+    ui: monitor,
     // the page scales the canvas up by f: draw it with that many more
     // pixels, up to a ratio of 2 (a 2x display is already there)
     oversample: function (f) {

@@ -449,3 +449,58 @@
   .rxs__title { background-image: none; -webkit-text-fill-color: currentColor; color: var(--black); }
   .rxs__title::before { display: none; }
 }
+
+/* ------------------------------------------------------- field monitor --- */
+/* 18 Oct (Jacquelyn): "add software interface on top of it (small)". A small
+   panel of the ReLEAF software, standing on the machine's upper half inside
+   #rx, so the scene's transform carries it with the model; --rxui-k (home.js,
+   piece 7) is 1 / the model's scale, so it keeps its own size while the
+   machine grows. It shows only while How ReLEAF works plays (.is-on, written
+   by home-reactor.js from the film), and says what the software is doing at
+   that step: the stress index climbing, the alert, the light, the delivery,
+   the switch-off. Dark glass, so it reads on the machine and on the ink. */
+.rxui {
+  position: absolute; left: 50%; top: calc(50% - var(--rxs-h) * .30); z-index: 3;
+  width: 13.25rem; box-sizing: border-box; padding: .55rem .65rem .5rem;
+  transform: translate(-50%, -50%) scale(var(--rxui-k, 1)); transform-origin: 50% 50%;
+  border-radius: 10px; border: 1px solid rgb(255 255 255 / .16);
+  background: rgb(10 16 14 / .72); backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px);
+  box-shadow: 0 18px 40px -22px rgb(0 0 0 / .9);
+  color: rgb(255 255 255 / .92); text-align: left;
+  opacity: 0; visibility: hidden; pointer-events: none;
+  transition: opacity .4s ease, visibility 0s linear .4s;
+  --rxui-sig: #35e08a;
+}
+.rxui.is-on { opacity: 1; visibility: visible; transition-delay: 0s, 0s; }
+.rxui.is-alert { --rxui-sig: #ff8d6b; }
+.rxui.is-off { --rxui-sig: #e0533d; }
+.rxui p { margin: 0; }
+.rxui__head {
+  display: flex; align-items: center; gap: .4rem;
+  font-size: .625rem; letter-spacing: .14em; text-transform: uppercase;
+  color: rgb(255 255 255 / .6);
+}
+.rxui__led {
+  width: .4rem; height: .4rem; border-radius: 50%; background: var(--rxui-sig);
+  box-shadow: 0 0 8px var(--rxui-sig); transition: background .3s ease, box-shadow .3s ease;
+}
+.rxui__read { display: flex; align-items: baseline; gap: .4rem; margin-top: .2rem; }
+.rxui__read b {
+  font-family: var(--font-display); font-size: 1.5rem; font-weight: 700; line-height: 1;
+  letter-spacing: -.02em; font-variant-numeric: tabular-nums;
+  color: var(--rxui-sig); transition: color .3s ease;
+}
+.rxui__read span { font-size: .6875rem; color: rgb(255 255 255 / .55); }
+.rxui__plot { display: block; width: 100%; height: 1.85rem; margin: .3rem 0 .35rem; overflow: visible; }
+.rxui__thr { fill: none; stroke: rgb(255 255 255 / .28); stroke-width: 1; stroke-dasharray: 3 4; }
+.rxui__trace {
+  fill: none; stroke: var(--rxui-sig); stroke-width: 2.2; stroke-linecap: round; stroke-linejoin: round;
+  stroke-dasharray: 1; stroke-dashoffset: 1; transition: stroke .3s ease;
+}
+.rxui__state {
+  font-size: .6875rem; line-height: 1.3; font-weight: 600; letter-spacing: .005em;
+  color: var(--rxui-sig); transition: color .3s ease;
+}
+/* it belongs to the film: nothing shows it on a screen that never runs one */
+@media (prefers-reduced-motion: reduce) { .rxui { transition: none; } }
+@media (max-width: 979px), (max-height: 639px) { .rxui { display: none; } }
