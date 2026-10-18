@@ -23,11 +23,11 @@ the inside wall, vessel, pump, hollow-fibre cartridge, photometer), and a
 cutaway of the soil along the foot of the picture where the permeate line
 runs back to a drip emitter at the roots.
 
-WHAT THE FILM MOVES (home-story.js reads <g data-k>): the groups that used
-to draw on as strokes now wipe on under a brush-shaped clip (data-k="wp-*"
-is the clip's shape, moved by its track); wires and traces are still strokes
-with pathLength="1" and draw on; the flows, pulses, cells, protectant,
-drops, LEDs, beams and labels are the same parts as before by name.
+WHAT THE FILM MOVES (home-story.js reads <g data-k>): the flows, pulses,
+cells, protectant, drops, LEDs, beams, traces and labels, the same parts
+as before by name. The scene stands whole from the first frame (owner,
+18 Oct: open on the field and the reactor); the brush-clip paint-on is
+kept in wipe() but off.
 
 These additions are AI-assisted drawing after her style, not hers, and the
 page says so in its HTML comment.
@@ -213,9 +213,15 @@ def end():
     out.append("</g>")
 
 
+WIPES_ON = False   # 18 Oct, owner: the film opens on the painted scene, nothing paints on
+
+
 def wipe(name, x0, y0, x1, y1, axis="x"):
-    """A brush-edged clip for a group that paints on. Its track moves it in
-    along `axis`; in the markup it already covers the group."""
+    """A brush-edged clip for a group that paints on (home-scenes.js moves
+    it in along `axis`; in the markup it already covers the group). Off
+    since the owner asked for the film to open on the whole scene."""
+    if not WIPES_ON:
+        return ""
     m = 14
     x0, x1 = max(x0, -220), min(x1, 1420)          # the camera never sees past these
     box = rrect(x0 - m, y0 - m, x1 + m, y1 + m)
@@ -569,7 +575,7 @@ LABELS = [
     ("lab-thr", 598, 286, "start", "", "threshold"),
     ("lab-strip", 662, 244, "start", "st-lab--green", "green light, 520 nm"),
     ("lab-cells", 874, 372, "start", "", '<tspan font-style="italic">B. subtilis</tspan>'),
-    ("lab-prot", 874, 398, "start", "st-lab--prot", "ACC deaminase"),
+    ("lab-prot", 874, 398, "start", "st-lab--prot", "plant protectants"),
     ("lab-photo", 900, 526, "middle", "", "photometer"),
     ("lab-pump", 983, 180, "middle", "", "pump"),
     ("lab-stay", 983, 262, "middle", "", "the cells stay in the loop"),
