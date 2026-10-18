@@ -711,7 +711,6 @@
   var card = th.querySelector(".tm-card");
   var inner = th.querySelector(".tm-inner");
   var stops = [].slice.call(th.querySelectorAll(".tm-stop"));
-  var bars = [].slice.call(th.querySelectorAll(".tm-prog i"));
   homeFrame.request();
   if (!run || !pin || !map || !card || stops.length < 2 || !window.matchMedia || reduced) return;
   if (!window.WebGL2RenderingContext) return;
@@ -993,7 +992,6 @@
     if (c !== cur) {
       cur = c;
       stops.forEach(function (st, i) { st.classList.toggle("is-on", i === c); });
-      bars.forEach(function (b, i) { b.classList.toggle("is-on", i <= c); });
       // a stop with its own heading (the hour, the protectants) takes the
       // section title's place
       card.classList.toggle("is-late", !!stops[c].querySelector(".tm-head"));
