@@ -91,10 +91,6 @@
     var inner = hero.querySelector(".hero__inner");
     var veil = hero.querySelector(".hero__veil");
     if (!farm || !inner || !veil) return;
-    // the depth variant: the students are nearer than the title behind them,
-    // so they lag the page less than the field and the title lag it
-    var people = hero.getAttribute("data-hero") === "depth" ? hero.querySelector(".hero__people-pic") : null;
-    var deep = people ? hero.querySelector(".hero__deep") : null;
     hero.classList.add("is-drift");
     var last = -1;
     homeFrame.add(function () {
@@ -106,15 +102,10 @@
       last = s.k;
       farm.style.transform = s.k ? "translate3d(0," + (s.k * s.h * .34).toFixed(1) + "px,0) scale(" + (1 + .05 * s.k).toFixed(4) + ")" : "";
       inner.style.transform = s.k ? "translate3d(0," + (-s.k * s.h * .1).toFixed(1) + "px,0)" : "";
-      if (people) {
-        people.style.transform = s.k ? "translate3d(0," + (s.k * s.h * .14).toFixed(1) + "px,0)" : "";
-        deep.style.transform = s.k ? "translate3d(0," + (s.k * s.h * .34).toFixed(1) + "px,0)" : "";
-      }
       inner.style.opacity = s.k ? (1 - ease(span(s.k, .12, .55))).toFixed(3) : "";
       veil.style.opacity = s.k ? (ease(span(s.k, .4, .95)) * .92).toFixed(3) : "";
     }, function () {
       farm.style.transform = inner.style.transform = inner.style.opacity = veil.style.opacity = "";
-      if (people) people.style.transform = deep.style.transform = "";
     });
     window.addEventListener("scroll", homeFrame.request, { passive: true });
     window.addEventListener("resize", homeFrame.request, { passive: true });
