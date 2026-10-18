@@ -1,0 +1,150 @@
+/* =============================================================================
+   RESULTS · wet lab and dry lab, stage by stage
+   -----------------------------------------------------------------------------
+   Two lanes and six stages, in the Wet Lab and Dry Lab header colours. The
+   figure is one grid: the four parts of a stage (its name, the wet result, the
+   exchange, the dry result) are direct children in that order, and
+   grid-auto-flow: column turns each stage into a column, so the wet results
+   line up in one row and the dry results in another without subgrid. The lanes
+   are the cells' own tint with no column gap between them, which is what makes
+   each lane read as one continuous band.
+
+   Below 60rem the flow turns back to rows: each stage reads as a small block,
+   name, wet, exchange, dry, and the bands are not drawn.
+
+   Arrows are CSS rules and heads inside their own cell, so nothing is computed
+   from element positions and none of them can cross.
+   ========================================================================== */
+
+.rflow, .rflow-key {
+  --wet-ink:  #3d6a4b;          /* bannerhead wetlab: label, deep, fill */
+  --wet-deep: #4a7c59;
+  --wet-band: #eef3e9;
+  --dry-ink:  #3f5a66;          /* bannerhead drylab */
+  --dry-deep: #516c77;
+  --dry-band: #eaf1f4;
+  --rf-ease:  cubic-bezier(.32, .72, 0, 1);
+}
+
+.rflow {
+  position: relative;
+  display: grid;
+  grid-template-rows: auto auto auto auto;
+  grid-auto-flow: column;
+  grid-auto-columns: minmax(0, 1fr);
+  gap: .3rem 0;
+  margin: 1.1rem 0 0;
+  padding: .2rem 0 .1rem;
+}
+
+/* ── a stage: name, wet result, exchange, dry result ──────────────────── */
+.rflow__stage {
+  grid-row: 1 / 2;
+  display: block;
+  margin: 0 .45rem;
+  padding: 0 0 .25rem;
+  font-size: .7rem;
+  font-weight: 700;
+  line-height: 1.25;
+  letter-spacing: .01em;
+  color: var(--ink-3, #6e6e73);
+  text-decoration: none;
+  border-bottom: 1px solid #e6e8ec;
+  transition: color .18s var(--rf-ease), border-color .18s var(--rf-ease);
+}
+.rflow__stage b {
+  display: block;
+  font-size: .66rem;
+  font-weight: 700;
+  letter-spacing: .09em;
+  color: #a6abb3;
+}
+.rflow__stage:hover, .rflow__stage:focus-visible { color: var(--ink, #1d1d1f); border-bottom-color: #c8ccd3; }
+
+.rflow p.rflow__cell {
+  margin: 0;
+}
+.rflow__cell {
+  align-self: stretch;
+  padding: .6rem .65rem;
+  font-size: .74rem;
+  line-height: 1.32;
+  font-weight: 600;
+}
+/* no column gap, so each lane is one band; a hairline separates the stages */
+.rflow__cell + .rflow__cell { border-left: 1px solid rgb(255 255 255 / .85); }
+.rflow__cell--wet:first-of-type { border-radius: 12px 0 0 12px; }
+.rflow__cell--dry:first-of-type { border-radius: 12px 0 0 12px; }
+.rflow__cell--wet:last-of-type { border-radius: 0 12px 12px 0; }
+.rflow__cell--dry:last-of-type { border-radius: 0 12px 12px 0; }
+.rflow__cell--wet { grid-row: 2 / 3; color: var(--wet-ink); background: var(--wet-band); }
+.rflow__cell--dry { grid-row: 4 / 5; color: var(--dry-ink); background: var(--dry-band); }
+.rflow__cell--none { opacity: .38; font-weight: 500; }
+.rflow__cell em { font-style: italic; font-weight: 600; }
+
+/* ── the exchange between the lanes ───────────────────────────────────── */
+.rflow__xch {
+  grid-row: 3 / 4;
+  display: flex;
+  justify-content: center;
+  gap: .85rem;
+  padding: .3rem 0;
+}
+.rflow__arrow {
+  position: relative;
+  width: 1.5px;
+  height: 1.5rem;
+  background: currentColor;
+}
+.rflow__arrow::after {
+  content: "";
+  position: absolute;
+  left: -3.2px;
+  width: 7px; height: 7px;
+  border-right: 1.5px solid currentColor;
+  border-bottom: 1.5px solid currentColor;
+}
+.rflow__arrow--down { color: var(--wet-deep); }          /* wet hands to dry */
+.rflow__arrow--down::after { bottom: 0; transform: rotate(45deg); }
+.rflow__arrow--up { color: var(--dry-deep); }            /* dry hands to wet */
+.rflow__arrow--up::after { top: 0; transform: rotate(-135deg); }
+
+/* ── the key ──────────────────────────────────────────────────────────── */
+.rflow-key {
+  display: flex;
+  flex-wrap: wrap;
+  gap: .25rem 1.4rem;
+  margin: .9rem 0 0;
+  font-size: .72rem;
+  font-weight: 650;
+  letter-spacing: .02em;
+}
+.rflow-key span { display: inline-flex; align-items: center; gap: .4rem; }
+.rflow-key span::before {
+  content: "";
+  width: .55rem; height: .55rem; border-radius: 3px;
+  background: currentColor;
+}
+.rflow-key .is-wet { color: var(--wet-ink); }
+.rflow-key .is-dry { color: var(--dry-ink); }
+
+/* ── stacked: a stage at a time ───────────────────────────────────────── */
+@media (max-width: 60rem) {
+  .rflow {
+    grid-auto-flow: row;
+    grid-template-rows: none;
+    grid-auto-columns: auto;
+    grid-template-columns: minmax(0, 1fr);
+    gap: .25rem 0;
+  }
+  .rflow__stage { grid-row: auto; margin-top: 1rem; padding-bottom: .3rem; }
+  .rflow__cell { grid-row: auto; border-radius: 10px; border-left: 0; }
+  .rflow__cell--wet:first-of-type, .rflow__cell--dry:first-of-type,
+  .rflow__cell--wet:last-of-type, .rflow__cell--dry:last-of-type { border-radius: 10px; }
+  .rflow__xch { grid-row: auto; justify-content: flex-start; padding: .25rem 0 .25rem .9rem; }
+  .rflow__arrow { height: 1.1rem; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .rflow__stage { transition: none; }
+}
