@@ -1,150 +1,273 @@
 /* =============================================================================
-   RESULTS · wet lab and dry lab, stage by stage
+   RESULTS · wet lab and dry lab
    -----------------------------------------------------------------------------
-   Two lanes and six stages, in the Wet Lab and Dry Lab header colours. The
-   figure is one grid: the four parts of a stage (its name, the wet result, the
-   exchange, the dry result) are direct children in that order, and
-   grid-auto-flow: column turns each stage into a column, so the wet results
-   line up in one row and the dry results in another without subgrid. The lanes
-   are the cells' own tint with no column gap between them, which is what makes
-   each lane read as one continuous band.
+   Two columns, the stages running down them, in the Wet Lab and Dry Lab header
+   colours. A stage is a full-width name, then the bench box, the exchange, and
+   the dry-lab box; a hairline spine runs down the centre so the stages read as
+   one sequence rather than six unrelated pairs. Only stage one has no exchange.
 
-   Below 60rem the flow turns back to rows: each stage reads as a small block,
-   name, wet, exchange, dry, and the bands are not drawn.
+   The same graph is drawn small in the left rail, under the navigation, where
+   the stage the reader has reached is the one lit. flow.js does that part; with
+   no script every stage in the rail stays legible and the figure is unchanged.
 
-   Arrows are CSS rules and heads inside their own cell, so nothing is computed
-   from element positions and none of them can cross.
+   Also here: the overview drawing sits on white at the width of the prose,
+   rather than in the grey chart box the rest of the page uses for its plots.
    ========================================================================== */
 
-.rflow, .rflow-key {
+.engage.res .fig--plain,
+.rflow, .rmap {
   --wet-ink:  #3d6a4b;          /* bannerhead wetlab: label, deep, fill */
   --wet-deep: #4a7c59;
   --wet-band: #eef3e9;
   --dry-ink:  #3f5a66;          /* bannerhead drylab */
   --dry-deep: #516c77;
   --dry-band: #eaf1f4;
-  --rf-ease:  cubic-bezier(.32, .72, 0, 1);
+  --rf-line:  #e2e5ea;
 }
 
+/* ── the overview drawing, on white ───────────────────────────────────── */
+.engage.res .fig--plain { margin: 1.2rem 0; background: #fff; padding: 0; }
+.engage.res .fig--plain img {
+  display: block;
+  width: 100%;
+  height: auto;
+  background: #fff;
+}
+.engage.res .fig--plain figcaption {
+  margin-top: .7rem;
+  font-size: .86rem;
+  line-height: 1.5;
+  color: var(--ink-3, #6e6e73);
+}
+
+/* ── the figure ───────────────────────────────────────────────────────── */
 .rflow {
   position: relative;
   display: grid;
-  grid-template-rows: auto auto auto auto;
-  grid-auto-flow: column;
-  grid-auto-columns: minmax(0, 1fr);
-  gap: .3rem 0;
-  margin: 1.1rem 0 0;
-  padding: .2rem 0 .1rem;
+  grid-template-columns: minmax(0, 1fr) 3.4rem minmax(0, 1fr);
+  align-items: stretch;
+  gap: .4rem 0;
+  margin: 1.2rem 0 0;
+}
+/* the spine: six stages, one sequence, read top to bottom */
+.rflow::before {
+  content: "";
+  position: absolute;
+  top: 2.4rem; bottom: .6rem; left: 50%;
+  width: 1.5px;
+  margin-left: -.75px;
+  background: var(--rf-line);
 }
 
-/* ── a stage: name, wet result, exchange, dry result ──────────────────── */
-.rflow__stage {
-  grid-row: 1 / 2;
-  display: block;
-  margin: 0 .45rem;
-  padding: 0 0 .25rem;
-  font-size: .7rem;
+.rflow__head {
+  margin: 0 0 .1rem;
+  font-size: .72rem;
   font-weight: 700;
-  line-height: 1.25;
-  letter-spacing: .01em;
-  color: var(--ink-3, #6e6e73);
-  text-decoration: none;
-  border-bottom: 1px solid #e6e8ec;
-  transition: color .18s var(--rf-ease), border-color .18s var(--rf-ease);
+  letter-spacing: .1em;
+  text-transform: uppercase;
+}
+.rflow__head--wet { grid-column: 1 / 2; color: var(--wet-ink); }
+.rflow__head--dry { grid-column: 3 / 4; color: var(--dry-ink); }
+
+.rflow p.rflow__stage {
+  grid-column: 1 / -1;
+  position: relative;
+  margin: .8rem 0 .15rem;
+  padding-bottom: .3rem;
+  font-size: .8rem;
+  font-weight: 700;
+  color: var(--ink, #1d1d1f);
+  border-bottom: 1px solid var(--rf-line);
+  background: #fff;
 }
 .rflow__stage b {
-  display: block;
-  font-size: .66rem;
+  margin-right: .5rem;
+  font-size: .72rem;
   font-weight: 700;
-  letter-spacing: .09em;
+  letter-spacing: .08em;
   color: #a6abb3;
 }
-.rflow__stage:hover, .rflow__stage:focus-visible { color: var(--ink, #1d1d1f); border-bottom-color: #c8ccd3; }
 
-.rflow p.rflow__cell {
-  margin: 0;
-}
+.rflow p.rflow__cell { margin: 0; }   /* page.css margins would break the rows */
 .rflow__cell {
   align-self: stretch;
-  padding: .6rem .65rem;
-  font-size: .74rem;
-  line-height: 1.32;
-  font-weight: 600;
+  padding: .7rem .8rem;
+  border-radius: 12px;
+  font-size: .78rem;
+  line-height: 1.45;
+  font-weight: 500;
 }
-/* no column gap, so each lane is one band; a hairline separates the stages */
-.rflow__cell + .rflow__cell { border-left: 1px solid rgb(255 255 255 / .85); }
-.rflow__cell--wet:first-of-type { border-radius: 12px 0 0 12px; }
-.rflow__cell--dry:first-of-type { border-radius: 12px 0 0 12px; }
-.rflow__cell--wet:last-of-type { border-radius: 0 12px 12px 0; }
-.rflow__cell--dry:last-of-type { border-radius: 0 12px 12px 0; }
-.rflow__cell--wet { grid-row: 2 / 3; color: var(--wet-ink); background: var(--wet-band); }
-.rflow__cell--dry { grid-row: 4 / 5; color: var(--dry-ink); background: var(--dry-band); }
-.rflow__cell--none { opacity: .38; font-weight: 500; }
-.rflow__cell em { font-style: italic; font-weight: 600; }
+.rflow__cell--wet { grid-column: 1 / 2; color: var(--wet-ink); background: var(--wet-band); }
+.rflow__cell--dry { grid-column: 3 / 4; color: var(--dry-ink); background: var(--dry-band); }
+.rflow__cell--none { background: #f7f8f9; color: #9aa0a8; }
+.rflow__cell i { font-style: italic; }
 
-/* ── the exchange between the lanes ───────────────────────────────────── */
+/* ── the exchange, between the two boxes ──────────────────────────────── */
 .rflow__xch {
-  grid-row: 3 / 4;
+  grid-column: 2 / 3;
   display: flex;
+  flex-direction: column;
   justify-content: center;
-  gap: .85rem;
-  padding: .3rem 0;
+  gap: .5rem;
+  padding: 0 .3rem;
 }
-.rflow__arrow {
-  position: relative;
-  width: 1.5px;
-  height: 1.5rem;
-  background: currentColor;
-}
+.rflow__arrow { position: relative; height: 1.5px; background: currentColor; }
 .rflow__arrow::after {
   content: "";
   position: absolute;
-  left: -3.2px;
+  top: -3.2px;
   width: 7px; height: 7px;
+  border-top: 1.5px solid currentColor;
   border-right: 1.5px solid currentColor;
-  border-bottom: 1.5px solid currentColor;
 }
-.rflow__arrow--down { color: var(--wet-deep); }          /* wet hands to dry */
-.rflow__arrow--down::after { bottom: 0; transform: rotate(45deg); }
-.rflow__arrow--up { color: var(--dry-deep); }            /* dry hands to wet */
-.rflow__arrow--up::after { top: 0; transform: rotate(-135deg); }
+.rflow__arrow--right { color: var(--wet-deep); }        /* the bench hands over */
+.rflow__arrow--right::after { right: 0; transform: rotate(45deg); }
+.rflow__arrow--left { color: var(--dry-deep); }         /* and gets it back */
+.rflow__arrow--left::after { left: 0; transform: rotate(-135deg); }
 
-/* ── the key ──────────────────────────────────────────────────────────── */
-.rflow-key {
-  display: flex;
-  flex-wrap: wrap;
-  gap: .25rem 1.4rem;
-  margin: .9rem 0 0;
-  font-size: .72rem;
-  font-weight: 650;
-  letter-spacing: .02em;
-}
-.rflow-key span { display: inline-flex; align-items: center; gap: .4rem; }
-.rflow-key span::before {
-  content: "";
-  width: .55rem; height: .55rem; border-radius: 3px;
-  background: currentColor;
-}
-.rflow-key .is-wet { color: var(--wet-ink); }
-.rflow-key .is-dry { color: var(--dry-ink); }
-
-/* ── stacked: a stage at a time ───────────────────────────────────────── */
-@media (max-width: 60rem) {
-  .rflow {
-    grid-auto-flow: row;
-    grid-template-rows: none;
-    grid-auto-columns: auto;
-    grid-template-columns: minmax(0, 1fr);
-    gap: .25rem 0;
+/* ── stacked: the exchange turns to point down and up ─────────────────── */
+@media (max-width: 52rem) {
+  .rflow { grid-template-columns: minmax(0, 1fr); }
+  .rflow::before, .rflow__head { display: none; }
+  .rflow__cell--wet, .rflow__cell--dry { grid-column: 1 / -1; }
+  .rflow__cell--wet::before, .rflow__cell--dry::before {
+    content: "Wet lab";
+    display: block;
+    margin-bottom: .25rem;
+    font-size: .64rem;
+    font-weight: 700;
+    letter-spacing: .1em;
+    text-transform: uppercase;
+    opacity: .75;
   }
-  .rflow__stage { grid-row: auto; margin-top: 1rem; padding-bottom: .3rem; }
-  .rflow__cell { grid-row: auto; border-radius: 10px; border-left: 0; }
-  .rflow__cell--wet:first-of-type, .rflow__cell--dry:first-of-type,
-  .rflow__cell--wet:last-of-type, .rflow__cell--dry:last-of-type { border-radius: 10px; }
-  .rflow__xch { grid-row: auto; justify-content: flex-start; padding: .25rem 0 .25rem .9rem; }
-  .rflow__arrow { height: 1.1rem; }
+  .rflow__cell--dry::before { content: "Dry lab"; }
+  .rflow__xch {
+    grid-column: 1 / -1;
+    flex-direction: row;
+    justify-content: flex-start;
+    gap: .9rem;
+    padding: .15rem 0 .15rem .9rem;
+  }
+  .rflow__arrow { width: 1.5px; height: 1.1rem; }
+  .rflow__arrow::after { top: auto; right: auto; left: -3.2px; }
+  .rflow__arrow--right::after { bottom: 0; transform: rotate(135deg); }
+  .rflow__arrow--left::after { top: 0; transform: rotate(-45deg); }
+}
+
+/* =============================================================================
+   THE RAIL MAP · the same graph, small, under the navigation
+   ========================================================================== */
+.rmap { display: none; }
+
+@media (min-width: 64rem) {
+  .rmap {
+    display: block;
+    margin: 0 0 1.3rem;
+    padding: 0 0 1.1rem;
+    border-bottom: 1px solid var(--rf-line);
+  }
+
+  /* the two words sit over the two sides of the spine, not over the numbers */
+  .rmap__head {
+    display: flex;
+    justify-content: space-between;
+    width: 4.6rem;
+    margin: 0 0 .45rem 1.75rem;
+    font-size: .6rem;
+    font-weight: 700;
+    letter-spacing: .09em;
+    text-transform: uppercase;
+  }
+  .rmap__wet { color: var(--wet-ink); }
+  .rmap__dry { color: var(--dry-ink); }
+
+  .rmap__list { position: relative; margin: 0; padding: 0; list-style: none; }
+  /* the spine, the same one the figure has */
+  .rmap__list::before {
+    content: "";
+    position: absolute;
+    left: 3.9rem; top: .7rem; bottom: .7rem;
+    width: 1.5px;
+    background: var(--rf-line);
+  }
+
+  .rmap__stage { margin: 0; }
+  .rmap__stage a {
+    position: relative;
+    display: block;
+    min-height: 1.4rem;
+    padding: .28rem 0 .28rem 5.4rem;
+    color: inherit;
+    text-decoration: none;
+  }
+  /* the exchange: a tick to the wet side, a tick to the dry side */
+  .rmap__stage a::after {
+    content: "";
+    position: absolute;
+    left: 2.5rem; top: 50%;
+    width: 2.8rem; height: 1.5px;
+    margin-top: -.75px;
+    background: linear-gradient(to right, #dfe7da 0 46%, #dde7ec 54% 100%);
+    transition: background .2s ease;
+  }
+  .rmap__stage--dryonly a::after {
+    background: linear-gradient(to right, transparent 0 46%, #dde7ec 54% 100%);
+  }
+  /* the node on the spine */
+  .rmap__stage a::before {
+    content: "";
+    position: absolute;
+    z-index: 1;
+    left: 3.9rem; top: 50%;
+    width: 7px; height: 7px;
+    margin: -3.5px 0 0 -2.75px;
+    border-radius: 50%;
+    background: #fff;
+    box-shadow: 0 0 0 1.5px var(--rf-line);
+    transition: box-shadow .2s ease, background .2s ease;
+  }
+
+  .rmap__no {
+    position: absolute;
+    left: 0; top: 50%;
+    transform: translateY(-50%);
+    font-size: .64rem;
+    font-weight: 700;
+    letter-spacing: .08em;
+    color: #b2b7bf;
+    transition: color .2s ease;
+  }
+  .rmap__name {
+    display: block;
+    font-size: .74rem;
+    font-weight: 600;
+    line-height: 1.3;
+    color: #9aa0a8;
+    transition: color .2s ease;
+  }
+  .rmap__stage a:hover .rmap__name,
+  .rmap__stage a:focus-visible .rmap__name { color: var(--ink-2, #424245); }
+
+  /* the stage the reader has reached */
+  .rmap__stage.is-here .rmap__no { color: var(--wet-deep); }
+  .rmap__stage.is-here .rmap__name { color: var(--ink, #1d1d1f); }
+  .rmap__stage.is-here a::before {
+    background: var(--wet-deep);
+    box-shadow: 0 0 0 1.5px var(--wet-deep), 0 0 0 4px var(--wet-band);
+  }
+  .rmap__stage.is-here a::after {
+    background: linear-gradient(to right, var(--wet-deep) 0 46%, var(--dry-deep) 54% 100%);
+  }
+  .rmap__stage--dryonly.is-here .rmap__no { color: var(--dry-deep); }
+  .rmap__stage--dryonly.is-here a::before {
+    background: var(--dry-deep);
+    box-shadow: 0 0 0 1.5px var(--dry-deep), 0 0 0 4px var(--dry-band);
+  }
+  .rmap__stage--dryonly.is-here a::after {
+    background: linear-gradient(to right, transparent 0 46%, var(--dry-deep) 54% 100%);
+  }
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .rflow__stage { transition: none; }
+  .rmap__stage a::before, .rmap__stage a::after, .rmap__no, .rmap__name { transition: none; }
 }
