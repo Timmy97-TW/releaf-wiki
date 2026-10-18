@@ -198,9 +198,7 @@ window.__homeRx = (function () {
   }
 
   /* ---------- the plinth ---------- */
-  // A dark slab with a rim of the signal green under the case: it stands the
-  // machine on something, and its light is what separates a black case from
-  // the ink of the band.
+  // A dark slab under the case: it stands the machine on something.
   var glowOf = new Map();  // kept for shade(): an additive glow that belongs to a component
   function roundedRect(w, d, r) {
     var s = new THREE.Shape(), x = -w / 2, y = -d / 2;
@@ -217,18 +215,12 @@ window.__homeRx = (function () {
     // no specular at all: the rim lamps graze a flat slab and any gloss on it
     // turns the whole top into one pale glare
     var dark = new THREE.MeshLambertMaterial({ color: 0x070d09 });
-    var glow = function (o) {
-      return new THREE.MeshBasicMaterial({ color: 0x3ddc8b, transparent: true,
-        opacity: o, blending: THREE.AdditiveBlending, depthWrite: false, side: THREE.DoubleSide });
-    };
     var flat = function (mesh, y) { mesh.rotation.x = -Math.PI / 2; mesh.position.set(cx, y, cz); scene.add(mesh); return mesh; };
 
     flat(new THREE.Mesh(new THREE.ExtrudeGeometry(roundedRect(w, dp, .03), { depth: .012, bevelEnabled: false }), dark), ground - .012);
     flat(new THREE.Mesh(new THREE.ExtrudeGeometry(roundedRect(w + .03, dp + .03, .038), { depth: .008, bevelEnabled: false }), dark), ground - .022);
-    flat(new THREE.Mesh(new THREE.ExtrudeGeometry(roundedRect(w + .006, dp + .006, .032), { depth: .0016, bevelEnabled: false }), glow(.5)), ground - .0143).renderOrder = 1;
-    var rimShape = roundedRect(w - .008, dp - .008, .028);
-    rimShape.holes.push(new THREE.Path(roundedRect(w - .02, dp - .02, .023).getPoints(24)));
-    flat(new THREE.Mesh(new THREE.ShapeGeometry(rimShape, 24), glow(.7)), ground + .0005).renderOrder = 1;
+    // 18 Oct (Jacquelyn): the two green rim lines under the case are gone;
+    // the dark slab stays
   }
 
   /* ---------- highlight, for the demand cards ---------- */

@@ -590,35 +590,11 @@ for k, x, y, anc, cls, text in LABELS:
                % (k, x, y, (" " + cls) if cls else "", anc, text))
 
 # ================================================================ THE CARD --
-# The card itself is painted (18 Oct, owner: "make the white boundary paint
-# style, a vision into the future"): a sheet of white with a brush edge, a
-# faint second stroke of cream round it, and a breath of lime behind it in
-# painted rings in place of a drop shadow. It is drawn in a 100 x 100 box
-# that stretches to the card (preserveAspectRatio none), so the jitter is
-# in hundredths of the card's width and height. The picture is set into
-# the sheet under its own brush edge: a clip in the picture's own box.
-paper = []
+# 18 Oct (Jacquelyn): the card is a clean white sheet with a hairline, set in
+# CSS (home-story.css); the painted sheet and the picture's brush-edged clip
+# that this script used to write are gone.
 
-
-def dpath_f(pts, closed=True):
-    s = "M" + " ".join("%.1f %.1f" % (x, y) for x, y in pts)
-    return s + ("Z" if closed else "")
-
-
-def paper_poly(pts, fill, alpha=None, r=0.45, step=1.1, wob=1.4):
-    paper.append('<path fill="%s"%s d="%s" />' % (rgb(fill), ' fill-opacity="%.2f"' % alpha if alpha is not None else "", dpath_f(rough(pts, r, step, True, wob))))
-
-
-for inset, a in ((-6.5, 0.05), (-4.2, 0.07), (-2.2, 0.1)):
-    paper_poly(rrect(inset, inset, 100 - inset, 100 - inset, 7), (120, 220, 150), alpha=a, r=0.6, step=2.4, wob=1.8)
-paper_poly(rrect(0.1, 0.1, 99.9, 99.9, 4.5), (236, 234, 220), alpha=0.8, r=0.4, step=1.8, wob=1.5)
-paper_poly(rrect(0.8, 0.8, 99.2, 99.2, 4), (251, 252, 250), r=0.3, step=1.6, wob=1.3)
-paper_svg = "\n".join(paper)
-edge = rough(rrect(0.004, 0.004, 0.996, 0.996, 0.045), 0.0038, 0.011, True, 1.4)
-EDGE = ('<clipPath id="st-edge" clipPathUnits="objectBoundingBox"><path d="%s" /></clipPath>'
-        % ("M" + " ".join("%.4f %.4f" % (x, y) for x, y in edge) + "Z"))
-
-DEFS = ('<defs>' + EDGE + '<filter id="rw-glow" x="-120%" y="-120%" width="340%" height="340%"><feGaussianBlur stdDeviation="7" /></filter>'
+DEFS = ('<defs>' + '<filter id="rw-glow" x="-120%" y="-120%" width="340%" height="340%"><feGaussianBlur stdDeviation="7" /></filter>'
         '<filter id="rw-glow-s" x="-120%" y="-120%" width="340%" height="340%"><feGaussianBlur stdDeviation="3" /></filter>'
         '<filter id="rw-glow-l" x="-60%" y="-60%" width="220%" height="220%"><feGaussianBlur stdDeviation="22" /></filter></defs>')
 
@@ -632,10 +608,6 @@ m = re.search(r'(<svg class="st-svg" data-story-svg[^>]*>)(.*?)(</svg>)', html, 
 if not m:
     sys.exit("the story SVG was not found in index.html")
 html = html[:m.start(2)] + "\n" + svg_inner + "\n              " + html[m.end(2):]
-m = re.search(r'(<svg class="st-paper"[^>]*>)(.*?)(</svg>)', html, re.S)
-if not m:
-    sys.exit("the paper SVG was not found in index.html")
-html = html[:m.start(2)] + paper_svg + html[m.end(2):]
 html_path.write_text(html)
 print("wrote", html_path.relative_to(ROOT))
 if "--svg" in sys.argv:
