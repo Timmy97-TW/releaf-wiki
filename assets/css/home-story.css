@@ -5,10 +5,13 @@
    (owner): hosted beside the real reactor in #dx, the card stands white on
    the ink; the drawing is a painting after the design team's valley on
    #vision (the rw- rules below; build/how-art.py); and the card is a
-   postcard: the painting across the top of it, edge to edge, the words on
-   the white below it, the section's name a small green line above them. No
-   step rail, no numerals, no subtitle (owner). No gradients: every ground,
-   card and part is one flat colour; the only glows are blurred shapes.
+   painted sheet: a white with a brush edge (.st-paper, an SVG the script
+   also writes, stretched to the card), the section's name big and green
+   across the top, the painting set into the sheet under its own brush
+   edge (clip-path #st-edge), the words on the white below it. No step
+   rail, no numerals, no subtitle (owner). No gradients: every ground, card
+   and part is one flat colour; the glows are blurred shapes or painted
+   rings.
    -----------------------------------------------------------------------------
    RESTING (no script, or a screen under 560px tall): the card on the ink,
    the painting still in its overview and the six captions listed under it,
@@ -35,17 +38,22 @@
 /* ------------------------------------------------------------ resting --- */
 .st__inner { display: grid; grid-template-columns: minmax(0, 1fr); justify-items: center; }
 .st-card {
-  width: 100%; max-width: 70rem; box-sizing: border-box; overflow: hidden;
-  background: var(--st-card); border: 1px solid var(--st-line); border-radius: 24px;
+  --st-m: clamp(.9rem, 1.6vw, 1.3rem);           /* the sheet's margin round the picture */
+  position: relative; width: 100%; max-width: 70rem; box-sizing: border-box;
+  padding: 0 var(--st-m) clamp(1.3rem, 2.2vw, 1.75rem);
 }
-.st-scene { position: relative; overflow: hidden; background: var(--st-scene); aspect-ratio: 1200 / 680; }
-.st-svg { position: absolute; inset: 0; display: block; width: 100%; height: 100%; }
-.st-panel { padding: clamp(1.1rem, 1.9vw, 1.45rem) clamp(1.25rem, 2.2vw, 1.75rem) clamp(1.3rem, 2.2vw, 1.75rem); }
+/* the sheet: painted, behind everything on the card */
+.st-paper { position: absolute; inset: 0; width: 100%; height: 100%; display: block; z-index: 0; overflow: visible; pointer-events: none; }
+.st-face { position: relative; z-index: 1; }
+.st-head { padding: clamp(1rem, 1.8vw, 1.35rem) .25rem clamp(.7rem, 1.3vw, 1rem); }
 .st-title {
-  margin: 0 0 .7rem;
-  font-family: var(--font-display); font-size: .84rem; font-weight: 700; letter-spacing: .01em;
-  color: var(--st-accent);
+  margin: 0;
+  font-family: var(--font-display); font-size: clamp(1.6rem, 1.2rem + 1.1vw, 2.1rem); font-weight: 720; line-height: 1.05; letter-spacing: -.022em;
+  color: var(--st-accent); text-wrap: balance;
 }
+.st-scene { position: relative; overflow: hidden; background: var(--st-scene); aspect-ratio: 1200 / 680; clip-path: url(#st-edge); }
+.st-svg { position: absolute; inset: 0; display: block; width: 100%; height: 100%; }
+.st-panel { padding: clamp(1rem, 1.7vw, 1.3rem) .25rem 0; }
 .st-caps { margin: 0; padding: 0; list-style: none; display: grid; row-gap: 1.1rem; font-size: 1rem; line-height: 1.55; color: var(--st-ink); }
 .st-caps li { max-width: 58ch; text-wrap: pretty; }
 .st-h {
@@ -75,9 +83,9 @@
 .st.is-live .st-card {
   --st-h: min(46rem, calc(100svh - var(--nav-h, 68px) - clamp(1.5rem, 6svh, 4rem)));
   max-height: var(--st-h); max-width: min(70rem, calc(var(--st-h) * 1.05));
-  display: grid; grid-template-rows: auto minmax(0, 1fr);
+  display: grid; grid-template-rows: minmax(0, 1fr);
 }
-.st.is-live .st-face--scene { display: grid; grid-template-rows: auto minmax(0, 1fr); min-height: 0; }
+.st.is-live .st-face--scene { display: grid; grid-template-rows: auto auto minmax(0, 1fr); min-height: 0; }
 .st.is-live .st-scene { aspect-ratio: 5 / 4; }
 .st.is-live .st-caps { row-gap: 0; }
 .st.is-live .st-caps li { grid-area: 1 / 1; opacity: 0; max-width: none; }
@@ -86,8 +94,8 @@
 
 /* HOSTED (.is-hosted, home-story.js): inside the question's scene (#dx,
    home.js piece 7), over the answer, in the pin's one screen. The card
-   stands at the right of the column, a hairline of white and a faint breath
-   of the 520 nm round it standing it off the black; the scene fades and
+   stands at the right of the column, its painted sheet and the lime breath
+   behind it standing it off the black; the scene fades and
    slides it in with --dx-how (0 to 1) as the reactor glides into the room
    left of it. Nothing in it takes the pointer: the scroll is its only
    control */
@@ -97,16 +105,14 @@
 .st.is-live.is-hosted .st__inner { justify-items: end; }
 .st.is-live.is-hosted .st-card {
   max-width: min(36%, calc(var(--st-h) * 1.05));
-  border-color: rgb(255 255 255 / .14);
-  box-shadow: 0 0 0 1px rgb(255 255 255 / .06), 0 0 90px -30px rgb(53 224 138 / .35), 0 40px 80px -40px rgb(0 0 0 / .9);
   opacity: var(--dx-how, 0); transform: translateX(calc((1 - var(--dx-how, 0)) * 3rem));
   will-change: opacity, transform;
 }
 .st.is-live.is-hosted .st-caps { font-size: clamp(.95rem, .9rem + .15vw, 1.02rem); line-height: 1.5; }
 
 @media (max-width: 899px) {
-  .st.is-live .st-card { border-radius: 18px; }
-  .st.is-live .st-panel { padding: 1rem 1.1rem 1.2rem; }
+  .st.is-live .st-card { padding-bottom: 1.2rem; }
+  .st.is-live .st-title { font-size: 1.5rem; }
   .st.is-live .st-caps { font-size: .95rem; }
   .st.is-live .st-h { font-size: 1.35rem; }
 }
