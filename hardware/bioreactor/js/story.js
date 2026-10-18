@@ -1511,7 +1511,7 @@
     const g = new THREE.Group(); g.position.set(FIBX, AX[1], z0 + len / 2);
     const geo = new THREE.CylinderGeometry(FR, FR, len, 64, 1, true).rotateX(Math.PI / 2);
     const texO = poreTexture(32, 2.6, "#4a4a47", "#e2e2dd"); texO.repeat.set(3, 53);       // (round 4b: off-white, not beige)
-    // the fibre's outside: a glassy PES tube (bright at its edges, clear through its middle), so the culture inside and
+    // the fibre's outside: a glassy mPES tube (bright at its edges, clear through its middle), so the culture inside and
     // the inner wall read through it (round-2 visual 4: it was a flat white stripe)
     const tubeVS = "varying vec3 vN; varying vec3 vV; varying vec2 vU; void main(){ vU = uv; vec4 mv = modelViewMatrix * vec4(position, 1.0); vN = normalize(normalMatrix * normal); vV = -mv.xyz; gl_Position = projectionMatrix * mv; }";
     const outer = new THREE.Mesh(geo, new THREE.ShaderMaterial({ uniforms: { uA: { value: 1 }, uCol: { value: RQ.srgb("#ecece8") } }, vertexShader: tubeVS,

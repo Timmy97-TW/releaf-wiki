@@ -8,7 +8,7 @@
    coarser membrane would let through.
 
    On record, and drawn to one shared scale with the 1 µm bar:
-     - the pore: 0.2 µm, PES hollow fiber (6.1 and 3.4 of this page);
+     - the pore: 0.2 µm, mPES hollow fiber (6.1 and 3.4 of this page);
      - the cells: 0.25–1.0 µm in diameter, the reported range (6.1).
      Every cell in the window has a width from that range, from the thinnest
      (0.25) to the widest (1.0); a cell crosses only if its width is smaller
