@@ -522,6 +522,13 @@
   }
 
   function linksOf(slug) { return (D.links[slug] || []).filter(function (l) { return PAGE[l.to]; }); }
+  /* The three connections the data marks as this page's key ones. Hovering a
+     place lights those and nothing else: the full set, in and out, lit up to
+     sixteen other places at once and said nothing. */
+  function keyLinks(slug) {
+    var ls = linksOf(slug), k = ls.filter(function (l) { return l.key; });
+    return (k.length ? k : ls.slice(0, 3)).map(function (l) { return l.to; });
+  }
   function neighbours(slug) {
     var set = {};
     linksOf(slug).forEach(function (l) { set[l.to] = true; });
@@ -694,7 +701,7 @@
       clear();
       current = slug;
       root.setAttribute('data-lit', slug);
-      var shown = [slug].concat(Object.keys(neighbours(slug)));
+      var shown = [slug].concat(keyLinks(slug));
       light.lift(shown);
       places[slug].parentNode.classList.add('nma-active');
       layoutTags(svg, tagPos, shown);
@@ -850,7 +857,7 @@
       tree: tree, pine: pine, bush: bush, person: person, house: house, hay: hay, fence: fence, pot: pot, flowers: flowers, tuft: tuft,
       roadPath: roadPath, slab: slab, pavilion: pavilion, mountains: mountains, treeline: treeline, farFields: farFields, defs: defs,
       beacon: beacon, lighting: lighting, keyboard: keyboard, layoutTags: layoutTags, tagFor: tagFor, placeGroup: placeGroup,
-      linksOf: linksOf, neighbours: neighbours, common: common, head: head, h: h, note: note, setSeed: function (v) { seed = v; } } };
+      linksOf: linksOf, keyLinks: keyLinks, neighbours: neighbours, common: common, head: head, h: h, note: note, setSeed: function (v) { seed = v; } } };
   function init() {
     // data-art="scene" belongs to scene.js; mounting it here would draw the page
     // road first and have the scene replace it a moment later.

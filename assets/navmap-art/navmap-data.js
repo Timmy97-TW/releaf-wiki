@@ -252,13 +252,15 @@ window.NAVMAP_DATA = {
     "to": "plant",
     "lane": "out",
     "next": false,
-    "why": "where the stressed plants are tested"
+    "why": "where the stressed plants are tested",
+    "key": true
    },
    {
     "to": "hardware",
     "lane": "out",
     "next": false,
-    "why": "the bioreactor the design calls for"
+    "why": "the bioreactor the design calls for",
+    "key": true
    },
    {
     "to": "software",
@@ -270,7 +272,8 @@ window.NAVMAP_DATA = {
     "to": "results",
     "lane": "out",
     "next": true,
-    "why": "what the design did on the bench"
+    "why": "what the design did on the bench",
+    "key": true
    }
   ],
   "biomanufacturing": [
@@ -284,7 +287,8 @@ window.NAVMAP_DATA = {
     "to": "hardware",
     "lane": "in",
     "next": false,
-    "why": "the reactor that would make it on the farm"
+    "why": "the reactor that would make it on the farm",
+    "key": true
    },
    {
     "to": "software",
@@ -296,13 +300,15 @@ window.NAVMAP_DATA = {
     "to": "laws-and-regulations",
     "lane": "out",
     "next": false,
-    "why": "the approval route a farm product needs"
+    "why": "the approval route a farm product needs",
+    "key": true
    },
    {
     "to": "entrepreneurship",
     "lane": "out",
     "next": true,
-    "why": "the business case built on this"
+    "why": "the business case built on this",
+    "key": true
    }
   ],
   "engineering": [
@@ -310,7 +316,8 @@ window.NAVMAP_DATA = {
     "to": "experiments",
     "lane": "in",
     "next": false,
-    "why": "the protocols behind each cycle"
+    "why": "the protocols behind each cycle",
+    "key": true
    },
    {
     "to": "measurement",
@@ -328,13 +335,15 @@ window.NAVMAP_DATA = {
     "to": "hardware",
     "lane": "in",
     "next": false,
-    "why": "the three hardware tracks in detail"
+    "why": "the three hardware tracks in detail",
+    "key": true
    },
    {
     "to": "results",
     "lane": "out",
     "next": true,
-    "why": "the final numbers from the cycles"
+    "why": "the final numbers from the cycles",
+    "key": true
    },
    {
     "to": "biomanufacturing",
@@ -348,7 +357,8 @@ window.NAVMAP_DATA = {
     "to": "engineering",
     "lane": "in",
     "next": false,
-    "why": "the cycles each stage was judged on"
+    "why": "the cycles each stage was judged on",
+    "key": true
    },
    {
     "to": "human-practices",
@@ -360,13 +370,15 @@ window.NAVMAP_DATA = {
     "to": "milestones",
     "lane": "in",
     "next": false,
-    "why": "the same season, dated"
+    "why": "the same season, dated",
+    "key": true
    },
    {
     "to": "results",
     "lane": "out",
     "next": true,
-    "why": "evidence for each stage’s criteria"
+    "why": "evidence for each stage’s criteria",
+    "key": true
    },
    {
     "to": "contribution",
@@ -380,7 +392,8 @@ window.NAVMAP_DATA = {
     "to": "hardware",
     "lane": "in",
     "next": false,
-    "why": "the open reactor designs we hand on"
+    "why": "the open reactor designs we hand on",
+    "key": true
    },
    {
     "to": "plant",
@@ -392,13 +405,15 @@ window.NAVMAP_DATA = {
     "to": "results",
     "lane": "in",
     "next": false,
-    "why": "the data behind every tool here"
+    "why": "the data behind every tool here",
+    "key": true
    },
    {
     "to": "education",
     "lane": "out",
     "next": true,
-    "why": "the lessons we leave with schools"
+    "why": "the lessons we leave with schools",
+    "key": true
    },
    {
     "to": "team",
@@ -412,7 +427,8 @@ window.NAVMAP_DATA = {
     "to": "experiments",
     "lane": "in",
     "next": false,
-    "why": "the runs these numbers come from"
+    "why": "the runs these numbers come from",
+    "key": true
    },
    {
     "to": "measurement",
@@ -424,7 +440,8 @@ window.NAVMAP_DATA = {
     "to": "hardware",
     "lane": "in",
     "next": false,
-    "why": "the instruments that took the readings"
+    "why": "the instruments that took the readings",
+    "key": true
    },
    {
     "to": "software",
@@ -442,7 +459,8 @@ window.NAVMAP_DATA = {
     "to": "plant",
     "lane": "out",
     "next": true,
-    "why": "what the protectant did on stressed plants"
+    "why": "what the protectant did on stressed plants",
+    "key": true
    }
   ],
   "experiments": [
@@ -450,7 +468,8 @@ window.NAVMAP_DATA = {
     "to": "parts",
     "lane": "in",
     "next": false,
-    "why": "the constructs each run used"
+    "why": "the constructs each run used",
+    "key": true
    },
    {
     "to": "safety-and-security",
@@ -474,13 +493,15 @@ window.NAVMAP_DATA = {
     "to": "plant",
     "lane": "out",
     "next": false,
-    "why": "the plant trials the runs fed"
+    "why": "the plant trials the runs fed",
+    "key": true
    },
    {
     "to": "results",
     "lane": "out",
     "next": true,
-    "why": "what the runs showed"
+    "why": "what the runs showed",
+    "key": true
    }
   ],
   "parts": [
@@ -488,7 +509,8 @@ window.NAVMAP_DATA = {
     "to": "protein-design",
     "lane": "in",
     "next": false,
-    "why": "the peptide the constructs express"
+    "why": "the peptide the constructs express",
+    "key": true
    },
    {
     "to": "engineering",
@@ -506,13 +528,15 @@ window.NAVMAP_DATA = {
     "to": "experiments",
     "lane": "out",
     "next": false,
-    "why": "the runs each construct went into"
+    "why": "the runs each construct went into",
+    "key": true
    },
    {
     "to": "results",
     "lane": "out",
     "next": true,
-    "why": "how each part performed"
+    "why": "how each part performed",
+    "key": true
    },
    {
     "to": "biomanufacturing",
@@ -526,7 +550,8 @@ window.NAVMAP_DATA = {
     "to": "experiments",
     "lane": "in",
     "next": false,
-    "why": "the bench runs before the plants"
+    "why": "the bench runs before the plants",
+    "key": true
    },
    {
     "to": "measurement",
@@ -544,7 +569,8 @@ window.NAVMAP_DATA = {
     "to": "results",
     "lane": "out",
     "next": true,
-    "why": "the trial outcomes"
+    "why": "the trial outcomes",
+    "key": true
    },
    {
     "to": "geospatial-analysis",
@@ -556,7 +582,8 @@ window.NAVMAP_DATA = {
     "to": "human-practices",
     "lane": "out",
     "next": false,
-    "why": "the farmers the trials were designed with"
+    "why": "the farmers the trials were designed with",
+    "key": true
    }
   ],
   "measurement": [
@@ -564,7 +591,8 @@ window.NAVMAP_DATA = {
     "to": "hardware",
     "lane": "in",
     "next": false,
-    "why": "the photometer and LED rig behind the readings"
+    "why": "the photometer and LED rig behind the readings",
+    "key": true
    },
    {
     "to": "software",
@@ -582,7 +610,8 @@ window.NAVMAP_DATA = {
     "to": "model",
     "lane": "out",
     "next": false,
-    "why": "the equations fitted to the readings"
+    "why": "the equations fitted to the readings",
+    "key": true
    },
    {
     "to": "plant",
@@ -594,7 +623,8 @@ window.NAVMAP_DATA = {
     "to": "results",
     "lane": "out",
     "next": true,
-    "why": "the calibrated numbers in use"
+    "why": "the calibrated numbers in use",
+    "key": true
    }
   ],
   "safety-and-security": [
@@ -608,7 +638,8 @@ window.NAVMAP_DATA = {
     "to": "experiments",
     "lane": "out",
     "next": false,
-    "why": "the runs the rules apply to"
+    "why": "the runs the rules apply to",
+    "key": true
    },
    {
     "to": "parts",
@@ -620,13 +651,15 @@ window.NAVMAP_DATA = {
     "to": "hardware",
     "lane": "out",
     "next": false,
-    "why": "the reactor’s safety fittings"
+    "why": "the reactor’s safety fittings",
+    "key": true
    },
    {
     "to": "laws-and-regulations",
     "lane": "out",
     "next": true,
-    "why": "the law behind the lab rules"
+    "why": "the law behind the lab rules",
+    "key": true
    },
    {
     "to": "sustainability",
@@ -640,7 +673,8 @@ window.NAVMAP_DATA = {
     "to": "experiments",
     "lane": "in",
     "next": false,
-    "why": "the protocols the entries follow"
+    "why": "the protocols the entries follow",
+    "key": true
    },
    {
     "to": "parts",
@@ -658,7 +692,8 @@ window.NAVMAP_DATA = {
     "to": "engineering",
     "lane": "out",
     "next": false,
-    "why": "the cycles the entries add up to"
+    "why": "the cycles the entries add up to",
+    "key": true
    },
    {
     "to": "development",
@@ -670,7 +705,8 @@ window.NAVMAP_DATA = {
     "to": "results",
     "lane": "out",
     "next": true,
-    "why": "what the record produced"
+    "why": "what the record produced",
+    "key": true
    }
   ],
   "model": [
@@ -678,7 +714,8 @@ window.NAVMAP_DATA = {
     "to": "measurement",
     "lane": "in",
     "next": false,
-    "why": "the readings the equations are fitted to"
+    "why": "the readings the equations are fitted to",
+    "key": true
    },
    {
     "to": "hardware",
@@ -696,13 +733,15 @@ window.NAVMAP_DATA = {
     "to": "software",
     "lane": "out",
     "next": true,
-    "why": "the Digital Twin that runs the model"
+    "why": "the Digital Twin that runs the model",
+    "key": true
    },
    {
     "to": "results",
     "lane": "out",
     "next": false,
-    "why": "the model against the bench"
+    "why": "the model against the bench",
+    "key": true
    },
    {
     "to": "geospatial-analysis",
@@ -716,7 +755,8 @@ window.NAVMAP_DATA = {
     "to": "engineering",
     "lane": "in",
     "next": false,
-    "why": "the build cycles behind each device"
+    "why": "the build cycles behind each device",
+    "key": true
    },
    {
     "to": "safety-and-security",
@@ -728,7 +768,8 @@ window.NAVMAP_DATA = {
     "to": "measurement",
     "lane": "out",
     "next": false,
-    "why": "what the instruments measure"
+    "why": "what the instruments measure",
+    "key": true
    },
    {
     "to": "plant",
@@ -740,7 +781,8 @@ window.NAVMAP_DATA = {
     "to": "software",
     "lane": "out",
     "next": true,
-    "why": "the Digital Twin that runs the reactor"
+    "why": "the Digital Twin that runs the reactor",
+    "key": true
    },
    {
     "to": "biomanufacturing",
@@ -754,13 +796,15 @@ window.NAVMAP_DATA = {
     "to": "hardware",
     "lane": "in",
     "next": false,
-    "why": "the reactor the Digital Twin controls"
+    "why": "the reactor the Digital Twin controls",
+    "key": true
    },
    {
     "to": "model",
     "lane": "in",
     "next": false,
-    "why": "the equations behind the forecast"
+    "why": "the equations behind the forecast",
+    "key": true
    },
    {
     "to": "measurement",
@@ -778,7 +822,8 @@ window.NAVMAP_DATA = {
     "to": "results",
     "lane": "out",
     "next": true,
-    "why": "the 434-hour run and its data"
+    "why": "the 434-hour run and its data",
+    "key": true
    },
    {
     "to": "plant",
@@ -792,7 +837,8 @@ window.NAVMAP_DATA = {
     "to": "model",
     "lane": "in",
     "next": false,
-    "why": "the numbers the peptide dose came from"
+    "why": "the numbers the peptide dose came from",
+    "key": true
    },
    {
     "to": "drylab-notebook",
@@ -804,7 +850,8 @@ window.NAVMAP_DATA = {
     "to": "parts",
     "lane": "out",
     "next": true,
-    "why": "the constructs that express BoPep4"
+    "why": "the constructs that express BoPep4",
+    "key": true
    },
    {
     "to": "engineering",
@@ -822,7 +869,8 @@ window.NAVMAP_DATA = {
     "to": "biomanufacturing",
     "lane": "out",
     "next": false,
-    "why": "the product the peptide becomes"
+    "why": "the product the peptide becomes",
+    "key": true
    }
   ],
   "drylab-notebook": [
@@ -836,7 +884,8 @@ window.NAVMAP_DATA = {
     "to": "model",
     "lane": "in",
     "next": false,
-    "why": "the fits these entries record"
+    "why": "the fits these entries record",
+    "key": true
    },
    {
     "to": "hardware",
@@ -848,13 +897,15 @@ window.NAVMAP_DATA = {
     "to": "software",
     "lane": "in",
     "next": false,
-    "why": "the Digital Twin’s development log"
+    "why": "the Digital Twin’s development log",
+    "key": true
    },
    {
     "to": "results",
     "lane": "out",
     "next": true,
-    "why": "what the computational work produced"
+    "why": "what the computational work produced",
+    "key": true
    }
   ],
   "human-practices": [
@@ -868,19 +919,22 @@ window.NAVMAP_DATA = {
     "to": "plant",
     "lane": "out",
     "next": true,
-    "why": "the trials farmers asked for"
+    "why": "the trials farmers asked for",
+    "key": true
    },
    {
     "to": "laws-and-regulations",
     "lane": "out",
     "next": false,
-    "why": "the regulators we spoke to, in detail"
+    "why": "the regulators we spoke to, in detail",
+    "key": true
    },
    {
     "to": "entrepreneurship",
     "lane": "out",
     "next": false,
-    "why": "the farm economics stakeholders raised"
+    "why": "the farm economics stakeholders raised",
+    "key": true
    },
    {
     "to": "education",
@@ -900,13 +954,15 @@ window.NAVMAP_DATA = {
     "to": "description",
     "lane": "in",
     "next": false,
-    "why": "the project the lessons explain"
+    "why": "the project the lessons explain",
+    "key": true
    },
    {
     "to": "human-practices",
     "lane": "in",
     "next": false,
-    "why": "the stakeholder work the lessons grew from"
+    "why": "the stakeholder work the lessons grew from",
+    "key": true
    },
    {
     "to": "team",
@@ -918,7 +974,8 @@ window.NAVMAP_DATA = {
     "to": "contribution",
     "lane": "out",
     "next": true,
-    "why": "the lesson kits future teams can reuse"
+    "why": "the lesson kits future teams can reuse",
+    "key": true
    },
    {
     "to": "data-physicalization",
@@ -938,7 +995,8 @@ window.NAVMAP_DATA = {
     "to": "biomanufacturing",
     "lane": "in",
     "next": false,
-    "why": "the product the business makes"
+    "why": "the product the business makes",
+    "key": true
    },
    {
     "to": "hardware",
@@ -956,13 +1014,15 @@ window.NAVMAP_DATA = {
     "to": "human-practices",
     "lane": "in",
     "next": false,
-    "why": "the farmers who priced it with us"
+    "why": "the farmers who priced it with us",
+    "key": true
    },
    {
     "to": "laws-and-regulations",
     "lane": "out",
     "next": true,
-    "why": "the approvals before any sale"
+    "why": "the approvals before any sale",
+    "key": true
    },
    {
     "to": "sustainability",
@@ -982,7 +1042,8 @@ window.NAVMAP_DATA = {
     "to": "entrepreneurship",
     "lane": "in",
     "next": false,
-    "why": "the business the impact depends on"
+    "why": "the business the impact depends on",
+    "key": true
    },
    {
     "to": "safety-and-security",
@@ -994,13 +1055,15 @@ window.NAVMAP_DATA = {
     "to": "human-practices",
     "lane": "in",
     "next": false,
-    "why": "the people the impact is measured for"
+    "why": "the people the impact is measured for",
+    "key": true
    },
    {
     "to": "contribution",
     "lane": "out",
     "next": true,
-    "why": "what others can build on"
+    "why": "what others can build on",
+    "key": true
    }
   ],
   "laws-and-regulations": [
@@ -1008,7 +1071,8 @@ window.NAVMAP_DATA = {
     "to": "biomanufacturing",
     "lane": "in",
     "next": false,
-    "why": "the product the rules apply to"
+    "why": "the product the rules apply to",
+    "key": true
    },
    {
     "to": "safety-and-security",
@@ -1020,13 +1084,15 @@ window.NAVMAP_DATA = {
     "to": "human-practices",
     "lane": "in",
     "next": false,
-    "why": "the regulators who explained the route"
+    "why": "the regulators who explained the route",
+    "key": true
    },
    {
     "to": "entrepreneurship",
     "lane": "out",
     "next": true,
-    "why": "the business the approvals gate"
+    "why": "the business the approvals gate",
+    "key": true
    },
    {
     "to": "sustainability",
@@ -1040,13 +1106,15 @@ window.NAVMAP_DATA = {
     "to": "model",
     "lane": "in",
     "next": false,
-    "why": "the stress model mapped here"
+    "why": "the stress model mapped here",
+    "key": true
    },
    {
     "to": "plant",
     "lane": "in",
     "next": false,
-    "why": "the trial data behind the map"
+    "why": "the trial data behind the map",
+    "key": true
    },
    {
     "to": "data-physicalization",
@@ -1064,7 +1132,8 @@ window.NAVMAP_DATA = {
     "to": "human-practices",
     "lane": "out",
     "next": true,
-    "why": "the regions’ farmers we spoke to"
+    "why": "the regions’ farmers we spoke to",
+    "key": true
    }
   ],
   "data-physicalization": [
@@ -1072,7 +1141,8 @@ window.NAVMAP_DATA = {
     "to": "results",
     "lane": "in",
     "next": false,
-    "why": "the data the objects are built from"
+    "why": "the data the objects are built from",
+    "key": true
    },
    {
     "to": "plant",
@@ -1090,13 +1160,15 @@ window.NAVMAP_DATA = {
     "to": "geospatial-analysis",
     "lane": "in",
     "next": false,
-    "why": "the map made touchable"
+    "why": "the map made touchable",
+    "key": true
    },
    {
     "to": "education",
     "lane": "out",
     "next": true,
-    "why": "where the objects were used"
+    "why": "where the objects were used",
+    "key": true
    },
    {
     "to": "human-practices",
@@ -1110,19 +1182,22 @@ window.NAVMAP_DATA = {
     "to": "attributions",
     "lane": "in",
     "next": false,
-    "why": "who did what, by name"
+    "why": "who did what, by name",
+    "key": true
    },
    {
     "to": "milestones",
     "lane": "in",
     "next": false,
-    "why": "when it all happened"
+    "why": "when it all happened",
+    "key": true
    },
    {
     "to": "description",
     "lane": "out",
     "next": true,
-    "why": "the project we built"
+    "why": "the project we built",
+    "key": true
    },
    {
     "to": "contribution",
@@ -1148,7 +1223,8 @@ window.NAVMAP_DATA = {
     "to": "team",
     "lane": "in",
     "next": false,
-    "why": "the people being credited"
+    "why": "the people being credited",
+    "key": true
    },
    {
     "to": "milestones",
@@ -1160,13 +1236,15 @@ window.NAVMAP_DATA = {
     "to": "experiments",
     "lane": "out",
     "next": false,
-    "why": "the bench work credited here"
+    "why": "the bench work credited here",
+    "key": true
    },
    {
     "to": "contribution",
     "lane": "out",
     "next": true,
-    "why": "the tools credited here"
+    "why": "the tools credited here",
+    "key": true
    },
    {
     "to": "human-practices",
@@ -1180,7 +1258,8 @@ window.NAVMAP_DATA = {
     "to": "team",
     "lane": "in",
     "next": false,
-    "why": "who was there each month"
+    "why": "who was there each month",
+    "key": true
    },
    {
     "to": "description",
@@ -1192,13 +1271,15 @@ window.NAVMAP_DATA = {
     "to": "engineering",
     "lane": "out",
     "next": false,
-    "why": "the cycles behind each month"
+    "why": "the cycles behind each month",
+    "key": true
    },
    {
     "to": "development",
     "lane": "out",
     "next": true,
-    "why": "the stage each milestone marks"
+    "why": "the stage each milestone marks",
+    "key": true
    },
    {
     "to": "contribution",
