@@ -3,14 +3,14 @@
 
    TWO JOBS.
 
-   1. THE TABLE. One table of thirty-five rows in eight groups, and three
+   1. THE TABLE. One table of thirty-three rows in seven groups, and three
       ways of cutting it down: the search field and the chips in the left rail,
       and four sortable columns. All of it is progressive. The HTML ships every
       row written out, in module order, with the function sentence in a row of
       its own marked hidden; without this script a reader still gets the whole collection as
       a plain table, which is what a printout and a text browser get too.
 
-      Sorting hides the eight group headers, because a header that says
+      Sorting hides the seven group headers, because a header that says
       "Level 1, 7 parts" over a column sorted by documentation is a lie. Each
       row carries its own group under its name for exactly that moment,
       written in the HTML and shown by the sheet only inside the flat body.
@@ -140,9 +140,8 @@
     });
     /* -- sorting -- */
     var heads = [].slice.call(table.querySelectorAll("thead th[data-sort]"));
-    /* documentation sorts deepest first, and the two rows that are not on the
-       Registry at all sort last */
-    var ORDER = { char: 0, expe: 1, desi: 2, none: 3, designed: 4 };
+    /* documentation sorts deepest first; a part with no entry yet sorts last */
+    var ORDER = { char: 0, expe: 1, desi: 2, none: 3 };
 
     function keyOf(row, by) {
       if (by === "st")   return String(ORDER[row.getAttribute("data-st")] != null
@@ -154,7 +153,7 @@
       return row.getAttribute("data-name");
     }
 
-    /* One sorted body replaces the eight grouped ones, and group order puts
+    /* One sorted body replaces the seven grouped ones, and group order puts
        them back exactly as the HTML shipped them. */
     var flat = document.createElement("tbody");
     flat.className = "ptable__grp ptable__grp--flat";
