@@ -82,7 +82,7 @@
     scale.forEach(function (s) { s.classList.remove("on"); });
     rows.forEach(function (row) { row.classList.remove("on"); });
     if (rw) rw.textContent = "\u2014\u2014";
-    if (rt) rt.textContent = "Point at a mark to read its week";
+    if (rt) rt.textContent = "";
     panel.style.removeProperty("--c");
   };
   panel.addEventListener("pointermove", track);
