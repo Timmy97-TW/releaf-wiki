@@ -6,11 +6,14 @@
    on is a ruler that fills in the colour of the instrument you are going to,
    and the readout under it names that page.
 
-   It plays only from one Hardware page to another, never on arrival from
-   the rest of the wiki, and not at all with reduced motion.
+   It plays on every entrance to a Hardware page (19 Oct 2026): a move from
+   one Hardware page to another carries one walk across both, and an arrival
+   from anywhere else -- the wiki nav, the homepage, a new tab, a bookmark, a
+   typed URL, a reload -- starts a walk of its own here. Not at all with
+   reduced motion, and never inside a frame.
 
-   HOW ONE WALK SPANS TWO PAGES. A click on a link to another Hardware page
-   closes the black over this page (0.32 s, the length of the old fade) and
+   HOW ONE WALK SPANS TWO PAGES (the in-section move). A click on a link to
+   another Hardware page closes the black over this page (0.32 s, the length of the old fade) and
    starts him walking, then navigates. This page keeps walking him until the
    browser swaps it out; at that moment (pagehide) it writes where he got to
    into sessionStorage. The next page reads that in its <head>, before
@@ -37,6 +40,7 @@
 (function (d, w) {
   "use strict";
   if (!w.sessionStorage || !w.matchMedia || w.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+  try { if (w.top !== w.self) return; } catch (err) { return; }   // not over a page embedded in another
 
   var KEY = "releaf-hwl";
   var me = d.currentScript;
@@ -171,6 +175,13 @@
     return Math.min(el / MIN, done ? 1 : Math.max(p, .84 * (1 - Math.exp(-el / 2200))));
   }
 
+  // He closed on the goal by a share of the gap each frame, which made the
+  // walk as long as the screen was slow: a 30 Hz laptop held the black twice
+  // as long, and a tab in the background (where frames stop) until the timer
+  // below. Since every entrance plays it (19 Oct), the same share is taken
+  // per 1/60 s of real time instead, so the walk lasts what it lasts.
+  function ease(k, dt) { return 1 - Math.pow(1 - k, Math.min(dt, 250) / 16.667); }
+
   /* ───────── leaving: a click to another Hardware page ───────── */
   w.addEventListener("click", function (e) {
     if (running || e.defaultPrevented || e.button !== 0 || e.metaKey || e.ctrlKey || e.shiftKey || e.altKey) return;
@@ -190,10 +201,12 @@
     t0 = performance.now();
     void L.offsetWidth;
     L.classList.add("in");
+    var last = t0;
     (function tick(now) {
       if (!L) return;
       var g = goal(now - t0, false);
-      p += (g - p) * .08;
+      p += (g - p) * ease(.08, now - last);
+      last = now;
       paint();
       w.requestAnimationFrame(tick);
     })(t0);
@@ -208,19 +221,24 @@
     if (ev.persisted && L) { L.remove(); L = null; running = false; d.documentElement.classList.remove("hwl"); }
   });
 
-  /* ───────── arriving: the walk carries on here ───────── */
+  /* ───────── arriving: the walk carries on here, or begins here ───────── */
   var got = null;
   try { got = JSON.parse(sessionStorage.getItem(KEY) || "null"); sessionStorage.removeItem(KEY); } catch (err) { got = null; }
-  if (!got || got.to !== here || !(Date.now() - got.at < 15000)) return;
+  // handed over by the page we came from, or an entrance from outside the section
+  var handed = !!got && got.to === here && Date.now() - got.at < 15000;
 
   var root = d.documentElement;
   root.classList.add("hwl");
   build(here);
-  L.classList.add("at");
-  p = Math.max(0, Math.min(.84, +got.p || 0));
+  L.classList.add("at");                                       // opaque from the first frame; the body is hidden under it
+  p = handed ? Math.max(0, Math.min(.84, +got.p || 0)) : 0;
   paint();
-  var since = Date.now() - got.at;                             // ms since the click, on the other page
+  // on an entrance of its own he starts at nought, and the letters fill with
+  // their fade, so drop "at" once the screen is up
+  if (!handed) w.setTimeout(function () { if (L && !left) { L.classList.remove("at"); L.classList.add("in"); } }, 0);
+  var since = handed ? Date.now() - got.at : 0;                // ms since the click, on the other page
   var start = performance.now() - since;
+  var left = false;
   var loaded = false, fonts = !d.fonts, parsed = d.readyState !== "loading";
   w.addEventListener("load", function () { loaded = true; });
   d.addEventListener("DOMContentLoaded", function () { parsed = true; });
@@ -238,26 +256,37 @@
   }
   drawings();
 
-  var left = false;
   function lift() {
     if (left) return;
     left = true;
     L.classList.remove("at");
+    L.classList.remove("in");
     L.classList.add("out");
     root.classList.remove("hwl");
+    w.clearInterval(beat);
     w.setTimeout(function () { if (L) L.remove(); L = null; }, LIFT + 50);
   }
-  (function tick(now) {
-    if (left) return;
+  var prev = performance.now();
+  function step() {
+    if (left || p >= 1) return;
+    var now = performance.now();
     var el = now - start;
     var late = el > MAX && (parsed || el > HARD);
     var done = (loaded && fonts) || late;
     var g = goal(el, done);
-    p += (g - p) * (late ? .22 : .08);
+    p += (g - p) * ease(late ? .22 : .08, now - prev);
+    prev = now;
     if (done && el >= MIN && 1 - p < .01) p = 1;
     paint();
-    if (p >= 1) { w.setTimeout(lift, 380); return; }
-    w.requestAnimationFrame(tick);
-  })(performance.now());
-  w.setTimeout(lift, Math.max(HARD - since, 0) + 1500);         // a hidden tab never ticks; never keep anyone out
+    if (p >= 1) w.setTimeout(lift, 380);
+  }
+  (function frame() { if (left || p >= 1) return; step(); w.requestAnimationFrame(frame); })();
+  // A tab that is not on screen is given no frames at all -- a page opened in
+  // a background tab, or any tab the browser has put to sleep -- and the walk
+  // would stand still there until the last timer in this file. Timers are only
+  // slowed, not stopped, so the same step runs on one too, and whichever of the
+  // two is awake carries him (he advances by elapsed time, so neither doubles
+  // the other's work).
+  var beat = w.setInterval(function () { if (left || p >= 1) { w.clearInterval(beat); return; } step(); }, 120);
+  w.setTimeout(lift, Math.max(HARD - since, 0) + 1500);         // never keep anyone out
 })(document, window);
