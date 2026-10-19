@@ -428,14 +428,25 @@ h2:hover .anchor, h3:hover .anchor, .anchor:focus-visible { opacity: 1; }
 }
 .lightbox__close:hover { background: rgb(255 255 255 / .22); }
 
-/* Engagement pages (18 Oct): a picture carries no title under it, only its
-   number on the four pages that number figures (IHP, Education, GIS, Data
-   Physicalization). The legend is read in the lightbox, laid flat along the
-   bottom of the window. Tables and live maps keep their captions. */
+/* Engagement pages: one rule for every figure caption.
+
+   A page that numbers its figures carries `fignums` on <body> (IHP, Education,
+   Geospatial Analysis, Data Physicalization). There a picture's caption reads
+   "Figure N. legend" on one line, under the picture, and the same text is
+   repeated along the bottom of the lightbox.
+
+   The other three Engagement pages do not number figures and their legends run
+   200 to 400 characters, so a picture there still carries no caption and the
+   legend is read in the lightbox alone. Tables and live maps, which have no
+   <img>, keep their captions everywhere. */
 figure:has(img) > figcaption .figlegend { display: none; }
 figure:has(img) > figcaption:has(> .figlegend):not(:has(.fignum)) { display: none; }
+.fignums figure:has(img) > figcaption .figlegend { display: inline; }
+.fignums figure:has(img) > figcaption:has(> .figlegend) { display: block; }
 .fignum { font-weight: 650; color: var(--gray-600, #555); }
-figure:not(:has(img)) .fignum::after { content: "."; }
+.fignum::after { content: "."; }
+/* keep the number and its legend on one line for as long as the line allows */
+.fignums figure:has(img) > figcaption { text-wrap: pretty; }
 :is(.engage, .ihp) .lightbox { padding-bottom: 0; }
 :is(.engage, .ihp) .lightbox img { max-height: calc(100vh - 10rem); }
 :is(.engage, .ihp) .lightbox figcaption {
