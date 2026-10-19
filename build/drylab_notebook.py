@@ -206,7 +206,7 @@ def assign_deliverables(date, lanes, deliv):
         j = back[i][j]
     out = [lanes[j] for j in path]
     for i, d in enumerate(deliv):
-        forced = DELIV_LANE.get((date, re.sub('<[^>]+>', '', d['t'])))
+        forced = d.get('lane') or DELIV_LANE.get((date, re.sub('<[^>]+>', '', d['t'])))
         if forced:
             out[i] = forced
     return out
@@ -241,7 +241,7 @@ def read_record():
         e['photos'] = [{'l': ph['href'], 't': ph.img['src'], 'c': ph.get('data-cap', ''),
                         'd': ph.get('data-date', ''), 'fig': 'ph--draft' in ph.get('class', [])}
                        for ph in a.select('.photos a.ph')]
-        e['deliv'] = [{'t': inner(d.b), 'items': [inner(li) for li in d.select('ul > li')]}
+        e['deliv'] = [{'t': inner(d.b), 'items': [inner(li) for li in d.select('ul > li')], 'lane': d.get('data-lane', '')}
                       for d in a.select('.deliv__item')]
         e['contrib'] = [{'who': inner(g.dt), 'html': inner(g.dd)} for g in a.select('dl.contrib > div')]
         links = a.select_one('.links')
@@ -301,9 +301,9 @@ BRANCHES = [
     dict(kind='branch', frm='math', fw=10, to='gis', tw=10, t='The spatial story splits from the kinetic model'),
     dict(kind='branch', frm='protect', fw=11, to='codon', tw=11, t='Design and expression are different problems'),
     # What one pipeline handed to another, where the notebook says so.
-    dict(kind='feed', frm='chamber', fw=3, to='reactor', tw=3, t='Carried forward from the chamber: the RS485 soil sensor, and the airflow, lighting and enclosure learnings', ai=True),
-    dict(kind='feed', frm='photo', fw=16, to='reactor', tw=16, t='The photometer goes in-line on the instrumented reactor', ai=True),
-    dict(kind='feed', frm='protect', fw=18, to='math', tw=18, t='The protectant set is fixed, which closes the modelling uncertainty', ai=True),
+    dict(kind='feed', frm='chamber', fw=3, to='reactor', tw=3, t='Carried forward from the chamber: the RS485 soil sensor, and the airflow, lighting and enclosure learnings'),
+    dict(kind='feed', frm='photo', fw=16, to='reactor', tw=16, t='The photometer goes in-line on the instrumented reactor'),
+    dict(kind='feed', frm='protect', fw=18, to='math', tw=18, t='The protectant set is fixed, which closes the modelling uncertainty'),
 ]
 
 # What came back from each handoff, as a state; and, where the notebook
@@ -520,7 +520,9 @@ def main():
         for i, p in enumerate(rec['pipes']):
             # An event (a symposium, a forum) is its own entry in the record
             # and a flag on the timeline; it does not add marks to the board.
-            if p['lane'] == 'wet' or rec['event']:
+            # A lane whose only stage that week is 'Planned to the freeze' is the plan,
+            # not a record: it is already a pencilled-in node from PLAN.
+            if p['lane'] == 'wet' or rec['event'] or p['stage'] == 'Planned to the freeze':
                 continue
             key = (p['lane'], w)
             if key in by_key:
@@ -571,7 +573,7 @@ def main():
         weeks.append({'date': (D0 + datetime.timedelta(days=7 * len(weeks))).isoformat(), 'days': [], 'plan': True})
     for date, lane, t, sm in PLAN:
         entries.append({'p': lane, 'w': week_of(date), 'k': 'plan', 'h': 1, 'stage': 'Planned', 't': t, 's': sm,
-                        'ai': True, 'deliv': [], 'dates': []})
+                        'ai': False, 'deliv': [], 'dates': []})
 
     handoffs = handoffs + [dict(h) for h in EXTRA_HANDOFFS]
     for j, more in BACK_MORE.items():
@@ -582,7 +584,7 @@ def main():
         rec = next(x for d in weeks[hf['w']]['days'] for x in d['deliv'] if x['lane'] == 'wet')
         items = rec['items']
         hf['student_sent'] = next((re.sub(r'^Sent:\s*', '', x) for x in items if x.startswith('Sent:')), '')
-        hf['student_did'] = [x for x in items if not x.startswith('Sent:')]
+        hf['student_did'] = [x for x in items if not x.startswith(('Sent:', 'Came back:'))]
         hf['ret'] = RETURNS[j]
         hf['date'] = day['date']
 

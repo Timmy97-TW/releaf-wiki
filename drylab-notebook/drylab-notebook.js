@@ -455,7 +455,7 @@ function nodes(){
       ${face}${pix.length>1?`<span class="wetcnt">${pix.length}</span>`:''}</button>`;
     if(WETWORDS){
       const open=/open/i.test(hf.ret.state);
-      s+=`<span class="wetstate ai${open?' open':''}" style="left:${x+30}px;top:${y}px">${esc(hf.ret.state)}</span>`;
+      s+=`<span class="wetstate${open?' open':''}" style="left:${x+30}px;top:${y}px">${esc(hf.ret.state)}</span>`;
     }
   });
   return s;
@@ -489,8 +489,8 @@ function joinsHTML(e){
     if(b.frm===e.p&&b.fw===e.w) rows.push(`<li${b.ai?' class="ai"':''}>${b.kind==='branch'?'Branched into':'Fed'} <b>${esc(P_BY_ID[b.to].short)}</b>: ${esc(b.t)}</li>`);
   });
   HANDOFFS.forEach((hf,j)=>{
-    if(hf.p===e.p&&hf.w===e.w) rows.push(`<li>Sent to the <b>Wet Lab</b>: ${esc(hf.t)}. <span class="ai">${esc(hf.ret.state)}.</span></li>`);
-    if(hf.ret.to===e.p&&hf.ret.w===e.w) rows.push(`<li class="ai">Came back from the <b>Wet Lab</b>: ${esc(hf.ret.t)}</li>`);
+    if(hf.p===e.p&&hf.w===e.w) rows.push(`<li>Sent to the <b>Wet Lab</b>: ${esc(hf.t)}. ${esc(hf.ret.state)}.</li>`);
+    if(hf.ret.to===e.p&&hf.ret.w===e.w) rows.push(`<li>Came back from the <b>Wet Lab</b>: ${esc(hf.ret.t)}</li>`);
   });
   return rows.length?`<div class="csec"><h4>Connections</h4><ul>${rows.join('')}</ul></div>`:'';
 }
@@ -501,7 +501,7 @@ function cardHTML(e){
   return `
   <div class="top">${lane}<span class="when">${wk2(e.w)} · ${days}</span></div>
   <span class="kind">${k.label}</span>
-  ${e.stage?`<span class="stage">${e.stage}</span>`:''}
+  ${e.stage&&e.stage.toLowerCase()!==String(e.t||'').toLowerCase()?`<span class="stage">${e.stage}</span>`:''}
   <h3${e.ai?' class="ai"':''}>${e.t}</h3>
   ${shotsHTML(PIX_BY_PW[e.p+'|'+e.w])}
   ${e.s?`<p class="sum${e.ai?' ai':''}">${e.s}</p>`:''}
@@ -514,14 +514,14 @@ function wetCardHTML(hf,j){
   const did=hf.student_did.length?hf.student_did:hf.did;
   return `
   <div class="top"><span class="pipe" style="color:var(--wet)">${gicon('wet')} Sent to the Wet Lab</span><span class="when">${wk2(hf.w)} · ${fmt(hf.date)}</span></div>
-  <span class="state ai${open?' open':''}">${esc(r.state)}</span>
+  <span class="state${open?' open':''}">${esc(r.state)}</span>
   <h3>${esc(hf.t.charAt(0).toUpperCase()+hf.t.slice(1))}</h3>
   ${shotsHTML(PIX_BY_HF[j],'of what followed')}
   <p class="sum">${hf.d}</p>
   <div class="csec"><h4>What we sent</h4><p class="sum" style="margin-top:0">${hf.student_sent?hf.student_sent.charAt(0).toUpperCase()+hf.student_sent.slice(1)+'.':hf.sent}</p></div>
   <div class="csec"><h4>What the wet lab did with it</h4><ul>${did.map(b=>`<li>${b}</li>`).join('')}</ul></div>
   <div class="csec"><h4>What came back</h4><p class="sum" style="margin-top:0">${hf.back}</p>
-    ${r.to?`<p class="jump ai">It landed on <button type="button" data-goto="${r.to}|${r.w}">${esc(P_BY_ID[r.to].short)}, ${fmt(WEEKS[r.w])}</button>: ${esc(r.t)}.</p>`:''}</div>
+    ${r.to?`<p class="jump">It landed on <button type="button" data-goto="${r.to}|${r.w}">${esc(P_BY_ID[r.to].short)}, ${fmt(WEEKS[r.w])}</button>: ${esc(r.t)}.</p>`:''}</div>
   <div class="foot"><span>From ${esc(p.short)}</span><button type="button" class="close" data-close>Close</button></div>`;
 }
 /* A week's page: the whole entry as the students wrote it. */
@@ -531,7 +531,7 @@ function weekCardHTML(w){
     const pl=ENTRIES.filter(e=>e.w===w);
     let h=`<div class="top"><span class="pipe" style="color:var(--ink-2)">Planned week</span><span class="when">${wk2(w)}</span></div>`;
     h+=`<h3>${fmtLong(WEEKS[w])}</h3>`;
-    h+=pl.length?`<div class="csec"><h4>Pencilled in</h4><ul class="ai">${pl.map(e=>`<li><b>${esc(P_BY_ID[e.p].short)}</b>: ${e.t}</li>`).join('')}</ul></div>`
+    h+=pl.length?`<div class="csec"><h4>Pencilled in</h4><ul>${pl.map(e=>`<li><b>${esc(P_BY_ID[e.p].short)}</b>: ${e.t}</li>`).join('')}</ul></div>`
                 :`<p class="sum">Nothing pencilled in yet.</p>`;
     h+=`<div class="foot"><span>Wiki freeze, 21 October</span><button type="button" class="close" data-close>Close</button></div>`;
     return h;
@@ -540,7 +540,7 @@ function weekCardHTML(w){
   wk.days.forEach((d,i)=>{
     h+=`<h3${d.ai?' class="ai"':''}>${fmtLong(d.date)}</h3>`;
     if(d.event){ h+=`<p class="sum"><b>Event:</b> ${esc(d.event)}</p><p class="jump"><button type="button" data-record="e-${d.date}">Read it in the written record</button></p>`; return; }
-    if(d.note) h+=`<p class="sum ai">${d.note}</p>`;
+    if(d.note) h+=`<p class="sum">${d.note}</p>`;
     const lanes=[...new Set(d.deliv.map(x=>x.lane))];
     const onBoard=ENTRIES.filter(e=>e.w===w && e.dates.includes(d.date));
     if(onBoard.length) h+=`<div class="tags" style="margin-top:10px">${onBoard.map(e=>`<span class="tag" style="box-shadow:inset 3px 0 0 ${P_BY_ID[e.p].cv}">${esc(P_BY_ID[e.p].short)}${e.stage?`: ${e.stage}`:''}</span>`).join('')}</div>`;
@@ -884,14 +884,13 @@ function buildLegend(){
   const sw=(d,extra)=>`<svg width="30" height="12" viewBox="0 0 30 12" aria-hidden="true"><path d="${d}" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" ${extra||''}/></svg>`;
   document.getElementById('legend').innerHTML=`
   <div><h4>Marks</h4>
-    <ul>${Object.values(KND).map(v=>`<li><svg width="18" height="18" viewBox="-9 -9 18 18" style="color:var(--ink-2)">${glyph(v)}</svg>${v.label}</li>`).join('')}
-      <li class="ai"><svg width="18" height="18" viewBox="-9 -9 18 18" aria-hidden="true"><circle r="3.2" fill="var(--ai-ink,#c2410c)"/></svg>Drafted, not yet written up by the team</li></ul></div>
+    <ul>${Object.values(KND).map(v=>`<li><svg width="18" height="18" viewBox="-9 -9 18 18" style="color:var(--ink-2)">${glyph(v)}</svg>${v.label}</li>`).join('')}</ul></div>
   <div><h4>Lines</h4>
     <ul>
       <li style="color:var(--ink-3)">${sw('M2 11 C2 4, 28 8, 28 1')}<span style="color:var(--ink-2)">A pipeline grows out of another</span><span class="desc">${branches}</span></li>
-      <li style="color:var(--ink-3)" class="ai">${sw('M2 3 C10 12, 20 12, 27 5')}<span>One pipeline feeds another</span><span class="desc">${feeds}</span></li>
+      <li style="color:var(--ink-3)">${sw('M2 3 C10 12, 20 12, 27 5')}<span>One pipeline feeds another</span><span class="desc">${feeds}</span></li>
       <li style="color:var(--wet)">${sw('M2 6 L28 6','stroke-dasharray="5 4"')}<span style="color:var(--ink-2)">Sent to the Wet Lab</span><span class="desc">${HANDOFFS.length}</span></li>
-      <li style="color:var(--wet)" class="ai">${sw('M28 6 L2 6','stroke-dasharray="1.5 4"')}<span>Came back and changed a pipeline</span><span class="desc">${returns}</span></li>
+      <li style="color:var(--wet)">${sw('M28 6 L2 6','stroke-dasharray="1.5 4"')}<span>Came back and changed a pipeline</span><span class="desc">${returns}</span></li>
     </ul></div>
   <div><h4>Hardware</h4><ul>${legendPipes(p=>p.g==='hw')}</ul></div>
   <div><h4>Protein design and modelling</h4><ul>${legendPipes(p=>p.g==='bio'||p.g==='model')}</ul></div>
@@ -1191,7 +1190,7 @@ const reduce=()=>matchMedia('(prefers-reduced-motion: reduce)').matches;
   }
   function describe(ph){
     const p=ph.p?P_BY_ID[ph.p]:null;
-    return `<b>${esc(ph.d)}</b>${p?` &middot; <span class="pc" style="color:${p.ct}">${esc(p.short)}</span>`:''} &middot; <span class="ai">${esc(ph.c)}</span>`;
+    return `<b>${esc(ph.d)}</b>${p?` &middot; <span class="pc" style="color:${p.ct}">${esc(p.short)}</span>`:''} &middot; <span>${esc(ph.c)}</span>`;
   }
   sheet.addEventListener('mouseover',e=>{ const t=e.target.closest('.tile'); if(t){ hovering=true; cap.innerHTML=describe(dealt[+t.dataset.t]); } });
   sheet.addEventListener('focusin',e=>{ const t=e.target.closest('.tile'); if(t) cap.innerHTML=describe(dealt[+t.dataset.t]); });
