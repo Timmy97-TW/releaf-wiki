@@ -40,7 +40,7 @@
   var toc = sec.querySelector(".pn-toc"), det = sec.querySelector(".pn-det");
   var links = Array.prototype.slice.call(sec.querySelectorAll(".pn-list .pn-e[data-page]"));
   var wlinks = Array.prototype.slice.call(sec.querySelectorAll(".pn-weeks .pn-wa[data-page]"));
-  // full titles on hover, for the packed one-line form (pn-one)
+  // the week's full titles on hover, where its row shows only the entry on screen
   wlinks.forEach(function (x) { var t = x.getAttribute("data-titles"); if (t && !x.title) x.title = t.split("|").join(" \u00b7 "); });
   var openA = sec.querySelector(".pn-open"), openP = sec.querySelector(".pn-open-p");
   var nowW = sec.querySelector(".pn-now-w"), nowT = sec.querySelector(".pn-now-t");
@@ -103,7 +103,10 @@
   // entry, a line each; a row per week (its entries as dots), the title of the entry on screen on up to two lines;
   // the week chips, with the title of the entry on screen under them. Under ~560 px tall even the chips may not fit:
   // they scroll in their column, only while the box has the wheel (pn.css).
-  var FORMS = [["pn-full", "pn-two"], ["pn-full"], ["pn-two"], [], ["pn-one"]];  // owner, 8 Oct: always a vertical list, never chips
+  // owner, 8 Oct: always a vertical list, never chips. 19 Oct: and never the packed one-line form either, which
+  // cut every title with an ellipsis and scrolled anyway; where nothing fits, the week rows keep their titles
+  // whole on two lines and the column scrolls (pn-tight), faded at the cut (pn.css).
+  var FORMS = [["pn-full", "pn-two"], ["pn-full"], ["pn-two"]];
   function whole() {
     if (toc.scrollHeight > toc.clientHeight + 1) return false;
     var rows = toc.querySelectorAll(toc.classList.contains("pn-full") ? ".pn-list .pn-t" : ".pn-weeks .pn-t");
@@ -134,6 +137,7 @@
     }
     wlinks.forEach(function (x, j) { var t = x.querySelector(".pn-t"); if (t) t.textContent = saved[j]; });
     if (toc.scrollHeight > toc.clientHeight + 1) toc.classList.add("pn-tight");
+    ends();
     if (cur >= 0) keep(cur);
   }
 
@@ -165,6 +169,15 @@
     if (colours[i]) sec.style.setProperty("--pn-cur", colours[i]); else sec.style.removeProperty("--pn-cur");
     keep(i);
   }
+  // a scrolling column is faded where it is cut, at whichever end has more list behind it (pn.css pn-up / pn-dn)
+  function ends() {
+    if (!toc) return;
+    var tight = toc.classList.contains("pn-tight");
+    toc.classList.toggle("pn-up", tight && toc.scrollTop > 2);
+    toc.classList.toggle("pn-dn", tight && toc.scrollTop + toc.clientHeight < toc.scrollHeight - 2);
+  }
+  if (toc) toc.addEventListener("scroll", ends, { passive: true });
+
   // in a column that scrolls (pn-tight only), keep the marked row in view: the column's own scroll, never the page's
   function keep(i) {
     if (!toc || !toc.classList.contains("pn-tight")) return;
@@ -172,6 +185,7 @@
     var t = a.offsetTop, b = t + a.offsetHeight, top = toc.scrollTop, h = toc.clientHeight;
     if (t >= top && b <= top + h) return;
     toc.scrollTop = Math.max(0, t - h * 0.3);
+    ends();
   }
   // the PDF action follows the page on screen
   var openN = 0;
