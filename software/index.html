@@ -11,7 +11,7 @@
   <link rel="stylesheet" href="../assets/css/page.css" />
   <link rel="stylesheet" href="../assets/css/engage.css?v=1018hdr" />
   <link rel="stylesheet" href="../assets/vendor/katex/katex.min.css" />
-  <link rel="stylesheet" href="software.css?v=20261019a" />
+  <link rel="stylesheet" href="software.css?v=20261019b" />
   <link rel="stylesheet" href="../assets/css/bannerhead.css?v=20261018" />
 <link rel="stylesheet" href="../assets/css/fulllines.css?v=1014" />
 <link rel="stylesheet" href="../assets/navmap/navmap.css?v=1018stk" />
@@ -69,10 +69,10 @@
         <div class="lede-c">
           <p>ReLEAF's bioreactor is built to stand beside a rice field and keep producing for weeks at a time. The person responsible for it there grows rice, and nobody with laboratory training is on hand to draw a sample or read a trace. That situation set the list of jobs before any software existed. Somebody has to see what the culture is doing while it runs. Something has to raise an alarm when a reading or the culture starts to drift, because a week can be lost before the next visit. The grower needs to know how much biomass there will be in a few hours, and whether the protectant will be ready when the crop wants it, which means watching the weather forecast and the crop as well as the vessel. And the answer has to come back in plain language, so that acting on it does not depend on reading a dashboard built for a laboratory.</p>
           <p>Live readings alone cover only the first of those. A drift alarm needs a model of what a healthy run looks like; a delivery date needs the batch carried forward in simulation; a suggested setting needs that simulation returned to the bioreactor. This is the distinction the literature draws. A digital model represents a physical system but is updated by hand. A digital shadow receives live data automatically, but changes back to the system still need a person. A digital twin closes the loop: data flows automatically from the system to the model and back&nbsp;[1,&nbsp;2]. The jobs above describe the third one, so that is what we built: a second simulated world running the same batch as the physical one but ahead of it, which is what lets the software hand over a risk assessment and a suggested action before the event instead of a report after it.</p>
-          <p id="aiot">ReLEAF is an AIoT system: the bioreactor's sensors and valves are wired to a board that logs every reading, and models learn from those readings. The twin reads optical density, pH, pressure and flow live, and the pinch and Luer valves are commanded from the same interface. Some of what it watches sits outside the bioreactor: a sensor beside the crop reads leaf temperature and leaf wetness, two readings that together say when the weather is letting disease into the field. An autoencoder our team trained on the healthy first 120 hours of the 434-hour run flagged a failing photometer 26.7 hours before its reading became unusable (<a href="#r2">R2</a>). The models have so far run on recorded data after each run, and a person still makes every decision. <a href="#ui-next">The next Digital Twin</a> joins them to the live loop and adds the Ask tab, where a farmer with no expertise in biomanufacturing can ask about the bioreactor in plain language and act on the answer.</p>
+          <p id="aiot">ReLEAF is an AIoT system: the bioreactor's sensors and valves are wired to a board that logs every reading, and models learn from those readings. The twin reads optical density, pH, pressure and flow live, and the pinch and Luer valves are commanded from the same interface. Some of what it watches sits outside the bioreactor: a sensor beside the crop reads leaf temperature and leaf wetness, two readings that together say when the weather is letting disease into the field. An autoencoder our team trained on the healthy first 120 hours of the 434-hour run flagged a failing photometer 26.7 hours before its reading became unusable (<a href="#r2">R2</a>). One thing the twin cannot read at all is how much protectant a batch has made: that comes from a sample drawn by hand and assayed at the bench, ELISA for the amount and DNPH for the activity, and it reaches the decision through a person (<a href="#amounts">section&nbsp;4</a>). The models have so far run on recorded data after each run, and a person still makes every decision. <a href="#ui-next">The next Digital Twin</a> joins them to the live loop and adds the Ask tab, where a farmer with no expertise in biomanufacturing can ask about the bioreactor in plain language and act on the answer.</p>
         </div>
         <figure class="flow" id="flow" aria-labelledby="flow-cap"
-                data-edges="in-br>m-alarm m-alarm>m-fc m-prior>m-fc m-fc>w-ready ~in-out>m-stress ~in-wx>m-stress ~m-stress>w-need ~w-ready>d-ind ~w-need>d-ind ~d-ind>a-light +d-ind>a-valve">
+                data-edges="in-br>m-alarm m-alarm>m-fc m-prior>m-fc m-fc>w-ready ~in-assay>w-ready ~in-out>m-stress ~in-wx>m-stress ~m-stress>w-need ~w-ready>d-ind ~w-need>d-ind ~d-ind>a-light +d-ind>a-valve">
           <div class="flow__grid">
             <div class="flow__col">
               <p class="flow__head"><i>1</i>What it takes in</p>
@@ -82,6 +82,13 @@
                   <div class="flow__node flow__node--live" data-node="in-br">
                     <b><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9 3.5h6M10 3.5v6L5 19a1.5 1.5 0 0 0 1.3 2h11.4a1.5 1.5 0 0 0 1.3-2l-5-9.5v-6"/></svg>Bioreactor sensors</b>
                     <ul class="flow__chips"><li class="flow__badge">Live</li><li>OD600</li><li>pH</li><li>Flow rate</li><li>Pressure &times;&nbsp;4</li></ul>
+                  </div>
+                </div>
+                <div class="flow__group pl-5">
+                  <p class="flow__glabel">At the bench</p>
+                  <div class="flow__node" data-node="in-assay">
+                    <b><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M10 3h4M11 3v6.5L6.5 18A2 2 0 0 0 8.3 21h7.4a2 2 0 0 0 1.8-3L13 9.5V3"/><path d="M8.4 15h7.2"/></svg>Sample assays</b>
+                    <span>ELISA for how much enzyme, DNPH for whether it works</span>
                   </div>
                 </div>
                 <div class="flow__group pl-3">
@@ -125,7 +132,7 @@
               <div class="flow__body">
                 <div class="flow__node" data-node="w-ready">
                   <b><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="8.5"/><path d="M12 7.5V12l3 2"/></svg>Batch readiness</b>
-                  <span>Is the protectant ready in time</span>
+                  <span>Is the protectant ready in time, and is there enough of it</span>
                 </div>
                 <div class="flow__node" data-node="w-need">
                   <b><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 20v-8"/><path d="M12 12c0-4 3-6 7-6 0 4-3 6-7 6z"/><path d="M12 14c0-3-2.5-5-6-5 0 3.5 2.5 5 6 5z"/></svg>Field need</b>
@@ -472,118 +479,10 @@
       </section>
 
       <!-- ====================================== 4 · WHAT IT AMOUNTS TO ==== -->
-      <!-- The results above are six separate checks. This section is where they
+      <!-- The results above are separate checks. This section is where they
            become one decision: when to switch the green light on. -->
       <section class="sec" id="amounts">
         <h2>What the results amount to</h2>
-
-        <figure class="gate" id="gate" aria-labelledby="gate-cap">
-          <div class="gate__plate">
-            <svg viewBox="0 0 1120 600" role="img" aria-label="Two chains run left to right and meet on the right. From the field: the forecast and leaf sensors feed the crop-stress rule, which gives the hour the crop comes under stress, and subtracting the time it takes to make the protectant gives the latest hour to induce. From the vessel: the growth prior from the light plate feeds the Kalman filter, which gives the hour the culture is ready; the trust layer and the fouling trace check both. Where the two meet, the twin either names the hour to induce or says the batch cannot meet this demand. The green light itself is tested on the light plate and not yet fitted to the bioreactor, and how long to leave it on is not yet measured.">
-              <defs>
-                <marker id="gate-ah" viewBox="0 0 10 10" refX="8.5" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
-                  <path class="gate__ah" d="M1 1.5L9 5L1 8.5" />
-                </marker>
-                <marker id="gate-ah-off" viewBox="0 0 10 10" refX="8.5" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
-                  <path class="gate__ah gate__ah--off" d="M1 1.5L9 5L1 8.5" />
-                </marker>
-              </defs>
-
-              <!-- wires first, so the boxes sit over their ends -->
-              <path class="gate__w" d="M252 120 L280 120" marker-end="url(#gate-ah)" />
-              <path class="gate__w" d="M516 120 L544 120" marker-end="url(#gate-ah)" />
-              <path class="gate__w" d="M252 288 L280 288" marker-end="url(#gate-ah)" />
-              <path class="gate__w" d="M516 288 L544 288" marker-end="url(#gate-ah)" />
-              <path class="gate__w" d="M402 376 L402 348" marker-end="url(#gate-ah)" />
-              <path class="gate__w" d="M666 376 L666 348" marker-end="url(#gate-ah)" />
-              <path class="gate__w" d="M780 120 C802 120 796 146 812 158" marker-end="url(#gate-ah)" />
-              <path class="gate__w" d="M780 288 C802 288 796 242 812 230" marker-end="url(#gate-ah)" />
-              <path class="gate__w" d="M958 296 L958 314" marker-end="url(#gate-ah)" />
-              <path class="gate__w gate__w--off" d="M958 428 L958 462" marker-end="url(#gate-ah-off)" />
-
-              <!-- FROM THE FIELD -->
-              <text class="gate__kicker gate__kicker--field" x="24" y="52">From the field</text>
-
-              <rect class="gate__box" x="24" y="68" width="228" height="104" rx="14" />
-              <text class="gate__t" x="42" y="96">Forecast and leaf sensors</text>
-              <text class="gate__s" x="42" y="119">Temperature, humidity, rain;</text>
-              <text class="gate__s" x="42" y="137">leaf temperature and wetness</text>
-              <text class="gate__s" x="42" y="155"><tspan class="gate__r gate__r--field">R3</tspan> · on the bench, not on a plant</text>
-
-              <rect class="gate__box" x="288" y="68" width="228" height="104" rx="14" />
-              <text class="gate__t" x="306" y="96">Crop-stress rule</text>
-              <text class="gate__s" x="306" y="119">The stress index and the rice</text>
-              <text class="gate__s" x="306" y="137">blast rule give the hour the</text>
-              <text class="gate__s" x="306" y="155">crop comes under stress</text>
-
-              <rect class="gate__box" x="552" y="68" width="228" height="104" rx="14" />
-              <text class="gate__t" x="570" y="96">Latest hour to induce</text>
-              <text class="gate__s" x="570" y="119">That hour minus the time it</text>
-              <text class="gate__s" x="570" y="137">takes to make the protectant</text>
-
-              <!-- FROM THE VESSEL -->
-              <text class="gate__kicker gate__kicker--vessel" x="24" y="220">From the vessel</text>
-
-              <rect class="gate__box" x="24" y="236" width="228" height="104" rx="14" />
-              <text class="gate__t" x="42" y="264">Growth prior</text>
-              <text class="gate__s" x="42" y="287">What this strain does before</text>
-              <text class="gate__s" x="42" y="305">the batch starts</text>
-              <text class="gate__s" x="42" y="323"><tspan class="gate__r gate__r--vessel">R6</tspan> · fitted on the light plate</text>
-
-              <rect class="gate__box" x="288" y="236" width="228" height="104" rx="14" />
-              <text class="gate__t" x="306" y="264">Kalman filter</text>
-              <text class="gate__s" x="306" y="287">Updates the estimate as the</text>
-              <text class="gate__s" x="306" y="305">run proceeds</text>
-              <text class="gate__s" x="306" y="323"><tspan class="gate__r gate__r--vessel">R5</tspan> · 41% less error at 2 h</text>
-
-              <rect class="gate__box" x="552" y="236" width="228" height="104" rx="14" />
-              <text class="gate__t" x="570" y="264">Hour the culture is ready</text>
-              <text class="gate__s" x="570" y="287">When the batch reaches the</text>
-              <text class="gate__s" x="570" y="305">density the field order needs</text>
-
-              <rect class="gate__box" x="288" y="376" width="228" height="84" rx="14" />
-              <text class="gate__t" x="306" y="402">Trust layer</text>
-              <text class="gate__s" x="306" y="425">Are the readings worth using?</text>
-              <text class="gate__s" x="306" y="443"><tspan class="gate__r gate__r--vessel">R1</tspan> calibration · <tspan class="gate__r gate__r--vessel">R2</tspan> alarm</text>
-
-              <rect class="gate__box" x="552" y="376" width="228" height="84" rx="14" />
-              <text class="gate__t" x="570" y="402">Fouling trace</text>
-              <text class="gate__s" x="570" y="425">Will the membrane still be</text>
-              <text class="gate__s" x="570" y="443">passing permeate? <tspan class="gate__r gate__r--vessel">R4</tspan></text>
-
-              <!-- WHERE THE TWO MEET -->
-              <rect class="gate__box gate__box--decide" x="816" y="100" width="284" height="196" rx="16" />
-              <text class="gate__t gate__t--decide" x="836" y="132">Where the two meet</text>
-              <text class="gate__s gate__s--lead" x="836" y="156">Does the culture reach that density</text>
-              <text class="gate__s gate__s--lead" x="836" y="174">before the field needs the protectant?</text>
-              <line class="gate__rule" x1="836" y1="192" x2="1080" y2="192" />
-              <circle class="gate__dot--yes" cx="842" cy="211" r="4" />
-              <text class="gate__s" x="856" y="215">Yes — induce at the named hour</text>
-              <circle class="gate__dot--no" cx="842" cy="241" r="4" />
-              <text class="gate__s" x="856" y="245">No — this batch cannot meet this</text>
-              <text class="gate__s" x="856" y="263">demand, and the grower hears days</text>
-              <text class="gate__s" x="856" y="281">early rather than on the day</text>
-
-              <rect class="gate__box gate__box--off" x="816" y="318" width="284" height="104" rx="14" />
-              <text class="gate__t gate__t--off" x="836" y="348">Green light on the bioreactor</text>
-              <text class="gate__s" x="836" y="371">Tested on the light plate; the lamp</text>
-              <text class="gate__s" x="836" y="389">is not yet fitted to the vessel</text>
-
-              <rect class="gate__box gate__box--off" x="816" y="462" width="284" height="112" rx="14" />
-              <text class="gate__t gate__t--off" x="836" y="492">For how long?</text>
-              <text class="gate__s" x="836" y="515">Nothing yet measures how much ACC</text>
-              <text class="gate__s" x="836" y="533">deaminase an hour of induction makes.</text>
-              <text class="gate__s" x="836" y="551">The activity assay is the missing number.</text>
-            </svg>
-          </div>
-          <figcaption id="gate-cap">
-            <span class="gate__title">The two chains that meet at the induction hour.</span>
-            <span class="gate__legend">
-              <span><i class="gate__key"></i>Runs on our recorded data</span>
-              <span><i class="gate__key gate__key--off"></i>Designed, not yet connected</span>
-            </span>
-          </figcaption>
-        </figure>
 
         <h3 id="green-light-questions">The green-light decision making questions</h3>
         <div class="tablewrap">
@@ -620,6 +519,11 @@
                 <td><a href="#r3">R3</a>, field sensors and the weather forecast, and the <a href="../model/">math model</a> connection</td>
                 <td>Bench only: the leaf sensor reads 1.2 to 1.9&nbsp;&deg;C warm, and nothing is on a plant yet</td>
               </tr>
+              <tr>
+                <th scope="row">How much protectant is actually there?</th>
+                <td><a href="../results/">ELISA</a> for how much, <a href="../model/">DNPH</a> for whether it works: an anti-His ELISA on samples drawn through the run, read off a logit standard curve, and the DNPH assay reading &alpha;-ketobutyrate, the product of the ACC deaminase reaction</td>
+                <td>About <b>5&nbsp;&micro;g/mL</b> of ACC deaminase across both October runs, between 3.4 and 6.5 and flat over 41&nbsp;h; <b>0.5503&nbsp;mM</b> &alpha;-ketobutyrate after 3&nbsp;h of induction, our best activity figure. Both from single samples</td>
+              </tr>
             </tbody>
           </table>
         </div>
@@ -628,7 +532,7 @@
         <p><b>From the field.</b> The forecast and the crop-stress rule give an hour at which the crop comes under stress. Protectant takes time to make, so the light has to come on before that hour, not at it. The twin subtracts one from the other.</p>
         <p><b>From the vessel.</b> The prior says what this strain does before the batch starts, so a target time exists on hour zero. The Kalman filter updates it as the run proceeds. The trust layer decides whether the readings feeding both are worth using, and the fouling trace says whether the membrane will still be passing permeate when the moment arrives.</p>
         <p>Where the two meet is the answer. If the culture reaches the needed density before the field needs the protectant, the twin names the hour to induce. If it does not, the useful output is the opposite: this batch cannot meet this demand, and the grower learns that days early rather than on the day of stress.</p>
-        <p>What the chain does not yet have is its last number. Nothing here measures how many hours of induction produce how much ACC deaminase. Until the activity assay puts a figure on that, the twin can say when the culture will be ready and cannot yet say how long to leave the light on. That assay, and fitting green light to the bioreactor, are what close the loop. Until then the models run on recorded data after each run, and a person makes the call.</p>
+        <p>The last number is the one that says a batch is worth harvesting, and the two assays are the first readings of it. The ELISA says how much enzyme the run made, about 5&nbsp;&micro;g/mL, flat from the first hour to the forty-first: that strain secretes constitutively, so this is what a run makes with no light on it at all. The DNPH assay says the enzyme works, and puts 0.5503&nbsp;mM of &alpha;-ketobutyrate against three hours of induction. Neither can yet set the induction length. Both are single samples, the activity reading sits below the assay's quantitation limit, and the two readouts of it disagree twenty-twofold depending on how long the reaction ran. So the twin can say when the culture will be ready, and a person still decides how long to leave the light on, from a sample drawn by hand and carried to the bench. Repeating the assays on an induced batch, and fitting green light to the bioreactor, are what close the loop.</p>
       </section>
 
       <!-- ========================================= 5 · THE SOFTWARE ======= -->
