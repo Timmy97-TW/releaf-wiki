@@ -2,14 +2,13 @@
    ReLeaf: Wet Lab Notebook
    -----------------------------------------------------------------------------
    The page works without it: with JavaScript off every month is on the
-   page in order, each with its Open PDF and Download links, and the
-   plant notebook's three records follow them.
+   page in order, each with its Open PDF and Download links.
 
-   One job. Segmented controls: one panel at a time. The page has two of
-   them, the wet lab months and the plant notebook's three kinds of record,
-   and each runs on its own. A panel's viewer gets its src only when it is
-   on screen, since a file is up to 7 MB. The open panel is kept in the URL
-   hash (#july, #plant-meetings).
+   One job. A segmented control: one month at a time. A panel's viewer gets
+   its src only when it is on screen, since a file is up to 7 MB. The open
+   panel is kept in the URL hash (#july). The loop still runs over every
+   [data-mtabs] on the page, so a second rail would work as the plant
+   notebook's did before it moved to the Plants page on 19 October.
    ========================================================================== */
 (function () {
   "use strict";

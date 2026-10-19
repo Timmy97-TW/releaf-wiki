@@ -98,7 +98,29 @@
     show(cells[0]);
   }
 
-  /* ---- 4. tab sets ------------------------------------------------------- */
+  /* ---- 4. notebook readers ----------------------------------------------- */
+  /* The three plant notebook PDFs are up to 7 MB, so a reader only gets its
+     src once its panel is open and on screen. A closed tab panel is hidden,
+     so the observer never fires for it; it fires on the click that opens it.
+     Without IntersectionObserver all three load, which is the old behaviour. */
+
+  function readers() {
+    var frames = $$(".pdfbox iframe[data-src]");
+    if (!frames.length) return;
+
+    function load(f) {
+      var want = f.getAttribute("data-src") + "#view=FitH&navpanes=0";
+      if (f.getAttribute("src") !== want) f.setAttribute("src", want);
+    }
+
+    var seen = typeof IntersectionObserver === "function" ? new IntersectionObserver(function (es) {
+      es.forEach(function (e) { if (e.isIntersecting) { load(e.target); seen.unobserve(e.target); } });
+    }, { rootMargin: "300px 0px" }) : null;
+
+    frames.forEach(function (f) { if (seen) seen.observe(f); else load(f); });
+  }
+
+  /* ---- 5. tab sets ------------------------------------------------------- */
   /* Every [data-tabset]: its own bar of role="tab" buttons, each pointing at a
      panel by aria-controls. A sliding ink marks the open tab. Sets that share
      a data-sync name (the Agar / Hydroponics / Soil tabs in sections 1 and 2)
@@ -260,6 +282,7 @@
     $$("[data-ledger]").forEach(ledger);
     $$("[data-matrix]").forEach(matrix);
     wireTabsets();
+    readers();
   }
 
   if (document.readyState === "loading") {
