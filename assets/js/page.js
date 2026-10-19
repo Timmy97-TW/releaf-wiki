@@ -64,18 +64,19 @@
 
       /* Two headings with the same words ("The problem" under three goals)
          would share an id, and every contents link after the first would jump
-         to the first one. The second becomes the-problem-2, and so on. A
-         clash with the heading's own <section id> is left alone: both are
-         the same place on the page. */
+         to the first one. The second becomes the-problem-2, and so on. When
+         the heading's own <section> already carries the id, the link points
+         there and the heading takes no id, so no id is used twice. */
       if (!h.id) {
         const base = slug(h.textContent) || "section";
         let id = base, k = 2, other;
         while ((other = document.getElementById(id)) && !other.contains(h)) id = base + "-" + k++;
-        h.id = id;
+        if (other && other.contains(h)) h.dataset.anchor = id; else h.id = id;
       }
+      const anchor = h.id || h.dataset.anchor;
 
       const link = document.createElement("a");
-      link.href = "#" + h.id;
+      link.href = "#" + anchor;
       if (h.dataset.toc) link.title = h.textContent.replace(/^[\d.]+\s*/, "").trim();
 
       if (no) {
@@ -163,7 +164,7 @@
       for (const h of heads) {
         /* a heading inside a closed tab panel has no box; it is not where the reader is */
         if (!h.getClientRects().length) continue;
-        if (h.getBoundingClientRect().top <= line) id = h.id; else break;
+        if (h.getBoundingClientRect().top <= line) id = h.id || h.dataset.anchor; else break;
       }
       if (id === current) return;
       current = id;

@@ -41,8 +41,8 @@
      panel, the legend and the two generated tables is in here twice.         */
   const STR = {
     summaryTitle:  { en: "Nine trajectories", zh: "九條軌跡" },
-    summaryLead:   { en: "Pick a chip to read what that run changed and how it came out. The four limbs are the four things that vary.",
-                     zh: "點一個方塊，就能看到那條軌跡改了什麼、結果如何。四條分支就是四個變動的項目。" },
+    summaryLead:   { en: "Each chip is one run, with what it changed and how it came out. The four limbs are the four things that vary.",
+                     zh: "每一個方塊是一條軌跡，記著它改了什麼、結果如何。四條分支就是四個變動的項目。" },
     totals:        { en: "9 systems &middot; 30 ns each &middot; 25.9 GPU-hours &middot; 13,500 frames",
                      zh: "9 個系統 &middot; 每條 30 奈秒 &middot; 25.9 GPU 小時 &middot; 13,500 個影格" },
     back:          { en: "&larr; All nine", zh: "&larr; 回到九條" },
