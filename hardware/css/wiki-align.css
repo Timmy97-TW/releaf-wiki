@@ -650,3 +650,93 @@ body.doc-light .doc-wrap .sec th a:not(.xref):not(.pick-link) {
 }
 body.doc-light { --dq-d: var(--w-leaf-900); --dq-b: var(--w-leaf-700); --dq-t: #2e7d5b; --dq-l: #1d6a62; }
 .dbtl-ring { --dq-d: var(--w-leaf-900, #14402b); --dq-b: var(--w-leaf-700, #23684a); --dq-t: #2e7d5b; --dq-l: #1d6a62; }
+
+
+/* ============================================================== THE WIDTH ==
+   The record reads in the column the rest of the wiki reads in
+   -----------------------------------------------------------------------------
+   Anton's grid is `1fr / 760px / 1fr`, so on a laptop the record read in a
+   760px column with the contents rail in the left gutter and the right one
+   empty: a third of the window held nothing, and the page ran long for it.
+   The wiki's own pages (Measurement, Software, Engineering, Contribution)
+   run 1048px of content, so the record does too, and the right gutter
+   becomes a margin rather than a void.
+
+   Prose, tables and the card grids reflow into the extra width, which is
+   where the height comes off. Media does not: a figure locked to an aspect
+   ratio gets TALLER as it gets wider, and most of the photographs are 800px
+   or narrower, so scaling them up would both soften them and undo the point.
+   Every figure therefore keeps the measure it was drawn at and centres in
+   the wider column.
+   ========================================================================== */
+
+@media (min-width: 1100px) {
+  .doc-wrap {
+    grid-template-columns: minmax(15rem, 1fr) minmax(0, 1048px) minmax(2.5rem, .22fr);
+  }
+  /* the measure every figure on these pages was drawn at */
+  body.hwreveal .doc-wrap .doc { --w-media: 760px; }
+
+  body.hwreveal .doc-wrap .doc :is(figure, .chart-fig, .circuit, .asm-kit) > :is(
+      .frame-img, .bsb-shot, .bc, .chart-wrap, picture, img, svg
+  ) {
+    max-width: var(--w-media);
+    margin-inline: auto;
+  }
+  /* figures that are a layout of their own (the scroll scene, the exploded
+     viewers, the tab stacks, the side-by-side splits) size themselves and are
+     left alone; so is anything already asking for the full width */
+  body.hwreveal .doc-wrap .doc :is(.sy-figure, .xv, .xp, .bvc, .pm-tabs, .dbtl-split, .frame.wide, .feature) :is(img, svg, .frame-img) {
+    max-width: none;
+  }
+}
+
+@media (min-width: 1100px) {
+  /* The walkthrough reached 300px into the right gutter to get the width it
+     needs for its two-column scene. The column now has that width, so the
+     breakout only pushes it off the window. */
+  body.hwreveal .doc-wrap .doc #syswalk.sy[data-mode="track"] { margin-right: 0; }
+
+  /* polish.css hangs a section figure's caption in the right margin while the
+     record is still dark (it is under the figure once doc-light is on). With
+     the column this wide there is no margin left to hang it in, so it sits
+     under the figure in both states, which is what wiki-align already does
+     for the light record. */
+  body:not(.doc-light) .doc .sec > figure > figcaption {
+    position: static; width: auto; max-width: none;
+    margin: .7rem 0 0; padding: 0;
+    border-left: 0;
+    text-align: left;
+  }
+}
+
+/* ---- the caption reads beside its figure ---------------------------------
+   The width the column just gained is a column of its own: 760px of figure
+   and about 250px beside it. A caption set there costs the page no height,
+   which is where the record's length actually was: on the bioreactor the
+   captions alone were about 3,000px of scroll.
+
+   Only figures that stand alone in a section and whose media is capped. The
+   scenes and viewers size themselves and keep their caption underneath, and
+   so do the small multiples inside .frames, which are not direct children of
+   the section. Below 1240px there is no room for the second column and
+   everything goes back to caption-under-figure. */
+@media (min-width: 1240px) {
+  body.hwreveal .doc-wrap .doc section.sec > figure:not(.sy-figure):not(.xv):not(.xp):not(.bvc):not(.feature):not(.bsb) {
+    display: grid;
+    grid-template-columns: minmax(0, var(--w-media)) minmax(13rem, 1fr);
+    column-gap: 1.6rem;
+    align-items: start;
+  }
+  body.hwreveal .doc-wrap .doc section.sec > figure > * { grid-column: 1; }
+  body.hwreveal .doc-wrap .doc section.sec > figure > figcaption {
+    grid-column: 2;
+    grid-row: 1;
+    margin: 0;
+    padding-left: .9rem;
+    border-left: 1px solid rgb(0 0 0 / .12);
+    font-size: .82rem;
+    line-height: 1.6;
+    text-align: left;
+  }
+}
