@@ -3,19 +3,19 @@
 
    TWO JOBS.
 
-   1. THE TABLE. One table of thirty-two rows in five module groups, and three
+   1. THE TABLE. One table of thirty-five rows in eight groups, and three
       ways of cutting it down: the search field and the chips in the left rail,
-      and five sortable columns. All of it is progressive. The HTML ships every
+      and four sortable columns. All of it is progressive. The HTML ships every
       row written out, in module order, with the function sentence in a row of
       its own marked hidden; without this script a reader still gets the whole collection as
       a plain table, which is what a printout and a text browser get too.
 
-      Sorting hides the five module group headers, because a header that says
-      "Module 01, 3 parts" over a column sorted by evidence is a lie. Each row
-      carries its own module under its name for exactly that moment, written
-      in the HTML and shown by the sheet only inside the flat body. Clicking
-      the sorted column a third time drops back to module order and brings
-      the headers back.
+      Sorting hides the eight group headers, because a header that says
+      "Level 1, 7 parts" over a column sorted by documentation is a lie. Each
+      row carries its own group under its name for exactly that moment,
+      written in the HTML and shown by the sheet only inside the flat body.
+      Clicking the sorted column a third time drops back to group order and
+      brings the headers back.
 
    2. THE FOLDS. A link into the closed references <details>, from a URL
       somebody shared or from a citation on another page, would
@@ -140,7 +140,9 @@
     });
     /* -- sorting -- */
     var heads = [].slice.call(table.querySelectorAll("thead th[data-sort]"));
-    var ORDER = { seq: 0, designed: 1 };   /* evidence sorts strongest first */
+    /* documentation sorts deepest first, and the two rows that are not on the
+       Registry at all sort last */
+    var ORDER = { char: 0, expe: 1, desi: 2, none: 3, designed: 4 };
 
     function keyOf(row, by) {
       if (by === "st")   return String(ORDER[row.getAttribute("data-st")] != null
@@ -152,8 +154,8 @@
       return row.getAttribute("data-name");
     }
 
-    /* One sorted body replaces the five grouped ones, and module order puts
-       the five back exactly as the HTML shipped them. */
+    /* One sorted body replaces the eight grouped ones, and group order puts
+       them back exactly as the HTML shipped them. */
     var flat = document.createElement("tbody");
     flat.className = "ptable__grp ptable__grp--flat";
     flat.hidden = true;
@@ -187,7 +189,7 @@
     function unsort() {
       sortBy = null; sortDir = 1;
       heads.forEach(function (h) { h.removeAttribute("aria-sort"); });
-      /* every row carries the module it came from, so putting them back is a
+      /* every row carries the group it came from, so putting them back is a
          matter of appending in the original order */
       rows.forEach(function (row) {
         var home = document.querySelector('.ptable__grp[data-grp="' + row.getAttribute("data-mod") + '"]');
