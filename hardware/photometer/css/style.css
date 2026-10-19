@@ -2991,12 +2991,12 @@ body[data-instrument="photometer"] .doc-wrap > .hwsum { margin-top: clamp(1.25re
 /* The seven-column dashboard-snapshot table in 3.5 (the long-term run): on a phone each snapshot stacks as a small
    grid with its own labels, as 6.1 does, instead of cutting 3 of its 7 columns off (W6 R2, V10). */
 @media (max-width: 640px) {
-  .doc .cycles .tablewrap > table.pm-snap { min-width: 0; }
+  .doc :is(.cycles, .hw-result) .tablewrap > table.pm-snap { min-width: 0; }
   .doc table.pm-snap thead { display: none; }
   .doc table.pm-snap, .doc table.pm-snap tbody { display: block; width: 100%; }
   .doc table.pm-snap tr { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: .45rem .75rem; padding: .75rem 0; border-bottom: 1px solid var(--pm-hair, rgba(15, 19, 25, .12)); }
   .doc table.pm-snap tr:last-child { border-bottom: 0; }
-  .doc .cycles .tablewrap > table.pm-snap tr > * { display: block; padding: 0; border: 0; background: none; text-align: left; white-space: nowrap; }
+  .doc :is(.cycles, .hw-result) .tablewrap > table.pm-snap tr > * { display: block; padding: 0; border: 0; background: none; text-align: left; white-space: nowrap; }
   .doc table.pm-snap th[scope="row"] { grid-column: 1 / -1; }
   .doc table.pm-snap td::before { display: block; margin-bottom: .1rem; font-family: var(--mono); font-size: 11px; font-weight: 600; letter-spacing: .08em; text-transform: uppercase; color: var(--pm-ink-2, #4b5563); }
   .doc table.pm-snap td:nth-child(2)::before { content: "Points"; }
@@ -3253,3 +3253,170 @@ body.doc-light .doc-wrap table td .todo { white-space: nowrap; }
 /* V24: the hero's corner brackets clear the Back/Skip row on a phone and the Skip / "Jump to" pills on a desk */
 @media (min-width: 761px) { .story .hero-frame i.hf-bl, .story .hero-frame i.hf-br { bottom: 64px; } }
 @media (max-width: 760px) { .story .hero-frame i.hf-tl, .story .hero-frame i.hf-tr { top: 124px; } }
+
+/* ---- 7.3: the app, set up and used, as two small cards side by side (17 Oct 2026) ---- */
+.doc .pm-app { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: .8rem; margin: 1rem 0 1.1rem; }
+.doc .pm-app__card { min-width: 0; padding: .95rem 1.05rem .9rem; border: 1px solid var(--pm-hair, #e5e5e5); border-radius: 14px; background: #fff; }
+.doc .sec .pm-app p.pm-app__h { margin: 0 0 .5rem; max-width: none; font: 650 .74rem/1.3 var(--sans); letter-spacing: .12em; text-transform: uppercase; color: var(--pm-leaf-700, #23684a); }
+.doc .pm-app ol { margin: 0; padding: 0; list-style: none; counter-reset: ap; display: grid; gap: .5rem; max-width: none; }
+.doc .pm-app li { counter-increment: ap; position: relative; margin: 0; padding-left: 1.75rem; font-size: .9rem; line-height: 1.5; color: #262626; }
+.doc .pm-app li::before { content: counter(ap); position: absolute; left: 0; top: .1rem; width: 1.2rem; height: 1.2rem; border-radius: 50%; display: grid; place-items: center; font: 700 .7rem/1 var(--sans); color: var(--pm-leaf-900, #14402b); background: var(--pm-leaf-50, #f4f9f6); border: 1px solid var(--pm-leaf-200, #cfe4d8); }
+.doc .pm-app code { font: 500 .8rem/1.3 var(--mono); }
+body.doc-light .doc-wrap section.sec > .pm-app { max-width: none; }
+@media (max-width: 700px) { .doc .pm-app { grid-template-columns: minmax(0, 1fr); } }
+@media (max-width: 560px) { .doc #fold-app dl.pm-keyspecs > div { grid-template-columns: minmax(0, 1fr); gap: .15rem; } }
+
+/* =========================================================================================================
+   17 Oct 2026, evening: the files on the page, tab strips, the plate photo. Delete from here to the end to undo it.
+   ========================================================================================================= */
+
+/* ---- tab strips inside a section (js/pm-tabs.js): 5.2 and 5.3 show one graph at a time, 10.1 one materials list.
+   The cycles' pill bar (../css/hwdoc.css, 4b); the calibration bars are sticky (below). A panel's text and figures are no
+   longer children of section.sec, so the record's prose and figure rules (hwdoc.css, section 5) are repeated here
+   at the same weight. ---- */
+.doc .pm-tabs { margin: 1.4rem 0 1.5rem; }
+.doc .pm-tabs__bar.cyc-tabs { position: relative; top: auto; z-index: 1; margin: 0 0 1.25rem; }
+.doc .pm-tabs > [role="tabpanel"][hidden] { display: none !important; }
+.doc .pm-tabs > [role="tabpanel"] > :first-child { margin-top: 0; }
+.doc .pm-tabs > [role="tabpanel"] > :last-child { margin-bottom: 0; }
+body.hwreveal .doc-wrap .doc .pm-tabs > .pm-tab > p {
+  max-width: 68ch; margin: 0 0 1rem; font-size: 1.0625rem; line-height: 1.7; letter-spacing: -.004em;
+  color: #2b2b2e; text-wrap: pretty;
+}
+body.hwreveal .doc-wrap .doc .pm-tabs > .pm-tab > figure { border-color: rgb(0 0 0 / .07); border-radius: 20px; margin: 1.5rem auto; }
+body.hwreveal .doc-wrap .doc .pm-tabs > .pm-tab > figure:first-child { margin-top: 0; }
+body.hwreveal .doc-wrap .doc .pm-tabs > .pm-tab > .tablewrap { margin: 0; }
+.doc .pm-tabs > .is-entering { animation: cyc-in .35s var(--ease, cubic-bezier(.2, .8, .2, 1)) both; }
+@media (prefers-reduced-motion: reduce) { .doc .pm-tabs > .is-entering { animation: none; } }
+@media print { .doc .pm-tabs > [role="tabpanel"][hidden] { display: block !important; } }
+/* 17 Oct 2026, evening, the owner: the calibration bars (5.2, 5.3; data-sticky) follow the screen until the reader is
+   out of their box, as the cycle stepper does. Sticky inside .pm-tabs, so a bar stays until its own set has gone and
+   never overlaps the next one; js/pm-tabs.js marks it pinned (.is-pinned) and measures its height into --pmt-bar-h so
+   a link into a panel lands below it. 10.1's materials-list bar stays put. */
+.doc .pm-tabs[data-sticky] > .pm-tabs__bar.cyc-tabs { position: sticky; top: calc(var(--nv-h, 68px) + .5rem); z-index: 6; }
+.doc .pm-tabs[data-sticky] > [role="tabpanel"] :is(figure[id], [id] > h3, [id]),
+.doc .pm-tabs[data-sticky] > [role="tabpanel"] {
+  scroll-margin-top: calc(var(--nv-h, 68px) + .5rem + var(--pmt-bar-h, 3.5rem) + 1.25rem);
+}
+/* the two square calibration charts keep one size */
+#fig-cal-simplified { max-width: 30rem; margin-left: auto; margin-right: auto; }
+
+
+/* ---- download cards (7.3 the app, 10.3 the assembly guide): the button is a link now ---- */
+body.hwreveal .doc-wrap .doc .pm-dl a.pm-dl__btn {
+  display: inline-flex; align-items: baseline; gap: .45rem; white-space: nowrap;
+  color: var(--w-leaf-900, #14402b); background: var(--w-leaf-50, #f4f9f6); background-image: none;
+  border: 1px solid var(--w-leaf-200, #cfe4d8); text-decoration: none;
+}
+body.hwreveal .doc-wrap .doc .pm-dl a.pm-dl__btn span { font: 500 .74rem/1.3 var(--mono); color: var(--w-leaf-700, #23684a); }
+body.hwreveal .doc-wrap .doc .pm-dl a.pm-dl__btn:is(:hover, :focus-visible) { border-color: var(--w-leaf-500, #4f9c6f); background: #fff; }
+
+/* ---- 10.2: one STL printed three times (the Slim's clips) carries its numbers as a pill ---- */
+.files .fn.fn--range { width: auto; min-width: 1.6rem; padding: 0 .4rem; border-radius: 999px; }
+
+/* ---- 8.2 the soldered board: a photo and both sides drawn hole by hole (dev/pcb-diagrams/build_pcb_svg.py), three
+   tabs in one figure (js/pm-tabs.js). The drawings are svg.wire, so the solder traces take the schematic's own net
+   strokes above (.pwr3, .pwr5, .sda, .scl, .gnd, .sig); the 8.1 buttons light them as they light #fig-wiring
+   (js/wire-nets.js). Labels clear 12 px at 1440 and 11 px at 390 (the viewBox is 360 wide, drawn at most 460 px). ---- */
+.pcbfig .pm-tabs { margin: 0; }
+.doc .pcbfig .pm-tabs__bar.cyc-tabs { max-width: 30rem; margin: 0 auto 1.1rem; }
+.pcbfig svg.pcb { max-width: 460px; margin: 0 auto; }
+/* the photo is a frame (so it opens full size) without the plate, as 1.2's as-built photo is */
+.pcbfig .frame.pcb-shot { max-width: 330px; margin: 0 auto; }
+body.doc-light .doc .pcbfig .frame.pcb-shot { padding: 0; border: 0; background: none; box-shadow: none; }
+body.doc-light .doc .pcbfig .frame.pcb-shot::before, body.doc-light .doc .pcbfig .frame.pcb-shot::after { content: none; display: none; }
+body.doc-light .doc .pcbfig .frame.pcb-shot .frame-img { aspect-ratio: auto; height: auto; }
+.pcbfig .frame.pcb-shot .frame-img img { display: block; width: 100%; height: auto; object-fit: contain; }
+
+.pcb text { font-family: var(--sans); font-size: 11px; fill: var(--pm-ink); }
+.pcb .m { text-anchor: middle; }
+.pcb .e { text-anchor: end; }
+.pcb .brd { fill: #e9f2ec; stroke: #86b39a; stroke-width: 1; }
+.pcb .mh { fill: #fff; stroke: #c3cbd2; stroke-width: 2.4; }
+.pcb .pad { fill: #dfe4e8; stroke: #b6bfc7; stroke-width: .8; }
+.pcb .holes { fill: #fff; stroke: #c6ced5; stroke-width: 2.6; }
+.pcb text.silk { font-family: var(--mono); font-size: 10.5px; fill: #3d7a5a; }
+.pcb .hs { fill: #f6f2e8; stroke: #b9ae94; stroke-width: 1; }
+.pcb .stub { fill: none; stroke: #a3adb6; stroke-width: 3.4; }
+.pcb text.pn { font-family: var(--mono); font-size: 10.5px; fill: #3f4954; }
+.pcb text.gl { font-weight: 650; }
+.pcb .gl .ad { font-family: var(--mono); font-weight: 400; fill: var(--pm-ink-2); }
+.pcb .pq, .pcb .tip { fill: #c2c9cf; stroke: #5d6770; stroke-width: .8; }
+.pcb .lead { fill: none; stroke: #8f989f; stroke-width: 1.8; }
+.pcb .rb { fill: #eedfbd; stroke: #ad9362; stroke-width: 1; }
+.pcb text.rv { fill: #3d311b; }
+.pcb .tq { fill: #2c3237; stroke: #13171a; stroke-width: 1; }
+.pcb text.qt { fill: #fff; font-weight: 700; }
+.pcb .ldr { fill: none; stroke: #8f989f; stroke-width: 1; }
+/* the jumpers, in their real colours: a darker edge under each, so crossings read */
+.pcb .wo, .pcb .wc { fill: none; stroke-linecap: round; stroke-linejoin: round; }
+.pcb .wo { stroke-width: 7.4; }
+.pcb .wc { stroke-width: 5.6; }
+.pcb .wo.red { stroke: #8e2a22; }   .pcb .wc.red { stroke: #d0402f; }
+.pcb .wo.black { stroke: #0c0f11; } .pcb .wc.black { stroke: #2b3136; }
+.pcb .wo.green { stroke: #1f6c3d; } .pcb .wc.green { stroke: #36a25e; }
+.pcb .wo.blue { stroke: #1c3e86; }  .pcb .wc.blue { stroke: #3164cb; }
+/* the solder side: tinned bridges, each with its net's stroke down the middle */
+.pcb .spd { fill: #d8dde2; stroke: #9aa5ae; stroke-width: 1.2; }
+.pcb .sb { fill: none; stroke: #d8dde2; stroke-width: 9.6; stroke-linecap: round; stroke-linejoin: round; }
+.pcb .w.sc { stroke-width: 2.8; }
+.pcb .pt, .pcb .lt { fill: #f2f4f6; stroke: #66707a; stroke-width: .9; }
+/* phones: every label to 13.2 units (11.2 px on a 390 px screen); the column numbers drop their leading zero and
+   the values their thin space (tspan.z), as two mono digits are wider than a pitch at that size */
+@media (max-width: 700px) {
+  .pcb text, .pcb text.silk, .pcb text.pn { font-size: 13.2px; }
+  .pcb .z { display: none; }
+}
+/* one net at a time, from the 8.1 buttons and lead-ins */
+.pcbfig svg.pcb [class*="n-"] { transition: opacity .2s ease; }
+.pcbfig svg.pcb.hl [class*="n-"] { opacity: .13; }
+.pcbfig svg.pcb.hl-gnd .n-gnd, .pcbfig svg.pcb.hl-led .n-led,
+.pcbfig svg.pcb.hl-bus .n-bus, .pcbfig svg.pcb.hl-pwr .n-pwr { opacity: 1; }
+@media (prefers-reduced-motion: reduce) { .pcbfig svg.pcb [class*="n-"] { transition: none; } }
+
+/* ---- User Testing and Feedback (18 Oct 2026) ------------------------------
+   The same block on all four instrument pages. One entry per recorded event:
+   when, who and the source on the left; what they did or said, and what
+   changed, on the right. A list rather than a table, so it reads on a phone
+   without sideways scrolling; one column under 700px. */
+.doc .sec ol.ut-log {
+  list-style: none; margin: 1.3rem 0 1.4rem; padding: 0;
+  border-top: 1px solid #dcdcdc;
+}
+body.doc-light .doc-wrap section.sec > ol.ut-log { max-width: none; }
+.doc .sec ol.ut-log > li {
+  display: grid; grid-template-columns: minmax(0, 13rem) minmax(0, 1fr);
+  gap: .5rem 1.75rem; margin: 0; padding: 1.05rem 0 1.1rem;
+  border-bottom: 1px solid #dcdcdc;
+  font-size: inherit; line-height: inherit;
+}
+.doc .sec ol.ut-log > li::before, .doc .sec ol.ut-log > li::after { content: none; display: none; }
+.doc .sec .ut-who { min-width: 0; }
+.doc .sec .ut-who > span { display: block; }
+.doc .sec .ut-when {
+  font: 700 .75rem/1.4 var(--sans, system-ui, sans-serif); letter-spacing: .06em;
+  text-transform: uppercase; color: var(--w-leaf-700, #23684a);
+}
+.doc .sec .ut-name { margin-top: .3rem; font-weight: 650; line-height: 1.4; color: var(--fg, #1d1d1f); }
+.doc .sec .ut-role { margin-top: .1rem; font-size: .875rem; line-height: 1.45; color: #4a4a4a; }
+.doc .sec .ut-src { margin-top: .45rem; font-size: .8125rem; line-height: 1.45; color: #4a4a4a; }
+.doc .sec .ut-body { min-width: 0; }
+.doc .sec .ut-body p { margin: 0; max-width: 68ch; font-size: .96875rem; line-height: 1.62; color: #262626; }
+.doc .sec .ut-body p + p { margin-top: .5rem; }
+.doc .sec .ut-body .ut-k {
+  display: inline; margin-right: .4rem;
+  font: 700 .72rem/1 var(--sans, system-ui, sans-serif); letter-spacing: .07em;
+  text-transform: uppercase; color: var(--w-leaf-700, #23684a);
+}
+.doc .sec p.ut-learn { margin-top: 1.1rem; }
+@media (max-width: 700px) {
+  .doc .sec ol.ut-log > li { grid-template-columns: minmax(0, 1fr); gap: .55rem; padding: .95rem 0 1rem; }
+  .doc .sec .ut-who > span { display: inline; }
+  .doc .sec .ut-name { margin-top: 0; }
+  .doc .sec .ut-name::before { content: " \00b7  "; color: #6a6a6a; font-weight: 400; }
+  .doc .sec .ut-role, .doc .sec .ut-src { display: block !important; }
+  .doc .sec .ut-body p { font-size: 1rem; }
+}
+/* 18 Oct 2026: the long-run photo (#fig-run-rig) is cropped to the chamber's middle shelf, so it is landscape */
+body.doc-light .doc .frame.pm-solo#fig-run-rig { max-width: 36rem; }
+body.doc-light .doc .frame.pm-solo#fig-run-rig .frame-img { aspect-ratio: auto; height: auto; }

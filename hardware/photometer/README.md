@@ -27,7 +27,10 @@ site/
   js/scene.js       scroll engine + three.js renderer
   js/doc.js         contents-rail scrollspy + smooth anchors
   js/vendor/        three.js r128 + STLLoader (vendored, no CDN)
-  models/           printed parts, bought-in components, light path
+  models/           the Pro's printed parts (part*.stl, downloads) and the viewers' configs
+  models/bought/    bought-in components and the light path, as _pack.json + _pack.bin
+                    (tools/pack_models.py; the STLs beside them are git-ignored sources)
+  models/slim-files/ the Slim's three printed parts (downloads; its viewer draws them too)
 ```
 
 ## The technical record

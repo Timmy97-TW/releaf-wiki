@@ -1,0 +1,347 @@
+/* =============================================================================
+   Bioreactor 7.3, Future Plan: the three containment figures (17 Oct 2026)
+   -----------------------------------------------------------------------------
+   figure.bvc.bvc-layers    7.3.1  the membrane at the core, two planned layers around it; a key of four facts
+                                   per layer beside the rings (it replaces the plan's layer table)
+   figure.bvc.bvc-drip-fig  7.3.3  the cabinet floor in section: drip tray, low point, droplet sensor
+   figure.bvc.bvc-resp      7.3.4  detect -> alarm -> stop -> hold, with the four failures as buttons that light
+                                   their path (it replaces the plan's failure table)
+
+   One drawing language with the part 2-3 figures (dev/bio-visuals/purpose, bv-purpose.css) and the pressure model beside them
+   (css/xp-pressure.css): a white sheet on a hairline; hardware a pale body on a grey outline; culture amber
+   #e08a22 and protectant green #23864f, as the loop diagram and the 3D viewer's toggles; red is the alarm and
+   nothing else; orange stays reserved for missing content.
+
+   Built against planned is drawn, not only said: what exists is solid, what is planned is dashed and takes
+   the explore kit's "concept" violet (css/explore.css, .xp-tag.concept: designed, not built). That is one
+   token, --bvc-plan; change it here and every planned line, word and badge follows.
+
+   Hover, focus or tap lights one layer or one path (js/bv-contain.js sets .is-lit on the figure and .is-on on
+   what belongs to it); the rest steps back. Without script the figures are complete, only still.
+   Everything is scoped to .bvc. Light record only.
+   ========================================================================== */
+
+.bvc {
+  --bvc-ink: #1d1d1f;
+  --bvc-ink-2: #424245;
+  --bvc-ink-3: #6e6e73;
+  --bvc-hair: rgb(29 29 31 / .08);
+  --bvc-box: #cfd6dc;            /* a node's outline */
+  --bvc-rule: #e4e8eb;           /* rules inside a node */
+  --bvc-cul: #e08a22;            /* culture */
+  --bvc-cul-d: #b8650f;
+  --bvc-cul-l: #fcedd7;
+  --bvc-pro: #23864f;            /* protectant */
+  --bvc-pro-l: #e3f1e8;
+  --bvc-hw: #f2f4f6;             /* hardware */
+  --bvc-hw-line: #7c8791;
+  --bvc-cut: #e9edf0;            /* the cabinet, cut */
+  --bvc-cut-line: #8d98a2;
+  --bvc-wall: #c3ccd4;           /* the fiber wall */
+  --bvc-leaf: #23684a;           /* built, contained today; links and focus */
+  --bvc-leaf-l: #eef6f1;
+  --bvc-plan: #5b4a86;           /* planned */
+  --bvc-plan-line: #8d82b5;
+  --bvc-plan-l: #efebf7;
+  --bvc-plan-l2: #f8f6fc;
+  --bvc-alarm: #c62828;
+  --bvc-alarm-l: #fdf3f3;
+  --bvc-alarm-line: #efc2c2;
+  --bvc-slate: #3f5a66;          /* the lit path: the house hover (photometer and LPA drawings) */
+  --bvc-sans: var(--sans, -apple-system, BlinkMacSystemFont, "SF Pro Text", "Inter", "Segoe UI", Roboto, Helvetica, Arial, sans-serif);
+  container-type: inline-size;
+  margin: 0;
+}
+
+/* ------------------------------------------------------------- the figure */
+body.hwreveal .doc-wrap .doc section.sec > figure.bvc { margin: 1.6rem 0 0; }
+body.hwreveal .doc-wrap .doc section.sec > figure.bvc + p { margin-top: 1.4rem; }
+.bvc__sheet {
+  padding: 22px;
+  border-radius: 20px;
+  background: #fff;
+  box-shadow: 0 0 0 1px var(--bvc-hair);
+}
+@container (max-width: 520px) { .bvc__sheet { padding: 14px; border-radius: 18px; } }
+@container (max-width: 400px) { .bvc__sheet { padding: 12px 10px; } }
+.bvc > figcaption { margin: .8rem .2rem 0; }
+/* before the record turns light, polish.css lifts a section figure's caption into the margin at 1360 px and up */
+body:not(.doc-light) .doc .sec > figure.bvc > figcaption {
+  position: static; width: auto; margin: .8rem .2rem 0; padding: 0; border-left: 0; font-size: .875rem;
+}
+/* the record's `.sec li` (1.05rem, 1.8 leading) and `.sec a` (amber, underlined) must not reach inside */
+.doc .bvc li { margin: 0; padding: 0; font-size: inherit; line-height: inherit; }
+.doc .bvc li::before { content: none; }
+.bvc-sr {
+  position: absolute; width: 1px; height: 1px; margin: -1px; padding: 0; overflow: hidden;
+  clip: rect(0 0 0 0); clip-path: inset(50%); white-space: nowrap; border: 0;
+}
+
+/* ------------------------------------------------------------- drawings */
+.bvc-svg { display: block; width: 100%; height: auto; overflow: visible; }
+.bvc-svg text { font-family: var(--bvc-sans); fill: var(--bvc-ink); }
+.bvc-svg .bvc-t { font-size: 14.5px; font-weight: 600; letter-spacing: -.004em; }
+.bvc-svg .bvc-t--lg { font-size: 15px; font-weight: 650; }
+.bvc-svg .bvc-s { font-size: 12.5px; font-weight: 500; fill: var(--bvc-ink-3); }
+.bvc-svg .bvc-planw { font-weight: 650; fill: var(--bvc-plan); }
+.bvc-svg .bvc-kick { font-size: 12px; font-weight: 650; letter-spacing: .12em; text-transform: uppercase; fill: var(--bvc-slate); }
+
+.bvc-svg .bvc-ldr { fill: none; stroke: rgb(29 29 31 / .5); stroke-width: 1; vector-effect: non-scaling-stroke; }
+.bvc-svg .bvc-ldr-dot { fill: var(--bvc-ink); }
+.bvc-svg .bvc-hw { fill: var(--bvc-hw); stroke: var(--bvc-hw-line); stroke-width: 1.5; stroke-linejoin: round; vector-effect: non-scaling-stroke; }
+.bvc-svg .bvc-hw-l { fill: none; stroke: var(--bvc-hw-line); stroke-width: 1.25; vector-effect: non-scaling-stroke; }
+.bvc-svg .bvc-ico { fill: none; stroke: var(--bvc-slate); stroke-width: 1.7; stroke-linecap: round; stroke-linejoin: round; }
+
+/* the culture and the protectant, as 2.2's fiber draws them */
+.bvc-svg .bvc-cell { fill: var(--bvc-cul); stroke: var(--bvc-cul-d); stroke-width: .75; vector-effect: non-scaling-stroke; }
+.bvc-svg .bvc-lumen { fill: var(--bvc-cul-l); }
+.bvc-svg .bvc-pores { fill: none; stroke: #fff; }
+.bvc-svg .bvc-wall { fill: none; stroke: var(--bvc-wall); }
+.bvc-svg .bvc-pro { fill: var(--bvc-pro); }
+.bvc-svg .bvc-drop { fill: var(--bvc-cul); stroke: var(--bvc-cul-d); stroke-width: .75; vector-effect: non-scaling-stroke; }
+
+/* the droplet sensor: a pad with two combs, planned */
+.bvc-svg .bvc-dsens__pad { fill: #fff; stroke: var(--bvc-plan); stroke-width: 1.4; stroke-dasharray: 3 2; vector-effect: non-scaling-stroke; }
+.bvc-svg .bvc-dsens__comb { fill: none; stroke: var(--bvc-plan); stroke-width: 1.1; stroke-linecap: round; vector-effect: non-scaling-stroke; }
+
+/* the alarm sign of the pressure model (js/xp-pressure.js) */
+.bvc-svg .bvc-alarm__tri { fill: var(--bvc-alarm); }
+.bvc-svg .bvc-alarm__mark { fill: none; stroke: #fff; stroke-width: 1.7; stroke-linecap: round; }
+
+/* a layer's number: 0 filled green (contained today), 1 and 2 a dashed violet ring (planned) */
+.bvc-svg .bvc-badge__c { stroke-width: 1.5; vector-effect: non-scaling-stroke; }
+.bvc-svg .bvc-badge__n { font-size: 14px; font-weight: 700; }
+.bvc-svg .bvc-badge--today .bvc-badge__c { fill: var(--bvc-leaf); stroke: #fff; }
+.bvc-svg .bvc-badge--today .bvc-badge__n { fill: #fff; }
+.bvc-svg .bvc-badge--plan .bvc-badge__c { fill: #fff; stroke: var(--bvc-plan-line); stroke-dasharray: 3 2.2; }
+.bvc-svg .bvc-badge--plan .bvc-badge__n { fill: var(--bvc-plan); }
+
+/* ============================================ 7.3.1 · the layers (fig-layers) */
+.bvc-lay { display: grid; grid-template-columns: minmax(0, 1fr); gap: 16px; align-items: center; }
+.bvc-lay__pic { width: 100%; max-width: 296px; margin: 0 auto; }
+@container (min-width: 680px) {
+  .bvc-lay { grid-template-columns: minmax(0, 316px) minmax(0, 1fr); gap: 22px; }
+  .bvc-lay__pic { max-width: none; }
+}
+
+/* the rings */
+.bvc-svg .bvc-ring { cursor: pointer; }
+.bvc-svg .bvc-ring__band { transition: fill .2s; }
+.bvc-svg .bvc-ring--2 .bvc-ring__band { fill: var(--bvc-plan-l2); }
+.bvc-svg .bvc-ring--1 .bvc-ring__band { fill: var(--bvc-plan-l); }
+.bvc-svg .bvc-ring__edge { fill: none; stroke: var(--bvc-plan-line); stroke-width: 1.5; stroke-dasharray: 6 4.5; vector-effect: non-scaling-stroke; transition: stroke .2s, stroke-width .2s; }
+.bvc-svg .bvc-core { fill: var(--bvc-pro-l); stroke: var(--bvc-leaf); stroke-width: 2; vector-effect: non-scaling-stroke; transition: stroke-width .2s; }
+.bvc-svg .bvc-port { fill: none; stroke: var(--bvc-hw-line); stroke-width: 3; stroke-linecap: round; }
+.bvc-svg .bvc-gauge__body { fill: #fff; stroke: var(--bvc-hw-line); stroke-width: 1.25; vector-effect: non-scaling-stroke; }
+.bvc-svg .bvc-gauge__dial { fill: none; stroke: #b4bdc5; stroke-width: 1.2; stroke-linecap: round; vector-effect: non-scaling-stroke; }
+.bvc-svg .bvc-gauge__needle { fill: none; stroke: var(--bvc-ink); stroke-width: 1.5; stroke-linecap: round; vector-effect: non-scaling-stroke; }
+.bvc-svg .bvc-gauge__hub { fill: var(--bvc-ink); }
+/* a lit ring deepens; the other two step back */
+.bvc-layers.is-lit .bvc-ring--2.is-on .bvc-ring__band { fill: #ece7f6; }
+.bvc-layers.is-lit .bvc-ring--1.is-on .bvc-ring__band { fill: #e2dbf1; }
+.bvc-layers.is-lit .bvc-ring.is-on .bvc-ring__edge { stroke: var(--bvc-plan); stroke-width: 2; }
+.bvc-layers.is-lit .bvc-ring--0.is-on .bvc-core { stroke-width: 3; }
+
+/* the key: one row per layer, each a link to its subsection */
+.bvc-lay__rows { display: grid; margin: 0; padding: 0; }
+.bvc-lay__rows > div { padding: 3px 0; }
+.bvc-lay__rows > div + div { border-top: 1px solid var(--bvc-rule); }
+.doc .bvc a.bvc-lay__row,
+.bvc a.bvc-lay__row {
+  display: block;
+  padding: 11px 14px 12px;
+  border: 0;
+  border-radius: 14px;
+  background: none;
+  color: inherit;
+  text-decoration: none;
+  transition: background-color .2s, opacity .2s;
+}
+.doc .bvc a.bvc-lay__row:hover, .bvc a.bvc-lay__row.is-on { background: rgb(91 74 134 / .065); }
+.doc .bvc a.bvc-lay__row[data-key="0"]:hover, .bvc a.bvc-lay__row[data-key="0"].is-on { background: rgb(35 104 74 / .07); }
+.bvc a.bvc-lay__row:focus-visible { outline: 2px solid var(--bvc-leaf); outline-offset: 2px; }
+.bvc-lay__head { display: flex; align-items: center; gap: 10px; }
+.bvc-num {
+  flex: none;
+  display: inline-grid; place-items: center;
+  width: 24px; height: 24px; border-radius: 50%;
+  box-sizing: border-box;
+  font: 700 13px/1 var(--bvc-sans);
+  font-style: normal;
+}
+.bvc-num--today { background: var(--bvc-leaf); color: #fff; }
+.bvc-num--plan { background: #fff; color: var(--bvc-plan); border: 1.5px dashed var(--bvc-plan-line); }
+.bvc-lay__name { font: 650 16px/1.25 var(--bvc-sans); letter-spacing: -.01em; color: var(--bvc-ink); }
+.bvc-lay__go { margin-left: auto; padding-left: 8px; font: 600 13px/1 var(--bvc-sans); color: var(--bvc-leaf); white-space: nowrap; }
+.bvc-lay__go i { font-style: normal; }
+.bvc a.bvc-lay__row:hover .bvc-lay__go { text-decoration: underline; text-underline-offset: 2.5px; }
+.bvc-lay__status { display: block; margin: 3px 0 7px 34px; font: 500 13px/1.4 var(--bvc-sans); color: var(--bvc-ink-3); }
+.bvc-st { font-weight: 650; }
+.bvc-st--today { color: var(--bvc-leaf); }
+.bvc-st--plan { color: var(--bvc-plan); }
+.bvc-lay__kv { display: grid; grid-template-columns: 70px minmax(0, 1fr); gap: 0 8px; margin-left: 34px; padding: 1px 0; }
+.bvc-lay__k { padding-top: 2px; font: 650 12px/1.45 var(--bvc-sans); letter-spacing: .06em; text-transform: uppercase; color: var(--bvc-ink-3); }
+.bvc-lay__v { font: 450 14.5px/1.45 var(--bvc-sans); color: var(--bvc-ink-2); text-wrap: pretty; }
+.bvc-layers.is-lit a.bvc-lay__row:not(.is-on) { opacity: .5; }
+@container (max-width: 420px) {
+  .bvc a.bvc-lay__row, .doc .bvc a.bvc-lay__row { padding: 10px 6px 11px; }
+  .bvc-lay__status, .bvc-lay__kv { margin-left: 0; }
+  .bvc-lay__status { margin-top: 6px; }
+}
+
+/* ============================================ 7.3.3 · the drip tray (fig-droplet) */
+/* two drawings: wide from 680 px of figure, the compact one below it */
+.bvc-drip-fig .bvc-svg--wide { display: none; }
+.bvc-drip-fig .bvc-svg--tall { max-width: 420px; margin: 0 auto; }
+@container (min-width: 680px) {
+  .bvc-drip-fig .bvc-svg--wide { display: block; }
+  .bvc-drip-fig .bvc-svg--tall { display: none; }
+}
+.bvc-svg .bvc-cut { fill: var(--bvc-cut); stroke: var(--bvc-cut-line); stroke-width: 1; vector-effect: non-scaling-stroke; }
+.bvc-svg .bvc-tube__wall { fill: none; stroke: #ecd2ab; stroke-width: 10; stroke-linejoin: round; }
+.bvc-svg .bvc-tube__liq { fill: none; stroke: var(--bvc-cul); stroke-width: 4; stroke-linejoin: round; opacity: .85; }
+.bvc-svg .bvc-tray { fill: var(--bvc-plan-l2); stroke: var(--bvc-plan-line); stroke-width: 1.75; stroke-dasharray: 7 4.5; stroke-linejoin: round; vector-effect: non-scaling-stroke; }
+.bvc-svg .bvc-film { fill: none; stroke: var(--bvc-cul); stroke-width: 2.5; stroke-linecap: round; opacity: .8; }
+.bvc-svg .bvc-film__arr { fill: none; stroke: var(--bvc-cul-d); stroke-width: 1.5; stroke-linecap: round; stroke-linejoin: round; vector-effect: non-scaling-stroke; }
+.bvc-svg .bvc-pool { fill: var(--bvc-cul); opacity: .38; }
+.bvc-svg .bvc-cable { fill: none; stroke: var(--bvc-plan-line); stroke-width: 1.5; stroke-dasharray: 5 4; stroke-linejoin: round; vector-effect: non-scaling-stroke; }
+.bvc-svg .bvc-cable__head { fill: var(--bvc-plan-line); }
+.bvc-svg .bvc-streak { fill: none; stroke: var(--bvc-cul); stroke-width: 1.5; stroke-linecap: round; opacity: .45; vector-effect: non-scaling-stroke; }
+.bvc-svg .bvc-splash { fill: none; stroke: var(--bvc-cul); stroke-width: 1.5; stroke-linecap: round; opacity: .7; vector-effect: non-scaling-stroke; }
+/* the inset: a typical sensor board, magnified (img/droplet-sensor.webp, our own render, dev/droplet-sensor); its ring
+   is a planned part's dashed line, as the layer rings of 7.3.1, so the photograph reads as the plan, not as fitted */
+.bvc-svg .bvc-inset__bg { fill: #fff; }
+.bvc-svg .bvc-inset__ring { fill: none; stroke: var(--bvc-plan-line); stroke-width: 1.5; stroke-dasharray: 6 4.5; vector-effect: non-scaling-stroke; }
+.bvc-svg .bvc-callout__box { fill: var(--bvc-alarm-l); stroke: var(--bvc-alarm-line); stroke-width: 1; vector-effect: non-scaling-stroke; }
+.bvc-svg .bvc-callout__t { font-size: 14px; font-weight: 500; fill: var(--bvc-ink); }
+/* one drop falls three times when the figure first comes into view, then rests where it is drawn */
+@media (prefers-reduced-motion: no-preference) {
+  .bvc-drip-fig.is-play .bvc-fall { animation: bvc-fall 2.6s 3 both; transform-box: fill-box; transform-origin: 50% 50%; }
+  .bvc-drip-fig.is-play .bvc-streak { animation: bvc-streak 2.6s 3 both; }
+  .bvc-drip-fig.is-play .bvc-splash { animation: bvc-splash 2.6s 3 both; transform-box: fill-box; transform-origin: 50% 100%; }
+}
+/* from where it is drawn: up to the fitting, down to the tray */
+.bvc-svg--wide .bvc-fall { --bvc-up: -39.5px; --bvc-down: 32px; }
+.bvc-svg--tall .bvc-fall { --bvc-up: -65.5px; --bvc-down: 64px; }
+/* one fall under constant acceleration, cut where the drop is drawn: from the fitting to there is s = t^2 (ease-in),
+   and from there to the tray the rest of the same parabola, so the drop is fastest when it lands */
+@keyframes bvc-fall {
+  0%   { transform: translateY(0); opacity: 1; animation-timing-function: cubic-bezier(.333, .284, .667, .617); }
+  9.5% { transform: translateY(var(--bvc-down)); opacity: 1; }
+  12%  { transform: translateY(var(--bvc-down)) scale(1.35, .45); opacity: 0; }
+  16%  { transform: translateY(var(--bvc-up)) scale(.3); opacity: 0; }
+  26%  { transform: translateY(var(--bvc-up)) scale(.5); opacity: 1; }
+  72%  { transform: translateY(var(--bvc-up)) scale(1); opacity: 1; animation-timing-function: cubic-bezier(.333, 0, .667, .333); }
+  100% { transform: translateY(0); opacity: 1; }
+}
+@keyframes bvc-streak { 0% { opacity: .45; } 5%, 90% { opacity: 0; } 100% { opacity: .45; } }
+@keyframes bvc-splash {
+  0% { opacity: .7; transform: scale(1); }
+  6%, 9.5% { opacity: 0; transform: scale(.6); }
+  11% { opacity: .95; transform: scale(1.25); }
+  30% { opacity: 0; transform: scale(1.5); }
+  90% { opacity: 0; transform: scale(1); }
+  100% { opacity: .7; transform: scale(1); }
+}
+
+/* ============================================ 7.3.4 · the response (fig-response) */
+/* two drawings: the plan's way round (sensors left, outputs right) from 720 px of figure, top to bottom below it;
+   the four failures under either one, two by two once there is room */
+.bvc-resp__flow { position: relative; width: 100%; max-width: 400px; margin: 0 auto; }
+.bvc-resp__flow--wide { display: none; max-width: none; }
+@container (min-width: 720px) {
+  .bvc-resp__flow--wide { display: block; }
+  .bvc-resp__flow--tall { display: none; }
+}
+.bvc-resp__cases { margin-top: 22px; }
+
+/* the nodes */
+.bvc-svg .bvc-node__box { fill: #fff; stroke: var(--bvc-box); stroke-width: 1.25; vector-effect: non-scaling-stroke; transition: stroke .2s, fill .2s; }
+.bvc-svg .bvc-node--plan .bvc-node__box { fill: var(--bvc-plan-l2); stroke: var(--bvc-plan-line); stroke-dasharray: 6 4.5; }
+.bvc-svg .bvc-node--today .bvc-node__box { fill: var(--bvc-leaf-l); stroke: #a9cdb8; }
+.bvc-svg .bvc-node--today .bvc-ico { stroke: var(--bvc-leaf); }
+.bvc-svg .bvc-group { fill: #fff; stroke: var(--bvc-box); stroke-width: 1.25; vector-effect: non-scaling-stroke; }
+.bvc-svg .bvc-row__bg { fill: transparent; transition: fill .2s; }
+.bvc-svg .bvc-row__bar { fill: var(--bvc-slate); opacity: 0; transition: opacity .2s; }
+.bvc-svg .bvc-hair { fill: none; stroke: var(--bvc-rule); stroke-width: 1; vector-effect: non-scaling-stroke; }
+.bvc-svg .bvc-port-n { font-size: 12px; font-weight: 500; fill: var(--bvc-ink-2); }
+.bvc-svg .bvc-trig__t { font-size: 12.5px; font-weight: 600; fill: var(--bvc-ink-2); }
+/* the phone drawing is shown at about its own size on a 360-390 px phone: its smallest words go up half a pixel */
+.bvc-resp__flow--tall .bvc-svg .bvc-port-n, .bvc-resp__flow--tall .bvc-svg .bvc-kick { font-size: 12.5px; }
+.bvc-svg .bvc-conn__line { fill: none; stroke: #a3adb6; stroke-width: 1.5; stroke-linejoin: round; vector-effect: non-scaling-stroke; transition: stroke .2s, stroke-width .2s; }
+.bvc-svg .bvc-conn__head { fill: #a3adb6; transition: fill .2s; }
+.bvc-svg .bvc-conn--dash .bvc-conn__line { stroke-dasharray: 4 3.5; }
+
+/* lit: the path in slate, its rows tinted; the rest steps back */
+.bvc.is-lit [data-on] { transition: opacity .2s; }
+.bvc.is-lit .bvc-svg [data-on]:not(.is-on) { opacity: .26; }
+.bvc.is-lit .bvc-svg [data-on]:not(.is-on) [data-on] { opacity: 1; }
+.bvc-resp.is-lit .bvc-node.is-on .bvc-node__box { stroke: var(--bvc-slate); stroke-width: 1.75; }
+.bvc-resp.is-lit .bvc-node--plan.is-on .bvc-node__box { stroke: var(--bvc-plan); }
+.bvc-resp.is-lit .bvc-node--today.is-on .bvc-node__box { stroke: var(--bvc-leaf); }
+.bvc-resp.is-lit .bvc-row.is-on .bvc-row__bg { fill: rgb(63 90 102 / .035); }
+.bvc-resp.is-lit .bvc-row.is-on .bvc-row__bar { opacity: 1; }
+.bvc-resp.is-lit .bvc-conn.is-on .bvc-conn__line { stroke: var(--bvc-slate); stroke-width: 2.25; }
+.bvc-resp.is-lit .bvc-conn.is-on .bvc-conn__head { fill: var(--bvc-slate); }
+.bvc-resp.is-lit .bvc-trig.is-on text { fill: var(--bvc-ink); font-weight: 700; }
+
+/* real buttons over the two sensor groups, and a link over the plating box */
+.bvc-hit {
+  position: absolute;
+  display: block;
+  box-sizing: border-box;
+  margin: 0; padding: 0;
+  border: 0;
+  border-radius: 12px;
+  background: transparent;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+}
+.doc .bvc a.bvc-hit { border: 0; background: transparent; }
+.bvc-hit:focus-visible { outline: 2px solid var(--bvc-leaf); outline-offset: 3px; }
+.bvc-hit--link:hover { background: rgb(35 104 74 / .05); }
+
+/* the four failures */
+.bvc-kick-h { display: block; margin: 2px 0 9px; font: 650 12px/1.3 var(--bvc-sans); letter-spacing: .12em; text-transform: uppercase; color: var(--bvc-slate); }
+.bvc-cases { list-style: none; margin: 0; padding: 0; display: grid; gap: 8px; }
+@container (min-width: 560px) { .bvc-cases { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; } }
+.doc .bvc .bvc-cases > li { display: flex; }
+.bvc-case {
+  -webkit-appearance: none; appearance: none;
+  display: grid; gap: 5px;
+  width: 100%;
+  margin: 0;
+  padding: 11px 14px 12px;
+  border: 1px solid #dde2e6;
+  border-radius: 12px;
+  background: #fff;
+  color: inherit;
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+  transition: border-color .2s, background-color .2s, opacity .2s, box-shadow .2s;
+}
+.bvc-case:hover { border-color: #b7c2ca; }
+.bvc-case:focus-visible { outline: 2px solid var(--bvc-leaf); outline-offset: 2px; }
+.bvc-resp.is-lit .bvc-case.is-on { border-color: var(--bvc-slate); background: #f6f8f9; }
+.bvc-case[aria-pressed="true"] { border-color: var(--bvc-slate); background: #f6f8f9; box-shadow: inset 3px 0 0 var(--bvc-slate); }
+.bvc-resp.is-lit .bvc-case:not(.is-on) { opacity: .55; }
+.bvc-case__if { font: 650 14.5px/1.35 var(--bvc-sans); letter-spacing: -.005em; color: var(--bvc-ink); }
+.bvc-case__by { display: flex; flex-wrap: wrap; align-items: center; gap: 4px 7px; font: 550 13px/1.3 var(--bvc-sans); color: var(--bvc-ink-2); }
+.bvc-case__k { font: 650 12px/1.3 var(--bvc-sans); letter-spacing: .06em; text-transform: uppercase; color: var(--bvc-ink-3); }
+.bvc-num--sm { width: 20px; height: 20px; font-size: 12px; }
+.bvc-num--plan.bvc-num--sm { border-width: 1.25px; }
+.bvc-num--dish { background: var(--bvc-leaf-l); box-shadow: inset 0 0 0 1.5px var(--bvc-leaf), inset 0 0 0 4px var(--bvc-leaf-l), inset 0 0 0 5.25px var(--bvc-leaf); }
+.bvc-case__then { font: 450 13.5px/1.45 var(--bvc-sans); color: var(--bvc-ink-2); }
+
+@media (prefers-reduced-motion: reduce) {
+  .bvc, .bvc * { transition: none !important; }
+}
+@media print {
+  .bvc-drip-fig .bvc-svg--wide { display: block; }
+  .bvc-drip-fig .bvc-svg--tall { display: none; }
+  .bvc-hit { display: none; }
+  .bvc-resp__flow--wide { display: block; }
+  .bvc-resp__flow--tall { display: none; }
+}

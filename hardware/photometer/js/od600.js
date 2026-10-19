@@ -17,21 +17,30 @@
   const OD_MAX = 1.8;
 
   // Phases read off the record itself, not assumed from a textbook curve.
+  // 19 Oct 2026 (judging review): from 240 h the record is not read as growth.
+  // Notebook entry 22a, re-plotted from the raw log, and the Digital Twin's runs
+  // table both put the photometer's failure there: the reference channel, which
+  // never passes through the culture, collapses, and the twin marks 240-434 h
+  // "photometer and OD both unreliable". That stretch is greyed (UNRELIABLE_FROM)
+  // and its phase says so; the dip near 145 h stays a phase, unexplained.
+  const UNRELIABLE_FROM = 240;
   const PHASES = [
-    { a: 0,   b: 6,     name: "Lag",       note: "no measurable growth" },
-    { a: 6,   b: 115,   name: "Growth",    note: "steady rise to OD 0.95" },
-    { a: 115, b: 155,   name: "Dip",       note: "falls to 0.68" },
-    { a: 155, b: 210,   name: "Recovery",  note: "climbs past the earlier peak" },
-    { a: 210, b: T_MAX, name: "Plateau",   note: "holds near 1.5" },
+    { a: 0,   b: 6,     name: "Lag",        note: "no measurable growth" },
+    { a: 6,   b: 115,   name: "Growth",     note: "steady rise to OD 0.95" },
+    { a: 115, b: 155,   name: "Dip",        note: "falls to 0.68; not explained" },
+    { a: 155, b: 210,   name: "Recovery",   note: "climbs past the earlier peak" },
+    { a: 210, b: UNRELIABLE_FROM, name: "Plateau", note: "holds near 1.5" },
+    { a: UNRELIABLE_FROM, b: T_MAX, name: "Unreliable", grey: true,
+      note: "reference channel failing; not read as growth (notebook 22a)" },
   ];
 
-  // Events, marked where the data actually shows them rather than where the
-  // story would like them. Hour 282 carries a scatter of 1.28 OD against 0.60
-  // for the next worst hour in the run, and the largest one-hour fall in the
-  // median — it is the disturbance, unambiguously. Week 22 records what caused
-  // it: the recirculation pump had failed, confirmed on inspection.
+  // Events. Until 19 Oct 2026 a "Pump failure" line stood at 280-283 h, the
+  // hour of the worst scatter; the record gives only the date the pump failed
+  // (notebook entry 22: 1 August; 22a: "no record of the hour the pump
+  // stopped"). So the mark is the day itself, 1 August Taiwan time, counted
+  // from the log's start (21 July 11:46), as entry 22a's own plot marks it.
   const EVENTS = [
-    { a: 280, b: 283, name: "Pump failure" },
+    { a: 252.2, b: 276.2, name: "1 August" },
   ];
 
   host.innerHTML =
@@ -65,12 +74,16 @@
     M = { t: narrow ? 14 : 30, r: 12, b: 42, l: 38 };
     iw = W - M.l - M.r; ih = H - M.t - M.b;
 
-    const path = (sel) =>
-      S.map((p, i) => (i ? "L" : "M") + f(x(p[0])) + " " + f(y(sel(p)))).join("");
+    const path = (sel, s) =>
+      (s || S).map((p, i) => (i ? "L" : "M") + f(x(p[0])) + " " + f(y(sel(p)))).join("");
     // envelope: up the highs, back along the lows
-    const band =
-      S.map((p, i) => (i ? "L" : "M") + f(x(p[0])) + " " + f(y(p[3]))).join("") +
-      S.slice().reverse().map((p) => "L" + f(x(p[0])) + " " + f(y(p[2]))).join("") + "Z";
+    const env = (s) =>
+      s.map((p, i) => (i ? "L" : "M") + f(x(p[0])) + " " + f(y(p[3]))).join("") +
+      s.slice().reverse().map((p) => "L" + f(x(p[0])) + " " + f(y(p[2]))).join("") + "Z";
+    // the readable part, and the greyed part from UNRELIABLE_FROM (they share the point at the seam)
+    const ok = S.filter((p) => p[0] <= UNRELIABLE_FROM);
+    const late = S.filter((p) => p[0] >= UNRELIABLE_FROM);
+    const band = env(ok);
     // Start on the baseline, then draw to the first sample. slice(1) drops the
     // leading "M" from path(), so the "L" has to be put back — without it y(0)
     // ran straight into the next x and the fill was an invalid path.
@@ -95,7 +108,7 @@
         PHASES.map((p, i) =>
           '<g class="od-phase p' + i + '">' +
           '<rect x="' + f(x(p.a)) + '" y="' + M.t + '" width="' + f(x(p.b) - x(p.a)) +
-            '" height="' + ih + '"/>' +
+            '" height="' + ih + '"' + (p.grey ? ' style="fill: #8a8f98; opacity: .16"' : "") + '/>' +
           (narrow ? "" :
             '<text x="' + f((x(p.a) + x(p.b)) / 2) + '" y="' + (M.t - 10) + '">' + p.name + "</text>") +
           "</g>").join("") +
@@ -107,7 +120,10 @@
         '<text class="od-ax" x="' + f(M.l + iw / 2) + '" y="' + (H - 6) + '">Elapsed time (hours)</text>' +
         '<path class="od-area" d="' + area + '"/>' +
         '<path class="od-band" d="' + band + '"/>' +
-        '<path class="od-line" d="' + path((p) => p[1]) + '"/>' +
+        '<path class="od-line" d="' + path((p) => p[1], ok) + '"/>' +
+        (late.length > 1 ?
+          '<path class="od-band" style="opacity: .07" d="' + env(late) + '"/>' +
+          '<path class="od-line" style="opacity: .35" d="' + path((p) => p[1], late) + '"/>' : "") +
         EVENTS.map((e, i) => {
           const ex = x(e.a);
           // the label sits right of the marker unless that runs off the plot

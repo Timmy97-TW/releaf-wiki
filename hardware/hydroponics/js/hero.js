@@ -345,9 +345,11 @@ window.HERO = (function () {
       pTarget = Math.min(1, Math.max(0, (window.pageYOffset - storyTop) / storySpan));
       if (snap === true || reduced) { p = pLast = pTarget; pVel = 0; }
     }
+    // the words follow the frame on screen (player.follow), the clip seeks to the scroll's p (18 Oct 2026)
     function draw(pp, t) {
-      titleCue(pp);
-      placeCaption(pp);
+      const q = player.follow(pp);
+      titleCue(q);
+      placeCaption(q);
       player.draw(pp, reduced ? 0 : t);
     }
     function step(now) {
@@ -413,7 +415,8 @@ window.HERO = (function () {
       renderAt: function (pp, clock) {
         held = true;
         p = pTarget = pLast = Math.min(1, Math.max(0, pp)); pVel = 0;
-        draw(p, clock === undefined ? 12.5 : clock);
+        window.__storyExact = true;
+        try { draw(p, clock === undefined ? 12.5 : clock); } finally { window.__storyExact = false; }
         return p;
       },
       resume: function () { if (!held) return; held = false; onScroll(); start(); },

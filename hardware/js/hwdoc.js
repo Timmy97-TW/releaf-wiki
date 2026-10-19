@@ -209,7 +209,10 @@
      at a time carries the pill and is unfolded; every other one is shut. */
   function mark() {
     if (!secs.length) return;
-    var line = navH() + 80;
+    /* 18 Oct 2026 (photometer audit): the reading line is the upper third of the window, not 80 px under the bar.
+       At 1440 x 900 a heading had to climb to ~140 px before it lit, so the rail stayed one sub-section behind
+       ("Design Changes" lit while 4.3 filled the screen). */
+    var line = Math.max(navH() + 80, window.innerHeight * 0.34);
     var here = null;
     secs.forEach(function (s) {
       if (!visible(s.part)) return;
@@ -366,7 +369,7 @@
      stacked, as before. A link, the rail, the cycle map or a URL pointing into
      a prototype that is not showing opens its tab first (land(), above). */
 
-  var sets = [], uid = 0;
+  var sets = [], uid = 0, START_LAST = true;
 
   function mk(tag, cls, text) {
     var e = document.createElement(tag);
@@ -408,7 +411,25 @@
     tl.setAttribute("aria-label", name);
     bar.appendChild(tl);
 
-    var set = { root: root, grp: g.el, at: at, bar: bar, list: tl, items: [], cur: -1, compact: false };
+    var set = { root: root, grp: g.el, at: at, bar: bar, list: tl, items: [], cur: -1, compact: false, touched: false };
+
+    /* 19 Oct 2026, the owner: each group opens on its final prototype, so a
+       reader who only scrolls past still sees the finished work. A thin
+       segmented line under the bar says where in the run that is, and a small
+       "Start at 1" (until the reader picks a tab) says there is a story
+       before it. START_LAST = false puts the old behaviour back. */
+    var prog = mk("div", "cyc-prog");
+    prog.setAttribute("aria-hidden", "true");
+    bar.appendChild(prog);
+    set.prog = prog;
+    var hint = mk("button", "cyc-hint");
+    hint.type = "button";
+    hint.appendChild(mk("i", null, "←"));
+    hint.appendChild(mk("span", null, "Start at " + noun + " 1"));
+    hint.hidden = true;
+    hint.addEventListener("click", function () { set.touched = true; select(set, 0, true); });
+    bar.appendChild(hint);
+    set.hint = hint;
 
     g.steps.forEach(function (s, i) {
       var n = i + 1;
@@ -434,7 +455,8 @@
       s.setAttribute("aria-labelledby", b.id);
       set.items.push({ el: s, btn: b, n: n, step: step, target: $(".cyc__band[id]", s) || s });
 
-      b.addEventListener("click", function () { select(set, i, true); });
+      b.addEventListener("click", function () { set.touched = true; select(set, i, true); });
+      prog.appendChild(mk("i"));
       b.addEventListener("keydown", function (e) { keys(set, i, e); });
     });
 
@@ -455,15 +477,30 @@
       p.appendChild(a);
       it.el.appendChild(p);
     });
+    /* the final prototype, the one a group opens on, points back to the start */
+    if (START_LAST && set.items.length > 1) {
+      var f = set.items[0], lp = mk("p", "cyc-next cyc-next--back"), la = mk("a");
+      la.href = "#" + f.target.id;
+      var bi = mk("i", null, "←");
+      bi.setAttribute("aria-hidden", "true");
+      la.appendChild(bi);
+      la.appendChild(mk("span", "cyc-next__lead", "From the start"));
+      la.appendChild(mk("span", "cyc-next__t", noun + " 1" + (f.step ? " · " + f.step : "")));
+      lp.appendChild(la);
+      set.items[set.items.length - 1].el.appendChild(lp);
+    }
 
     first.parentNode.insertBefore(at, first);
     first.parentNode.insertBefore(bar, first);
     g.el.classList.add("has-tabs");
 
-    /* open on whichever prototype the URL points into, else the first */
+    /* open on whichever prototype the URL points into, else the last one
+       that is written (the first, with START_LAST off) */
     var start = 0, t = targetOf(location.hash);
+    if (START_LAST) set.items.forEach(function (it, i) { if (!it.btn.classList.contains("is-todo")) start = i; });
     set.items.forEach(function (it, i) { if (t && (it.el === t || it.el.contains(t))) start = i; });
     sets.push(set);
+    set.start = start;
     select(set, start, false);
     fit(set);
   }
@@ -479,6 +516,8 @@
        page under the reader, and then they would no longer look inside */
     var inside = !first && pinned(set);
     set.cur = i;
+    if (set.prog) $$("i", set.prog).forEach(function (seg, j) { seg.classList.toggle("is-on", j <= i); });
+    if (set.hint) set.hint.hidden = set.touched || i === 0 || i !== set.start;
     set.items.forEach(function (it, j) {
       var on = j === i;
       it.btn.setAttribute("aria-selected", on ? "true" : "false");

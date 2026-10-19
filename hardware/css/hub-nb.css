@@ -1,0 +1,223 @@
+/* The hub notebook section, option (a) "index by month" (19 Oct 2026), from dev/hub-notebook-alts:
+   common.css (the reader) + a/style.css (the index). Replaces css/hub-pn.css, which is kept for going back. */
+/* The three prototypes' shared ground: replaces hardware/css/hub-pn.css (the section, the pages' box, the phone/no-JS
+   list layout). Only the classes hub-pn.js reads or sets are kept: .pn .pn-wrap .pn-toc .pn-list .pn-e .pn-weeks .pn-wa
+   .pn-dots .pn-frame .pn-view .pn-rail .pn-open(-p) .pn-dl .pn-now(-w,-t) .pn-cover, and the states pn-in pn-noview.
+   pn-strip / pn-slim and the toc's pn-full/-two/-one/-tight forms are ignored. */
+.pn.nx {
+  --nx-bg: #05060a;
+  --nx-ink: #eef2f6;
+  --nx-ink-2: #c5cdd7;
+  --nx-ink-3: #9aa5b1;
+  --nx-ink-4: #7f8a97;
+  --nx-line: rgba(255, 255, 255, .09);
+  --nx-line-2: rgba(255, 255, 255, .14);
+  --nx-focus: #9ccfff;
+  --nx-acc: #3ddc8b;
+  --nx-paper: #f8f5ec;
+  --nx-top: calc(56px + clamp(30px, 5.4svh, 60px));      /* under the wiki's fixed navbar */
+  --nx-bot: clamp(26px, 4.4svh, 48px);
+  position: relative; isolation: isolate; box-sizing: border-box;
+  height: 100vh; height: 100svh; min-height: 620px;
+  padding: var(--nx-top) 0 var(--nx-bot);
+  background: var(--nx-bg); color: var(--nx-ink);
+}
+body.hub section#notebook.pn, section#notebook.pn { scroll-margin-top: 0; }
+.nx .pn-wrap {
+  box-sizing: border-box; height: 100%;
+  width: var(--hub-col, min(1280px, calc(100vw - 2 * clamp(20px, 5.5vw, 80px))));
+  margin-inline: auto;
+}
+.nx .sh { margin: 0; }
+.nx .sh-k { font-size: var(--hub-kick, .6875rem); margin-bottom: 1rem; }
+.nx .sh-t { font-size: var(--hub-h2, clamp(1.9rem, 1rem + 2vw, 2.85rem)); line-height: 1.06; letter-spacing: -.028em; }
+.nx .sh-lede { margin: .85rem 0 0; color: var(--nx-ink-3); font-size: 1rem; line-height: 1.55; }
+
+/* ---- the pages' box: every page drawn whole, at the box's height (a container query on the box) ---------------- */
+.nx .pn-view { position: relative; min-width: 0; min-height: 0; }
+.nx .pn-view:focus { outline: none; }
+.nx .nx-stage { position: relative; }
+.nx .pn-frame {
+  position: absolute; inset: 0; box-sizing: border-box; container-type: size;
+  overflow: hidden; overscroll-behavior: auto; scrollbar-width: none;
+}
+.nx .pn-frame::-webkit-scrollbar { display: none; }
+.nx.pn-in .pn-frame { overflow-y: auto; }
+.nx .pn-pages {
+  list-style: none; margin: 0; padding: var(--nx-pad, 12px);
+  display: grid; grid-template-columns: auto; justify-content: center; gap: var(--nx-gap, 12px);
+}
+.nx .pn-pg {
+  position: relative; width: calc((100cqh - 2 * var(--nx-pad, 12px)) * 935 / 1210); max-width: calc(100cqw - 2 * var(--nx-pad, 12px));
+  aspect-ratio: 935 / 1210; background: var(--nx-paper); border-radius: 3px; overflow: hidden;
+  box-shadow: 0 0 0 1px rgba(0, 0, 0, .25), 0 18px 40px -24px rgba(0, 0, 0, .95);
+}
+.nx .pn-pg img { display: block; width: 100%; height: 100%; -webkit-user-drag: none; }
+.nx .pn-rail {
+  position: absolute; z-index: 2; top: 0; right: 5px; width: 3px; height: 40px; border-radius: 2px; pointer-events: none;
+  background: var(--pn-cur, var(--nx-focus)); opacity: 0; transition: opacity .25s ease;
+}
+.nx.pn-in .pn-rail { opacity: 1; }
+
+/* ---- links that look like links ------------------------------------------------------------------------------- */
+.nx .pn-open {
+  display: inline-flex; align-items: center; gap: .45rem; flex: none; box-sizing: border-box;
+  padding: .55rem 1rem .57rem 1.1rem; border-radius: 999px; text-decoration: none; white-space: nowrap;
+  font-size: .875rem; font-weight: 600; color: var(--nx-ink);
+  background: rgba(61, 220, 139, .1); border: 1px solid rgba(61, 220, 139, .42);
+  transition: background-color .18s ease, border-color .18s ease;
+}
+.nx .pn-open-p { font-weight: 500; color: var(--nx-ink-3); font-variant-numeric: tabular-nums; }
+.nx .pn-open i { font-style: normal; color: var(--nx-acc); }
+.nx .pn-open:hover { background: rgba(61, 220, 139, .18); border-color: rgba(61, 220, 139, .7); }
+.nx .pn-dl {
+  display: inline-flex; align-items: center; gap: .4rem; flex: none; white-space: nowrap;
+  padding: .55rem .9rem; border-radius: 999px; text-decoration: none;
+  font-size: .8125rem; font-weight: 500; color: var(--nx-ink-2);
+  border: 1px solid var(--nx-line); background: rgba(255, 255, 255, .02);
+  transition: background-color .18s ease, border-color .18s ease, color .18s ease;
+}
+.nx .pn-dl-n { font-family: var(--mono); font-size: .92em; color: var(--nx-ink-3); }
+.nx .pn-dl i { font-style: normal; color: var(--nx-ink-3); }
+.nx .pn-dl:hover { color: var(--nx-ink); border-color: var(--nx-line-2); background: rgba(255, 255, 255, .05); }
+
+.nx .pn-dot { display: block; width: 8px; height: 8px; border-radius: 50%; box-sizing: border-box; background: var(--mk, transparent); flex: none; }
+.nx .pn-e-front .pn-dot { border: 1.5px solid var(--nx-ink-3); background: none; }
+.nx .pn-skip { position: absolute; left: -9999px; }
+.nx .pn-sum::-webkit-details-marker { display: none; }
+
+body.hub .nx a:focus-visible, body.hub .nx button:focus-visible, body.hub .nx summary:focus-visible { outline: 2px solid var(--nx-focus); outline-offset: 2px; }
+body.hub .nx .pn-frame:focus-visible { outline: 2px solid var(--nx-focus); outline-offset: -2px; }
+.nx a:focus:not(:focus-visible) { outline: none; }
+
+.nx .pn-cover { display: none; }
+
+/* ---- phones and no script (pn-noview): no pages' box; each option lays out its own list ------------------------ */
+.nx.pn-noview, html:not(.js) .nx { height: auto; min-height: 0; padding: clamp(3rem, 8svh, 4.5rem) 0 clamp(3rem, 8svh, 4.5rem); }
+.nx.pn-noview .pn-wrap, html:not(.js) .nx .pn-wrap { height: auto; width: auto; max-width: 560px; padding-inline: 20px; }
+.nx.pn-noview .pn-view, html:not(.js) .nx .pn-view { display: none; }
+.nx.pn-noview .pn-open-p, html:not(.js) .nx .pn-open-p { display: none; }
+@media (pointer: coarse) { .nx .pn-open, .nx .pn-dl { min-height: 44px; } }
+@media (prefers-reduced-motion: reduce) { .nx *, .nx *::before, .nx *::after { transition: none !important; } }
+.pn.nx { font-family: var(--sans); }
+
+/* (a) The index, by month. The heading, the month tabs and that month's entries in the left column; the pages, each
+   drawn whole, in a framed reader on the right that runs the column's full height, with its own bar (where you are,
+   Open, PDF). The two columns share a top and a bottom edge. */
+.nx-a { --nx-bar: 52px; }
+.nx-a .pn-wrap {
+  display: grid; column-gap: clamp(32px, 4vw, 64px);
+  /* the reader is as wide as one whole page at the column's height, plus its pad */
+  grid-template-columns: minmax(0, 1fr) calc((100svh - var(--nx-top) - var(--nx-bot) - var(--nx-bar) - 26px) * 935 / 1210 + 26px);
+  grid-template-rows: auto auto minmax(0, 1fr);
+  grid-template-areas: "head view" "toc view" "toc view";
+}
+.nx-a .nx-head { grid-area: head; display: block; padding-top: 2px; }
+.nx-a .sh-lede { max-width: 34rem; }
+
+/* the index */
+.nx-a .nx-index { grid-area: toc; display: flex; flex-direction: column; min-height: 0; margin-top: clamp(22px, 3.6svh, 40px); }
+.nx-a .nx-tabs {
+  display: grid; grid-template-columns: minmax(max-content, 1.15fr) repeat(6, minmax(0, 1fr)); gap: 6px; flex: none;
+  padding-bottom: 14px; border-bottom: 1px solid var(--nx-line);
+}
+.nx-a .nx-tab {
+  appearance: none; font: inherit; cursor: pointer; text-align: left;
+  display: flex; flex-direction: column; gap: 9px; padding: 10px 11px 11px; border-radius: 10px;
+  border: 1px solid transparent; background: none; color: var(--nx-ink-3);
+  transition: background-color .16s ease, border-color .16s ease, color .16s ease;
+}
+.nx-a .nx-tab-n { font-size: .9375rem; font-weight: 600; letter-spacing: -.005em; white-space: nowrap; }
+@media (min-width: 761px) and (max-width: 1200px) { .nx-a .nx-tab { padding: 9px 7px 10px; } .nx-a .nx-tab-n { font-size: .875rem; } }
+/* the month's entries as one segmented bar in their builds' colours */
+.nx-a .nx-tab-d { display: flex; gap: 2px; height: 3px; }
+.nx-a .nx-tab-d i { flex: 1; border-radius: 2px; background: var(--mk); opacity: .5; transition: opacity .16s ease; }
+.nx-a .nx-tab:hover { color: var(--nx-ink); background: rgba(255, 255, 255, .035); }
+.nx-a .nx-tab:hover .nx-tab-d i { opacity: .8; }
+.nx-a .nx-tab[aria-selected="true"] { color: #fff; background: rgba(255, 255, 255, .06); border-color: var(--nx-line-2); }
+.nx-a .nx-tab[aria-selected="true"] .nx-tab-d i { opacity: 1; }
+
+.nx-a .nx-months { flex: 1 1 auto; min-height: 0; overflow-y: auto; scrollbar-width: thin; scrollbar-color: rgba(255,255,255,.18) transparent; padding-top: 18px; }
+html.js .nx-a .nx-month:not(.on) { display: none; }
+.nx-a .nx-mh {
+  display: flex; align-items: baseline; gap: .8rem; margin: 0 0 10px 10px;
+  font-size: 1.125rem; font-weight: 650; letter-spacing: -.01em; color: var(--nx-ink);
+}
+.nx-a .nx-mh span { font-family: var(--mono); font-size: .6875rem; font-weight: 500; letter-spacing: .08em; text-transform: uppercase; color: var(--nx-ink-4); }
+.nx-a .nx-month ol { list-style: none; margin: 0; padding: 0; }
+.nx-a .pn-e {
+  position: relative; box-sizing: border-box;
+  display: grid; grid-template-columns: 2.1rem 8px minmax(0, 1fr) auto; align-items: center; column-gap: .85rem;
+  min-height: 40px; padding: 6px 12px 6px 10px; border-radius: 9px; text-decoration: none;
+  font-size: .9688rem; line-height: 1.3; color: var(--nx-ink-2);
+  transition: background-color .16s ease, color .16s ease;
+}
+.nx-a .pn-wk { font-family: var(--mono); font-size: .75rem; font-weight: 500; color: var(--nx-ink-4); font-variant-numeric: tabular-nums; }
+.nx-a .pn-t { min-width: 0; text-wrap: pretty; }
+.nx-a .nx-p { font-family: var(--mono); font-size: .75rem; color: var(--nx-ink-4); font-variant-numeric: tabular-nums; white-space: nowrap; }
+.nx-a .nx-p::after { content: "\2192"; display: inline-block; margin-left: .4rem; opacity: 0; translate: -4px 0; transition: opacity .16s ease, translate .16s ease; }
+.nx-a .pn-e:hover { background: rgba(255, 255, 255, .05); color: #fff; }
+.nx-a .pn-e:hover .nx-p { color: var(--nx-ink-2); }
+.nx-a .pn-e:hover .nx-p::after { opacity: 1; translate: 0 0; }
+.nx-a .pn-e[aria-current="true"] { color: #fff; background: linear-gradient(90deg, color-mix(in srgb, var(--mk, #9ccfff) 17%, transparent), color-mix(in srgb, var(--mk, #9ccfff) 5%, transparent)); }
+.nx-a .pn-e[aria-current="true"]::before { content: ""; position: absolute; left: 0; top: 7px; bottom: 7px; width: 2px; border-radius: 2px; background: var(--mk, var(--nx-ink-3)); }
+.nx-a .pn-e[aria-current="true"] .pn-wk, .nx-a .pn-e[aria-current="true"] .nx-p { color: var(--nx-ink); }
+.nx-a .pn-e[aria-current="true"] .pn-dot { box-shadow: 0 0 0 3px color-mix(in srgb, var(--mk, #9ccfff) 35%, transparent); }
+
+/* the reader */
+.nx-a .nx-view {
+  grid-area: view; display: flex; flex-direction: column; overflow: hidden;
+  border: 1px solid rgba(255, 255, 255, .12); border-radius: 14px;
+  background: linear-gradient(180deg, rgba(255, 255, 255, .035), rgba(255, 255, 255, .01) 30%), #090b11;
+  box-shadow: 0 34px 70px -44px rgba(0, 0, 0, .95), inset 0 1px 0 rgba(255, 255, 255, .04);
+}
+.nx-a .nx-bar {
+  flex: none; height: var(--nx-bar); box-sizing: border-box; display: flex; align-items: center; gap: 8px;
+  padding: 0 9px 0 16px; border-bottom: 1px solid var(--nx-line);
+}
+.nx-a .pn-now { flex: 1 1 auto; min-width: 0; margin: 0; display: flex; align-items: baseline; gap: .6rem; overflow: hidden; }
+.nx-a .pn-now-w { flex: none; font-family: var(--mono); font-size: .6875rem; font-weight: 600; letter-spacing: .08em; text-transform: uppercase; color: var(--pn-cur, var(--nx-ink-3)); }
+.nx-a .pn-now-t { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: .875rem; color: var(--nx-ink-2); }
+.nx-a .nx-bar .pn-open { padding: .42rem .8rem .44rem .9rem; font-size: .8125rem; }
+.nx-a .nx-bar .pn-dl { padding: .42rem .7rem; font-size: .75rem; }
+.nx-a .nx-bar .pn-dl-n { display: none; }
+.nx-a .nx-stage { flex: 1 1 auto; min-height: 0; }
+.nx-a { --nx-pad: 13px; }
+
+/* ---- phone ---- */
+.nx-a.pn-noview .pn-wrap, html:not(.js) .nx-a .pn-wrap { display: flex; flex-direction: column; }
+.nx-a.pn-noview .nx-index, html:not(.js) .nx-a .nx-index { order: 3; margin-top: 26px; }
+.nx-a.pn-noview .pn-cover, html:not(.js) .nx-a .pn-cover {
+  order: 2; display: grid; grid-template-columns: 104px minmax(0, 1fr); align-items: center; gap: 18px;
+  margin-top: 24px; padding: 12px 16px 12px 12px; border-radius: 14px; text-decoration: none; color: var(--nx-ink);
+  border: 1px solid rgba(61, 220, 139, .32); background: linear-gradient(135deg, rgba(61, 220, 139, .08), rgba(255,255,255,.015) 60%);
+}
+.nx-a .pn-cover img { display: block; width: 104px; height: auto; border-radius: 4px; box-shadow: 0 10px 24px -14px #000; }
+.nx-a .pn-cover::after { content: "Open the notebook \2197"; font-weight: 600; font-size: 1rem; }
+.nx-a .nx-dlm { display: none; }
+.nx-a.pn-noview .nx-tabs, html:not(.js) .nx-a .nx-tabs { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+.nx-a.pn-noview .nx-tab, html:not(.js) .nx-a .nx-tab { min-height: 48px; }
+.nx-a.pn-noview .nx-months { overflow: visible; }
+.nx-a.pn-noview .pn-e { grid-template-columns: 2rem 8px minmax(0, 1fr); min-height: 48px; }
+.nx-a.pn-noview .nx-p { display: none; }
+.nx-a.pn-noview .pn-e[aria-current] { background: none; color: var(--nx-ink-2); }
+.nx-a.pn-noview .pn-e[aria-current]::before { display: none; }
+.nx-a.pn-noview .nx-dlm, html:not(.js) .nx-a .nx-dlm {
+  order: 2; display: inline-flex; align-self: center; align-items: center; gap: .4rem; min-height: 44px; margin-top: 6px;
+  font-size: .875rem; color: var(--nx-ink-2); text-decoration: underline; text-decoration-color: rgba(61,220,139,.45); text-underline-offset: 4px;
+}
+.nx-a .nx-dlm span { font-family: var(--mono); color: var(--nx-ink-3); }
+.nx-a.pn-noview .nx-tab-n { font-size: .875rem; white-space: nowrap; }
+.nx-a.pn-noview .nx-tab { padding: 9px 9px 10px; }
+
+/* ---- the LPA, a faint CAD line drawing under the index (19 Oct 2026) ---------------------------------------------
+   In the space a short month leaves under its list; a long month's rows simply run over it. Desktop only. */
+.nb-art { position: absolute; inset: 0; z-index: -1; overflow: hidden; pointer-events: none; }
+.nb-art img {
+  position: absolute; display: block; height: auto; max-width: none;
+  width: clamp(380px, 34vw, 560px); left: calc(var(--hub-g, 40px) - 30px); bottom: calc(-1 * clamp(10px, 3svh, 40px));
+  opacity: .13;
+  -webkit-mask-image: radial-gradient(70% 70% at 50% 55%, #000 40%, transparent 80%);
+          mask-image: radial-gradient(70% 70% at 50% 55%, #000 40%, transparent 80%);
+}
+@media (max-width: 760px) { .nb-art { display: none; } }

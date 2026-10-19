@@ -19,9 +19,8 @@
 //   - a device where the live story was measured too slow on an earlier visit (< 30 frames a second while it was on
 //     screen; remembered for 30 days in localStorage, "heroSlow");
 //   - or a page that asks for it (data-hero="video" on #story).
-// While the live story loads, the clip's own first frame (the poster) stands in for it, so the opening is on screen
-// as soon as that one image has arrived; the story takes over when it has drawn, and a thin line along the foot of
-// the stage shows the load.
+// While the story loads (either mode) the stage shows a loading screen, not the poster (18 Oct 2026, the owner; see
+// loadingScreen below).
 //
 // The page's #story element names its clips:
 //   data-src-desktop / data-src-phone        the two MP4s (16:9 and portrait)
@@ -111,90 +110,71 @@ window.HeroMode = (function () {
     var st = document.createElement("style");
     st.id = "hm-style";
     st.textContent =
-      // the poster that stands in for the live story while it loads
-      ".story-stage>.hm-poster{position:absolute;left:0;top:0;width:100%;height:100%;object-fit:cover;object-position:50% 50%;" +
-        "display:block;pointer-events:none;opacity:0;transition:opacity .35s ease}" +
-      ".story-stage>.hm-poster.is-phone{object-position:50% 30%}" +
-      ".story-stage>.hm-poster.is-in{opacity:1;transition:none}" +
-      ".story-stage>.hm-poster.is-in.is-out{opacity:0;transition:opacity .45s ease}" +
-      ".story-stage.hm-postered .loader{opacity:0!important;pointer-events:none}" +
-      ".story-stage>.hm-load{position:absolute;left:0;bottom:0;height:2px;width:100%;z-index:9;pointer-events:none;" +
-        "background:rgba(255,255,255,.08);transition:opacity .5s ease}" +
-      ".story-stage>.hm-load>i{position:absolute;left:0;top:0;bottom:0;width:0;background:var(--amber,#ffa040);opacity:.7;" +
-        "transition:width .3s ease}" +
-      ".story-stage>.hm-load.is-done{opacity:0}" +
-      // the Skip button: small and quiet until it is pointed at or focused
+      // the loading screen (owner, 18 Oct: "If the animation isn't fully loaded yet then leave the screen on loading not on
+      // the hero first frame"): the page's own #loader (a dark cover over the stage, story.css) with a label, a bar and
+      // the percentage. No spinner: the owner had the player's spinning circle removed the same day.
+      ".story-stage>.loader .hm-ld{display:flex;flex-direction:column;align-items:center;gap:.9rem;width:min(300px,70vw);" +
+        "font-family:var(--mono,ui-monospace,SFMono-Regular,Menlo,monospace);text-transform:uppercase}" +
+      ".story-stage>.loader .hm-ld-t{margin:0;font-size:.72rem;letter-spacing:.24em;color:rgba(226,234,242,.86)}" +
+      ".story-stage>.loader .hm-ld-bar{position:relative;width:100%;height:2px;border-radius:2px;background:rgba(255,255,255,.12);overflow:hidden}" +
+      ".story-stage>.loader .hm-ld-bar>i{position:absolute;left:0;top:0;bottom:0;width:4%;background:var(--amber,#ffa040);" +
+        "transition:width .4s ease}" +
+      ".story-stage>.loader .hm-ld-p{font-size:.62rem;letter-spacing:.2em;color:rgba(226,234,242,.5);font-variant-numeric:tabular-nums}" +
+      // the Back button stays usable over the loading screen too (it sits at z-index 6, the loader at 8)
+      ".story-stage:has(>.loader:not(.gone))>.backbtn--stage{z-index:9}" +
+      // the Skip button (owner, 18 Oct: "make the skip animation button more visible"): full opacity, larger, amber edge
       ".story-stage>.hm-skip{position:absolute;z-index:9;right:18px;bottom:18px;margin:0;display:inline-flex;align-items:center;" +
-        "gap:.5rem;padding:.5rem .8rem .5rem .9rem;border:1px solid rgba(255,255,255,.16);border-radius:999px;" +
-        "background:rgba(8,10,14,.42);-webkit-backdrop-filter:blur(6px);backdrop-filter:blur(6px);color:rgba(220,228,236,.82);" +
-        "font-family:var(--mono,ui-monospace,SFMono-Regular,Menlo,monospace);font-size:.6rem;line-height:1;letter-spacing:.16em;" +
-        "text-transform:uppercase;white-space:nowrap;cursor:pointer;opacity:.46;" +
+        "gap:.55rem;padding:.7rem 1.05rem .7rem 1.15rem;border:1.5px solid color-mix(in srgb,var(--amber,#ffa040) 70%,transparent);border-radius:999px;" +
+        "background:rgba(8,10,14,.72);-webkit-backdrop-filter:blur(6px);backdrop-filter:blur(6px);color:#fff;" +
+        "box-shadow:0 4px 18px rgba(0,0,0,.35);" +
+        "font-family:var(--mono,ui-monospace,SFMono-Regular,Menlo,monospace);font-size:.74rem;font-weight:600;line-height:1;letter-spacing:.14em;" +
+        "text-transform:uppercase;white-space:nowrap;cursor:pointer;opacity:1;" +
         "transition:opacity .3s ease,border-color .25s ease,background .25s ease,color .25s ease}" +
       ".story-stage>.hm-skip::before{content:'';position:absolute;inset:-8px -6px}" +     // a finger-sized target
-      ".story-stage>.hm-skip svg{width:10px;height:10px;flex:none;color:var(--amber,#ffa040)}" +
-      ".story-stage>.hm-skip.is-known{opacity:.68}" +
+      ".story-stage>.hm-skip svg{width:13px;height:13px;flex:none;color:var(--amber,#ffa040)}" +
+      ".story-stage>.hm-skip.is-known{opacity:1}" +
       ".story-stage>.hm-skip:hover,.story-stage>.hm-skip:focus-visible{opacity:1;color:#fff;" +
-        "border-color:color-mix(in srgb,var(--amber,#ffa040) 55%,transparent);background:rgba(8,10,14,.66)}" +
+        "border-color:var(--amber,#ffa040);background:rgba(8,10,14,.9)}" +
       ".story-stage>.hm-skip:focus-visible{outline:2px solid var(--amber,#ffa040);outline-offset:3px}" +
       ".story-stage>.hm-skip.is-tucked:not(:focus-visible){opacity:0;pointer-events:none}" +
       "@media (max-width:640px){.story-stage>.hm-skip .hm-long{display:none}}" +
-      "@media (prefers-reduced-motion:reduce){.story-stage>.hm-poster,.story-stage>.hm-load,.story-stage>.hm-skip{transition:none!important}}" +
-      "@media print{.story-stage>.hm-skip,.story-stage>.hm-load{display:none}}";
+      "@media (prefers-reduced-motion:reduce){.story-stage>.loader .hm-ld-bar>i,.story-stage>.hm-skip{transition:none!important}}" +
+      "@media print{.story-stage>.hm-skip{display:none}}";
     document.head.appendChild(st);
   }
 
-  /* ------------------------------------------------------------------ live3d: the poster first */
+  /* ------------------------------------------------------------------ the loading screen */
+  // 18 Oct 2026, the owner: "If the animation isn't fully loaded yet then leave the screen on loading not on the hero
+  // first frame tht will confuse reader". Until the story is ready (live3d: its model drawn; video: the clip's first
+  // frame scrubbable, js/scrub-video.js) the stage shows the page's #loader: dark, "Loading animation", a bar and the
+  // percentage the story reports into #load-pct. The poster no longer stands in for the live story while it loads
+  // (posterFirst, removed 18 Oct; git history has it). The Skip button sits above it and works throughout.
   function storyReady() {
     var s = window.__story;
     try { return !!(s && typeof s.ready === "function" && s.ready()); } catch (e) { return false; }
   }
-  function posterFirst(story) {
-    var stage = story.querySelector(".story-stage");
-    var d = story.dataset;
-    if (!stage || !(d.posterDesktop || d.posterPhone)) return;
-    // the clip nearer the stage's aspect, as js/scrub-video.js picks it (the log-distance to 16:9 and 1080:2340)
-    var a = (stage.clientWidth || innerWidth) / Math.max(1, stage.clientHeight || innerHeight);
-    var phone = Math.abs(Math.log(a / (16 / 9))) > Math.abs(Math.log(a / (1080 / 2340)));
-    var src = phone ? (d.posterPhone || d.posterDesktop) : (d.posterDesktop || d.posterPhone);
-    var img = document.createElement("img");
-    img.className = "hm-poster" + (phone ? " is-phone" : "");
-    img.alt = ""; img.setAttribute("aria-hidden", "true"); img.decoding = "async";
-    var canvas = stage.querySelector("canvas#gl");
-    if (canvas) canvas.parentNode.insertBefore(img, canvas.nextSibling); else stage.insertBefore(img, stage.firstChild);
-    var bar = document.createElement("div"); bar.className = "hm-load"; bar.setAttribute("aria-hidden", "true");
+  function loadingScreen(story) {
+    var ld = document.getElementById("loader"), pct = document.getElementById("load-pct");
+    if (!ld || ld.querySelector(".hm-ld")) return;
+    var box = document.createElement("div"); box.className = "hm-ld";
+    var t = document.createElement("p"); t.className = "hm-ld-t"; t.textContent = "Loading animation\u2026";
+    var bar = document.createElement("div"); bar.className = "hm-ld-bar"; bar.setAttribute("aria-hidden", "true");
     var fill = document.createElement("i"); bar.appendChild(fill);
-    var gone = false;
-    img.onload = function () {
-      if (gone || storyReady()) return;
-      img.classList.add("is-in");
-      stage.classList.add("hm-postered");
-      stage.appendChild(bar);
-      // the hydroponics title rises when its loader is hidden: let it rise over the poster now
-      var ld = document.getElementById("loader");
-      if (ld) ld.classList.add("hide");
-    };
-    img.onerror = function () { img.remove(); };
-    img.src = src;
-    var pct = document.getElementById("load-pct");
+    if (!pct) { pct = document.createElement("span"); pct.id = "load-pct"; pct.textContent = "0%"; }
+    pct.classList.add("hm-ld-p");
+    box.appendChild(t); box.appendChild(bar); box.appendChild(pct);
+    ld.textContent = ""; ld.appendChild(box);
+    ld.setAttribute("role", "status"); ld.setAttribute("aria-live", "polite");
     function progress() {
-      if (!pct) return;
       var m = /(\d+)\s*%/.exec(pct.textContent || "");
-      if (m) fill.style.width = Math.min(100, +m[1]) + "%";
+      if (m) fill.style.width = Math.max(4, Math.min(100, +m[1])) + "%";
     }
-    if (pct && "MutationObserver" in window) new MutationObserver(progress).observe(pct, { childList: true, characterData: true, subtree: true });
-    var t0 = performance.now();
+    if ("MutationObserver" in window) new MutationObserver(progress).observe(pct, { childList: true, characterData: true, subtree: true });
+    if (mode !== "live3d") return;
+    var stage = story.querySelector(".story-stage"), t0 = performance.now();
     (function poll() {
-      if (storyReady()) {
-        gone = true;
-        fill.style.width = "100%";
-        bar.classList.add("is-done");
-        img.classList.add("is-out");
-        stage.classList.remove("hm-postered");
-        setTimeout(function () { img.remove(); bar.remove(); }, 600);
-        watchPace(stage);
-        return;
-      }
-      if (performance.now() - t0 > 120000) return;      // never ready (a failed load): the poster stays
+      if (storyReady()) { if (stage) watchPace(stage); return; }
+      if (performance.now() - t0 > 120000) return;
       requestAnimationFrame(poll);
     })();
   }
@@ -345,7 +325,7 @@ window.HeroMode = (function () {
     document.documentElement.setAttribute("data-hero-why", why);
     style();
     if (story) {
-      if (mode === "live3d") posterFirst(story);
+      loadingScreen(story);
       skipButton(story);
     }
     var tpl = document.getElementById("hero-" + mode);

@@ -17,6 +17,8 @@
   const reduced = function () { return !!(XP && XP.reduced); };
   const refBtn = card.querySelector("#xp-bom-ref");
   const read = card.querySelector(".xp-bom-read");
+  // 17 Oct 2026, pass 3: the chart lives in a <dialog> (#bom-pop) that a button beside the table opens
+  const pop = card.closest("dialog");
 
   /* ---------------------------------------------------------------- read the table */
   function clean(s) { return (s || "").replace(/\s+/g, " ").trim(); }
@@ -26,8 +28,9 @@
     td.childNodes.forEach(function (n) { if (n.nodeType === 3) t += n.textContent; });
     return clean(t);
   }
-  function plain(v) { return Math.round(v).toLocaleString("en-US"); }
-  function money(v) { return "NT$" + plain(v); }
+  // 17 Oct 2026: the materials list is in US dollars, to the cent
+  function plain(v) { return (Math.round(v * 100) / 100).toLocaleString("en-US", { minimumFractionDigits: v % 1 ? 2 : 0, maximumFractionDigits: 2 }); }
+  function money(v) { return "US$" + plain(v); }
 
   const lines = [];
   Array.prototype.forEach.call(table.tBodies, function (tb) {
@@ -132,12 +135,13 @@
     return withRef || (l && l.ref) ? "the " + money(sheetTotal) + " sheet total" : "the " + money(partsTotal) + " parts total";
   }
   function label(l) {
+    const tail = pop ? "." : ". Show its row in the table.";
     if (l.cost == null) {
       return l.name + (l.note ? " (" + l.note + ")" : "") + ": not costed" + (l.todo ? ", " + l.todo : "") +
-        ". Quantity " + l.qty + ". Show its row in the table.";
+        ". Quantity " + l.qty + tail;
     }
     return l.name + (l.note ? " (" + l.note + ")" : "") + ": " + money(l.cost) + ", " + pct(l) + " of " + totalWords(l) +
-      (l.partial ? "; " + l.todo : "") + ". Quantity " + l.qty + " on the sheet. Show its row in the table.";
+      (l.partial ? "; " + l.todo : "") + ". Quantity " + l.qty + tail;
   }
 
   /* ---------------------------------------------------------------- the readout */
@@ -169,7 +173,7 @@
         money(sumRef) + ", which is not part of the build."]);
     } else {
       say(["Parts total ", { t: money(partsTotal) }, ", from the " + costedCount + " of " + buildLines.length +
-        " lines that carry a cost. ", { miss: true, t: "Orange" }, ": what the sheet does not cost yet."]);
+        " lines that carry a cost. ", { miss: true, t: "Dashed" }, ": what is not costed yet."]);
     }
   }
   function refresh() {
@@ -194,7 +198,8 @@
     });
     // With a mouse the table is a short reach, so the row is brought into view. On a phone the table is a long way
     // down and a tap is also how the share is read, so the page stays put; the row is lit for when the reader gets there.
-    if (selected && fine && selected.tr.offsetParent && !inView(selected.tr)) {
+    // In the dialog the page behind it never moves.
+    if (selected && fine && !pop && selected.tr.offsetParent && !inView(selected.tr)) {
       selected.tr.scrollIntoView({ block: "nearest", behavior: reduced() ? "auto" : "smooth" });
     }
     refresh();
@@ -252,4 +257,40 @@
     }, { threshold: 0.3 });
     io.observe(list);
   }
+
+  /* ---------------------------------------------------------------- the dialog (17 Oct 2026, pass 3) */
+  // A button beside the table opens the chart; Esc (the dialog's own cancel), the close button or a click on the
+  // backdrop closes it, and focus goes back to the button. The page behind does not scroll while it is open, as with
+  // the photo lightbox (../js/figures.js). The button joins the table's tool row (the filter, ../js/polish.js) when
+  // there is one. A selection is let go on close, so no table row stays lit for a chart that is not showing.
+  const opener = document.getElementById("bom-pop-open");
+  if (!pop || !opener) return;
+  const tools = sec.querySelector(".bom-tools");
+  if (tools) tools.appendChild(opener);
+  function shut() {
+    if (!pop.open) return;
+    if (typeof pop.close === "function") pop.close();
+    else { pop.removeAttribute("open"); pop.dispatchEvent(new Event("close")); }
+  }
+  opener.addEventListener("click", function () {
+    if (pop.open) return;
+    if (typeof pop.showModal === "function") pop.showModal(); else pop.setAttribute("open", "");
+    document.body.style.overflow = "hidden";
+    opener.setAttribute("aria-expanded", "true");
+    requestAnimationFrame(function () { requestAnimationFrame(grow); });
+  });
+  pop.addEventListener("close", function () {
+    document.body.style.overflow = "";
+    opener.setAttribute("aria-expanded", "false");
+    if (selected) select(selected);
+    hot = null; refresh();
+    if (document.activeElement === document.body || pop.contains(document.activeElement)) opener.focus();
+  });
+  pop.addEventListener("click", function (e) {
+    if (e.target === pop || (e.target.closest && e.target.closest("[data-bom-close]"))) shut();
+  });
+  if (typeof pop.showModal !== "function") {               // no native dialog: Esc by hand
+    document.addEventListener("keydown", function (e) { if (e.key === "Escape") shut(); });
+  }
+  opener.setAttribute("aria-expanded", "false");
 })();

@@ -132,19 +132,19 @@ window.PM_TRACED = {
 
   // ---------- the charts ----------
   const CHARTS = {
-    // Test 1 agreement: Bio-Drop against the raw photometer reading, paired by mass.
+    // Test 1 agreement: the raw photometer reading against the Bio-Drop, paired by mass (x = BioDrop, as in Test 2 and 5.3).
     "tio2-t1": function () {
       const keep = [], open = [];
       T1_BIODROP.forEach(function (b, i) {
         const mass = T1_MASS_FROM + i;
         if (mass > T1_PLOTTED_TO) return;
-        const p = [T1_PHOTOMETER[i], b];
+        const p = [b, T1_PHOTOMETER[i]];
         (T1_EXCLUDED.indexOf(mass) >= 0 ? open : keep).push(p);
       });
       return {
-        aria: "Test 1: BioDrop OD600 against Pro photometer OD600 for TiO2 suspensions from 2 to 41 mg, with a least-squares line and the line of identity",
-        x: { min: 0, max: 2.5, step: 0.5, dp: 1, label: "Pro photometer OD600 (raw)", short: "Pro OD600 (raw)" },
-        y: { min: 0, max: 2.5, step: 0.5, dp: 1, label: "BioDrop OD600" },
+        aria: "Test 1: Pro photometer OD600 against BioDrop OD600 for TiO2 suspensions from 2 to 41 mg, with a least-squares line and the line of identity",
+        x: { min: 0, max: 2.5, step: 0.5, dp: 1, label: "BioDrop OD600" },
+        y: { min: 0, max: 2.5, step: 0.5, dp: 1, label: "Pro photometer OD600 (raw)", short: "Pro OD600 (raw)" },
         identity: true,
         series: [{ name: "Test 1, 2–41 mg", cls: "s-photo", pts: keep, open: open, fit: fit(keep),
                    openName: "37 mg, excluded (BioDrop handling error)" }]

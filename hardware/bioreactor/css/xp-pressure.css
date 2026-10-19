@@ -1,62 +1,125 @@
 /* ===========================================================================
-   6.2 · Four pressure ports, two alarms (15 Oct 2026). Page-scoped to
-   #xp-pressure; an .xp card from ../css/explore.css, run by js/xp-pressure.js,
-   which adds .is-live. Without script only a short line shows in the stage.
+   7.3.2 · Four pressure ports, two alarms (15 Oct 2026; four situations to
+   press since 17 Oct 2026). Page-scoped to #xp-pressure; an .xp card from
+   ../css/explore.css, run by js/xp-pressure.js, which builds the situation
+   buttons (.xps-pick), the readout and the two alarm lights (.xps-panel) and
+   adds .is-live. Without script only a short line shows in the stage.
 
-   The kit sets the title, sub-line and note (44bac12); the one local guard is
-   the same as css/xp-pore.css's (the dark record's margin captions, logged in
-   NEED-SHARED.md). Red is the alarm colour and nothing else here; orange stays
-   reserved for missing content.
+   Everything this card shows is planned (7.3.2, 7.3.3): it carries a Planned
+   tag beside its Model tag. Culture is the page's amber, the shell side its
+   green; red is the alarm and nothing else; orange stays reserved for missing
+   content. The one local guard is the same as css/xp-pore.css's (the dark
+   record's margin captions, logged in NEED-SHARED.md).
    =========================================================================== */
 
 body:not(.doc-light) .doc #xp-pressure > figcaption { position: static; width: auto; padding: .7rem 1.15rem 1rem; border-left: 0; font-size: .8rem; }
 body:not(.doc-light) .doc #xp-pressure > figcaption b { display: inline; margin: 0; color: var(--xp-ink); }
 
+#xp-pressure { --xps-alarm: #c62828; --xps-cul: #b8650f; --xps-pro: #1b6b3f; }
 #xp-pressure:not(.is-live) .xps-live, #xp-pressure:not(.is-live) .xps-draw { display: none !important; }
 #xp-pressure.is-live .xps-fallback { display: none; }
 #xp-pressure .xps-fallback { margin: 0; padding: 1rem 1.15rem; font-size: .9rem; line-height: 1.5; color: var(--xp-ink-2); max-width: none; }
+#xp-pressure .xp-head .xp-tag + .xp-tag { margin-left: -.35rem; }
 
-#xp-pressure .xps-draw canvas, #xp-pressure .xps-chartbox canvas { display: block; width: 100%; }
-#xp-pressure .xps-draw canvas { touch-action: pan-y; }
-#xp-pressure .xps-chartbox { padding: .1rem .55rem .45rem; background: #fff; }
-#xp-pressure .xps-chartbox canvas { touch-action: pan-y; cursor: crosshair; }
-
-/* the TMP sum, with the gauges' own readings in it, and the flow across the wall */
-#xp-pressure .xps-read {
-  display: flex; flex-wrap: wrap; align-items: center; gap: .35rem 1.25rem;
-  padding: .6rem 1.15rem .45rem; border-top: 1px solid var(--xp-line); background: #fff;
+/* "Try this:" — what to press and what to watch */
+#xp-pressure .xp-sub.xp-try {
+  margin: .15rem 1.15rem .8rem; padding: .55rem .8rem; max-width: none;
+  border-radius: 10px; background: #f4f9f6; border: 1px solid #dcebe2;
+  font-size: .92rem; line-height: 1.5; color: var(--xp-ink);
 }
-#xp-pressure .xps-sum { flex: 1 1 22rem; min-width: 0; margin: 0; }
-#xp-pressure .xps-formula, #xp-pressure .xps-calc { margin: 0; max-width: none; line-height: 1.45; }
-#xp-pressure .xps-formula { font: 600 .8rem/1.45 var(--sans); color: var(--xp-ink-2); }
-#xp-pressure .xps-formula sub { font-size: .72em; }
-#xp-pressure .xps-calc { font: 500 .84rem/1.5 var(--mono); color: var(--xp-ink-2); font-variant-numeric: tabular-nums; }
-#xp-pressure .xps-calc b { font-weight: 650; }
-#xp-pressure .xps-calc .l { color: var(--xp-lumen); }
-#xp-pressure .xps-calc .s { color: #23684a; }
-#xp-pressure .xps-calc .xps-tmp { color: var(--xp-ink); font-size: 1.05em; }
-#xp-pressure .xps-flux { display: inline-flex; align-items: center; gap: .55rem; font: 600 .78rem/1.2 var(--sans); color: var(--xp-ink-2); }
-#xp-pressure .xps-flux s { position: relative; display: block; width: 92px; height: 7px; border-radius: 4px; background: #e3efe8; overflow: hidden; text-decoration: none; }
-#xp-pressure .xps-flux i { position: absolute; inset: 0; border-radius: 4px; background: var(--xp-shell); transform-origin: left center; transform: scaleX(0); }
+#xp-pressure .xp-try b { color: var(--xp-leaf-d); font-weight: 700; }
 
-/* controls: the valve, then four buttons that look like buttons */
-#xp-pressure .xps-valve input[type="range"] { width: clamp(150px, 24vw, 240px); }
-#xp-pressure .xps-valve output { min-width: 8ch; }
-#xp-pressure .xps-acts { display: flex; flex-wrap: wrap; gap: .5rem; }
-#xp-pressure .xps-acts .xp-btn svg { flex: none; width: 15px; height: 15px; }
-#xp-pressure .xps-acts .xp-btn:disabled { opacity: .5; cursor: default; transform: none; background: #fff; }
+/* ---- the four situations, then Run again ---- */
+/* a label row that also holds Run again, then the four situations */
+#xp-pressure .xps-pick {
+  display: grid; grid-template-columns: minmax(0, 1fr) auto; align-items: center; gap: 8px 12px;
+  padding: 0 1.15rem .9rem;
+}
+#xp-pressure .xps-pick-k { grid-column: 1; grid-row: 1; font: 700 11px/1.2 var(--sans); letter-spacing: .12em; text-transform: uppercase; color: var(--xp-ink-2); }
+#xp-pressure .xps-opts { grid-column: 1 / -1; grid-row: 2; display: flex; flex-wrap: wrap; gap: 8px; }
+#xp-pressure .xps-opt {
+  -webkit-appearance: none; appearance: none;
+  display: inline-flex; align-items: center; gap: 8px;
+  min-height: 46px; padding: 0 16px 0 13px; margin: 0;
+  border-radius: 12px; border: 1.5px solid #cbd7d0; background: #fff; color: var(--xp-leaf-d);
+  font: 700 .95rem/1.15 var(--sans); letter-spacing: -.005em; text-align: left; cursor: pointer;
+  box-shadow: 0 1px 0 rgba(20, 64, 43, .06), 0 3px 8px -6px rgba(20, 64, 43, .35);
+  transition: background-color .18s, border-color .18s, color .18s, transform .12s;
+}
+#xp-pressure .xps-opt svg { flex: none; width: 16px; height: 16px; }
+#xp-pressure .xps-opt:hover { background: #f4f9f6; border-color: #8fbfa3; }
+#xp-pressure .xps-opt:active { transform: translateY(1px); }
+#xp-pressure .xps-opt:focus-visible { outline: 2px solid var(--xp-leaf); outline-offset: 2px; }
+#xp-pressure .xps-opt[aria-pressed="true"] { background: var(--xp-leaf-d); border-color: var(--xp-leaf-d); color: #fff; }
+#xp-pressure .xps-tools { grid-column: 2; grid-row: 1; display: inline-flex; margin: 0; }
+#xp-pressure .xps-tools .xp-btn { min-height: 40px; }
+#xp-pressure .xps-again svg { flex: none; }
 
-#xp-pressure .xps-status { margin: 0 1.15rem .9rem; max-width: 72ch; font-size: .9rem; line-height: 1.5; color: var(--xp-ink); }
-#xp-pressure .xps-status b { font-weight: 650; }
-/* when the status line carries an alarm, it reads as one: red rule, red icon (red means alarm, nothing else) */
-#xp-pressure .xps-status.is-alarm { padding: .45rem .7rem; border-radius: 10px; border: 1px solid #efc2c2; background: #fdf3f3; color: #5f1414; }
-#xp-pressure .xps-status .xps-warn { display: inline-block; width: 15px; height: 15px; margin: 0 .4rem 0 0; vertical-align: -2px; color: #c62828; }
+#xp-pressure .xps-draw canvas, #xp-pressure .xps-panel canvas { display: block; width: 100%; }
+#xp-pressure .xps-draw canvas { touch-action: pan-y; }
+
+/* ---- the readout: TMP and its chart, then the two alarm lights ---- */
+#xp-pressure .xps-panel {
+  display: grid; grid-template-columns: minmax(0, 1.55fr) minmax(0, 1fr); gap: 0;
+  border-top: 1px solid var(--xp-line); background: #fff;
+}
+#xp-pressure .xps-tmpbox { min-width: 0; padding: .7rem 1.15rem .55rem; border-right: 1px solid var(--xp-line); }
+#xp-pressure .xps-k { margin: 0; max-width: none; font: 700 11px/1.3 var(--sans); letter-spacing: .12em; text-transform: uppercase; color: var(--xp-ink-2); }
+#xp-pressure .xps-k span { margin-left: .4rem; font-weight: 500; letter-spacing: 0; text-transform: none; font-size: .8rem; }
+#xp-pressure .xps-v { margin: .1rem 0 .3rem; max-width: none; font: 500 .9rem/1.1 var(--sans); color: var(--xp-ink-2); }
+#xp-pressure .xps-v b { font: 750 1.7rem/1 var(--mono); letter-spacing: -.02em; color: var(--xp-ink); font-variant-numeric: tabular-nums; }
+#xp-pressure .xps-lamps { display: grid; align-content: center; gap: 10px; padding: .8rem 1.15rem; }
+#xp-pressure .xps-lamp {
+  display: grid; grid-template-columns: auto minmax(0, 1fr); grid-template-rows: auto auto; column-gap: 10px; align-items: center;
+  padding: 9px 12px; border-radius: 12px; border: 1px solid var(--xp-line); background: #fafbfa;
+  transition: background-color .25s, border-color .25s;
+}
+#xp-pressure .xps-lamp i {
+  grid-row: 1 / span 2; width: 14px; height: 14px; border-radius: 50%;
+  background: #cfd6d2; box-shadow: inset 0 0 0 2px rgba(255, 255, 255, .6);
+}
+#xp-pressure .xps-lamp span { display: flex; flex-wrap: wrap; align-items: baseline; gap: 0 8px; min-width: 0; }
+#xp-pressure .xps-lamp b { font: 700 .9rem/1.25 var(--sans); color: var(--xp-ink); }
+#xp-pressure .xps-lamp small { flex-basis: 100%; font: 500 .74rem/1.25 var(--sans); color: var(--xp-ink-2); }
+#xp-pressure .xps-lamp em { grid-column: 2; font: 650 .82rem/1.3 var(--sans); font-style: normal; color: var(--xp-ink-2); }
+#xp-pressure .xps-lamp.is-on { background: #fdf1f1; border-color: #efb9b9; }
+#xp-pressure .xps-lamp.is-on i { background: var(--xps-alarm); box-shadow: 0 0 0 4px rgba(198, 40, 40, .18); }
+/* the lit lamp pulses only while the card is on screen (.is-vis, set by the script) */
+#xp-pressure.is-vis .xps-lamp.is-on i { animation: xps-blink 1.1s ease-in-out infinite; }
+#xp-pressure .xps-lamp.is-on em { color: #9f1d1d; font-weight: 750; }
+@keyframes xps-blink { 50% { box-shadow: 0 0 0 7px rgba(198, 40, 40, .06); } }
+
+/* ---- what just happened, in one sentence (aria-live) ---- */
+#xp-pressure .xps-status {
+  display: flex; align-items: flex-start; gap: .6rem;
+  margin: 0; padding: .85rem 1.15rem .9rem; max-width: none; min-height: 3.2em;
+  border-bottom: 1px solid var(--xp-line); background: #fafbfa;
+  font-size: .95rem; line-height: 1.5; color: var(--xp-ink);
+}
+#xp-pressure .xps-status b { font-weight: 700; }
+#xp-pressure .xps-status .xps-warn, #xp-pressure .xps-status .xps-okm { flex: none; width: 18px; height: 18px; margin-top: 2px; }
+#xp-pressure .xps-status .xps-warn { color: var(--xps-alarm); }
+#xp-pressure .xps-status .xps-okm { color: #1b6b3f; }
+/* an alarm reads as one: red rule, red icon (red means alarm, nothing else) */
+#xp-pressure .xps-status.is-alarm { background: #fdf3f3; color: #4c1010; }
+#xp-pressure .xps-status.is-ok { background: #f4f9f6; }
+/* the card ends on the sentence (17 Oct: the owner took the caption off): no rule under it */
+#xp-pressure .xps-status:last-child { border-bottom: 0; }
 
 @media (max-width: 560px) {
-  #xp-pressure .xp-sub, #xp-pressure .xps-status { margin-left: .85rem; margin-right: .85rem; }
-  #xp-pressure .xps-read { padding-left: .85rem; padding-right: .85rem; }
-  #xp-pressure .xps-calc { font-size: .78rem; }
-  #xp-pressure .xps-valve { flex-wrap: wrap; width: 100%; }
-  #xp-pressure .xps-valve input[type="range"] { flex: 1; width: auto; min-width: 0; }
-  #xp-pressure .xps-acts .xp-btn { padding: .5rem .7rem; }
+  #xp-pressure .xp-sub.xp-try { margin-left: .85rem; margin-right: .85rem; }
+  #xp-pressure .xps-pick { padding: 0 .85rem .8rem; gap: 8px; }
+  #xp-pressure .xps-opts { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 6px; }
+  #xp-pressure .xps-opt { min-height: 50px; padding: 6px 10px; font-size: .9rem; }
+  #xp-pressure .xps-panel { grid-template-columns: minmax(0, 1fr); }
+  #xp-pressure .xps-tmpbox { border-right: 0; border-bottom: 1px solid var(--xp-line); padding: .65rem .85rem .5rem; }
+  #xp-pressure .xps-k span { display: block; margin: .15rem 0 0; }
+  #xp-pressure .xps-lamps { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; padding: .7rem .85rem; }
+  #xp-pressure .xps-lamp { padding: 8px 10px; column-gap: 8px; }
+  #xp-pressure .xps-lamp b { font-size: .84rem; }
+  #xp-pressure .xps-status { padding-left: .85rem; padding-right: .85rem; }
+}
+@media (prefers-reduced-motion: reduce) {
+  #xp-pressure .xps-opt, #xp-pressure .xps-lamp { transition: none; }
+  #xp-pressure.is-vis .xps-lamp.is-on i { animation: none; }
 }

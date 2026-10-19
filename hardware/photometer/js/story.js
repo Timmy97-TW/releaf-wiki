@@ -32,17 +32,17 @@
     { file: "part7.stl", mat: "printed", tag: "shell" },
     { file: "part8.stl", mat: "printed", tag: "shell" },
     { file: "part9.stl", mat: "printed", tag: "shell" },
-    { file: "led-holder.stl", mat: "black", tag: "collar" },
-    { file: "led-bulb-body.stl", mat: "amber", tag: "led", key: "bulb" },
-    { file: "lens.stl", mat: "glass", tag: "optic", key: "lens" },
-    { file: "beamsplitter.stl", mat: "glass", tag: "optic", key: "splitter" },
-    { file: "cuvette.stl", mat: "glass", tag: "optic", key: "cuvette" },
-    { file: "sensor-sample-pcb.stl", mat: "pcb", tag: "sensor" },
-    { file: "sensor-sample-grey.stl", mat: "chipGrey", tag: "sensor" },
-    { file: "sensor-sample-black.stl", mat: "chipBlack", tag: "sensor", key: "sampleChip" },
-    { file: "sensor-reference-pcb.stl", mat: "pcb", tag: "sensor" },
-    { file: "sensor-reference-grey.stl", mat: "chipGrey", tag: "sensor" },
-    { file: "sensor-reference-black.stl", mat: "chipBlack", tag: "sensor", key: "refChip" },
+    { file: "bought/led-holder.stl", mat: "black", tag: "collar" },
+    { file: "bought/led-bulb-body.stl", mat: "amber", tag: "led", key: "bulb" },
+    { file: "bought/lens.stl", mat: "glass", tag: "optic", key: "lens" },
+    { file: "bought/beamsplitter.stl", mat: "glass", tag: "optic", key: "splitter" },
+    { file: "bought/cuvette.stl", mat: "glass", tag: "optic", key: "cuvette" },
+    { file: "bought/sensor-sample-pcb.stl", mat: "pcb", tag: "sensor" },
+    { file: "bought/sensor-sample-grey.stl", mat: "chipGrey", tag: "sensor" },
+    { file: "bought/sensor-sample-black.stl", mat: "chipBlack", tag: "sensor", key: "sampleChip" },
+    { file: "bought/sensor-reference-pcb.stl", mat: "pcb", tag: "sensor" },
+    { file: "bought/sensor-reference-grey.stl", mat: "chipGrey", tag: "sensor" },
+    { file: "bought/sensor-reference-black.stl", mat: "chipBlack", tag: "sensor", key: "refChip" },
   ];
 
   const srgb = RQ.srgb;
@@ -204,8 +204,13 @@
     pct: document.getElementById("load-pct"),
   };
 
+  // The bought-in parts (the LED, the optics, the sensor boards) are drawn, never downloaded, so since 17 Oct 2026 they
+  // come from one pack, models/bought/_pack.* (tools/pack_models.py; ../js/packed-loader.js); the printed parts are
+  // the record's STL downloads and load as they are.
+  const packed = window.PackedModel ? PackedModel.bundle(MODELS + "bought/") : null;
   PARTS.forEach(function (spec) {
-    loader.load(MODELS + spec.file, function (geo) {
+    const from = packed && spec.file.indexOf("bought/") === 0 ? packed : loader;
+    from.load(MODELS + spec.file, function (geo) {
       RQ.dropDegenerate(geo);
       // 22 degrees, not 36. These prints have 30-degree chamfers, and at 36 the
       // smoothing ran straight across them: the optical head's front wall came

@@ -1,23 +1,30 @@
 /* ===========================================================================
-   6.2 · Pressure at the four ports (15 Oct 2026). Markup: figure#xp-pressure.
+   7.3.2 · Four pressure ports, two alarms (15 Oct 2026; four situations to
+   press since 17 Oct 2026). Markup: figure#xp-pressure, in the Future Plan.
    ---------------------------------------------------------------------------
    The membrane module with its four pressure transducers, one at each port
    (In-Lumen, Out-Lumen, In-Shell, Out-Shell), each behind a filter (owner,
-   15 Oct), live gauges for each, and the transmembrane pressure
+   15 Oct), and the transmembrane pressure
        TMP = (P_in,L + P_out,L)/2 − (P_in,S + P_out,S)/2
-   on a small rolling chart. The reader closes the pinch valve, fast-forwards
-   a long run, breaches the membrane or leaks onto the bench, and sees which
-   sensor notices.
+   on a small chart. 17 Oct, the owner: the models looked "very complicated".
+   The valve slider and four action buttons became four situations to press,
+   Normal run, Membrane clogging, Fiber breaks, Fitting leaks, each played out
+   from the normal run, with two alarm lights saying which planned layer
+   catches it, and one plain sentence. Everything the card shows is PLANNED:
+   neither alarm exists yet (7.3.2, 7.3.3), so the words are "planned", never
+   "designed".
 
    On record, and the only measured numbers here:
      - the 4 September 2026 dashboard read feed, retentate and permeate each
-       near 0.20 bar (4.1 and the specification table, 5.1; the dashboard
-       photo in 4.3). The model starts all four ports there, so TMP starts
-       near zero.
-     - the transducers are fitted and logging; the droplet sensor sits under
-       the setup; the pinch valve is fitted near the Out-Lumen end (4.3, 5.1,
-       6.2). The alarms are designed and have not been validated with an
-       induced leak or breach (6.2, 7.2).
+       near 0.20 bar (4.1, 5.1, the dashboard photo in 4.3); P0 below;
+     - the operating point 4.1 recommends: 263 mL/min at a TMP of 0.30 bar;
+       the normal run holds that TMP (TMP_N below);
+     - the transducers are fitted and logging (7.3.2); the alarms, the pump
+       stop and the droplet sensor are the plan of 7.3.2 and 7.3.3: lumen
+       pressure or TMP above a threshold for several readings in a row, or a
+       sudden drop -> alarm, the culture pump stops, the pinch valve opens
+       (a sudden drop: the run stops and a shell-side sample is plated, 6.1);
+       any moisture under the unit -> alarm, pumps stop;
      - the owner's answers of 16 Oct 2026 (missing-info B10): (a) the valve that
        regulates the pressure is the one in the diagram, clamping the end of
        the lumen tube, past the Out-Lumen tap; (b) the four taps are right as
@@ -28,16 +35,22 @@
    Everything else is a MODEL with illustrative numbers: a peristaltic pump
    holds the loop flow, the valve adds a pressure drop downstream of the
    Out-Lumen tap, the wall passes liquid in proportion to TMP (Darcy) through a
-   resistance that a cake raises as liquid is filtered, the shell loop carries
-   what crosses the wall from the Out-Shell port round to the In-Shell port and
-   its branch takes the excess out through a plain outlet line (an assumption:
-   (d)), a breach opens a short circuit to the shell, a leak drains the
-   Out-Lumen fitting. The low-TMP rule (TMP below half of what the valve
-   setting should give) is the model's own and illustrative: (e).
+   resistance that a cake raises as liquid is filtered (clogging: the valve
+   closes further to hold the flow across the wall, as a set harvest flow
+   would), the shell loop carries what crosses the wall round to the In-Shell
+   port and its branch takes the excess out through a plain outlet line (an
+   assumption: (d)), a broken fiber opens a short circuit to the shell, a leak
+   drains the Out-Lumen fitting, a stopped pump lets every port fall back to
+   P0. The alarm level (HIGH) and the sudden-drop rule (TMP below half of what
+   it was 1.5 s before) are the model's own and illustrative: (e).
+
+   Colours: the page's culture amber and protectant green (bv-contain.css);
+   red is the alarm and nothing else.
 
    Uses window.XP (../js/xp-kit.js): XP.loop pauses off screen and in hidden tabs;
-   with reduced motion every change lands at once (no rolling, no drips in
-   flight) and the controls still work.
+   with reduced motion each situation lands at once on its outcome (no rolling,
+   no drips in flight), chart included, and the buttons still work. The script
+   builds its own buttons, readout and lights into .xps-pick and .xps-panel.
    =========================================================================== */
 (function () {
   "use strict";
@@ -46,50 +59,58 @@
   if (!XP || !fig) return;
   var box = fig.querySelector(".xps-draw");
   var cv = fig.querySelector(".xps-canvas");
-  var ch = fig.querySelector(".xps-chart");
-  var valve = fig.querySelector(".xps-valve input");
-  if (!box || !cv || !cv.getContext || !ch || !valve) return;
-  var valveOut = fig.querySelector(".xps-valve output");
-  var bFF = fig.querySelector('[data-act="ff"]');
-  var bBreach = fig.querySelector('[data-act="breach"]');
-  var bLeak = fig.querySelector('[data-act="leak"]');
-  var bReset = fig.querySelector('[data-act="reset"]');
-  var status = fig.querySelector(".xps-status");
-  var calc = {};
-  ["pinL", "poutL", "pinS", "poutS", "tmp"].forEach(function (k) { calc[k] = fig.querySelector('[data-k="' + k + '"]'); });
-  var flux = fig.querySelector(".xps-flux");
-  var fluxBar = fig.querySelector(".xps-flux i");
+  var stageEl = fig.querySelector(".xp-stage");
+  if (!box || !cv || !cv.getContext || !stageEl) return;
 
   /* ---- the record ---- */
-  var P0 = 0.20;          // bar: feed, retentate and permeate on the 4 Sep 2026 dashboard (this page, 4.1 and 5.1)
+  var P0 = 0.20;          // bar: feed, retentate and permeate on the 4 Sep 2026 dashboard (4.1, 5.1)
+  var TMP_N = 0.30;       // bar: the operating point 4.1 recommends (263 mL/min at a TMP of 0.30 bar)
 
   /* ---- the model's constants (illustrative) ---- */
   var DELTA = 0.003;      // bar: pressure drop along the fibers at the loop flow
-  var RS = 0.15;          // shell outlet line: bar per unit of flow across the wall
-  var KV = 0.6;           // bar: the valve's pressure rise, scaled by closure^1.6
-  var CMAX = 0.9;         // the slider stops at 90 % closed
-  var GB = 25;            // a breach: conductance of the short circuit to the shell
+  var RS = 0.06;          // shell outlet line: bar per unit of flow across the wall (keeps the shell near P0)
+  var KV = 1.2;           // bar: the valve's pressure rise, scaled by closure^1.6
+  var CMAX = 0.9;         // the valve stops at 90 % closed
+  var GB = 25;            // a broken fiber: conductance of the short circuit to the shell
   var GL = 0.06;          // a leak at the Out-Lumen fitting, to the bench
-  var ALPHA = 0.19;       // cake: wall resistance gained per unit flow per hour
-  var FF_H = 72, FF_S = 9;// fast-forward: 72 h of run in 9 s
+  var ALPHA = 0.035;      // cake: wall resistance gained per unit flow per hour
+  var FF_H = 72, FF_S = 6.5;  // clogging: up to 72 h of run, played in 6.5 s
+  var HIGH = 0.45;        // bar: the alarm level drawn here, illustrative (none is set yet)
+  var DROP = 0.5;         // the sudden-drop rule: TMP under half of what it was DROP_S before
+  var DROP_S = 1.5;
+  var LEAD = 0.9;         // s: the normal run shown before a fault starts
   var GMAX = 1.0;         // bar: full scale of the dials
-  var YMAX = 0.5;         // bar: top of the TMP chart
+  var YMAX = 0.6;         // bar: top of the TMP chart
+  var WIN = 10;           // s: the chart's window
 
   var C = {
-    lumen: "#1d5a9e", lumenTube: "#7f9fc6", lumenFill: "#e2edf9",
-    shell: "#23684a", shellTube: "#7fb89a", shellFill: "#e8f4ed", shellSpace: "#f1f8f4",
-    perm: "#2f8f5b", part: "#8795a3", partFill: "#eef1f4", head: "#dfe4e9",
+    lumen: "#b8650f", lumenTube: "#e9b77a", lumenFill: "#fbe8cf",
+    shell: "#1b6b3f", shellTube: "#8cc4a2", shellFill: "#e1f1e7", shellSpace: "#f1f8f4",
+    perm: "#23864f", part: "#8795a3", partFill: "#eef1f4", head: "#dfe4e9",
     ink: "#1f2933", ink2: "#556070", ink3: "#7a8591",
-    alarm: "#c62828", alarmFill: "#fdecec", cake: "#97a3b0", grid: "#e6eae8", line: "#23684a",
+    alarm: "#c62828", alarmFill: "#fdecec", cake: "#a08f7a", grid: "#e6eae8", line: "#1b6b3f",
     halo: "rgba(255,255,255,.9)"
   };
   var FONT = (getComputedStyle(fig).getPropertyValue("--sans") || "").trim() || "-apple-system, system-ui, sans-serif";
   var MONO = (getComputedStyle(fig).getPropertyValue("--mono") || "").trim() || "ui-monospace, Menlo, monospace";
 
+  /* ---- the four situations, and what each one shows, in words ---- */
+  var SITS = [
+    { id: "normal", name: "Normal run",
+      icon: '<path d="M1.5 9.5h13" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/><path d="M1.5 5.5h13" fill="none" stroke="currentColor" stroke-width="1.2" stroke-linecap="round" opacity=".45"/>' },
+    { id: "clog", name: "Membrane clogging",
+      icon: '<path d="M1.5 12.5c4 0 6-1 8-4s3-5 5-6" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>' },
+    { id: "breach", name: "Fiber breaks",
+      icon: '<path d="M1.5 4.5h5l1.5 2-1 2 1.5 2h6" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>' },
+    { id: "leak", name: "Fitting leaks",
+      icon: '<path d="M8 1.8c2.4 3.1 4 5.3 4 7.4a4 4 0 0 1-8 0c0-2.1 1.6-4.3 4-7.4z" fill="currentColor"/>' }
+  ];
+  function b2(v) { return Math.max(0, v).toFixed(2); }
+
   /* ---- the flow model ----
      A peristaltic pump holds the loop flow Q = 1. The Out-Lumen node drains through the valve (pressure rise
      Kv·Q_v above the downstream P0) and, with a leak, to the bench (Gl·P_out,L). The wall passes J = TMP·G, with
-     G = 1/Rw (+ Gb for a breach); the shell outlet line sits RS·J above P0. Solved exactly for TMP:          */
+     G = 1/Rw (+ Gb for a broken fiber); the shell outlet line sits RS·J above P0. Solved exactly for TMP:   */
   function kv(c) { return KV * Math.pow(Math.max(0, c), 1.6); }
   function solve(c, Rw, gb, gl) {
     var Kv = kv(c), G = 1 / Rw + gb, re = 1.1 * RS, D = 1 + Kv * gl;
@@ -99,25 +120,68 @@
     return { pinL: A + DELTA, poutL: A, pinS: P0 + 1.2 * RS * J, poutS: P0 + RS * J,
              tmp: tmp, jm: tmp / Rw, jb: tmp * gb };
   }
-  /* the valve setting that holds the flow across the membrane at J0 (fast-forward) */
+  /* the valve setting that holds the flow across the membrane at J0 (clogging) */
   function holdValve(J0, Rw, gb, gl) {
     var lo = 0, hi = CMAX;
     if (solve(hi, Rw, gb, gl).jm < J0) return hi;
     for (var i = 0; i < 32; i++) { var m = (lo + hi) / 2; if (solve(m, Rw, gb, gl).jm < J0) lo = m; else hi = m; }
     return (lo + hi) / 2;
   }
+  /* the valve setting of the normal run: TMP_N on a clean wall */
+  var C_N = (function () {
+    var lo = 0, hi = CMAX;
+    for (var i = 0; i < 40; i++) { var m = (lo + hi) / 2; if (solve(m, 1, 0, 0).tmp < TMP_N) lo = m; else hi = m; }
+    return (lo + hi) / 2;
+  })();
+
+  /* ---- the controls and the readout (built here; the old markup's own row, sum and chart box retire) ---- */
+  var pick = fig.querySelector(".xps-pick");
+  var panel = fig.querySelector(".xps-panel");
+  var status = fig.querySelector(".xps-status");
+  if (!pick) return;
+  if (!panel) {
+    panel = document.createElement("div");
+    panel.className = "xps-panel xps-live";
+    box.parentNode.insertBefore(panel, box.nextSibling);
+  }
+  if (!status) {
+    status = document.createElement("p");
+    status.className = "xps-status xps-live";
+    stageEl.parentNode.insertBefore(status, stageEl.nextSibling);
+  }
+  status.setAttribute("aria-live", "polite");
+  pick.setAttribute("role", "group");
+  pick.setAttribute("aria-label", "Situation");
+  pick.innerHTML = '<span class="xps-pick-k" aria-hidden="true">Situation</span><span class="xps-opts">' + SITS.map(function (s) {
+    return '<button type="button" class="xps-opt" data-s="' + s.id + '" aria-pressed="false"><svg viewBox="0 0 16 16" width="16" height="16" aria-hidden="true" focusable="false">' + s.icon + "</svg><span>" + s.name + "</span></button>";
+  }).join("") + "</span>" +
+    '<span class="xps-tools"><button type="button" class="xp-btn xps-again"><svg viewBox="0 0 16 16" width="15" height="15" aria-hidden="true" focusable="false"><path d="M3.2 8a4.8 4.8 0 1 0 1.5-3.5" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/><path d="M2.6 2.4v3h3" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg><span>Run again</span></button></span>';
+  panel.innerHTML =
+    '<div class="xps-tmpbox">' +
+      '<p class="xps-k">TMP <span>how hard the culture side pushes on the wall</span></p>' +
+      '<p class="xps-v"><b class="xps-tmp">0.30</b> bar</p>' +
+      '<canvas class="xps-chart" role="img" aria-label="TMP over the last seconds, in bar, against the alarm level. The value now is printed above."></canvas>' +
+    "</div>" +
+    '<div class="xps-lamps">' +
+      '<div class="xps-lamp" data-l="p"><i aria-hidden="true"></i><span><b>Pressure alarm</b><small>Layer&nbsp;1 &middot; planned</small></span><em>quiet</em></div>' +
+      '<div class="xps-lamp" data-l="w"><i aria-hidden="true"></i><span><b>Droplet sensor</b><small>Layer&nbsp;2 &middot; planned</small></span><em>dry</em></div>' +
+    "</div>";
+  var opts = Array.prototype.slice.call(pick.querySelectorAll(".xps-opt"));
+  var again = pick.querySelector(".xps-again");
+  var ch = panel.querySelector(".xps-chart");
+  var tmpEl = panel.querySelector(".xps-tmp");
+  var lampP = panel.querySelector('[data-l="p"]'), lampW = panel.querySelector('[data-l="w"]');
 
   /* ---- state ---- */
-  var M, disp, hist, events, parts, drops, still = XP.reduced;
+  var M, disp, hist, events, parts, drops, recent, still = XP.reduced, sit = "normal";
   function fresh() {
-    M = { c: 0, Rw: 1, gb: 0, gbT: 0, gl: 0, glT: 0, t: 0, wet: 0, aT: false, aW: false, expT: 0,
-          ff: null, win: 60, winT: 60, lastT: 0, dropAcc: 0, permAcc: 0, brAcc: 0, tmpBeforeBreach: 0, tmpBeforeLeak: 0 };
-    var s = solve(0, 1, 0, 0);
+    M = { c: C_N, Rw: 1, gb: 0, gbT: 0, gl: 0, glT: 0, pump: 1, pumpT: 1, open: false, t: 0, st: 0, wet: 0,
+          phase: 0, ff: false, ffT0: 0, J0: 0, tmpRef: TMP_N, aP: "", aW: false, highFor: 0, stopAt: 0,
+          ct: 0, doneAt: 0, lastH: -1, dropAcc: 0, permAcc: 0, brAcc: 0 };
+    var s = solve(M.c, 1, 0, 0);
     disp = { pinL: s.pinL, poutL: s.poutL, pinS: s.pinS, poutS: s.poutS, tmp: s.tmp, jm: s.jm };
-    M.expT = s.tmp;
-    hist = []; events = []; parts = []; drops = [];
-    // the minute before the reader arrives: the start state, held
-    for (var i = 0; i <= 300; i++) hist.push({ t: -60 + i * 0.2, v: s.tmp });
+    hist = []; events = []; parts = []; drops = []; recent = [];
+    for (var i = 0; i <= 80; i++) hist.push({ t: -WIN + i * WIN / 80, v: s.tmp });   // the run so far, steady
     for (var k = 0; k < 14; k++) parts.push({ kind: 0, x: k / 14, f: k % 4, y: 0 });
   }
 
@@ -152,10 +216,11 @@
     L.ft = ph ? 7 : 8;
     L.fy = [];
     for (var i = 0; i < L.nf; i++) L.fy.push(L.my0 + 11 + (L.mh - 22) * (L.nf === 1 ? 0.5 : i / (L.nf - 1)));
-    L.bx = L.mx0 + (L.mx1 - L.mx0) * 0.44; L.bf = 1;   // where a breach opens: fiber 2
+    L.bx = L.mx0 + (L.mx1 - L.mx0) * 0.44; L.bf = 1;   // where a fiber breaks: fiber 2
     ctx = XP.dpr(cv, W, L.H);
-    CW = Math.max(300, Math.round(ch.parentNode.clientWidth));
-    CH = ph ? 112 : 104;
+    var bs = getComputedStyle(ch.parentNode);
+    CW = Math.max(220, Math.round(ch.parentNode.clientWidth - parseFloat(bs.paddingLeft) - parseFloat(bs.paddingRight)));
+    CH = ph ? 104 : 96;
     cctx = XP.dpr(ch, CW, CH);
   }
 
@@ -206,11 +271,12 @@
     var tw = (ctx.measureText(name).width || 50) / 2, nx = XP.clamp(x, tw + 3, L.W - tw - 3);
     text(ctx, name, nx, ny, { size: 11, weight: 650, color: C.ink2, align: "center" });
   }
-  function pill(str, x, y) {
+  function pill(str, x, y, col) {
     ctx.font = "700 10.5px " + FONT;
     if ("letterSpacing" in ctx) ctx.letterSpacing = "0.8px";
     var w = ctx.measureText(str).width + 30, h = 20;
-    rr(ctx, x - w / 2, y - h / 2, w, h, 10); ctx.fillStyle = C.alarm; ctx.fill();
+    x = XP.clamp(x, w / 2 + 2, L.W - w / 2 - 2);
+    rr(ctx, x - w / 2, y - h / 2, w, h, 10); ctx.fillStyle = col || C.alarm; ctx.fill();
     ctx.lineWidth = 2; ctx.strokeStyle = "#fff"; ctx.stroke();
     var tx = x - w / 2 + 9;                                   // a small warning triangle, then the word
     ctx.beginPath(); ctx.moveTo(tx + 4.5, y - 5); ctx.lineTo(tx + 9.5, y + 4.5); ctx.lineTo(tx - 0.5, y + 4.5); ctx.closePath();
@@ -255,7 +321,7 @@
                  ox: (Math.random() - 0.5) * (L.mx1 - L.mx0) * 0.5, th: Math.random() * 3, life: 0 });
   }
   function stepParts(dt) {
-    var keep = [], sp = L.ph ? 54 : 70, out = L.W - 6;
+    var keep = [], sp = (L.ph ? 54 : 70) * M.pump, out = L.W - 6, go = M.pump;
     for (var i = 0; i < parts.length; i++) {
       var p = parts[i];
       if (p.kind === 0) {                                     // culture, round the loop
@@ -263,30 +329,31 @@
         if (p.x * L.W > out) { p.x = 6 / L.W; p.f = (p.f + 1) % 4; }
         keep.push(p); continue;
       }
-      p.life += dt;
+      var dts = dt * Math.max(0.15, go);
+      p.life += dts;
       if (p.st === 0) {                                       // in the shell space, drawn to the Out-Shell port
         var far = Math.abs(L.sOut - p.x) > 26, tx = L.sOut + (far ? p.ox * 0.6 : 0), ty = far ? L.y : L.my0 + 2;
         var dx = tx - p.x, dy = ty - p.y, d = Math.sqrt(dx * dx + dy * dy) || 1;
-        var w = p.life < 0.35 ? 0 : 1, sp2 = p.kind === 2 ? 30 : 46;
+        var w = p.life < 0.35 ? 0 : 1, sp2 = (p.kind === 2 ? 30 : 46) * go;
         if (far && Math.abs(dx) < 10) { p.ox *= 0.5; }
-        p.vx += ((dx / d) * sp2 * w - p.vx) * Math.min(1, dt * 2.2) + (Math.random() - 0.5) * 60 * dt;
-        p.vy += ((dy / d) * sp2 * w * (far ? 0.25 : 1) - p.vy) * Math.min(1, dt * 2.2) + (Math.random() - 0.5) * 60 * dt;
-        p.x += p.vx * dt; p.y += p.vy * dt;
+        p.vx += ((dx / d) * sp2 * w - p.vx) * Math.min(1, dt * 2.2) + (Math.random() - 0.5) * 60 * dts;
+        p.vy += ((dy / d) * sp2 * w * (far ? 0.25 : 1) - p.vy) * Math.min(1, dt * 2.2) + (Math.random() - 0.5) * 60 * dts;
+        p.x += p.vx * dts; p.y += p.vy * dts;
         p.x = XP.clamp(p.x, L.mx0 + L.hw + 2, L.mx1 - L.hw - 2);
         p.y = XP.clamp(p.y, L.my0 + 2, L.my1 - 2);
         if (Math.abs(p.x - tx) < 5 && p.y < L.my0 + 6) { p.st = 1; p.x = tx; p.y = L.my0; }
       } else if (p.st === 1) {                                // up the Out-Shell port into the shell loop
-        p.y -= dt * 40;
+        p.y -= dts * 40;
         // at the loop: most of it out along the branch to harvest, some round the loop and back into the shell
         if (p.y <= L.hy) { p.st = p.kind === 1 && Math.random() < 0.4 ? 3 : 2; p.y = L.hy; }
       } else if (p.st === 3) {                                // round the loop, to the In-Shell port
-        p.x -= dt * 60;
+        p.x -= dts * 60;
         if (p.x <= L.sIn) { p.x = L.sIn; p.st = 4; }
       } else if (p.st === 4) {                                // down the In-Shell port, back into the shell space
-        p.y += dt * 40;
+        p.y += dts * 40;
         if (p.y >= L.my0 + 4) { p.st = 0; p.life = 0; p.ox = (Math.random() - 0.5) * (L.mx1 - L.mx0) * 0.5; }
       } else {                                                // along the harvest branch, out of the picture
-        p.x += dt * 60;
+        p.x += dts * 60;
         if (p.x > out) continue;
       }
       keep.push(p);
@@ -294,208 +361,167 @@
     parts = keep;
   }
 
-  /* ---- the run ---- */
-  var lastSay = "";
-  function say(html) {
-    if (html === lastSay) return;
-    lastSay = html; status.innerHTML = html;
-    status.classList.toggle("is-alarm", html.indexOf("xps-warn") >= 0);
-  }
-  function pct(c) { return Math.round(c * 100); }
-  function b2(v) { return v.toFixed(2); }
-
-  function setValve(c, fromUser) {
-    M.c = XP.clamp(c, 0, CMAX);
-    var v = Math.round(M.c * 100);
-    if (+valve.value !== v) valve.value = String(v);
-    valveOut.textContent = v === 0 ? "open" : v + "% closed";
-    valve.setAttribute("aria-valuetext", v === 0 ? "open" : v + " percent closed");
-    if (fromUser && M.ff) endFF(true);
-  }
-
-  function addEvent(kind) { events.push({ t: M.t, kind: kind }); if (events.length > 24) events.shift(); }
-
-  function toLive() { M.winT = 60; }
-
-  function startFF() {
-    if (M.ff) return;
-    toLive();
-    var pre = M.c < 0.15;
-    M.ff = { phase: pre ? 0 : 1, k: 0, c0: M.c, t0: 0, J0: 0, tmp0: 0, cStart: 0, limitAt: null };
-    bFF.disabled = true;
-    if (pre) say("First the pinch valve closes to 40%, so there is a flow across the wall to watch.");
-    else beginRun();
-    if (still) { while (M.ff) tick(0.05, true); render(); }
-  }
-  function beginRun() {
-    var s = solve(M.c, M.Rw, M.gb, M.gl);
-    M.ff.phase = 1; M.ff.t0 = M.t; M.ff.J0 = s.jm; M.ff.tmp0 = s.tmp; M.ff.cStart = M.c;
-    say("Fast&#8209;forwarding: a cake builds on the wall, and the valve closes further to hold the same flow across it.");
-  }
-  function endFF(aborted) {
-    var f = M.ff; if (!f) return;
-    M.ff = null;
-    bFF.disabled = false;
-    bFF.querySelector("span").textContent = "Fast-forward a long run";
-    if (aborted || f.phase !== 1) return;
-    var s = solve(M.c, M.Rw, M.gb, M.gl), h = Math.round((M.t - f.t0) / 3600);
-    if (f.limitAt == null) {
-      say("After " + h + "&nbsp;h at the same flow across the wall, TMP rose from <b>" + b2(f.tmp0) + "</b> to <b>" + b2(s.tmp) +
-          "&nbsp;bar</b> and the valve had to close from " + pct(f.cStart) + "% to " + pct(M.c) + "%. Fouling shows as a rising trend, not a sudden failure.");
-    } else {
-      say("The valve reached its 90% limit after " + f.limitAt + "&nbsp;h. From then on the flow across the wall fell while TMP kept rising, to <b>" +
-          b2(s.tmp) + "&nbsp;bar</b> after " + h + "&nbsp;h. Fouling shows as a rising trend, not a sudden failure.");
-    }
-  }
-
-  function breach() {
-    if (M.gbT) return;
-    if (M.ff) endFF(true);
-    toLive();
-    M.gbT = GB; M.tmpBeforeBreach = solve(M.c, M.Rw, 0, M.gl).tmp;
-    addEvent("breach");
-    bBreach.disabled = true;
-    if (M.tmpBeforeBreach < 0.04) {
-      say("Breach: culture now flows straight into the shell. With the valve open, TMP was already about zero, so there is no drop to see. <b>Close the pinch valve</b> and watch TMP.");
-    } else say("Breach: culture now flows straight into the shell, and the lumen and shell pressures move together.");
-    if (still) settle();
-  }
-  function leak() {
-    if (M.glT) return;
-    if (M.ff) endFF(true);
-    toLive();
-    M.glT = GL; M.tmpBeforeLeak = solve(M.c, M.Rw, M.gb, 0).tmp;
-    addEvent("leak");
-    bLeak.disabled = true;
-    say("A fitting at the Out&#8209;Lumen end starts to drip onto the bench.");
-    if (still) settle();
-  }
-  function reset() {
-    fresh();
-    setValve(0, false);
-    bFF.disabled = false; bBreach.disabled = false; bLeak.disabled = false;
-    bFF.querySelector("span").textContent = "Fast-forward a long run";
-    status.classList.remove("is-alarm");
-    say("Back to the 4 September reading: every port near 0.20&nbsp;bar, TMP about zero.");
-    render();
-  }
-
-  /* an alarm is said in the status line (aria-live) and stays drawn where it happens: a red pill on the module,
-     a red pad. Both are the alarms the system is designed to raise; neither path has been tested (6.2, 7.2). */
+  /* ---- the words ---- */
   var ALARM = '<svg class="xps-warn" viewBox="0 0 16 16" aria-hidden="true" focusable="false"><path d="M8 1.6 15 14H1z" fill="currentColor"/><path d="M8 6v3.6M8 11.6v.1" stroke="#fff" stroke-width="1.7" stroke-linecap="round"/></svg>';
+  var OKMARK = '<svg class="xps-okm" viewBox="0 0 16 16" aria-hidden="true" focusable="false"><path d="M3.5 8.4 6.6 11.4 12.5 4.8" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>';
+  var lastSay = "";
+  function say(html, kind) {
+    var full = (kind === "alarm" ? ALARM : kind === "ok" ? OKMARK : "") + "<span>" + html + "</span>";
+    if (full === lastSay) return;
+    lastSay = full; status.innerHTML = full;
+    status.classList.toggle("is-alarm", kind === "alarm");
+    status.classList.toggle("is-ok", kind === "ok");
+  }
+  function lamps() {
+    var p = M.aP, w = M.aW;
+    lampP.classList.toggle("is-on", !!p);
+    lampW.classList.toggle("is-on", w);
+    lampP.querySelector("em").textContent = p === "high" ? "alarm: TMP too high" : p === "drop" ? "alarm: sudden drop" : "quiet";
+    lampW.querySelector("em").textContent = w ? "alarm: liquid" : "dry";
+  }
+  function intro() {
+    if (sit === "normal") say("<b>Normal run.</b> The culture side pushes on the wall about 0.30&nbsp;bar harder than the shell side (that push is the TMP), so liquid crosses into the shell at a steady rate. Both planned alarms stay quiet.", "ok");
+    else if (sit === "clog") say("<b>Membrane clogging.</b> The run carries on as normal for a moment&hellip;");
+    else if (sit === "breach") say("<b>Fiber breaks.</b> The run carries on as normal for a moment&hellip;");
+    else say("<b>Fitting leaks.</b> The run carries on as normal for a moment&hellip;");
+  }
 
-  /* one model step; dt is real seconds */
+  /* ---- one model step; dt is real seconds ---- */
+  function addEvent(kind, label) {
+    events.push({ t: M.st, kind: kind, label: label || "" });
+    // once an alarm has fired, the chart runs on for a few seconds, then holds the whole story still
+    if (kind === "alarm") M.doneAt = M.st + 3;
+  }
+  function fire(kind) {
+    if (kind === "high") {
+      M.aP = "high"; M.ff = false; M.pumpT = 0; M.open = true;
+      addEvent("alarm");
+      say("<b>Pressure alarm (Layer&nbsp;1, planned).</b> A layer of cells and debris has built up on the wall, so the culture side had to push harder and TMP climbed past the alarm level. The planned controller sounds the alarm, stops the culture pump and opens the pinch valve. Clogging shows as a slow rise, long before anything breaks.", "alarm");
+    } else if (kind === "drop") {
+      M.aP = "drop"; M.stopAt = M.st + 0.9;
+      addEvent("alarm");
+      say("<b>Pressure alarm (Layer&nbsp;1, planned).</b> TMP fell suddenly, from about " + b2(M.tmpRef) + " to " + b2(disp.tmp) + "&nbsp;bar: the two sides&rsquo; pressures met through the broken fiber. A sudden drop can mean the membrane has given way, so the run stops and a shell&#8209;side sample is plated to check (<a href=\"#sec61\">6.1</a>).", "alarm");
+    } else if (kind === "wet") {
+      M.aW = true; M.pumpT = 0;
+      addEvent("alarm");
+      var dT = Math.abs(disp.tmp - M.tmpRef);
+      say("<b>Droplet alarm (Layer&nbsp;2, planned).</b> The pressures hardly moved (TMP changed by " + (dT < 0.01 ? "less than 0.01" : "only " + b2(dT)) + "&nbsp;bar), so the pressure alarm cannot see this one. The droplet sensor under the setup feels the liquid and the pumps stop. The two layers watch different failures.", "alarm");
+    }
+    lamps();
+  }
   function tick(dt, quick) {
-    var speed = 1, f = M.ff;
-    if (f && f.phase === 0) {                                // easing the valve to 40 % first
-      f.k += dt;
-      setValve(XP.lerp(f.c0, 0.4, XP.ease(Math.min(1, f.k / 1.2))), false);
-      if (f.k > 2.2 || quick && f.k > 1.2) beginRun();
-    } else if (f && f.phase === 1) speed = FF_H * 3600 / FF_S;
+    M.st += dt;
+    var speed = 1;
+    // the situation's script: the normal run first, then the fault
+    if (M.phase === 0 && sit !== "normal" && M.st >= LEAD) {
+      M.phase = 1;
+      M.tmpRef = disp.tmp;
+      if (sit === "clog") {
+        M.ff = true; M.ffT0 = M.t; M.J0 = solve(M.c, M.Rw, 0, 0).jm;
+        addEvent("mark", "fast-forward");
+        say("<b>Fast&#8209;forwarding a long run&hellip;</b> Cells and debris slowly build up on the fiber walls, so the culture side has to push harder to keep the harvest flowing: watch TMP climb toward the alarm level.");
+      } else if (sit === "breach") {
+        M.gbT = GB;
+        addEvent("mark", "fiber breaks");
+        say("<b>A fiber breaks.</b> Culture now flows straight into the shell side, so the lumen and shell pressures move toward each other&hellip;");
+      } else if (sit === "leak") {
+        M.glT = GL;
+        addEvent("mark", "leak");
+        say("<b>A fitting leaks.</b> Culture drips from the Out&#8209;Lumen fitting onto the bench&hellip;");
+      }
+    }
+    if (M.ff) speed = FF_H * 3600 / FF_S;
     var dm = dt * speed;
     M.t += dm;
 
-    // breach and leak open quickly but not in a single frame
-    M.gb += (M.gbT - M.gb) * Math.min(1, dt * 6);
-    M.gl += (M.glT - M.gl) * Math.min(1, dt * 6);
-    if (quick) { M.gb = M.gbT; M.gl = M.glT; }
+    // a break or a leak opens quickly but not in a single frame; a stopped pump runs down; an opened valve opens
+    var k = quick ? 1 : Math.min(1, dt * 6);
+    M.gb += (M.gbT - M.gb) * k;
+    M.gl += (M.glT - M.gl) * k;
+    M.pump += (M.pumpT - M.pump) * (quick ? 1 : Math.min(1, dt * 2.4));
+    if (M.open) M.c += (0 - M.c) * (quick ? 1 : Math.min(1, dt * 3));
+    if (M.stopAt && M.st >= M.stopAt) { M.pumpT = 0; M.stopAt = 0; }
 
     var s = solve(M.c, M.Rw, M.gb, M.gl);
-    if (f && f.phase === 1) {
+    if (M.ff) {
       M.Rw += ALPHA * s.jm * dm / 3600;                      // the cake grows with the liquid filtered
-      var cNeed = holdValve(f.J0, M.Rw, M.gb, M.gl);
-      if (cNeed >= CMAX - 1e-4 && f.limitAt == null) f.limitAt = Math.max(1, Math.round((M.t - f.t0) / 3600));
-      setValve(cNeed, false);
+      M.c = holdValve(M.J0, M.Rw, M.gb, M.gl);
       s = solve(M.c, M.Rw, M.gb, M.gl);
-      bFF.querySelector("span").textContent = "Fast-forwarding… " + Math.min(FF_H, Math.round((M.t - f.t0) / 3600)) + " h";
-      if (M.t - f.t0 >= FF_H * 3600) { endFF(false); }
+      if (M.t - M.ffT0 >= FF_H * 3600) M.ff = false;
     }
-
+    // a stopped pump: every port falls back to P0, nothing crosses the wall
+    var q = M.pump, r = {
+      pinL: P0 + (s.pinL - P0) * q, poutL: P0 + (s.poutL - P0) * q, pinS: P0 + (s.pinS - P0) * q, poutS: P0 + (s.poutS - P0) * q,
+      tmp: s.tmp * q, jm: s.jm * q };
     // the transducers read with a short lag (none with reduced motion)
-    var a = quick ? 1 : 1 - Math.exp(-dt / 0.45);
-    ["pinL", "poutL", "pinS", "poutS", "tmp", "jm"].forEach(function (k) { disp[k] += (s[k] - disp[k]) * a; });
-    var exp = solve(M.c, M.Rw, 0, 0).tmp;
-    M.expT += (exp - M.expT) * a;
+    var a = quick ? 1 : 1 - Math.exp(-dt / 0.3);
+    ["pinL", "poutL", "pinS", "poutS", "tmp", "jm"].forEach(function (key) { disp[key] += (r[key] - disp[key]) * a; });
 
-    // the model's low-TMP rule: TMP under half of what this valve setting should give
-    if (!M.aT && M.expT > 0.04 && disp.tmp < 0.5 * M.expT) {
-      M.aT = true; addEvent("alarm");
-      status.classList.add("is-alarm");
-      if (M.tmpBeforeBreach >= 0.04) {
-        say(ALARM + "<b>Low&#8209;TMP alarm</b>, as designed: the lumen and shell pressures have met, so TMP fell from about <b>" + b2(M.tmpBeforeBreach) +
-            "</b> to <b>" + b2(Math.max(0, s.tmp)) + "&nbsp;bar</b>. A breach shows here before any liquid is seen.");
-      } else {
-        say(ALARM + "<b>Low&#8209;TMP alarm</b>, as designed: the valve is closing, but TMP stays near <b>" + b2(Math.max(0, s.tmp)) +
-            "&nbsp;bar</b>, under half of what this setting should give. That is how a breach shows, before any liquid is seen.");
-      }
+    // Layer 1, as planned: TMP above the alarm level for a few readings in a row, or a sudden drop
+    recent.push({ t: M.st, v: disp.tmp });
+    while (recent.length > 2 && recent[1].t < M.st - DROP_S) recent.shift();
+    if (!M.aP && !M.aW && M.pumpT > 0) {
+      if (disp.tmp > HIGH) { M.highFor += dt; if (M.highFor >= 0.3) fire("high"); } else M.highFor = 0;
+      var then = recent[0];
+      if (!M.aP && then && M.st - then.t >= DROP_S * 0.9 && then.v > 0.1 && disp.tmp < DROP * then.v) fire("drop");
     }
 
-    // the leak: drops, a puddle on the sensor pad, the sensor trips
-    if (M.glT) {
-      M.dropAcc += dt;
-      if (quick) { M.wet = 0.55; }
-      else if (M.dropAcc > 0.5) { M.dropAcc = 0; drops.push({ y: L.y + 5, v: 0 }); }
+    // Layer 2, as planned: drips land on the droplet sensor under the setup
+    if (M.glT && M.pump > 0.25) {
+      if (quick) M.wet = Math.min(1, M.wet + dt * 0.3);
+      else { M.dropAcc += dt; if (M.dropAcc > 0.42) { M.dropAcc = 0; drops.push({ y: L.y + 5, v: 0 }); } }
+    }
+    if (!quick) {
       var keepD = [];
-      drops.forEach(function (d) { d.v += 900 * dt; d.y += d.v * dt; if (d.y >= L.padY - 1) M.wet = Math.min(1, M.wet + 0.16); else keepD.push(d); });
+      drops.forEach(function (d) { d.v += 900 * dt; d.y += d.v * dt; if (d.y >= L.padY - 1) M.wet = Math.min(1, M.wet + 0.14); else keepD.push(d); });
       drops = keepD;
-      if (!M.aW && M.wet >= 0.3) {
-        M.aW = true; addEvent("wet");
-        status.classList.add("is-alarm");
-        var dT = Math.abs(solve(M.c, M.Rw, M.gb, M.gl).tmp - M.tmpBeforeLeak);
-        say(ALARM + "<b>Droplet alarm</b>, as designed: liquid under the setup. TMP moved by " + (dT < 0.01 ? "less than 0.01" : "only " + b2(dT)) +
-            "&nbsp;bar, so only the droplet sensor sees this one. The two sensors watch different failures.");
-      }
     }
+    if (!M.aW && !M.aP && M.wet >= 0.3) fire("wet");
 
     // particles
     if (!quick) {
       M.permAcc += dt * Math.min(30, disp.jm * 70);
       while (M.permAcc >= 1) { M.permAcc -= 1; if (parts.length < 90) spawnPerm(1); }
-      if (M.gb > 1) { M.brAcc += dt * 3.5; while (M.brAcc >= 1) { M.brAcc -= 1; if (parts.length < 110) spawnPerm(2); } }
+      if (M.gb > 1 && M.pump > 0.2) { M.brAcc += dt * 3.5; while (M.brAcc >= 1) { M.brAcc -= 1; if (parts.length < 110) spawnPerm(2); } }
       stepParts(dt);
     }
 
-    // the chart: about 500 samples across the window, and every frame while fast-forwarding
-    if (M.t - M.lastT >= Math.max(0.2, M.win / 500) || (M.ff && M.ff.phase === 1) || quick) {
-      M.lastT = M.t;
-      hist.push({ t: M.t, v: disp.tmp });
-      if (hist.length > 2400) hist.splice(0, hist.length - 2400);
+    // the chart: a sample every 50 ms of the situation, until it has played out
+    if (!M.doneAt || M.st <= M.doneAt) {
+      M.ct = M.st;
+      if (M.st - M.lastH >= 0.05) {
+        M.lastH = M.st;
+        hist.push({ t: M.st, v: disp.tmp });
+        while (hist.length > 2 && hist[1].t < M.st - WIN * 1.05) hist.shift();
+      }
     }
-    // the window: a minute when live; the whole fast-forward while it runs, until the next action
-    var running = M.ff && M.ff.phase === 1;
-    if (running) M.winT = Math.max(60, M.t - M.ff.t0 + 60);
-    // the window follows a fast-forward exactly; only the way back to the live minute is eased
-    M.win = quick || running ? M.winT : Math.exp(XP.lerp(Math.log(M.win), Math.log(M.winT), Math.min(1, dt * 2.5)));
-    while (hist.length > 2 && hist[1].t < M.t - Math.max(M.win, M.winT) * 1.02) hist.shift();
   }
-  /* reduced motion: run the model forward until it settles, then draw once */
-  function settle() { for (var k = 0; k < 40; k++) tick(0.05, true); render(); }
 
   /* ---- drawing ---- */
   function drawScene() {
-    var W = L.W, H = L.H, i;
-    ctx.clearRect(0, 0, W, H);
-    var alarmT = M.aT, s = disp;
+    var W = L.W, i, s = disp;
+    ctx.clearRect(0, 0, W, L.H);
 
-    // the droplet sensor under the whole setup
+    // the droplet sensor under the whole setup: planned (7.3.3)
     rr(ctx, L.px0, L.padY, L.px1 - L.px0, 8, 4);
     ctx.fillStyle = M.aW ? C.alarmFill : C.partFill; ctx.fill();
-    ctx.lineWidth = 1.2; ctx.strokeStyle = M.aW ? C.alarm : C.part; ctx.stroke();
-    ctx.beginPath(); ctx.arc(L.px0 + 10, L.padY + 4, 2.6, 0, 6.2832); ctx.fillStyle = M.aW ? C.alarm : C.perm; ctx.fill();
+    ctx.lineWidth = 1.2; ctx.strokeStyle = M.aW ? C.alarm : C.part;
+    if (!M.aW && ctx.setLineDash) ctx.setLineDash([4, 3]);
+    ctx.stroke();
+    if (ctx.setLineDash) ctx.setLineDash([]);
+    ctx.beginPath(); ctx.arc(L.px0 + 10, L.padY + 4, 2.6, 0, 6.2832); ctx.fillStyle = M.aW ? C.alarm : C.part; ctx.fill();
     if (M.wet > 0) {
       ctx.beginPath(); ctx.ellipse(L.leakX, L.padY - 0.5, 4 + 26 * M.wet, 2.2 + 1.6 * M.wet, 0, Math.PI, 0);
-      ctx.fillStyle = "rgba(29, 90, 158, .35)"; ctx.fill();
+      ctx.fillStyle = "rgba(224, 138, 34, .45)"; ctx.fill();
     }
     if (M.aW) text(ctx, "droplet sensor: liquid", (L.px0 + L.px1) / 2, L.padY + 22, { size: 11, weight: 700, color: C.alarm, align: "center" });
-    else text(ctx, "droplet sensor", (L.px0 + L.px1) / 2, L.padY + 22, { size: 11, weight: 600, color: C.ink2, align: "center" });
+    else text(ctx, "droplet sensor (planned)", (L.px0 + L.px1) / 2, L.padY + 22, { size: 11, weight: 600, color: C.ink2, align: "center" });
 
     // the lumen lines: in from the pump, out through the valve
     tube(4, L.y, L.mx0, L.y, C.lumenTube, C.lumenFill);
     tube(L.mx1, L.y, W - 6, L.y, C.lumenTube, C.lumenFill);
     arrow(W - 2, L.y, 1, C.lumenTube);
     text(ctx, "from pump", 6, L.y - 10, { size: 11, weight: 500, color: C.ink3 });
-    // on phones too (reviewer, 15 Oct): the line has to say where it goes. There it is on two lines, in the gap
-    // between the Out-Lumen tap and the edge, so the tap's line does not run through it.
     if (!L.ph) text(ctx, "to reservoir", W - 4, L.y + 21, { size: 11, weight: 500, color: C.ink3, align: "right" });
     else { text(ctx, "to", W - 4, L.y + 21, { size: 11, weight: 500, color: C.ink3, align: "right" });
            text(ctx, "reservoir", W - 4, L.y + 34, { size: 11, weight: 500, color: C.ink3, align: "right" }); }
@@ -516,13 +542,14 @@
     text(ctx, "to harvest", W - 4, L.hy - 9, { size: 11, weight: 500, color: C.ink3, align: "right" });
 
     // the module: shell space, potted headers, fibers
+    var alarmP = !!M.aP;
     rr(ctx, L.mx0, L.my0, L.mx1 - L.mx0, L.mh, 12);
     ctx.fillStyle = C.shellSpace; ctx.fill();
-    ctx.lineWidth = alarmT ? 2.2 : 1.5; ctx.strokeStyle = alarmT ? C.alarm : C.part; ctx.stroke();
+    ctx.lineWidth = alarmP ? 2.2 : 1.5; ctx.strokeStyle = alarmP ? C.alarm : C.part; ctx.stroke();
     ctx.save(); rr(ctx, L.mx0, L.my0, L.mx1 - L.mx0, L.mh, 12); ctx.clip();
     ctx.fillStyle = C.head; ctx.fillRect(L.mx0, L.my0, L.hw, L.mh); ctx.fillRect(L.mx1 - L.hw, L.my0, L.hw, L.mh);
     ctx.restore();
-    var cake = XP.clamp((M.Rw - 1) / 3, 0, 1) * (L.ft / 2 - 1);
+    var cake = XP.clamp((M.Rw - 1) / 0.8, 0, 1) * (L.ft / 2 - 1);
     for (i = 0; i < L.nf; i++) {
       var fy = L.fy[i];
       rr(ctx, L.mx0 + 2, fy - L.ft / 2, L.mx1 - L.mx0 - 4, L.ft, L.ft / 2);
@@ -535,7 +562,7 @@
       rr(ctx, L.mx0 + 2, fy - L.ft / 2, L.mx1 - L.mx0 - 4, L.ft, L.ft / 2);
       ctx.lineWidth = 1; ctx.strokeStyle = C.lumen; ctx.stroke();
     }
-    if (M.gbT) {                                              // the breach: a split in one fiber's wall
+    if (M.gbT) {                                              // the break: a split in one fiber's wall
       var by = L.fy[L.bf] - L.ft / 2;
       ctx.fillStyle = C.shellSpace; ctx.fillRect(L.bx - 3, by - 1.5, 6, 3);
       ctx.beginPath(); ctx.arc(L.bx, by, 7.5, 0, 6.2832); ctx.lineWidth = 1.6; ctx.strokeStyle = C.alarm; ctx.stroke();
@@ -546,34 +573,37 @@
       var p = parts[i];
       if (p.kind !== 0) continue;
       var xy = lumenXY(p);
-      ctx.beginPath(); ctx.arc(xy[0], xy[1], 1.7, 0, 6.2832); ctx.fillStyle = C.lumen; ctx.fill();
+      ctx.beginPath(); ctx.arc(xy[0], xy[1], 1.8, 0, 6.2832); ctx.fillStyle = C.lumen; ctx.fill();
     }
-    // across the wall: permeate (green); after a breach, culture too (blue, ringed red)
+    // across the wall: permeate (green); after a break, culture too (amber, ringed red)
     for (i = 0; i < parts.length; i++) {
       p = parts[i];
       if (p.kind === 1) { ctx.beginPath(); ctx.arc(p.x, p.y, 1.8, 0, 6.2832); ctx.fillStyle = C.perm; ctx.fill(); }
       else if (p.kind === 2) {
-        capsule(ctx, p.x, p.y, p.th, 7, 3.6); ctx.fillStyle = C.alarmFill; ctx.fill();
+        capsule(ctx, p.x, p.y, p.th, 7, 3.6); ctx.fillStyle = "#fbe0bf"; ctx.fill();
         ctx.lineWidth = 1.1; ctx.strokeStyle = C.alarm; ctx.stroke();
       }
     }
 
-    if (alarmT) pill("LOW TMP", (L.mx0 + L.mx1) / 2, L.y);
+    var pillX = L.mx0 + (L.mx1 - L.mx0) * 0.64;
+    if (alarmP) pill(M.aP === "high" ? "TMP TOO HIGH" : "SUDDEN DROP", L.ph ? (L.mx0 + L.mx1) / 2 : pillX, L.ph ? L.my1 + 13 : L.y);
+    if (M.pumpT === 0 && M.pump < 0.6) pill("PUMP STOPPED", L.ph ? (L.mx0 + L.mx1) / 2 : 58, L.ph ? L.my1 + (alarmP ? 36 : 13) : L.y - 30, "#3c4650");
 
     // the pinch valve, on the Out-Lumen line after the transducer's tap
     var gap = 7 * (1 - 0.82 * M.c / CMAX) + 0.6;
     ctx.fillStyle = "#3c4650";
     rr(ctx, L.vx - 7, L.y - gap / 2 - 7, 14, 7, 2); ctx.fill();
     rr(ctx, L.vx - 7, L.y + gap / 2, 14, 7, 2); ctx.fill();
-    text(ctx, "pinch valve", L.vx, L.y - 15 - (L.ph ? 0 : 1), { size: 11, weight: 600, color: C.ink2, align: L.ph ? "right" : "center" });
+    text(ctx, M.open ? (L.ph ? "valve open" : "pinch valve: open") : "pinch valve", L.vx, L.y - 15 - (L.ph ? 0 : 1),
+         { size: 11, weight: M.open ? 700 : 600, color: M.open ? C.ink : C.ink2, align: L.ph ? "right" : "center" });
 
     // the leak, dripping from the Out-Lumen fitting
     if (M.glT) {
-      ctx.beginPath(); ctx.arc(L.leakX, L.y + 4.5, 2.2, 0, 6.2832); ctx.fillStyle = "rgba(29, 90, 158, .55)"; ctx.fill();
+      ctx.beginPath(); ctx.arc(L.leakX, L.y + 4.5, 2.2, 0, 6.2832); ctx.fillStyle = "rgba(224, 138, 34, .6)"; ctx.fill();
       drops.forEach(function (d) {
         ctx.beginPath(); ctx.moveTo(L.leakX, d.y - 4); ctx.quadraticCurveTo(L.leakX + 3, d.y + 1, L.leakX, d.y + 2.5);
         ctx.quadraticCurveTo(L.leakX - 3, d.y + 1, L.leakX, d.y - 4);
-        ctx.fillStyle = "rgba(29, 90, 158, .6)"; ctx.fill();
+        ctx.fillStyle = "rgba(224, 138, 34, .75)"; ctx.fill();
       });
     }
 
@@ -589,61 +619,43 @@
     gauge(L.tapOut, L.gBot, L.g, s.poutL, "Out‑Lumen", "L", false);
   }
 
-  /* the rolling TMP chart, one series, one axis */
-  var hover = null;
-  function fmtAgo(sec) {
-    if (sec < 1) return "now";
-    if (sec < 120) return Math.round(sec) + " s ago";
-    if (sec < 7200) return Math.round(sec / 60) + " min ago";
-    return Math.round(sec / 3600) + " h ago";
-  }
-  function fmtSpan(sec) {
-    if (sec < 120) return "−" + Math.round(sec) + " s";
-    if (sec < 7200) return "−" + Math.round(sec / 60) + " min";
-    return "−" + Math.round(sec / 3600) + " h";
-  }
+  /* the TMP chart: the last ten seconds of the situation, one line, the alarm level */
   function drawChart() {
-    var c = cctx, W = CW, H = CH, l = 44, r = W - 14, t = 22, b = H - 20;
+    var c = cctx, W = CW, H = CH, l = 34, r = W - 8, t = 10, b = H - 16;
     c.clearRect(0, 0, W, H);
-    var x = function (tt) { return r - (M.t - tt) / M.win * (r - l); };
+    var x = function (tt) { return r - (M.ct - tt) / WIN * (r - l); };
     var y = function (v) { return b - XP.clamp(v, 0, YMAX) / YMAX * (b - t); };
-    // grid and axes
-    [0, 0.25, 0.5].forEach(function (v) {
+    [0, 0.3, 0.6].forEach(function (v) {
       c.beginPath(); c.moveTo(l, y(v)); c.lineTo(r, y(v)); c.lineWidth = 1; c.strokeStyle = v === 0 ? "#c9d0cc" : C.grid; c.stroke();
-      text(c, v === 0 ? "0" : String(v), l - 6, y(v) + 4, { size: 10.5, weight: 500, color: C.ink3, align: "right", halo: false, mono: true });
+      text(c, v === 0 ? "0" : v.toFixed(1), l - 6, y(v) + 4, { size: 10.5, weight: 500, color: C.ink3, align: "right", halo: false, mono: true });
     });
-    text(c, "TMP, bar", l, 12, { size: 10.5, weight: 650, color: C.ink2, halo: false });
-    text(c, fmtSpan(M.win), l, H - 5, { size: 10.5, weight: 500, color: C.ink3, halo: false });
-    text(c, "now", r, H - 5, { size: 10.5, weight: 500, color: C.ink3, align: "right", halo: false });
+    // the alarm level, dashed, in the alarm's red
+    c.save();
+    if (c.setLineDash) c.setLineDash([5, 4]);
+    c.beginPath(); c.moveTo(l, y(HIGH)); c.lineTo(r, y(HIGH)); c.lineWidth = 1.3; c.strokeStyle = "rgba(198, 40, 40, .7)"; c.stroke();
+    c.restore();
+    text(c, "alarm level", l + 4, y(HIGH) - 4, { size: 10.5, weight: 650, color: "#a32020", halo: true });
+    text(c, "time →", r, H - 3, { size: 10.5, weight: 500, color: C.ink3, align: "right", halo: false });
 
-    // events: a hairline and a word; words that would touch share one label. The alarm also gets its dot on the line.
-    var marks = [];
-    events.forEach(function (e) {
-      var ex = x(e.t); if (ex < l || ex > r || (e.kind !== "breach" && e.kind !== "leak")) return;
-      c.beginPath(); c.moveTo(ex, t - 12); c.lineTo(ex, b); c.lineWidth = 1; c.strokeStyle = "#cfd5da"; c.stroke();
-      var last = marks[marks.length - 1];
-      if (last && ex - last.x < 64) last.word += " · " + e.kind; else marks.push({ x: ex, word: e.kind });
-    });
+    // what happened, marked where it happened
     c.font = "600 10.5px " + FONT;
-    marks.forEach(function (m) {
-      var lw = c.measureText(m.word).width, left = m.x + 4 + lw > r + 10;   // near "now", the word goes on the left
-      text(c, m.word, left ? m.x - 4 : m.x + 4, 12, { size: 10.5, weight: 600, color: C.ink2, align: left ? "right" : "left" });
+    events.forEach(function (e) {
+      var ex = x(e.t); if (ex < l || ex > r || e.kind !== "mark") return;
+      c.beginPath(); c.moveTo(ex, t); c.lineTo(ex, b); c.lineWidth = 1; c.strokeStyle = "#cfd5da"; c.stroke();
+      var lw = (c.measureText(e.label).width || 40), left = ex - 6 - lw >= l + 2;
+      text(c, e.label, left ? ex - 5 : ex + 5, b - 5, { size: 10.5, weight: 600, color: C.ink2, align: left ? "right" : "left" });
     });
 
-    // the line, with a 10 % wash under it
-    var t0 = M.t - M.win * 1.02, pts = [];
-    for (var hi = 0; hi < hist.length; hi++) {
-      if (hist[hi].t >= t0) { if (!pts.length && hi > 0) pts.push(hist[hi - 1]); pts.push(hist[hi]); }
-    }
+    var t0 = M.ct - WIN * 1.02, pts = hist.filter(function (h) { return h.t >= t0; });
     if (pts.length > 1) {
       c.save(); c.beginPath(); c.rect(l, t - 4, r - l, b - t + 8); c.clip();
       c.beginPath();
       pts.forEach(function (h, i) { var px = x(h.t), py = y(h.v); if (i) c.lineTo(px, py); else c.moveTo(px, py); });
       c.lineTo(x(pts[pts.length - 1].t), b); c.lineTo(x(pts[0].t), b); c.closePath();
-      c.fillStyle = "rgba(35, 104, 74, .1)"; c.fill();
+      c.fillStyle = "rgba(35, 134, 79, .1)"; c.fill();
       c.beginPath();
       pts.forEach(function (h, i) { var px = x(h.t), py = y(h.v); if (i) c.lineTo(px, py); else c.moveTo(px, py); });
-      c.lineWidth = 2; c.lineJoin = "round"; c.lineCap = "round"; c.strokeStyle = C.line; c.stroke();
+      c.lineWidth = 2.2; c.lineJoin = "round"; c.lineCap = "round"; c.strokeStyle = C.line; c.stroke();
       c.restore();
       var last = pts[pts.length - 1];
       c.beginPath(); c.arc(x(last.t), y(last.v), 4, 0, 6.2832); c.fillStyle = C.line; c.fill();
@@ -653,72 +665,51 @@
       if (e.kind !== "alarm") return;
       var ex = x(e.t); if (ex < l || ex > r) return;
       var v = 0; for (var i = 0; i < hist.length; i++) if (hist[i].t >= e.t) { v = hist[i].v; break; }
-      c.beginPath(); c.arc(ex, y(v), 4.5, 0, 6.2832); c.fillStyle = C.alarm; c.fill();
+      c.beginPath(); c.arc(ex, y(v), 5, 0, 6.2832); c.fillStyle = C.alarm; c.fill();
       c.lineWidth = 2; c.strokeStyle = "#fff"; c.stroke();
     });
-
-    // hover: a crosshair on the nearest sample
-    if (hover != null && pts.length) {
-      var tt = M.t - (r - XP.clamp(hover, l, r)) / (r - l) * M.win, best = pts[0];
-      pts.forEach(function (h) { if (Math.abs(h.t - tt) < Math.abs(best.t - tt)) best = h; });
-      var hx = x(best.t), hy = y(best.v);
-      c.beginPath(); c.moveTo(hx, t - 2); c.lineTo(hx, b); c.lineWidth = 1; c.strokeStyle = "#9aa5af"; c.stroke();
-      c.beginPath(); c.arc(hx, hy, 4, 0, 6.2832); c.fillStyle = C.line; c.fill(); c.lineWidth = 2; c.strokeStyle = "#fff"; c.stroke();
-      var label = best.v.toFixed(3) + " bar · " + fmtAgo(M.t - best.t);
-      c.font = "600 11px " + FONT;
-      var tw = c.measureText(label).width + 14, tx = XP.clamp(hx + 8, l, r - tw);
-      rr(c, tx, 1, tw, 19, 6); c.fillStyle = "rgba(255,255,255,.97)"; c.fill(); c.lineWidth = 1; c.strokeStyle = "#d5dbe0"; c.stroke();
-      text(c, label, tx + 7, 14.5, { size: 11, weight: 600, color: C.ink, halo: false });
-    }
   }
 
-  var shown = {};
+  var shownT = "";
   function readouts() {
-    // the gauges' rounded readings, and TMP from exactly those, so the sum on screen always adds up
-    var r = { pinL: +disp.pinL.toFixed(2), poutL: +disp.poutL.toFixed(2), pinS: +disp.pinS.toFixed(2), poutS: +disp.poutS.toFixed(2) };
-    r.tmp = (r.pinL + r.poutL) / 2 - (r.pinS + r.poutS) / 2;
-    ["pinL", "poutL", "pinS", "poutS"].forEach(function (k) { var v = r[k].toFixed(2); if (shown[k] !== v) { shown[k] = v; calc[k].textContent = v; } });
-    var tv = XP.fmt(r.tmp, 3);
-    if (shown.tmp !== tv) { shown.tmp = tv; calc.tmp.textContent = tv; }
-    var j = XP.clamp(disp.jm / 0.32, 0, 1), word = j < 0.03 ? "none" : j < 0.3 ? "low" : j < 0.65 ? "moderate" : "high";
-    fluxBar.style.transform = "scaleX(" + j.toFixed(3) + ")";
-    if (shown.flux !== word) { shown.flux = word; flux.setAttribute("aria-valuetext", word); flux.setAttribute("aria-valuenow", String(Math.round(j * 100))); }
+    var tv = b2(disp.tmp);
+    if (tv !== shownT) { shownT = tv; tmpEl.textContent = tv; }
   }
   function render() { drawScene(); drawChart(); readouts(); }
 
+  /* ---- the situations ---- */
+  function start(id, announce) {
+    sit = id;
+    opts.forEach(function (b) { b.setAttribute("aria-pressed", b.getAttribute("data-s") === id ? "true" : "false"); });
+    status.setAttribute("aria-live", announce ? "polite" : "off");
+    fresh();
+    lamps();
+    intro();
+    if (still) settle(); else render();
+  }
+  /* reduced motion: play the whole situation at once, to its outcome, then draw it */
+  function settle() {
+    var cap = sit === "normal" ? 3 : LEAD + FF_S + 3;
+    for (var k = 0; k < cap / 0.05; k++) {
+      tick(0.05, true);
+      if (M.doneAt && M.st > M.doneAt) break;
+    }
+    if (sit === "normal") intro();
+    render();
+  }
+
   /* ---- wiring ---- */
-  fresh();
   layout();
   fig.classList.add("is-live");
-  setValve(0, false);
-  say("Start: the 4 September reading. Feed (In&#8209;Lumen), retentate (Out&#8209;Lumen) and permeate (shell) each read about 0.20&nbsp;bar, so TMP is about zero and nothing pushes liquid across the wall. <b>Close the pinch valve.</b>");
-  render();
+  XP.watch(fig, function (v) { fig.classList.toggle("is-vis", v); });
+  start("normal", false);
 
   var loop = null;
-  if (!still) loop = XP.loop(box, function (dt) { if (dt > 0) tick(dt, false); render(); });
+  // the whole stage, drawing and readout, counts as on screen: the chart keeps moving while only it is in view
+  if (!still) loop = XP.loop(stageEl, function (dt) { if (dt > 0) tick(dt, false); render(); });
 
-  valve.addEventListener("input", function () {
-    setValve(+valve.value / 100, true);
-    toLive();
-    if (still) settle();
-  });
-  valve.addEventListener("change", function () {
-    setValve(+valve.value / 100, true);
-    if (still) settle();
-    if (M.aT || M.gbT) return;               // during a breach, the alarm rule in tick() does the talking
-    var s = solve(M.c, M.Rw, M.gb, M.gl);
-    if (M.c < 0.02) say("Valve open: every port near 0.20&nbsp;bar again and TMP about zero, so nothing is pushed across the wall.");
-    else say("Pinch valve " + pct(M.c) + "% closed: the lumen side rises to about <b>" + b2(s.poutL) + "&nbsp;bar</b>, TMP to <b>" + b2(s.tmp) +
-             "&nbsp;bar</b>, and liquid is pushed across the wall into the shell.");
-  });
-  bFF.addEventListener("click", startFF);
-  bBreach.addEventListener("click", breach);
-  bLeak.addEventListener("click", leak);
-  bReset.addEventListener("click", reset);
-
-  // the chart's crosshair (pointer); the readouts above carry the same numbers for keyboard and screen readers
-  ch.addEventListener("pointermove", function (e) { var rc = ch.getBoundingClientRect(); hover = e.clientX - rc.left; if (still || !loop) drawChart(); });
-  ch.addEventListener("pointerleave", function () { hover = null; if (still || !loop) drawChart(); });
+  opts.forEach(function (b) { b.addEventListener("click", function () { start(b.getAttribute("data-s"), true); }); });
+  again.addEventListener("click", function () { start(sit, true); });
 
   var lastW = L.W;
   if ("ResizeObserver" in window) {

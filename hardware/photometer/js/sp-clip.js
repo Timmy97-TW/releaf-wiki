@@ -42,6 +42,12 @@
 //     frames, while playing decodes each frame once. When the scroll stops or turns back it
 //     pauses and makes one exact seek, as before;
 //   - a quiet "Skip" in the popped-out card's corner jumps past the pinned stretch.
+//
+// 18 Oct 2026, the owner: "hardstop the scrolling with the progress of the video". The pinned stretch is gated
+// (ScrollGate, ../../js/vu-embed.js): the scroll may run at most LEAD_S of clip ahead of the frame on screen (the
+// last seek that landed, or the player's reported position carried forward at most 0.6 s while it plays along), so
+// the card cannot settle back into the column before the clip has reached its end. Wheel, trackpad and touch only;
+// the keyboard, links and Skip are never held.
 (function () {
   "use strict";
   var figs = document.querySelectorAll("figure.sp-clip[data-src-desktop]");
@@ -223,9 +229,9 @@
     var objectURL = null, token = 0, ok = false, dur = 0;
     function load(which) {
       if (which === kind) return;
-      kind = which; clip = SRC[which];
+      kind = which; clip = SRC[which]; shownT = 0; clipFailed = false;
       var my = ++token;
-      ok = false; seeking = false; mode = "seek";
+      ok = false; seeking = false; mode = "seek"; floorT = -1;
       fig.classList.toggle("is-portrait", which === "phone");
       if (objectURL) { URL.revokeObjectURL(objectURL); objectURL = null; }
       video.removeAttribute("src"); video.load();
@@ -253,7 +259,9 @@
       var go = function () { video.pause(); seeking = false; kickLoop(); };
       if (pr && pr.then) pr.then(go, go); else go();
     });
+    var clipFailed = false;
     video.addEventListener("error", function () {
+      clipFailed = true;
       if (video.getAttribute("src")) console.warn("simplified-photometer clip unavailable; the poster stays");
     });
 
@@ -265,6 +273,7 @@
     video.addEventListener("seeked", function () {
       if (!seeking) return;
       seeking = false;
+      if (mode !== "play") shownT = video.currentTime;
       var ms = performance.now() - seekT0;
       stats.seeks++; stats.ms.push(ms); if (stats.ms.length > 400) stats.ms.shift();
       stats.maxMs = Math.max(stats.maxMs, ms);
@@ -274,6 +283,7 @@
       if (!ok || seeking) return;
       // the first frame is stamped 0.033 s, the last half a frame before the end
       var target = Math.max(T0, Math.min(dur - 1 / 120, t));
+      if (floorT >= 0) target = Math.max(target, Math.min(dur - 1 / 120, floorT));   // never back while going forward
       if (!force && Math.abs(video.currentTime - target) < 1 / 120) return;
       force = false;
       seeking = true; seekT0 = now;
@@ -296,31 +306,75 @@
     }
     function setRate(r, now) {
       if (mode === "play") { anchorPos = position(now); anchorAt = Math.max(anchorAt, now); }
-      rate = Math.max(0.25, Math.min(16, r)); rateAt = now;
+      var nr = Math.max(0.25, Math.min(vu() ? 6 : 16, r));
+      if (mode === "play") { ubPos = upper(now); ubAt = now; ubR = Math.max(ubR > 0 ? rate : 0, nr); }   // (the old rate may still run a moment)
+      rate = nr; rateAt = now;   // (6x in the player: see ../../js/scrub-video.js)
       try { video.playbackRate = rate; } catch (e) { /* the browser refused the rate: keep the old one */ }
       stats.rates++;
     }
-    function startPlay(now) {
-      anchorPos = video.currentTime; anchorAt = now + 90; repSeen = now;
+    function startPlay(now, from) {
+      anchorPos = from === undefined ? video.currentTime : from; anchorAt = now + 90; repSeen = now; playFrom = anchorPos; playAt = now;
       mode = "play"; stats.plays++;
-      setRate(vel, now);
+      ubPos = anchorPos; ubAt = now; ubR = 0;
+      setRate(vu() ? Math.max(vel, 0.25) + (t - anchorPos) / 0.35 : vel, now);
       var pr = video.play();
       if (pr && pr.catch) pr.catch(function () { mode = "seek"; force = true; });
     }
-    function stopPlay() {
-      mode = "seek";
-      video.pause();
-      seeking = false; force = true;         // then one exact seek to where the scroll is
+    // 18 Oct 2026, the owner: "sometimes i scroll and it suddenly jumps back a few frames". Playing along, the clip
+    // often runs a little past the scroll (its rate is steered by an estimate between the player's 0.5 s reports), and
+    // the exact seek "to where the scroll is" that followed every stop then went BACK: measured 13 of 18 stops, up to
+    // 0.47 s (28 frames). Now a stop never goes back while the scroll runs forward: the clip is held where it is (a
+    // floor, floorT), the player's next report says exactly where that is, and the picture waits there until the
+    // scroll passes it. Only a scroll that turns back (want falls) lifts the floor.
+    var floorT = -1, landAt = 0, lastWant = 0;
+    // As far as the playing clip can have got: where it started (or its last report) plus the fastest rate in force
+    // since then, with no start-up allowance. (position() assumes the player takes 90 ms to start; it often starts at
+    // once, so at a stop it was measured 0.3 s short of the frame on screen.)
+    var ubPos = 0, ubAt = 0, ubR = 0;
+    function upper(now) {
+      var u = ubPos + ubR * Math.max(0, now - ubAt) / 1000, S = vu();
+      if (S && S.rep && S.rep.at > ubAt) u = Math.min(u, S.rep.pos + ubR * Math.max(0, now - S.rep.at) / 1000);
+      return u;
     }
+    function stopPlay(now) {
+      now = now || performance.now();
+      var hi = Math.max(upper(now) + 0.03, position(now), playShown(now));   // (+30 ms: the hold's own way there)
+      shownT = playShown(now);
+      video.pause();
+      seeking = false;
+      if (vu()) { mode = "land"; landAt = now; landKnown = false; floorT = Math.max(floorT, hi + LAND_PAD); }
+      else { mode = "seek"; force = true; floorT = Math.max(floorT, video.currentTime); }   // a real <video> knows
+    }
+    // Held after playing along: nothing is sent until the scroll has passed the held frame; then one seek, forward,
+    // and the usual seek/play rules from there. Where it is held comes from the player's first report after the hold.
+    // LAND_PAD: a playing clip's picture runs up to ~5 frames ahead of the time it reports (measured: held at
+    // 0.645 s with 0.717 s on screen), so even a seek to exactly where it reports was a step back.
+    var LAND_PAD = 0.12, landKnown = false;
+    function land(now) {
+      var S = vu();
+      if (floorT < 0) { mode = "seek"; force = true; seek(now); return; }            // the scroll turned back
+      if (!landKnown && S && S.rep && S.rep.at > landAt + 120) {
+        landKnown = true; shownT = S.rep.pos; floorT = S.rep.pos + LAND_PAD;
+      }
+      if (t > floorT) { mode = "seek"; force = true; seek(now); }                    // past it: forward from here
+    }
+    // 18 Oct 2026, in the Video Universe player: every forward move is played (however slow) and steered by the
+    // player's reported position (playShown), because its answer to a seek comes before the frame does and a seek
+    // that waits for data cannot be seen from out here; a playing clip that waits stops reporting progress. Seeks
+    // remain for going back and for jumps. (A plain <video> keeps the 17 Oct rule.)
     function follow(now) {
+      var S = vu();
+      if (mode === "land") { land(now); return; }
       if (mode === "seek") {
-        if (ok && !seeking && vel > V_ON && t < dur - 0.6 && Math.abs(t - video.currentTime) < 2.5) startPlay(now);
+        var ahead = t - video.currentTime;
+        var go = S ? ahead > 1.5 / 60 && ahead < 3 && t < dur - 0.3 : vel > V_ON && t < dur - 0.6 && Math.abs(ahead) < 2.5;
+        if (ok && go && (S || !seeking)) startPlay(now);   // (a seek still in flight in the player is overtaken by the play)
         else seek(now);
         return;
       }
-      var x = position(now), e = t - x;
-      var why = vel < V_OFF && e < 0.1 ? "still" : e < -0.6 ? "ahead" : e > 3 ? "behind" : t >= dur - 0.3 ? "end" : "";
-      if (why) { stats.stops[why] = (stats.stops[why] || 0) + 1; stopPlay(); seek(now); return; }
+      var x = position(now), e = t - x, eT = S ? t - playShown(now) : e;
+      var why = vel < V_OFF && e < (S ? 0.05 : 0.1) && eT < 0.6 ? "still" : eT < -0.6 ? "ahead" : eT > (S ? 3.5 : 3) ? "behind" : t >= dur - 0.3 ? "end" : "";
+      if (why) { stats.stops[why] = (stats.stops[why] || 0) + 1; stopPlay(now); if (mode === "seek") seek(now); return; }
       // the rate the scroll runs at, plus a pull toward it: behind, a little faster; ahead, a little slower
       var r = vel + e / 0.35;
       if (Math.abs(r - rate) > 0.2 * rate && now - rateAt > 200) setRate(r, now);
@@ -330,6 +384,8 @@
       raf = 0;
       var dt = Math.min(0.05, Math.max(0, (now - last) / 1000)); last = now;
       want = geometry() * (dur || 26.77);
+      if (want < lastWant - 0.02) floorT = -1;   // the reader turned back: going back is right now
+      lastWant = want;
       if (reduce) { t = l1 = l2 = want; vel = 0; }
       else {
         var t0 = t, n = Math.max(1, Math.ceil(dt / SUB)), k = 1 - Math.exp(-(dt / n) / TAU);
@@ -340,13 +396,33 @@
       if (settled) { t = l1 = l2 = want; vel = 0; }
       follow(now);
       skipShow();
-      if (near || !settled || seeking || mode === "play") raf = requestAnimationFrame(step);
+      if (near || !settled || seeking || mode !== "seek") raf = requestAnimationFrame(step);
     }
     function kickLoop() {
       if (raf) return;
       last = performance.now();
       raf = requestAnimationFrame(step);
     }
+
+    /* ------------------------------------------------------------ the scroll gate */
+    var shownT = 0, LEAD_S = 0.5, playFrom = 0, playAt = 0;
+    // the player's last report carried forward at most 0.5 s, at the speed it really moved (0 while it buffers)
+    function playShown(now) {
+      var S = vu();
+      if (!S) return video.currentTime;
+      if (!S.rep || S.rep.at <= playAt) return playFrom + Math.min(0.4, rate * Math.min(0.25, Math.max(0, now - playAt - 90) / 1000));
+      var r0 = S.rep.r || 0;
+      if (S.rep.prevAt <= playAt) { var d0 = (S.rep.at - playAt - 90) / 1000; r0 = d0 > 0.05 ? (S.rep.pos - playFrom) / d0 : 0; }
+      var r = Math.max(0, Math.min(rate * 1.15, r0));
+      return S.rep.pos + Math.min(0.35, r * Math.min(0.5, Math.max(0, now - S.rep.at) / 1000));
+    }
+    if (window.ScrollGate) ScrollGate.add(frame, function () {
+      if (clipFailed || !started) return null;
+      var D = dur || 26.77;       // before the clip has answered, the poster (its first frame) is what is shown
+      var f = (mode === "play" ? playShown(performance.now()) : shownT) / D;
+      var b = GROW * vh, y0 = track.getBoundingClientRect().top + (window.pageYOffset || document.documentElement.scrollTop || 0) - T + b;
+      return ScrollGate.at(y0, y0 + Math.max(1, L - 2 * b), Math.max(0, f), LEAD_S / D);
+    });
 
     /* ------------------------------------------------------------ the Skip button */
     // In the card's corner while it is out (left of the page's "Jump to" hint on a desk), quiet until pointed at.

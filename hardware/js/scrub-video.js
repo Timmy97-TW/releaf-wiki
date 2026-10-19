@@ -24,6 +24,15 @@
 //     The video holds the rest, frozen at the clock it was rendered with.
 //   - Reduced motion: story-core already hands p straight from the scroll (no spring) and
 //     a clock of 0, so the scrub is frame-accurate and every live layer stands still.
+//   - 18 Oct 2026, the owner: "sometimes the video cant keep up with the scrolling, and the labels move on without
+//     the clip, so I want you to hardstop the scrolling with the progress of the video". Two things, both keyed to
+//     the frame actually ON SCREEN (the last seek the player confirmed, the frame the <video> presented, or, while
+//     the Video Universe player plays along, its own reported position carried forward at most 0.6 s):
+//       * the scroll may not run more than LEAD_S (0.5 s of clip) ahead of it: ScrollGate (js/vu-embed.js) holds
+//         wheel, trackpad and touch input at that wall until the picture catches up;
+//       * follow(p) (followP here): the p the captions, labels and live layers are drawn at, kept within EPS_F frames of the
+//         shown frame (lightly smoothed), so the words can never be on a different act from the picture. The page
+//         passes it to story-core as cfg.follow and to its own dom(); the seek itself still goes to the scroll's p.
 window.ScrubVideo = function (opt) {
   "use strict";
 
@@ -136,7 +145,8 @@ window.ScrubVideo = function (opt) {
     if (which === kind) return;
     kind = which; clip = DATA[which] || null;
     const token = ++loadToken;
-    ok = false; shown = false; failed = false; seeking = false; presented = -1;
+    ok = false; shown = false; failed = false; seeking = false; presented = -1; shownF = 0; dispP = -1;
+    pmode = "seek"; pFloor = -1;   // (18 Oct 2026: a switch mid-play or mid-hold starts over)
     if (objectURL) { URL.revokeObjectURL(objectURL); objectURL = null; }
     // a switch (a phone turned on its side): the new clip's poster until its first frame
     frame.classList.remove("hv-shown", "hv-has-poster", "hv-failed");
@@ -193,11 +203,13 @@ window.ScrubVideo = function (opt) {
     maybeReady(true);
   }
 
-  // The loader goes when there is something true to show: the clip's first frame, or
-  // the poster while the story is still at its opening (the poster IS p = 0).
+  // The loader goes when there is something true to show: the clip's first frame, scrubbable (a seek has landed),
+  // or, when the clip cannot play, the poster for good. 18 Oct 2026, the owner: "If the animation isn't fully loaded
+  // yet then leave the screen on loading not on the hero first frame tht will confuse reader": the poster no longer
+  // stands in at the opening while the clip loads (it looked live and did not move).
   function maybeReady(force) {
     if (isReady) return;
-    if (shown || force || (frame.classList.contains("hv-has-poster") && curP < 0.02)) fireReady();
+    if (shown || force) fireReady();
   }
 
   video.addEventListener("loadedmetadata", function () {
@@ -209,9 +221,12 @@ window.ScrubVideo = function (opt) {
     if (pr && pr.then) pr.then(function () { video.pause(); kick(true); }, function () { kick(true); });
     else { video.pause(); kick(true); }
   });
+  // the Video Universe player's own stages (js/vu-embed.js), short of 1: 1 is the first frame on screen ("seeked")
+  video.addEventListener("vuprogress", function () { if (!shown) progress(Math.min(0.97, video.vuProgress || 0)); });
   video.addEventListener("error", function () { fail("decode/network error " + (video.error ? video.error.code : "")); });
   video.addEventListener("seeked", function () {
     seeking = false; seekedAt = performance.now();
+    if (pmode !== "play") setShown(Math.round(video.currentTime * FPS - 0.5));
     stats.seeks++; const ms = performance.now() - seekT0; stats.seekMs += ms; stats.seekMax = Math.max(stats.seekMax, ms);
     if (!shown) { shown = true; frame.classList.add("hv-shown"); progress(1); maybeReady(); }
     if (!hasRVFC) presented = Math.round(video.currentTime * FPS - 0.5);
@@ -222,6 +237,7 @@ window.ScrubVideo = function (opt) {
   if (hasRVFC) {
     const onFrame = function (now, meta) {
       presented = Math.round(meta.mediaTime * FPS);
+      if (!vuS() && shown) setShown(presented);
       stats.frames++;
       video.requestVideoFrameCallback(onFrame);
     };
@@ -238,6 +254,7 @@ window.ScrubVideo = function (opt) {
   function kick(first) {
     if (!ok || failed) return;
     if (pmode === "play" && !first) return;
+    if (pmode === "land" && !first && !pLand()) return;
     if (seeking && !first) return;
     const cur = Math.round(video.currentTime * FPS - 0.5);
     if (!first && !pForce && cur === want && shown) return;
@@ -253,7 +270,8 @@ window.ScrubVideo = function (opt) {
   // turns back it pauses and makes one exact seek. Where the player is between its reports (every 0.5 s) is
   // carried forward at the rate in force. Only for the player: a clip from a plain file seeks in ~5 ms.
   let pmode = "seek", prate = 1, pAnchor = 0, pAt = 0, pRep = 0, pRateAt = 0, pForce = false;
-  let vt = 0, lastDrawP = -1, lastDrawAt = 0;
+  let vt = 0, lastDrawP = -1, lastDrawAt = 0, pStartT = 0, pStartAt = 0;
+  const RATE_MAX = 6;
   function vuS() { return video.__vu || null; }
   function pPos(now) {
     const S = vuS();
@@ -262,31 +280,154 @@ window.ScrubVideo = function (opt) {
   }
   function pSetRate(r, now) {
     if (pmode === "play") { pAnchor = pPos(now); pAt = Math.max(pAt, now); }
-    prate = Math.max(0.25, Math.min(16, r)); pRateAt = now;
+    // (18 Oct 2026: at most 6x, was 16x. Above that, with the CPU at 1/4, the player's clock ran on while the picture
+    // stood still -- its reports said 54 s while the frame on screen was 28 s -- so neither the words nor the gate could
+    // trust them. 6x is still 6 s of clip a second, about 2,000 px of scroll.)
+    const nr = Math.max(0.25, Math.min(RATE_MAX, r));
+    if (pmode === "play") { pUbPos = pUpper(now); pUbAt = now; pUbR = Math.max(pUbR > 0 ? prate : 0, nr); }   // (the old rate may run a moment)
+    prate = nr; pRateAt = now;
     try { video.playbackRate = prate; } catch (e) { /* the old rate stays */ }
   }
   function pStart(now) {
-    pAnchor = video.currentTime; pAt = now + 90; pRep = now;
+    pAnchor = video.currentTime; pAt = now + 90; pRep = now; pStartT = pAnchor; pStartAt = now;
     pmode = "play"; stats.plays++;
-    pSetRate(vt, now);
+    pUbPos = pAnchor; pUbAt = now; pUbR = 0;
+    pSetRate(Math.max(vt, 0.25) + (timeOf(want) - pAnchor) / 0.35, now);
     const pr = video.play();
     if (pr && pr.catch) pr.catch(function () { pmode = "seek"; pForce = true; });
   }
-  function pStop() { pmode = "seek"; video.pause(); seeking = false; pForce = true; stats.stops++; }
-  // true when this frame is played along; false when the seek path should run
+  // 18 Oct 2026 (the owner, of the Slim pop-out that plays along the same way: "sometimes i scroll and it suddenly jumps
+  // back a few frames"). Playing along, the clip often runs a little past the scroll, and the exact seek "to where the
+  // scroll is" after every stop then went BACK (Slim, measured: 13 of 18 stops, up to 0.47 s). Now a stop holds the
+  // clip where it is ("land"): nothing is sent until the scroll has passed the held frame (the player's first report
+  // after the hold, plus LAND_PAD: its picture runs up to ~5 frames ahead of the time it reports), then one forward
+  // seek and the usual rules. Only a scroll that turns back lifts that floor (pFloor). Same as photometer/js/sp-clip.js.
+  let pFloor = -1, pLandAt = 0, pLandKnown = false, pUbPos = 0, pUbAt = 0, pUbR = 0, pLastWant = 0;
+  const LAND_PAD = 0.12;
+  // as far as the playing clip can have got: its start (or last report) plus the fastest rate in force since, with no
+  // start-up allowance (pPos assumes 90 ms; the player often starts at once)
+  function pUpper(now) {
+    const S = vuS();
+    let u = pUbPos + pUbR * Math.max(0, now - pUbAt) / 1000;
+    if (S && S.rep && S.rep.at > pUbAt) u = Math.min(u, S.rep.pos + pUbR * Math.max(0, now - S.rep.at) / 1000);
+    return u;
+  }
+  function pStop() {
+    const now = performance.now(), hi = Math.max(pUpper(now) + 0.03, pPos(now), playShownT(now));
+    setShown(playShownF(now)); video.pause(); seeking = false; stats.stops++;
+    pmode = "land"; pLandAt = now; pLandKnown = false; pFloor = Math.max(pFloor, hi + LAND_PAD);
+  }
+  // held: true once the seek path may run again (the scroll turned back, or passed the held frame: a forward seek)
+  function pLand() {
+    const S = vuS();
+    if (pFloor >= 0 && !pLandKnown && S && S.rep && S.rep.at > pLandAt + 120) {
+      pLandKnown = true; pFloor = S.rep.pos + LAND_PAD; setShown(Math.round(S.rep.pos * FPS - 0.5));
+    }
+    if (pFloor >= 0 && timeOf(want) <= pFloor) return false;
+    pmode = "seek"; pForce = true; return true;
+  }
+  // where the player is while it plays along: its last report (every 0.5 s, accurate to a frame, measured), carried
+  // forward at most 0.5 s (and 0.35 s of clip) at the speed it really moved between its last two reports (0 while it buffers); before its
+  // first report since the play began, where it began. Conservative on purpose: while the clip speeds up the words
+  // may trail the picture by a fraction of a report; they never run ahead of it (measured: extrapolating at the rate
+  // in force instead let them lead by up to 2 s whenever a stall began between two reports; the 0.35 s cap bounds
+  // that lead even at a high rate).
+  function playShownT(now) {
+    const S = vuS();
+    // just after the play began: carried forward at the rate asked for, a quarter of a second (0.4 s of clip) at most
+    let t = pStartT + Math.min(0.4, prate * Math.min(0.25, Math.max(0, now - pStartAt - 90) / 1000));
+    if (S && S.rep && S.rep.at > pStartAt) {
+      // the first report since the play began is measured from the start, not from the paused report before it
+      let r0 = S.rep.r || 0;
+      if (S.rep.prevAt <= pStartAt) { const dt = (S.rep.at - pStartAt - 90) / 1000; r0 = dt > 0.05 ? (S.rep.pos - pStartT) / dt : 0; }
+      const r = Math.max(0, Math.min(prate * 1.15, r0));
+      t = S.rep.pos + Math.min(0.35, r * Math.min(0.5, Math.max(0, now - S.rep.at) / 1000));
+    }
+    return t;
+  }
+  // 18 Oct 2026, the owner: "the labels and the bioreactor clip isn't playing in sync". Measured (rVFC inside the
+  // player against the labels, scratchpad sync/heroharness.py): playing along, the picture keeps within ~2 frames of
+  // the scroll's frame, but playShownT, which only trusts the 0.5 s reports, trailed it by up to 22 frames (0.75 s), so
+  // the labels lagged the picture and the scroll wall (ScrollGate) held the reader back on a picture that was already
+  // there. So the frame on screen while playing is the scroll's own frame, kept between what the player has surely
+  // reached (playShownT, its reports) and what it can at most have reached (pUpper: its last report plus the fastest
+  // rate in force since). A player that stalls stops moving between two reports: then the reports alone.
+  // (The upper bound uses the speed the player really made between its last two reports, a third more, at least 1x:
+  // asked for 5x on a fast wheel it may make 3x, and the rate asked for let the labels lead by up to 31 frames.)
+  function playEstT(now) {
+    const lo = playShownT(now), S = vuS();
+    let hi = pUpper(now);
+    if (S && S.rep && S.rep.playing && S.rep.at > pStartAt) {
+      const age = Math.min(0.6, Math.max(0, now - S.rep.at) / 1000);
+      hi = Math.min(hi, S.rep.pos + (S.rep.r < 0.2 && S.rep.prevAt > pStartAt ? 0 : Math.max(1, 1.33 * S.rep.r)) * age);
+    } else hi = Math.min(hi, pStartT + Math.min(prate, 1.5) * Math.max(0, now - pStartAt) / 1000);
+    return Math.max(lo, Math.min(hi + 1 / FPS, timeOf(want)));
+  }
+  function playShownF(now) { return Math.max(0, Math.min(N - 1, Math.round(playEstT(now) * FPS - 0.5))); }
+  // true when this frame is played along; false when the seek path should run.
+  // 18 Oct 2026: every forward move is played, however slow (was: only above 0.6 clip-s/s), and steered by the
+  // player's REPORTED position (playShownT), not by the rate it was asked for. The player answers a seek before it
+  // has the frame (its API returns once currentTime is set), so from out here a seek that waits for data cannot be
+  // told from one that does not; a playing clip that waits stops reporting progress, which can. Measured with the
+  // network at 4 Mbit/s and the CPU at 1/4 (dev/night-logs/2026-10-18-final/ANIM.md): seeks forward had the words
+  // up to 5 s ahead of a picture that was still loading. Seeks remain for going back and for jumps.
   function follow(now) {
     const wantT = timeOf(want), dur = video.duration || N / FPS;
+    if (want < pLastWant) pFloor = -1;                 // the reader turned back: going back is right now
+    pLastWant = want;
+    if (pmode === "land") return false;                // (kick decides when it may seek again)
     if (pmode === "seek") {
-      if (ok && shown && !failed && !seeking && !reduced && vt > 0.6 && wantT < dur - 0.6 &&
-          Math.abs(wantT - video.currentTime) < 2.5) { pStart(now); return true; }
+      const ahead = wantT - video.currentTime;
+      if (ok && shown && !failed && !reduced && ahead > 1.5 / FPS && ahead < 3 && wantT < dur - 0.3) { pStart(now); return true; }
       return false;
     }
-    const e = wantT - pPos(now);
-    if ((vt < 0.25 && e < 0.1) || e < -0.6 || e > 3 || wantT >= dur - 0.3) { pStop(); return false; }
+    // steered by the rate it was asked for (pPos, re-anchored on every report); stopped and checked by what it reported
+    const e = wantT - pPos(now), eTrue = wantT - playShownT(now);
+    if ((vt < 0.25 && e < 0.05 && eTrue < 0.6) || eTrue < -0.6 || eTrue > 3.5 || wantT >= dur - 0.3) { pStop(); return false; }
     const r = vt + e / 0.35;
     if (Math.abs(r - prate) > 0.2 * prate && now - pRateAt > 200) pSetRate(r, now);
     return true;
   }
+
+  /* ------------------------------------------- the frame on screen: labels and the scroll follow it */
+  let shownF = 0, dispP = -1, dispAt = 0, fIn = -1, fOut = 0, fAt = 0;
+  // (EPS_F: 2 frames while seeking, as before; 0.75 while playing or held, 18 Oct 2026: held past the scroll, the words
+  // sat 2-3 frames short of the picture)
+  const LEAD_S = 0.5, EPS_F = 2, EPS_HELD = 0.75, DISP_TAU = 0.035;
+  function setShown(f) { if (f >= 0 && f < N) shownF = f; }
+  // the p of the frame on screen, or null when there is nothing to follow (no clip, or it failed: the poster is
+  // all there is, and the words go with the scroll as they did). Before the first frame the poster is frame 0.
+  function shownP() {
+    if (failed || !clip) return null;
+    if (!shown) return 0;
+    const f = pmode === "play" ? playShownF(performance.now()) : shownF;
+    return f / Math.max(1, N - 1);
+  }
+  function followP(p) {
+    const now = performance.now();
+    if (p === fIn && now - fAt < 6) return fOut;     // asked again in the same frame (story-core, then the page)
+    let q = p;
+    const s = window.__storyExact ? null : shownP();
+    if (s !== null) {
+      const e = (pmode === "seek" ? EPS_F : EPS_HELD) / Math.max(1, N - 1);
+      const t = Math.max(s - e, Math.min(s + e, p));
+      const dt = dispAt ? (now - dispAt) / 1000 : 1;
+      if (reduced || dispP < 0 || Math.abs(t - dispP) > 0.05 || dt > 0.25) dispP = t;
+      else dispP += (t - dispP) * (1 - Math.exp(-dt / DISP_TAU));
+      q = dispP;
+    } else dispP = -1;
+    dispAt = now; fIn = p; fOut = q; fAt = now;
+    return q;
+  }
+  // the scroll's wall: the story's track, scrolled from its top to the end of its sticky span
+  const gate = window.ScrollGate ? ScrollGate.add(stage, function () {
+    if (!ok && !shown && failed) return null;
+    const s = shownP();
+    if (s === null) return null;
+    const r = story.getBoundingClientRect(), y0 = r.top + (window.pageYOffset || document.documentElement.scrollTop || 0);
+    const span = story.offsetHeight - stage.offsetHeight;
+    return ScrollGate.at(y0, y0 + span, s, LEAD_S * FPS / Math.max(1, N - 1));
+  }) : null;
 
   /* -------------------------------------------------------------- live layers */
 
@@ -662,7 +803,8 @@ window.ScrubVideo = function (opt) {
     lastDrawP = p; lastDrawAt = now;
     want = frameOf(p);
     if (!(vuS() && follow(now))) kick();
-    for (let i = 0; i < layers.length; i++) layers[i].draw(p, t);
+    const q = followP(p);
+    for (let i = 0; i < layers.length; i++) layers[i].draw(q, t);
     breathe(t);
   }
   let lastW = -1, lastH = -1;
@@ -682,7 +824,8 @@ window.ScrubVideo = function (opt) {
     },
     frame: function () {
       const ct = pmode === "play" ? pPos(performance.now()) : video.currentTime;
-      return { want: want, current: Math.round(ct * FPS - 0.5), presented: presented, kind: kind, mode: pmode, rate: prate };
+      return { want: want, current: Math.round(ct * FPS - 0.5), presented: presented, kind: kind, mode: pmode, rate: prate,
+               shown: shown ? (pmode === "play" ? playShownF(performance.now()) : shownF) : 0, follow: fOut };
     },
     stats: stats, video: video, failed: function () { return failed; },
   };
@@ -697,7 +840,7 @@ window.ScrubVideo = function (opt) {
   }
 
   return {
-    draw: draw, visibleRef: visibleRef,
+    draw: draw, visibleRef: visibleRef, follow: followP, shownP: shownP, gate: gate,
     // Pick the clip for this stage and start fetching it, before the story's first frame.
     preload: function (p) { curP = p || 0; const w = pick(); if (w !== kind) load(w); },
     onReady: function (f) { readyFns.push(f); if (isReady) f(); },

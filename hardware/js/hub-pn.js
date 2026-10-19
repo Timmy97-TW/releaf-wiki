@@ -3,7 +3,7 @@
 
    The pages. The notebook's 62 pages in a scroll box of their own, as wide as the box (up to 1.4 times their size).
    Vector pages (pages-svg/pNN.svg, from the same PDF; the folder is v10/pages-url) wherever a page is drawn larger than
-   its PNG (hardware/notebook/pages/pNN.png, 935 px), at any screen density; the PNG elsewhere and if an SVG fails.
+   its picture (hardware/notebook/pages/pNN.avif, 816 px AVIF since 17 Oct 2026 night: iGEM's GitLab answers cross-site image requests with 403, so the pages must deploy with the site), at any screen density; the PNG elsewhere and if an SVG fails.
    Pages load as they come near, never all at once. The contents mark the entry on screen; a pick glides the box to
    its page. The one PDF action, "Open the PDF · p. N", follows the page on screen.
 
@@ -40,7 +40,7 @@
   var toc = sec.querySelector(".pn-toc"), det = sec.querySelector(".pn-det");
   var links = Array.prototype.slice.call(sec.querySelectorAll(".pn-list .pn-e[data-page]"));
   var wlinks = Array.prototype.slice.call(sec.querySelectorAll(".pn-weeks .pn-wa[data-page]"));
-  // the week's full titles on hover, where its row shows only the entry on screen
+  // full titles on hover, for the packed one-line form (pn-one)
   wlinks.forEach(function (x) { var t = x.getAttribute("data-titles"); if (t && !x.title) x.title = t.split("|").join(" \u00b7 "); });
   var openA = sec.querySelector(".pn-open"), openP = sec.querySelector(".pn-open-p");
   var nowW = sec.querySelector(".pn-now-w"), nowT = sec.querySelector(".pn-now-t");
@@ -103,10 +103,7 @@
   // entry, a line each; a row per week (its entries as dots), the title of the entry on screen on up to two lines;
   // the week chips, with the title of the entry on screen under them. Under ~560 px tall even the chips may not fit:
   // they scroll in their column, only while the box has the wheel (pn.css).
-  // owner, 8 Oct: always a vertical list, never chips. 19 Oct: and never the packed one-line form either, which
-  // cut every title with an ellipsis and scrolled anyway; where nothing fits, the week rows keep their titles
-  // whole on two lines and the column scrolls (pn-tight), faded at the cut (pn.css).
-  var FORMS = [["pn-full", "pn-two"], ["pn-full"], ["pn-two"]];
+  var FORMS = [["pn-full", "pn-two"], ["pn-full"], ["pn-two"], [], ["pn-one"]];  // owner, 8 Oct: always a vertical list, never chips
   function whole() {
     if (toc.scrollHeight > toc.clientHeight + 1) return false;
     var rows = toc.querySelectorAll(toc.classList.contains("pn-full") ? ".pn-list .pn-t" : ".pn-weeks .pn-t");
@@ -122,6 +119,8 @@
   function fit() {
     if (!toc) return;
     toc.classList.remove("pn-full", "pn-two", "pn-chips", "pn-one", "pn-tight");
+    toc.style.removeProperty("--pn-one-h");
+    toc.style.removeProperty("--pn-one-gap");
     if (!inline() || sec.classList.contains("pn-strip")) return;
     // the forms that take a week's title on one line are measured with the longest title in each row
     var saved = wlinks.map(function (x) { var t = x.querySelector(".pn-t"); return t ? t.textContent : ""; });
@@ -129,15 +128,33 @@
       var t = x.querySelector(".pn-t"), all = (x.getAttribute("data-titles") || "").split("|");
       if (t && all.length > 1) t.textContent = all.reduce(function (a, b) { return b.length > a.length ? b : a; });
     });
+    // the one-line form's natural row, read before any form is set (.pn-wa's min-height, --pn-row)
+    var row0 = wlinks[0] ? parseFloat(getComputedStyle(wlinks[0]).minHeight) || 22 : 22;
     var k;
     for (k = 0; k < FORMS.length; k++) {
       toc.classList.remove("pn-full", "pn-two", "pn-chips", "pn-one");
       FORMS[k].forEach(function (c) { toc.classList.add(c); });
       if (k === FORMS.length - 1 || whole()) break;
     }
+    // 18 Oct 2026: thirty weeks no longer fit a 1440 x 900 screen at the one-line form's natural row (21 px), which
+    // left the last weeks under the column's edge. Pack the rows to the column instead, down to 16 px a row (pn.css
+    // scales the type with the row); only below that does the column scroll (pn-tight).
+    // 18 Oct 2026, later (owner: the band "bland", titles cut with an ellipsis): a long title now takes a second line
+    // (pn.css, .pn-one), so rows are no longer all one height; step the row down from its natural height until the
+    // column holds every week, measured with each week's longest title (the row's title changes with the entry on
+    // screen, and must not then push the list over the edge).
+    if (toc.classList.contains("pn-one")) {
+      for (var rh = Math.round(row0 * 2) / 2; rh >= 16; rh -= .5) {
+        toc.style.setProperty("--pn-one-h", rh + "px");
+        if (toc.scrollHeight <= toc.clientHeight + 1) break;
+      }
+      // what the half-pixel steps leave over goes between the rows, so the list ends on the column's edge
+      var ol = toc.querySelector(".pn-weeks"), nrow = ol ? ol.children.length : 0;
+      var free = ol ? toc.clientHeight - ol.offsetHeight - 1 : 0;
+      if (free > 0 && nrow > 1) toc.style.setProperty("--pn-one-gap", Math.min(6, Math.floor(free / (nrow - 1) * 100) / 100) + "px");
+    }
     wlinks.forEach(function (x, j) { var t = x.querySelector(".pn-t"); if (t) t.textContent = saved[j]; });
     if (toc.scrollHeight > toc.clientHeight + 1) toc.classList.add("pn-tight");
-    ends();
     if (cur >= 0) keep(cur);
   }
 
@@ -169,15 +186,6 @@
     if (colours[i]) sec.style.setProperty("--pn-cur", colours[i]); else sec.style.removeProperty("--pn-cur");
     keep(i);
   }
-  // a scrolling column is faded where it is cut, at whichever end has more list behind it (pn.css pn-up / pn-dn)
-  function ends() {
-    if (!toc) return;
-    var tight = toc.classList.contains("pn-tight");
-    toc.classList.toggle("pn-up", tight && toc.scrollTop > 2);
-    toc.classList.toggle("pn-dn", tight && toc.scrollTop + toc.clientHeight < toc.scrollHeight - 2);
-  }
-  if (toc) toc.addEventListener("scroll", ends, { passive: true });
-
   // in a column that scrolls (pn-tight only), keep the marked row in view: the column's own scroll, never the page's
   function keep(i) {
     if (!toc || !toc.classList.contains("pn-tight")) return;
@@ -185,7 +193,6 @@
     var t = a.offsetTop, b = t + a.offsetHeight, top = toc.scrollTop, h = toc.clientHeight;
     if (t >= top && b <= top + h) return;
     toc.scrollTop = Math.max(0, t - h * 0.3);
-    ends();
   }
   // the PDF action follows the page on screen
   var openN = 0;
@@ -373,7 +380,7 @@
     return !!svg && w * (window.devicePixelRatio || 1) > 936;
   }
   function srcOf(n) {
-    return vec && svgSkip.indexOf(n) < 0 ? svg + "p" + pad2(n) + ".svg" : png + "p" + pad2(n) + ".webp";
+    return vec && svgSkip.indexOf(n) < 0 ? svg + "p" + pad2(n) + ".svg" : png + "p" + pad2(n) + ".avif";
   }
   function sources() {
     if (native || !pages.length) return;
@@ -391,7 +398,7 @@
       img.alt = "Page " + n + " of " + N; img.width = 935; img.height = 1210; img.decoding = "async"; img.draggable = false;
       img.addEventListener("error", function () {          // an SVG that fails: its PNG
         var s = this.getAttribute("src") || "";
-        if (/\.svg$/.test(s)) this.src = png + s.slice(s.lastIndexOf("/") + 1).replace(/\.svg$/, ".webp");
+        if (/\.svg$/.test(s)) this.src = png + s.slice(s.lastIndexOf("/") + 1).replace(/\.svg$/, ".avif");
       });
       li.appendChild(img); ol.appendChild(li);
       pages.push({ li: li, img: img });

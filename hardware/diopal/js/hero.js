@@ -219,10 +219,13 @@ window.HERO = (function () {
       // the room air's brightness, fitted to the WebGL frame (dev/hero-video)
       motes: [{ gain: 0.10 }],
     });
-    const story = Story(storyConfig(function (p, clock) {
+    // the words follow the frame on screen (player.follow), the clip seeks to the scroll's p (18 Oct 2026)
+    const cfg = storyConfig(function (p, clock) {
       player.draw(p, clock);
-      dom(p, clock, player.visibleRef());
-    }));
+      dom(player.follow(p), clock, player.visibleRef());
+    });
+    cfg.follow = player.follow;
+    const story = Story(cfg);
     player.onProgress(story.progress);
     player.onReady(story.ready);
     player.preload(window.__story.p);

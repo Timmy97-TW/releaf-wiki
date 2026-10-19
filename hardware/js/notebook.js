@@ -1,17 +1,45 @@
-// Notebook reader: scroll progress and index highlighting.
+// Notebook reader: scroll progress and the timeline rail's reading position.
 //
 // The pages are plain <img> in document order, so with JavaScript off the whole
-// notebook still scrolls and the index still jumps — this only adds the reading
-// position. Nothing here is required to read the record.
+// notebook still scrolls and every timeline mark still jumps — this only adds
+// the reading position. Nothing here is required to read the record.
+//
+// The rail is the build timeline on its side (18 Oct 2026, owner): weeks down,
+// one column per build. The entry being read lights its mark and its week's
+// row, and the readout under the timeline names it; pointing at a mark names
+// that one instead until the pointer leaves.
 (function () {
   const pages = Array.prototype.slice.call(document.querySelectorAll(".nbr-page"));
   if (!pages.length) return;
 
   const bar = document.getElementById("nbr-bar");
   const rail = document.getElementById("nbr-rail");
-  const links = rail ? Array.prototype.slice.call(rail.querySelectorAll("a[data-page]")) : [];
-  const items = links.map(function (a) {
-    return { li: a.parentElement, page: parseInt(a.getAttribute("data-page"), 10) };
+  const dots = rail ? Array.prototype.slice.call(rail.querySelectorAll("a[data-page]")) : [];
+  const rows = {};
+  if (rail) rail.querySelectorAll(".tl-row[data-w]").forEach(function (r) { rows[r.getAttribute("data-w")] = r; });
+  const items = dots.map(function (a) {
+    return { a: a, page: parseInt(a.getAttribute("data-page"), 10), w: a.getAttribute("data-w"),
+             t: a.getAttribute("data-t") || "", cell: a.parentElement };
+  }).sort(function (x, y) { return x.page - y.page; });
+  const read = rail ? rail.querySelector(".tl-read") : null;
+  const readW = read ? read.querySelector("b") : null;
+  const readT = read ? read.querySelector("span") : null;
+  const idle = readT ? readT.textContent : "";
+
+  let active = null, pointed = null;
+  function say(it) {
+    if (!readW || !readT) return;
+    if (!it) { readW.textContent = "\u2014"; readT.textContent = idle; read.style.removeProperty("--c"); return; }
+    readW.textContent = "WEEK " + it.w;
+    readT.textContent = it.t;
+    read.style.setProperty("--c", window.getComputedStyle(it.cell).getPropertyValue("--c"));
+  }
+  items.forEach(function (it) {
+    // the readout names the mark, so the native tooltip would only repeat it a second late
+    it.a.addEventListener("pointerenter", function () { pointed = it; say(it); });
+    it.a.addEventListener("focus", function () { pointed = it; say(it); });
+    it.a.addEventListener("pointerleave", function () { pointed = null; say(active); });
+    it.a.addEventListener("blur", function () { pointed = null; say(active); });
   });
 
   let ticking = false;
@@ -24,18 +52,10 @@
       bar.style.width = (h > 0 ? Math.min(1, Math.max(0, window.scrollY / h)) * 100 : 0) + "%";
     }
     if (!items.length) return;
-    // The page whose top is nearest just above the middle of the screen.
-    //
-    // This used to restart the search at page 1 on every scroll frame and walk
-    // down until it found one below the line, so the work grew with how far you
-    // had read: about four getBoundingClientRect calls near the front, fifty by
-    // entry twenty-six, sixty-two at the end. Each one forces a synchronous
-    // layout of an 81,000px document holding 62 full-page scans, so the reader
-    // got heavier the longer you stayed in it — which is the wrong way round.
-    //
-    // Page tops increase down the document, and scrolling is near-monotonic, so
-    // walking out from wherever the answer was last time is the same answer for
-    // O(1) work in the common case.
+    // The page whose top is nearest just above the middle of the screen. Page
+    // tops increase down the document and scrolling is near-monotonic, so the
+    // search walks out from wherever the answer was last time: O(1) layout reads
+    // per frame instead of one per page read so far.
     const mid = window.innerHeight * 0.42;
     let i = Math.min(lastIdx, pages.length - 1);
     while (i + 1 < pages.length &&
@@ -43,21 +63,24 @@
     while (i > 0 && pages[i].getBoundingClientRect().top > mid) i--;
     lastIdx = i;
     const passed = pages[i].getBoundingClientRect().top <= mid;
-    const current = passed
-      ? parseInt(pages[i].getAttribute("data-page"), 10)
-      : 1;
-    // an entry owns every page from its own up to the next entry's
-    let active = items[0];
-    for (let i = 0; i < items.length; i++) {
-      if (items[i].page <= current) active = items[i]; else break;
+    const current = passed ? parseInt(pages[i].getAttribute("data-page"), 10) : 1;
+    // an entry owns every page from its own up to the next entry's; the front
+    // matter (cover, contents) belongs to none
+    let now = null;
+    for (let k = 0; k < items.length; k++) {
+      if (items[k].page <= current) now = items[k]; else break;
     }
-    items.forEach(function (it) { it.li.classList.toggle("on", it === active); });
-    if (active && rail && rail.scrollHeight > rail.clientHeight) {
-      const r = active.li.getBoundingClientRect(), rr = rail.getBoundingClientRect();
-      if (r.top < rr.top || r.bottom > rr.bottom) {
-        active.li.scrollIntoView({ block: "nearest" });
-      }
+    if (now === active) return;
+    if (active) {
+      active.a.classList.remove("on"); active.a.removeAttribute("aria-current");
+      if (rows[active.w]) rows[active.w].classList.remove("on");
     }
+    active = now;
+    if (active) {
+      active.a.classList.add("on"); active.a.setAttribute("aria-current", "location");
+      if (rows[active.w]) rows[active.w].classList.add("on");
+    }
+    if (!pointed) say(active);
   }
 
   function onScroll() {

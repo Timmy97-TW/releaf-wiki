@@ -336,7 +336,7 @@ table.bom tbody tr.hidden-row { display: none; }
    feature of it. */
 .onward {
   display: grid;
-  grid-template-columns: repeat(3, 1fr);
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 11rem), 1fr));   /* four cards since 18 Oct (the notebook) */
   gap: .7rem;
   margin: 4.5rem 0 0;
   padding-top: 2rem;
@@ -366,6 +366,7 @@ table.bom tbody tr.hidden-row { display: none; }
 .onward-diopal     { --c: var(--c-diopal, #3ddc8b); }
 .onward-reactor    { --c: var(--c-reactor, #5aa9ff); }
 .onward-all        { --c: var(--accent); }
+.onward-notebook   { --c: var(--accent); }
 
 .onward-k {
   font-family: var(--mono); font-size: .52rem; letter-spacing: .2em;
@@ -874,17 +875,17 @@ table.bom tfoot td {
           mask-image: radial-gradient(70% 70% at 50% 50%, #000 30%, transparent 78%);
 }
 body[data-instrument="photometer"] .doc-wrap::after {
-  background-image: url("../img/blueprint-photometer.svg");
 }
 body[data-instrument="diopal"] .doc-wrap::after {
-  background-image: url("../img/blueprint-diopal.svg");
   opacity: .075;
 }
-/* the bioreactor's hero already carries the machine, so its ghost sits left
-   and fainter rather than competing with the picker */
+/* 18 Oct 2026: the bioreactor and hydroponics records get their own drawings
+   (lab rack from dev/lab-bioreactor/web/models; floating plate + 2 handles +
+   13 seed holders from hydroponics/models), on the right like the others. */
 body[data-instrument="bioreactor"] .doc-wrap::after {
-  background-image: url("../img/blueprint-photometer.svg");
-  right: auto; left: -8vw; opacity: .055;
+}
+body[data-instrument="hydroponics"] .doc-wrap::after {
+  opacity: .085;
 }
 .doc { position: relative; z-index: 1; }
 .doc-nav { position: sticky; z-index: 1; }
@@ -1165,7 +1166,28 @@ body.doc-light .od-phase rect { fill: #0f1319; }
 /* The blueprint is a line drawing with its stroke baked in as the accent, so on
    white it has to be pushed to ink rather than recoloured — and it was already
    faint, so at this size it would otherwise read as a stain. */
-body.doc-light .doc-wrap::after { filter: brightness(.3) saturate(1.5); opacity: .085; }
+/* 18 Oct 2026 (owner: "putting back the gold construction line drawings ... Make it light tho"): gold, not ink.
+   The baked stroke is the photometer orange #ffa23d; a small hue turn and darkening make it a light gold on paper. */
+/* Owner, same day: "basically covered by the writing. move it more right ... too light we cant really tell what it
+   is ... if its too dark it will take away attention". So the drawing is placed from the layout, not the viewport
+   edge: the record column is 760px centred (cards reach 32px past it, to 50vw + 412px), and the drawing starts 24px
+   past the cards and fills the band to the window edge, bleeding a little off it. Each SVG's content sits differently
+   in its square, so the box is sized per drawing; the mask fades only the bleed, never the side next to the text. */
+body.doc-light .doc-wrap::after {
+  --bp-band: calc(50vw - 436px);                     /* 50vw + 412px (card edge) + 24px gap */
+  filter: hue-rotate(14deg) saturate(.95) brightness(.68); opacity: .5;
+  right: auto; left: calc(50vw + 436px);
+  width: calc(var(--bp-band) + 6vw);
+  background-position: left center;
+  -webkit-mask-image: linear-gradient(to right, #000 82%, transparent 100%);
+          mask-image: linear-gradient(to right, #000 82%, transparent 100%);
+}
+/* the photometer is a tall tower in the left 60% of its square: a bigger box puts the tower across the band */
+body.doc-light[data-instrument="photometer"] .doc-wrap::after { width: calc(var(--bp-band) * 1.6); left: calc(50vw + 424px); }
+/* the floating plate is a low, wide part with few edges: a wider box and a little more weight to read at all */
+body.doc-light[data-instrument="hydroponics"] .doc-wrap::after { width: calc(var(--bp-band) + 10vw); opacity: .64; }
+/* the band is under ~260px below 1400px wide: too narrow to read the drawing, so it goes */
+@media (max-width: 1399px) { body.doc-light .doc-wrap::after { display: none; } }
 
 /* DiOPAL's wavelength matrix uses neon LED colours — #4dff7a reads at about
    1.4:1 on white. Darkened to the same hues at usable weight, and the glow
@@ -2173,5 +2195,8 @@ body.doc-light .bom-meter { background: rgba(15, 19, 25, .10); }
 .doc-nav-back:hover, .doc-nav-back:focus-visible { color: var(--fg); }
 .doc-nav-back:hover i, .doc-nav-back:focus-visible i { transform: translateX(-3px); }
 
-/* no plate numbers on figures (14 Oct 2026): the captions carry no figure label */
-body.doc-light .frame::after { content: none !important; }
+/* 18 Oct 2026, owner: "nevermind remove the drawings" — the blueprint ghost is off on every page (the SVGs are
+   deleted; the rules above stay for history), and "remove the jump to button for every components page" — the
+   command palette still opens from its key, only the corner "Jump to" pill is gone from the component pages. */
+.doc-wrap::after { content: none !important; display: none !important; }
+body:not(.hub) .palette-hint { display: none !important; }

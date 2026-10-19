@@ -241,16 +241,18 @@ window.HERO = (function () {
     });
     const kindNow = function () { return player.frame.dataset.clip || "desktop"; };
     initLabels();
-    let pScroll = 0;
+    let pScroll = 0, pShow = 0;
     const story = Story({
       stage: stage, track: track, hud: $("hud"), caps: (D && D.caps) || [], rail: true,
       title: $("title"), cue: $("cue"), loader: $("loader"), pct: $("load-pct"),
       titleOut: D && D.titleOut !== undefined ? D.titleOut : 0.06,
       // story-core-v4 hands the scroll's p to the warp first and draws at the story's time q; the clip is indexed by p
-      warp: function (p) { pScroll = p; return qAt(kindNow(), p); },
+      // 18 Oct 2026: everything drawn over the clip (captions, labels, route, fades) follows the frame on screen
+      // (player.follow); only the clip's seek goes to the scroll's p
+      warp: function (p) { pScroll = p; pShow = player.follow(p); return qAt(kindNow(), pShow); },
       draw: function (q, clock) {
         player.draw(pScroll, clock);
-        dom(player, kindNow(), pScroll);
+        dom(player, kindNow(), pShow);
       },
     });
     // the protectant's caption in the green (V4's ready(): CAPS[i].loop)

@@ -1,0 +1,153 @@
+/* ===========================================================================
+   3.1's growth-fit chart, read by touch (js/lpa-fit.js; 18 Oct 2026)
+   ---------------------------------------------------------------------------
+   The photometer page's growth-chart kit (its css/style.css .bc rules and
+   css/xp-charts.css), copied for this page as its other borrowed pieces are,
+   with the LPA's own colours: the two wavelengths in 2.2's tier shades (low,
+   mid, high: light to dark, the spread chart's fills and inks), red drawn as
+   squares and green as circles so the wavelength never rests on colour alone,
+   the fit in a neutral slate, and the "no samples" stretch in grey, since
+   orange on this page means missing content.
+   =========================================================================== */
+
+.bc.lf {
+  --lf-g: #137a3c; --lf-r: #c1392a; --lf-fit: #4b5a6b;
+  --lf-g-low: #b8e3c6; --lf-g-mid: #5bb77f; --lf-g-high: #17843f;
+  --lf-r-low: #f6c4bb; --lf-r-mid: #e2725d; --lf-r-high: #b8321f;
+  position: relative; min-height: 360px;
+}
+.bc.lf.is-live { min-height: 0; }
+.doc .bc.lf p.lf-nojs { margin: 0; padding: 2rem 0; font-size: .9rem; color: var(--muted); }
+
+/* ---- the fit's numbers, as the team's figure prints them ---- */
+.doc .bc.lf p.lf-stats {
+  display: flex; flex-wrap: wrap; gap: .2rem 1.1rem; margin: 0 0 .7rem; max-width: none;
+  font: 500 12px/1.4 var(--mono); color: var(--dim); font-variant-numeric: tabular-nums;
+}
+.bc.lf .lf-stats span { white-space: nowrap; }
+.bc.lf .lf-stats sup { font-size: .75em; line-height: 0; }
+
+/* ---- the keys: buttons, as on the photometer's charts ---- */
+.bc.lf .bc-legend { display: flex; flex-wrap: wrap; align-items: center; gap: .4rem; margin: 0 0 .8rem; }
+.bc.lf button.bc-key {
+  -webkit-appearance: none; appearance: none;
+  display: inline-flex; align-items: center; gap: .45rem;
+  min-height: 2rem; margin: 0; padding: .3rem .75rem .3rem .6rem;
+  border: 1px solid #cfd8d3; border-radius: 999px; background: #fff;
+  font: 500 12px/1.1 var(--sans); letter-spacing: 0; text-transform: none; color: var(--fg);
+  cursor: pointer; box-shadow: 0 1px 0 rgba(20, 64, 43, .06);
+  transition: background .18s, border-color .18s, color .18s, opacity .18s;
+}
+.bc.lf button.bc-key b { font: 650 12px/1.1 var(--mono); }
+.bc.lf button.bc-key:hover, .bc.lf button.bc-key.is-hi { background: var(--w-leaf-50, #f4f9f6); border-color: #a9c9b7; }
+.bc.lf button.bc-key:active { transform: translateY(1px); }
+.bc.lf button.bc-key:focus-visible { outline: 2px solid var(--w-leaf-700, #23684a); outline-offset: 2px; }
+.bc.lf button.bc-key[aria-pressed="false"] { color: #7b8490; background: #f6f7f8; border-style: dashed; box-shadow: none; }
+.bc.lf button.bc-key[aria-pressed="false"] i { opacity: .35; }
+.bc.lf .bc-key i, .bc.lf .lf-rv i { flex: none; width: 10px; height: 10px; border-radius: 50%; border: 1.5px solid; box-sizing: border-box; }
+.bc.lf .bc-key i.square, .bc.lf .lf-rv i.square { border-radius: 1.5px; }
+.bc.lf .bc-key.g i, .bc.lf .lf-rv.g i { border-color: var(--lf-g); }
+.bc.lf .bc-key.r i, .bc.lf .lf-rv.r i { border-color: var(--lf-r); }
+.bc.lf .g.t-low i { background: var(--lf-g-low); }  .bc.lf .g.t-mid i { background: var(--lf-g-mid); }  .bc.lf .g.t-high i { background: var(--lf-g-high); }
+.bc.lf .r.t-low i { background: var(--lf-r-low); }  .bc.lf .r.t-mid i { background: var(--lf-r-mid); }  .bc.lf .r.t-high i { background: var(--lf-r-high); }
+.bc.lf .bc-key i.fit { width: 18px; height: 8px; border: 0; border-radius: 2px; background: rgb(75 90 107 / .2); position: relative; }
+.bc.lf .bc-key i.fit::after { content: ""; position: absolute; left: 0; right: 0; top: 3px; height: 2px; background: var(--lf-fit); }
+.bc.lf .lf-exkey { display: inline-flex; align-items: center; gap: .45rem; padding: 0 .3rem; font: 500 12px/1.1 var(--sans); color: var(--dim); }
+.bc.lf .lf-exkey i { width: 10px; height: 10px; border-radius: 50%; border: 1.5px solid #6b7480; background: #fff; box-sizing: border-box; }
+
+/* ---- the plot ---- */
+.bc.lf .bc-plot { position: relative; touch-action: pan-y; cursor: crosshair; border-radius: 6px; -webkit-tap-highlight-color: transparent; }
+.bc.lf .bc-plot:focus { outline: none; }
+.bc.lf .bc-plot:focus-visible { outline: 2px solid var(--w-leaf-700, #23684a); outline-offset: 4px; }
+.bc.lf svg.bc-svg { width: 100%; height: auto; display: block; overflow: visible; }
+.bc.lf .bc-grid { stroke: #e3e7eb; stroke-width: 1; }
+.bc.lf .lf-axis { stroke: #9aa3ad; stroke-width: 1; }
+.bc.lf .bc-tick { fill: #6b7680; font-family: var(--mono); font-size: 10.5px; }
+.bc.lf .bc-tick.x { text-anchor: middle; }
+.bc.lf .bc-tick.y { text-anchor: end; }
+.bc.lf .bc-ax { fill: #6b7680; font-family: var(--mono); font-size: 9.5px; letter-spacing: .12em; text-anchor: middle; text-transform: uppercase; }
+.bc.lf .lf-gap { fill: #8a939d; fill-opacity: .08; }
+.bc.lf .lf-gap-t { fill: #6b7680; font: 500 11px var(--sans); text-anchor: middle; }
+
+.bc.lf .lf-fitg { transition: opacity .25s ease; }
+.bc.lf .lf-fitg.is-off { opacity: 0; }
+.bc.lf .lf-band { fill: var(--lf-fit); fill-opacity: .16; }
+.bc.lf .lf-fit { fill: none; stroke: var(--lf-fit); stroke-width: 2; stroke-linejoin: round; }
+.bc.lf .lf-k { stroke: var(--lf-fit); stroke-width: 1; stroke-dasharray: 4 4; opacity: .7; }
+.bc.lf .lf-k-t { fill: var(--lf-fit); font: 600 11px var(--sans); paint-order: stroke; stroke: #fff; stroke-width: 3px; stroke-linejoin: round; }
+
+/* the readings: tier fill, wavelength ink; hollow when excluded from the fit */
+.bc.lf .lf-arm { transition: opacity .2s ease; }
+.bc.lf .lf-arm.is-off { opacity: 0; pointer-events: none; }
+.bc.lf .lf-svg.has-hi .lf-arm:not(.is-hi) { opacity: .16; }
+.bc.lf .lf-svg.has-hi .lf-arm.is-off { opacity: 0; }
+.bc.lf .lf-pt { stroke-width: 1.2; fill-opacity: .92; }
+.bc.lf .lf-arm.g .lf-pt { stroke: var(--lf-g); }
+.bc.lf .lf-arm.r .lf-pt { stroke: var(--lf-r); }
+.bc.lf .lf-arm.g.t-low .lf-pt { fill: var(--lf-g-low); }  .bc.lf .lf-arm.g.t-mid .lf-pt { fill: var(--lf-g-mid); }  .bc.lf .lf-arm.g.t-high .lf-pt { fill: var(--lf-g-high); }
+.bc.lf .lf-arm.r.t-low .lf-pt { fill: var(--lf-r-low); }  .bc.lf .lf-arm.r.t-mid .lf-pt { fill: var(--lf-r-mid); }  .bc.lf .lf-arm.r.t-high .lf-pt { fill: var(--lf-r-high); }
+.bc.lf .lf-arm .lf-pt.ex { fill: #fff; fill-opacity: 1; stroke: #6b7480; stroke-width: 1.5; }
+.bc.lf .lf-arm.is-hi .lf-pt { stroke-width: 1.6; fill-opacity: 1; }
+.bc.lf .lf-ring { fill: none; stroke-width: 2; stroke: var(--fg); pointer-events: none; }
+.bc.lf .lf-ring.g { stroke: var(--lf-g); }
+.bc.lf .lf-ring.r { stroke: var(--lf-r); }
+
+/* ---- the readout: beside the point (a line under the plot on a phone) ---- */
+.bc.lf .bc-read {
+  position: absolute; z-index: 1; pointer-events: none; left: 0; top: 0;
+  display: grid; gap: .15rem; min-width: 11rem;
+  padding: .45rem .6rem .5rem; border-radius: 9px;
+  font: 500 11px/1.35 var(--sans); color: var(--dim);
+  visibility: hidden;
+}
+.bc.lf .bc-read.is-on { visibility: visible; background: rgba(255, 255, 255, .97); box-shadow: 0 0 0 1px rgba(15, 19, 25, .1), 0 8px 20px -12px rgba(15, 19, 25, .4); }
+.bc.lf .bc-read b { font: 650 12px/1.3 var(--mono); color: var(--fg); }
+.bc.lf .bc-read small { font: 500 11px/1.3 var(--sans); color: var(--dim); margin-left: .55rem; }
+.bc.lf .bc-read .bc-hint { font: 500 11px/1.35 var(--sans); color: var(--dim); }
+.bc.lf .lf-rv { display: flex; align-items: center; gap: .4rem; color: var(--fg); font: 500 11.5px/1.35 var(--sans); }
+.bc.lf .lf-rv em { margin-left: auto; padding-left: .8rem; font: 650 12.5px/1.35 var(--mono); font-style: normal; color: var(--fg); }
+.bc.lf .lf-rx { color: #4b5560; font-weight: 600; }
+.bc.lf .lf-rf { color: var(--dim); font-variant-numeric: tabular-nums; }
+
+.bc.lf.is-narrow .bc-read {
+  position: static; visibility: visible; display: flex; flex-wrap: wrap; align-items: center; align-content: center; gap: .15rem 1rem;
+  min-width: 0; min-height: 3.6rem; margin: .55rem 0 0; padding: .45rem .7rem;
+  background: #fff; box-shadow: inset 0 0 0 1px rgba(15, 19, 25, .1);
+}
+.bc.lf.is-narrow .bc-read b { flex-basis: 100%; }
+.bc.lf.is-narrow .lf-rv em { margin-left: .3rem; padding-left: 0; }
+.bc.lf p.bc-live {
+  position: absolute; width: 1px; height: 1px; margin: -1px; padding: 0; overflow: hidden;
+  clip: rect(0 0 0 0); clip-path: inset(50%); white-space: nowrap; border: 0;
+}
+@media (max-width: 479px) {
+  .bc.lf button.bc-key { padding: .25rem .6rem .25rem .5rem; min-height: 1.9rem; }
+}
+
+/* ---- the readings behind it, in their fold ---- */
+.doc table.lpa-fit-table { font-size: .875rem; }
+.doc table.lpa-fit-table thead th { white-space: nowrap; }
+.doc table.lpa-fit-table thead th span { display: block; font: 500 .7rem/1.3 var(--sans); color: var(--muted); letter-spacing: 0; text-transform: none; }
+.doc table.lpa-fit-table tbody th { width: auto; white-space: nowrap; }
+.doc table.lpa-fit-table td { font-variant-numeric: tabular-nums; white-space: nowrap; }
+.doc table.lpa-fit-table td sup { color: #6b7480; font-weight: 600; margin-left: .05em; }
+.doc #lpa-fit-data .table-scroll { overflow-x: auto; }
+/* 19 Oct 2026 (judging review L10): the G3 column was cut off at 1440 and the table overran its card on phones.
+   The green cells hold three readings each; they may now wrap between readings (never inside one), and the cell
+   padding is tighter, so the seven columns fit the card. */
+body.doc-light .doc-wrap .doc .sec .table-scroll:has(> table) > table.lpa-fit-table :is(th, td) { padding-left: .55rem; padding-right: .55rem; }
+.doc table.lpa-fit-table td[data-arm^="G"] { white-space: normal; min-width: 3.6rem; }
+.doc table.lpa-fit-table td [data-v] { white-space: nowrap; }
+.doc p.lf-scrollhint { display: none; }
+@media (max-width: 700px) {
+  .doc p.lf-scrollhint { display: block; margin: 0 0 .5rem; max-width: none; font: 500 .75rem/1.4 var(--mono); color: var(--muted); }
+}
+@media (max-width: 520px) {
+  body.doc-light .doc-wrap .doc .sec .table-scroll:has(> table) > table.lpa-fit-table :is(th, td) { padding-left: .35rem; padding-right: .35rem; }
+  .doc table.lpa-fit-table { font-size: .8125rem; }
+  .doc table.lpa-fit-table thead th { white-space: normal; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .bc.lf button.bc-key, .bc.lf .lf-arm, .bc.lf .lf-fitg { transition: none; }
+}

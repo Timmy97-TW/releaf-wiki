@@ -135,8 +135,12 @@ window.Story = function (cfg) {
     raf = (running && visible) ? requestAnimationFrame(step) : 0;
   }
 
+  // 18 Oct 2026: cfg.follow (a clip's player, js/scrub-video.js) maps the scroll's p to the p of the frame actually
+  // on screen; the captions, title, cue and rail are drawn there, so they never move on without the clip. cfg.draw
+  // still gets the scroll's p (the clip seeks to it); a page draws its own words at cfg.follow(p) too.
   function draw(pp, clock, dt) {
-    caption(pp); title(pp); cue(pp); railAt(pp);
+    const q = cfg.follow ? cfg.follow(pp) : pp;
+    caption(q); title(q); cue(q); railAt(q);
     cfg.draw(pp, reduced ? 0 : (clock || 0), dt || 0);
   }
 
@@ -190,7 +194,10 @@ window.Story = function (cfg) {
     renderAt: function (pp, clock) {
       stop();
       p = Math.max(0, Math.min(1, pp)); vel = 0; l1 = p; l2 = p;
-      draw(p, clock !== undefined ? clock : (cfg.captureClock === undefined ? 12.5 : cfg.captureClock), 0);
+      // (the frame rig asks for an exact p: the words are drawn there, not where the clip has got to)
+      window.__storyExact = true;
+      try { draw(p, clock !== undefined ? clock : (cfg.captureClock === undefined ? 12.5 : cfg.captureClock), 0); }
+      finally { window.__storyExact = false; }
     },
     resume: function () { start(); },
     caps: caps,

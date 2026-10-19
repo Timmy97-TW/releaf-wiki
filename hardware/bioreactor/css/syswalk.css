@@ -1,0 +1,393 @@
+/* =============================================================================
+   3.4 · The system, stage by stage (17 Oct 2026, the owner: "so that it's cooler")
+   -----------------------------------------------------------------------------
+   div#syswalk.sy, run by ../js/syswalk.js. One panel: a header (As designed, the stage count, Back / seven dots /
+   Next), the stage card and the drawing. Three modes, set by the script on the root as data-mode:
+     static  no script, reduced motion, print: the drawing fully lit above all seven stages. The default.
+     track   a desktop that fits the panel: the panel pins, the page scrolls through seven equal steps, the card
+             beside the drawing changes with them.
+     cards   phones, tablets, short windows: the drawing pins at the top, the seven cards scroll under it.
+   In both walking modes (.is-walk) the live stage glows and flows, passed stages stay dimly on, and stages not
+   reached wait faintly. Nothing moves unless the walk is on screen (.is-on) and motion is allowed.
+
+   Palette: the page's (bv-purpose.css, bio-final.css): culture amber #e08a22, protectant green #23864f, hardware a
+   pale body on a grey outline. The amber chip is the record's "not on record" mark (wiki-align.css .todo).
+   Everything is scoped to #syswalk.sy, which outranks polish.css's old .syswalk rules (which load earlier).
+   ========================================================================== */
+
+#syswalk.sy {
+  --sy-cul: #e08a22; --sy-cul-d: #b8650f; --sy-cul-l: #fcedd7;
+  --sy-pro: #23864f; --sy-pro-d: #1b6b3f; --sy-pro-l: #e3f1e8;
+  --sy-mem: #14402b;
+  --sy-hw: #f2f4f6; --sy-hw-line: #7c8791; --sy-hw-dark: #4a5058; --sy-wall: #c3ccd4;
+  --sy-ink: #1d1d1f; --sy-ink-2: #424245; --sy-ink-3: #6e6e73;
+  --sy-hair: rgb(29 29 31 / .08);
+  --sy-leaf: var(--w-leaf-700, #23684a); --sy-leaf-d: var(--w-leaf-900, #14402b);
+  --sy-top: calc(var(--nv-h, 68px) + 12px);
+  --sy-ease: cubic-bezier(.16, 1, .3, 1);
+  --sy-sans: var(--sans, -apple-system, BlinkMacSystemFont, "SF Pro Text", "Inter", "Segoe UI", Roboto, Helvetica, Arial, sans-serif);
+  position: relative;
+  margin: 1.4rem 0 2.4rem;
+}
+#syswalk.sy .sy-figure { margin: 0; }
+
+/* ------------------------------------------------------------------ the panel */
+#syswalk.sy .sy-panel {
+  position: relative;
+  padding: 16px 18px 18px;
+  border-radius: 20px;
+  background: #fff;
+  box-shadow: 0 0 0 1px var(--sy-hair), 0 26px 52px -40px rgb(20 48 34 / .45);
+}
+#syswalk.sy .sy-head {
+  display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between;
+  gap: 10px 18px; margin: 0 0 12px;
+}
+#syswalk.sy .sy-title { min-width: 0; }
+#syswalk.sy p.sy-kick {
+  display: flex; flex-wrap: wrap; align-items: center; gap: 6px 10px;
+  margin: 0; max-width: none;
+  font: 700 11px/1.2 var(--sy-sans); letter-spacing: .12em; text-transform: uppercase; color: var(--sy-ink-3);
+}
+#syswalk.sy .sy-asd {
+  padding: 4px 9px 3px; border-radius: 999px;
+  color: var(--sy-leaf); background: #eef6f1; border: 1px solid rgb(35 104 74 / .22);
+}
+#syswalk.sy .sy-count { display: none; color: var(--sy-ink-2); }
+#syswalk.sy .sy-count b { font-weight: 800; color: var(--sy-ink); font-variant-numeric: tabular-nums; }
+#syswalk.sy p.sy-name {
+  margin: 6px 0 0; max-width: none;
+  font: 750 1.22rem/1.2 var(--sy-sans); letter-spacing: -.015em; color: var(--sy-ink);
+}
+#syswalk.sy .sy-name-w { display: none; }
+
+/* ---- Back, the seven stages, Next ---- */
+#syswalk.sy .sy-nav { display: flex; align-items: center; gap: 8px; }
+#syswalk.sy .sy-nav[hidden] { display: none; }
+#syswalk.sy .sy-btn {
+  -webkit-appearance: none; appearance: none;
+  display: inline-flex; align-items: center; justify-content: center; gap: 6px;
+  min-height: 40px; min-width: 40px; padding: 0 14px; margin: 0;
+  border-radius: 999px; border: 1px solid #cfd8d3; background: #fff; color: var(--sy-leaf-d);
+  font: 650 14px/1 var(--sy-sans); cursor: pointer;
+  box-shadow: 0 1px 0 rgb(20 64 43 / .06);
+  transition: background-color .18s, border-color .18s, color .18s, opacity .18s, transform .12s;
+}
+#syswalk.sy .sy-btn svg { width: 16px; height: 16px; flex: none; }
+#syswalk.sy .sy-btn:hover { background: #f4f9f6; border-color: #a9c9b7; }
+#syswalk.sy .sy-btn:active { transform: translateY(1px); }
+#syswalk.sy .sy-btn:focus-visible, #syswalk.sy .sy-dot:focus-visible { outline: 2px solid var(--sy-leaf); outline-offset: 2px; }
+#syswalk.sy .sy-next { background: var(--sy-leaf); border-color: var(--sy-leaf); color: #fff; }
+#syswalk.sy .sy-next:hover { background: var(--sy-leaf-d); border-color: var(--sy-leaf-d); }
+#syswalk.sy .sy-btn[aria-disabled="true"] { opacity: .35; cursor: default; transform: none; }
+#syswalk.sy .sy-prev[aria-disabled="true"]:hover { background: #fff; border-color: #cfd8d3; }
+#syswalk.sy .sy-next[aria-disabled="true"]:hover { background: var(--sy-leaf); border-color: var(--sy-leaf); }
+
+#syswalk.sy ol.sy-dots { display: flex; align-items: center; margin: 0 2px; padding: 0; list-style: none; }
+#syswalk.sy ol.sy-dots > li { display: flex; align-items: center; margin: 0; padding: 0; list-style: none; }
+#syswalk.sy ol.sy-dots > li::marker { content: ""; }
+/* the line between two dots fills as the walk passes it */
+#syswalk.sy ol.sy-dots > li + li::before {
+  content: ""; display: block; width: 10px; height: 2px; border-radius: 1px; background: #dfe5e1;
+  transition: background-color .4s var(--sy-ease);
+}
+#syswalk.sy ol.sy-dots > li.is-reached::before { background: #9cc2ab; }
+#syswalk.sy .sy-dot {
+  -webkit-appearance: none; appearance: none;
+  --dot: var(--sy-cul-d);
+  display: grid; place-items: center; width: 30px; height: 30px; margin: 0; padding: 0;
+  border-radius: 50%; border: 2px solid #cdd5d0; background: #fff; color: var(--sy-ink-3);
+  font: 750 12px/1 var(--sy-sans); font-variant-numeric: tabular-nums; cursor: pointer;
+  transition: background-color .35s var(--sy-ease), border-color .35s var(--sy-ease), color .35s, box-shadow .35s, transform .35s var(--sy-ease);
+}
+#syswalk.sy .sy-dot.m, #syswalk.sy .sy-dot.all { --dot: var(--sy-mem); }
+#syswalk.sy .sy-dot.h { --dot: var(--sy-pro); }
+#syswalk.sy .sy-dot:hover { border-color: var(--dot); color: var(--dot); }
+#syswalk.sy .sy-dot.is-past { border-color: var(--dot); color: var(--dot); background: color-mix(in srgb, var(--dot) 12%, #fff); }
+#syswalk.sy .sy-dot.is-live {
+  border-color: var(--dot); background: var(--dot); color: #fff; transform: scale(1.1);
+  box-shadow: 0 0 0 4px color-mix(in srgb, var(--dot) 20%, transparent);
+}
+
+/* ------------------------------------------------------------------ the drawing */
+#syswalk.sy .sy-fig { container-type: inline-size; min-width: 0; }
+#syswalk.sy .sy-svg { display: block; width: 100%; height: auto; overflow: visible; }
+#syswalk.sy .sy-svg text { font-family: var(--sy-sans); font-size: 13.5px; font-weight: 650; letter-spacing: 0; fill: var(--sy-ink); }
+#syswalk.sy .sy-svg .sy-s { font-size: 12px; font-weight: 450; fill: var(--sy-ink-2); }
+#syswalk.sy .sy-svg .sy-k { font-size: 12px; font-weight: 700; font-style: italic; fill: var(--sy-pro-d); }
+#syswalk.sy .sy-svg .sy-minor { font-size: 12px; font-weight: 600; fill: var(--sy-ink-2); }
+#syswalk.sy .sy-svg .sy-out { fill: var(--sy-pro-d); }
+#syswalk.sy .sy-svg .sy-zt { font-size: 11px; font-weight: 800; letter-spacing: .12em; }
+#syswalk.sy .sy-svg .sy-zt.c { fill: var(--sy-cul-d); }
+#syswalk.sy .sy-svg .sy-zt.h { fill: var(--sy-pro-d); }
+#syswalk.sy .sy-svg .sy-side { font-size: 10px; letter-spacing: .14em; }
+#syswalk.sy .sy-svg .sy-zs { font-size: 12px; font-weight: 500; fill: var(--sy-ink-3); }
+#syswalk.sy .sy-svg .sh { display: none; }
+#syswalk.sy .sy-zone.c { fill: #fdf7ef; }
+#syswalk.sy .sy-zone.h { fill: #f1f8f4; }
+
+#syswalk.sy .sy-hw { fill: var(--sy-hw); stroke: var(--sy-hw-line); stroke-width: 1.5; }
+#syswalk.sy .sy-hwd, #syswalk.sy .sy-cap, #syswalk.sy .sy-probe { fill: var(--sy-hw-dark); }
+#syswalk.sy .sy-glassbg { fill: #fff; }
+#syswalk.sy .sy-glass { fill: none; stroke: var(--sy-hw-line); stroke-width: 1.6; }
+#syswalk.sy .sy-shine { fill: none; stroke: #fff; stroke-width: 3; stroke-linecap: round; opacity: .85; }
+#syswalk.sy .sy-wave { fill: url(#sy-cul); }
+#syswalk.sy .sy-cells { fill: none; stroke: var(--sy-cul-d); stroke-width: 2.6; stroke-linecap: round; }
+#syswalk.sy .sy-stir { fill: var(--sy-hw-dark); transform-box: fill-box; transform-origin: center; }
+#syswalk.sy .sy-dip { fill: none; stroke: var(--sy-cul-d); stroke-width: 2.4; stroke-linecap: round; }
+
+/* tubing: a pale tube, the liquid in it, and a moving shimmer when it flows */
+#syswalk.sy .sy-pipe { fill: none; stroke: #dde2e7; stroke-width: 11; stroke-linecap: round; stroke-linejoin: round; }
+#syswalk.sy .sy-liq { fill: none; stroke-width: 6; stroke-linecap: round; stroke-linejoin: round; }
+#syswalk.sy .sy-liq.c { stroke: var(--sy-cul); }
+#syswalk.sy .sy-liq.h { stroke: var(--sy-pro); }
+#syswalk.sy .sy-flow, #syswalk.sy .sy-dflow {
+  fill: none; stroke: #fff; stroke-width: 3; stroke-linecap: round; stroke-linejoin: round;
+  stroke-dasharray: .1 13.9; opacity: 0;
+}
+/* the live segment's light: a wide soft stroke under the tube */
+#syswalk.sy .sy-glow { fill: none; stroke-width: 22; stroke-linecap: round; stroke-linejoin: round; opacity: 0; transition: opacity .7s var(--sy-ease); }
+#syswalk.sy .sy-glow.c { stroke: var(--sy-cul); }
+#syswalk.sy .sy-glow.h { stroke: var(--sy-pro); }
+#syswalk.sy .sy-dflow { stroke-width: 1.8; stroke-dasharray: .1 8.9; }
+#syswalk.sy .sy-chev { fill: none; stroke: #fff; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
+#syswalk.sy .sy-arrow { fill: var(--sy-pro); }
+
+#syswalk.sy .sy-arm { fill: none; stroke: var(--sy-hw-dark); stroke-width: 1.6; stroke-linecap: round; }
+#syswalk.sy .sy-roll { fill: #fff; stroke: var(--sy-hw-dark); stroke-width: 1.3; }
+#syswalk.sy .sy-rotor { transform-box: view-box; }
+#syswalk.sy .sy-pm { fill: #39414a; }
+#syswalk.sy .sy-pmwin { fill: #f6d3a4; stroke: rgb(255 255 255 / .35); stroke-width: 1; }
+#syswalk.sy .sy-beam { fill: none; stroke: #ffcf6e; stroke-width: 2.6; stroke-linecap: round; opacity: .7; }
+#syswalk.sy .sy-led { fill: #ffe3a3; }
+#syswalk.sy .sy-det { fill: #c9ced4; }
+
+#syswalk.sy .sy-hdr { fill: var(--sy-cul-l); }
+#syswalk.sy .sy-shell { fill: var(--sy-pro-l); }
+#syswalk.sy .sy-fib { fill: #f6cf9b; stroke: var(--sy-cul-d); stroke-width: .6; }
+#syswalk.sy .sy-seep circle { fill: var(--sy-pro); }
+#syswalk.sy .sy-sheet { fill: none; stroke: var(--sy-hw-line); stroke-width: 1; }
+#syswalk.sy .sy-col { fill: none; stroke: var(--sy-hw-line); stroke-width: 1.6; }
+#syswalk.sy .sy-lead { fill: none; stroke: var(--sy-hw-dark); stroke-width: 1.4; stroke-dasharray: 2 2.5; }
+#syswalk.sy .sy-lz.c { fill: #fbe5c7; }
+#syswalk.sy .sy-lz.h { fill: #dcefe3; }
+#syswalk.sy .sy-lwall { fill: var(--sy-wall); }
+#syswalk.sy .sy-lcell { fill: #f2b766; stroke: var(--sy-cul-d); stroke-width: 1; }
+#syswalk.sy .sy-lp { fill: var(--sy-pro); }
+#syswalk.sy .sy-lens { fill: none; stroke: var(--sy-hw-dark); stroke-width: 2; }
+
+#syswalk.sy .sy-dose { fill: none; stroke: #c3cad1; stroke-width: 5; stroke-linecap: round; }
+#syswalk.sy .sy-naoh { fill: #eef3f8; stroke: var(--sy-hw-line); stroke-width: 1.3; }
+#syswalk.sy .sy-frame { fill: none; stroke: var(--sy-hw-dark); stroke-width: 1.6; stroke-linejoin: round; }
+#syswalk.sy .sy-todo rect { fill: #fdf3dc; stroke: #e8cf95; stroke-width: 1; }
+#syswalk.sy .sy-svg .sy-todo text { font-size: 11px; font-weight: 650; letter-spacing: .02em; fill: #92610c; }
+#syswalk.sy .sy-svg .sy-todo.sh { display: none; }
+#syswalk.sy .sy-soil { fill: #dccbad; }
+#syswalk.sy .sy-stem { fill: none; stroke: var(--sy-pro-d); stroke-width: 1.8; stroke-linecap: round; }
+#syswalk.sy .sy-leaf { fill: #5aa874; }
+
+/* the stage badges: the cards' numbers, in each circuit's colour (3, the membrane, belongs to both) */
+#syswalk.sy .sy-b { transform-box: fill-box; transform-origin: center; transition: transform .5s var(--sy-ease); }
+#syswalk.sy .sy-b circle { fill: var(--sy-cul-d); stroke: #fff; stroke-width: 0; transition: stroke-width .4s; }
+#syswalk.sy .sy-b.h circle { fill: var(--sy-pro); }
+#syswalk.sy .sy-b.m circle { fill: var(--sy-mem); }
+#syswalk.sy .sy-svg .sy-b text { font-size: 12.5px; font-weight: 750; fill: #fff; text-anchor: middle; }
+
+/* the glow behind the live stage's parts: off until a walk lights them */
+#syswalk.sy .sy-halo { opacity: 0; transition: opacity .7s var(--sy-ease); }
+#syswalk.sy .sy-halo.c { fill: url(#sy-gc); }
+#syswalk.sy .sy-halo.h { fill: url(#sy-gh); }
+
+/* ------------------------------------------------------------------ the seven stages */
+#syswalk.sy ol.sy-cards { margin: 16px 0 0; padding: 0; list-style: none; max-width: none; }
+#syswalk.sy ol.sy-cards > li { margin: 0; padding: 0; list-style: none; max-width: none; }
+#syswalk.sy ol.sy-cards > li::marker { content: ""; }
+#syswalk.sy ol.sy-cards > li::before { content: none; }
+#syswalk.sy .sy-card { --k: var(--sy-cul-d); }
+#syswalk.sy .sy-card.m, #syswalk.sy .sy-card.all { --k: var(--sy-mem); }
+#syswalk.sy .sy-card.h { --k: var(--sy-pro); }
+#syswalk.sy .sy-card p.sy-card-k {
+  display: flex; align-items: center; gap: 8px; margin: 0 0 8px; max-width: none;
+  font: 750 11px/1.2 var(--sy-sans); letter-spacing: .11em; text-transform: uppercase; color: var(--k);
+}
+#syswalk.sy .sy-card-k b {
+  display: grid; place-items: center; width: 24px; height: 24px; border-radius: 50%;
+  background: var(--k); color: #fff; font-size: 12px; letter-spacing: 0; font-variant-numeric: tabular-nums;
+}
+#syswalk.sy .sy-card h4 {
+  margin: 0 0 6px; padding: 0; border: 0;
+  font: 750 1.1rem/1.3 var(--sy-sans); letter-spacing: -.012em; color: var(--sy-ink);
+}
+#syswalk.sy .sy-card h4::before, #syswalk.sy .sy-card h4::after { content: none; }
+#syswalk.sy .sy-card p:not(.sy-card-k) { margin: 0; max-width: none; font-size: .97rem; line-height: 1.62; color: #262626; }
+
+/* static: every stage as a card under the drawing */
+#syswalk.sy:not(.is-walk) ol.sy-cards {
+  display: grid; grid-template-columns: repeat(auto-fill, minmax(min(100%, 290px), 1fr)); gap: 12px;
+}
+#syswalk.sy:not(.is-walk) .sy-card {
+  padding: 14px 16px 16px; border-radius: 14px; background: #fff; box-shadow: 0 0 0 1px var(--sy-hair);
+}
+
+#syswalk.sy .sy-say {
+  position: absolute !important; width: 1px; height: 1px; margin: -1px; padding: 0; overflow: hidden;
+  clip: rect(0 0 0 0); clip-path: inset(50%); white-space: nowrap; border: 0;
+}
+#syswalk.sy .sy-figure > figcaption {
+  margin: 1.2rem 0 0; padding-top: .8rem; border-top: 1px solid var(--line, #e5e5e5);
+  font-size: .9375rem; line-height: 1.62; color: var(--fg, #1d1d1f); max-width: var(--w-measure, 62ch);
+}
+
+/* ------------------------------------------------------------------ walking: live, passed, waiting */
+#syswalk.sy.is-walk .sy-count { display: inline; }
+#syswalk.sy.is-walk .sy-svg .sy-st { opacity: .2; transition: opacity .6s var(--sy-ease); }
+#syswalk.sy.is-walk .sy-svg .sy-st.is-past { opacity: .5; }
+#syswalk.sy.is-walk .sy-svg .sy-st.is-live { opacity: 1; }
+#syswalk.sy.is-walk .sy-st.is-live .sy-halo { opacity: 1; }
+#syswalk.sy.is-walk .sy-st.is-live .sy-glow { opacity: .15; }
+#syswalk.sy.is-walk .sy-st.is-live .sy-flow, #syswalk.sy.is-walk .sy-st.is-live .sy-dflow { opacity: .95; }
+#syswalk.sy.is-walk .sy-st.is-live .sy-b { transform: scale(1.18); }
+#syswalk.sy.is-walk .sy-st.is-live .sy-b circle { stroke-width: 2.5; }
+/* the whole system at once: every part lit, no glow (it would wash the drawing out) */
+#syswalk.sy.is-walk.is-all .sy-st .sy-halo, #syswalk.sy.is-walk.is-all .sy-st .sy-glow { opacity: 0; }
+#syswalk.sy.is-walk.is-all .sy-st .sy-b { transform: none; }
+
+/* motion: only while the walk is on screen and the reader allows it */
+#syswalk.sy.is-walk.is-on .sy-st.is-live .sy-flow { animation: sy-flow 1s linear infinite; }
+#syswalk.sy.is-walk.is-on .sy-st.is-live .sy-dflow { animation: sy-dflow 1.1s linear infinite; }
+#syswalk.sy.is-walk.is-on .sy-st.is-live .sy-rotor { animation: sy-spin 2.4s linear infinite; }
+#syswalk.sy.is-walk.is-on .sy-st.is-live .sy-rotor.ccw { animation-name: sy-spin-ccw; }
+#syswalk.sy.is-walk.is-on .sy-st.is-live .sy-rotor.sy-rotor-s { animation-duration: 1.6s; }
+#syswalk.sy.is-walk.is-on .sy-st.is-live .sy-wave { animation: sy-wave 3.4s linear infinite; }
+#syswalk.sy.is-walk.is-on .sy-st.is-live .sy-stir { animation: sy-stir .8s ease-in-out infinite; }
+#syswalk.sy.is-walk.is-on .sy-st.is-live .sy-beam { animation: sy-beam 2.2s ease-in-out infinite; }
+#syswalk.sy.is-walk.is-on .sy-st.is-live .sy-seep circle { animation: sy-seep 3.2s ease-in-out infinite; }
+#syswalk.sy.is-walk.is-on .sy-st.is-live .sy-cross { animation: sy-cross 2.8s ease-in-out infinite; }
+#syswalk.sy.is-walk.is-on:not(.is-all) .sy-st.is-live .sy-halo { animation: sy-breathe 3.6s ease-in-out infinite; }
+#syswalk.sy .sy-seep circle:nth-child(2n) { animation-delay: -.9s !important; }
+#syswalk.sy .sy-seep circle:nth-child(3n) { animation-delay: -1.7s !important; }
+#syswalk.sy .sy-seep circle:nth-child(5n) { animation-delay: -2.4s !important; }
+@keyframes sy-flow { to { stroke-dashoffset: -28; } }
+@keyframes sy-dflow { to { stroke-dashoffset: -18; } }
+@keyframes sy-spin { to { transform: rotate(360deg); } }
+@keyframes sy-spin-ccw { to { transform: rotate(-360deg); } }
+@keyframes sy-wave { to { transform: translateX(-22px); } }
+@keyframes sy-stir { 0%, 100% { transform: scaleX(1); } 50% { transform: scaleX(.22); } }
+@keyframes sy-beam { 0%, 100% { opacity: .55; } 50% { opacity: 1; } }
+@keyframes sy-seep { 0% { transform: translateX(-2px); opacity: 0; } 35% { opacity: 1; } 100% { transform: translateX(3px); opacity: 0; } }
+@keyframes sy-cross { 0% { transform: translateX(0); opacity: 0; } 15% { opacity: 1; } 80% { opacity: 1; } 100% { transform: translateX(30px); opacity: 0; } }
+@keyframes sy-breathe { 0%, 100% { opacity: .7; } 50% { opacity: 1; } }
+
+/* ------------------------------------------------------------------ track: the panel pins, the card changes */
+#syswalk.sy[data-mode="track"] { margin-right: calc(-1 * clamp(0px, (100vw - 856px) / 2 - 24px, 300px)); }
+#syswalk.sy[data-mode="track"] .sy-panel { position: sticky; top: var(--sy-top); padding: 18px 22px 20px; }
+#syswalk.sy[data-mode="track"] .sy-body {
+  display: grid; grid-template-columns: minmax(0, 31fr) minmax(0, 69fr); gap: 26px; align-items: center;
+}
+#syswalk.sy[data-mode="track"] .sy-slot { position: relative; align-self: stretch; display: flex; flex-direction: column; justify-content: center; }
+#syswalk.sy[data-mode="track"] ol.sy-cards { display: grid; margin: 0; }
+#syswalk.sy[data-mode="track"] .sy-card {
+  grid-area: 1 / 1; opacity: 0; visibility: hidden; transform: translateY(12px);
+  transition: opacity .35s var(--sy-ease), transform .35s var(--sy-ease), visibility 0s linear .35s;
+}
+#syswalk.sy[data-mode="track"] .sy-card.is-live {
+  opacity: 1; visibility: visible; transform: none;
+  transition: opacity .5s var(--sy-ease) .12s, transform .5s var(--sy-ease) .12s, visibility 0s;
+}
+#syswalk.sy[data-mode="track"] .sy-card h4 { font-size: 1.42rem; line-height: 1.2; letter-spacing: -.02em; margin-bottom: 10px; }
+#syswalk.sy[data-mode="track"] .sy-card p:not(.sy-card-k) { font-size: 1rem; line-height: 1.66; color: var(--sy-ink-2); }
+#syswalk.sy[data-mode="track"] .sy-slot::after {
+  content: "Scroll, or use Back and Next"; display: block; margin-top: 18px; padding-top: 12px;
+  border-top: 1px solid var(--sy-hair); font: 600 12px/1.3 var(--sy-sans); letter-spacing: .02em; color: var(--sy-ink-3);
+}
+/* a narrower window (a small laptop, a tablet held sideways) gives the card a larger share, so its lines stay long enough */
+@media (max-width: 1180px) {
+  #syswalk.sy[data-mode="track"] .sy-body { grid-template-columns: minmax(0, 38fr) minmax(0, 62fr); gap: 20px; }
+  #syswalk.sy[data-mode="track"] .sy-card h4 { font-size: 1.28rem; }
+  #syswalk.sy[data-mode="track"] .sy-card p:not(.sy-card-k) { font-size: .96rem; line-height: 1.6; }
+}
+
+/* ------------------------------------------------------------------ cards: the drawing pins, the cards scroll */
+/* the white band above the panel (its last shadow) covers the gap under the site's bar, so a card scrolling up
+   behind the pinned drawing never shows above it; the walk's top margin is taller, so before it pins nothing is hidden */
+#syswalk.sy[data-mode="cards"] .sy-panel {
+  position: sticky; top: var(--sy-top); z-index: 4;
+  max-width: 760px; margin: 0 auto; padding: 10px 12px 10px; border-radius: 18px;
+  box-shadow: 0 0 0 1px var(--sy-hair), 0 18px 30px -24px rgb(20 48 34 / .6), 0 -16px 0 0 var(--sy-bg, #fff);
+}
+#syswalk.sy[data-mode="cards"] .sy-head { margin-bottom: 8px; gap: 8px 12px; }
+#syswalk.sy[data-mode="cards"] p.sy-name { margin-top: 4px; font-size: 1.05rem; }
+#syswalk.sy[data-mode="cards"] .sy-name-s { display: none; }
+#syswalk.sy[data-mode="cards"] .sy-name-w { display: inline; }
+#syswalk.sy[data-mode="cards"] .sy-svg { max-height: min(46vh, 420px); }
+#syswalk.sy[data-mode="cards"] ol.sy-cards {
+  display: flex; flex-direction: column; gap: max(110px, 16vh);
+  max-width: 640px; margin: 22px auto 0; padding: 0 0 max(160px, 30vh);
+}
+#syswalk.sy[data-mode="cards"] .sy-card {
+  padding: 15px 16px 17px; border-radius: 14px; background: #fff;
+  box-shadow: 0 0 0 1px var(--sy-hair); opacity: .42;
+  transition: opacity .4s var(--sy-ease), box-shadow .4s var(--sy-ease);
+}
+#syswalk.sy[data-mode="cards"] .sy-card.is-live {
+  opacity: 1; box-shadow: 0 0 0 1.5px color-mix(in srgb, var(--k) 55%, transparent), 0 14px 30px -22px rgb(20 48 34 / .5);
+}
+
+/* phones: Back and Next become arrows, the dots a little smaller, so one row holds all nine */
+@media (max-width: 560px) {
+  #syswalk.sy .sy-panel { padding: 12px 12px 14px; border-radius: 16px; }
+  #syswalk.sy .sy-head { align-items: flex-start; }
+  #syswalk.sy .sy-nav { width: 100%; justify-content: space-between; gap: 4px; }
+  #syswalk.sy .sy-btn { padding: 0; width: 40px; }
+  #syswalk.sy .sy-btn span { display: none; }
+  #syswalk.sy .sy-dot { width: 28px; height: 28px; font-size: 11.5px; }
+  #syswalk.sy ol.sy-dots > li + li::before { width: 6px; }
+  #syswalk.sy[data-mode="cards"] .sy-panel { margin: 0 -8px; padding: 9px 10px 8px; }
+  #syswalk.sy[data-mode="cards"] .sy-head { margin-bottom: 4px; }
+}
+@media (max-width: 374px) {
+  #syswalk.sy .sy-dot { width: 26px; height: 26px; }
+  #syswalk.sy ol.sy-dots > li + li::before { width: 4px; }
+  #syswalk.sy .sy-btn { width: 36px; min-width: 36px; }
+}
+
+/* a small drawing (a phone, or a narrow column): short names, set larger so they stay at 11 px or more on screen */
+@container (max-width: 470px) {
+  #syswalk.sy .sy-svg .lo { display: none; }
+  #syswalk.sy .sy-svg .sh { display: inline; }
+  #syswalk.sy .sy-svg .sy-todo.lo { display: none; }
+  #syswalk.sy .sy-svg .sy-todo.sh { display: inline; }
+  #syswalk.sy .sy-svg text { font-size: 21px; }
+  #syswalk.sy .sy-svg .sy-s, #syswalk.sy .sy-svg .sy-minor { font-size: 19px; }
+  #syswalk.sy .sy-svg .sy-zt { font-size: 18px; letter-spacing: .06em; }
+  #syswalk.sy .sy-svg .sy-side { font-size: 15px; letter-spacing: .08em; }
+  #syswalk.sy .sy-svg .sy-todo text { font-size: 18px; }
+  #syswalk.sy .sy-svg .sy-b text { font-size: 13px; }
+  #syswalk.sy .sy-b { transform: scale(1.3); }
+  #syswalk.sy.is-walk .sy-st.is-live .sy-b { transform: scale(1.45); }
+}
+@container (min-width: 471px) and (max-width: 560px) {
+  #syswalk.sy .sy-svg text { font-size: 16px; }
+  #syswalk.sy .sy-svg .sy-s, #syswalk.sy .sy-svg .sy-minor, #syswalk.sy .sy-svg .sy-k { font-size: 14.5px; }
+  #syswalk.sy .sy-svg .sy-zt { font-size: 13.5px; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  #syswalk.sy *, #syswalk.sy *::before, #syswalk.sy *::after { animation: none !important; transition: none !important; }
+}
+@media print {
+  #syswalk.sy .sy-track { height: auto !important; }
+  #syswalk.sy .sy-nav, #syswalk.sy .sy-slot::after { display: none !important; }
+  #syswalk.sy .sy-panel { position: static !important; box-shadow: none; }
+  #syswalk.sy .sy-card { grid-area: auto !important; opacity: 1 !important; visibility: visible !important; transform: none !important; }
+  #syswalk.sy .sy-svg .sy-st { opacity: 1 !important; }
+}
+
+/* 18 Oct 2026: while the walk runs, stage 7 says what the caption says; the caption stays for a screen reader and for
+   the still drawing (no script, reduced motion). */
+#syswalk.sy.is-walk .sy-figure > figcaption {
+  position: absolute !important; width: 1px; height: 1px; margin: -1px; padding: 0; overflow: hidden;
+  clip: rect(0 0 0 0); clip-path: inset(50%); white-space: nowrap; border: 0;
+}
+/* the pinch valve's sub-line (was the "not on record" chip) */
+#syswalk.sy .sy-svg text.sy-s.lo { font-size: 12px; }

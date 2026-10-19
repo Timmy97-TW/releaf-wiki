@@ -507,7 +507,43 @@
   // settles. Tied to the scroll position, not to time; a reader who prefers less motion gets the settled state. The
   // pins, the bubble and its leader arrive by a class once it is nearly in place, never half there (round 1, D4).
   let lq = false, lastIn = "", uiOn = false;
-  function setUI(on) { if (on !== uiOn) { uiOn = on; root.classList.toggle("pb-ui-on", on); } }
+  function setUI(on) { if (on !== uiOn) { uiOn = on; root.classList.toggle("pb-ui-on", on); if (on) tourSoon(); } }
+
+  /* 19 Oct 2026, the owner: a first-time reader may not know the bench is something to point at. Once per visit,
+     the first time its pins arrive, each instrument lights in turn, as it would under the pointer (setActive), list
+     order, then all go dark again. Any move of the reader's own over the bench or the list ends it at once, and a
+     reader who prefers less motion never gets it. */
+  let toured = false, touring = 0, tourT = 0;
+  try { toured = sessionStorage.getItem("pb-toured") === "1"; } catch (e) {}
+  function tourSoon() {
+    if (toured || reduced || !SECTION) return;
+    clearTimeout(tourT);
+    tourT = setTimeout(function () {
+      if (toured || !uiOn || !seen || active || !onScreen) return;
+      toured = true;
+      try { sessionStorage.setItem("pb-toured", "1"); } catch (e) {}
+      const ks = listLinks.map(function (a) { return a.dataset.k; });
+      let i = 0;
+      const step = function () {
+        if (!touring) return;
+        if (i >= ks.length) { touring = 0; setActive(null); return; }
+        setActive(ks[i++], "tour");
+        touring = setTimeout(step, 620);
+      };
+      touring = 1; step();
+    }, 700);
+  }
+  function endTour() {
+    toured = true; clearTimeout(tourT);
+    if (touring) { clearTimeout(touring); touring = 0; if (activeSrc === "tour") setActive(null); }
+  }
+  // (a real move only: Chrome sends a still mouse a synthetic move, with no movement, as the page scrolls under it)
+  const realMove = function (e) { return e.pointerType === "mouse" && (e.movementX || e.movementY); };
+  stage.addEventListener("pointerdown", endTour, { passive: true, capture: true });
+  stage.addEventListener("pointermove", function (e) { if (realMove(e)) endTour(); }, { passive: true, capture: true });
+  list.addEventListener("pointermove", function (e) { if (realMove(e)) endTour(); }, { passive: true });
+  list.addEventListener("pointerdown", endTour, { passive: true });
+  list.addEventListener("focusin", endTour);
   function lightUp() {
     lq = false;
     if (!SECTION || reduced) { if (SECTION) root.style.setProperty("--pb-in", "1"); setUI(true); return; }
@@ -877,7 +913,7 @@ void main(){
       onScreen = e.isIntersecting;
       if (onScreen) { draw(); kick(); }
       else if (raf) { cancelAnimationFrame(raf); raf = 0; }
-      if (e.intersectionRatio >= 0.4) { seen = true; maybeIntro(); }
+      if (e.intersectionRatio >= 0.4) { seen = true; maybeIntro(); if (uiOn) tourSoon(); }
     }, { threshold: [0, 0.4] }).observe(stage);
   } else {
     onScreen = seen = true; load();

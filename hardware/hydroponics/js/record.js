@@ -1,24 +1,10 @@
 // Hydroponics record: the one moving figure.
 //
-// Section 2.2 sets a fixed plate beside a floating one and lets the reader move
+// Section 1.2 sets a fixed plate beside a floating one and lets the reader move
 // through a run. The level is the only input: the fixed plate's roots dry out
 // once it leaves the window, the floating plate rides down with it. Without
 // this script the figure still reads: both panels show the start of a run with
 // the end-of-run level dashed in, and the control simply stays hidden.
-(function () {
-  "use strict";
-  // ../js/toc.js strips a leading number from each map card's title so the card does
-  // not repeat its own number, which turns "3D Design and Animation" into "D Design
-  // and Animation". This page's part titles carry no numbers; give the cards them back.
-  var cards = document.querySelectorAll(".doc-map .map-card");
-  for (var c = 0; c < cards.length; c++) {
-    var part = document.querySelector(cards[c].getAttribute("href"));
-    var h2 = part && part.querySelector("h2");
-    var t = cards[c].querySelector(".map-t");
-    if (h2 && t) t.textContent = h2.textContent.replace(/\s+/g, " ").trim();
-  }
-})();
-
 (function () {
   "use strict";
   var fig = document.getElementById("fig-level");

@@ -218,6 +218,7 @@ body.doc-light .story-stage { z-index: 0; }
 .hw-ledger a:hover, .hw-ledger a:focus-visible { background: var(--w-paper); }
 .hw-ledger__name { font-size: 1rem; font-weight: 620; letter-spacing: -.008em; color: var(--w-ink); }
 .hw-ledger__text { grid-column: 1 / -1; font-size: .875rem; line-height: 1.45; color: var(--w-ink-3); text-wrap: pretty; }
+
 /* the sheet settles in once, the way the wiki's abstract does */
 @media (prefers-reduced-motion: no-preference) {
   .hwsum__inner > * { animation: hwsettle .9s cubic-bezier(.2, .7, .2, 1) both; }
@@ -859,10 +860,11 @@ body.hwreveal .doc-wrap .doc .cycles .cyc .iter-body > .dbtl-h:first-child { mar
    phone they reflow to the card instead: the headers wrap, the numbers stay
    on one line, and the frame still scrolls inside itself as a last resort. */
 @media (max-width: 700px) {
-  .doc .cycles .tablewrap { max-width: 100%; overflow-x: auto; }
-  .doc .cycles .tablewrap > table { min-width: 0; width: 100%; font-size: .78rem; }
-  .doc .cycles .tablewrap > table :is(th, td) { padding-right: .45rem; white-space: normal; overflow-wrap: anywhere; }
-  .doc .cycles .tablewrap > table td.num { white-space: nowrap; overflow-wrap: normal; }
+  .doc :is(.cycles, .hw-result) .tablewrap { max-width: 100%; overflow-x: auto; }
+  .doc :is(.cycles, .hw-result) .tablewrap > table { min-width: 0; width: 100%; font-size: .78rem; }
+  .doc :is(.cycles, .hw-result) .tablewrap > table :is(th, td) { padding-right: .45rem; white-space: normal; overflow-wrap: anywhere; }
+  .doc :is(.cycles, .hw-result) .tablewrap > table td.num { white-space: nowrap; overflow-wrap: normal; }
+  /* 18 Oct 2026: the long run (photometer 4.1) left the cycles for Results and keeps this */
   .doc .cycles .tablewrap > table td .todo { display: block; margin: .2rem 0 0; white-space: normal; }
 }
 
@@ -1235,3 +1237,208 @@ body.doc-light .sitenav--dark.is-scrolled .sitenav__bar::before { height: var(--
 
 /* V18: a to-do block is as wide as the cards and figures around it (it was capped at 68ch) */
 body.hwreveal .doc-wrap .doc section.sec > p.todo { max-width: none; }
+
+/* ==========================================================================
+   8. A stage's one photo beside its text (17 Oct 2026)
+   --------------------------------------------------------------------------
+   The owner: "When doing the dbtl cycles, most of the time you have an image
+   below the text, which takes up a lot of unnecessary space. I want to try
+   moving the photos to the left of the text, or the right, whichever looks
+   better ... If there is more than one photo then maybe don't put it like
+   that."
+
+   A design, build, test or learn stage whose text is followed by one photo
+   wraps the two in .dbtl-split (dev/dbtl-photos/dbtl_split.py does the
+   wrapping and proves that nothing else moved). Wider than a phone, the photo
+   stands to the LEFT of its text, top-aligned, in two fifths of the card,
+   with its caption under it. Left is where every other picture beside text on
+   these pages already stands (each final design's 3D model, the LPA's first
+   build photo), and a mixed side would read as an accident. A tall portrait
+   photo beside a short paragraph takes 35% (--narrow), so it does not run far
+   below its text. The markup keeps the text first, so a phone (700px and
+   under) stacks the stage as before: text, then the photo.
+
+     <div class="dbtl-split [dbtl-split--narrow]">
+       <div class="dbtl-split__text"> the stage's paragraphs </div>
+       <figure class="frame ..."> the one photo </figure>
+     </div>
+
+   Left as they were: stages with two or more photos, wide strips, and charts
+   or blots whose labels need the card's width.
+
+   The text and the figure are no longer children of section.sec, so the two
+   section 5 rules they lost (the prose, and a figure in a card) are repeated
+   here at the same weight, and a phone sees them exactly as before. On a wide
+   screen the photo's own size rules, some of them on its id in the page's
+   stylesheet, give way to the column: !important on width, max-width and
+   margin only.
+   ========================================================================== */
+body.hwreveal .doc-wrap .doc div.dbtl-split { margin: 0 0 1rem; }
+body.hwreveal .doc-wrap .doc div.dbtl-split__text > p {
+  max-width: 68ch;
+  margin: 0 0 1rem;
+  font-size: 1.0625rem;
+  line-height: 1.7;
+  letter-spacing: -.004em;
+  color: #2b2b2e;
+  text-wrap: pretty;
+}
+body.hwreveal .doc-wrap .doc div.dbtl-split__text > p strong { font-weight: 650; color: var(--w-ink); }
+body.hwreveal .doc-wrap .doc div.dbtl-split > figure {
+  border-color: rgb(0 0 0 / .07);
+  border-radius: 20px;
+  margin: 1.5rem auto;
+}
+/* the photo keeps its own shape: no fixed-ratio well, nothing cropped away */
+body.hwreveal .doc-wrap .doc div.dbtl-split > figure .frame-img { aspect-ratio: auto; height: auto; }
+body.hwreveal .doc-wrap .doc div.dbtl-split > figure .frame-img img { display: block; width: 100%; height: auto; object-fit: contain; }
+
+@media (min-width: 701px) {
+  body.hwreveal .doc-wrap .doc div.dbtl-split {
+    display: grid;
+    grid-template-columns: minmax(0, 2fr) minmax(0, 3fr);
+    column-gap: clamp(1.5rem, .75rem + 1.5vw, 2.25rem);
+    align-items: start;
+  }
+  body.hwreveal .doc-wrap .doc div.dbtl-split--narrow { grid-template-columns: minmax(0, 7fr) minmax(0, 13fr); }
+  body.hwreveal .doc-wrap .doc div.dbtl-split > .dbtl-split__text { grid-column: 2; grid-row: 1; min-width: 0; }
+  body.hwreveal .doc-wrap .doc div.dbtl-split__text > :last-child { margin-bottom: 0; }
+  body.hwreveal .doc-wrap .doc div.dbtl-split > figure {
+    grid-column: 1;
+    grid-row: 1;
+    width: auto !important;
+    max-width: none !important;
+    margin: 0 !important;
+  }
+}
+
+/* 18 Oct 2026 (final night): a table inside an open fold must not widen the folds grid on a phone (found on hydroponics). */
+body.hwreveal .doc-wrap .doc .folds > .fold { min-width: 0; }
+
+/* ==========================================================================
+   9. Results: one card per result, opening on a one-line summary (18 Oct 2026)
+   --------------------------------------------------------------------------
+   The owner: "I want to create a new section right under dbtls called
+   'Results,' where we put the most prominent successes ... For each 'result'
+   we want to start it with a one line summary of the result, then get into
+   the details. This line should be in a box kind of highlighted."
+
+   Every instrument page has a part "Results" straight after its engineering
+   cycles. Each result is one div.hw-result; its first card is the result's
+   head, its h3 then the summary box, and the details follow in the same card
+   or in the cards after it (the photometer's calibration keeps its five
+   sections as cards of their own, numbered 4.2.1-4.2.5 in h4s).
+
+     <div class="hw-result">
+       <section class="sec hw-result__card" id="...">
+         <h3><i>4.1</i> Title</h3>
+         <p class="hw-result__line">The result, in one sentence, with its number.</p>
+         <h5 class="hw-result__h">The Run</h5> ... details ...
+       </section>
+       [<section class="sec"><h4 class="hw-result__sub"><i>4.2.1</i> ...</h4> ...</section> ...]
+     </div>
+
+   The summary box is the cycles' leaf band in small: a pale leaf panel, a
+   hairline ring and a leaf accent down its left edge, the sentence in dark
+   leaf at a size between the prose and the card's title. An empty box (a
+   result the owner has still to write) keeps its height, so the shell reads
+   as a place to fill, not as a gap.
+   ========================================================================== */
+.doc .hw-result { margin: 0 0 2.75rem; }
+.doc .hw-result:last-child { margin-bottom: 0; }
+body.hwreveal .doc-wrap .doc .hw-result > section.sec + section.sec { margin-top: .9rem; }
+
+body.hwreveal .doc-wrap .doc section.sec > p.hw-result__line {
+  max-width: none;
+  margin: 0 0 1.75rem;
+  padding: 1rem 1.3rem 1.05rem 1.45rem;
+  border-radius: 16px;
+  background: linear-gradient(180deg, var(--w-leaf-50, #f4f9f6), color-mix(in srgb, var(--w-leaf-100, #e3f0e8) 70%, #fff));
+  box-shadow: inset 0 0 0 1px var(--w-leaf-200, #cfe4d8), inset 4px 0 0 var(--w-leaf-700, #23684a);
+  font-size: clamp(1.0625rem, 1rem + .3vw, 1.1875rem);
+  font-weight: 560;
+  line-height: 1.5;
+  letter-spacing: -.008em;
+  color: var(--w-leaf-900, #14402b);
+  text-wrap: pretty;
+}
+body.hwreveal .doc-wrap .doc section.sec > p.hw-result__line:last-child { margin-bottom: 0; }
+body.hwreveal .doc-wrap .doc section.sec > p.hw-result__line:empty { min-height: 3.4rem; }
+body.hwreveal .doc-wrap .doc section.sec > p.hw-result__line i { color: inherit; }
+.doc .hw-result__body:empty { display: none; }
+
+/* a detail's heading inside a result: the stage label of the cycles, without the D/B/T/L disc */
+body.hwreveal .doc-wrap .doc section.sec > :is(h4, h5).hw-result__h {
+  display: flex; align-items: center; gap: .65rem;
+  margin: 2.1rem 0 .9rem; padding: 0; border: 0;
+  font-family: var(--sans, inherit);
+  font-size: .8125rem; font-weight: 700; line-height: 1.2; letter-spacing: .12em; text-transform: uppercase;
+  color: var(--w-leaf-900, #14402b);
+}
+body.hwreveal .doc-wrap .doc section.sec > :is(h4, h5).hw-result__h::before {
+  content: ""; flex: none; width: .5rem; height: .5rem; border-radius: 50%; background: var(--w-leaf-700, #23684a);
+}
+body.hwreveal .doc-wrap .doc section.sec > :is(h4, h5).hw-result__h::after { content: ""; flex: 1; height: 1px; background: rgb(0 0 0 / .1); }
+body.hwreveal .doc-wrap .doc section.sec > p.hw-result__line + :is(h4, h5).hw-result__h { margin-top: 0; }
+
+/* a numbered part of a result (4.2.1): the card title's chip and ink, a step smaller */
+body.hwreveal .doc-wrap .doc section.sec > h4.hw-result__sub {
+  display: flex; align-items: baseline; gap: .65rem;
+  margin: 0 0 1rem; padding: 0; border: 0;
+  font-size: clamp(1.125rem, 1.05rem + .3vw, 1.25rem); font-weight: 650; line-height: 1.25; letter-spacing: -.015em;
+  color: var(--w-ink);
+}
+body.hwreveal .doc-wrap .doc section.sec > h4.hw-result__sub > i {
+  flex: none; padding: .24em .58em .22em; border-radius: 999px;
+  font-size: .75rem; font-style: normal; font-weight: 650; line-height: 1.15; letter-spacing: .01em;
+  font-variant-numeric: tabular-nums;
+  color: var(--pl); background: color-mix(in srgb, var(--pl) 13%, #fff);
+  transform: translateY(-.14em);
+}
+/* a result's own small table (the LPA's arms) */
+body.hwreveal .doc-wrap .doc .hw-result .tablewrap { margin: 1.25rem 0; }
+/* sub- and superscripts in the summary (TiO2, R2) must not open the line */
+body.hwreveal .doc-wrap .doc section.sec > p.hw-result__line :is(sub, sup) { line-height: 0; }
+/* a chart drawn elsewhere and kept as one image (the LPA's growth fit): a white sheet, the image at its own shape */
+body.hwreveal .doc-wrap .doc section.sec > figure.hw-result__fig {
+  margin: 1.5rem 0; padding: clamp(.6rem, .3rem + 1vw, 1rem) clamp(.6rem, .3rem + 1vw, 1rem) .9rem;
+  border: 1px solid rgb(0 0 0 / .07); border-radius: 20px; background: #fff;
+}
+.doc figure.hw-result__fig > img { display: block; width: 100%; height: auto; }
+.doc figure.hw-result__fig > figcaption { margin-top: .75rem; }
+body.hwreveal .doc-wrap .doc section.sec > p.hw-result__line:has(+ .hw-result__body:empty:last-child) { margin-bottom: 0; }
+
+/* ---- progress under the bar, and the way back to 1 (19 Oct 2026) ----------
+   Each group opens on its final prototype (hwdoc.js, START_LAST). One thin
+   segment per prototype just under the pill, filled up to the one showing, so
+   "4 of 4" reads at a glance; and, until the reader picks a tab, a small
+   "Start at 1" under it. Hidden while the bar is pinned over the text. */
+.cyc-prog {
+  position: absolute; left: 1.4rem; right: 1.4rem; top: calc(100% + 6px);
+  display: flex; gap: 4px; height: 3px; pointer-events: none;
+}
+.cyc-prog i {
+  flex: 1 1 0; border-radius: 3px; background: rgb(63 90 102 / .16);
+  transition: background-color .35s var(--ease, ease);
+}
+.cyc-prog i.is-on { background: var(--w-tab, #3f5a66); }
+.doc .cyc-hint {
+  position: absolute; left: 1rem; top: calc(100% + 15px);
+  display: inline-flex; align-items: center; gap: .35rem;
+  margin: 0; padding: .2rem .7rem .22rem .55rem; border: 0; border-radius: 999px;
+  background: var(--w-tab-pill, #e3eef2); color: var(--w-tab, #3f5a66);
+  font: inherit; font-size: .8125rem; font-weight: 600; line-height: 1.3; cursor: pointer;
+  transition: background-color .2s ease, color .2s ease, opacity .2s ease;
+}
+.doc .cyc-hint i { font-style: normal; font-weight: 700; }
+.doc .cyc-hint:hover, .doc .cyc-hint:focus-visible { background: var(--w-tab, #3f5a66); color: #fff; }
+.doc .cyc-hint:focus-visible { outline: 2px solid var(--w-tab, #3f5a66); outline-offset: 2px; }
+.doc .cyc-hint[hidden] { display: none; }
+.cyc-tabs.is-pinned .cyc-hint { opacity: 0; pointer-events: none; }
+.cyc-tabs.is-pinned .cyc-prog { top: calc(100% + 4px); }
+/* the hint needs room under the bar while it shows */
+.cyc-tabs:has(.cyc-hint:not([hidden])) { margin-bottom: calc(var(--cyc-gap) + 1.9rem); }
+/* "From the start", at the foot of the final prototype: the Next pill, leading left */
+.doc .cyc-next--back { justify-content: flex-start; }
+@media (prefers-reduced-motion: reduce) { .cyc-prog i, .doc .cyc-hint { transition: none; } }
+@media print { .cyc-prog, .cyc-hint { display: none !important; } }

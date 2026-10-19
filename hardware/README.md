@@ -96,8 +96,8 @@ Since 9 Oct 2026 the hub is **v10** (the owner: "Yes, promote v10"), dark end to
 **Choose an instrument**, a path-traced photograph of one lab bench rendered from the team's CAD — the
 commercial bioreactor as proposed (the compact B2) with the in-line photometer inside it, shown close up
 in a bubble, the LPA and the hydroponics plate — each a link to its page (`img/bench-photo/`); then
-**Twenty-one weeks, written down.**: the notebook's own pages (`notebook/pages/`) scrolling beside its
-contents, a pick gliding to its page, and *Open the PDF · p. N* (`notebook/releaf-hardware-notebook.pdf`).
+**Thirty weeks, written down.**: the notebook's own pages scrolling beside its contents, a pick gliding to
+its page, *Open the notebook · p. N* (the reader page at that entry) and *Download the PDF* (see "Hardware notebook").
 There is no topbar: on the iGEM wiki the site's own navbar sits there, and a *Back to Hardware* button
 takes its place. The photograph's liquids, flow, tub and room are illustrative, as the note under it says.
 
@@ -191,8 +191,18 @@ python3 tools/stamp_assets.py
 
 ## Hardware notebook
 
-`notebook/` is the team's week-by-week hardware notebook, 23 March to 13 August
-2026: 31 entries over 62 pages.
+`notebook/` is the team's week-by-week hardware notebook, 23 March to 17 October
+2026: 51 entries over 97 pages (the edition of 17 October; the first edition ran to 13 August, 31 entries, 62 pages).
+
+**Its pages are not in this folder.** The 17 October edition is photo-heavy: its 97 page images are 5.7 MiB as
+WebP, against about 2 MiB free in the 10 MiB deploy. They live in the repo at `downloads/notebook/pages/pNN.webp`
+(1020 x 1320; lossless where that is smaller, else WebP q70), outside `hardware/`, and the hub and this page load
+them as plain `<img>` from the repo's GitLab raw URL
+(`https://gitlab.igem.org/antonlin1005/hardware-wiki/-/raw/main/downloads/notebook/pages/`), which serves
+`image/webp` publicly. They show only once pushed. The PDF itself is `downloads/notebook/releaf-hardware-notebook.pdf`,
+linked as *Download the PDF* (`?inline=false`). Both are regenerated from the edition's PDF with
+`python3 tools/notebook_edition.py <the edition's PDF>`, which also rewrites the hub's notebook section, this page's
+lanes, rail and pages, and `notebook/search.json`.
 
 **The pages are shown as the team designed them** — cream stock, dark green
 header band, gold annotations — rendered straight from their deck. They are
@@ -200,21 +210,20 @@ deliberately *not* re-typeset into the site's dark theme. The layout is part of
 the record, and rebuilding it would quietly change what the record says.
 
 What the site adds is the reading. A PDF viewer paginates: you click, a page
-replaces the one before it, and in 62 pages you lose your place. Here the pages
+replaces the one before it, and in 97 pages you lose your place. Here the pages
 are stacked as plain `<img>` in document order and scroll continuously, with a
 sticky index rail that jumps by week and tracks where you are. With JavaScript
 off the whole notebook still scrolls and the index still jumps; the script only
 adds the progress bar and the highlight.
 
 The hub carries the notebook too: these page images in a scroll box beside its
-contents, and the PDF, `notebook/releaf-hardware-notebook.pdf` (the team's own
-export with an outline and linked contents, built by
-`dev/hub-variants/v10/notebook_pdf.py`). This page stays: the DiOPAL page and the
+contents, every link opening this page at its entry, and the PDF as a download from the repo. This page stays: the DiOPAL page and the
 team wiki link to it.
 
 ### Regenerating
 
-Source of truth is the deck. To rebuild after the team edits it:
+Since 17 October 2026 the source of truth is the edition's PDF: `python3 tools/notebook_edition.py <pdf>` (see above).
+The steps below were the first edition's, from the deck:
 
 1. Strip the blank template slides (the deck ships with five unfilled layout
    slides that must not be published).
@@ -237,6 +246,21 @@ bare `413 Request Entity Too Large`, and the limit is lower than it looks:
 **10.59 MiB was rejected, 8.77 MiB was accepted.** Treat ~9 MiB as the working
 ceiling until a larger upload is observed to pass, and compare in bytes:
 8.77 MiB is about 9,196,000 B.
+
+**17 Oct 2026, two more observations** (zipped the way the check-ignore walk below does it):
+- `52cddf4` at 9,882,144 B (9.42 MiB) **passed**;
+- `a72f176` at 10,326,602 B (9.85 MiB) **was rejected** with the same 413.
+
+So the real ceiling lies between them. `faa0fc6` then passed, measured at 9.148 MiB, and the runner's own
+`artifacts.zip` for it was **9,823,981 B**. The runner's zip is about 2.4% larger than this walk's figure. Both
+results fit a hard **10 MiB (10,485,760 B) limit on the runner's archive**: 52cddf4 comes to about 10.12 M bytes,
+under it, and a72f176 to about 10.58 M bytes, over it. Keep this walk's figure at or under **~9.6 MiB**.
+
+Big downloads (the assembly-guide PDFs) now live outside `hardware/`, in the repo's `downloads/` folder. The CI never
+copies that folder. The page cards link to GitLab's raw URL with `?inline=false`
+(`https://gitlab.igem.org/antonlin1005/hardware-wiki/-/raw/main/downloads/…`); it is public and downloads as an
+attachment under the file's own name. Put any further large download there, not in `hardware/`. A file a page itself
+loads (a 3D viewer's STL, an image) must stay in `hardware/`: GitLab raw sends no CORS header.
 
 gitlab.igem.org publishes its limits at `https://gitlab.igem.org/help/instance_configuration` (read 15 September
 2026):
@@ -360,6 +384,10 @@ close), chosen by the owner on 2 Oct 2026; the 720p and 480p clips still open on
   screens) are **git-ignored**: together they are far past the 10 MiB artifact
   limit, and iGEM requires video to come from
   [Video Universe](https://video.igem.org).
+- **Since 17 Oct 2026 the film is off the site.** To fit the 10 MiB deploy, the owner had the hub show its poster as a
+  still; the instructor adds the film back in the combined wiki. The markup has no `data-src`, so `js/hero-film.js`
+  does nothing. `hub-film-lite.mp4` is untracked and git-ignored (still on disk and in git history), and the owner has
+  a copy in `~/Downloads/ReLeaf-clips/`. The notes below describe how it ran until then.
 - **For testing only (15 Sep 2026), the page plays `img/film/hub-film-lite.mp4`.**
   - It is committed through an exception in `.gitignore` and deploys with the site.
   - Since 2 Oct 2026 it is the v3 cut (43.75 s) at 960×540, two-pass at about 340 kbps (1,870,772 B; 517 kbps and 2,830,128 B until 3 Oct 2026, when the

@@ -1,18 +1,21 @@
 /* ===========================================================================
    6.1 · What gets through the membrane wall (15 Oct 2026; proposal 2,
-   "Containment you can watch"). Markup: figure#fig-pore in index.html.
+   "Containment you can watch"; simplified 17 Oct 2026). Markup: figure#fig-pore.
    ---------------------------------------------------------------------------
    A to-scale window onto the hollow-fiber wall. Rod-shaped B. subtilis drift
    in the lumen's crossflow and come to rest against the wall; ACC deaminase
-   slips through the pores to the shell side. A pore-size slider shows what a
-   coarser membrane would let through.
+   slips through the pores to the shell side. 17 Oct, the owner: the models
+   looked "very complicated". The one control is now three pore sizes to press
+   (our membrane's 0.2 µm, then 0.5 and 1.2 µm), and one plain sentence says
+   what happened, beside two counts: cells through, protectant through.
 
    On record, and drawn to one shared scale with the 1 µm bar:
      - the pore: 0.2 µm, mPES hollow fiber (6.1 and 3.4 of this page);
      - the cells: 0.25–1.0 µm in diameter, the reported range (6.1).
      Every cell in the window has a width from that range, from the thinnest
      (0.25) to the widest (1.0); a cell crosses only if its width is smaller
-     than the pore, end first.
+     than the pore, end first. The two wider pores are not membranes anyone
+     uses here: they show what the 0.2 µm rating is for.
    ACC deaminase runs at ~42 kDa on the team's western blot (4.3). A globular
    protein of that mass is a few nanometers across (from its mass, not a
    measurement); here it is drawn as a dot several times too large to see.
@@ -20,10 +23,14 @@
    lengths, the pore spacing and the wall's thickness (a real fiber wall is far
    thicker than this window).
 
+   Colours: the page's culture amber and protectant green (bv-purpose.css,
+   bv-contain.css); red only for a cell that got through.
+
    Uses window.XP (../js/xp-kit.js): XP.loop pauses off screen and in hidden tabs;
    with reduced motion the scene starts still (30 s of flow, simulated) and the
-   slider still works. The figure gets .is-live once this runs; without script
-   the old still drawing shows instead (css/xp-pore.css).
+   buttons still work. The figure gets .is-live once this runs; without script
+   the old still drawing shows instead (css/xp-pore.css). The script builds its
+   own buttons, counts and sentence into .xpp-pick, .xpp-tally and .xpp-result.
    =========================================================================== */
 (function () {
   "use strict";
@@ -32,38 +39,33 @@
   if (!XP || !fig) return;
   var stage = fig.querySelector(".xp-stage");
   var cv = fig.querySelector(".xpp-canvas");
-  var range = fig.querySelector(".xpp-size input");
-  if (!stage || !cv || !cv.getContext || !range) return;
-  var out = fig.querySelector(".xpp-size output");
-  var refBtn = fig.querySelector(".xpp-ref");
-  var playBtn = fig.querySelector(".xpp-play");
-  var status = fig.querySelector(".xpp-status");
-  var cellsChip = fig.querySelector(".xpp-count.cells");
-  var cellsN = fig.querySelector(".xpp-count.cells b");
-  var protN = fig.querySelector(".xpp-count.prot b");
-  var when = fig.querySelector(".xpp-when");
+  if (!stage || !cv || !cv.getContext) return;
 
   /* ---- record values (this page) ---- */
   var PORE = 0.2;                 // µm, the membrane's rating (6.1, 3.4)
   var CELL_MIN = 0.25, CELL_MAX = 1.0;   // µm, the reported cell diameter range (6.1)
 
-  /* ---- colours: the record's two sides (../css/explore.css) ---- */
+  /* ---- the three pore sizes to press, and what each one means, in words ---- */
+  var CHOICES = [
+    { d: 0.2, name: "0.2&nbsp;µm", sub: "our membrane", ok: true,
+      say: "<b>No cell gets through.</b> The pores are 0.2&nbsp;µm wide, narrower than even the thinnest cell (0.25&nbsp;µm), so every cell stays on the culture side. The protectant, a few nanometers across, passes freely." },
+    { d: 0.5, name: "0.5&nbsp;µm", sub: "wider", ok: false,
+      say: "<b>Some cells get through.</b> Cells thinner than 0.5&nbsp;µm now fit through end&#8209;first and leak into the harvest. Only the wider ones are still held back." },
+    { d: 1.2, name: "1.2&nbsp;µm", sub: "wider than any cell", ok: false,
+      say: "<b>Every cell gets through.</b> The pores are wider than the widest cell (1.0&nbsp;µm), so the wall no longer holds the culture back at all." }
+  ];
+
+  /* ---- colours: the page's culture amber and protectant green ---- */
   var C = {
-    lumenBg: "#f3f7fc", shellBg: "#f1f8f4",
-    lumen: "#1d5a9e", lumenInk: "#1d5a9e", shellInk: "#23684a",
-    cellFill: "#dde9f7", cellHi: "rgba(255,255,255,.75)",
-    gone: "#b3261e", goneFill: "#fbe9e8",
-    prot: "#2f8f5b",
+    lumenBg: "#fdf6ec", shellBg: "#eff7f2",
+    lumen: "#b8650f", lumenInk: "#a35a0c", shellInk: "#1b6b3f",
+    cellFill: "#f8dcb4", cellHi: "rgba(255,255,255,.7)",
+    gone: "#b3261e", goneFill: "#fbe4e2",
+    prot: "#23864f",
     wall: "#d9dfe5", wallEdge: "#a3aeb9",
     ink: "#1f2933", ink2: "#556070", halo: "rgba(255,255,255,.88)"
   };
   var FONT = (getComputedStyle(fig).getPropertyValue("--sans") || "").trim() || "-apple-system, system-ui, sans-serif";
-
-  /* the slider is logarithmic: 0..200 maps 0.05..2 µm, and 0.2 µm sits at 75.2 */
-  var DMIN = 0.05, DMAX = 2;
-  function dOf(v) { return DMIN * Math.pow(DMAX / DMIN, v / 200); }
-  function vOf(d) { return 200 * Math.log(d / DMIN) / Math.log(DMAX / DMIN); }
-  function snap(d) { return Math.abs(vOf(d) - vOf(PORE)) < 1.2 ? PORE : d; }
   function fmtD(d) { return d < 0.1 ? d.toFixed(3) : d < 1 ? d.toFixed(2) : d.toFixed(1); }
 
   /* ---- seeded randomness, so the still frame is the same on every load ---- */
@@ -111,14 +113,16 @@
 
   function makeCell(w, x, y) {
     return { w: w, L: XP.clamp(w * (2 + R() * 0.8), 0.6, 2.3), x: x, y: y,
-             th: (R() - 0.5) * 0.5, om: 0, vy: 0, st: 0, px: 0, k: 0, emit: R() };
+             th: (R() - 0.5) * 0.5, om: 0, vy: 0, st: 0, px: 0, k: 0, emit: R(), out: false };
   }
   function seed() {
     R = rng(20261015);
     S.cells = []; S.prots = []; S.nCell = 0; S.nProt = 0; S.t = 0;
     var n = Math.round(XP.clamp(S.wu * S.top / 3.4, 4, 8));
     var ws = [];
-    for (var i = 0; i < n; i++) ws.push(CELL_MIN + (CELL_MAX - CELL_MIN) * i / (n - 1));
+    // widths from the thinnest to the widest reported, spaced more closely at the thin end (illustrative), so that
+    // a pore between the two (0.5 um) lets a few of them through, not one
+    for (var i = 0; i < n; i++) ws.push(CELL_MIN + (CELL_MAX - CELL_MIN) * Math.pow(i / (n - 1), 1.6));
     // shuffle the widths across the window so thin and wide cells mix
     for (i = ws.length - 1; i > 0; i--) { var j = Math.floor(R() * (i + 1)), t = ws[i]; ws[i] = ws[j]; ws[j] = t; }
     ws.forEach(function (w, k) {
@@ -163,7 +167,7 @@
     for (i = 0; i < cells.length; i++) {
       c = cells[i];
       if (c.st === 0) {                                   // in the lumen, carried by the crossflow
-        c.vy += (0.16 - c.vy) * 1.4 * dt + gauss() * 0.16 * sq;
+        c.vy += (0.3 - c.vy) * 1.4 * dt + gauss() * 0.16 * sq;
         c.om += (-c.th * 0.8 - c.om * 1.6) * dt + gauss() * 0.22 * sq;
         c.th = XP.clamp(c.th + c.om * dt, -0.6, 0.6);
         c.x += (flow(c.y) + gauss() * 0.05) * dt;
@@ -195,11 +199,13 @@
         c.x += (c.px - c.x) * Math.min(1, dt * 3.2);
         c.th += (tgt - c.th) * Math.min(1, dt * 3.2);
         c.y = S.top - extY(c) + Math.min(0.03, c.k * 0.03);
-        if (c.k > 0.55 && Math.abs(tgt - c.th) < 0.06) { c.th = tgt; c.st = 2; }
+        if (c.k > 0.4 && Math.abs(tgt - c.th) < 0.06) { c.th = tgt; c.st = 2; }
       } else if (c.st === 2) {                            // through the pore
         c.x = c.px;
-        c.y += 0.42 * dt;
-        if (c.y - c.L / 2 > S.bot) { c.st = 3; S.nCell++; c.vy = 0; }
+        c.y += 0.8 * dt;
+        // it counts, and turns red, the moment its leading end comes out on the shell side
+        if (!c.out && c.y + c.L / 2 > S.bot) { c.out = true; S.nCell++; }
+        if (c.y - c.L / 2 > S.bot) { c.st = 3; c.vy = 0; }
       } else {                                            // on the shell side: carried off to the harvest
         c.th += ((c.th > 0 ? 0.35 : -0.35) - c.th) * Math.min(1, dt * 0.9);
         c.x += 0.24 * dt;
@@ -269,7 +275,7 @@
     ctx.closePath();
   }
   function drawCell(c) {
-    var s = S.s, gone = c.st === 3 || (c.st === 2 && c.y - c.L / 2 > S.top);
+    var s = S.s, gone = c.out;
     var x = c.x * s, y = c.y * s, L = c.L * s, w = c.w * s;
     capsule(x, y, c.th, L, w);
     ctx.fillStyle = gone ? C.goneFill : C.cellFill;
@@ -365,7 +371,43 @@
     text("1 µm", (bx0 + bx1) / 2, by - 7, { size: 11.5, weight: 600, color: C.ink, align: "center" });
   }
 
-  /* ---- the readouts ---- */
+  /* ---- the controls, the counts and the sentence ---- */
+  var ICON = {
+    pause: '<svg class="i-pause" viewBox="0 0 16 16" width="16" height="16" aria-hidden="true" focusable="false"><rect x="3.5" y="2.5" width="3" height="11" rx="1" fill="currentColor"/><rect x="9.5" y="2.5" width="3" height="11" rx="1" fill="currentColor"/></svg>',
+    play: '<svg class="i-play" viewBox="0 0 16 16" width="16" height="16" aria-hidden="true" focusable="false"><path d="M4.5 2.8v10.4a.6.6 0 0 0 .9.5l8.2-5.2a.6.6 0 0 0 0-1L5.4 2.3a.6.6 0 0 0-.9.5z" fill="currentColor"/></svg>',
+    reset: '<svg viewBox="0 0 16 16" width="15" height="15" aria-hidden="true" focusable="false"><path d="M3.2 8a4.8 4.8 0 1 0 1.5-3.5" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/><path d="M2.6 2.4v3h3" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>',
+    ok: '<svg viewBox="0 0 16 16" width="16" height="16" aria-hidden="true" focusable="false"><path d="M3.5 8.4 6.6 11.4 12.5 4.8" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>',
+    bad: '<svg viewBox="0 0 16 16" width="16" height="16" aria-hidden="true" focusable="false"><path d="M8 3.6v5.6M8 11.9v.2" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round"/></svg>'
+  };
+  var pick = fig.querySelector(".xpp-pick");
+  var result = fig.querySelector(".xpp-result");
+  var tallyBox = fig.querySelector(".xpp-tally");
+  if (!pick) return;
+  if (!result) {
+    result = fig.querySelector(".xpp-status") || document.createElement("p");
+    result.classList.add("xpp-result", "xpp-live");
+    if (!result.parentNode) stage.parentNode.insertBefore(result, stage.nextSibling);
+  }
+  if (!tallyBox) { tallyBox = document.createElement("div"); tallyBox.className = "xpp-tally xpp-live"; stage.appendChild(tallyBox); }
+  pick.setAttribute("role", "group");
+  pick.setAttribute("aria-label", "Pore size");
+  pick.innerHTML = '<span class="xpp-pick-k" aria-hidden="true">Pore size</span><span class="xpp-opts">' + CHOICES.map(function (c, i) {
+    return '<button type="button" class="xpp-opt' + (c.ok ? " is-ours" : "") + '" data-i="' + i + '" aria-pressed="false"><b>' + c.name + "</b><small>" + c.sub + "</small></button>";
+  }).join("") + "</span>" +
+    '<span class="xpp-tools"><button type="button" class="xp-btn xpp-play" aria-label="Pause the motion" title="Pause">' + ICON.pause + ICON.play + "</button>" +
+    '<button type="button" class="xp-btn xpp-reset">' + ICON.reset + "<span>Start over</span></button></span>";
+  tallyBox.innerHTML = '<span class="xpp-count cells"><i aria-hidden="true"></i>Cells through <b>0</b></span>' +
+    '<span class="xpp-count prot"><i aria-hidden="true"></i>Protectant through <b>0</b></span>' +
+    '<span class="xpp-when" hidden>after 30&nbsp;s of flow</span>';
+  result.setAttribute("aria-live", "polite");
+  var opts = Array.prototype.slice.call(pick.querySelectorAll(".xpp-opt"));
+  var playBtn = pick.querySelector(".xpp-play");
+  var resetBtn = pick.querySelector(".xpp-reset");
+  var cellsChip = tallyBox.querySelector(".xpp-count.cells");
+  var cellsN = tallyBox.querySelector(".xpp-count.cells b");
+  var protN = tallyBox.querySelector(".xpp-count.prot b");
+  var when = tallyBox.querySelector(".xpp-when");
+
   var shownC = -1, shownP = -1;
   function tally(force) {
     if (!force && S.nCell === shownC && S.nProt === shownP) return;
@@ -374,31 +416,31 @@
     protN.textContent = S.nProt;
     cellsChip.classList.toggle("is-crossed", S.nCell > 0);
   }
-  function say(d) {
-    var D = "<b>" + fmtD(d) + "&nbsp;µm</b>";
-    if (d === PORE) return "At " + D + ", this membrane’s rating, no cell fits: even the thinnest reported cell is 0.25&nbsp;µm across. ACC deaminase, a few nanometers across, passes.";
-    if (d <= CELL_MIN) return "At " + D + " no cell fits: the thinnest reported cell is 0.25&nbsp;µm across. ACC deaminase still passes.";
-    if (d <= CELL_MAX) return "At " + D + " the thinnest cells fit end‑first and cross; wider ones are still held. The wall now lets culture through.";
-    return "At " + D + " every reported cell width fits. The wall no longer holds the culture back.";
+  var choice = 0;
+  function choose(i, announce) {
+    choice = i;
+    var c = CHOICES[i];
+    opts.forEach(function (b, k) { b.setAttribute("aria-pressed", k === i ? "true" : "false"); });
+    // the live region speaks only for the reader's own presses
+    result.setAttribute("aria-live", announce ? "polite" : "off");
+    result.classList.toggle("is-bad", !c.ok);
+    result.innerHTML = '<span class="xpp-ico" aria-hidden="true">' + (c.ok ? ICON.ok : ICON.bad) + "</span><span>" + c.say + "</span>";
+    setPore(c.d);
   }
-  function setPore(d, announce) {
+  function setPore(d) {
     S.d = d;
     layPores();
     S.nCell = 0; S.nProt = 0;
     // anything part-way through a pore follows its pore as the spacing changes; a cell that no longer fits goes
     // back to the lumen side
-    S.cells.forEach(function (c) {
-      if (c.st !== 1 && c.st !== 2) return;
-      if (c.w >= d && c.y - c.L / 2 <= S.bot) { c.st = 0; c.th = 0; c.y = S.top - extY(c); }
-      else c.px = poreNear(c.px);
+    S.cells.forEach(function (c, i) {
+      if (c.st >= 2 || c.out) { S.cells[i] = respawn(c); return; }
+      if (c.st === 1) {
+        if (c.w >= d) { c.st = 0; c.th = 0; c.y = S.top - extY(c); }
+        else c.px = poreNear(c.px);
+      }
     });
     S.prots.forEach(function (q) { if (q.st === 1) { q.px = poreNear(q.px); } });
-    out.textContent = fmtD(d) + " µm";
-    range.setAttribute("aria-valuetext", fmtD(d) + " micrometers");
-    if (refBtn) refBtn.hidden = d === PORE;
-    // the visible sentence follows the drag; the live region speaks only when the hand stops (change, or a key)
-    status.setAttribute("aria-live", announce ? "polite" : "off");
-    status.innerHTML = say(d);
     if (still) runStill(); else { tally(true); draw(); }
   }
 
@@ -416,15 +458,17 @@
   function runLive() { seed(); warm(8); S.nCell = 0; S.nProt = 0; tally(true); draw(); }
 
   /* ---- wiring ---- */
-  var loop = null;
+  var loop = null, playing = false;
   function setPlaying(on) {
+    playing = on;
     if (on) {
       still = false;
       if (when) when.hidden = true;
       if (!loop) loop = XP.loop(stage, frame);
       loop.start();
     } else if (loop) loop.stop();
-    playBtn.querySelector("span").textContent = on ? "Pause" : "Play";
+    playBtn.setAttribute("aria-label", on ? "Pause the motion" : "Play the motion");
+    playBtn.title = on ? "Pause" : "Play";
     playBtn.classList.toggle("is-paused", !on);
   }
   var acc = 0;
@@ -439,14 +483,19 @@
   seed();
   if (!still) warm(8);
   fig.classList.add("is-live");
-  range.value = String(vOf(PORE));
-  setPore(PORE, false);            // with reduced motion this also simulates the still frame
+  choose(0, false);                // with reduced motion this also simulates the still frame
   setPlaying(!still);
+  if (XP.reduced) { playBtn.hidden = true; }
 
-  range.addEventListener("input", function () { setPore(snap(dOf(+range.value)), false); });
-  range.addEventListener("change", function () { setPore(snap(dOf(+range.value)), true); });
-  if (refBtn) refBtn.addEventListener("click", function () { range.value = String(vOf(PORE)); setPore(PORE, true); range.focus(); });
-  playBtn.addEventListener("click", function () { setPlaying(!(loop && loop.running)); });
+  opts.forEach(function (b, i) { b.addEventListener("click", function () { choose(i, true); }); });
+  playBtn.addEventListener("click", function () { setPlaying(!playing); });
+  resetBtn.addEventListener("click", function () {
+    seed();
+    if (!still) warm(8);
+    S.nCell = 0; S.nProt = 0;
+    choose(0, true);
+    if (!XP.reduced) setPlaying(true);
+  });
 
   var lastW = W;
   if ("ResizeObserver" in window) {

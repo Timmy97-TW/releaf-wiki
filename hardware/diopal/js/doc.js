@@ -165,7 +165,7 @@
   }
 
   const PANELS = [
-    { table: "tbl-green", hue: "green", label: "Green LEDs at 5 V", unit: "kLux",
+    { table: "tbl-green", hue: "green", label: "Green LEDs at 5 V", unit: "klux",
       full: [1.96, 2.58], fullTicks: [2.0, 2.1, 2.2, 2.3, 2.4, 2.5], dp: 1,
       zoom: [2.32, 2.43], zoomTicks: [2.32, 2.34, 2.36, 2.38, 2.40, 2.42], zdp: 2 },
     { table: "tbl-red", hue: "red", label: "Red LEDs at 5 V", unit: "lux",
@@ -233,6 +233,31 @@
   }
   cropOnPhone(".autodraw.layout", "160 8 338 272");
   cropOnPhone(".autodraw.drive", "284 18 324 322");
+
+  /* ---------- 4.1: the sticky model ends level with the final-build photo ----------
+     18 Oct 2026, the owner: "have this part scroll until the photos are aligned vertically, right now thats the max
+     scroll". On a wide screen the model (.xv) sticks in the left column while the specifications scroll past it, and
+     its sticky travel ends where the pair ends, at the photo's bottom. The photo was shorter than the model, so the
+     model stopped about 70-100 px above it. Giving the photo the model's height makes the end of the travel the
+     point where the two stand side by side, tops and bottoms level, the photo's picture as tall as the model's stage (css/final-design.css, .fd-pair--matched). The
+     height is measured, not written into the CSS, because the model's bar and its one-line readout below the stage
+     change height with the column. Below 820 px the two are stacked and the rule does not apply. */
+  (function () {
+    const pair = document.querySelector("#sec62 .fd-pair");
+    const xv = pair && pair.querySelector(".xv");
+    if (!pair || !xv || !pair.querySelector("#fig-final")) return;
+    const sync = function () {
+      const h = Math.round(xv.getBoundingClientRect().height);
+      const stage = xv.querySelector(".xv__stage");
+      const sh = stage ? Math.round(stage.getBoundingClientRect().height) : 0;
+      if (h > 0) pair.style.setProperty("--xv-h", h + "px");
+      if (sh > 0) pair.style.setProperty("--xv-stage-h", sh + "px");
+      pair.classList.toggle("fd-pair--matched", h > 0);
+    };
+    sync();
+    if ("ResizeObserver" in window) new ResizeObserver(sync).observe(xv);
+    window.addEventListener("resize", sync, { passive: true });
+  })();
 
   /* ---------- part numbers: a balloon and its name light up together ----------
      Figures 14 (the parts plate) and 16 (the section) number the parts the same

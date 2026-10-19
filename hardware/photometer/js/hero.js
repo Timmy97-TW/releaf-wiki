@@ -39,8 +39,8 @@ window.HERO = (function () {
       body: "A 45° beamsplitter turns one beam into two. One crosses the culture. The other never meets it — it goes straight to a second sensor as a <em>reference</em>." },
     { win: [A4, A5], n: " ", role: "The measurement", name: "The ratio, not the reading",
       body: "The sample beam crosses <b>2&nbsp;mm</b> of flowing culture and lands on one sensor; the reference has already gone straight to the other. The instrument records the <em>ratio</em>, so anything that changes the lamp divides out of it." },
-    { win: [A5, A6], n: " ", role: "The record", name: "400 hours, unattended",
-      body: "<b>2,132</b> points in its first 336 hours, no samples withdrawn. The dip is a recirculation pump that failed overnight — the instrument caught it because it was still reading when nobody was watching." },
+    { win: [A5, A6], n: " ", role: "The record", name: "434 hours, in line",
+      body: "<b>434</b> hours logged, no samples withdrawn. The first ~240 hours are clean; after that the reference channel failed, and the record says so." },
   ];
 
   function ramp(p, a, b) { const t = (p - a) / (b - a); return t < 0 ? 0 : t > 1 ? 1 : t * t * (3 - 2 * t); }
@@ -54,7 +54,7 @@ window.HERO = (function () {
     const dens = ramp(p, A4 + 0.01, A5 - 0.02) * 0.92 + ramp(p, A5, A6) * 0.08;
     // The instrument is already running when the page opens: the seams are lit
     // in the title frame, not after a scroll. There is nothing to 'switch on'
-    // in this story — it has been reading a culture for 400 hours.
+    // in this story — it has been reading a culture for hundreds of hours.
     const lit = 1;
     // one dip, entirely inside act 5, ~1.4% of the track wide
     const dipC = A4 + (A5 - A4) * 0.62, dipW = 0.017;
@@ -189,10 +189,13 @@ window.HERO = (function () {
       // the room air's brightness, fitted to the WebGL frame at the opening (dev/hero-video)
       motes: [{ gain: 0.10 }],
     });
-    const story = Story(storyConfig(function (p, clock) {
-      dom(p);
+    // the words follow the frame on screen (player.follow), the clip seeks to the scroll's p (18 Oct 2026)
+    const cfg = storyConfig(function (p, clock) {
+      dom(player.follow(p));
       player.draw(p, clock);
-    }));
+    });
+    cfg.follow = player.follow;
+    const story = Story(cfg);
     player.onProgress(story.progress);
     player.onReady(story.ready);
     player.preload(window.__story.p);
