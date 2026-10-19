@@ -19,6 +19,11 @@
 (function () {
   "use strict";
 
+  /* 20 Oct 2026: the task pills are off until the instructors settle who owns
+     which task. Off hides them under every name, in every profile, and the
+     task key and filter in the legend. Set back to true to bring them all back. */
+  const SHOW_TASKS = false;
+
   /* ---------------------------------------------------------- helpers ---- */
 
   const el = (tag, cls, text) => {
@@ -274,7 +279,7 @@
     const meta = metaOf(m);
     if (meta) body.appendChild(el("p", "card__meta", meta));
 
-    const tags = tagRow(m);
+    const tags = SHOW_TASKS ? tagRow(m) : null;
     if (tags) body.appendChild(tags);
 
     if (m.bio) {
@@ -456,7 +461,7 @@
       "keeps the task moving, does it well, and is our main line to the instructors."));
     tasks.appendChild(task(false, "Task member",
       "contributed to this task."));
-    wrap.appendChild(tasks);
+    if (SHOW_TASKS) wrap.appendChild(tasks);
 
     /* Every task on the board, in its own colour. The two pills above explain
        what owning and being on a task mean; this says what the tasks ARE, so a
@@ -508,7 +513,7 @@
     status.appendChild(reset);
     all.appendChild(status);
 
-    wrap.appendChild(all);
+    if (SHOW_TASKS) wrap.appendChild(all);
     return wrap;
   }
 
@@ -755,7 +760,7 @@
        frame is made of */
     const holder = modal.querySelector(".modal__tags");
     holder.innerHTML = "";
-    const tags = tagRow(m, "x", true);
+    const tags = SHOW_TASKS ? tagRow(m, "x", true) : null;
     if (tags) { while (tags.firstChild) holder.appendChild(tags.firstChild); }
     holder.hidden = !tags;
 
@@ -897,7 +902,7 @@
       pushed = false;
       hideModal();
       holdScroll(false);
-      const task = /^task-/.test(id) ? taskFromHash(id) : null;
+      const task = SHOW_TASKS && /^task-/.test(id) ? taskFromHash(id) : null;
       if (task) {
         const fresh = task !== activeTask;
         setFilter(task, { quiet: true, still: true });
