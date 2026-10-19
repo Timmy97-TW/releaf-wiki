@@ -330,6 +330,24 @@
     const cap = $("figcaption", box);
     let opener = null;
 
+    /* The Engagement strip holds the legend on one flat line (page.css sets
+       white-space: nowrap there). A long legend is stepped down to a floor
+       that is still readable; the two longest on the wiki pass that floor and
+       scroll sideways rather than break onto a second line. Pages that lay
+       the caption out normally are left alone. */
+    const fitCaption = () => {
+      cap.style.fontSize = "";
+      if (getComputedStyle(cap).whiteSpace !== "nowrap") return;
+      if (!cap.textContent.trim()) return;
+      let size = parseFloat(getComputedStyle(cap).fontSize);
+      const floor = 11;
+      while (cap.scrollWidth > cap.clientWidth && size > floor) {
+        size -= 0.5;
+        cap.style.fontSize = size + "px";
+      }
+      cap.scrollLeft = 0;
+    };
+
     const close = () => {
       box.classList.remove("is-open");
       document.body.style.overflow = "";
@@ -356,6 +374,7 @@
         }
         box.classList.add("is-open");
         document.body.style.overflow = "hidden";
+        fitCaption();
         $(".lightbox__close", box).focus();
     };
     imgs.forEach((img) => {
@@ -367,6 +386,8 @@
         if (e.key === "Enter" || e.key === " ") { e.preventDefault(); open(img); }
       });
     });
+
+    window.addEventListener("resize", () => { if (box.classList.contains("is-open")) fitCaption(); });
 
     box.addEventListener("click", (e) => { if (e.target === box || e.target.closest(".lightbox__close")) close(); });
     document.addEventListener("keydown", (e) => {
