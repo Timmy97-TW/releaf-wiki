@@ -120,7 +120,7 @@
 /* the drawing */
 .tmapfig { display: block; width: 100%; height: auto; }
 .tmapfig__band { fill: #f7f9f6; }
-.tmapfig__lane { font-size: 11.5px; font-weight: 650; letter-spacing: .14em; }
+.tmapfig__lane { font-size: 12.5px; font-weight: 650; letter-spacing: .14em; }
 .tmapfig__card { fill: #fff; stroke: rgb(29 38 32 / .13); stroke-width: 1; }
 .tmapfig__card.is-main { stroke: rgb(47 107 74 / .5); stroke-width: 1.6; }
 .tmapfig__node { cursor: pointer; }
@@ -129,23 +129,83 @@
   stroke: rgb(29 38 32 / .34);
   filter: drop-shadow(0 6px 14px rgb(29 38 32 / .16));
 }
-.tmapfig__name { font-size: 17px; font-weight: 640; fill: var(--ink-1); }
+.tmapfig__name { font-size: 19px; font-weight: 640; fill: var(--ink-1); }
 .tmapfig__res  { font-size: 13px; fill: var(--ink-3); }
 .tmapfig__flow { fill: none; stroke: #8b938c; stroke-width: 1.3; }
 .tmapfig__main { fill: none; stroke: #2f6b4a; stroke-width: 5.2; stroke-linejoin: round; stroke-linecap: round; }
 .tmapfig__back { fill: none; stroke: #9aa39c; stroke-width: 1.4; stroke-dasharray: 5 4; }
-.tmapfig__lab  { font-size: 12.5px; fill: #78817a; }
-.tmapfig__lab.is-main { font-size: 13px; font-weight: 580; fill: #2f6b4a; }
+.tmapfig__lab  { font-size: 14px; fill: #78817a; }
+.tmapfig__lab.is-main { font-size: 14.5px; font-weight: 580; fill: #2f6b4a; }
 
-/* the same blocks, stacked, on a narrow window */
+
+/* the reading panel. The drawing answers "what talks to what"; a first-time
+   reader also needs "what IS this block", which is what the panel carries:
+   one card per block, a real picture of the thing or of its result, what it
+   is, and what it does here. Hovering or tabbing a block swaps the card.
+   Below 78rem the panel sits under the drawing instead of beside it, so the
+   drawing never has to shrink into a column too narrow to read.            */
+.tmap__grid { display: grid; gap: clamp(.9rem, .4rem + 1vw, 1.4rem); }
+@media (min-width: 86rem) {
+  .tmap__grid { grid-template-columns: minmax(0, 1fr) clamp(17rem, 23vw, 22.5rem); align-items: stretch; }
+  .tmapfig { align-self: center; }
+}
+
+/* between the list and the side-by-side layout the panel goes under the
+   drawing and turns on its side, so the drawing keeps the whole width   */
+@media (min-width: 64rem) and (max-width: 85.999rem) {
+  .tmapinfo__card { display: grid; grid-template-columns: minmax(0, 16rem) minmax(0, 1fr); grid-template-rows: auto auto auto 1fr auto; column-gap: 1.2rem; align-content: start; }
+  .tmapinfo__frame { grid-column: 1; grid-row: 1 / span 5; align-self: start; margin: 0; }
+  .tmapinfo__eyebrow { grid-column: 2; grid-row: 1; }
+  .tmapinfo__name    { grid-column: 2; grid-row: 2; margin-bottom: .4rem; }
+  .tmapinfo__what    { grid-column: 2; grid-row: 3; font-size: .875rem; }
+  .tmapinfo__role    { grid-column: 2; grid-row: 4; font-size: .875rem; }
+  .tmapinfo__go      { grid-column: 2; grid-row: 5; justify-self: start; }
+}
+
+/* the twelve cards sit in one grid cell, so the box is always as tall as the
+   longest of them and swapping a card never moves the page under the reader */
+.tmapinfo { display: grid; border-radius: 16px; background: var(--paper-2); box-shadow: inset 0 0 0 1px rgb(29 38 32 / .07); }
+.tmapinfo__card { grid-area: 1 / 1; padding: clamp(.9rem, .6rem + .6vw, 1.15rem); opacity: 0; visibility: hidden; }
+.tmapinfo__card.is-on { opacity: 1; visibility: visible; }
+
+.tmapinfo__eyebrow {
+  margin: 0 0 .15rem;
+  font-size: .625rem; font-weight: 650; letter-spacing: .14em; text-transform: uppercase; color: var(--ink-3);
+}
+
+.tmapinfo__name { margin: 0 0 .6rem; font-size: 1.1875rem; font-weight: 650; line-height: 1.2; color: var(--ink-1); }
+
+.tmapinfo__frame { margin: 0 0 .7rem; border-radius: 11px; overflow: hidden; background: #fff; box-shadow: inset 0 0 0 1px rgb(29 38 32 / .07); }
+.tmapinfo__frame img { display: block; width: 100%; aspect-ratio: 2 / 1; height: auto; object-fit: contain; }
+
+.tmapinfo__what, .tmapinfo__role { margin: 0 0 .5rem; font-size: .8125rem; line-height: 1.5; color: var(--ink-2); }
+.tmapinfo__what { color: var(--ink-1); }
+.tmapinfo__role { color: var(--ink-3); }
+
+.tmapinfo__go { display: inline-block; font-size: .75rem; font-weight: 620; color: #2f6b4a; text-decoration: none; border-bottom: 1px solid rgb(47 107 74 / .35); }
+.tmapinfo__go:hover, .tmapinfo__go:focus-visible { border-bottom-color: #2f6b4a; }
+
+/* the block whose card is up reads as the one being read */
+.tmapfig__node.is-on .tmapfig__card { stroke: #2f6b4a; stroke-width: 2; filter: drop-shadow(0 6px 16px rgb(47 107 74 / .28)); }
+.tmapfig__node.is-on .tmapfig__name { fill: #2f6b4a; }
+
+@media (prefers-reduced-motion: no-preference) {
+  .tmapinfo__card { transition: opacity .2s ease, visibility .2s; }
+  .tmapfig__node .tmapfig__name { transition: fill .25s ease; }
+}
+
+/* the same blocks, stacked, on a narrow window. The drawing and its panel
+   both go; each row carries the sentence the panel would have shown.      */
+@media (max-width: 63.999rem) { .tmapinfo { display: none; } }
 .tmaplist { display: none; }
+.tmaplist__what { display: block; }
 @media (max-width: 64rem) {
   .tmapfig { display: none; }
   .tmaplist { display: block; list-style: none; margin: 0; padding: 0; }
   .tmaplist li + li { margin-top: .4rem; }
   .tmaplist a {
     display: grid;
-    grid-template-columns: 46px minmax(0, 1fr) auto;
+    grid-template-columns: 46px minmax(0, 1fr);
     align-items: center;
     row-gap: .1rem;
     column-gap: .8rem;
@@ -157,13 +217,8 @@
   }
   .tmaplist img { grid-column: 1; grid-row: 1 / span 2; width: 46px; height: 46px; object-fit: contain; }
   .tmaplist__lane { grid-column: 2; grid-row: 1; align-self: end; font-size: .625rem; font-weight: 650; letter-spacing: .14em; text-transform: uppercase; color: var(--ink-3); }
-  .tmaplist__name { grid-column: 2; grid-row: 2; display: flex; align-items: center; gap: .45rem; font-size: .9375rem; font-weight: 620; color: var(--ink-1); }
-  .tmaplist__name::before {
-    content: ""; width: .6rem; height: .6rem; border-radius: 50%;
-    border: 1.5px solid var(--st); background: var(--bgst, transparent);
-  }
-  .tmaplist .st-worked  { --st: #2f6b4a; --bgst: #2f6b4a; }
-  .tmaplist .st-partial { --st: #9c6b1f; --bgst: linear-gradient(90deg, #9c6b1f 50%, transparent 50%); }
-  .tmaplist .st-open    { --st: #47627a; }
-  .tmaplist__st { grid-column: 3; grid-row: 2; align-self: center; font-size: .625rem; font-weight: 700; letter-spacing: .14em; text-transform: uppercase; color: var(--st); }
+  .tmaplist__name { grid-column: 2; grid-row: 2; font-size: .9375rem; font-weight: 620; color: var(--ink-1); }
+  .tmaplist a { grid-template-rows: auto auto auto; }
+  .tmaplist__what { grid-column: 2; grid-row: 3; margin-top: .25rem; font-size: .8125rem; line-height: 1.45; color: var(--ink-3); }
+  .tmaplist img { align-self: start; }
 }
