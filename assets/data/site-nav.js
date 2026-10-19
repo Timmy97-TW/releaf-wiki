@@ -123,14 +123,13 @@ const NAV_UNLISTED = [
   { title: "Inclusivity", slug: "inclusivity",
     caption: "Who the project serves" },
 
-  /* The two pages below used to be Dry Lab tabs of their own. Since
-     23 September 2026 they are steps inside Protein Design, reached from
-     /protein-design/. Their addresses have not changed, so every existing
-     link and every footer entry still resolves. */
+  /* The page below used to be a Dry Lab tab of its own. Since 23 September
+     2026 it is a step inside Protein Design, reached from /protein-design/.
+     Its address has not changed, so every existing link and every footer
+     entry still resolves. Peptide Design sat here too until 19 October 2026,
+     when the page was removed; do not add it back. */
   { title: "MD Simulations", slug: "md-simulations",
-    caption: "BoPep4 on its receptor" },
-  { title: "Peptide Design", slug: "peptide-design",
-    caption: "BoPep4, designed end to end" }
+    caption: "BoPep4 on its receptor" }
 ];
 
 /* iGEM rule check (assets/js/rulecheck.js): outlines on every page whatever

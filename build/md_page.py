@@ -163,7 +163,6 @@ HTML = r'''<!DOCTYPE html>
       <a class="step" href="../sprints/">Sprints and Results</a>
       <a class="step" href="./" aria-current="page">Molecular Dynamics</a>
       <a class="step" href="../../md-simulations/">MD reports</a>
-      <a class="step" href="../../peptide-design/">Worked case</a>
     </div>
   </nav>
 
@@ -629,13 +628,6 @@ HTML = r'''<!DOCTYPE html>
             </span>
             <span class="door__name">Into the wet lab</span>
             <p class="door__what ai">The tag moves to the N-terminus before anything is expressed, and the truncation plateau is a manufacturability claim being tested as a secretion assay against the wild type.</p>
-          </a>
-          <a class="door" href="../../peptide-design/">
-            <span class="door__shot">
-              <img class="is-fit" src="../../assets/img/peptide-design/pep-anchor-belt.webp" alt="Molecular render of the peptide lying along the receptor groove with its salt bridges labelled." width="1300" height="950" loading="lazy" decoding="async" />
-            </span>
-            <span class="door__name">Into the worked case</span>
-            <p class="door__what ai">Peptide Design carries BoPEP4 residue by residue, with the per-position interface data and the constructs as they were ordered.</p>
           </a>
           <a class="door" href="../../md-simulations/">
             <span class="door__shot">

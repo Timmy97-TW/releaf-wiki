@@ -23,7 +23,6 @@ protein-design/           the Dry Lab section on the protectant peptide: a
                           are redirects into methodology/
 md-simulations/           step F of protein design: the overview with the map of
                           the nine runs, plus the nine self-contained reports
-peptide-design/           the worked case, BoPep4 run end to end
 assets/
   css/   tokens.css       colours, type and spacing, read by everything else
          nav.css          the five-tab navigation
@@ -77,14 +76,22 @@ outline and the note telling whoever writes it what belongs in each section.
 
 **Protein Design is a section, not a page**, since 23 September 2026. The Dry
 Lab tab used to carry Peptide Design and MD Simulations as two entries. They
-are now two steps of one pipeline, reached from `/protein-design/`: a hub plus
-five hand-written subpages named for the pipeline's own steps. Neither of the
-two older pages moved, so every link into them still resolves, and both keep
-their entries in `build/pages.py` so the generator goes on skipping them. The
-addresses live, as always, in `assets/data/site-nav.js`, where the two pages
-have moved into `NAV_UNLISTED`.
+are now steps of one pipeline, reached from `/protein-design/`: a hub plus
+hand-written subpages named for the pipeline's own steps. MD Simulations did
+not move, so every link into it still resolves, and it keeps its entry in
+`build/pages.py` so the generator goes on skipping it. The addresses live, as
+always, in `assets/data/site-nav.js`, where it sits in `NAV_UNLISTED`.
 
 **Bioreactor Calculations was removed on 25 September 2026**, on purpose. Do not restore it or link to it.
+
+**Peptide Design was removed on 19 October 2026**, on purpose. The page lived
+at `/peptide-design/`, outside `protein-design/`, and the section's own rail
+never listed it. Its generator (`build/peptide_design.py`), its entry in
+`build/pages.py` and its line in `NAV_UNLISTED` went with it, as did the four
+links that reached it: the MD reports stepnav, that page's closing paragraph
+and its next link, and the Molecular Dynamics page's "Worked case" block and
+next link. Do not restore it or link to it. What it argued that nothing else
+does is in the history: `git show 0f636d0:peptide-design/index.html`.
 
 **Drafting marks (28 September 2026).** Student writing is in the normal ink. Text an AI assistant drafted to fill a page carries `class="ai"` and shows in orange (the rule is at the end of `assets/css/nav.css`, so every page has it). `window.AI_MARK = false` in `assets/data/site-nav.js` turns the orange off, e.g. for the freeze. Maths is written as LaTeX and rendered by the KaTeX copy in `assets/vendor/katex/` through `assets/js/math.js`. The Project tab gained **Development** (`/development/`), and the Dry Lab page at `/software/` is titled **Digital Twin** (its judged address is unchanged).
 

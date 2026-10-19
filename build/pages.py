@@ -664,43 +664,11 @@ PAGES = [
 # with a sixth for packaging. None of those files is generated, so none of
 # them has an entry here; site-nav.js is where their addresses live.
 #
-# The two entries below stay because both pages still exist at their old
-# addresses and generate.py has to keep skipping them. Do not delete these
-# entries and do not run `generate.py peptide-design --force`.
+# The entry below stays because that page still exists at its old address and
+# generate.py has to keep skipping it. Peptide Design had an entry here too
+# until 19 October 2026, when the page was removed on purpose. Do not add it
+# back, and do not run `generate.py peptide-design`.
 # --------------------------------------------------------------------------
-
-{
- "slug": "peptide-design", "tab": "drylab", "title": "Peptide Design",
- "lede": "Choosing the protectant, and letting its size decide the membrane.",
- "owner": "Dry lab, design",
- "award": None,
- "sections": [
-   {"h": "Why ACC deaminase",
-    "note": "In the open literature since the 1990s. Nothing about the biology "
-            "is proprietary, which is the argument, not a weakness."},
-   {"h": "Sequence selection",
-    "note": "Which source organism, which variant, and what ruled the others "
-            "out.",
-    "table": (["Candidate", "Source organism", "Length", "Why kept or dropped"],
-              [["", "", "", ""] for _ in range(4)])},
-   {"h": "Structure and oligomeric state",
-    "note": "Molecular weight and oligomeric state are what decide the "
-            "membrane cutoff. Look them up and cite them; do not supply them "
-            "from memory."},
-   {"h": "In silico work",
-    "note": "Whatever was actually run: alignment, structure prediction, "
-            "signal peptide prediction. Name the tool and the version.",
-    "figs": ["Predicted structure, with the feature that matters marked."]},
-   {"h": "Expression and secretion design",
-    "note": "Codon usage for B. subtilis, signal peptide, tags, and what each "
-            "costs."},
-   {"h": "What this sets for the membrane",
-    "note": "Carry the size straight into the cutoff decision. The page that "
-            "used to hold that calculation is gone; the reactor record is at "
-            "/hardware/bioreactor."},
-   {"h": "Validation status",
-    "note": "Nothing here has been confirmed at the bench. Say it plainly."},
- ]},
 
 {
  # This page is written by hand: it carries the map of the nine runs and the
