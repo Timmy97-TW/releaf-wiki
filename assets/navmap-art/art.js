@@ -665,31 +665,10 @@
 
     var legend = h('ul', 'nma-legend'); root.appendChild(legend);
     ZONES.forEach(function (z) { var li = h('li', null, z[1]); li.style.setProperty('--s-line', SEC[z[0]].line); li.style.setProperty('--s-ink', SEC[z[0]].ink); legend.appendChild(li); });
-    var cap = h('div', 'nma-cap'); root.appendChild(cap);
-    function fillCap(slug) {
-      cap.innerHTML = '';
-      if (!PAGE[slug]) return;
-      var p = PAGE[slug], sec = SEC[p.section];
-      cap.style.setProperty('--s-ink', sec.ink); cap.style.setProperty('--s-pill', sec.pill);
-      var hd = h('div', 'nma-cap__head');
-      hd.appendChild(h('span', 'nma-cap__eyebrow', sec.name));
-      var nm = h('a', 'nma-cap__name', p.name); nm.href = c.href(slug); if (c.local) nm.addEventListener('click', function (e) { e.preventDefault(); root.dispatchEvent(new CustomEvent('navmap:go', { detail: slug, bubbles: true })); }); hd.appendChild(nm);
-      hd.appendChild(h('span', 'nma-cap__line', p.caption));
-      cap.appendChild(hd);
-      var ul = h('ul', 'nma-cap__links');
-      keyOf(slug).forEach(function (l) {
-        var li = h('li'); var a = h('a'); a.href = c.href(l.to);
-        var ls = SEC[PAGE[l.to].section]; a.style.setProperty('--s-ink', ls.ink); a.style.setProperty('--s-pill', ls.pill);
-        a.appendChild(h('b', null, PAGE[l.to].name));
-        a.appendChild(h('span', null, (l.lane === 'in' ? 'builds on · ' : 'leads to · ') + l.why));
-        if (l.next) a.appendChild(h('i', 'nm-next', 'Read next'));
-        a.addEventListener('mouseenter', function () { places[l.to].parentNode.classList.add('nma-active'); });
-        a.addEventListener('mouseleave', function () { places[l.to].parentNode.classList.remove('nma-active'); });
-        if (c.local) a.addEventListener('click', function (e) { e.preventDefault(); root.dispatchEvent(new CustomEvent('navmap:go', { detail: l.to, bubbles: true })); });
-        li.appendChild(a); ul.appendChild(li);
-      });
-      cap.appendChild(ul);
-    }
+    /* 19 October 2026: the whole-valley map (Description) ends on the picture
+       alone. The caption that listed the page and its three key links is gone;
+       pointing at a place still lights it and its links on the map. */
+    function fillCap() {}
     var current = null;
     function clear() {
       current = null;
