@@ -66,14 +66,15 @@
     return "data:image/svg+xml;charset=utf-8," + encodeURIComponent(svg);
   };
 
-  /* Every task pill is a member pill. Nobody is drawn as the owner of a task:
-     the roster says who worked on what, not who outranks whom. `own` and `mem`
-     are still read so an older roster keeps rendering, but both land in the
-     same place. */
+  /* A person's tasks, the ones they own first. The roster settled ownership on
+     20 October: `own` is the task owner, `mem` is everybody else who worked on
+     it, and a plain `tasks: [...]` from an older roster still reads as a list
+     of member tasks. The legend says what the two mean. */
   const tasksOf = (m) => {
-    const all = (m.tasks || []).concat(m.own || [], m.mem || []);
+    const all = (m.own || []).concat(m.mem || [], m.tasks || []);
     return all.filter((t, i) => all.indexOf(t) === i);
   };
+  const ownsTask = (m, task) => (m.own || []).indexOf(task) > -1;
 
   /* A bio can run to several paragraphs, separated in roster.js by a blank
      line ("\n\n"). The card shows them as one clamped run of text; the
@@ -203,14 +204,27 @@
     const wrap = el("ul", cls || "card__tags");
     wrap.setAttribute("aria-label", "Tasks");
     tasks.forEach((task) => {
-      /* the task's own hue, washed back to a tint so a card full of pills
-         still reads as one person rather than a scoreboard */
+      /* The owner's pill is filled in the task's own hue and carries a dot;
+         everybody else on the task gets the same hue washed back to a tint, so
+         a card full of pills still reads as one person rather than a
+         scoreboard. */
       const color = colorOf(task);
+      const own = ownsTask(m, task);
       const item = el("li");
-      const pill = el(asButtons ? "button" : "span", "tag tag--mem", task);
-      pill.style.backgroundColor = tint(color, WASH);
-      pill.style.color = inkOn(color, WASH);
+      const pill = el(asButtons ? "button" : "span", "tag " + (own ? "tag--own" : "tag--mem"));
+      if (own) {
+        pill.style.backgroundColor = color;
+        const grad = (typeof LABEL_GRADIENTS !== "undefined") && LABEL_GRADIENTS[task];
+        if (grad) pill.style.backgroundImage = grad;
+        pill.appendChild(el("i", "tag__dot"));
+        pill.appendChild(document.createTextNode(task));
+      } else {
+        pill.textContent = task;
+        pill.style.backgroundColor = tint(color, WASH);
+        pill.style.color = inkOn(color, WASH);
+      }
       pill.style.setProperty("--c", color);
+      pill.title = task + (own ? ": task owner" : ": task member");
       pill.dataset.task = task;
       if (asButtons) {
         pill.type = "button";
@@ -354,7 +368,11 @@
         if (!shown.length) return;
         count += shown.length;
         if (g.title) s.appendChild(el("h3", "group__title", g.title));
-        const grid = el("div", "grid");
+        /* `across: n` on a section in roster.js puts its people in one row of
+           n equal cards on a wide screen, instead of the roster's four. The
+           Project Leads use it: five leads, one row, margin to margin. */
+        const grid = el("div", "grid" + (sec.across ? " grid--row" : ""));
+        if (sec.across) grid.style.setProperty("--across", sec.across);
         shown.forEach((m) => {
           const p = buildCard(m);
           rec.people.push(p);
@@ -749,7 +767,9 @@
     fit();
 
     const role = modal.querySelector(".modal__role");
-    role.textContent = m.role || "";
+    /* roleFull where somebody holds two titles ("Project Lead · Wet Lab
+       Lead"); the card has room for the short one only. */
+    role.textContent = m.roleFull || m.role || "";
     role.style.display = m.role ? "" : "none";
     role.className = "modal__role modal__role--" + kind;
     modal.querySelector(".modal__name").textContent = m.name;
