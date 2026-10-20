@@ -31,7 +31,7 @@ ap.add_argument("--only-runs", action="store_true", help="redraw fig-runs-168.sv
 ap.add_argument("--only-r2", action="store_true", help="redraw the two R2 calibration figures only")
 ap.add_argument("--only-r6", action="store_true", help="redraw fig-r6-leafair.svg only")
 ap.add_argument("--growth", default=str(pathlib.Path.home() / "Downloads" / "B. Sub Growth Tests"),
-                help="folder holding one sub-folder per bioreactor run (round 1 .. round 6)")
+                help="folder holding one sub-folder per bioreactor run (round 1 .. round 7)")
 ap.add_argument("--leaf", default=str(pathlib.Path.home() / "Documents/Claude/Projects/Releaf_Wiki/drafts"
                                      / "2026-10-12 student drafts" / "Drylab" / "Digital Twin"),
                 help="folder holding the three 1010Temp_*.csv leaf-sensor logs")
@@ -506,6 +506,27 @@ def _expfit(t, y):
     return float(r), float(a), se, float(1 - (res @ res)/(((ly-ly.mean()) @ (ly-ly.mean()))))
 
 
+def _rig_channels(n, names):
+    """Named columns of a run's record_*.csv, on the same clock as _rig_log."""
+    paths = sorted(_round_dir(n).glob("record_*.csv"))
+    rows = []
+    for p in paths:
+        with open(p, newline="") as fh:
+            rows += list(csv.DictReader(fh))
+    t0 = _iso(rows[0]["timestamp_start"])
+    t = np.array([(_iso(r["timestamp_start"])-t0).total_seconds()/3600 for r in rows])
+    out = {}
+    for name in names:
+        out[name] = np.array([float(r[name]) if (r.get(name) or "").strip() not in ("", "None") else np.nan
+                              for r in rows])
+    return t, out, rows
+
+
+def _hourly_median(t, y, lo, hi):
+    k = (t >= lo) & (t < hi) & np.isfinite(y)
+    return float(np.median(y[k]))
+
+
 def fig_runs():
     """Every OD600 run on BR-01, June to October 2026, on one sheet."""
     r1 = _xlsx_rows(_round_file(1, "260610 test1 no stir.xlsx"))              # time (h), Bioreactor, Flask
@@ -546,9 +567,31 @@ def fig_runs():
     sse_exp = float(((m6[w] - np.exp(a6_ + r6_*h6[w]))**2).sum())
     od6_at = {int(k): float(m6[h6 >= k][0]) for k in (7, 12, 18, 24, 30, 37)}
 
+    # -- run 7, 17 to 20 October: one file, 77 hours, the longest run on the rig
+    t7, o7, f7, p7, s7, n7, t7_0 = _rig_log(7)
+    h7, m7 = _hourly(t7, o7, 0.25)
+    lagw = (m7 > 0.17) & (m7 < 0.21)
+    lag7 = (float(h7[lagw][0]), float(h7[lagw][-1]))
+    od7_at = {int(k): float(m7[h7 >= k][0]) for k in (1, 7, 12, 24, 37, 48, 60, 72)}
+    peak7, peak7_h = float(o7.max()), float(t7[o7.argmax()])
+    # the same fit as run 6, and the same fit over run 7's own rise: the window decides
+    w6like = (h7 >= 1.5) & (h7 <= 6.5)
+    r7_a, _, se7_a, rsq7_a = _expfit(h7[w6like], m7[w6like])
+    wrise = (h7 >= 5.0) & (h7 <= 9.0)
+    r7_b, a7_b, se7_b, rsq7_b = _expfit(h7[wrise], m7[wrise])
+    ch7_t, ch7, raw7 = _rig_channels(7, ("tmp_out_excess_kpa", "lp_lmh_bar", "od600_lux_ref",
+                                         "od600_bubble_pct", "ph", "ph_temp_c", "flow_mlmin",
+                                         "q_perm_mlmin", "j_lmh", "window_sec"))
+    gate7 = sum(1 for r in raw7 if r["od600_gate_accepted"] != "True")
+    flag7 = sum(1 for r in raw7 if (r.get("od600_flags") or "").strip())
+    exc7_0 = _hourly_median(ch7_t, ch7["tmp_out_excess_kpa"], 0, 2)
+    exc7_1 = _hourly_median(ch7_t, ch7["tmp_out_excess_kpa"], ch7_t.max()-2, ch7_t.max()+1)
+    ref7 = ch7["od600_lux_ref"][np.isfinite(ch7["od600_lux_ref"])]
+
     rec("runs", "~/Downloads/B. Sub Growth Tests: round 1 260610 test1 no stir.xlsx; round 2 260614, test 2 stir.xlsx "
         "(sheet 260614); round 3 0721, test3 20 day.csv; round 4 both test4 photometer.csv; "
-        "round 5 four record_2026100*.csv; round 6 record_20261014_105625.csv + record_20261015_110749.csv",
+        "round 5 four record_2026100*.csv; round 6 record_20261014_105625.csv + record_20261015_110749.csv; "
+        "round 7 record_20261017_022608_checkpoint_20261020_075028.csv",
         run1_end_h=float(r1[-1][0]), run1_bioreactor_max=max(r[1] for r in r1 if r[1] is not None),
         run1_flask_max=max(r[2] for r in r1 if r[2] is not None),
         run2_end_h=float(r2[-1][0])/60, run2_bioreactor_max=max(r[2] for r in r2),
@@ -565,16 +608,35 @@ def fig_runs():
         run6_first_od=float(m6[0]), run6_od_at_h=od6_at, run6_lowsignal_h=lows6,
         run6_last_reported=float(o6[-1]), run6_rate_h1=r6_, run6_rate_se=se6, run6_rate_r2=rsq6,
         run6_doubling_min=float(math.log(2)/r6_*60), run6_fit_window_h=[1.5, 6.5],
-        run6_sse_linear=sse_lin, run6_sse_exponential=sse_exp)
+        run6_sse_linear=sse_lin, run6_sse_exponential=sse_exp,
+        run7_files=len(p7), run7_rows=n7, run7_start=t7_0.isoformat(), run7_span_h=float(s7[-1][1]),
+        run7_logged_h=float(np.nansum(ch7["window_sec"])/3600),
+        run7_first_od=float(o7[0]), run7_od_at_h=od7_at, run7_peak_od=peak7, run7_peak_h=peak7_h,
+        run7_last_od=float(o7[-1]), run7_lag_h=list(lag7),
+        run7_rate_run6_window=r7_a, run7_rate_run6_window_se=se7_a, run7_rate_run6_window_r2=rsq7_a,
+        run7_rate_rise=r7_b, run7_rate_rise_se=se7_b, run7_rate_rise_r2=rsq7_b,
+        run7_rate_rise_window_h=[5.0, 9.0], run7_doubling_rise_min=float(math.log(2)/r7_b*60),
+        run7_gate_rejected=gate7, run7_lowsignal_windows=flag7,
+        run7_bubble_windows_over20=int((ch7["od600_bubble_pct"] > 20).sum()),
+        run7_bubble_max_pct=float(np.nanmax(ch7["od600_bubble_pct"])),
+        run7_ref_ratio=float(ref7.max()/ref7.min()),
+        run7_excess_kpa_first2h=exc7_0, run7_excess_kpa_last2h=exc7_1,
+        run7_lp_first=float(ch7["lp_lmh_bar"][0]), run7_lp_last=float(ch7["lp_lmh_bar"][-1]),
+        run7_ph_min=float(np.nanmin(ch7["ph"])), run7_ph_max=float(np.nanmax(ch7["ph"])),
+        run7_temp_c=float(np.nanmedian(ch7["ph_temp_c"])),
+        run7_flow_mlmin=float(np.nanmedian(ch7["flow_mlmin"])),
+        run7_perm_mlmin=float(ch7["q_perm_mlmin"][0]), run7_flux_lmh=float(ch7["j_lmh"][0]))
 
     f = Fig("Every B. subtilis OD600 run on BR-01, June to October 2026",
-            "Six panels. Run 1 and run 2: hand-sampled OD600 in the bioreactor against a shake flask. "
+            "Seven panels. Run 1 and run 2: hand-sampled OD600 in the bioreactor against a shake flask. "
             "Run 3: 434 hours of in-line OD600 at 22 °C. Run 4: in-line OD600 in two logged parts with a 10-hour gap. "
-            "Run 5: the reading breaks down after ten hours. Run 6: 42 hours of continuous in-line OD600.",
-            880, 960)
+            "Run 5: the reading breaks down after ten hours. Run 6: 42 hours of continuous in-line OD600. "
+            "Run 7, across the full width: 77 hours in one file, rising to OD 3.3 with the reading intact.",
+            880, 1292)
     BW, BH = 330, 190
     boxes = [(80, 46, BW, BH), (510, 46, BW, BH), (80, 366, BW, BH),
-             (510, 366, BW, BH), (80, 686, BW, BH), (510, 686, BW, BH)]
+             (510, 366, BW, BH), (80, 686, BW, BH), (510, 686, BW, BH),
+             (80, 1006, 760, BH)]
     def head(box, t, sub):
         f.text(box[0]-50, box[1]-22, t, 13, INK, weight=650)
         f.text(box[0]-50, box[1]-7, sub, 11, INK3)
@@ -639,8 +701,21 @@ def fig_runs():
     f.text(ax.X(9.2), ax.Y(0.40), f"over 1.5 to 6.5 h (doubling {math.log(2)/r6_*60:.0f} min)", 10, INK3, italic=True)
     f.text(ax.X(lows6)-7, ax.Y(1.42), "sample beam lost,", 10, INK3, "end", italic=True)
     f.text(ax.X(lows6)-7, ax.Y(1.20), "reading steps off scale", 10, INK3, "end", italic=True)
-    f.text(80-50, 946, "Lines: medians of the in-line reading (hourly in runs 3 and 4, half-hourly in run 5, "
-           "quarter-hourly in run 6). Panels have their own axes; runs 1 and 2 are hand samples. "
+    # run 7, the full width of the sheet
+    head(boxes[6], "Run 7 \u00b7 17 to 20 October, [i]B. subtilis[/i] WB800, 51 LMH",
+         "Constitutive ACCD; acceptance gate on, 77 h in one file, no restart")
+    ax = Axes(f, boxes[6], (0, 78), (0, 3.6), "Time from first logged row (h)", "OD600 (in-line)",
+              range(0, 79, 12), [0, 1, 2, 3], ylab_dx=40)
+    ax.hline(od6_at[37], SLATE, "4 4", 1.2)
+    f.text(ax.X(13), ax.Y(od6_at[37])-8, f"OD {od6_at[37]:.2f}: where run 6 lost the sample beam", 10, SLATE, italic=True)
+    ax.dots(t7[::4], o7[::4], LEAF2, 1.1)
+    ax.line(h7, m7, LEAF7, 1.6)
+    f.text(ax.X(10.5), ax.Y(0.42), f"flat at 0.19 from {lag7[0]:.1f} to {lag7[1]:.1f} h", 10, INK3, italic=True)
+    f.text(ax.X(77), ax.Y(0.52), f"reading intact to the last window: peak {peak7:.2f} at {peak7_h:.0f} h,", 10, INK3, "end", italic=True)
+    f.text(ax.X(77), ax.Y(0.30), f"{flag7} low-signal windows in {n7:,}", 10, INK3, "end", italic=True)
+    f.text(80-50, 1262, "Lines: medians of the in-line reading (hourly in runs 3 and 4, half-hourly in run 5, "
+           "quarter-hourly in runs 6 and 7).", 10.5, INK3)
+    f.text(80-50, 1279, "Panels have their own axes; runs 1 and 2 are hand samples. "
            "Grey: readings the twin does not use.", 10.5, INK3)
     f.save("fig-runs-168.svg")
 
