@@ -131,6 +131,13 @@ const SECTIONS = [
     groups: [
     { title: "", members: [
       {
+        name: "Abby Kao", role: "Cross-Team Lead",
+        photo: "assets/img/members/abby-kao.webp", workPhoto: "assets/img/members/work/abby-kao.webp", goofyPhoto: "assets/img/members/goofy/abby-kao.webp",
+        grade: "Freshman", school: "KCIS", track: "Wet Lab",
+        bio: "Hii, I'm Abby Kao! My main interests are ballet and public speaking, yet it was my interest in biology that led me to join iGEM. Through the hundreds of hours I have spent with these (initial) strangers in the lab, I realized that through one year of locked in dedication, we could really achieve something big.\n\nOverall, I played a role in conducting the cross-team aspect of our team, and, looking at the map of our project, I understand everything that plays a role leading to our success. Whether it is video editing, testing our protectant of arabidopsis, educating elementary school students and the general public, interviewing farmers, doing golden gate assembly, or designing merch, nothing goes unnoticed, and honestly? It's the best feeling ever knowing almost 100 people are working towards the same goal.\n\nEven though it looks like summer 2026 wasted, it was a summer full of the best experiences, spending it with the best people as well as learning from and laughing at our mistakes. While our arabidopsis grew, we grew with hope and anticipation, not for what contamination would appear next, but for next time we could test another protectant on our plants and the next time we get to share our project with the outside world.",
+        own: ["Art", "Lab", "Plant"], mem: ["Video", "Education", "Entrepreneurship", "Lab Notebook"]
+      },
+      {
         name: "Abby Tsai", role: "Wet Lab Lead",
         photo: "assets/img/members/abby-tsai.webp", workPhoto: "assets/img/members/work/abby-tsai.webp", goofyPhoto: "assets/img/members/goofy/abby-tsai.webp",
         grade: "Freshman", school: "KCIS", track: "Wet Lab",
@@ -145,11 +152,11 @@ const SECTIONS = [
         own: ["Lab", "Plant"], mem: ["Lab Notebook"]
       },
       {
-        name: "Joshua Hong", role: "Wet Lab Lead",
-        photo: "assets/img/members/joshua-hong.webp", workPhoto: "assets/img/members/work/joshua-hong.webp", goofyPhoto: "assets/img/members/goofy/joshua-hong.webp",
-        grade: "Freshman", school: "WEGO", track: "Wet Lab",
-        bio: "Hi, I'm Joshua. I love biology, firmware, and outdoor activities. When I first joined iGEM, I was excited about the possibility of doing experiments to create something impactful. However, I forgot that behind the achievements is sacrifice. These include repeating the same experiment countless times until cloning succeeds, or countless hours in labs or on computers. Throughout the year, I learned that patience and commitment are the cornerstones of research, and that really caring about and owning your tasks is what makes things work. Though I’m a wet lab member, most of my contribution lies in hardware. Prior to this experience, I never thought tech and bio could go hand in hand. It opened my eyes to new possibilities, since I now know I can combine my two interests. I really cherish this year and all the opportunities it provided. I learned a lot and found out more about myself. It is truly a surreal experience.",
-        own: ["Bioreactor", "Hardware"], mem: ["Lab"]
+        name: "Anna Chuang", role: "Cross-Team Vice Lead",
+        photo: "assets/img/members/anna-chuang.webp", workPhoto: "assets/img/members/work/anna-chuang.webp", goofyPhoto: "assets/img/members/goofy/anna-chuang.webp",
+        grade: "Junior", school: "KCIS", track: "Dry Lab",
+        bio: "Hello! I'm Anna! When I first joined iGEM, all I knew was that I wanted to do something big, something that mattered. I didn't know how yet, but looking around a room full of strangers, I knew that together, we could. I still remember the first time I successfully produced a graph in RStudio for our math model. It felt foreign, but it showed me I could do more than I thought.\n\nFrom there, working through large geospatial datasets and leading conversations with farmers, I slowly came to understand the people we were working for: who they are, where they live, what they need, or simply what they had for lunch. I also began to see a clearer and clearer definition for what \"something that mattered\" means.\n\nI cherish the big wins: the opportunities to speak at a public forum, the thumbs-ups from strangers, the farmers smiling in my selfies. But I cherish the small moments just as much. There were the sighs my partners and I shared as our computers lagged under all that data, the laughter at lunch, and everything in between. ReLEAF ReLEAF ReLEAF: that's something to remember by!!",
+        own: ["Video", "GIS"], mem: ["Outreach", "Model", "Education", "Entrepreneurship"]
       },
       {
         name: "Felix Yu", role: "Dry Lab Lead",
@@ -157,6 +164,20 @@ const SECTIONS = [
         grade: "Sophomore", school: "IBSH", track: "Dry Lab",
         bio: "Hey, I'm Felix. I'm interested in biochemistry and engineering, but overall, I just like the satisfaction of seeing systems work. In the team, I specialize in protein design and software, while occasionally helping out with the hardware. A challenge in this pipeline is understanding the methodology of complex systems. As you try different docking tools and modeling approaches, you may realize after hours of work, on paper, it was all for nothing, and the process needed to be scrapped and re-done. However, each failure taught me to question my past assumptions, helping me approach the problem from a new perspective. Looking back, the team is also a system where things may break down in seemingly insignificant, unexpected places. With one part of the project greatly impacting another, over time, I’ve experienced the hardships of connecting pipelines, data, and people together. But I know we can work together and finish the job. I also have a fat dog and cat.",
         own: ["Peptide Design"], mem: ["Outreach", "Data Physicalization"]
+      },
+      {
+        name: "Joshua Hong", role: "Wet Lab Lead",
+        photo: "assets/img/members/joshua-hong.webp", workPhoto: "assets/img/members/work/joshua-hong.webp", goofyPhoto: "assets/img/members/goofy/joshua-hong.webp",
+        grade: "Freshman", school: "WEGO", track: "Wet Lab",
+        bio: "Hi, I'm Joshua. I love biology, firmware, and outdoor activities. When I first joined iGEM, I was excited about the possibility of doing experiments to create something impactful. However, I forgot that behind the achievements is sacrifice. These include repeating the same experiment countless times until cloning succeeds, or countless hours in labs or on computers. Throughout the year, I learned that patience and commitment are the cornerstones of research, and that really caring about and owning your tasks is what makes things work. Though I’m a wet lab member, most of my contribution lies in hardware. Prior to this experience, I never thought tech and bio could go hand in hand. It opened my eyes to new possibilities, since I now know I can combine my two interests. I really cherish this year and all the opportunities it provided. I learned a lot and found out more about myself. It is truly a surreal experience.",
+        own: ["Bioreactor", "Hardware"], mem: ["Lab"]
+      },
+      {
+        name: "Naomi Lin", role: "Cross-Team Lead",
+        photo: "assets/img/members/naomi-lin.webp", workPhoto: "assets/img/members/work/naomi-lin.webp", goofyPhoto: "assets/img/members/goofy/naomi-lin.webp",
+        grade: "Freshman", school: "FHJH", track: "Wet Lab",
+        bio: "Hi, I’m Naomi! I joined iGEM because I was fascinated by synthetic biology and wanted to experience real research. I expected to spend most of my time doing labs and reading papers, but iGEM became much more than that. Throughout the year, I learned to turn biology concepts into experiments, balance iGEM with schoolwork, and work with teammates from different schools. When I made mistakes, I learned to face them honestly, learn from them, and step up again.\n\nI also learned to look beyond my own role and see how different parts of a project connect, and this is why I enjoy cross-team work. I even brought ReLEAF to my school by coordinating with my teachers and teammates to organize an educational event, allowing my peers a chance to learn about synthetic biology and its role in addressing agricultural challenges. Through ReLEAF, I came to see research as a way to share knowledge and address problems beyond the lab.",
+        own: ["Art"], mem: ["Video", "Lab", "Outreach", "Education", "Entrepreneurship"]
       },
       {
         name: "Noah Tau", role: "Dry Lab Lead",
@@ -173,18 +194,11 @@ const SECTIONS = [
         own: ["Education"], mem: ["Video", "Outreach", "Entrepreneurship", "Data Physicalization"]
       },
       {
-        name: "Abby Kao", role: "Cross-Team Lead",
-        photo: "assets/img/members/abby-kao.webp", workPhoto: "assets/img/members/work/abby-kao.webp", goofyPhoto: "assets/img/members/goofy/abby-kao.webp",
-        grade: "Freshman", school: "KCIS", track: "Wet Lab",
-        bio: "Hii, I'm Abby Kao! My main interests are ballet and public speaking, yet it was my interest in biology that led me to join iGEM. Through the hundreds of hours I have spent with these (initial) strangers in the lab, I realized that through one year of locked in dedication, we could really achieve something big.\n\nOverall, I played a role in conducting the cross-team aspect of our team, and, looking at the map of our project, I understand everything that plays a role leading to our success. Whether it is video editing, testing our protectant of arabidopsis, educating elementary school students and the general public, interviewing farmers, doing golden gate assembly, or designing merch, nothing goes unnoticed, and honestly? It's the best feeling ever knowing almost 100 people are working towards the same goal.\n\nEven though it looks like summer 2026 wasted, it was a summer full of the best experiences, spending it with the best people as well as learning from and laughing at our mistakes. While our arabidopsis grew, we grew with hope and anticipation, not for what contamination would appear next, but for next time we could test another protectant on our plants and the next time we get to share our project with the outside world.",
-        own: ["Art", "Lab", "Plant"], mem: ["Video", "Education", "Entrepreneurship", "Lab Notebook"]
-      },
-      {
-        name: "Naomi Lin", role: "Cross-Team Lead",
-        photo: "assets/img/members/naomi-lin.webp", workPhoto: "assets/img/members/work/naomi-lin.webp", goofyPhoto: "assets/img/members/goofy/naomi-lin.webp",
-        grade: "Freshman", school: "FHJH", track: "Wet Lab",
-        bio: "Hi, I’m Naomi! I joined iGEM because I was fascinated by synthetic biology and wanted to experience real research. I expected to spend most of my time doing labs and reading papers, but iGEM became much more than that. Throughout the year, I learned to turn biology concepts into experiments, balance iGEM with schoolwork, and work with teammates from different schools. When I made mistakes, I learned to face them honestly, learn from them, and step up again.\n\nI also learned to look beyond my own role and see how different parts of a project connect, and this is why I enjoy cross-team work. I even brought ReLEAF to my school by coordinating with my teachers and teammates to organize an educational event, allowing my peers a chance to learn about synthetic biology and its role in addressing agricultural challenges. Through ReLEAF, I came to see research as a way to share knowledge and address problems beyond the lab.",
-        own: ["Art"], mem: ["Video", "Lab", "Outreach", "Education", "Entrepreneurship"]
+        name: "Sophia Lin", role: "Human Practices Vice Lead",
+        photo: "assets/img/members/sophia-lin.webp", workPhoto: "assets/img/members/work/sophia-lin.webp", goofyPhoto: "assets/img/members/goofy/sophia-lin.webp",
+        grade: "Sophomore", school: "KCISLK", track: "Human Practices",
+        bio: "Hi, I’m Sophia! I’ve always been interested in biology, which is one of the reasons I decided to join iGEM. Throughout the year, I’ve learned and experienced many new things, including designing an educational lesson, helping build a business plan, contacting experts, organizing outreach events, learning lab techniques, and much more than I ever imagined I would learn if I hadn’t joined iGEM. I’m looking forward to present our results and share the insights we’ve gained throughout this journey. I hope to carry the knowledge and experiences I’ve gained from iGEM into my future studies and continue exploring biology and science.",
+        own: ["Outreach"], mem: ["Lab", "Education", "Entrepreneurship"]
       },
       {
         name: "Sophia Yeh", role: "Cross-Team Lead",
@@ -199,20 +213,6 @@ const SECTIONS = [
         grade: "Sophomore", school: "TAS", track: "Wet Lab",
         bio: "Hi, I’m Sophie! I joined iGEM to explore synthetic biology and build practical scientific skills. Over the past year, I learned to troubleshoot and adapt when experiments and processes didn’t go as planned, or when our initial assumptions about market promotion were wrong I worked across wet lab, drylab hardware/math modeling, and business strategy, constantly shifting between different types of problems. Through focusing on cross-team work and understanding how each workflow fed into others, I really got to understand how much of the project’s success depended on people communicating with each other and building on what different subteams had learned. The most valuable part of this experience was learning from professors, farmers we interviewed, as well as collaborating with the instructors and my teammates, and each person in this journey has taught me something different about what it takes to build a project that will actually be successful in the real world, which I’m extremely grateful to be able to experience.",
         own: ["Entrepreneurship"], mem: ["Video", "Lab", "Outreach", "Education"]
-      },
-      {
-        name: "Anna Chuang", role: "Cross-Team Vice Lead",
-        photo: "assets/img/members/anna-chuang.webp", workPhoto: "assets/img/members/work/anna-chuang.webp", goofyPhoto: "assets/img/members/goofy/anna-chuang.webp",
-        grade: "Junior", school: "KCIS", track: "Dry Lab",
-        bio: "Hello! I'm Anna! When I first joined iGEM, all I knew was that I wanted to do something big, something that mattered. I didn't know how yet, but looking around a room full of strangers, I knew that together, we could. I still remember the first time I successfully produced a graph in RStudio for our math model. It felt foreign, but it showed me I could do more than I thought.\n\nFrom there, working through large geospatial datasets and leading conversations with farmers, I slowly came to understand the people we were working for: who they are, where they live, what they need, or simply what they had for lunch. I also began to see a clearer and clearer definition for what \"something that mattered\" means.\n\nI cherish the big wins: the opportunities to speak at a public forum, the thumbs-ups from strangers, the farmers smiling in my selfies. But I cherish the small moments just as much. There were the sighs my partners and I shared as our computers lagged under all that data, the laughter at lunch, and everything in between. ReLEAF ReLEAF ReLEAF: that's something to remember by!!",
-        own: ["Video", "GIS"], mem: ["Outreach", "Model", "Education", "Entrepreneurship"]
-      },
-      {
-        name: "Sophia Lin", role: "Human Practices Vice Lead",
-        photo: "assets/img/members/sophia-lin.webp", workPhoto: "assets/img/members/work/sophia-lin.webp", goofyPhoto: "assets/img/members/goofy/sophia-lin.webp",
-        grade: "Sophomore", school: "KCISLK", track: "Human Practices",
-        bio: "Hi, I’m Sophia! I’ve always been interested in biology, which is one of the reasons I decided to join iGEM. Throughout the year, I’ve learned and experienced many new things, including designing an educational lesson, helping build a business plan, contacting experts, organizing outreach events, learning lab techniques, and much more than I ever imagined I would learn if I hadn’t joined iGEM. I’m looking forward to present our results and share the insights we’ve gained throughout this journey. I hope to carry the knowledge and experiences I’ve gained from iGEM into my future studies and continue exploring biology and science.",
-        own: ["Outreach"], mem: ["Lab", "Education", "Entrepreneurship"]
       }
     ]},
     ]
