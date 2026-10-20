@@ -663,9 +663,10 @@
     var light = lighting(svg, places, order, svg.querySelector('.nma-places'), svg.querySelector('.nma-litlayer'));
     function tagPos(slug) { var p = POS[slug]; return [p[0], p[1] - PLACE[slug].r * 1.35 * p[2] - (slug === here ? 64 : 20), p[1] - PLACE[slug].r * 1.1 * p[2] - (slug === here ? 50 : 0)]; }
 
-    var legend = h('ul', 'nma-legend'); root.appendChild(legend);
-    ZONES.forEach(function (z) { var li = h('li', null, z[1]); li.style.setProperty('--s-line', SEC[z[0]].line); li.style.setProperty('--s-ink', SEC[z[0]].ink); legend.appendChild(li); });
-    /* 19 October 2026: the whole-valley map (Description) ends on the picture
+    /* 21 October 2026: the zone legend under the valley is gone as well. It
+       named the six places a second time and read as a key to the dot colours,
+       which it was not.
+       19 October 2026: the whole-valley map (Description) ends on the picture
        alone. The caption that listed the page and its three key links is gone;
        pointing at a place still lights it and its links on the map. */
     function fillCap() {}

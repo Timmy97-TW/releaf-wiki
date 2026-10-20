@@ -223,7 +223,9 @@
 
       var ds = face.dataset;
       card.href = face.getAttribute("href");
-      $(".rcard__img", card).src = $("img", face).currentSrc || $("img", face).src;
+      var fimg = $("img", face), rimg = $(".rcard__img", card);
+      if (fimg) { rimg.src = fimg.currentSrc || fimg.src; rimg.style.display = ""; }
+      else { rimg.removeAttribute("src"); rimg.style.display = "none"; }
       $(".rcard__name", card).innerHTML = "";
       $(".rcard__name", card).appendChild(document.createTextNode(ds.name + (ds.zh ? " " : "")));
       if (ds.zh) { var z = document.createElement("span"); z.textContent = ds.zh; $(".rcard__name", card).appendChild(z); }

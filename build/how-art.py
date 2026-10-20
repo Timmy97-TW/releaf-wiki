@@ -28,7 +28,7 @@ the foot of the picture.
 21 Oct (owner): THE FARMER IS IN THE LOOP. The wiki says the app is for
 farmers without laboratory skills: the forecast lets them prepare ahead,
 they collect the protectant the bioreactor makes, dilute it by the factor
-the app states and apply it through irrigation or spraying; and a farmer
+the app states and spray it on the crop by hand; and a farmer
 who adds land enters it to see how many sensors and bioreactors it needs
 and what they cost. So nothing is piped to the crop any more: the permeate
 fills the harvest bottle, the farmer collects it (the bottle leaves the
@@ -611,7 +611,7 @@ poly(ell(977, 208, 10, 8, 12), (214, 224, 228), r=0.5, step=3, alpha=0.7)
 end()
 out.append('<g data-k="rotor" transform="translate(983 214)"><g transform="rotate(20)"><path class="rw-arm" d="M0 -13 V13 M-11.3 -6.5 L11.3 6.5 M-11.3 6.5 L11.3 -6.5" /><circle class="rw-roller" cy="-13" r="5" /><circle class="rw-roller" cx="11.3" cy="6.5" r="5" /><circle class="rw-roller" cx="-11.3" cy="6.5" r="5" /></g></g>')
 
-# the hollow-fibre cartridge
+# the hollow-fiber cartridge
 g(wipe("cart", 1000, 276, 1110, 536, "y") + ' class="rw-cart"')
 poly(rrect(1016, 290, 1064, 520, 14), GLASS, r=0.8, step=4)
 for fx in (1030, 1040, 1050):
@@ -697,12 +697,12 @@ LABELS = [
     ("lab-photo", 900, 526, "middle", "", "photometer"),
     ("lab-pump", 983, 180, "middle", "", "pump"),
     ("lab-stay", 983, 262, "middle", "", "the cells stay in the loop"),
-    ("lab-membrane", 1004, 338, "end", "", "hollow-fibre membrane"),
+    ("lab-membrane", 1004, 338, "end", "", "hollow-fiber membrane"),
     ("lab-pores", 1004, 362, "end", "", "0.2 µm pores"),
     ("lab-perm", 1086, 408, "middle", "st-lab--prot", "permeate"),
     ("lab-bottle", 1100, 441, "middle", "", "harvest bottle"),
     ("lab-dilute", 482, 584, "middle", "st-lab--prot", "dilute as the app states"),
-    ("lab-crop", 112, 404, "middle", "", "irrigation or spray"),
+    ("lab-crop", 112, 404, "middle", "", "manual spray"),
     ("lab-off", 662, 244, "start", "st-lab--red", "red light, 660 nm: off"),
     ("lab-app", 502, 428, "middle", "st-lab--green", "ReLEAF app"),
 ]
