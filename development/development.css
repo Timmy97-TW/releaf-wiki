@@ -1,5 +1,5 @@
 /* =============================================================================
-   ReLeaf: the Development page
+   ReLEAF: the Development page
    -----------------------------------------------------------------------------
    The same rounded system as Plants and Integrated Human Practices: soft grey
    panels (#f5f5f7) and white hairline cards, one radius family, no horizontal
@@ -7,9 +7,15 @@
 
    One colour system on top of it, taken from the team's own stage figures:
    each of the five stages owns a tint, a soft ground and an ink, set as
-   custom properties by .st--{stage}, so the chain, the five functions, the
-   stage cards, the tabs and the tables all speak the same colour for the
-   same stage.
+   custom properties by .st--{stage}, so the chain, the stage cards, the tabs
+   and every table speak the same colour for the same stage.
+
+   20 October 2026. The page was cut to three sections: what ReLEAF must do,
+   how each subsystem was built, and the verdict on every criterion. With the
+   first-attempts cards and the eight step timelines gone, their rules go with
+   them; what is new here is the journey card (.jcard), the brief criteria
+   table (.ctable--brief) and the verdict column (.vd). Tables lost their
+   zebra for hairline rows, which reads better at three columns.
    ========================================================================== */
 
 .devp {
@@ -19,6 +25,7 @@
   --ink: #1d1d1f;
   --ink-2: #424245;
   --ink-3: #6e6e73;
+  --hair: rgb(0 0 0 / .07);
   --r-xl: 28px;
   --r-lg: 20px;
   --r-md: 14px;
@@ -48,9 +55,9 @@
 
 /* the site's list indent and spacing are for prose lists; every list on this
    page is a laid-out component */
-.devp .sec :is(.chain__list, .fns, .goals, .asks, .fourq, .atts, .steps, .goal__crit) { padding-left: 0; }
-.devp .sec :is(.chain__list, .fns, .goals, .asks, .fourq, .atts, .steps, .goal__crit) li + li { margin-top: 0; }
-.devp .sec :is(.chain__list, .fns, .goals, .fourq, .atts, .steps) { margin-bottom: 0; }
+.devp .sec :is(.chain__list, .goals, .gaps) { padding-left: 0; }
+.devp .sec :is(.chain__list, .goals, .gaps) li + li { margin-top: 0; }
+.devp .sec :is(.chain__list, .goals) { margin-bottom: 0; }
 
 /* ------------------------------------------------------------ STAGES ----- */
 .st--detect   { --tint: #e3e9f8; --soft: #f3f6fd; --ink-s: #34509f; --acc: #6f86d0; }
@@ -93,28 +100,14 @@
 .devp .fig figcaption b { color: var(--ink); }
 
 /* ============================================================ SECTION 1 == */
-.opener { display: grid; gap: var(--sp-6); align-items: center; }
-@media (min-width: 960px) {
-  .opener { grid-template-columns: minmax(0, 1fr) minmax(17rem, 24rem); gap: var(--sp-8); }
-}
-.opener__q {
-  margin: 0 0 var(--sp-5) !important;
+.devp .pagebody .sec > p.opener__q {
+  margin: 0 0 var(--sp-5); max-width: 26ch;
   font-size: clamp(1.5rem, 1.05rem + 1.45vw, 2.25rem); font-weight: 650;
-  line-height: 1.16; letter-spacing: -.022em; color: var(--ink) !important;
-  max-width: 22ch;
+  line-height: 1.16; letter-spacing: -.022em; color: var(--ink);
 }
-.opener__text p:not(.opener__q) { max-width: var(--measure); }
-/* The drawing sits in the column whole, on white: it is a flow chart, and
-   cropping it to a photo frame would cut its labels. */
-.opener__fig { margin: 0; }
-.opener__fig img {
-  display: block; width: 100%; max-width: 22rem; height: auto; margin: 0 auto; cursor: zoom-in;
-  border-radius: var(--r-md); background: var(--white);
-}
-@media (min-width: 960px) { .opener__fig img { max-width: none; } }
 
 /* Figure 1: the chain */
-.chain { margin: var(--sp-6) 0 var(--sp-6); }
+.chain { margin: var(--sp-7) 0 var(--sp-6); }
 .chain__list {
   list-style: none; margin: 0; padding: 0;
   display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: var(--sp-3);
@@ -124,10 +117,10 @@
 .chain__stage {
   position: relative; margin: 0 !important;
   display: flex; flex-direction: column; align-items: center; text-align: center; gap: .35rem;
-  padding: 1.15rem .6rem 1.1rem; border-radius: var(--r-md);
+  padding: 1.25rem .6rem 1.2rem; border-radius: var(--r-md);
   background: var(--tint); color: var(--ink-s);
 }
-.chain__disc, .fn__disc, .goal__disc, .seg__disc {
+.chain__disc, .goal__disc, .seg__disc {
   display: grid; place-items: center; flex: none;
   width: 2.75rem; height: 2.75rem; border-radius: 50%;
   background: rgb(255 255 255 / .8); box-shadow: 0 1px 2px rgb(0 0 0 / .05);
@@ -137,13 +130,13 @@
 .chain__part { font-size: .75rem; line-height: 1.3; opacity: .85; }
 @media (min-width: 1100px) {
   .chain__stage:not(:last-child)::after {
-    content: ""; position: absolute; top: 50%; right: -.9rem; width: .6rem; height: .6rem;
+    content: ""; position: absolute; top: 50%; right: -.9rem; width: .55rem; height: .55rem;
     border-top: 2px solid var(--gray-300); border-right: 2px solid var(--gray-300);
     transform: translateY(-50%) rotate(45deg);
   }
 }
 
-/* 1.1 the stage cards */
+/* 1.1 the stage cards: where each stage began, and what carries it */
 .goals {
   list-style: none; margin: var(--sp-6) 0 var(--sp-7); padding: 0;
   display: grid; gap: var(--sp-3); grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -154,11 +147,10 @@
 @media (min-width: 1200px) {
   .goals { grid-template-columns: repeat(5, minmax(0, 1fr)); gap: .75rem; }
   /* one row of five: the coloured heads are levelled so the cards read across */
-  .goal__head { padding: .9rem .5rem .75rem; min-height: 8.5rem; justify-content: center; }
+  .goal__head { padding: .95rem .5rem .8rem; min-height: 7.75rem; justify-content: center; }
   .goal__head b { font-size: .9375rem; }
-  .goal__fn { padding: .8rem .75rem .2rem; }
-  .goal__block { margin: .5rem .5rem 0; padding: .6rem .55rem .65rem; }
-  .goal__crit b { font-size: 1.125rem; }
+  .goal__fn { padding: .85rem .75rem .2rem; }
+  .goal__block { margin: .55rem .5rem 0; padding: .6rem .55rem .65rem; }
 }
 .goal {
   margin: 0 !important; display: flex; flex-direction: column;
@@ -166,135 +158,117 @@
 }
 .goal__head {
   display: flex; flex-direction: column; align-items: center; gap: .5rem;
-  padding: 1rem .75rem .85rem; background: var(--tint);
+  padding: 1rem .75rem .85rem; background: var(--tint); text-align: center;
 }
 .goal__head b { font-size: 1rem; font-weight: 700; letter-spacing: -.01em; }
 .goal__fn { margin: 0 !important; padding: .9rem .9rem .2rem; font-size: .8125rem; line-height: 1.45; color: var(--ink-s) !important; }
 .goal__block {
-  margin: .55rem .55rem 0; padding: .7rem .7rem .75rem;
+  margin: .6rem .55rem 0; padding: .7rem .7rem .75rem;
   border-radius: var(--r-sm); background: var(--white);
 }
-.goal__block + .goal__block { margin-top: .4rem; }
-.goal__lbl { letter-spacing: .05em; }
-.goal__block p { margin: .35rem 0 0 !important; font-size: .78rem; line-height: 1.4; color: var(--ink-2) !important; }
+.goal__block p { margin: .35rem 0 0 !important; font-size: .78rem; line-height: 1.42; color: var(--ink-2) !important; }
 .goal__lbl {
-  display: inline-block; padding: .15rem .45rem; border-radius: 6px;
-  background: var(--tint); font-size: .625rem; font-weight: 700; letter-spacing: .07em; text-transform: uppercase;
+  display: inline-block; padding: .15rem .45rem; border-radius: 6px; letter-spacing: .07em;
+  background: var(--tint); font-size: .625rem; font-weight: 700; text-transform: uppercase;
 }
-.goal__crit { list-style: none; margin: .4rem 0 0 !important; padding: 0 !important; }
-.goal__crit li { margin: 0 !important; padding: .3rem 0; display: flex; flex-direction: column; }
-.goal__crit b { font-size: 1.25rem; font-weight: 750; letter-spacing: -.02em; line-height: 1.1; }
-.goal__crit span { font-size: .72rem; line-height: 1.35; color: var(--ink-3); }
-.goal__sys { margin: auto 0 0 !important; padding: .8rem .8rem .9rem; text-align: center; font-size: .75rem; font-weight: 600; color: var(--ink-s) !important; }
+.goal__sys { margin: auto 0 0 !important; padding: .85rem .8rem .95rem; text-align: center; font-size: .75rem; font-weight: 600; color: var(--ink-s) !important; }
 
 /* ------------------------------------------------- SEGMENTED CONTROLS ---- */
-/* Since 10 October 2026 the three controls are the shared Integrated Human
+/* Since 10 October 2026 the two controls are the shared Integrated Human
    Practices rail (assets/css/engage.css + engage.js): a frosted pill pinned
-   under the site nav with a white thumb sliding under the open stage. This
+   under the site nav with a white thumb sliding under the open panel. This
    file only dresses what goes inside a button, which is this page's own: the
-   stage's coloured disc, its name and its count.                           */
+   stage's coloured disc and its name.                                      */
 
 .devp .seg__btn { gap: .55rem; padding: .5rem .85rem; }
 .devp .seg__disc { width: 1.75rem; height: 1.75rem; background: var(--tint); box-shadow: none; transition: transform .25s ease; }
 .devp .seg__disc .sico { width: .95rem; height: .95rem; }
 .devp .seg__btn[aria-selected="true"] .seg__disc { transform: scale(1.06); }
 .devp .seg__name { font-size: .9375rem; font-weight: 600; letter-spacing: -.01em; line-height: 1.2; }
-.devp .seg__sub { font-size: .75rem; color: var(--ink-3); font-variant-numeric: tabular-nums; }
-/* eight subsystems do not fit on one line at tablet width, so that rail wraps
-   its own way: the track scrolls sideways, which engage.css already allows. */
-@media (max-width: 60rem) { .devp .seg__sub { display: none; } }
 
 .stagetabs { margin-top: var(--sp-5); }
+.stagetabs--status .seg__btn { padding-bottom: .65rem; }
 
 /* -------------------------------------------------------------- TABLES --- */
 .tcard {
   margin-top: var(--sp-5); overflow: hidden;
   border: 0; border-radius: var(--r-xl); background: var(--white);
   box-shadow: 0 0 0 1px rgb(0 0 0 / .06), 0 24px 44px -34px rgb(0 0 0 / .35);
+  scroll-margin-top: calc(var(--nav-h) + 4.5rem);
 }
-.tcard__lvl {
-  margin: 0; padding: 1rem 1.15rem .35rem; background: var(--soft); color: var(--ink-s);
-  font-size: .8125rem; font-weight: 700; letter-spacing: -.01em;
-}
-.tcard__lvl + .ctable thead th { padding-top: .55rem; }
-.ctable { width: 100%; border-collapse: separate; border-spacing: 0; font-size: var(--text-sm); line-height: 1.5; }
-.ctable th, .ctable td { padding: .9rem 1rem; text-align: left; vertical-align: top; border: 0; }
+.tcard--brief { margin-top: var(--sp-6); }
+.ctable { width: 100%; border-collapse: separate; border-spacing: 0; font-size: var(--text-sm); line-height: 1.55; }
+.ctable th, .ctable td { padding: 1rem 1.15rem; text-align: left; vertical-align: top; border: 0; }
 .ctable thead th {
-  background: var(--soft); color: var(--ink-s);
+  padding-top: .85rem; padding-bottom: .7rem;
+  background: var(--soft, #f5f5f7); color: var(--ink-s, #6e6e73);
   font-size: .6875rem; font-weight: 700; letter-spacing: .07em; text-transform: uppercase;
 }
-.ctable tbody tr:nth-child(even) > * { background: #fafafb; }
-.ctable tbody th { width: 27%; font-weight: 600; color: var(--ink); }
-.ctable td { color: var(--ink-2); }
+/* hairline rows rather than zebra: three columns of prose read better with a
+   rule between them than with alternating grounds */
+.ctable tbody tr + tr > * { border-top: 1px solid var(--hair); }
+.ctable tbody th { font-weight: 650; color: var(--ink); letter-spacing: -.005em; }
+.ctable td { color: var(--ink-2); font-variant-numeric: tabular-nums; }
 .ctable strong { color: var(--ink); font-weight: 650; }
-.ctable--crit td[data-label="Metric"] { width: 18%; }
-.ctable--crit td[data-label="Evidence"] { width: 18%; color: var(--ink-3); }
-.ctable--val th[scope="row"] { width: 38%; }
-@media (max-width: 760px) {
+.ctable--val th[scope="row"] { width: 26%; }
+.ctable--val td[data-label="Verdict"] { width: 8.5rem; }
+
+/* the level divider inside the Produce table */
+.ctable .grouprow > th {
+  padding: .8rem 1.15rem .75rem; background: var(--soft);
+  color: var(--ink-s); font-size: .6875rem; font-weight: 700;
+  letter-spacing: .07em; text-transform: uppercase;
+}
+.ctable tbody tr.grouprow > * { border-top: 1px solid var(--hair); }
+
+/* the source link that closes an evidence cell */
+.ctable .src {
+  display: inline-block; margin-top: .15rem; color: var(--ink-s);
+  font-weight: 600; text-decoration: none;
+  box-shadow: inset 0 -1px 0 0 color-mix(in srgb, var(--ink-s) 30%, transparent);
+}
+.ctable .src:hover { box-shadow: inset 0 -1px 0 0 currentColor; }
+
+/* The verdict is a word, weighted and tinted. Deliberately not a disc or a
+   filled pill: the progress marks came off the wiki on 19 October because a
+   reader met the grade before the sentence that earned it, and this column
+   sits after the evidence rather than in front of it. */
+.vd {
+  display: inline-block; font-size: .8125rem; font-weight: 700;
+  letter-spacing: -.004em; white-space: nowrap;
+}
+.vd--met  { color: #1f7a46; }
+.vd--part { color: #8a5a07; }
+.vd--none { color: #6e6e73; }
+
+/* section 1's brief table: the stage colour runs down the first column */
+.ctable--brief thead th { background: var(--surface); color: var(--ink-3); }
+.ctable--brief th[scope="row"] { width: 22%; }
+.ctable--brief td:last-child { width: 36%; color: var(--ink-3); }
+.cstage { display: flex; align-items: flex-start; gap: .55rem; color: var(--ink-s); }
+.cstage .sico { width: 1.1rem; height: 1.1rem; margin-top: .12rem; }
+.ctable--brief tbody tr:hover > * { background: color-mix(in srgb, var(--soft) 55%, var(--white)); }
+
+@media (max-width: 860px) {
   .ctable thead { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); }
   .ctable, .ctable tbody, .ctable tr, .ctable th, .ctable td { display: block; width: auto !important; }
-  .ctable tr { padding: .9rem 1rem; }
-  .ctable tbody tr:nth-child(even) > * { background: none; }
-  .ctable tbody tr:nth-child(even) { background: #fafafb; }
+  .ctable tr { padding: 1rem 1.15rem; }
+  .ctable tbody tr + tr { border-top: 1px solid var(--hair); }
+  .ctable tbody tr + tr > * { border-top: 0; }
   .ctable tbody th, .ctable td { padding: 0; }
-  .ctable td { margin-top: .55rem; }
+  .ctable td { margin-top: .6rem; }
   .ctable td::before {
     content: attr(data-label); display: block; margin-bottom: .1rem;
     font-size: .625rem; font-weight: 700; letter-spacing: .07em; text-transform: uppercase; color: var(--ink-s);
   }
+  .ctable .grouprow { padding: 0; }
+  .ctable .grouprow > th { display: block; padding: .8rem 1.15rem .75rem; }
+  .ctable--brief th[scope="row"], .ctable--val th[scope="row"] { width: auto !important; }
 }
-.after-table { margin-top: var(--sp-4) !important; font-size: var(--text-sm); color: var(--ink-3) !important; }
-.after-table a { color: var(--leaf-700); }
 
 /* ============================================================ SECTION 2 == */
-.fourq {
-  list-style: none; margin: var(--sp-5) 0 0 !important; padding: 0 !important;
-  display: grid; gap: var(--sp-3); grid-template-columns: repeat(2, minmax(0, 1fr));
-}
-@media (min-width: 860px) { .fourq { grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 1.6rem; } }
-.fourq li {
-  position: relative; margin: 0 !important;
-  display: flex; flex-direction: column; gap: .3rem;
-  padding: 1rem 1.15rem 1.1rem; border-radius: var(--r-md); background: var(--surface);
-}
-.fourq__lbl { font-size: .6875rem; font-weight: 700; letter-spacing: .07em; text-transform: uppercase; color: var(--ink-3); }
-.fourq li:last-child .fourq__lbl { color: var(--leaf-700); }
-.fourq__q { font-size: 1.0625rem; font-weight: 650; color: var(--ink); letter-spacing: -.01em; line-height: 1.3; }
-@media (min-width: 860px) {
-  .fourq li:not(:last-child)::after {
-    content: ""; position: absolute; top: 50%; right: -1.12rem; width: .6rem; height: .6rem;
-    border-top: 2px solid var(--gray-300); border-right: 2px solid var(--gray-300);
-    transform: translateY(-50%) rotate(45deg);
-  }
-}
-
-.atts {
-  list-style: none; margin: var(--sp-5) 0 0 !important; padding: 0 !important;
-  display: grid; gap: var(--sp-4); grid-template-columns: minmax(0, 1fr);
-}
-@media (min-width: 820px) { .atts { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: var(--sp-5); } }
-.att {
-  margin: 0 !important; display: flex; flex-direction: column;
-  border-radius: var(--r-xl); background: var(--surface); overflow: hidden;
-  scroll-margin-top: calc(var(--nav-h) + 1.5rem);
-}
-.att__fig { aspect-ratio: 16 / 10; border-radius: 0; background: #ececf0; }
-.att__body { display: flex; flex-direction: column; flex: 1; padding: 1.4rem 1.5rem 1.5rem; }
-.att__kicker { display: flex; align-items: center; gap: .55rem; margin: 0 !important; font-size: .8125rem; font-weight: 600; color: var(--ink-3) !important; }
-.att__kicker .tico { width: 1.6rem; height: 1.6rem; border-radius: 7px; }
-.devp .sec .att__name { margin: .7rem 0 .55rem; font-size: 1.5rem; font-weight: 700; letter-spacing: -.022em; line-height: 1.15; color: var(--ink); }
-.devp .sec .att__name a { color: inherit; text-decoration: none; background-image: linear-gradient(var(--ink-4, #c9c9cf), var(--ink-4, #c9c9cf)); background-size: 100% 1px; background-repeat: no-repeat; background-position: 0 92%; }
-.devp .sec .att__name a:hover { background-image: linear-gradient(currentColor, currentColor); }
-.att__desc { margin: 0 0 .9rem !important; font-size: var(--text-sm); line-height: 1.55; color: var(--ink-3) !important; }
-.fccl { margin: .2rem 0 0; padding: .35rem 1.1rem; border-radius: var(--r-md); background: var(--white); }
-.fccl__row { display: grid; grid-template-columns: 6.5rem minmax(0, 1fr); gap: .75rem; padding: .7rem 0; }
-.fccl dt { font-size: .6875rem; font-weight: 700; letter-spacing: .07em; text-transform: uppercase; color: var(--ink-3); padding-top: .2rem; }
-.fccl dd { margin: 0; font-size: var(--text-sm); line-height: 1.5; color: var(--ink-2); }
-.fccl__row--lesson dt { color: var(--leaf-700); }
-.fccl__row--lesson dd { color: var(--ink); font-weight: 550; }
-@media (max-width: 480px) { .fccl__row { grid-template-columns: 1fr; gap: .15rem; } }
-
-/* ============================================================ SECTION 3 == */
+/* One card per subsystem, inside the shared rail: where it started, what
+   turned it, where it stands, and the page that owns the detail.          */
 .journey { margin-top: var(--sp-6); }
 .seg--journey {
   position: sticky; top: calc(var(--nav-h) + .5rem); z-index: 6;
@@ -311,56 +285,58 @@
 .seg--journey .tico { width: 1.85rem; height: 1.85rem; filter: saturate(.7); opacity: .85; transition: filter .25s ease, opacity .25s ease, transform .25s ease; }
 .seg--journey .seg__btn[aria-selected="true"] .tico { filter: none; opacity: 1; transform: scale(1.05); }
 
-.journey__group { display: flex; align-items: center; gap: .9rem; margin: var(--sp-7) 0 var(--sp-2) !important; }
-.journey__group .tico { width: 3rem; height: 3rem; border-radius: 13px; }
-.journey__group span { display: flex; flex-direction: column; font-size: var(--text-sm); color: var(--ink-3); }
-.journey__group b { font-size: 1.625rem; font-weight: 700; letter-spacing: -.022em; line-height: 1.15; color: var(--ink); }
-
-.steps { list-style: none; margin: var(--sp-4) 0 0 !important; padding: 0 !important; }
-.step {
-  position: relative; margin: 0 !important;
-  display: grid; grid-template-columns: 2.25rem minmax(0, 1fr); column-gap: 1.1rem;
-  padding: 1.25rem 0;
+.jcard { margin-top: var(--sp-6); }
+.jcard__head {
+  display: flex; align-items: center; gap: 1rem;
+  padding-bottom: 1.1rem; border-bottom: 1px solid var(--hair);
 }
-.step::before {
-  content: ""; position: absolute; left: calc(1.125rem - 1px); top: 0; bottom: 0; width: 2px;
-  background: #e8e8ed;
+.jcard__head .tico { width: 3rem; height: 3rem; border-radius: 13px; }
+.jcard__id { display: flex; flex-direction: column; min-width: 0; }
+.jcard__id b { font-size: 1.625rem; font-weight: 700; letter-spacing: -.022em; line-height: 1.15; color: var(--ink); }
+.jcard__id span { font-size: var(--text-sm); color: var(--ink-3); }
+.jcard__link {
+  margin-left: auto; flex: none; display: inline-flex; align-items: center; gap: .45rem;
+  padding: .5rem .95rem; border-radius: 999px; background: var(--surface);
+  font-size: .8125rem; font-weight: 600; color: var(--ink-2); text-decoration: none;
+  transition: background .2s ease, color .2s ease;
 }
-.step:first-child::before { top: 2.7rem; }
-.step--last::before { bottom: auto; height: 2.7rem; }
-.step:first-child.step--last::before { display: none; }
-.step__no {
-  position: relative; z-index: 1; grid-row: 1 / span 2; justify-self: center;
-  display: grid; place-items: center; width: 2.25rem; height: 2.25rem; margin-top: .15rem;
-  border-radius: 50%; background: var(--white); box-shadow: inset 0 0 0 1.5px #d2d2d7;
-  font-size: .72rem; font-weight: 700; color: var(--ink-3); font-variant-numeric: tabular-nums;
-}
-.step--last .step__no { background: var(--leaf-700); color: var(--white); box-shadow: none; }
-.step__body { grid-column: 2; }
-.step__body p { margin: 0 0 .8rem !important; font-size: 1.0625rem; line-height: 1.62; color: var(--ink-2) !important; }
-.step__body p:last-child { margin-bottom: 0 !important; }
-.step__media { grid-column: 2; margin-top: 1rem; display: grid; gap: .6rem; grid-template-columns: repeat(2, minmax(0, 1fr)); max-width: 26rem; }
-.step__media--n1 { grid-template-columns: minmax(0, 1fr); }
-.step__media--n3 > :first-child { grid-column: 1 / -1; }
-@media (min-width: 900px) {
-  .step { grid-template-columns: 2.25rem minmax(0, 1fr) minmax(0, .62fr); column-gap: 2rem; align-items: start; }
-  .step__media { grid-column: 3; grid-row: 1; margin-top: 0; }
-  .step--text .step__body { grid-column: 2 / 4; max-width: 64ch; }
+.jcard__link span { transition: transform .2s var(--ease); }
+.jcard__link:hover { background: var(--leaf-100); color: var(--leaf-900); }
+.jcard__link:hover span { transform: translateX(2px); }
+/* on a phone the pill would squeeze the subsystem's name to nothing, so it
+   takes a line of its own under it */
+@media (max-width: 640px) {
+  .jcard__head { flex-wrap: wrap; row-gap: .9rem; }
+  .jcard__id { flex: 1 1 8rem; }
+  .jcard__id b { font-size: 1.4375rem; }
+  .jcard__link { margin-left: 0; width: 100%; justify-content: space-between; }
 }
 
-.iter { display: flex; flex-wrap: wrap; align-items: center; gap: .45rem .55rem; margin-top: 1rem !important; }
-.iter__lbl { flex-basis: 100%; font-size: .6875rem; font-weight: 700; letter-spacing: .07em; text-transform: uppercase; color: var(--ink-3); }
-.iter__from, .iter__to { padding: .4rem .8rem; border-radius: 999px; font-size: .875rem; line-height: 1.35; }
-.iter__from { background: var(--surface); color: var(--ink-3); }
-.iter__to { background: var(--leaf-100); color: var(--leaf-900); font-weight: 600; }
-.iter__arrow { color: var(--gray-400); font-size: 1rem; }
+.jcard__blocks { display: grid; gap: var(--sp-4); margin-top: var(--sp-5); }
+@media (min-width: 900px) { .jcard__blocks { grid-template-columns: repeat(3, minmax(0, 1fr)); gap: var(--sp-5); } }
+.jblk { display: flex; flex-direction: column; gap: .55rem; }
+.jblk__lbl {
+  font-size: .6875rem; font-weight: 700; letter-spacing: .07em;
+  text-transform: uppercase; color: var(--ink-3);
+}
+.jblk:last-child .jblk__lbl { color: var(--leaf-700); }
+.jblk p { margin: 0 !important; font-size: 1rem; line-height: 1.62; color: var(--ink-2) !important; }
+.jblk p b { color: var(--ink); font-weight: 650; }
 
-/* steps rise in as they reach the screen; only with JavaScript, only when
+.jcard__shots {
+  display: grid; gap: var(--sp-3); margin-top: var(--sp-5);
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+@media (min-width: 720px) { .jcard__shots { grid-template-columns: repeat(3, minmax(0, 1fr)); } }
+.jcard__shots .frame { aspect-ratio: 4 / 3; }
+.jcard__shots .frame--data { background: #fff; box-shadow: inset 0 0 0 1px var(--hair); }
+
+/* cards rise in as they reach the screen; only with JavaScript, only when
    the reader has not asked for less motion */
-html.dev-rise .step { opacity: 0; transform: translateY(18px); transition: opacity .6s ease, transform .7s var(--ease); }
-html.dev-rise .step.is-in { opacity: 1; transform: none; }
+html.dev-rise .jcard { opacity: 0; transform: translateY(14px); transition: opacity .5s ease, transform .6s var(--ease); }
+html.dev-rise .jcard.is-in { opacity: 1; transform: none; }
 
-/* ============================================================ SECTION 4 == */
+/* ============================================================ SECTION 3 == */
 /* The final system is a render on black, so its panel is black: the one
    dark surface on the page, because the picture itself is dark.          */
 .showcase {
@@ -378,8 +354,7 @@ html.dev-rise .step.is-in { opacity: 1; transform: none; }
   margin: 0; color: #f5f5f7;
   font-size: clamp(1.75rem, 1.1rem + 2vw, 3rem); font-weight: 700; letter-spacing: -.03em; line-height: 1.05;
 }
-.showcase > h3 .sec__no { color: #6e6e73; }
-.showcase > h3 .anchor { color: #6e6e73; }
+.showcase > h3 .sec__no, .showcase > h3 .anchor { color: #6e6e73; }
 .devp .sec .showcase > p { margin: 0; max-width: 46ch; font-size: 1.125rem; line-height: 1.55; color: #a1a1a6; }
 .showcase__fig { margin: 0; }
 .showcase__fig img {
@@ -387,9 +362,24 @@ html.dev-rise .step.is-in { opacity: 1; transform: none; }
   -webkit-mask-image: linear-gradient(to bottom, #000 94%, transparent); mask-image: linear-gradient(to bottom, #000 94%, transparent);
 }
 
-.stagetabs--status .seg__btn { padding-bottom: .65rem; }
+/* the open ends, under What counts as success */
+.gaps {
+  list-style: none; margin: var(--sp-5) 0 0 !important; padding: 0 !important;
+  display: grid; gap: var(--sp-3); grid-template-columns: minmax(0, 1fr);
+}
+@media (min-width: 900px) {
+  .gaps { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  /* an odd last item runs the width rather than leaving a hole beside it */
+  .gaps li:last-child:nth-child(odd) { grid-column: 1 / -1; }
+}
+.gaps li {
+  margin: 0 !important; padding: 1rem 1.2rem 1.1rem;
+  border-radius: var(--r-md); background: var(--surface);
+  font-size: var(--text-sm); line-height: 1.6; color: var(--ink-2);
+}
+.gaps li b { display: block; margin-bottom: .2rem; color: var(--ink); font-weight: 650; }
 
-/* Section 4 reads across the whole row. Only the black showcase panel, which
+/* Section 3 reads across the whole row. Only the black showcase panel, which
    is a designed box, keeps a measured column.                            */
 .devp .pagebody #releaf-validation > p { max-width: none; }
 .devp .pagebody .sec > p.closing {
@@ -401,17 +391,9 @@ html.dev-rise .step.is-in { opacity: 1; transform: none; }
 .teamshot img { display: block; width: 100%; height: auto; border-radius: var(--r-xl); }
 
 @media (prefers-reduced-motion: reduce) {
-  .devp .frame img, .devp .seg__disc, .devp .tico { transition: none !important; }
+  .devp .frame img, .devp .seg__disc, .devp .tico, .jcard__link span { transition: none !important; }
 }
 @media print {
   .devp .rail__panel[hidden] { display: block !important; }
   .devp .showcase { background: none; color: inherit; }
 }
-
-/* a single record, plate or chart in a step keeps its own shape: a wide
-   record card in a 4:3 box would sit small in a sea of grey */
-.step__media--n1 .frame--data { aspect-ratio: auto; }
-.step__media--n1 .frame--data img { height: auto; max-height: 34rem; object-fit: contain; }
-
-/* the open stage sits on the control's filled pill, so its count reads in white */
-.devp .seg__btn[aria-selected="true"] .seg__sub { color: rgb(255 255 255 / .82); }
