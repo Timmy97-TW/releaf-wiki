@@ -341,7 +341,9 @@
     const holder = document.createDocumentFragment();
 
     SECTIONS.forEach((sec) => {
-      const s = el("section", "section");
+      /* `across` also widens the section to the key box's own width, so its
+         row of cards lines up with that box edge to edge. */
+      const s = el("section", "section" + (sec.across ? " section--wide" : ""));
       const rec = { node: s, link: null, count: null, people: [], grids: [], seats: null };
 
       const h = el("h2", "section__title", sec.title);
@@ -480,11 +482,9 @@
       return item;
     };
     tasks.appendChild(task(true, "Task owner",
-      "keeps the task moving, beyond doing it well: the whole team and the " +
-      "instructors turn to this person when the task comes up, and the project " +
-      "relies on them to get it done."));
+      "Main contributor to the task, showed ownership beyond helping."));
     tasks.appendChild(task(false, "Task member",
-      "contributed to this task, and made a difference to it."));
+      "Contributed to helping."));
     if (SHOW_TASKS) wrap.appendChild(tasks);
 
     /* Every task on the board, in its own colour. The two pills above explain

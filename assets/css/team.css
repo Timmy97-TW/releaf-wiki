@@ -43,6 +43,9 @@
   --card-bg:    #f4f4f2;       /* card body, a shade lighter than Marburg's gray-200 */
   --nav-h:      68px;          /* matches --nv-h in nav.css */
   --max:        1280px;        /* max-w-7xl */
+  --wide:       1400px;        /* the key box and the Project Leads row, which
+                                  run wider so the owner and member keys sit
+                                  on one line beside each other */
   --radius:     0.5rem;        /* rounded-lg */
   --shadow-md:  0 4px 6px -1px rgb(0 0 0 / .1), 0 2px 4px -2px rgb(0 0 0 / .1);
   --shadow-lg:  0 10px 15px -3px rgb(0 0 0 / .1), 0 4px 6px -4px rgb(0 0 0 / .1);
@@ -178,7 +181,7 @@ img { display: block; max-width: 100%; }
 
 /* ---- owner / member key ------------------------------------------------- */
 .legend {
-  max-width: var(--max);
+  max-width: var(--wide);
   width: calc(100% - 4rem);
   margin: 2.5rem auto 0;
   padding: 1.35rem 1.5rem 1.15rem;
@@ -268,7 +271,10 @@ img { display: block; max-width: 100%; }
 }
 .legend__task .tag { align-self: center; }
 .legend__term { color: var(--black); font-weight: 700; white-space: nowrap; }
-.legend__task .legend__def { flex: 1 1 14rem; }
+/* The definition keeps its place beside the term wherever it can: a 9rem
+   basis is short enough that the member key, in the narrower of the two
+   columns, stays on one line instead of dropping under its own pill. */
+.legend__task .legend__def { flex: 1 1 9rem; }
 
 /* every task on the board, on its own hairline under the two key pills */
 .legend__all {
@@ -427,15 +433,17 @@ main { padding-bottom: 5rem; }
   .grid--row .card__role, .grid--row .card__track { white-space: normal; }
 }
 @media (min-width: 1200px) { .grid--row { gap: 1.1rem; } }
-/* The row ends where the legend box above it ends. Both stop at --max, but a
-   section reaches that cap and then takes its 2rem padding out of it, while
-   the legend takes 2rem out of the window first. From 1344px up, where the
-   legend sits at the cap too, the difference is exactly that padding and the
-   row takes it back. Below the cap the two agree, bar the 64px of window just
-   under it, where the row stays the narrower of the two.                    */
-@media (min-width: 1344px) {
-  .grid--row { width: calc(100% + 4rem); margin-inline: -2rem; }
+/* A section with `across` is measured the way the key box above it is, rather
+   than the way a section is: the same cap, the same 2rem off the window, and
+   no padding of its own. So the title, the note and the row of five start and
+   end exactly where that box does, at every width, with no arithmetic to go
+   out of step.                                                              */
+.section--wide {
+  max-width: var(--wide);
+  width: calc(100% - 4rem);
+  padding: 0;
 }
+@media (max-width: 639px) { .section--wide { width: calc(100% - 2rem); } }
 
 /* named, not carded: the quiet line under a grid */
 .section__after {
