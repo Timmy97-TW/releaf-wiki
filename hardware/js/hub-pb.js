@@ -44,9 +44,14 @@
 
   const INST = {
     lpa:         { n: "01", label: "LPA", role: "LED array", stat: "24", statL: "cultures at once", c: "#3ddc8b" },
-    bioreactor:  { n: "02", label: "Bioreactor", role: "Perfusion", stat: "300", statL: "mL working volume", c: "#5aa9ff" },
-    photometer:  { n: "03", label: "Photometer", role: "In-line OD600", stat: "0.2", statL: "mm light path", c: "#ffa23d", loop: true },
-    hydroponics: { n: "04", label: "Hydroponics", role: "Growth plate", stat: "13", statL: "seed positions", c: "#b18cff" },
+    // 20 Oct 2026: these four lines are a second copy of the card claims in
+    // index.html, and two of them had drifted off the records -- the bench pin
+    // read "300 mL working volume" against the bioreactor's 1 L bottle, and
+    // "0.2 mm light path" against the photometer's 2 mm path length, a factor
+    // of ten. Each stat now reads as its own record's summary states it.
+    bioreactor:  { n: "02", label: "Bioreactor", role: "Perfusion", stat: "1", statL: "L culture bottle", c: "#5aa9ff" },
+    photometer:  { n: "03", label: "Photometer", role: "In-line OD600", stat: "2", statL: "mm path length", c: "#ffa23d", loop: true },
+    hydroponics: { n: "04", label: "Hydroponics", role: "Growth plate", stat: "13", statL: "seedlings", c: "#b18cff" },
   };
   const SLOT = { bioreactor: 0, photometer: 1, lpa: 2, hydroponics: 3 };   // uH = (bioreactor, photometer, lpa, plate)
   const HIT = [null, "bioreactor", "photometer", "lpa", "hydroponics"];

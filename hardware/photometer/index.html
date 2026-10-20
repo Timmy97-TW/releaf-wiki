@@ -130,22 +130,23 @@
       <p class="hwsum__lead">The photometer reads OD600 from the flowing culture
         without ever drawing a sample.</p>
       <p class="hwsum__body">A 600&nbsp;nm LED shines through a 2&nbsp;mm flow
-        cuvette in the bioreactor&rsquo;s culture loop. A nominal 90:10
-        splitter sends a tenth of the beam to a reference sensor before the sample,
-        and OD600 comes from the ratio of the two sensors, so each reading is
-        normalized against the LED&rsquo;s own output. <strong>It logged in line for
+        cuvette in the bioreactor&rsquo;s culture loop, with a nominal 90:10
+        splitter feeding a reference sensor before the sample,
+        so OD600 comes from the ratio of the two and is normalized
+        against the LED&rsquo;s own output. <strong>It logged in line for
         434&nbsp;hours with nothing withdrawn from the culture; the first ~240&nbsp;hours
         are clean, and after that its reference channel failed (5.1).</strong></p>
       <p class="hwsum__body">Against the BioDrop, its raw output agreed to a median
         3.8% on TiO<sub>2</sub> with no correction applied; on silica it reads about
         0.12&nbsp;OD low (5.2.3). Its parts come to US$371.78, against about
-        US$15,000 for the BioDrop; the materials list (11.1) itemizes each part.</p>
+        US$15,000 for the BioDrop (11.1). Three classmates outside the team built the
+        Slim from its guide, and the three places they got stuck changed it (6.2).</p>
       <div class="hwsum__spec">
         <dl>
           <div><dt>Wavelength</dt><dd>600<span>nm</span></dd></div>
           <div><dt>Path length</dt><dd>2<span>mm</span></dd></div>
           <div><dt>In&#8209;line run, logged</dt><dd>434<span>h</span></dd></div>
-          <div><dt>Points logged</dt><dd>2,132</dd></div>
+          <div><dt>Points logged</dt><dd>2,132 <span>in 336&nbsp;h</span></dd></div>
         </dl>
       </div>
     </div>
@@ -155,6 +156,9 @@
         <li><a href="#fig-run">
           <span class="hw-ledger__name">The long in-line run</span>
           <span class="hw-ledger__text">434&nbsp;h logged on <i>B.&nbsp;subtilis</i>&nbsp;168, no sample withdrawn; the first ~240&nbsp;h are clean, then the reference channel failed</span></a></li>
+        <li><a href="#handover">
+          <span class="hw-ledger__name">Three outside builders</span>
+          <span class="hw-ledger__text">Three classmates built the Slim from its assembly guide on 15 and 16&nbsp;October, one of them in about two hours; their builds changed the guide in three places</span></a></li>
         <li><a href="#fig-dash">
           <span class="hw-ledger__name">Bubble and outlier filter</span>
           <span class="hw-ledger__text">14-reading bursts cut at median &plusmn; 3&middot;MAD; on day&nbsp;10, 28.6% of the latest burst rejected, under the 50% alarm</span></a></li>
@@ -181,7 +185,7 @@
     <li><a href="#overview"><b>01</b> Overview</a></li>
     <li><a href="#part-growth"><b>02</b> Bacterial Growth</a></li>
     <li><a href="#pro-cycles"><b>03</b> Engineering the Pro Photometer</a></li>
-    <li><a href="#slim"><b>04</b> Simplified Photometer (Slim)</a></li>
+    <li><a href="#slim"><b>04</b> Engineering the Slim Photometer</a></li>
     <li><a href="#results"><b>05</b> Results</a></li>
     <li><a href="#feedback"><b>06</b> Adjusting to Feedback</a></li>
     <li><a href="#final"><b>07</b> Final Designs &amp; Specifications</a></li>
@@ -190,6 +194,13 @@
     <li><a href="#future"><b>10</b> Future Use</a></li>
     <li><a href="#reproduction"><b>11</b> Reproduction</a></li>
   </ol>
+  <div class="doc-nav-label doc-nav-label--ans">Four answers</div>
+  <ul class="doc-nav-ans">
+    <li><a href="#overview" data-ans="need">What it is for</a></li>
+    <li><a href="#feedback" data-ans="users">What users changed</a></li>
+    <li><a href="#results" data-ans="proof">What it did</a></li>
+    <li><a href="#reproduction" data-ans="build">How to build one</a></li>
+  </ul>
 </aside>
 
 <article class="doc">
@@ -233,18 +244,18 @@
   <section class="sec pm-overview">
     <p class="pm-lede">In&#8209;Line Flow&#8209;Cell Photometer</p>
     <p class="pm-sublede">A subsystem of the ReLEAF bioreactor.</p>
-    <p>The In&#8209;Line Flow&#8209;Cell Photometer is the optical&#8209;density monitoring subsystem of the bioreactor. It reads the lumen loop of the hollow&#8209;fiber membrane continuously, so the culture&rsquo;s density is known without opening the loop or withdrawing a sample. A 600&nbsp;nm LED shines through a 2&nbsp;mm flow cuvette; a nominal 90:10 beam splitter sends a tenth of the beam to a reference sensor before the sample, and OD600 comes from the ratio of the two sensors, so each reading is normalized against the LED&rsquo;s own output.</p>
+    <p>The In&#8209;Line Flow&#8209;Cell Photometer is the bioreactor&rsquo;s optical&#8209;density monitoring subsystem. It reads the lumen loop of the hollow&#8209;fiber membrane continuously, so the culture&rsquo;s density is known without opening the loop or withdrawing a sample. A 600&nbsp;nm LED shines through a 2&nbsp;mm flow cuvette, a nominal 90:10 beam splitter feeds a reference sensor before the sample, and OD600 comes from the ratio (<a href="#pro-optics">7.2.2</a>).</p>
     <!-- 18 Oct 2026: edit doc v3, p. 45 (new in v3): why the density has to be read in line, and the three design
          choices that keep long runs honest. The doc's "plano-convex lens" is the page's paralleling lens. -->
-    <p>In&#8209;line reading matters because <i>B.&nbsp;subtilis</i> grows at ambient temperature, and a bioreactor on a farm cannot hold its temperature precisely. The culture&rsquo;s density in real time is how we judge the reactor&rsquo;s yield and when to harvest. Manual sampling cannot do this: each sample opens the loop, risks contamination and gives one point hours apart.</p>
-    <p>Development began with the characteristics of <i>Bacillus subtilis</i> and its growth curve in the bioreactor, since the instrument has to resolve that curve.</p>
+    <p>In&#8209;line reading matters because <i>B.&nbsp;subtilis</i> grows at ambient temperature and a bioreactor on a farm cannot hold its temperature precisely. Density in real time is how we judge the reactor&rsquo;s yield and when to harvest. Manual sampling cannot do that: each sample opens the loop, risks contamination and gives one point hours apart.</p>
+    <p>Development began with <i>Bacillus subtilis</i> and its growth curve in the bioreactor, since the instrument has to resolve that curve.</p>
     <!-- 19 Oct 2026, the owner: every run on this page is strain 168, and the project did not stay on it. The
          bioreactor moved to WB800 from its second integrated run (8-10 Oct); see bioreactor 2.2 and 4.2. -->
     <p>
       Every run on this page used <strong><i>B.&nbsp;subtilis</i>&nbsp;168</strong>: the growth cycles of part&nbsp;2,
-      the photometer cycles of part&nbsp;3 and the 434&#8209;hour run of <a href="#cyc4">5.1</a>. The project did not
-      stay on that strain. From the bioreactor&rsquo;s second integrated run, in October, the chassis is the
-      protease&#8209;deficient <strong><i>B.&nbsp;subtilis</i>&nbsp;WB800</strong>, which the photometer reads in the same way
+      the photometer cycles of part&nbsp;3 and the 434&#8209;hour run of <a href="#cyc4">5.1</a>. From the bioreactor&rsquo;s
+      second integrated run, in October, the chassis is the
+      protease&#8209;deficient <strong><i>B.&nbsp;subtilis</i>&nbsp;WB800</strong>, read in the same way
       (<a href="../bioreactor/index.html#sec22">bioreactor, 2.2</a>).
     </p>
   </section>
@@ -302,7 +313,7 @@
           </ol>
         </div>
       </div>
-      <p class="xp-note">Growing the culture (part&nbsp;2) and reading it in line (3.1&ndash;3.4) are two tracks that meet
+      <p class="xp-note">Growing the culture (part&nbsp;2) and reading it in line (3.1&ndash;3.4) meet
         in the long run at 22&nbsp;&deg;C, the first of the Results (5.1). Each ring marks a cycle&rsquo;s design, build, test and learn.</p>
     </nav>
   </section>
@@ -337,17 +348,17 @@
     <h4 class="dbtl-h d" id="bg1-d">Design</h4>
     <!-- 18 Oct 2026: edit doc v3, p. 47 (new in v3): the chassis rationale, the membrane's surface area, the 1:15
          inoculum, the sealed shell side, BioDrop sampling and the flask control. -->
-    <p>We chose <i>B.&nbsp;subtilis</i> as the chassis because it is practical to clone, grows at ambient temperature and secretes proteins into its medium, so the protectant can be collected without lysing cells. <i>B.&nbsp;subtilis</i>&nbsp;168 also has compromised motility and weak biofilm formation, which suits a contained loop.</p>
+    <p><i>B.&nbsp;subtilis</i> is practical to clone and secretes proteins into its medium, so the protectant can be collected without lysing cells. <i>B.&nbsp;subtilis</i>&nbsp;168 also has compromised motility and weak biofilm formation, which suits a contained loop.</p>
     <div class="dbtl-split">
       <div class="dbtl-split__text">
-        <p>The objective of this cycle was a <strong>functional continuous&#8209;flow system</strong> using a PES hollow&#8209;fiber membrane, to confirm that the loop circulates and that the culture grows in it before any optical hardware was added.</p>
+        <p>This cycle aimed at a <strong>functional continuous&#8209;flow system</strong> using a PES hollow&#8209;fiber membrane, to confirm that the loop circulates and the culture grows in it before any optics were added.</p>
         <p>
-          Within this first cycle, we used a PES hollow&#8209;fiber protein membrane (lumen volume ~200&nbsp;mL, surface
-          area about 1.3&nbsp;m&sup2;) connected to a 500&nbsp;mL LB medium reservoir containing 300&nbsp;mL of LB medium,
-          inoculated with 20&nbsp;mL (1:15) of a multi&#8209;overnight <i>B.&nbsp;subtilis</i> liquid culture. The shell side
-          was closed by a silicone tube joining its two outlets. For each OD600 reading, broth was drawn by syringe from
-          the sampling Luer valve and measured on a BioDrop spectrophotometer. As a control, an identical culture of the
-          same volume grew in a 500&nbsp;mL conical flask at <b>37&nbsp;&deg;C and 200&nbsp;rpm</b>.
+          A PES hollow&#8209;fiber protein membrane (lumen volume ~200&nbsp;mL, surface
+          area about 1.3&nbsp;m&sup2;) fed a 500&nbsp;mL LB medium reservoir holding 300&nbsp;mL of LB,
+          inoculated with 20&nbsp;mL (1:15) of a multi&#8209;overnight <i>B.&nbsp;subtilis</i> liquid culture. A silicone
+          tube joining its two outlets closed the shell side. Each OD600 reading was drawn by syringe from
+          the sampling Luer valve and measured on a BioDrop spectrophotometer. The control was an identical culture of the
+          same volume in a 500&nbsp;mL conical flask at <b>37&nbsp;&deg;C and 200&nbsp;rpm</b>.
         </p>
       </div>
       <figure class="frame square contain" id="fig-c1-sketch">
@@ -359,7 +370,7 @@
     <h4 class="dbtl-h b" id="bg1-b">Build</h4>
     <div class="dbtl-split">
       <div class="dbtl-split__text">
-        <p>After the leak in the first run (prototype I&#8209;0606, below), we moved to a <strong>pump with more durable tubing</strong>. This single change keeps the comparison with the previous run interpretable.</p>
+        <p>After the leak in the first run (prototype I&#8209;0606, below), we moved to a <strong>pump with more durable tubing</strong>, the only change, which keeps the comparison with the previous run interpretable.</p>
       </div>
       <figure class="frame land" id="fig-c1-setup">
         <div class="frame-img"><img src="photos/c1-prototype-setup.webp" alt="Prototype I-0610 on an incubator shelf: the peristaltic pump, the tubing to the membrane and the reservoir bottle of medium" width="630" height="370" loading="lazy" decoding="async"></div>
@@ -378,23 +389,22 @@
           (<a href="../bioreactor/index.html#sec61">bioreactor page, part 8</a>).</figcaption>
       </figure>
     </div>
-    <p>With the new pump the test ran <b>27 hours</b> before that pump also failed: its tubing could not withstand driving the flow through the hollow&#8209;fiber membrane for that long. The bioreactor culture barely grew at 22&nbsp;&deg;C while the flask control, shaken at 37&nbsp;&deg;C, climbed to an OD600 close to <b>2.5</b>; the medium reservoir never rose above <b>0.5</b>. The low readings from the bioreactor were therefore not an artifact of the failing pump.</p>
+    <p>With the new pump the test ran <b>27 hours</b> before that pump also failed: its tubing could not withstand the flow through the hollow&#8209;fiber membrane for that long. The bioreactor culture barely grew at 22&nbsp;&deg;C while the flask control, shaken at 37&nbsp;&deg;C, climbed to an OD600 close to <b>2.5</b>; the medium reservoir never rose above <b>0.5</b>. The low readings were not an artifact of the failing pump.</p>
     <link rel="stylesheet" href="css/xp-charts.css?v=69a6a42a">
     <figure class="chart-fig" id="fig-growth-c1">
       <div class="bc" data-chart="growth-c1"><img src="photos/c1-growth-chart.webp" alt="Line chart of OD600 against time in hours: the flask control rises to about 2.5 by 25 hours while the bioreactor rises only from about 0.17 to 0.3 to 0.37" width="914" height="408" loading="lazy" decoding="async"></div>
       <!-- 18 Oct 2026, conflict: the caption said "at 22 °C" for both; edit doc v3 (p. 47) puts the flask control at
            37 °C, 200 rpm. The newer doc wins. -->
       <figcaption><b>The bioreactor at 22&nbsp;&deg;C against a laboratory flask.</b> OD600 growth curves of the
-        medium in the bioreactor and in a standard laboratory flask, the control, shaken at 37&nbsp;&deg;C and
+        medium in the bioreactor and in the flask control, shaken at 37&nbsp;&deg;C and
         200&nbsp;rpm (prototypes I&#8209;0606 and I&#8209;0610).</figcaption>
     </figure>
 
     <h4 class="dbtl-h l" id="bg1-l">Learn</h4>
-    <p>The gap between the tube&rsquo;s and the reservoir&rsquo;s final OD600 (0.304 against 0.48) suggests that, without mixing, in&#8209;line sampling <strong>underestimated the culture</strong>. We attribute the gap and the low growth to the <strong>lack of active mixing</strong>, which allows nutrient stratification and cell sedimentation in the reservoir. The leakage pointed to <strong>biocompatible (BPT) tubing</strong> for durability and a more stable seal at the pump.</p>
+    <p>The gap between the tube&rsquo;s and the reservoir&rsquo;s final OD600 (0.304 against 0.48) suggests that, without mixing, in&#8209;line sampling <strong>underestimated the culture</strong>. We attribute the gap and the low growth to the <strong>lack of active mixing</strong>, which allows nutrient stratification and cell sedimentation. The leakage pointed to <strong>biocompatible (BPT) tubing</strong>.</p>
     <p>
-      Through these tests we were able to catch a problem with the culturing of our <i>B.&nbsp;subtilis</i>&nbsp;168
-      strain early, which told us that homogeneity and stirring are imperative before the long BPT run.
-    </p>
+      These tests caught a culturing problem with <i>B.&nbsp;subtilis</i>&nbsp;168 early: homogeneity and stirring
+      had to be settled before the long BPT run.</p>
   </section>
   </div>
 
@@ -425,11 +435,9 @@
     <div class="dbtl-split">
       <div class="dbtl-split__text">
         <p>
-          Improving on the previous design, a <b>200&nbsp;rpm</b> magnetic stirrer was added to the medium reservoir to
-          prevent sedimentation and ensure a homogeneous nutrient distribution, so that our bacteria consume nutrients more
-          evenly. In addition, the sampling sector was placed closer to the medium reservoir to acquire a more accurate
-          measurement: the reservoir holds much more of the volume than the hollow&#8209;fiber membrane, which gives us a
-          more averaged prediction of the total OD of the entire bioreactor module
+          A <b>200&nbsp;rpm</b> magnetic stirrer was added to the medium reservoir against sedimentation. The sampling
+          sector was also moved closer to the reservoir, which holds much more of the volume than the
+          hollow&#8209;fiber membrane, so a sample drawn there is closer to the whole module&rsquo;s OD
           (<a href="#fig-c2-sketch">the illustration</a>).
         </p>
       </div>
@@ -440,7 +448,7 @@
     </div>
     <div class="dbtl-split">
       <div class="dbtl-split__text">
-        <p>To keep sampling from contaminating the loop, we built an <strong>aseptic sampling port</strong> from a three&#8209;way Luer valve, a one&#8209;way check valve and a 0.22&nbsp;&micro;m hydrophobic PTFE membrane filter (<a href="#fig-c2-sampler">drawing</a>). A sterile syringe draws broth through the check valve, which prevents backflow. After each sample, an empty syringe pushes sterile air through the 0.22&nbsp;&micro;m filter to clear the sampling line.</p>
+        <p>To keep sampling from contaminating the loop, we built an <strong>aseptic sampling port</strong> from a three&#8209;way Luer valve, a one&#8209;way check valve and a 0.22&nbsp;&micro;m hydrophobic PTFE membrane filter (<a href="#fig-c2-sampler">drawing</a>). A sterile syringe draws broth through the check valve; after each sample an empty syringe pushes sterile air through the filter to clear the line.</p>
       </div>
       <figure class="frame land contain" id="fig-c2-sampler">
         <div class="frame-img"><img src="photos/c2-sampler-diagram.webp" alt="Drawing of the sampler: a sampling syringe draws broth through a one-way valve from a three-way Luer valve on the loop, and an air syringe above pushes air through a 0.22 micrometre PTFE hydrophobic filter into the same valve" width="900" height="673" loading="lazy" decoding="async"></div>
@@ -452,7 +460,7 @@
     <h4 class="dbtl-h b" id="bg2-b">Build</h4>
     <div class="dbtl-split">
       <div class="dbtl-split__text">
-        <p>This cycle changed more than the pump. A stir bar was added to the medium reservoir flask on a magnetic stir plate, for homogeneity between the sampling region and the reservoir&rsquo;s inlets and outlets, and the sampling point was moved closer to the mixed volume, which gave more consistent readings. The whole loop was placed in an incubator at <b>37&nbsp;&deg;C</b>.</p>
+        <p>A stir bar was added to the medium reservoir flask on a magnetic stir plate, and the sampling point moved closer to the mixed volume, which gave more consistent readings. The whole loop was placed in an incubator at <b>37&nbsp;&deg;C</b>.</p>
       </div>
       <figure class="frame land" id="fig-c2-build">
         <div class="frame-img"><img src="photos/g3-incubator.webp" alt="Prototype II-0614 inside an incubator: the blue-capped reservoir bottle of yellow culture on a magnetic stir plate, the peristaltic pump beside it, and a syringe hanging from the sampling valve" width="800" height="622" loading="lazy" decoding="async"></div>
@@ -462,7 +470,7 @@
     </div>
 
     <h4 class="dbtl-h t" id="bg2-t">Test</h4>
-    <p>The peristaltic pump held 94&nbsp;mL/min for the whole test. The bioreactor and the flask control ran at 37&nbsp;&deg;C rather than room temperature, and both reached a full growth curve.</p>
+    <p>The peristaltic pump held 94&nbsp;mL/min for the whole test. At 37&nbsp;&deg;C instead of room temperature, the bioreactor and the flask control both reached a full growth curve.</p>
     <div class="headline-stats">
       <div><b>0.8&ndash;0.9</b><span>Bioreactor plateau, OD600</span></div>
       <div><b>2<em>h</em></b><span>Bioreactor, time to plateau</span></div>
@@ -472,11 +480,11 @@
     <figure class="chart-fig" id="fig-growth">
       <div class="bc" data-chart="growth-c2"><img src="photos/c2-growth-chart.webp" alt="Line chart of OD600 against time in minutes: the bioreactor rises to about 0.9 by 200 minutes, the flask to about 0.8 by about 280 minutes" width="855" height="452" loading="lazy" decoding="async"></div>
       <figcaption><b>The bioreactor against a laboratory flask, at 37&nbsp;&deg;C.</b> OD600 growth curves of the
-        medium in the bioreactor and in a standard laboratory flask (prototype II&#8209;0614).</figcaption>
+        medium in the bioreactor and in the flask (prototype II&#8209;0614).</figcaption>
     </figure>
 
     <h4 class="dbtl-h l" id="bg2-l">Learn</h4>
-    <p>Stirring at 37&nbsp;&deg;C gave a full growth curve. The run does not isolate stirring: the stirrer, the temperature (22 to 37&nbsp;&deg;C) and the sampler&rsquo;s position all changed between DBTL&nbsp;1 and this cycle. We kept the stirrer, since it addresses the sedimentation DBTL&nbsp;1 pointed to. The next cycle evaluates growth kinetics at <b>22&nbsp;&deg;C</b>, and higher&#8209;durability BPT tubing is still needed to prevent the tube degradation seen in earlier trials.</p>
+    <p>Stirring at 37&nbsp;&deg;C gave a full growth curve. The run does not isolate stirring: the stirrer, the temperature (22 to 37&nbsp;&deg;C) and the sampler&rsquo;s position all changed between DBTL&nbsp;1 and this cycle. We kept the stirrer, since it addresses the sedimentation DBTL&nbsp;1 pointed to. The next cycle evaluates growth kinetics at <b>22&nbsp;&deg;C</b>; BPT tubing is still needed against the degradation seen earlier.</p>
   </section>
   </div>
 
@@ -517,7 +525,7 @@
       </div>
     </div>
     <ol class="dbtl-steps" aria-label="Cycle 1, stage by stage">
-      <li class="d"><a href="#bench-d"><b>D</b><span><em>Design</em>Optics held in helping hands</span></a></li>
+      <li class="d"><a href="#bench-d"><b>D</b><span><em>Design</em>Optics in soldering clamps</span></a></li>
       <li class="b"><a href="#bench-b"><b>B</b><span><em>Build</em>All fixed but the lens</span></a></li>
       <li class="t"><a href="#bench-t"><b>T</b><span><em>Test</em>Lens moved until both sensors lit</span></a></li>
       <li class="l"><a href="#bench-l"><b>L</b><span><em>Learn</em>Three spacings for every build</span></a></li>
@@ -526,27 +534,26 @@
   <section class="sec cyc__body pm-cycle">
 
     <h4 class="dbtl-h d" id="bench-d">Design</h4>
-    <p>Before anything was printed we had to establish <strong>where each optical component belongs</strong>. The components were held on the bench in magnetic soldering clamps, which allow each one to be moved along the optical axis and locked in place.</p>
+    <p>Before anything was printed we had to establish <strong>where each optical component belongs</strong>. The components were held on the bench in magnetic soldering clamps, each movable along the optical axis and lockable.</p>
 
     <h4 class="dbtl-h b" id="bench-b">Build</h4>
     <div class="dbtl-split">
       <div class="dbtl-split__text">
-        <p>We fixed the LED, slit, beam splitter and both lux sensors relative to each other and left only the paralleling lens free to move, so that <strong>lens position was the only variable</strong>.</p>
+        <p>We fixed the LED, slit, beam splitter and both lux sensors relative to each other and left only the paralleling lens free to move, so lens position was <strong>the only variable</strong>.</p>
       </div>
       <figure class="frame land" id="fig-bench">
         <div class="frame-img"><img src="photos/pm1-bench-light-path.webp" alt="Bench layout: helping hands holding the optics, a sensor holder, lens mounts and a caliper on a mat" width="1100" height="825" loading="lazy" decoding="async"></div>
-        <figcaption><b>The light path on the bench.</b> The optics held in helping hands, with the lens mounts and a caliper for the spacings.</figcaption>
+        <figcaption><b>The light path on the bench.</b> The optics in their magnetic soldering clamps, with the lens mounts and a caliper for the spacings.</figcaption>
       </figure>
     </div>
 
     <h4 class="dbtl-h t" id="bench-t">Test</h4>
-    <p>With the other components fixed, we moved the paralleling lens along the axis until the beam <strong>illuminated both sensors steadily</strong>, and recorded that position.</p>
+    <p>We moved the paralleling lens along the axis until the beam <strong>illuminated both sensors steadily</strong>, and recorded that position.</p>
 
     <h4 class="dbtl-h l" id="bench-l">Learn</h4>
     <p>
-      We measured three spacings: the tip of the LED to the paralleling lens, the lens to the center of the beam
-      splitter, and the center of the beam splitter to each sensor. The measured spacings became the fixed geometry
-      for every build after this one.
+      We measured three spacings: LED tip to paralleling lens, lens to beam&#8209;splitter center, and
+      beam&#8209;splitter center to each sensor. These became the fixed geometry for every later build.
     </p>
     <div class="specgrid">
       <div><h4>LED tip to lens</h4><p><b>5.5&nbsp;cm</b></p></div>
@@ -577,13 +584,12 @@
   <section class="sec cyc__body pm-cycle">
 
     <h4 class="dbtl-h d" id="cyc1-d">Design</h4>
-    <p>V1 turns the bench layout into a self&#8209;contained instrument that sits in the loop. Two decisions shaped it: the light path stays <strong>flat and horizontal</strong>, and each component sits on an independently adjustable mount so the bench distances can be reproduced and corrected.</p>
+    <p>V1 turns the bench layout into a self&#8209;contained instrument in the loop. The light path stays <strong>flat and horizontal</strong>, and each component sits on an independently adjustable mount, so the bench distances can be reproduced and corrected.</p>
 
     <h4 class="dbtl-h b" id="cyc1-b">Build</h4>
     <p>
-      The whole optical train mounts on a single printed rail. Each component sits on the rail and slides along it, set
-      by hand against the distances from cycle&nbsp;1. The flow cuvette is plumbed into the recirculating loop with
-      tubing at both ends, so the instrument reads the culture as it passes through.
+      The whole optical train mounts on a single printed rail, each component sliding along it and set by hand against
+      the distances from cycle&nbsp;1. The flow cuvette is plumbed into the recirculating loop at both ends.
     </p>
     <figure class="frame pm-strip pm-strip--v1" id="fig-p1">
       <div class="pm-strip__row">
@@ -596,15 +602,15 @@
 
     <h4 class="dbtl-h t" id="cyc1-t">Test</h4>
     <p>
-      The data fluctuated far too drastically, because of bubbling within the flow cuvette as well as the loose
+      The data fluctuated drastically, from bubbling within the flow cuvette and the loose
       tolerances of the lens and beam&#8209;splitter mounts.
     </p>
 
     <h4 class="dbtl-h l" id="cyc1-l">Learn</h4>
-    <p>Bubbles in the flow cuvette sat directly in the beam. With a horizontal path a bubble has no route out: it stays in the light until the flow happens to dislodge it.</p>
-    <p>The adjustable mounts were also too loose. The lens and beam splitter could drift between runs, so the geometry measured in cycle&nbsp;1 was not held.</p>
+    <p>Bubbles in the flow cuvette sat directly in the beam. With a horizontal path a bubble has no route out: it stays in the light until the flow dislodges it.</p>
+    <p>The adjustable mounts were also too loose: the lens and beam splitter could drift between runs, so the geometry measured in cycle&nbsp;1 was not held.</p>
     <p>
-      Both point the same direction. Stand the light path up so bubbles rise out of it, and tighten the component
+      Both point the same way: stand the light path up so bubbles rise out of it, and tighten the component
       tolerances.
     </p>
   </section>
@@ -631,14 +637,14 @@
   <section class="sec cyc__body pm-cycle">
 
     <h4 class="dbtl-h d" id="cyc2-d">Design</h4>
-    <p>V2 stands the light path up. The LED fires upward through the flow cuvette, so a bubble rises along the beam axis and leaves the light instead of settling in it.</p>
+    <p>V2 stands the light path up. The LED fires upward through the flow cuvette, so a bubble rises along the beam axis and out of the light.</p>
 
     <h4 class="dbtl-h b" id="cyc2-b">Build</h4>
     <div class="dbtl-split dbtl-split--narrow">
       <div class="dbtl-split__text">
         <p>
-          A wide square base plate was printed with a mounting adapter for the rail, so the assembly stands rigidly on the
-          bench with the optical axis vertical. The component seats were tightened so the lens and splitter hold their
+          A wide square base plate was printed with a mounting adapter for the rail, so the assembly stands rigidly with
+          the optical axis vertical. The component seats were tightened so the lens and splitter hold their
           measured positions.
         </p>
       </div>
@@ -649,7 +655,7 @@
     </div>
 
     <h4 class="dbtl-h t" id="cyc2-t">Test</h4>
-    <p>Two samples were run through V2 and compared against the BioDrop. The instrument was <strong>zeroed on the growth medium</strong>, so medium reads 0 by definition.</p>
+    <p>Two samples were run through V2 against the BioDrop. The instrument was <strong>zeroed on the growth medium</strong>, so medium reads 0 by definition.</p>
     <div class="tablewrap">
       <table class="spec pm-readings">
         <caption>V2 readings. Blank: medium.</caption>
@@ -661,19 +667,16 @@
       </table>
     </div>
     <p class="eq-key">
-      The firmware of the time divided the absorbance, 0.125, by the cuvette path entered in meters (0.002&nbsp;m), so it
-      logged 62.5. On the standard 1&nbsp;cm path the firmware uses now (<a href="#od-calc">8.2</a>), the same reading
-      is 0.62, against the BioDrop&rsquo;s 0.75 for the same sample (<a href="../notebook/index.html#w18-19">notebook, week&nbsp;18</a>).
+      The firmware of the time divided the absorbance, 0.125, by the cuvette path in meters (0.002&nbsp;m), logging
+      62.5. On the standard 1&nbsp;cm path the firmware uses now (<a href="#od-calc">8.2</a>) the same reading
+      is 0.62, against the BioDrop&rsquo;s 0.75 (<a href="../notebook/index.html#w18-19">notebook, week&nbsp;18</a>).
     </p>
-    <p>
-      The reference channel held at 92.5&nbsp;lx across both readings. That tells us the source was stable between
-      measurements, so the drop on the sample channel came from the sample and not from the LED.
-    </p>
+    <p>The reference channel held at 92.5&nbsp;lx across both readings, so the source was stable between measurements and the drop on the sample channel came from the sample, not the LED.</p>
 
     <h4 class="dbtl-h l" id="cyc2-l">Learn</h4>
     <p>The optics were not the main problem. Our calibration procedure was.</p>
-    <p>We had blanked our photometer against growth medium, while the BioDrop is calibrated on distilled water, so the two instruments reported absorbance relative to different baselines.</p>
-    <p>This is the origin of our blanking rule: both instruments are blanked on the same baseline, clear water, so our zero matches the instrument we validate against.</p>
+    <p>We had blanked our photometer on growth medium, while the BioDrop is calibrated on distilled water, so the two reported absorbance relative to different baselines.</p>
+    <p>Our blanking rule follows: both instruments are blanked on clear water, so our zero matches the instrument we validate against.</p>
   </section>
   </div>
 
@@ -705,7 +708,7 @@
       <div class="dbtl-split__text">
         <p>
           The body sits on a printed wedge with structural support underneath so it does not flex under its own weight. A
-          dual Luer valve with syringes is fitted to the loop, used to bleed gas out before the instrument is started.
+          dual Luer valve with syringes bleeds gas out of the loop before a run.
         </p>
       </div>
       <figure class="frame pm-solo" id="fig-p3">
@@ -717,10 +720,9 @@
     <h4 class="dbtl-h t" id="cyc3-t">Test 1 &middot; Titanium Dioxide on the Bench</h4>
     <p>
       We blanked on clear water this time, then read the growth medium, which read zero, and two titanium dioxide
-      suspensions through the same cell, 1&nbsp;mL and 2&nbsp;mL, using titanium dioxide because it scatters light
-      consistently and does not grow or settle the way a culture would. The sample channel dropped from 137.63&nbsp;lx on
-      the medium to 120.44&nbsp;lx at 1&nbsp;mL and 111.62&nbsp;lx at 2&nbsp;mL, giving readings of <strong>0.3712 and
-      0.5785&nbsp;au</strong>. The reference channel sat at 17.23&nbsp;lx on the medium and 18.33&nbsp;lx on both samples
+      suspensions through the same cell, 1&nbsp;mL and 2&nbsp;mL. The sample channel dropped from 137.63&nbsp;lx on
+      the medium to 120.44&nbsp;lx at 1&nbsp;mL and 111.62&nbsp;lx at 2&nbsp;mL, giving <strong>0.3712 and
+      0.5785&nbsp;au</strong>; the reference channel sat at 17.23&nbsp;lx on the medium and 18.33&nbsp;lx on both samples
       (<a href="../notebook/index.html#w19-21">notebook, week&nbsp;19</a>).
     </p>
     <div class="tablewrap">
@@ -739,10 +741,9 @@
     </p>
 
     <h4 class="dbtl-h l" id="cyc3-l">Learn 1</h4>
-    <p>The instrument responds in the right direction and separates the two concentrations, so the tilted geometry holds. Doubling the titanium dioxide moved the reading by a factor of 1.56, which we cannot yet explain from this data alone.</p>
-    <p>The reference channel is the more important finding. It <strong>moved 6.4%</strong> between the medium and the samples. The reference beam is split off before the sample, so nothing in the sample should change it; ambient light reaching the sensor is the likely cause.</p>
-    <p>V4 therefore needs the <strong>light path enclosed</strong> from the LED to both sensors, so only our own source reaches them, and <strong>direct control of the LED</strong>.</p>
-    <p>The next step was to show that the photometer holds up on a culture <strong>flowing and growing through the loop</strong>. The titanium dioxide data show the optics work, but not that the instrument tracks a live culture.</p>
+    <p>The instrument responds in the right direction and separates the two concentrations, so the tilted geometry holds. Doubling the titanium dioxide moved the reading by a factor of 1.56, which we cannot yet explain from this data.</p>
+    <p>The reference channel is the more important finding: it <strong>moved 6.4%</strong> between the medium and the samples. The reference beam is split off before the sample, so nothing in the sample should change it; ambient light reaching the sensor is the likely cause.</p>
+    <p>V4 therefore needs the <strong>light path enclosed</strong> from the LED to both sensors and <strong>direct control of the LED</strong>. The titanium dioxide data show the optics work, but not that the instrument tracks a live culture <strong>flowing and growing through the loop</strong>.</p>
 
     <!-- 19 Oct 2026, the owner: a short version of the long run (Results 5.1) in this cycle, the one the DBTL bars open
          on, so a reader who only scrolls past sees the instrument's main result. Shortened from 5.1 only; the full run,
@@ -750,22 +751,22 @@
          for (the owner's Test 1 / Learn 1 / Test 2 / Learn 2 pattern of 19 Oct). -->
     <h4 class="dbtl-h t" id="cyc3-t2">Test 2 &middot; V4, 434 Hours in the Loop</h4>
     <p>
-      V4 answered most of that list: snap&#8209;in covers enclose the light path from the LED to both sensors, the
-      components sit at fixed positions, every mount that touches glass is lined with TPU, and an Arduino Uno&nbsp;Q
-      serves both channels on a live dashboard. Still tilted on an angled base, V4 then logged OD600 in line with a
-      <i>B.&nbsp;subtilis</i>&nbsp;168 culture at 22&nbsp;&deg;C for <strong>434 hours</strong>, from 21 July to
-      8 August, <strong>without drawing a sample</strong> (<a href="../notebook/index.html#w22-28">notebook,
-      week&nbsp;22</a>). The full run, its chart and its data are in <a href="#cyc4">5.1</a>.
+      V4 answered most of that list: snap&#8209;in covers, fixed component positions, TPU&#8209;lined mounts and an
+      Arduino UNO&nbsp;Q serving both channels on a live dashboard. Still tilted on an angled
+      base, V4 logged OD600 in line with a
+      <i>B.&nbsp;subtilis</i>&nbsp;168 culture at 22&nbsp;&deg;C for <strong>434 hours</strong>, 21 July to
+      8 August, <strong>without drawing a sample</strong> (<a href="#cyc4">5.1</a>; <a href="../notebook/index.html#w22-28">notebook,
+      week&nbsp;22</a>).
     </p>
 
     <h4 class="dbtl-h l" id="cyc3-l2">Learn 2</h4>
     <p>
       The first ~240&nbsp;hours read as a growth curve (lag, growth, an unexplained dip near 145&nbsp;h, a plateau near
-      OD&nbsp;1.5), all without a sample drawn, which a manual sampling routine cannot produce. Later in the run the
+      OD&nbsp;1.5), all without a sample drawn. Later in the run the
       <strong>reference channel failed</strong>: it held near 26&nbsp;lx for ten days, then fell sharply through
       1&nbsp;August, around when the recirculation pump failed and was replaced, and from about 256&nbsp;h single
       readings jump by more than 0.3&nbsp;OD. The Digital Twin&rsquo;s analysis marks 240&ndash;434&nbsp;h as unreliable,
-      so we read the curve as growth only up to about 240&nbsp;h. The run also showed where the precision is: noise is
+      so we read the curve as growth only to about 240&nbsp;h. Noise is
       tight below about 0.4&nbsp;OD and ragged above about 0.8 (<a href="#cyc4-l">5.1</a>).
     </p>
   </section>
@@ -790,23 +791,22 @@
        ("not yet tested"). -->
   <section class="part" id="slim" data-n="4">
     <div class="part-mark"><span>Part</span><b>4</b></div>
-    <h2>Simplified Photometer (Slim)</h2>
+    <h2>Engineering the Slim Photometer</h2>
   </section>
 
   <section class="sec" id="slim-rationale">
     <h3><i>4.1</i> Rationale</h3>
     <p>
-      Our Pro photometer is costly. The beam splitter, the paralleling lens and the flow cuvette account for most of its
-      cost: <strong>US$275 of the US$371.78</strong> in parts (<a href="#materials">11.1</a>). This led us to look for ways to make our
-      photometer cheaper while keeping it reliable for measuring OD600. Because the flow cuvette is required for our
-      design&rsquo;s in&#8209;line measurement, we only looked to remove the need for the paralleling lens and the beam
-      splitter.
+      Our Pro photometer is costly: the beam splitter, the paralleling lens and the flow cuvette account for
+      <strong>US$275 of the US$371.78</strong> in parts (<a href="#materials">11.1</a>). We looked for a cheaper build
+      that still reads OD600 reliably. The flow cuvette is required
+      for in&#8209;line measurement, so only the paralleling lens and the beam splitter could go.
     </p>
   </section>
 
   <section class="sec" id="slim-design">
     <h3><i>4.2</i> Design Changes</h3>
-    <p>The Slim model uses optical fibers to carry two parallel beams of proportional intensity. A parallel path needs no paralleling lens and no beam splitter, which removes the two most expensive components. The fibers are split <b>1:1</b> between the sample and reference sensors, instead of the Pro model&rsquo;s 9:1.</p>
+    <p>The Slim model uses optical fibers to carry two parallel beams of proportional intensity, which needs no paralleling lens and no beam splitter, the two most expensive components. The fibers are split <b>1:1</b> between the sample and reference sensors, against the Pro model&rsquo;s 9:1.</p>
     <p>
       These changes reduced the size of our photometer by more than two&#8209;thirds and its cost by more than US$130.
     </p>
@@ -836,14 +836,13 @@
 
   <section class="sec" id="slim-compare">
     <h3><i>4.3</i> Comparison with Pro</h3>
-    <p>Both photometers track the BioDrop linearly. The Pro model reads OD600 <strong>nearly 1:1</strong> with the benchtop spectrophotometer, so its upper and lower bounds are close to the BioDrop&rsquo;s. The Slim model matches in linearity but reads <strong>a factor of 5 lower</strong>, so its sensitivity is &#8533; of the BioDrop&rsquo;s. Because its reading climbs more slowly, the Slim should read denser suspensions before its sensor saturates: we estimate about five times the BioDrop&rsquo;s range (<a href="#cal-sio2">5.2.3</a>). It is also <strong>cheaper to build</strong> (US$235.29 against US$371.78, <a href="#materials">11.1</a>).</p>
+    <p>Both photometers track the BioDrop linearly. The Pro reads OD600 <strong>nearly 1:1</strong> with the benchtop spectrophotometer, so its bounds are close to the BioDrop&rsquo;s. The Slim matches in linearity but reads <strong>a factor of 5 lower</strong>, so its sensitivity is &#8533; of the BioDrop&rsquo;s and it should read denser suspensions before saturating: we estimate about five times the BioDrop&rsquo;s range (<a href="#cal-sio2">5.2.3</a>). It is also <strong>cheaper to build</strong> (US$235.29 against US$371.78, <a href="#materials">11.1</a>).</p>
   </section>
 
   <section class="sec" id="slim-files">
     <h3><i>4.4</i> CAD Files &amp; Material List</h3>
     <p>
-      For teams who want to replicate the Slim photometer, its assembly guide (<a href="#assembly">11.3</a>), material list (<a href="#materials">11.1</a>) and STL files (<a href="#stl">11.2</a>) are in the Reproduction part of this page, and three classmates outside the team have built it from that guide (<a href="#handover">6.2</a>).
-    </p>
+      The Slim&rsquo;s assembly guide (<a href="#assembly">11.3</a>), material list (<a href="#materials">11.1</a>) and STL files (<a href="#stl">11.2</a>) are in part&nbsp;11, and three classmates outside the team have built it from that guide (<a href="#handover">6.2</a>).</p>
   </section>
 
     </div><!-- /part 4 -->
@@ -876,7 +875,7 @@
 
     <h4 class="hw-result__h" id="cyc4-t">The Run</h4>
     <p>
-      We ran wild&#8209;type <i>B.&nbsp;subtilis</i>&nbsp;168 continuously at 22&nbsp;&deg;C, drawn from the bioreactor loop and passed through the flow cell in line, so no sampling event interrupted the culture and no material was removed to measure it. The log runs <b>434 hours</b>, 2,720 rows from 21 July to 8 August (<a href="../notebook/index.html#w22-28">notebook, week&nbsp;22</a>).
+      We ran wild&#8209;type <i>B.&nbsp;subtilis</i>&nbsp;168 continuously at 22&nbsp;&deg;C, drawn from the bioreactor loop and passed through the flow cell in line, so no sampling event interrupted the culture. The log runs <b>434 hours</b>, 2,720 rows from 21 July to 8 August (<a href="../notebook/index.html#w22-28">notebook, week&nbsp;22</a>).
     </p>
     <p class="pm-data">Data: <a href="https://drive.google.com/file/d/1QAy6Qaf96TodM160J_e23pr6wDLT1DQS/view?usp=drive_link" rel="noopener" target="_blank">the run&rsquo;s readings (Google Drive)</a></p>
     <figure class="frame pm-solo" id="fig-run-rig">
@@ -895,22 +894,21 @@
     <h4 class="hw-result__h" id="cyc4-l">What the Run Showed</h4>
     <p>
       Its first ~240&nbsp;hours cover lag, growth, an unexplained dip near 145&nbsp;h and a plateau near OD&nbsp;1.5,
-      all without a sample drawn, which is the thing a manual sampling routine cannot produce. The run is also where the
-      instrument&rsquo;s limits became visible.
+      all without a sample drawn. The run also showed the instrument&rsquo;s limits.
     </p>
     <ul class="tight">
-      <li>Noise is tight below about 0.4&nbsp;OD and ragged above about 0.8, so the useful precision is not flat across
+      <li>Noise is tight below about 0.4&nbsp;OD and ragged above about 0.8, so the precision is not flat across
         the range.</li>
-      <li>The rejection rate is the share of the latest burst&rsquo;s 14 readings that were rejected. It moved from 42.9% to 14.3% to 0% within one run, so it reflects the most recent burst rather than a running total. The rule behind it, and the two bubble gates added after this run, are set out in <a href="#acquisition">8.1</a>.</li>
-      <li>The sample&#8209;to&#8209;reference ratio fell from 7.33&times; on day&nbsp;1 to 4.64&times; by day&nbsp;10 (<a href="#fig-dash">8.1</a>) as the culture grew, as it should: the dashboard&rsquo;s ~9:1 is the blank ratio of clean medium (9.16:1, worked back from the dashboard readings), and the ratio must fall below it as the OD rises (<a href="#od-calc">8.2</a>).</li>
+      <li>The rejection rate is the share of the latest burst&rsquo;s 14 readings rejected. It moved from 42.9% to 14.3% to 0% within one run, so it reflects only the most recent burst. The rule behind it, and the two bubble gates added after this run, are in <a href="#acquisition">8.1</a>.</li>
+      <li>The sample&#8209;to&#8209;reference ratio fell from 7.33&times; on day&nbsp;1 to 4.64&times; by day&nbsp;10 (<a href="#fig-dash">8.1</a>) as the culture grew: the dashboard&rsquo;s ~9:1 is the blank ratio of clean medium (9.16:1, worked back from the dashboard readings), and the ratio must fall below it as the OD rises (<a href="#od-calc">8.2</a>).</li>
     </ul>
 
     <h4 class="hw-result__h" id="cyc4-d">The Instrument: V4</h4>
     <p id="cyc4-b">
       The run used V4, built to what cycle&nbsp;4 asked for (<a href="#cyc3-l">3.4</a>): snap&#8209;in covers enclose the
-      light path from the LED to both sensors, the components sit at fixed positions instead of sliding, and every mount
-      that touches glass is lined with TPU. An Arduino Uno&nbsp;Q reads both sensors and serves a live dashboard on the
-      local network, so both channels could be watched during the run without touching the rig (<a href="#acquisition">8.1</a>).
+      light path from the LED to both sensors, the components sit at fixed positions, and every mount
+      that touches glass is lined with TPU. An Arduino UNO&nbsp;Q reads both sensors and serves a live dashboard on the
+      local network, watched during the run without touching the rig (<a href="#acquisition">8.1</a>).
     </p>
     <div class="frames">
       <figure class="frame" id="fig-p4">
@@ -952,7 +950,7 @@
          ../css/hwdoc.css section 8). -->
     <div class="dbtl-split dbtl-split--narrow">
       <div class="dbtl-split__text">
-      <p>The photometer&rsquo;s readings had to be checked against an established instrument. Calibrating with culture would add growth time, settling and batch&#8209;to&#8209;batch variation, so we used inert scattering standards instead: titanium dioxide (TiO<sub>2</sub>) and silica (SiO<sub>2</sub>) suspensions, which scatter light consistently and neither grow nor settle quickly. A BioDrop cuvette spectrophotometer was the reference instrument throughout.</p>
+      <p>The readings had to be checked against an established instrument. Calibrating with culture would add growth time, settling and batch&#8209;to&#8209;batch variation, so we used inert scattering standards: titanium dioxide (TiO<sub>2</sub>) and silica (SiO<sub>2</sub>) suspensions, which scatter consistently and neither grow nor settle quickly. A BioDrop cuvette spectrophotometer was the reference throughout.</p>
       </div>
       <figure class="frame" id="fig-cal-setup">
         <div class="frame-img"><img src="photos/cal-setup.webp" alt="The Pro photometer, a tall black printed tower, on a lab bench; tubing runs from it to a glass beaker of clear liquid on a white magnetic stirrer, and its wires lead to an Arduino board beside it." width="760" height="1097" loading="lazy" decoding="async"></div>
@@ -965,21 +963,18 @@
   <section class="sec" id="cal-tio2">
     <h4 class="hw-result__sub"><i>5.2.2</i> TiO₂ Calibration of the Pro Photometer</h4>
     <p>
-      We ran known concentrations of TiO<sub>2</sub> through a 500&nbsp;mL solution and used a BioDrop cuvette
-      spectrophotometer as our reference instrument for this calibration assessment.
+      We ran known concentrations of TiO<sub>2</sub> through a 500&nbsp;mL solution, against the BioDrop.
     </p>
-    <p>TiO<sub>2</sub> was added <strong>1&nbsp;mg at a time</strong> to 10&nbsp;mg, then in 5&nbsp;mg increments to 60&nbsp;mg, giving a fine series at low concentrations and a coarser one above.</p>
-    <p>
-      One single&#8209;point exclusion was applied on objective grounds, and is shown as an open marker in the figures.
-      The 5&nbsp;mg BioDrop reading violates monotonicity: it exceeds the readings both above and below it, which is
-      impossible for an increasing standard.
-    </p>
+    <p>TiO<sub>2</sub> was added <strong>1&nbsp;mg at a time</strong> to 10&nbsp;mg, then in 5&nbsp;mg increments to 60&nbsp;mg: a fine series at low concentrations and a coarser one above.</p>
+    <p>One single&#8209;point exclusion was applied on objective grounds, shown as an open marker in the figures.
+          The 5&nbsp;mg BioDrop reading violates monotonicity: it exceeds the readings both above and below it, which is
+          impossible for an increasing standard.</p>
     <div class="pm-tabs" data-pm-tabs data-numbered data-sticky aria-label="TiO₂ Test 2, two graphs">
       <div class="pm-tab" data-tab="Against TiO₂ mass">
         <p>
-          Plotted against the TiO<sub>2</sub> mass added, both instruments track the standard closely across the full
-          range, each regressing against mass at R&sup2;&nbsp;&gt;&nbsp;0.999 (Pro photometer 0.9999, BioDrop 0.9998). The
-          raw, uncalibrated output is linear in true concentration to the same degree as the reference instrument.
+          Plotted against the TiO<sub>2</sub> mass added, both instruments track the standard across the full
+          range, each regressing against mass at R&sup2;&nbsp;&gt;&nbsp;0.999 (Pro photometer 0.9999, BioDrop 0.9998): the
+          raw, uncalibrated output is as linear in true concentration as the reference instrument.
         </p>
         <figure class="chart-fig" id="fig-tio2-t2-mass">
           <div class="bc" data-chart="tio2-t2-mass"><img src="photos/pm6-test2-mass-chart.webp" alt="OD600 of the Pro photometer and the BioDrop against TiO2 mass added, both close to straight lines" width="958" height="664" loading="lazy" decoding="async"></div>
@@ -989,7 +984,7 @@
       <div class="pm-tab" data-tab="Against the BioDrop">
         <p>
           A line fit through the raw Test&nbsp;2 points has a residual scatter of RMSE&nbsp;=&nbsp;0.011&nbsp;OD600
-          (R&sup2;&nbsp;=&nbsp;0.9997) about that line; this quantifies the tightness of the raw agreement, with no calibration transform applied.
+          (R&sup2;&nbsp;=&nbsp;0.9997) about that line, with no calibration transform applied.
         </p>
         <figure class="chart-fig" id="fig-tio2-t2-identity">
           <div class="bc" data-chart="tio2-t2-identity"><img src="photos/pm6-test2-agreement-chart.webp" alt="The Pro photometer's OD600 against the BioDrop's OD600, points along the line of identity" width="781" height="717" loading="lazy" decoding="async"></div>
@@ -1000,8 +995,8 @@
     <p>We expected the photometer to need a calibration transform fitted against the BioDrop. On TiO<sub>2</sub> the raw, uncorrected output agreed with the BioDrop to a median of 3.8% across both runs, so no transform was applied.</p>
     <p>
       Every Pro reading in this wiki, including the continuous growth curve, is reported from the raw output with no
-      transform. The SiO<sub>2</sub> run (<a href="#cal-sio2">5.2.3</a>) then tested both photometers further and showed
-      the limits of that: on silica the Pro reads about 0.12&nbsp;OD below the BioDrop, and the Slim needs a
+      transform. The SiO<sub>2</sub> run (<a href="#cal-sio2">5.2.3</a>) showed
+      the limits: on silica the Pro reads about 0.12&nbsp;OD below the BioDrop, and the Slim needs a
       one&#8209;factor calibration.
     </p>
     <!-- The two TiO2 runs (the doc's "these two runs"): Test 1 is not in the doc's text, so its method, its exclusion
@@ -1011,22 +1006,20 @@
         <summary><span class="fold__t">The two TiO<sub>2</sub> runs in full</span><span class="fold__sub">the loop, Test&nbsp;1, its exclusion</span></summary>
         <div class="fold__body">
           <p>
-            We prepared known concentrations of TiO<sub>2</sub> in 500&nbsp;mL of 1% SDS solution, with a BioDrop
-            cuvette spectrophotometer as the reference instrument, and <strong>ran the calibration curve twice</strong>. In Test&nbsp;1
+            We prepared known concentrations of TiO<sub>2</sub> in 500&nbsp;mL of 1% SDS solution and
+            <strong>ran the calibration curve twice</strong>. In Test&nbsp;1
             we added TiO<sub>2</sub> 1&nbsp;mg at a time for 40 data points, a dense, uniform series that resolves how
             linear each instrument is. Test&nbsp;2 is the series above.
           </p>
           <p>
-            The calibration loop consisted of a magnetic stirrer, a peristaltic pump, our photometer, and a 500&nbsp;mL
-            reservoir. The reservoir cap had holes for the inlet and outlet of the photometer loop, a sampling port, and
-            an air hole that prevented a vacuum from forming during sampling or pressurization when adding
+            The calibration loop was a magnetic stirrer, a peristaltic pump, our photometer and a 500&nbsp;mL
+            reservoir. The reservoir cap had holes for the photometer loop&rsquo;s inlet and outlet, a sampling port, and
+            an air hole that prevented a vacuum forming during sampling or when adding
             TiO<sub>2</sub>.
           </p>
-          <p>
-            In Test&nbsp;1 the 37&nbsp;mg BioDrop reading is a handling error, off the trend of its neighbors, and is
-            shown as an open marker instead of being deleted. Its paired photometer reading is on trend, which puts the
-            error in the reference measurement.
-          </p>
+          <p>In Test&nbsp;1 the 37&nbsp;mg BioDrop reading is a handling error, off the trend of its neighbors, shown
+            as an open marker instead of being deleted. Its paired photometer reading is on trend, which puts the
+            error in the reference measurement.</p>
           <figure class="chart-fig" id="fig-tio2-t1">
             <div class="bc" data-chart="tio2-t1"></div>
             <figcaption><b>Test 1.</b> The raw photometer reading against the BioDrop OD600 for each TiO<sub>2</sub> mass from 2 to 41&nbsp;mg, with a least&#8209;squares line and the line of identity.</figcaption>
@@ -1043,16 +1036,12 @@
   <section class="sec" id="cal-sio2">
     <h4 class="hw-result__sub"><i>5.2.3</i> SiO₂ Calibration of the Pro and Slim Photometers</h4>
     <p>
-      We ran our SiO<sub>2</sub> calibration of the Pro and Slim photometers in sequence, sampling a set amount of the
-      SiO<sub>2</sub> solution to test on our benchtop spectrophotometer before adding more, while keeping the total
-      volume of solution in the run the same.
+      We ran the SiO<sub>2</sub> calibration of the Pro and Slim photometers in sequence, sampling a set amount of the
+      SiO<sub>2</sub> solution on our benchtop spectrophotometer before adding more, keeping the total
+      volume the same.
     </p>
     <div class="pm-tabs" data-pm-tabs data-numbered data-sticky aria-label="SiO₂ calibration, four graphs">
       <div class="pm-tab" data-tab="Full range">
-        <p>
-          We graphed the Pro, the Slim and the BioDrop on the same graph, all against the mass of SiO<sub>2</sub> as our
-          baseline.
-        </p>
 
     <figure class="frame" id="fig-cal-mass">
           <div class="frame-img"><svg class="cal-svg" viewBox="0 0 760 430" role="img" aria-labelledby="figa-t figa-d" preserveAspectRatio="xMidYMid meet">
@@ -1095,20 +1084,19 @@
     </svg></div>
           <figcaption><b>BioDrop vs. Pro vs. Slim, over the mass of SiO<sub>2</sub>.</b> OD600 of the three instruments against the silica added, 2.5 to 100&nbsp;mg in 500&nbsp;mL. Between OD&nbsp;1 and OD&nbsp;2 the BioDrop reads a two&#8209;fold dilution, and from 50&nbsp;mg (above OD&nbsp;2) a four&#8209;fold one, each multiplied back. Dashed: each instrument&rsquo;s least&#8209;squares line (R&sup2; 0.992 for the Slim, 0.974 for the Pro).</figcaption>
         </figure>
-        <p>Both photometer versions gave a <strong>consistent response</strong> as the SiO<sub>2</sub> concentration increased. The BioDrop readings are more irregular, which we attribute to its 1&nbsp;&micro;L sample volume: a droplet that small is sensitive to how the particles happen to be distributed in it.</p>
+        <p>Both photometer versions gave a consistent response as the SiO<sub>2</sub> concentration increased. The BioDrop readings are more irregular, which we attribute to its 1&nbsp;&micro;L sample volume: a droplet that small is sensitive to how the particles are distributed in it.</p>
         <p>
           The Slim photometer showed a more linear relationship (<strong>R&sup2;&nbsp;=&nbsp;0.992</strong>) than the Pro
-          (<strong>R&sup2;&nbsp;=&nbsp;0.974</strong>). This supports the reliability of our Slim photometer, as the TiO<sub>2</sub> run did for the Pro. The difference is likely caused by the design
-          changes we made to place our light closer to our sensors and cuvette; however, that change also meant that our
-          Slim photometer was a completely different structure from the Pro version.
+          (<strong>R&sup2;&nbsp;=&nbsp;0.974</strong>), as the TiO<sub>2</sub> run did for the Pro. The difference is likely
+          caused by placing the light closer to the sensors and cuvette, which also made the
+          Slim a different structure from the Pro.
         </p>
-        <p>The distance between the light source and the particles differs between the instruments, so light scattered by the particles can still reach our sensor. In the BioDrop&rsquo;s 1&nbsp;&micro;L droplet the path is short and scattered light is more likely to be lost, which makes individual readings less repeatable at low concentrations.</p>
+        <p>The distance between the light source and the particles differs between the instruments, so light scattered by the particles can still reach our sensor. In the BioDrop&rsquo;s 1&nbsp;&micro;L droplet the path is short and scattered light is more likely to be lost.</p>
       </div>
       <div class="pm-tab" data-tab="Up to OD 1">
         <p>
-          To test the true difference in sensitivity between our Pro and Slim photometers, with the BioDrop as our main
-          point of comparison, we narrowed the range of data points on our graph to 1&nbsp;OD, to stay within the
-          specifications of the BioDrop.
+          To compare the sensitivity of the Pro and Slim photometers against the BioDrop, we narrowed the range to
+          1&nbsp;OD, within the BioDrop&rsquo;s specifications.
         </p>
         <figure class="frame" id="fig-cal-low">
           <div class="frame-img"><svg class="cal-svg" viewBox="0 0 760 430" role="img" aria-labelledby="figl-t figl-d" preserveAspectRatio="xMidYMid meet">
@@ -1169,16 +1157,16 @@
             20&nbsp;mg of SiO<sub>2</sub>, each with its least&#8209;squares line: BioDrop y&nbsp;=&nbsp;0.0489x&nbsp;+&nbsp;0.0151,
             Pro y&nbsp;=&nbsp;0.0458x&nbsp;&minus;&nbsp;0.0636, Slim y&nbsp;=&nbsp;0.0086x&nbsp;+&nbsp;0.0081.</figcaption>
         </figure>
-        <p>The R&sup2; values are 0.9956 for the BioDrop, 0.9874 for the Pro photometer and 0.9947 for the Slim. All three are linear within the range where the instruments overlap.</p>
+        <p>The R&sup2; values are 0.9956 for the BioDrop, 0.9874 for the Pro photometer and 0.9947 for the Slim: all three linear within the range where the instruments overlap.</p>
       </div>
       <div class="pm-tab" data-tab="Pro vs BioDrop">
         <p>
-          The Pro photometer&rsquo;s line runs parallel to the BioDrop&rsquo;s. When we plot the two against each other,
-          the slope is <b>1.001</b>: for every 1.00&nbsp;OD the BioDrop rises, the Pro rises by 1.00&nbsp;OD as well. The
-          only difference is a constant offset of about 0.12&nbsp;OD (intercept &minus;0.123), with the Pro reading
+          The Pro photometer&rsquo;s line runs parallel to the BioDrop&rsquo;s. Plotted against each other the slope is
+          <b>1.001</b>: for every 1.00&nbsp;OD the BioDrop rises, the Pro rises by 1.00&nbsp;OD. The
+          only difference is a constant offset of about 0.12&nbsp;OD (intercept &minus;0.123), the Pro reading
           lower at every point.
         </p>
-        <p>That fit uses the eight silica points. Including the blank at 0&nbsp;mg, where both instruments read zero by definition, gives a slope of <b>0.93</b>, because the gap opens between the blank and the first silica step, so the Pro under&#8209;reads at the low end where a growth curve starts. Over the whole series, against the dilution&#8209;corrected BioDrop, our notebook&rsquo;s fits give a slope of <b>0.995</b> up to OD600&nbsp;2.5 and <b>0.594</b> above it (<a href="../notebook/index.html#w32-47">notebook, week&nbsp;32</a>), which is where the working limit of about OD600&nbsp;2.5 in 7.1 and 7.4 comes from.</p>
+        <p>That fit uses the eight silica points. Including the blank at 0&nbsp;mg, where both instruments read zero by definition, gives a slope of <b>0.93</b>: the gap opens between the blank and the first silica step, so the Pro under&#8209;reads at the low end where a growth curve starts. Over the whole series, against the dilution&#8209;corrected BioDrop, our notebook&rsquo;s fits give a slope of <b>0.995</b> up to OD600&nbsp;2.5 and <b>0.594</b> above it (<a href="../notebook/index.html#w32-47">notebook, week&nbsp;32</a>), the source of the working limit of about OD600&nbsp;2.5 in 7.1 and 7.4.</p>
         <figure class="frame" id="fig-cal-identity">
           <div class="frame-img"><svg class="cal-svg" viewBox="0 0 430 430" role="img" aria-labelledby="figb-t figb-d" preserveAspectRatio="xMidYMid meet">
     <title id="figb-t">The Pro photometer against the BioDrop, 2.5 to 20 mg of SiO2</title><desc id="figb-d">The Pro photometer's reading plotted against the BioDrop's for the same eight samples, 2.5 to 20 mg. The least-squares line has slope 1.001 and intercept -0.123 (R squared 0.988): it runs parallel to the line of identity, y = x, about 0.12 OD below it. An open point at the origin is the blank, 0 mg, which is not in the fit; with it, the slope is 0.93.</desc>
@@ -1263,11 +1251,11 @@
 
   <section class="sec" id="cal-blank">
     <h4 class="hw-result__sub"><i>5.2.4</i> Blank Protocol</h4>
-    <p>The blanking protocol accounts for much of the inaccuracy in our early iterations. The BioDrop is calibrated against distilled water, so a photometer blanked on growth medium reports absorbance relative to a different baseline.</p>
+    <p>The blanking protocol accounts for much of the inaccuracy in our early iterations (<a href="#cyc2">3.3</a>).</p>
     <!-- 19 Oct 2026 (judging review): the blank's history, from the notebook (entries 15, 16 and 20) and 8.2; the
          dilution step is the BioDrop's, not the in-line photometer's, and it applied from the silica run of 10 Oct. -->
-    <p>The baseline has changed between builds. V2 was zeroed on growth medium (<a href="#cyc2">3.3</a>); the angled stand was blanked on clear water, the BioDrop&rsquo;s own baseline (<a href="#cyc3">3.4</a>); in the loop, a run starts with a blank on the growth medium (<a href="#od-calc">8.2</a>). Since 19&nbsp;July the photometer also accepts a <strong>blank entered by hand</strong>, because the flow cuvette cannot be cleaned while it is in the loop, and a blank measured through a dirty window had read four times high (<a href="../notebook/index.html#w20-25">notebook, week&nbsp;20</a>).</p>
-    <p>A second limit on accuracy comes from concentration, and it applies to the BioDrop rather than to the in&#8209;line photometer. Prof. Chang noted in the June review that absorbance readings lose accuracy above OD600&nbsp;1 (<a href="#fb-chang">6.1</a>). From the silica run of 10&nbsp;October, BioDrop samples above that point were <strong>diluted before measurement</strong> and the value multiplied back: &times;2 for OD&nbsp;1&ndash;2 and &times;4 for OD&nbsp;2 and above (we never exceeded OD&nbsp;4). The TiO<sub>2</sub> runs of August were read undiluted (<a href="#cal-tio2">5.2.2</a>). The dilution is also why the BioDrop&rsquo;s silica readings become irregular past OD&nbsp;2, where a small discrepancy is multiplied by four (<a href="#cal-sio2">5.2.3</a>).</p>
+    <p>The baseline has changed between builds: V2 was zeroed on growth medium (<a href="#cyc2">3.3</a>); the angled stand on clear water, the BioDrop&rsquo;s own baseline (<a href="#cyc3">3.4</a>); in the loop, a run starts with a blank on the growth medium (<a href="#od-calc">8.2</a>). Since 19&nbsp;July the photometer also accepts a <strong>blank entered by hand</strong>, because the flow cuvette cannot be cleaned in the loop, and a blank measured through a dirty window had read four times high (<a href="../notebook/index.html#w20-25">notebook, week&nbsp;20</a>).</p>
+    <p>A second limit on accuracy comes from concentration, and it applies to the BioDrop. Prof. Chang noted in the June review that absorbance readings lose accuracy above OD600&nbsp;1 (<a href="#fb-chang">6.1</a>). From the silica run of 10&nbsp;October, BioDrop samples above that point were <strong>diluted before measurement</strong> and multiplied back: &times;2 for OD&nbsp;1&ndash;2 and &times;4 for OD&nbsp;2 and above (we never exceeded OD&nbsp;4). The TiO<sub>2</sub> runs of August were read undiluted (<a href="#cal-tio2">5.2.2</a>). The dilution is also why the BioDrop&rsquo;s silica readings turn irregular past OD&nbsp;2, where a small discrepancy is multiplied by four (<a href="#cal-sio2">5.2.3</a>).</p>
   </section>
 
   <section class="sec" id="cal-procedure">
@@ -1324,7 +1312,7 @@
       <p class="fb-tl__key"><span class="rv">Feedback</span><span class="cy">Cycles: Growth, the bacterial growth DBTLs (2); Pro, the Pro photometer (3); the long run (5.1)</span></p>
     </nav>
 
-    <p class="sec-lede">Two outside reviewers changed the photometer. <strong>Prof. Chang Jo&#8209;Shu</strong> reviewed the bioreactor design on 18 June and 4 September 2026, and <strong>Teacher He of Owl Lab</strong> reviewed its electronics on 20 and 22 September. The entries below give what each said about the photometer and the change it led to; the rest of both reviews is on the <a href="../bioreactor/index.html#feedback">bioreactor page</a>.</p>
+    <p class="sec-lede">Two outside reviewers changed the photometer. <strong>Prof. Chang Jo&#8209;Shu</strong> reviewed the bioreactor design on 18 June and 4 September 2026, and <strong>Teacher He of Owl Lab</strong> reviewed its electronics on 20 and 22 September. Each entry gives what was said about the photometer and the change it led to; the rest is on the <a href="../bioreactor/index.html#feedback">bioreactor page</a>.</p>
   </section>
 
   <section class="sec" id="fb-reviews">
@@ -1341,7 +1329,7 @@
               be taken.</p>
             <p><span class="ut-k">Why it mattered</span>The in&#8209;line photometer never opens the loop, so the advice
               applies to the instrument it is checked against: an undiluted BioDrop reading above OD600&nbsp;1 makes the
-              comparison least trustworthy exactly where the culture is densest.</p>
+              comparison least trustworthy where the culture is densest.</p>
             <p><span class="ut-k">Changed</span>How we read the reference instrument: from the silica run of 10&nbsp;October, BioDrop samples above OD600&nbsp;1 were <strong>diluted before measurement</strong> and the reading multiplied back (<a href="#cal-blank">5.2.4</a>; <a href="../notebook/index.html#w32-47">notebook, week&nbsp;32</a>).</p>
           </div>
         </details>
@@ -1364,7 +1352,7 @@
   <section class="sec" id="handover">
     <link rel="stylesheet" href="css/handover.css?v=17579300">
     <h3><i>6.2</i> Outside Builders</h3>
-    <p class="sec-lede">To test whether someone outside the team can build a photometer from our guide, we gave <strong>three classmates</strong> the Slim photometer&rsquo;s parts and its assembly guide (<a href="#assembly">11.3</a>) and observed the builds on 15 and 16&nbsp;October 2026. Their backgrounds ranged from an experienced engineer to a student with little engineering background. What they found changed the guide (table below).</p>
+    <p class="sec-lede">To test whether someone outside the team can build a photometer from our guide, we gave <strong>three classmates</strong> the Slim photometer&rsquo;s parts and its assembly guide (<a href="#assembly">11.3</a>) and watched the builds on 15 and 16&nbsp;October 2026. Their backgrounds ranged from an experienced engineer to a student with little engineering background. What they found changed the guide.</p>
 
     <div class="ho-cards">
       <article class="ho-card" id="ho-wentao">
@@ -1379,7 +1367,7 @@
           <blockquote><p>&ldquo;It gives a number, but I&rsquo;d want a check in the guide that tells me it&rsquo;s reading correctly before I trust it.&rdquo;</p></blockquote>
           <p class="ho-note">That check is the guide&rsquo;s Test&nbsp;4 (Stage&nbsp;7): after the blank, clean medium must read close to OD600&nbsp;0.</p>
           <blockquote><p>&ldquo;If you can&rsquo;t solder, a pre&#8209;made board option would remove the only hard step.&rdquo;</p></blockquote>
-          <blockquote><p>&ldquo;For around $235 against a commercial spectrophotometer, I&rsquo;d build it.&rdquo;</p></blockquote>
+          <blockquote><p>&ldquo;For around US$235 against a commercial spectrophotometer, I&rsquo;d build it.&rdquo;</p></blockquote>
         </div>
       </article>
 
@@ -1455,9 +1443,8 @@
 
   <section class="sec" id="final-intro">
     <p class="sec-lede">
-      After developing and validating both versions, we ended with two photometer designs suited to different
-      priorities. The Pro photometer prioritizes long&#8209;term stability and continuous monitoring, while the Slim
-      photometer prioritizes lower cost, smaller size and easier reproduction.
+      We ended with two photometer designs for different priorities: the Pro for long&#8209;term stability and
+      continuous monitoring, the Slim for lower cost, smaller size and easier reproduction.
     </p>
     <!-- W2: size-compare -->
     <figure class="fsz" id="fig-size-compare">
@@ -1499,25 +1486,25 @@
     <dl class="verdict">
       <div>
         <dt>Use the Pro for a bioreactor run.</dt>
-        <dd>Its reference beam normalizes every reading against the LED&rsquo;s own output, which is what stops a slow
+        <dd>Its reference beam normalizes every reading against the LED&rsquo;s own output, which stops a slow
           drift in the light from being recorded as growth over hundreds of hours.</dd>
       </div>
       <div>
         <dt>Use the Slim where cost and size decide.</dt>
-        <dd>The Slim costs 36.71% less than the Pro. It is far smaller, has fewer parts to build, and stays linear at
+        <dd>The Slim costs 36.71% less than the Pro, is far smaller, has fewer parts to build, and stays linear at
           high density. It needs its scale factor applied.</dd>
       </div>
     </dl>
     <p class="eq-key">
       Finest step: the smallest change in silica each photometer resolves on the 10&nbsp;October series, its
-      point&#8209;to&#8209;point noise divided by how far its reading moves per milligram.
+      point&#8209;to&#8209;point noise divided by how far the reading moves per milligram.
     </p>
   </section>
 
   <section class="sec" id="final-pro">
     <h3><i>7.2</i> Pro Photometer</h3>
     <p>
-      The Pro reads OD600 in line, inside the bioreactor loop, and normalizes every reading against a reference beam.
+      The Pro reads OD600 in line, inside the bioreactor loop, normalized against a reference beam.
       It is the photometer in the bioreactor today.
     </p>
     <div class="fd-pair">
@@ -1544,7 +1531,7 @@
           <div><dt>Reference</dt><dd>10% of the beam, split off at 90&deg;, to a second sensor</dd></div>
           <div><dt>Sensors</dt><dd>Two GY&#8209;302 lux sensors on one I&sup2;C bus</dd></div>
           <div><dt>Flow cuvette</dt><dd>2&nbsp;mm path; readings scaled &times;5 to the standard 10&nbsp;mm</dd></div>
-          <div><dt>Controller</dt><dd>Arduino Uno&nbsp;Q; runs with no computer attached</dd></div>
+          <div><dt>Controller</dt><dd>Arduino UNO&nbsp;Q; runs with no computer attached</dd></div>
           <div><dt>Output</dt><dd>OD600 from the sample&#8209;to&#8209;reference ratio, about every 10 minutes</dd></div>
           <div><dt>Mounting</dt><dd>Tilted 7.5&deg; on its base</dd></div>
           <div><dt>Body</dt><dd>PLA, with TPU&#8209;lined slots for the optics and sensors; snap&#8209;on covers</dd></div>
@@ -1555,8 +1542,7 @@
             <div class="fold__body">
               <p>
                 Each reading is a burst of 16 lux readings, the first 2 dropped while the LED settles. The 14 left are
-                cut at their median &plusmn;&nbsp;3&middot;MAD, and then two bubble gates check the burst against itself
-                and against the recent past. The method and its test on silica are in <a href="#acquisition">8.1</a>.
+                cut at their median &plusmn;&nbsp;3&middot;MAD, then two bubble gates check it (<a href="#acquisition">8.1</a>).
               </p>
             </div>
           </details>
@@ -1607,8 +1593,7 @@
       <!-- /W2: pro-optical -->
       <p>
         Light from the 600&nbsp;nm LED is made parallel by the lens and narrowed by a 2&nbsp;mm slit, then split 90:10.
-        The sample sensor sees the light after the culture; the reference sensor sees the LED alone. As the LED ages
-        and dims, both sensors see the change, so OD600 is <strong>taken from their ratio</strong> and the <strong>drift cancels out</strong>.
+        As the LED ages and dims, both sensors see the change, so OD600 is <strong>taken from their ratio</strong> and the <strong>drift cancels out</strong>.
       </p>
       <div class="folds">
         <details class="fold" id="why-600">
@@ -1618,7 +1603,7 @@
               <li><b>It is the standard.</b> OD600 is how bacterial density is reported, so the readings compare
                 directly with the BioDrop and with published growth curves.</li>
               <li><b>It measures cells, not chemistry.</b> At 600&nbsp;nm a culture dims the beam mainly by scattering
-                light off the cells; proteins and DNA absorb in the UV, and most of the medium&rsquo;s color in the
+                off the cells; proteins and DNA absorb in the UV and most of the medium&rsquo;s color in the
                 blue.</li>
               <li><b>It leaves the optogenetic switch alone.</b> CcaS/CcaR responds to green (~535&nbsp;nm) and red
                 (~670&nbsp;nm). Amber sits between the two peaks, so the photometer&rsquo;s own light does not switch
@@ -1656,7 +1641,7 @@
   <section class="sec" id="final-slim">
     <h3><i>7.3</i> Slim Photometer</h3>
     <p>
-      The Slim carries the light in two optical fibers instead of through a lens and a beam splitter. That removes the
+      The Slim carries the light in two optical fibers instead of a lens and a beam splitter. That removes the
       long light&#8209;travel column, so the whole instrument is 72&nbsp;mm tall, with five printed parts.
     </p>
     <div class="fd-pair">
@@ -1732,9 +1717,8 @@
       </figure>
       <!-- /W2: slim-optical -->
       <p>
-        The reference side copies the sample side&rsquo;s shape, so the two sensors see the same LED through the same
-        geometry, and the only difference between them is the culture. The sample&#8209;to&#8209;reference ratio cancels
-        LED drift, as in the Pro, with the fiber split doing the beam splitter&rsquo;s job.
+        The sample&#8209;to&#8209;reference ratio cancels LED drift, as in the Pro, with the fiber split doing the beam
+        splitter&rsquo;s job.
       </p>
     </div>
 
@@ -1761,7 +1745,7 @@
     <h3><i>7.4</i> One Limit for Both</h3>
     <p>
       The &times;5.57 factor and the working limit of about OD&nbsp;2.5 come from a single run on one scattering standard
-      (silica). Cells scatter differently: they are larger and softer, and they change shape as they grow. On culture, both are therefore approximate.
+      (silica). Cells scatter differently: they are larger and softer, and they change shape as they grow, so on culture both are approximate.
     </p>
   </section>
 
@@ -1786,25 +1770,23 @@
         <h4>Take a burst of 14 readings</h4>
         <p>For each measurement the LED switches on and the sensor takes 16 lux readings in a
           short burst. The first two are discarded while the LED settles, leaving 14. If a
-          bubble drifts through the light path during the burst, only one or two readings may
-          jump.</p>
+          bubble drifts through the light path, one or two readings may jump.</p>
       </li>
       <li>
         <h4>Find the median</h4>
-        <p>Instead of averaging the burst, the firmware uses the median. An average is dragged
-          toward whichever side a stray reading falls; one or two extreme readings barely move
+        <p>Instead of averaging the burst, the firmware uses the median. One or two extreme readings barely move
           the median, so it gives a bubble&#8209;resistant estimate of the true signal.</p>
       </li>
       <li>
         <h4>Measure the spread</h4>
-        <p>The firmware calculates the median absolute deviation (MAD), which describes how
+        <p>The firmware calculates the median absolute deviation (MAD): how
           far the readings typically fall from the median.</p>
       </li>
       <li>
         <h4>Reject outliers</h4>
         <p>Readings beyond median &plusmn; 3&middot;MAD are rejected before OD600 is
           calculated. The rejection percentage, the share of the latest burst&rsquo;s 14 readings
-          rejected, is reported live, and values above 50% trigger an alarm for excessive
+          rejected, is reported live; above 50% it triggers an alarm for excessive
           bubble interference.</p>
       </li>
     </ol>
@@ -1814,9 +1796,9 @@
         <img src="photos/od-day10.webp" alt="The live OD600 dashboard on a laptop screen at 10 days 4 hours 9 minutes: current OD600 1.4746, sample 120 lux, reference 25.83 lux, a sample-to-reference ratio of 4.64 times shown in red against an expected 10 to 1, a bubble and outlier reject rate of 28.6 percent, 1,574 data points, and the growth curve up to about 244 hours" loading="lazy" decoding="async">
         <svg class="dash-mark" viewBox="0 0 1200 675" aria-hidden="true"><rect x="921" y="51" width="152" height="98" rx="9"/></svg>
       </div></div>
-      <figcaption><b>Live rejection monitoring.</b> At 10&nbsp;d 4&nbsp;h 9&nbsp;m into the run,
+      <figcaption><b>Live rejection monitoring.</b> At 10&nbsp;d 4&nbsp;h 9&nbsp;m into the run
         the dashboard had recorded 1,574 data points. The bubble/outlier rejection rate was
-        28.6% (4 of the latest burst&rsquo;s 14 readings), below the 50% alarm threshold, so it was not highlighted in red. The red value beside it is the sample&#8209;to&#8209;reference ratio, 4.64&times;: the dashboard compares it with the ~9:1 of clean medium (rounded to 10:1 on this screen), so a dense culture shows red (<a href="#od-calc">8.2</a>).</figcaption>
+        28.6% (4 of the latest burst&rsquo;s 14 readings), below the 50% alarm threshold. The red value beside it is the sample&#8209;to&#8209;reference ratio, 4.64&times;, which the dashboard compares with the ~9:1 of clean medium (rounded to 10:1 on this screen), so a dense culture shows red (<a href="#od-calc">8.2</a>).</figcaption>
     </figure>
 
     <!-- 15 Oct 2026, content doc v5 (component page 4.2): the 10 October estimator test
@@ -1826,44 +1808,40 @@
       On 10&nbsp;October we ran both photometers in series on the same loop for 4.5&nbsp;hours,
       on 1&nbsp;&micro;m silica microspheres in suspension, across 40 concentrations in
       2.5&nbsp;mg steps (the series in <a href="#cal-sio2">5.2.3</a>). For every reading we logged
-      <strong>eight different estimators</strong> computed from the <strong>same 14 readings</strong>, to see which would match
-      the BioDrop most closely.
+      <strong>eight different estimators</strong> from the <strong>same 14 readings</strong>, to see which matched
+      the BioDrop best.
     </p>
     <p>
       <b>In clean flow, the estimator barely matters.</b> Across the 40 concentrations the
-      eight never disagreed with each other by more than 0.004&nbsp;OD, which is smaller than
-      the scatter during calibration.
+      eight never disagreed by more than 0.004&nbsp;OD, smaller than the scatter during calibration.
     </p>
     <p>
       <b>Under bubbles, one-sided estimators fail.</b> Five of the eight (MAD, Qn, biweight,
       mean and median) are symmetric: they treat an unusually bright reading and an unusually
-      dark one alike. The other three (upper, p75 and p90) keep only the bright end of the
-      burst. We had been running &ldquo;upper&rdquo; on the instrument, on the assumption that a
-      bubble can only block light. In a turbid culture it does the opposite: the air replaces
+      dark one alike. The other three (upper, p75 and p90) keep only the bright end. We had been running &ldquo;upper&rdquo;, on the assumption that a
+      bubble can only block light; in a turbid culture it does the opposite, the air replacing
       liquid full of particles, so <em>more</em> light reaches the detector. Under bubble
       conditions the five symmetric estimators stayed within 0.02&nbsp;OD of each other on the
-      Pro photometer and within 0.006&nbsp;OD on the Slim photometer, while the three
-      one&#8209;sided ones moved together, away from the rest. The one&#8209;sided estimators did better on the Pro and worse on the Slim, so the direction a bubble pushes is not the same
-      on both. We kept the symmetric MAD filter.
+      Pro photometer and within 0.006&nbsp;OD on the Slim, while the three
+      one&#8209;sided ones moved together, away from the rest. They did better on the Pro and worse on the Slim, so the direction a bubble pushes differs between them. We kept the symmetric MAD filter.
     </p>
     <p>
-      <b>No estimator rescues a reading taken through air.</b> A bubble can pass partway
-      through a burst, spoiling a few of the 14 readings, or fill the cell for several
-      seconds, so every reading in the burst is taken through air. Those readings agree with
+      <b>No estimator rescues a reading taken through air.</b> A bubble can spoil a few of the
+      14 readings, or fill the cell for several
+      seconds so every reading in the burst is taken through air. Those readings agree with
       each other perfectly and are all wrong. The MAD filter caught 94% of the first kind and
       none of the second. In one instance the Pro photometer reported 0.79&nbsp;OD for
-      6&nbsp;minutes while the actual value was 3.18, and the software flagged every one of
-      those readings as good. Instead of looking for a better estimator, we added two gates
-      that run after it:
+      6&nbsp;minutes while the actual value was 3.18, and the software flagged all of them as
+      good. We added two gates after it:
     </p>
     <div class="hwcards hwcards--2" id="filter-gates">
       <article class="hwcard">
         <h4 class="hwcard__name">Gate 1: the burst against itself</h4>
         <p>The same 14 readings are computed twice, once with the MAD filter and once with an
-          upper&#8209;percentile estimator. If the two differ by more than 0.03&nbsp;OD, the
-          reading is rejected. The upper estimator is not trusted for the OD itself; it is used
-          because the two agree to within a few thousandths of an OD in clean flow and pull
-          apart when a bubble passes. On the 10&nbsp;October run this flagged 97% of disturbed
+          upper&#8209;percentile estimator. If the two differ by more than 0.03&nbsp;OD the
+          reading is rejected. The upper estimator is not trusted for the OD itself: the two
+          agree to within a few thousandths of an OD in clean flow and pull
+          apart when a bubble passes. On the 10&nbsp;October run it flagged 97% of disturbed
           readings and rejected none of the clean ones.</p>
       </article>
       <article class="hwcard">
@@ -1873,14 +1851,13 @@
           This catches air slugs. At the long run&rsquo;s cadence of about one reading every 10&nbsp;minutes,
           3 readings span 30&nbsp;minutes, and a culture growing at 22&nbsp;&deg;C does not move 0.05&nbsp;OD in that
           time. In run&nbsp;6, at 37&nbsp;&deg;C on <i>B.&nbsp;subtilis</i>&nbsp;WB800, the windows came about every 2.3&nbsp;minutes (1,083 in 41.8&nbsp;h), so
-          3 readings span about 7&nbsp;minutes; growing at 0.286&nbsp;h<sup>&minus;1</sup>, the culture moved about 1% per
-          window, under the 5% step. The price is a few minutes&rsquo; delay and some lost points; the gain
-          is a growth curve that stays reliable over days and weeks.</p>
+          3 readings span about 7&nbsp;minutes; growing at 0.286&nbsp;h<sup>&minus;1</sup> the culture moved about 1% per
+          window, under the 5% step. The price is a few minutes&rsquo; delay and some lost points.</p>
       </article>
     </div>
     <p>
       Finally, if the rejection rate exceeds 50% of the latest burst&rsquo;s readings, the dashboard shows it in red
-      and tells the user there are excessive bubbles to fix in the bioreactor, so a long&#8209;lasting
+      and names excessive bubbles in the bioreactor, so a long&#8209;lasting
       air slug cannot leave the record wrong indefinitely.
     </p>
     <p class="pm-data">Data: <a href="https://drive.google.com/file/d/1XJ9AzlmeEHbHRuBG31qLgbMxXCxmHNrH/view?usp=drive_link" rel="noopener" target="_blank">Google Drive</a></p>
@@ -1889,14 +1866,13 @@
   <section class="sec" id="od-calc">
     <h3><i>8.2</i> OD600 Calculation</h3>
     <p>
-      Each sensor reports illuminance in lux. The <b>sample sensor</b> measures light
-      transmitted through the culture, while the <b>reference sensor</b> measures light
-      diverted before the sample. Using the ratio between these two signals helps normalize
-      readings against changes in LED output.
+      Each sensor reports illuminance in lux: the <b>sample sensor</b> light
+      transmitted through the culture, the <b>reference sensor</b> light
+      diverted before the sample. Their ratio normalizes readings against changes in LED output.
     </p>
     <p>
-      At the start of a run, we first take a blank measurement on the growth medium and calculate
-      <i>K</i>, the ratio of the sample and reference readings when no bacteria are present:
+      At the start of a run we take a blank measurement on the growth medium and calculate
+      <i>K</i>, the ratio of the sample and reference readings with no bacteria present:
     </p>
     <div class="equation eqn" role="math" aria-label="K equals S blank over R blank">
       <span class="eq-lhs"><i>K</i></span><span class="eq-eq">=</span>
@@ -1913,10 +1889,10 @@
       <span class="eq-par">)</span>
     </div>
     <p class="eq-key">
-      <i>S</i> is the sample&#8209;sensor reading and <i>R</i> is the reference&#8209;sensor
-      reading, both in lux. The 5 is 10&nbsp;mm &divide; 2&nbsp;mm: it scales the absorbance across
+      <i>S</i> is the sample&#8209;sensor reading and <i>R</i> the reference&#8209;sensor
+      reading, both in lux. The 5 is 10&nbsp;mm &divide; 2&nbsp;mm, scaling the absorbance across
       the 2&nbsp;mm cuvette to the standard 1&nbsp;cm path, so the result reads as OD600. On the
-      Pro, <i>K</i> is about 9:1, the splitter&rsquo;s ratio; as the culture grows, the live ratio falls below it
+      Pro, <i>K</i> is about 9:1, the splitter&rsquo;s ratio; as the culture grows the live ratio falls below it
       (<a href="#cyc4">5.1</a>).
     </p>
   </section>
@@ -1931,16 +1907,16 @@
   <section class="sec" id="code">
     <h3><i>8.3</i> Code</h3>
     <p>
-      The photometer runs one app on its Arduino Uno&nbsp;Q, built in Arduino App&nbsp;Lab. The board&rsquo;s
-      microcontroller only reads the two sensors; the board&rsquo;s Linux side turns those readings into OD600, keeps the
+      The photometer runs one app on its Arduino UNO&nbsp;Q, built in Arduino App&nbsp;Lab. The board&rsquo;s
+      microcontroller only reads the two sensors; its Linux side turns those readings into OD600, keeps the
       blank and serves a dashboard to any browser, so <strong>no computer has to stay plugged in</strong>. It is the photometer part of our
-      integrated bioreactor app, taken out on its own, with the same wiring (<a href="#electronics">9</a>).
+      integrated bioreactor app, with the same wiring (<a href="#electronics">9</a>).
     </p>
     <div class="pm-dl">
       <div class="pm-dl__ic" aria-hidden="true">{ }</div>
       <div class="pm-dl__tx">
         <b>Inline Photometer app, v1.2.0</b>
-        <p>For the Uno&nbsp;Q in Arduino App&nbsp;Lab: the sketch, the Python back end, the web dashboard and an offline
+        <p>For the UNO&nbsp;Q in Arduino App&nbsp;Lab: the sketch, the Python back end, the web dashboard and an offline
           replay tool.</p>
       </div>
       <a class="pm-dl__btn" href="software/inline_photometer_app.zip" download="releaf-photometer-inline-app-v1.2.0.zip">ZIP <span>64&nbsp;KB</span></a>
@@ -1987,7 +1963,7 @@
     </div>
     <p class="fineprint">Version 1.2.0 moves the OD600 calculation from the microcontroller to the Linux side.
       The downloadable v1.2.0 (10&nbsp;October) defaults to the one&#8209;sided &ldquo;upper&rdquo; estimator and predates
-      the two bubble gates of <a href="#filter-gates">8.1</a>; to run the MAD filter this page describes, set
+      the two bubble gates of <a href="#filter-gates">8.1</a>; to run the MAD filter, set
       <code>"default_algorithm"</code> to <code>"mad"</code> in <code>python/constants.json</code>.</p>
   </section>
 
@@ -2010,44 +1986,42 @@
     <h3><i>9.1</i> Control Architecture</h3>
     <p>
       Neither of our finalized photometer versions uses a breadboard; both use a <strong>soldered perfboard</strong> connected to an Arduino
-      Uno&nbsp;Q. The Arduino Uno&nbsp;Q is a <strong>small computer in itself</strong>, so we can run the code just by giving it a power
-      source, with no computer constantly plugged into it. This moves us one step closer to a cheap and accessible
-      bioreactor, and also removes one of the other failure points of our photometer&rsquo;s sensing (a
-      computer&ndash;Arduino cable coming unplugged).
+      UNO&nbsp;Q, which is a <strong>small computer in itself</strong>, so the code runs on a power
+      source alone. That removes one failure point of the
+      photometer&rsquo;s sensing, a computer&ndash;Arduino cable coming unplugged, and keeps the bioreactor cheaper.
     </p>
     <p data-net="gnd">
-      Our Arduino has a limited number of ground ports, so we link all of the ground wires of our sensors, LED and
-      transistor together.
+      The Arduino has a limited number of ground ports, so the ground wires of the sensors, LED and
+      transistor are linked together.
     </p>
     <p data-net="led">
-      The transistor is a more complex part. It lets us give the LED a completely <strong>different voltage</strong> from the sensors,
-      and lets us <strong>turn the LED on and off</strong> without affecting the sensors while they run. We want this because, as we
-      scale up our bioreactor, the voltage we give our LED may need to increase as well, and it is much safer and more
-      sustainable for our bioreactor if the LED is not kept on continuously.
+      The transistor lets us give the LED a <strong>different voltage</strong> from the sensors,
+      and lets us <strong>turn the LED on and off</strong> without affecting the sensors while they run. As the
+      bioreactor scales up the LED&rsquo;s voltage may need to rise, and leaving the LED off between readings is safer
+      and uses less power.
     </p>
     <p data-net="led">
-      The transistor has three parts: the collector, the base and the emitter. The LED&rsquo;s ground wire connects to
-      the collector side of our transistor; the Arduino&rsquo;s <strong>D3 port</strong> connects to the base after passing through a
-      <strong>1.2&nbsp;k&Omega;</strong> resistor; and the base also passes through a <strong>10&nbsp;k&Omega;</strong> resistor before joining the
-      output of the emitter side, and all of these finally combine with the sensor ground wires into one Arduino ground
+      The transistor has three parts: collector, base and emitter. The LED&rsquo;s ground wire connects to
+      the collector; the Arduino&rsquo;s <strong>D3 port</strong> connects to the base through a
+      <strong>1.2&nbsp;k&Omega;</strong> resistor; the base also passes through a <strong>10&nbsp;k&Omega;</strong> resistor to the
+      emitter output; all of these combine with the sensor ground wires into one Arduino ground
       port.
     </p>
     <p data-net="bus">
-      Because we have a sample sensor and a reference sensor, we connect both of their SDA and SCL ports together and
-      connect them to the same Arduino ports. Wiring them this way lets us control several sensors from the same
-      Arduino microcontroller at the same time.
+      The sample and reference sensors have their SDA and SCL ports joined and wired to the same Arduino ports, so one
+      microcontroller controls both at once.
     </p>
     <p data-net="pwr">
-      The power our Arduino supplies is different for our sensors and for our LED. Our LED currently takes a <strong>5&nbsp;V input</strong> through a 330&nbsp;&Omega; series resistor, which may need to increase in future work once we scale up our bioreactor, while our sensors need
-      a <strong>3.3&nbsp;V input</strong> to run smoothly. The two lux sensors can therefore share a power input, while the LED&rsquo;s stays separate.
+      Our LED takes a <strong>5&nbsp;V input</strong> through a 330&nbsp;&Omega; series resistor, which may need to increase once we scale up the bioreactor; the sensors need
+      a <strong>3.3&nbsp;V input</strong>. The two lux sensors therefore share a power input and the LED&rsquo;s stays separate.
     </p>
     <p>
-      After all of the wiring on the perfboard, we are left with six wire outputs: SCL, SDA, D3, 3.3&nbsp;V, 5&nbsp;V and
-      ground, which makes the last step of setting up the photometer extremely simple.
+      The perfboard ends in six wire outputs: SCL, SDA, D3, 3.3&nbsp;V, 5&nbsp;V and
+      ground, which makes setting up the photometer simple.
     </p>
 
 <figure class="diafig" id="fig-wiring">
-      <svg class="dia wire" viewBox="0 0 360 422" role="img" aria-labelledby="wire-t"><title id="wire-t">Wiring of the photometer as described in section 9.1. Arduino pin D3 drives the base of a PN2222 transistor through a 1.2 kilo-ohm resistor; a 10 kilo-ohm resistor joins the base to the emitter. The LED runs from 5 volts, through a 330 ohm resistor, to the collector. Both GY-302 lux sensors share 3.3 volts, SDA and SCL. The emitter, both sensor grounds and the Arduino ground meet on one shared ground.</title><rect class="mcu" x="8" y="8" width="344" height="54" rx="5"/><text class="ttl" x="18" y="29">Arduino Uno Q</text><rect class="pin n-led" x="30" y="58" width="8" height="8" rx="1"/><text class="pl m n-led" x="34" y="52">D3</text><rect class="pin n-led n-pwr" x="96" y="58" width="8" height="8" rx="1"/><text class="pl m n-led n-pwr" x="100" y="52">5V</text><rect class="pin n-gnd" x="174" y="58" width="8" height="8" rx="1"/><text class="pl m n-gnd" x="178" y="52">GND</text><rect class="pin n-pwr" x="236" y="58" width="8" height="8" rx="1"/><text class="pl m n-pwr" x="240" y="52">3.3V</text><rect class="pin n-bus" x="296" y="58" width="8" height="8" rx="1"/><text class="pl m n-bus" x="300" y="52">SDA</text><rect class="pin n-bus" x="336" y="58" width="8" height="8" rx="1"/><text class="pl m n-bus" x="340" y="52">SCL</text><path class="w sig n-led" d="M34 66V92"/><rect class="res n-led" x="27" y="92" width="14" height="38" rx="2"/><text class="cv n-led" x="48" y="108">1.2 k&#937;</text><text class="cv s n-led" x="48" y="123">R1</text><path class="w sig n-led" d="M34 130V176H82"/><circle class="jn n-led" cx="58" cy="176" r="2.6"/><path class="w n-led" d="M58 176V190"/><rect class="res n-led" x="51" y="190" width="14" height="38" rx="2"/><text class="cv e n-led" x="48" y="206">10 k&#937;</text><text class="cv s e n-led" x="48" y="221">R2</text><path class="w n-led n-gnd" d="M58 228V244H100"/><path class="qb n-led" d="M82 160V192"/><path class="w n-led" d="M82 168L100 156V128"/><path class="w n-led" d="M82 184L100 196V244"/><path class="arr n-led" d="M100 196l-8.2 -1.6l3.6 -5.4z"/><circle class="qc n-led" cx="90" cy="176" r="21"/><text class="cv n-led" x="114" y="174">PN2222</text><text class="tm e n-led" x="67" y="170">B</text><text class="tm n-led" x="105" y="150">C</text><text class="tm n-led" x="105" y="216">E</text><circle class="jn n-led n-gnd" cx="100" cy="244" r="2.6"/><path class="w pwr5 n-led n-pwr" d="M100 66V70"/><rect class="res n-led n-pwr" x="93" y="70" width="14" height="18" rx="2"/><path class="w n-led n-pwr" d="M100 88V92"/><text class="cv e n-led n-pwr" x="88" y="84">330 &#937;</text><path class="led n-led n-pwr" d="M89 92H111L100 110Z"/><path class="w n-led n-pwr" d="M89 110H111"/><path class="w n-led" d="M100 110V128"/><path class="ray n-led n-pwr" d="M113 97l9 -6m-3.4 -0.1l3.4 0.1l-0.7 3.2M115 105l9 -6m-3.4 -0.1l3.4 0.1l-0.7 3.2"/><text class="cv n-led n-pwr" x="130" y="98">LED</text><text class="cv s n-led n-pwr" x="130" y="113">600 nm</text><path class="w gnd n-gnd" d="M100 244V398"/><path class="w gnd n-gnd" d="M178 66V398"/><path class="w gnd n-gnd" d="M100 398H316"/><circle class="jn n-gnd" cx="178" cy="398" r="2.6"/><rect class="dev" x="186" y="316" width="84" height="64" rx="4"/><text class="pn m n-pwr" x="200" y="333">VCC</text><text class="pn m n-bus" x="226" y="333">SDA</text><text class="pn m n-bus" x="252" y="333">SCL</text><text class="dn m" x="228" y="354">Sample</text><text class="cv s m" x="228" y="371">GY&#8209;302</text><rect class="dev" x="274" y="316" width="84" height="64" rx="4"/><text class="pn m n-pwr" x="288" y="333">VCC</text><text class="pn m n-bus" x="314" y="333">SDA</text><text class="pn m n-bus" x="340" y="333">SCL</text><text class="dn m" x="316" y="354">Reference</text><text class="cv s m" x="316" y="371">GY&#8209;302</text><path class="w pwr3 n-pwr" d="M240 66V272"/><path class="w pwr3 n-pwr" d="M200 316V272H288"/><path class="w sda n-bus" d="M300 66V284"/><path class="w sda n-bus" d="M226 316V284H314"/><path class="w scl n-bus" d="M340 66V316"/><path class="w scl n-bus" d="M252 316V296H340"/><circle class="jn n-pwr" cx="240" cy="272" r="2.6"/><circle class="jn n-bus" cx="300" cy="284" r="2.6"/><circle class="jn n-bus" cx="340" cy="296" r="2.6"/><path class="w pwr3 n-pwr" d="M288 272V279a5 5 0 0 0 0 10V291a5 5 0 0 0 0 10V316"/><path class="w sda n-bus" d="M314 284V291a5 5 0 0 0 0 10V316"/><path class="w gnd n-gnd" d="M228 380V398"/><path class="w gnd n-gnd" d="M316 380V398"/><circle class="jn n-gnd" cx="228" cy="398" r="2.6"/><text class="gl n-gnd" x="106" y="414">One shared ground</text></svg>
+      <svg class="dia wire" viewBox="0 0 360 422" role="img" aria-labelledby="wire-t"><title id="wire-t">Wiring of the photometer as described in section 9.1. Arduino pin D3 drives the base of a PN2222 transistor through a 1.2 kilo-ohm resistor; a 10 kilo-ohm resistor joins the base to the emitter. The LED runs from 5 volts, through a 330 ohm resistor, to the collector. Both GY-302 lux sensors share 3.3 volts, SDA and SCL. The emitter, both sensor grounds and the Arduino ground meet on one shared ground.</title><rect class="mcu" x="8" y="8" width="344" height="54" rx="5"/><text class="ttl" x="18" y="29">Arduino UNO Q</text><rect class="pin n-led" x="30" y="58" width="8" height="8" rx="1"/><text class="pl m n-led" x="34" y="52">D3</text><rect class="pin n-led n-pwr" x="96" y="58" width="8" height="8" rx="1"/><text class="pl m n-led n-pwr" x="100" y="52">5V</text><rect class="pin n-gnd" x="174" y="58" width="8" height="8" rx="1"/><text class="pl m n-gnd" x="178" y="52">GND</text><rect class="pin n-pwr" x="236" y="58" width="8" height="8" rx="1"/><text class="pl m n-pwr" x="240" y="52">3.3V</text><rect class="pin n-bus" x="296" y="58" width="8" height="8" rx="1"/><text class="pl m n-bus" x="300" y="52">SDA</text><rect class="pin n-bus" x="336" y="58" width="8" height="8" rx="1"/><text class="pl m n-bus" x="340" y="52">SCL</text><path class="w sig n-led" d="M34 66V92"/><rect class="res n-led" x="27" y="92" width="14" height="38" rx="2"/><text class="cv n-led" x="48" y="108">1.2 k&#937;</text><text class="cv s n-led" x="48" y="123">R1</text><path class="w sig n-led" d="M34 130V176H82"/><circle class="jn n-led" cx="58" cy="176" r="2.6"/><path class="w n-led" d="M58 176V190"/><rect class="res n-led" x="51" y="190" width="14" height="38" rx="2"/><text class="cv e n-led" x="48" y="206">10 k&#937;</text><text class="cv s e n-led" x="48" y="221">R2</text><path class="w n-led n-gnd" d="M58 228V244H100"/><path class="qb n-led" d="M82 160V192"/><path class="w n-led" d="M82 168L100 156V128"/><path class="w n-led" d="M82 184L100 196V244"/><path class="arr n-led" d="M100 196l-8.2 -1.6l3.6 -5.4z"/><circle class="qc n-led" cx="90" cy="176" r="21"/><text class="cv n-led" x="114" y="174">PN2222</text><text class="tm e n-led" x="67" y="170">B</text><text class="tm n-led" x="105" y="150">C</text><text class="tm n-led" x="105" y="216">E</text><circle class="jn n-led n-gnd" cx="100" cy="244" r="2.6"/><path class="w pwr5 n-led n-pwr" d="M100 66V70"/><rect class="res n-led n-pwr" x="93" y="70" width="14" height="18" rx="2"/><path class="w n-led n-pwr" d="M100 88V92"/><text class="cv e n-led n-pwr" x="88" y="84">330 &#937;</text><path class="led n-led n-pwr" d="M89 92H111L100 110Z"/><path class="w n-led n-pwr" d="M89 110H111"/><path class="w n-led" d="M100 110V128"/><path class="ray n-led n-pwr" d="M113 97l9 -6m-3.4 -0.1l3.4 0.1l-0.7 3.2M115 105l9 -6m-3.4 -0.1l3.4 0.1l-0.7 3.2"/><text class="cv n-led n-pwr" x="130" y="98">LED</text><text class="cv s n-led n-pwr" x="130" y="113">600 nm</text><path class="w gnd n-gnd" d="M100 244V398"/><path class="w gnd n-gnd" d="M178 66V398"/><path class="w gnd n-gnd" d="M100 398H316"/><circle class="jn n-gnd" cx="178" cy="398" r="2.6"/><rect class="dev" x="186" y="316" width="84" height="64" rx="4"/><text class="pn m n-pwr" x="200" y="333">VCC</text><text class="pn m n-bus" x="226" y="333">SDA</text><text class="pn m n-bus" x="252" y="333">SCL</text><text class="dn m" x="228" y="354">Sample</text><text class="cv s m" x="228" y="371">GY&#8209;302</text><rect class="dev" x="274" y="316" width="84" height="64" rx="4"/><text class="pn m n-pwr" x="288" y="333">VCC</text><text class="pn m n-bus" x="314" y="333">SDA</text><text class="pn m n-bus" x="340" y="333">SCL</text><text class="dn m" x="316" y="354">Reference</text><text class="cv s m" x="316" y="371">GY&#8209;302</text><path class="w pwr3 n-pwr" d="M240 66V272"/><path class="w pwr3 n-pwr" d="M200 316V272H288"/><path class="w sda n-bus" d="M300 66V284"/><path class="w sda n-bus" d="M226 316V284H314"/><path class="w scl n-bus" d="M340 66V316"/><path class="w scl n-bus" d="M252 316V296H340"/><circle class="jn n-pwr" cx="240" cy="272" r="2.6"/><circle class="jn n-bus" cx="300" cy="284" r="2.6"/><circle class="jn n-bus" cx="340" cy="296" r="2.6"/><path class="w pwr3 n-pwr" d="M288 272V279a5 5 0 0 0 0 10V291a5 5 0 0 0 0 10V316"/><path class="w sda n-bus" d="M314 284V291a5 5 0 0 0 0 10V316"/><path class="w gnd n-gnd" d="M228 380V398"/><path class="w gnd n-gnd" d="M316 380V398"/><circle class="jn n-gnd" cx="228" cy="398" r="2.6"/><text class="gl n-gnd" x="106" y="414">One shared ground</text></svg>
       <div class="nets" role="group" aria-label="Highlight one part of the wiring">
         <span class="nets-k" aria-hidden="true">Highlight</span>
         <button type="button" data-net="gnd" aria-pressed="false"><i class="sw-gnd" aria-hidden="true"></i>One shared ground</button>
@@ -2075,7 +2049,7 @@
     <p>
       The circuit of <a href="#sec41">9.1</a> is soldered on a 2&nbsp;&times;&nbsp;8&nbsp;cm perfboard, with a
       330&nbsp;&Omega; resistor in series with the LED. Six right&#8209;angle 2510 headers take the cables: three to
-      the Arduino, one to each lux sensor and one to the LED.
+      the Arduino, one to each lux sensor, one to the LED.
     </p>
     <figure class="diafig pcbfig" id="fig-pcb">
       <div class="pm-tabs" data-pm-tabs data-start="Component side" aria-label="The soldered board, three views">
@@ -2090,8 +2064,8 @@
         </div>
       </div>
       <figcaption><b>The soldered board.</b> A photo of its wired half, then a diagram of the board wiring on both sides, hole by hole. The
-        jumper wires keep their real colors; underneath, seen from below and mirrored, the solder bridges take the
-        net colors of the architecture diagram (<a href="#fig-wiring">9.1</a>).</figcaption>
+      jumper wires keep their real colors; underneath, seen from below and mirrored, the solder bridges take the
+      net colors of <a href="#sec41">9.1</a>.</figcaption>
     </figure>
   </section>
 
@@ -2113,18 +2087,15 @@
   <section class="sec" id="future-use">
     <h3><i>10.1</i> Future Use</h3>
     <p>
-      Our photometer can help any student or professor measure the optical density of their solution at 600&nbsp;nm
-      during growth runs. It <strong>removes the reliance on sampling</strong>, and with it the human error that sampling brings. These benefits come at a relatively low cost: <strong>US$371.78</strong> in parts for the Pro model and
-      US$235.29 for the Slim model (<a href="#materials">11.1</a>), which drops the US$100 paralleling lens and the
-      US$40 beam splitter. This is small next to the prices of commercial laboratory spectrophotometers on the market
-      today: the BioDrop spectrophotometer we compared our photometer against during calibration costs <strong>about
+      Our photometer lets any student or professor measure the optical density of a solution at 600&nbsp;nm
+      during a growth run, and it <strong>removes the reliance on sampling</strong> and the human error sampling
+      brings. Parts come to <strong>US$371.78</strong> for the Pro and
+      US$235.29 for the Slim (<a href="#materials">11.1</a>), which drops the US$100 paralleling lens and the
+      US$40 beam splitter; the BioDrop we calibrated against costs <strong>about
       US$15,000</strong>.
     </p>
     <p>
-      For anyone who needs a photometer that measures optical density at 600&nbsp;nm in the future, our design lowers the barrier to entry to the cost of its parts and a 3D printer, and makes an in&#8209;line photometer openly accessible.
-    </p>
-    <p>
-      We hope that future uses of, and developments to, this design will benefit many others running their own experiments.
+      Our design lowers the barrier to an in&#8209;line photometer to the cost of its parts and a 3D printer.
     </p>
   </section>
 
@@ -2156,7 +2127,7 @@
   <section class="sec" id="materials">
     <h3><i>11.1</i> Materials List</h3>
     <p>
-      The material lists of both photometers, with costs in US dollars. The pictures are the parts&rsquo; own CAD
+      The material lists of both photometers, in US dollars. The pictures are the parts&rsquo; own CAD
       models.
     </p>
     <div class="pm-tabs" data-pm-tabs aria-label="Material lists">
@@ -2164,7 +2135,7 @@
         <div class="tablewrap">
         <table class="bom-doc" id="tbl-bom">
           <caption>Pro Photometer Material List</caption>
-          <thead><tr><th scope="col">Component</th><th scope="col">Specification</th><th scope="col" class="num">Unit Cost (USD)</th><th scope="col" class="num">Total Cost (USD)</th></tr></thead>
+          <thead><tr><th scope="col">Component</th><th scope="col">Specification</th><th scope="col" class="num">Unit Cost (US$)</th><th scope="col" class="num">Total Cost (US$)</th></tr></thead>
           <tbody>
             <tr><td><span class="bom-c"><span class="bom-ic"><img src="photos/parts/led.webp" alt="" width="44" height="112" loading="lazy" decoding="async"></span><span>LED</span></span></td><td>1x 600nm</td><td class="num" data-k="Unit cost">0.2</td><td class="num" data-k="Total">0.2</td></tr>
             <tr><td><span class="bom-c"><span class="bom-ic"><img src="photos/parts/led-clip.webp" alt="" width="65" height="112" loading="lazy" decoding="async"></span><span>LED Clip</span></span></td><td>1x black LED clip, holds the LED in the LED mount</td><td class="num" data-k="Unit cost">&mdash;</td><td class="num" data-k="Total">&mdash;</td></tr>
@@ -2172,7 +2143,7 @@
             <tr><td><span class="bom-c"><span class="bom-ic"><img src="photos/parts/splitter.webp" alt="" width="192" height="140" loading="lazy" decoding="async"></span><span>Beamsplitter</span></span></td><td>1x Coaxial Light Beamsplitter<br>12.0 × 12.0 × 14.5 mm, 45 degree angle, 90% through with 10% reflection</td><td class="num" data-k="Unit cost">40</td><td class="num" data-k="Total">40</td></tr>
             <tr><td><span class="bom-c"><span class="bom-ic"><img src="photos/parts/gy302.webp" alt="" width="112" height="94" loading="lazy" decoding="async"></span><span>Lux Sensor</span></span></td><td>2x GY-302 BH1750FVI Lux Sensor<br>Chip Light Intensity Light Module</td><td class="num" data-k="Unit cost">2</td><td class="num" data-k="Total">4</td></tr>
             <tr><td>Resistors</td><td>1x 330 Ohm<br>1x 1200 Ohm<br>1x 10000 Ohm</td><td class="num" data-k="Unit cost">1</td><td class="num" data-k="Total">3</td></tr>
-            <tr><td>Microcontroller</td><td>1x Arduino Uno Q</td><td class="num" data-k="Unit cost">70</td><td class="num" data-k="Total">70</td></tr>
+            <tr><td>Microcontroller</td><td>1x Arduino UNO Q</td><td class="num" data-k="Unit cost">70</td><td class="num" data-k="Total">70</td></tr>
             <tr><td>PCB</td><td>2x8cm</td><td class="num" data-k="Unit cost">1</td><td class="num" data-k="Total">1</td></tr>
             <tr><td><span class="bom-c"><span class="bom-ic"><img src="photos/parts/cuvette.webp" alt="" width="192" height="108" loading="lazy" decoding="async"></span><span>Flow Cuvette</span></span></td><td>2mm inner diameter, 4mm outer diameter, total length 76mm.</td><td class="num" data-k="Unit cost">135</td><td class="num" data-k="Total">135</td></tr>
             <tr><td>Wires</td><td>3x 12in+1in 20AWG black wires<br>3x 12in+1in 20AWG red wires<br>2x 12in+1in 20AWG green wires<br>2x 12in+1in 20AWG blue wires<br>1x 24in 20AWG red wire<br>1x 24in 20AWG black wire</td><td class="num" data-k="Unit cost">0.1</td><td class="num" data-k="Total">1.2</td></tr>
@@ -2191,12 +2162,12 @@
         <div class="tablewrap">
         <table class="bom-doc" id="tbl-slim-bom">
           <caption>Slim Photometer Material List</caption>
-          <thead><tr><th scope="col">Component</th><th scope="col">Specification</th><th scope="col" class="num">Unit Cost (USD)</th><th scope="col" class="num">Total Cost (USD)</th></tr></thead>
+          <thead><tr><th scope="col">Component</th><th scope="col">Specification</th><th scope="col" class="num">Unit Cost (US$)</th><th scope="col" class="num">Total Cost (US$)</th></tr></thead>
           <tbody>
             <tr><td>Fiber Optic Light</td><td>1x 600nm PMMA</td><td class="num" data-k="Unit cost">10</td><td class="num" data-k="Total">10</td></tr>
             <tr><td><span class="bom-c"><span class="bom-ic"><img src="photos/parts/gy302.webp" alt="" width="112" height="94" loading="lazy" decoding="async"></span><span>Lux Sensor</span></span></td><td>2x GY-302 BH1750FVI Lux Sensor<br>Chip Light Intensity Light Module</td><td class="num" data-k="Unit cost">2</td><td class="num" data-k="Total">4</td></tr>
             <tr><td>Resistors</td><td>1x 330 Ohm<br>1x 1200 Ohm<br>1x 10000 Ohm</td><td class="num" data-k="Unit cost">1</td><td class="num" data-k="Total">3</td></tr>
-            <tr><td>Microcontroller</td><td>1x Arduino Uno Q</td><td class="num" data-k="Unit cost">70</td><td class="num" data-k="Total">70</td></tr>
+            <tr><td>Microcontroller</td><td>1x Arduino UNO Q</td><td class="num" data-k="Unit cost">70</td><td class="num" data-k="Total">70</td></tr>
             <tr><td>PCB</td><td>2x8cm</td><td class="num" data-k="Unit cost">1</td><td class="num" data-k="Total">1</td></tr>
             <tr><td><span class="bom-c"><span class="bom-ic"><img src="photos/parts/cuvette.webp" alt="" width="192" height="108" loading="lazy" decoding="async"></span><span>Flow Cuvette</span></span></td><td>2mm inner diameter, 4mm outer diameter, total length 76mm.</td><td class="num" data-k="Unit cost">135</td><td class="num" data-k="Total">135</td></tr>
             <tr><td>Wires</td><td>3x 12in+1in 20AWG black wires<br>3x 12in+1in 20AWG red wires<br>2x 12in+1in 20AWG green wires<br>2x 12in+1in 20AWG blue wires<br>1x 24in 20AWG red wire<br>1x 24in 20AWG black wire</td><td class="num" data-k="Unit cost">0.1</td><td class="num" data-k="Total">1.2</td></tr>
@@ -2215,15 +2186,15 @@
     <!-- 19 Oct 2026 (judging review, issue 13): the lists stay verbatim (the owner's rule of 17 Oct); this note says
          where their arithmetic does not close instead of changing the numbers. -->
     <p class="fineprint">Both lists are copied as the team wrote them. In two rows the unit and total costs do not
-      multiply out (the transistor and the DuPont connections); a dash marks a part with no recorded price, which is not
-      in the total; and the Slim&rsquo;s six M3 and two M4 screws (<a href="#final-slim">7.3</a>) are not on its list.</p>
+      multiply out (the transistor and the DuPont connections); a dash marks a part with no recorded price, left out of
+      the total; the Slim&rsquo;s six M3 and two M4 screws (<a href="#final-slim">7.3</a>) are not on its list.</p>
   </section>
 
   <section class="sec" id="stl">
     <h3><i>11.2</i> Design Files</h3>
     <p>
       The printed parts of both photometers, numbered as in their 3D models (<a href="#final-pro">7.2</a>,
-      <a href="#final-slim">7.3</a>). Each STL downloads under a descriptive name.
+      <a href="#final-slim">7.3</a>).
     </p>
     <div class="folds">
       <details class="fold" id="fold-stl">
@@ -2267,7 +2238,7 @@
       </div>
       <!-- 17 Oct 2026, night: the guide PDF is served from the repo (downloads/, outside hardware/, so not in the Pages
          artifact; iGEM's runner refused the 9.85 MiB artifact with a 413). The raw link downloads it as an attachment. -->
-      <a class="pm-dl__btn" href="../../contribution/files/releaf-pro-photometer-assembly-guide.pdf" download="releaf-pro-photometer-assembly-guide.pdf">PDF <span>446&nbsp;KB</span></a>
+      <a class="pm-dl__btn" href="../../contribution/files/releaf-pro-photometer-assembly-guide.pdf" download="releaf-pro-photometer-assembly-guide.pdf">PDF <span>499&nbsp;KB</span></a>
     </div>
     <div class="pm-dl">
       <div class="pm-dl__ic" aria-hidden="true">PDF</div>
@@ -2275,15 +2246,15 @@
         <b>Slim photometer assembly guide</b>
         <p>The same stages for the Slim (<a href="#slim">part&nbsp;4</a>): print, make the illuminator cable, wire and test the sensors, assemble the body and align, with its parts list.</p>
       </div>
-      <a class="pm-dl__btn" href="../../contribution/files/releaf-slim-photometer-assembly-guide.pdf" download="releaf-slim-photometer-assembly-guide.pdf">PDF <span>594&nbsp;KB</span></a>
+      <a class="pm-dl__btn" href="../../contribution/files/releaf-slim-photometer-assembly-guide.pdf" download="releaf-slim-photometer-assembly-guide.pdf">PDF <span>647&nbsp;KB</span></a>
     </div>
     <p>Three classmates outside the team built the Slim from this guide, and the guide was changed where they got stuck (<a href="#handover">6.2</a>).</p>
     <!-- 19 Oct 2026 (judging review): one line on safe use, from facts already on the site; no new method. -->
-    <p class="fineprint" id="safe-use"><b>Safe use.</b> In the loop, the flow cell carries live <i>B.&nbsp;subtilis</i>
+    <p class="fineprint" id="safe-use"><b>Safe use.</b> In the loop the flow cell carries live <i>B.&nbsp;subtilis</i>
       culture: handle it, and anything that drips from it, as the bioreactor&rsquo;s culture, under its containment rules
       (<a href="../bioreactor/index.html#containment">bioreactor, part&nbsp;8</a>) and the loop&rsquo;s clean&#8209;in&#8209;place
       sterilization (<a href="../bioreactor/index.html#int3-d">bioreactor, integrated prototype&nbsp;3</a>). The flow cuvette
-      cannot be cleaned while it is in the loop (<a href="#cal-blank">5.2.4</a>). The electronics run at 5&nbsp;V and
+      cannot be cleaned in the loop (<a href="#cal-blank">5.2.4</a>). The electronics run at 5&nbsp;V and
       3.3&nbsp;V (<a href="#sec41">9.1</a>).</p>
   </section>
 
