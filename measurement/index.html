@@ -208,6 +208,22 @@
               <li><b>Optogenetic-compatible wavelength measurement.</b> 600&nbsp;nm wavelength LEDs keep us on the standard for measuring turbidity, while simultaneously sitting right between the wavelengths of green (~535&nbsp;nm) and red (~672&nbsp;nm), the 2 actuation peaks for CcaS/CcaR. This ensures that our photometer measurements don't affect the activation or deactivation of our optogenetic circuit in <i>B. subtilis</i>.</li>
             </ul>
 
+            <h4 class="blk__h">From lux to optical density</h4>
+            <p>The sensors report illuminance in lux, and the optical density is derived from those readings in software. The microcontroller does no arithmetic of its own: it forwards the readings intact, so every OD in our logs can be recomputed from the original readings after a run rather than existing only as a number the instrument chose to report.</p>
+            <p>One measurement is twenty readings from each sensor, four with the LED off and sixteen with it on. The median of the four dark readings is subtracted, which removes ambient light and the sensor's own offset, and the first two lit readings are discarded as settling time. The remaining fourteen per channel are reduced to one value by averaging those inside median&nbsp;&plusmn;&nbsp;3&middot;MAD. That leaves two numbers: S, the intensity through the flow cuvette, and R, the intensity at the reference sensor. With the blank values S&#8320; and R&#8320; stored from sterile medium,</p>
+            <p class="eqn">OD = log<sub>10</sub>[ (S&#8320;/R&#8320;) / (S/R) ] &times; plf</p>
+            <p>S/R is the sample intensity relative to the reference intensity at the same instant, so dividing the blank's value of that quantity by the current one gives the factor by which transmission has fallen, and its base-10 logarithm is the optical density. The path-length factor plf is 5.0, because our cuvette has a 2&nbsp;mm internal path and OD600 is conventionally quoted through a 1&nbsp;cm cuvette.</p>
+
+            <h4 class="blk__h">Why there is no calibration step</h4>
+            <p>A single sensor cannot tell a grown culture from a dimmed lamp, since both reduce the intensity at the detector. The reference channel makes that separation algebraic. Let P be the LED output at the moment of measurement, T the transmittance of the cuvette contents, and k the fixed gain of the sample path relative to the reference path: the 90/10 split and the responsivity difference between the two sensors. The reference path never crosses the cuvette, so T enters only the sample channel, and after dark subtraction</p>
+            <p class="eqn">S / R = k &times; T</p>
+            <p>P has gone. Whatever the LED did at that instant hit both readings equally and divided out. We never measure k either; it is eliminated by referencing a blank taken on sterile medium, for which S&#8320;/R&#8320; = k &times; T<sub>blank</sub>, so that</p>
+            <p class="eqn">(S/R) / (S&#8320;/R&#8320;) = T / T<sub>blank</sub></p>
+            <p>which is transmittance relative to medium, the quantity optical density is defined on. Accuracy rests on those two cancellations: the first removes source intensity at the instant of measurement, the second every fixed difference between the channels. It is also why the 9:1 split never appears in the equation despite being a real property of the optics. It sits inside k and cancels, along with sensor responsivity differences, one-sided transmission losses and small alignment errors, none of which has to be characterised on its own. That is what lets us report OD without calibrating against a benchtop spectrophotometer.</p>
+            <p>The blank is correspondingly the one input that cannot be wrong without consequence, since it carries k and T<sub>blank</sub> into every later point. It is refused if either sensor is saturated, if too few readings survive the filter, or if either channel reads zero; with no blank stored, the software returns no OD rather than an uncorrected number. The same model makes R a direct measure of source stability, because k is fixed and T never enters it:</p>
+            <p class="eqn">R / R&#8320; = P / P&#8320;</p>
+            <p>Reported on every measurement, that ratio holds at unity for a whole run regardless of culture density, and a value outside 0.85 to 1.15 raises a drift flag. Dividing by R keeps the data correct under drift; R/R&#8320; is what tells us the drift happened, which over a multi-week run is what says the LED needs attention. On a single optical path the reference terms are unavailable and the software falls back to OD = log<sub>10</sub>(S&#8320;/S)&nbsp;&times;&nbsp;plf, where P does not cancel and any source change reads directly as an OD change. Both forms are logged for every measurement.</p>
+
             <p>A fifth piece, an acceptance gate that holds a reading back instead of publishing it, was added on 14 October after the reactor run of 8 to 10 October. Why that gate exists, what it catches and what it costs are the subject of <a href="#software-calibration">the next section</a>, which is where all of the arithmetic between the light and the number is reported.</p>
 
             <div class="folds">
@@ -245,7 +261,7 @@
                 <summary><span>Mechanical and electrical build</span> <span class="fold__sub">TPU-lined slots, two supply rails, and five wires to the Arduino</span></summary>
                 <div class="fold__body">
                   <h5>Mechanical</h5>
-                  <p>Our sensors, splitter, and lens, all sit in TPU-lined slots in the PLA body. This provides a tight fit that doesn't crush our components and is the one change that created the most improved stability across long runs. The body splits from the base at a diagonal angle to avoid extra supports during printing and the covers on our photometer are snap-fitted to allow for easy service and access while also keeping the light path from being affected by external changes.</p>
+                  <p>Our sensors, splitter and lens all sit in TPU-lined slots in the PLA body, which grip them tightly without cracking the glass. That is the one change that most improved stability across long runs. The body joins the base at a diagonal, which gives the instrument the tilt that lets bubbles rise out of the cuvette and lets both parts print without supports. Snap-fit covers allow easy service and access while keeping the light path clear of anything outside it.</p>
                   <h5>Electrical</h5>
                   <p>Sensors run at 3.3&nbsp;V and the LED at 5&nbsp;V on separate supplies, since the LED supply is expected to rise as the bioreactor scales; a MOSFET switches the LED independently so the source is not held on continuously. The two BH1750 sensors share SDA and SCL. Grounds are commoned on a soldered PCB, leaving five connections (SDA, SCL, D3, 3.3&nbsp;V, 5&nbsp;V, GND) to the Arduino UNO Q, which runs the acquisition loop standalone with no tethered computer.</p>
                 </div>
@@ -294,33 +310,40 @@
             <header class="chap__hero">
               <h3 class="chap__title" id="pressure-and-flow" data-toc="Pressure and flow">Transmembrane pressure and flowrate meter</h3>
               <div class="chap__intro">
-                <p>Flow and transmembrane pressure were measured together, alongside our pump and specific dials and outputs.</p>
+                <p>Our reactor is meant to be run by a farmer, not a technician, so it has to show what is happening inside it rather than wait for someone who knows.</p>
               </div>
             </header>
 
-            <p>These two numbers decide whether the membrane can run our culture at all: flow sets how hard the fibers sweep the cells, and transmembrane pressure sets whether the protectant can be pushed through the wall.</p>
-            <p>Transmembrane pressure is the mean lumen pressure minus the shell pressure, and it has to be positive for anything to cross: at or below zero nothing leaves with the permeate. Past a certain point flux stops rising and the fouling layer is compressed instead, which only adds resistance (Millipore Corporation, 2003). We therefore read TMP at each pump setting, looking for dials that keep it positive without pushing it into that plateau.</p>
-            <p>Flow through the fiber lumens sets the wall shear that sweeps the membrane. For laminar flow in a lumen the wall shear rate is</p>
-            <p class="eqn">&gamma;&#775;<sub>w</sub> = 4(Q/n) / (&pi;r&sup3;)</p>
-            <p>where Q is the total flow, n the fiber count and r the lumen radius (Yuen, 2025). Our module has 11 fibers of 1&nbsp;mm inner diameter, so r&nbsp;=&nbsp;0.5&nbsp;mm, and dials 10 to 24 (113 to 450&nbsp;mL/min) work out at about 1,750 to 6,950&nbsp;s&#8315;&sup1;.</p>
-            <p>That range is the reason this measurement exists. <i>B.&nbsp;subtilis</i> grew in a Couette flow bioreactor at up to 1,482&nbsp;s&#8315;&sup1;, but the cells shrank to about half their size and intracellular reactive oxygen species rose 9.3-fold (Sahoo et al., 2003). Treating roughly 1,500&nbsp;s&#8315;&sup1; as the upper limit puts our whole operating range above it, so culture viability after circulation has to be checked before any dial is settled on. Pushing shear down is not free either: biofilms formed at every wall shear stress tested from 0.068 to 0.67&nbsp;Pa, and grew more slowly as shear rose (Wittig et al., 2025). Both studies used a different vessel, so these limits are transferred and not measured here.</p>
-            <p>Taken together, the two readings choose a pump setting: the flow has to keep lumen shear below the survival limit and high enough to slow fouling, and TMP at that flow has to stay positive. Both carry into scale-up, where larger vessels mix less well and leave gradients in gas, pH, substrate and shear that cells meet as they circulate (Lara et al., 2006). A third transfer is specific to ReLEAF, because the system is driven by light: as the culture scales, the path lengthens and the density rises until light no longer reaches every cell or crosses our photometer. Optogenetic circuits have given homogeneous induction at 5&nbsp;L and above, with illumination limiting above OD600 40 (Zhao et al., 2021).</p>
+            <p>Two of the parameters we sense are the most useful for that: the flow rate through the hollow fiber module and the transmembrane pressure across the membrane. This chapter is how we measured them and what we did to check the readings.</p>
+            <p>Both work as early warnings. If pressure or flow at a given pump setting drops suddenly, that points to a leak. If TMP climbs while the flow rate stays where it was, cells are most likely sticking, building a cake layer and blocking the fibers (Field et al., 1995), and the module is then washed with an alkaline solution to clear it (Millipore Corporation, 2003).</p>
+            <p>They also decide how the module is operated. Normally the shell-side valve is closed, so the culture runs parallel along the fibers and sweeps their surface, which is what keeps <i>B.&nbsp;subtilis</i> from settling on them (Millipore Corporation, 2003; Wittig et al., 2025). To collect the protectant we open the shell-side valve and close the pinch valve, which forces liquid across the fiber wall instead of along it: the cells stay inside and the protein they secrete passes through the 0.2&nbsp;&micro;m pores. That only works while TMP is positive, since TMP is the pressure pushing liquid out through the membrane. We also intend to try driving TMP negative, which would let us pump medium back into the reactor.</p>
+            <p>Flow also sets the shear the cells meet inside a fiber (Yuen, 2025). At our operating settings it is about 4,000 to 6,000&nbsp;s&#8315;&sup1;, which we read as comfortably inside what <i>B.&nbsp;subtilis</i> tolerates. That reading is not settled here, and the one published figure we have found points the other way: <i>B.&nbsp;subtilis</i> grew in a Couette flow bioreactor at up to 1,482&nbsp;s&#8315;&sup1;, but the cells shrank to about half their size and intracellular reactive oxygen species rose 9.3-fold (Sahoo et al., 2003). That was a different vessel, so the number transfers only loosely, but until culture viability has been read after circulation at our own dials, the margin is an expectation and not a measurement.</p>
 
             <div class="blk">
               <h4 class="blk__h">How flow was measured, three ways</h4>
               <p>First, by hand with no membrane fitted: set the pump dial, catch the outflow in a measuring cylinder over a fixed interval. The pump covers dials 0 to 100 and we tested every tenth, three trials per setting except 70 to 100.</p>
               <p>On 14 August we fitted the membrane and read flow and pressure together, still catching the outflow by hand, every second dial from 10 to 24 where we expect to operate: three rounds of three trials.</p>
               <p>On 16 August we replaced the hand method with the flow meter, because the hand readings depended too much on who took them. Two configurations ran at the same dials, 10 to 24: a background loop with plain tubing in place of the module and every valve, fitting and cuvette still fitted, and the same loop with the module installed.</p>
-              <p>The meter is a Hall-effect type: a magnet in an internal rotor spins with the flow and a fixed sensor counts the passes, which converts to a flow rate. We validated it by reading the meter and catching the outflow by hand at the same time, and the two agree with R&sup2;&nbsp;=&nbsp;0.995.</p>
+              <p>The meter is a ZJ-TM02, a Hall-effect type: a magnet in an internal rotor spins with the flow and a fixed sensor emits a pulse each time it passes, so pulse frequency is proportional to flow. Ours gives 2,580 pulses per litre, about 43&nbsp;Hz per L/min. The microcontroller counts rising edges and ignores any pulse arriving within 0.5&nbsp;ms of the previous one, which rejects switching noise, and reports the pulse count, the time between the first and last pulse and a running total every second. The software converts to mL/min as pulses&nbsp;/&nbsp;2,580&nbsp;&times;&nbsp;1,000 per minute.</p>
+              <p>We validated the meter by reading it and catching the outflow by hand at the same time, and the two agree with R&sup2;&nbsp;=&nbsp;0.995.</p>
             </div>
 
             <div class="blk">
               <h4 class="blk__h">How pressure was measured</h4>
-              <p>Three transducers were installed at the feed, retentate and permeate ports: feed and retentate read the lumen side as the medium enters and leaves, permeate reads the shell side. The quantity in the tables below was computed from the first two as (P<sub>feed</sub> &minus; P<sub>retentate</sub>) / 2, which is a pressure drop <i>along</i> the lumen and not the transmembrane pressure defined above. Readings are in psi, converted to bar.</p>
-              <p>The transducer outputs a current, which a two-resistor divider turns into a 0 to 3.3&nbsp;V signal the microcontroller can read; converting to 5&nbsp;V as supplied would have overdriven the input.</p>
+              <p>Pressure is read by three transmitters, Jingfeng BP8G-AGB, on the feed (lumen in), the retentate (lumen out) and the permeate (shell side). Each runs from 12&nbsp;V and outputs a voltage proportional to the pressure on its sensing element, 0&nbsp;V at 0&nbsp;bar to 5&nbsp;V at 10&nbsp;bar. The board's analog pins tolerate only 3.3&nbsp;V, so each signal first passes a 15&nbsp;k&Omega;&nbsp;/&nbsp;22&nbsp;k&Omega; divider, which scales 5&nbsp;V down to about 2.97&nbsp;V.</p>
+              <p>The microcontroller reads the three channels 100 times a second, each sample the sum of 16 readings to average out noise, and sends them to the computer in batches every 200&nbsp;ms. The software converts each count to a pin voltage, undoes the divider and rescales 0 to 5&nbsp;V onto 0 to 10&nbsp;bar. The three pressures from the same instant are then combined as TMP&nbsp;=&nbsp;(P<sub>feed</sub>&nbsp;+&nbsp;P<sub>retentate</sub>)&nbsp;/&nbsp;2&nbsp;&minus;&nbsp;P<sub>permeate</sub> (Millipore Corporation, 2003), and the value reported is the median over a 30 second window.</p>
+              <p>That is the instrument as it now stands. The August series below predate the permeate channel being logged, so the quantity in those tables and plots is (P<sub>feed</sub>&nbsp;&minus;&nbsp;P<sub>retentate</sub>)&nbsp;/&nbsp;2, a pressure drop <i>along</i> the lumen rather than across the wall. Readings are in psi, converted to bar.</p>
             </div>
 
             <h4 class="blk__h">Results</h4>
+            <div class="chartbox">
+              <div class="charts charts--1">
+                <figure class="fig">
+                  <img src="../assets/img/measurement/tmp-flow-dials.webp" srcset="../assets/img/measurement/tmp-flow-dials-w800.webp 800w, ../assets/img/measurement/tmp-flow-dials.webp 1344w" sizes="(max-width: 52rem) 100vw, 56rem" alt="A line chart of flow in millilitres per minute against pump dial from 0 to 100. The individual trial points sit on a line that climbs almost straight from about 100 at dial 10 to about 980 at dial 50, then bends over and reaches about 1,535 at dial 100." width="1344" height="562" loading="lazy" decoding="async" />
+                  <figcaption>Flow against pump dial with no membrane fitted. The response is close to linear to dial 50, about 22&nbsp;mL/min per dial, and flattens above it.</figcaption>
+                </figure>
+              </div>
+            </div>
             <div class="tablewrap">
               <table class="data">
                 <caption>Flowrate against pump dial, tube only, no membrane. Levels 70 to 100 were run once.</caption>
@@ -340,6 +363,10 @@
               </table>
             </div>
 
+            <p><b>From flow to shear rate.</b> With a 0.1&nbsp;cm fiber inner diameter and 11 working fibers, the wall shear rate follows from flow alone:</p>
+            <p class="eqn">&gamma;&#775;<sub>w</sub> = 32Q / (&pi;d&sup3;n) &asymp; 15.4 &times; Q&nbsp;(mL/min)&nbsp;s&#8315;&sup1;</p>
+            <p>(Bird et al., 2007; Yuen, 2025). Dial&nbsp;10, about 100&nbsp;mL/min, is therefore about 1,500&nbsp;s&#8315;&sup1; and dial&nbsp;20, about 314&nbsp;mL/min, about 4,800&nbsp;s&#8315;&sup1;, so the 4,000 to 6,000&nbsp;s&#8315;&sup1; band sits at roughly 260 to 390&nbsp;mL/min. Across that range the Reynolds number stays near 700 to 1,100, well below 2,100, so the flow is laminar and the formula holds.</p>
+
             <aside class="callout callout--unproven">
               <b class="callout__label">The 14 August pressure series does not repeat</b>
               <p>The pressure measurements from August 14 failed. Flow at a given dial repeats across two of the three runs, while pressure at a given flow does not repeat at all. At dial 10, for example, Series 1 reads 1.39&nbsp;psi at 140&nbsp;mL/min while Series 2 and 3 read 0.272&nbsp;psi at 121.7&nbsp;mL/min and 0.644&nbsp;psi at 116.7&nbsp;mL/min. Nothing in either file records was changed, whether a different module, different tubing, a wet or a dry membrane, or fouling from the run before.</p>
@@ -349,6 +376,14 @@
               <details class="fold">
                 <summary><span>The three 14 August series in full</span> <span class="fold__sub">kept on the page because the failure is the finding</span></summary>
                 <div class="fold__body">
+                  <div class="chartbox">
+                    <div class="charts charts--1">
+                      <figure class="fig">
+                        <img src="../assets/img/measurement/tmp-aug14-series1.webp" srcset="../assets/img/measurement/tmp-aug14-series1-w800.webp 800w, ../assets/img/measurement/tmp-aug14-series1.webp 1344w" sizes="(max-width: 52rem) 100vw, 56rem" alt="A scatter plot of pressure in bar against flow in millilitres per minute for the first 14 August series. Fifteen readings are spread between about 0.096 bar at 140 millilitres per minute and 0.257 at 405, around a dashed fit line they sit loosely on." width="1344" height="562" loading="lazy" decoding="async" />
+                        <figcaption>Series 1 of 14 August. The axis is labelled transmembrane pressure; the quantity plotted is the lumen pressure drop, (P<sub>feed</sub>&nbsp;&minus;&nbsp;P<sub>retentate</sub>)&nbsp;/&nbsp;2.</figcaption>
+                      </figure>
+                    </div>
+                  </div>
                   <div class="tablewrap">
                     <table class="data">
                       <caption>Series 1. Pressure drop in psi; multiply by 0.0689 for bar.</caption>
@@ -372,6 +407,15 @@
                       </tbody>
                     </table>
                   </div>
+                  <p>The fit on this series is 0.050&nbsp;bar per 100&nbsp;mL/min with R&sup2;&nbsp;=&nbsp;0.68. For laminar flow the pressure drop rises in proportion to flow (Hagen&ndash;Poiseuille; Bird et al., 2007), so that slope is the resistance of the flow path. Once a clean-module baseline is fixed, a reading more than about 1.3&times; the baseline at the same flow is the blockage warning and a reading clearly below it points to a leak or a bypass. This series is too scattered to be that baseline.</p>
+            <div class="chartbox">
+              <div class="charts charts--1">
+                <figure class="fig">
+                  <img src="../assets/img/measurement/tmp-aug14-series2.webp" srcset="../assets/img/measurement/tmp-aug14-series2-w800.webp 800w, ../assets/img/measurement/tmp-aug14-series2.webp 1344w" sizes="(max-width: 52rem) 100vw, 56rem" alt="A scatter plot of pressure in bar against flow in millilitres per minute for the second 14 August series. Twenty-one readings run from about 0.013 bar at 115 millilitres per minute to about 0.087 at 420, close to a shallow dashed fit line." width="1344" height="562" loading="lazy" decoding="async" />
+                  <figcaption>Series 2 of 14 August. The axis is labelled transmembrane pressure; the quantity plotted is the lumen pressure drop, (P<sub>feed</sub>&nbsp;&minus;&nbsp;P<sub>retentate</sub>)&nbsp;/&nbsp;2, since the permeate channel was not logged that day.</figcaption>
+                </figure>
+              </div>
+            </div>
                   <div class="tablewrap">
                     <table class="data">
                       <caption>Series 2. Pressure drop in psi; multiply by 0.0689 for bar.</caption>
@@ -401,6 +445,15 @@
                       </tbody>
                     </table>
                   </div>
+                  <p>Series 2 stays between 0.01 and 0.09&nbsp;bar across 115 to 420&nbsp;mL/min and is positive throughout, so filtrate is being pushed out of the lumen, which is the mode we want (Millipore Corporation, 2003). Its low slope, 0.022&nbsp;bar per 100&nbsp;mL/min, and tight fit, R&sup2;&nbsp;=&nbsp;0.89, make it the best candidate for the clean baseline.</p>
+            <div class="chartbox">
+              <div class="charts charts--1">
+                <figure class="fig">
+                  <img src="../assets/img/measurement/tmp-aug14-series3.webp" srcset="../assets/img/measurement/tmp-aug14-series3-w800.webp 800w, ../assets/img/measurement/tmp-aug14-series3.webp 1344w" sizes="(max-width: 52rem) 100vw, 56rem" alt="A scatter plot of pressure in bar against flow for the third 14 August series. Twenty-one readings climb from about 0.037 bar at 110 millilitres per minute to about 0.243 at 395, along a dashed fit line that is roughly three times steeper than the series 2 line." width="1344" height="562" loading="lazy" decoding="async" />
+                  <figcaption>Series 3 of 14 August, plotted on the same axes as series 2 above.</figcaption>
+                </figure>
+              </div>
+            </div>
                   <div class="tablewrap">
                     <table class="data">
                       <caption>Series 3. Pressure drop in psi; multiply by 0.0689 for bar.</caption>
@@ -430,8 +483,26 @@
                       </tbody>
                     </table>
                   </div>
+                  <p>Series 3 climbs at 0.073&nbsp;bar per 100&nbsp;mL/min and reaches 0.24&nbsp;bar at 395&nbsp;mL/min, about 2.8&times; series 2 at the same flow and far past the 1.3&times; alarm. On a run rather than a calibration, a jump like that should also show pressure-based shear, &tau;<sub>w</sub>&nbsp;=&nbsp;&Delta;P&middot;d&nbsp;/&nbsp;4L, which needs no fiber count (Bird et al., 2007), running ahead of flow-based shear. That divergence is how a blocked fiber is told from a change in pump output.</p>
                 </div>
               </details>
+            </div>
+
+            <div class="chartbox">
+              <div class="charts charts--1">
+                <figure class="fig">
+                  <img src="../assets/img/measurement/tmp-aug16-flow.webp" srcset="../assets/img/measurement/tmp-aug16-flow-w800.webp 800w, ../assets/img/measurement/tmp-aug16-flow.webp 1344w" sizes="(max-width: 52rem) 100vw, 56rem" alt="A line chart of flow in millilitres per minute against pump dial from 10 to 24, with two almost coincident traces: background tubing only in grey and with the membrane in blue. Both rise steadily from about 115 to about 450." width="1344" height="562" loading="lazy" decoding="async" />
+                  <figcaption>16 August, flow meter. The background loop and the loop with the module installed differ by under 6% at every dial.</figcaption>
+                </figure>
+              </div>
+            </div>
+            <div class="chartbox">
+              <div class="charts charts--1">
+                <figure class="fig">
+                  <img src="../assets/img/measurement/tmp-aug16-dp.webp" srcset="../assets/img/measurement/tmp-aug16-dp-w800.webp 800w, ../assets/img/measurement/tmp-aug16-dp.webp 1344w" sizes="(max-width: 52rem) 100vw, 56rem" alt="A line chart of pressure drop in bar against flow in millilitres per minute. The grey background trace rises from about 0.02 to 0.24 bar; the blue trace with the membrane installed rises from about 0.06 to 0.45, separating further as flow increases." width="1344" height="562" loading="lazy" decoding="async" />
+                  <figcaption>The same 16 August readings as pressure drop. With the module installed the drop is roughly 1.8 to 1.9 times the tubing-only value across dials 12 to 24, reaching 1.87&times; at dial 24.</figcaption>
+                </figure>
+              </div>
             </div>
 
             <div class="tablewrap">
@@ -452,6 +523,9 @@
             </div>
             <p>The 16 August series is the one to build on. Subtracting the background leaves the module's own contribution, 0.04&nbsp;bar at dial 10 rising to 0.21&nbsp;bar at dial 24, and the two flow columns agree within a few per cent at every setting, which is what the meter was brought in to fix.</p>
             <p>Note what the figure is not. The quantity in these tables is (P<sub>feed</sub>&nbsp;&minus;&nbsp;P<sub>retentate</sub>)&nbsp;/&nbsp;2, a pressure drop along the lumen. Transmembrane pressure needs the permeate reading as well, and the permeate channel is not in these tables, so no TMP has yet been computed from this rig and whether it stays positive at a working dial is still open.</p>
+
+            <h4 class="blk__h">Conclusion</h4>
+            <p>Flow and pressure can be measured reliably enough to act on. The flow meter matches manual measurement with R&sup2;&nbsp;=&nbsp;0.995, and flow rises by about 22&nbsp;mL/min per pump dial up to dial 50. The 4,000 to 6,000&nbsp;s&#8315;&sup1; shear band we work to corresponds to 260 to 390&nbsp;mL/min, or roughly dials 16 to 22, which is where the reactor is run. What the two readings still owe is a TMP: the permeate channel is now logged and the formula is in the software, so the next run on this module can close the one gap this chapter leaves open.</p>
           </div>
 
           <div class="rail__panel chap pl-3" role="tabpanel" id="p-breach" aria-labelledby="t-breach" hidden>
@@ -731,6 +805,22 @@
         <div class="blk">
           <h4 class="blk__h">What the measurement contributes</h4>
           <p>The Light Plate Apparatus is a general platform for characterizing light-inducible gene expression, not a CcaSR instrument. A team can survey light-responsive genetic modules beyond CcaSR and fit LEDs matched to each module's activating wavelength, which turns the same plate into a characterization tool for a wide range of optogenetic systems. What we add is the step before that: a worked method for matching cheap single-bulb LEDs by measured output, so the wells in one column receive the same light and the columns differ from one another by a measured amount.</p>
+          <p>The harder question for a team starting out is which LED to buy. Below is the survey we ran when we were choosing ours, mapping the common light-responsive systems onto the LED peaks that actually drive them. The wavelengths are the published action peaks; the notes are where a cheap off-the-shelf part will and will not do.</p>
+          <div class="tablewrap">
+            <table class="data">
+              <caption>Light-responsive systems and the LED peaks we would suggest to drive them, in nanometres.</caption>
+              <thead><tr><th scope="col">Band</th><th scope="col">Systems</th><th scope="col">LED peak</th><th scope="col">Notes</th></tr></thead>
+              <tbody>
+                <tr><th scope="row">UV-A, violet</th><td>UirS/UirR, caged inducers</td><td>365, 395 to 405</td><td>A 405&nbsp;nm LED covers the UirS P<sub>v</sub> peak at 396&nbsp;nm. Watch for phototoxicity and DNA damage (Ramakrishnan &amp; Tabor, 2016; Gerhardt et al., 2016)</td></tr>
+                <tr><th scope="row">Royal blue</th><td>EL222, CRY2/CIB1, Magnets, YF1/FixJ</td><td>450, 465 to 470</td><td>LOV and FAD absorbance peaks near 450&nbsp;nm; 470&nbsp;nm still works at slightly lower efficiency. CRY2 work often uses 461&nbsp;nm pulses (Ohlendorf et al., 2012; Motta-Mena et al., 2014; Kennedy et al., 2010)</td></tr>
+                <tr><th scope="row">Blue to green</th><td>LitR / LiEX</td><td>anywhere 450 to 530</td><td>The adenosylcobalamin absorption band is broad, so the wavelength choice is forgiving (Noya et al., 2024)</td></tr>
+                <tr><th scope="row">Green</th><td>CcaS/CcaR, CarH</td><td>525, 530 to 535</td><td>The CcaS P<sub>g</sub> peak is 535&nbsp;nm; the <i>P.&nbsp;putida</i> toolbox uses 530&nbsp;nm (Hirose et al., 2008; Chatelle et al., 2018; Kainrath et al., 2017)</td></tr>
+                <tr><th scope="row">Red</th><td>Cph8, pREDawn, PhyB, CcaS off</td><td>630, 660, 670</td><td>CcaS off peaks at 672&nbsp;nm, so 660 to 670&nbsp;nm is the closest match. 630&nbsp;nm is less efficient but common in off-the-shelf devices (Hirose et al., 2008; Multam&auml;ki et al., 2022)</td></tr>
+                <tr><th scope="row">Far red</th><td>PhyB dissociation, BphP1 reversal</td><td>730 to 740</td><td>PhyB P<sub>fr</sub> to P<sub>r</sub> uses 740&nbsp;nm. Note that BphP1's off state sits at 640&nbsp;nm, in the red, not the far red (Levskaya et al., 2009; Beyer et al., 2015)</td></tr>
+                <tr><th scope="row">Near IR</th><td>BphP1 / PpsR2</td><td>760 to 780</td><td>Best penetration depth, which suits dense cultures and work in vivo. The host supplies biliverdin, so no chromophore has to be added (Ong et al., 2017; Bugaj &amp; Lim, 2019)</td></tr>
+              </tbody>
+            </table>
+          </div>
         </div>
 
         <div class="blk">
@@ -833,7 +923,7 @@
               </div>
               <div class="card">
                 <h4 class="card__name">Horizontal circular plates</h4>
-                <p>The plates are designed to hold liquid protectant on the agar surface, which vertical plates cannot fulfill. We used them for the CH bio peptide and ACCD experiments in Phases 2 and 3, where treatment timing of salinity was a variable (pre-treatment, co-treatment, after-treatment). Horizontal circular plates also provide higher capacities of n values in each trial which minimizes inconsistencies; for example, vertical square plates can allow the testing of around 9 to 10 <i>Arabidopsis thaliana</i> seedlings while horizontal circular plates can hold around 40 seedlings.</p>
+                <p>The plates are designed to hold liquid protectant on the agar surface, which vertical plates cannot fulfill. We used them for the CH bio peptide and ACCD experiments in Phases 2 and 3, where treatment timing of salinity was a variable (pre-treatment, co-treatment, post-treatment). Horizontal circular plates also provide higher capacities of n values in each trial which minimizes inconsistencies; for example, vertical square plates can allow the testing of around 9 to 10 <i>Arabidopsis thaliana</i> seedlings while horizontal circular plates can hold around 40 seedlings.</p>
               </div>
             </div>
 
@@ -965,7 +1055,10 @@
                     <li>Place the square plates vertically at a slight angle.</li>
                     <li>Choose 9 germinated seeds after vernalization that have similar root lengths or germination status and align the endpoints of their roots to the line drawn on the plate.</li>
                     <li>Seal the plates with breathable tape and label the incubation date with a marker before placing the vertical plates on the stacks in the growth chamber, slightly tilted towards the back.</li>
+                    <li>Photograph the plates daily in the light box. A set runs for 6 to 14 days, depending on how fast the stress reads.</li>
+                    <li>At the end of the set, measure root length in ImageJ, weigh fresh weight and extract chlorophyll.</li>
                   </ol>
+                  <p>Each plate carries one condition, so the NaCl and trehalose concentrations are poured into the medium rather than applied to the surface.</p>
                   <h5>Horizontal plate assay (Phases 2 and 3), heat stress</h5>
                   <p><b>Transferring the seedlings</b></p>
                   <ol>
@@ -974,7 +1067,7 @@
                     <li>Draw a straight line along a ruler 5.5&nbsp;cm from the top of the plate, using the seed template.</li>
                     <li>Place the plates at a slight angle.</li>
                     <li>Choose 12 germinated seeds of similar root length or germination status and align the endpoints of their roots to the drawn line.</li>
-                    <li>Set up four groups: control, pre-treatment one day before, co-treatment on day 0, and after-treatment one day after.</li>
+                    <li>Set up four groups: control, pre-treatment one day before, co-treatment on day 0, and post-treatment one day after.</li>
                     <li>Seal the plates with breathable tape, label the transfer date, and place them on the rack in the growth chamber, tilted slightly towards the back.</li>
                   </ol>
                   <p><b>Applying the treatments</b></p>
@@ -983,9 +1076,17 @@
                     <li>Co-treatment, day 0. Take out the plate labelled co-treatment, hold it vertically, and spray evenly at 15&nbsp;cm, about two sprays. Seal with breathable tape.</li>
                     <li>Place all four groups on a rack, plates standing at a slight angle, and put the rack into the incubator at 37&nbsp;&deg;C under white light for thermopriming.</li>
                     <li>Observe the seedlings for a further 5 days in the incubator.</li>
-                    <li>After-treatment, one day after thermopriming. Take the after-treatment plate out of the incubator, hold it vertically, spray evenly at 15&nbsp;cm, seal with breathable tape and return it to the incubator.</li>
+                    <li>Post-treatment, one day after thermopriming. Take the post-treatment plate out of the incubator, hold it vertically, spray evenly at 15&nbsp;cm, seal with breathable tape and return it to the incubator.</li>
                   </ol>
-                  <p>The salinity version of the horizontal assay follows the same four timing arms, with 1&nbsp;mL of NaCl solution applied to the agar surface in place of the temperature change.</p>
+                  <h5>Horizontal plate assay (Phases 2 and 3), salinity</h5>
+                  <ol>
+                    <li>Label each plate with its timing group, pre-treatment, co-treatment, post-treatment or control, and its NaCl level, 0, 75 or 100&nbsp;mM. That gives twelve conditions. For the ACC deaminase runs the control is TB medium rather than water.</li>
+                    <li><b>CH bio peptide, Phase 2.</b> Dilute the peptide 1/500 in sterile water. Pipette 3&nbsp;mL onto the agar surface to submerge it, then draw 2&nbsp;mL back off, leaving 1&nbsp;mL. The extra volume is what overcomes the surface tension of the agar, which otherwise leaves the liquid sitting unevenly. Add 1&nbsp;mL of sterile water to every group not receiving the protectant, so the liquid volume is the same in all of them.</li>
+                    <li><b>ACC deaminase, Phase 3.</b> Filter the preparation through a 0.22&nbsp;&micro;m filter inside the biosafety cabinet. Hold a sterile spray nozzle 10&nbsp;cm above the plate and give three sprays, one top left, one top right and one at the bottom. Control plates are sprayed with TB medium.</li>
+                    <li>Apply the protectant on day &minus;1 for pre-treatment, day 0 for co-treatment or day +1 for post-treatment. NaCl goes onto every corresponding plate on day 0, at the same time as the co-treatment.</li>
+                    <li>Photograph the plates in the biosafety cabinet and observe for 5 days.</li>
+                    <li>On the last day, harvest the seedlings for fresh weight and chlorophyll extraction.</li>
+                  </ol>
                 </div>
               </details>
 
@@ -1013,7 +1114,7 @@
             <div class="chartbox">
               <div class="charts charts--1">
                 <figure class="fig">
-                  <img src="../assets/img/measurement/agar-accd-timing-heat.webp" srcset="../assets/img/measurement/agar-accd-timing-heat-w800.webp 800w, ../assets/img/measurement/agar-accd-timing-heat.webp 1400w" sizes="(max-width: 52rem) 100vw, 44vw" alt="Eight square agar plates in a grid. Columns are control, pre-treatment, co-treatment and after-treatment; rows are control and heat stress thermo priming. Each plate holds a row of seedlings with roots hanging below a drawn baseline." width="1400" height="691" loading="lazy" decoding="async" />
+                  <img src="../assets/img/measurement/agar-accd-timing-heat.webp" srcset="../assets/img/measurement/agar-accd-timing-heat-w800.webp 800w, ../assets/img/measurement/agar-accd-timing-heat.webp 1400w" sizes="(max-width: 52rem) 100vw, 44vw" alt="Eight square agar plates in a grid. Columns are control, pre-treatment, co-treatment and post-treatment; rows are control and heat stress thermo priming. Each plate holds a row of seedlings with roots hanging below a drawn baseline." width="1400" height="691" loading="lazy" decoding="async" />
                   <figcaption>ACC deaminase applied before, with and after heat stress, against an unstressed row of the same four timings.</figcaption>
                 </figure>
               </div>
@@ -1024,7 +1125,7 @@
             <p>Every seedling measured on 27 July, by group. Each group is a plate of eight seedlings and each column is one seedling, so the spread within a group is visible rather than hidden behind its mean.</p>
             <div class="tablewrap">
               <table class="data">
-                <caption>Primary root length in millimetres, 27 July. Eight seedlings per group, measured in ImageJ against the 120&nbsp;mm plate width.</caption>
+                <caption>Primary root length in millimetres, 27 July. Eight seedlings per group, traced in ImageJ.</caption>
                 <thead><tr><th scope="col">Group</th><th scope="col">1</th><th scope="col">2</th><th scope="col">3</th><th scope="col">4</th><th scope="col">5</th><th scope="col">6</th><th scope="col">7</th><th scope="col">8</th><th scope="col">Mean</th></tr></thead>
                 <tbody><tr><th scope="row">Control</th><td>75.604</td><td>75.852</td><td>80.472</td><td>69.615</td><td>76.543</td><td>77.848</td><td>79.041</td><td>72.802</td><td><b>75.972</b></td></tr><tr><th scope="row">1&nbsp;mM trehalose</th><td>79.748</td><td>41.179</td><td>37.422</td><td>82.38</td><td>82.131</td><td>82.476</td><td>80.219</td><td>70.393</td><td><b>69.494</b></td></tr><tr><th scope="row">5&nbsp;mM trehalose</th><td>77.003</td><td>76.213</td><td>79.461</td><td>81.394</td><td>70.329</td><td>78.748</td><td>73.158</td><td>79.481</td><td><b>76.973</b></td></tr><tr><th scope="row">10&nbsp;mM trehalose</th><td>73.73</td><td>74.868</td><td>55.021</td><td>72.988</td><td>78.073</td><td>76.883</td><td>68.776</td><td>49.769</td><td><b>68.764</b></td></tr><tr><th scope="row">150&nbsp;mM NaCl</th><td>3.059</td><td>3.992</td><td>4.176</td><td>4.547</td><td>4.726</td><td>4.461</td><td>5.322</td><td>3.787</td><td><b>4.259</b></td></tr><tr><th scope="row">150&nbsp;mM NaCl, 1&nbsp;mM trehalose</th><td>3.752</td><td>3.071</td><td>4.195</td><td>4.21</td><td>3.737</td><td>4.841</td><td>4.731</td><td>4.464</td><td><b>4.125</b></td></tr><tr><th scope="row">150&nbsp;mM NaCl, 5&nbsp;mM trehalose</th><td>3.425</td><td>1.366</td><td>0.477</td><td>2.925</td><td>2.893</td><td>2.676</td><td>0.717</td><td>1.547</td><td><b>2.003</b></td></tr><tr><th scope="row">150&nbsp;mM NaCl, 10&nbsp;mM trehalose</th><td>2.886</td><td>4.522</td><td>4.345</td><td>4.667</td><td>5.269</td><td>5.224</td><td>5.836</td><td>4.96</td><td><b>4.714</b></td></tr><tr><th scope="row">250&nbsp;mM NaCl, 1&nbsp;mM trehalose</th><td>1.127</td><td>1.122</td><td>1.277</td><td>1.188</td><td>1.283</td><td>1.002</td><td>1.153</td><td>0.448</td><td><b>1.075</b></td></tr><tr><th scope="row">250&nbsp;mM NaCl, 5&nbsp;mM trehalose</th><td>1.257</td><td>1.263</td><td>0.842</td><td>1.101</td><td>0.615</td><td>0.802</td><td>1.048</td><td>0.604</td><td><b>0.942</b></td></tr><tr><th scope="row">250&nbsp;mM NaCl, 10&nbsp;mM trehalose</th><td>0</td><td>0</td><td>0</td><td>0</td><td>0</td><td>0</td><td>0</td><td>0</td><td><b>0.000</b></td></tr></tbody>
               </table>
@@ -1314,7 +1415,7 @@
             </div>
 
             <h4 class="blk__h">Finding a dilution the plants survive</h4>
-            <p>TB at full strength kills the plants, so the first run was a pretest on TB medium carrying <i>B.&nbsp;subtilis</i> and no protectant, to separate the carrier from anything the protectant might do. We tested 1, 1/2, 1/4, 1/8 and 1/16, with 0 as the control, at pH 5.7 and pH 7. The optimum for <i>Arabidopsis</i> is 5.7 and ACCD works best between 8.0 and 8.5, which <i>Arabidopsis</i> will not tolerate, so 7 is the compromise we tested against.</p>
+            <p>TB at full strength kills the plants, so the first run was a pretest on TB medium carrying <i>B.&nbsp;subtilis</i> and no protectant, to separate the carrier from anything the protectant might do. We tested 1, 1/2, 1/4, 1/8 and 1/16, with 0 as the control, at pH 5.7 and pH 7. The optimum for <i>Arabidopsis</i> is 5.7 and ACCD works best at about 7.5 (Liu et al., 2022), which <i>Arabidopsis</i> will not tolerate, so 7 is the compromise we tested against.</p>
 
             <div class="chartbox">
               <div class="charts charts--1">
@@ -1337,6 +1438,35 @@
               </div>
             </div>
             <p>The expectation was wrong in one place and right in the other. 1/20 TB was still too much for the plants, and ACCD at 1/10 and 1/20 was not dilute enough for them to survive; 1/40 and 1/60 were tolerable. We therefore used 1/40 TB as the strongest dose in the heat runs, and these two runs together narrowed the working range from undiluted TB to 1/40 through 1/100.</p>
+
+            <h4 class="blk__h">BoPep4 across the same dilutions, under salt</h4>
+            <p>BoPep4 was then run over 1/40, 1/60, 1/80 and 1/100, with and without 100&nbsp;mM NaCl. The series starts at 1/40 because that was the strongest dose the ACCD salinity run tolerated. The controls are the same two: 1/40 WB800, which is the carrier without a protectant, and 0.1&times; MS medium alone.</p>
+
+            <div class="chartbox">
+              <div class="charts charts--1">
+                <figure class="fig">
+                  <img src="../assets/img/measurement/hydro-bopep4-salinity.webp" srcset="../assets/img/measurement/hydro-bopep4-salinity-w800.webp 800w, ../assets/img/measurement/hydro-bopep4-salinity.webp 1268w" sizes="(max-width: 52rem) 100vw, 56rem" alt="A teal tube rack photographed from above, bracketed into an upper block labelled 0 millimolar sodium chloride and a lower block labelled 100 millimolar. Each block runs one fortieth, one sixtieth, one eightieth and one hundredth BoPep4 along the top with one fortieth WB800 and 0.1 times MS medium below. Rosettes in the upper block are green with some reddening; in the lower block most are bleached and collapsed." width="1268" height="676" loading="lazy" decoding="async" />
+                  <figcaption>BoPep4 salinity test. BoPep4 at 1/40, 1/60, 1/80 and 1/100 at 0&nbsp;mM NaCl (top) and 100&nbsp;mM NaCl (bottom), with 1/40 WB800 and 0.1&times; MS medium as controls in both blocks.</figcaption>
+                </figure>
+              </div>
+            </div>
+
+            <p>Without salt, the BoPep4 wells show slight anthocyanin accumulation at every dilution from 1/40 to 1/100, while neither 1/40 WB800 nor plain 0.1&times; MS medium reddens. On an unstressed plant, in other words, BoPep4 looks mildly costly rather than beneficial.</p>
+            <p>Under 100&nbsp;mM NaCl the result reverses. Most groups bleached and died; the exception is 1/40 BoPep4, where every plant stayed green, and that group also carries the highest fresh weight and the highest chlorophyll per plant of anything at 100&nbsp;mM. The reading we take from the set is narrow: BoPep4 at 1/40 improves salinity tolerance, and the weaker dilutions do not separate from their controls.</p>
+
+            <div class="chartbox">
+              <div class="charts charts--2">
+                <figure class="fig">
+                  <img src="../assets/img/measurement/hydro-bopep4-salinity-fw.webp" srcset="../assets/img/measurement/hydro-bopep4-salinity-fw-w800.webp 800w, ../assets/img/measurement/hydro-bopep4-salinity-fw.webp 1026w" sizes="(max-width: 52rem) 100vw, 44vw" alt="A bar chart of fresh weight in grams for twelve groups. The six unsalted groups run between about 0.056 and 0.106 grams; the six groups at 100 millimolar are all lower, with one fortieth BoPep4 the tallest of them at about 0.051 and 0.1 times MS medium the shortest at about 0.029." width="1026" height="886" loading="lazy" decoding="async" />
+                  <figcaption>Fresh weight by group. Within the 100&nbsp;mM block, 1/40 BoPep4 is the only group that stays near the unsalted range.</figcaption>
+                </figure>
+                <figure class="fig">
+                  <img src="../assets/img/measurement/hydro-bopep4-salinity-chl.webp" srcset="../assets/img/measurement/hydro-bopep4-salinity-chl-w800.webp 800w, ../assets/img/measurement/hydro-bopep4-salinity-chl.webp 1026w" sizes="(max-width: 52rem) 100vw, 44vw" alt="A bar chart of chlorophyll content in micrograms per plant for the same twelve groups. The unsalted groups run between about 11 and 16.5; at 100 millimolar, one fortieth BoPep4 reads about 8.4 and the rest fall between about 2 and 4.6." width="1026" height="820" loading="lazy" decoding="async" />
+                  <figcaption>Chlorophyll per plant for the same groups, measured on the plants in the photograph above.</figcaption>
+                </figure>
+              </div>
+            </div>
+            <p>Both readouts are single plates with no technical replication, so the gap between 1/40 BoPep4 and the rest of the salted block is what the run supports, and the ordering among 1/60, 1/80 and 1/100 is not.</p>
 
             <h4 class="blk__h">The two heat runs</h4>
             <p>The ACCD and BoPep4 heat tests were set up together and differ only in the protectant, so the two panels below can be read against each other. In both figures the blue rack is the heat control at 22&nbsp;&deg;C and the white rack is the heat treatment at 37&nbsp;&deg;C.</p>
@@ -1385,7 +1515,7 @@
             <div class="blk">
               <h4 class="blk__h">Total chlorophyll content</h4>
               <p class="eqn">Chlorophyll a + b (mg&nbsp;g<sup>&minus;1</sup>) = (8.02 &times; A<sub>663</sub> + 20.20 &times; A<sub>645</sub>) &times; V / (1000 &times; fresh weight)</p>
-              <p>The coefficients and the extraction are those of Zhang and Huang (2013); our own changes to the grinding and readout steps are set out in the procedure below.</p>
+              <p>The equation and its coefficients are those of Kumari et al. (2018); the extraction procedure follows Zhang and Huang (2013), with our own changes to the grinding and readout steps set out below.</p>
               <div class="tablewrap">
                 <table class="data">
                   <thead><tr><th scope="col">Formula component</th><th scope="col">Purpose</th></tr></thead>
@@ -1485,7 +1615,7 @@
                   <figcaption>Experiment set #4: 0, 0.25, 0.5 and 1.0&nbsp;mM trehalose against 100&nbsp;mM NaCl, mean with SEM over three replicates.</figcaption>
                 </figure>
                 <figure class="fig">
-                  <img src="../assets/img/measurement/chlorophyll-heat-ch-peptide.webp" srcset="../assets/img/measurement/chlorophyll-heat-ch-peptide-w800.webp 800w, ../assets/img/measurement/chlorophyll-heat-ch-peptide.webp 1308w" sizes="(max-width: 52rem) 100vw, 44vw" alt="Bar chart of relative chlorophyll content under 37 degree heat stress with thermo priming. Control reads 1.0; pre-treatment about 2.25, co-treatment about 1.97 and after-treatment about 1.88." width="1308" height="946" loading="lazy" decoding="async" />
+                  <img src="../assets/img/measurement/chlorophyll-heat-ch-peptide.webp" srcset="../assets/img/measurement/chlorophyll-heat-ch-peptide-w800.webp 800w, ../assets/img/measurement/chlorophyll-heat-ch-peptide.webp 1308w" sizes="(max-width: 52rem) 100vw, 44vw" alt="Bar chart of relative chlorophyll content under 37 degree heat stress with thermo priming. Control reads 1.0; pre-treatment about 2.25, co-treatment about 1.97 and post-treatment about 1.88." width="1308" height="946" loading="lazy" decoding="async" />
                   <figcaption>Agar heat stress pretest with the CH bio peptide applied before, with and after a 37&nbsp;&deg;C thermopriming stress.</figcaption>
                 </figure>
               </div>
@@ -1537,7 +1667,7 @@
                     <li>Zoom into the captured image to ensure quality.</li>
                     <li>Repeat steps 2 to 7 with each agar plate of the experimental set.</li>
                     <li>Upload images into ImageJ.</li>
-                    <li>Set the scale of the agar plate (120&nbsp;mm) using ImageJ: draw a straight line of known distance, then Analyze &rarr; Set Scale &rarr; known distance &rarr; unit of length &rarr; Global &rarr; OK.</li>
+                    <li>Set the scale from the ruler in the frame using ImageJ: draw a straight line along a known distance on the ruler, 150&nbsp;mm, then Analyze &rarr; Set Scale &rarr; known distance &rarr; unit of length, mm &rarr; Global &rarr; OK.</li>
                     <li>Measure the length of the primary root from the marked start position to the tip using the segmented line option, then press Control+M to measure.</li>
                     <li>Save the measured data in the ROI manager.</li>
                     <li>Repeat steps 11 and 12 for all the <i>Arabidopsis</i> plates.</li>
@@ -1547,7 +1677,7 @@
                     <div class="charts charts--3">
                       <figure class="fig">
                         <img src="../assets/img/measurement/imagej-set-scale.webp" srcset="../assets/img/measurement/imagej-set-scale-w800.webp 800w, ../assets/img/measurement/imagej-set-scale.webp 1400w" sizes="(max-width: 52rem) 100vw, 30vw" alt="The ImageJ Set Scale dialog over a photograph of an agar plate, with a known distance typed in." width="1400" height="1020" loading="lazy" decoding="async" />
-                        <figcaption>Setting the known distance for scaling, step 10.</figcaption>
+                        <figcaption>Setting the known distance, 150&nbsp;mm on the ruler, for scaling in ImageJ, step 10.</figcaption>
                       </figure>
                       <figure class="fig">
                         <img src="../assets/img/measurement/imagej-measure-root.webp" srcset="../assets/img/measurement/imagej-measure-root-w800.webp 800w, ../assets/img/measurement/imagej-measure-root.webp 1152w" sizes="(max-width: 52rem) 100vw, 30vw" alt="A segmented yellow line traced along one Arabidopsis primary root in ImageJ." width="1152" height="1224" loading="lazy" decoding="async" />
@@ -1610,16 +1740,43 @@
               </details>
             </div>
 
-            <p>What the procedure above fixes is the part that decides whether the numbers mean anything: the 120&nbsp;mm plate width as the scale, the baseline the root is measured from, and the blotting step before the balance.</p>
+            <p>What the procedure above fixes is the part that decides whether the numbers mean anything: the ruler in the frame as the scale, the baseline the root is measured from, and the blotting step before the balance.</p>
 
             <h4 class="blk__h">Results</h4>
-            <p>Every number below comes from one experiment, the ACC deaminase heat stress trial 1 described above, and from nowhere else. Root lengths are the mean of the primary roots on each plate, traced in ImageJ against the 120&nbsp;mm plate width and reported in millimetres to three decimal places. Fresh weights are the mean per plate, weighed on the analytical balance and reported in grams to 0.0001&nbsp;g, which is what that balance resolves; rounding them further would discard the measurement.</p>
-            <p><b>Root length, heat stress with ACCD, trial 1.</b> Averaged over the whole trial, unstressed <i>Arabidopsis</i> reached 116.417&nbsp;mm of primary root against 43.466&nbsp;mm under heat stress, so thermopriming at 37&nbsp;&deg;C costs the root system roughly two thirds of its length. Within the heat-stressed groups, ACCD applied before the stress gave the longest average root at 46.857&nbsp;mm, and the co-treatment group performed worst.</p>
+            <p>Every number below comes from one experiment, the ACC deaminase heat stress trial 1 described above, and from nowhere else. Root lengths are the mean of the primary roots on each plate, traced in ImageJ against the ruler in the frame and reported in millimetres to three decimal places. Fresh weights are the mean per plate, weighed on the analytical balance and reported in grams to 0.0001&nbsp;g, which is what that balance resolves; rounding them further would discard the measurement.</p>
+            <p><b>Root length, heat stress with ACCD, trial 1.</b> Averaged over the whole trial, unstressed <i>Arabidopsis</i> reached 116.417&nbsp;mm of primary root against 43.186&nbsp;mm under heat stress, so thermopriming at 37&nbsp;&deg;C costs the root system roughly two thirds of its length. Within the heat-stressed groups, ACCD applied before the stress gave the longest average root at 46.857&nbsp;mm, and the co-treatment group performed worst.</p>
+
+            <div class="chartbox">
+              <div class="charts charts--1">
+                <figure class="fig">
+                  <img src="../assets/img/measurement/root-length-accd-heat-plates.webp" srcset="../assets/img/measurement/root-length-accd-heat-plates-w800.webp 800w, ../assets/img/measurement/root-length-accd-heat-plates.webp 1600w" sizes="(max-width: 52rem) 100vw, 56rem" alt="A four by two grid of photographs. The columns are no ACCD control, pre-treatment, co-treatment and post-treatment; the top row is no heat stress and the bottom row is heat stress with thermo priming. Each frame shows a row of seedlings laid on black with a blue ruler beside them. The top row carries long white roots and green leaves; the bottom row roots are short and the leaves pale." width="1600" height="900" loading="lazy" decoding="async" />
+                  <figcaption>The plates these root lengths were traced from, with the ruler that sets the ImageJ scale in each frame.</figcaption>
+                </figure>
+              </div>
+            </div>
+
+            <div class="tablewrap">
+              <table class="data">
+                <caption>Mean primary root length per group, ACC deaminase heat stress trial 1, ten seedlings per group. The right-hand column is the mean of the four groups in that block.</caption>
+                <thead><tr><th scope="col">Group</th><th scope="col">Mean root length, mm</th><th scope="col">Block mean, mm</th></tr></thead>
+                <tbody>
+                  <tr><th scope="row">No heat stress, no ACCD</th><td>116.302</td><td rowspan="4">116.417</td></tr>
+                  <tr><th scope="row">No heat stress, pre-treatment</th><td>135.731</td></tr>
+                  <tr><th scope="row">No heat stress, co-treatment</th><td>94.675</td></tr>
+                  <tr><th scope="row">No heat stress, post-treatment</th><td>118.958</td></tr>
+                  <tr><th scope="row">Heat stress, no ACCD</th><td>40.903</td><td rowspan="4">43.186</td></tr>
+                  <tr><th scope="row">Heat stress, pre-treatment</th><td>46.857</td></tr>
+                  <tr><th scope="row">Heat stress, co-treatment</th><td>39.238</td></tr>
+                  <tr><th scope="row">Heat stress, post-treatment</th><td>45.746</td></tr>
+                </tbody>
+              </table>
+            </div>
+            <p>Read down the table rather than across it. Under heat, all three treated groups except co-treatment beat the untreated 40.903&nbsp;mm, which is the comparison the project rests on. Without heat the pattern does not hold: co-treatment at 94.675&nbsp;mm is well below the untreated 116.302&nbsp;mm, so the timing arms are not ranking consistently in the absence of stress either.</p>
             <p><b>Fresh weight, the same trial.</b> Unstressed plants averaged 0.5069&nbsp;g against 0.0237&nbsp;g under heat stress, which is the water loss thermopriming causes stated as a number. Among the heat-stressed groups the post-treatment plants held the most water at 0.0318&nbsp;g, with pre-treatment next at 0.0258&nbsp;g; the post-treatment group also had three days of recovery under normal conditions, which the comparison cannot separate from the treatment itself.</p>
             <p>Both readouts agree on the part that matters for the project: stressed plants given ACCD do better than stressed plants given none. The timing arms do not rank consistently from one experimental set to the next, so the pre-treatment advantage seen here is a repeated observation and not a settled result. It is the observation the delivery argument rests on, because a protectant that works best before the stress arrives is what makes stress prediction worth doing at all.</p>
 
             <h4 class="blk__h">What went wrong, and what we changed</h4>
-            <p><b>Plates leaning back in the light box shortened the roots.</b> A plate resting against the back of the box is photographed at an angle, which foreshortens everything on it. We 3D printed a rack that holds a 12 to 13&nbsp;cm square plate upright, so the plate is square to the camera and the 120&nbsp;mm calibration in ImageJ is the distance it claims to be.</p>
+            <p><b>Plates leaning back in the light box shortened the roots.</b> A plate resting against the back of the box is photographed at an angle, which foreshortens everything on it. We 3D printed a rack that holds a 12 to 13&nbsp;cm square plate upright, so the plate is square to the camera and the ruler beside it calibrates ImageJ at the distance it claims to be.</p>
             <p><b>Reflections obscured the measurement.</b> Turning off the room lights and covering the opening of the light box with black cloth was not enough, because the box's own lights reflect off the plate. Moving the rack within the box and changing its distance from the camera left a reflection only at the extreme edges, clear of the roots.</p>
             <p><b>Roots grew over each other in the denser groups.</b> In the control groups especially, the primary root could not be told from its neighbours. For the last two or three sets we lifted the plants onto a thin sheet of black foam, laid parallel; pulled from the agar they clump, and the primary root is the longest, so it can be followed. Those photographs were taken from directly overhead with a 15&nbsp;cm ruler beside the plants for calibration.</p>
           </div>
@@ -1628,6 +1785,13 @@
       <section class="sec" id="protectant">
         <h2>Protectant assays</h2>
         <p>Five measurements follow the protein from the plasmid to the working enzyme. Electroporation decides how the construct gets into the chassis at all. The Western blot asks whether a protein of the right size leaves the cell. The ELISA puts a concentration on it. The Berthelot and DNPH assays read the two products of the reaction the enzyme is supposed to catalyse, and so are the only two that say whether the protein does anything. A concentration and an activity answer different questions and are not interchangeable, which is why both are here.</p>
+        <p>A plant bioassay is the most complete test of whether a protectant works, and it is also the slowest and the least forgiving. A run depends on plant husbandry and cultivation stability, and a contaminated box or an uneven stress spoils weeks of work before it says anything about the protein. These biochemical assays exist so that production can be optimised in the reactor without waiting on a plant.</p>
+        <p>They are ordered by cost. The Western blot is the cheap first screen: it says whether a band of the right size appears under a given production condition. Once the conditions are set, the ELISA is what turns that into a yield in &micro;g/mL. Which assay settles a protectant then depends on what the molecule is.</p>
+        <ul class="findings">
+          <li><b>Enzymes.</b> ACC deaminase has catalytic activity of its own, so it can be validated functionally and quantified directly by the DNPH colorimetric assay.</li>
+          <li><b>Non-enzymatic proteins.</b> LEA14 catalyses nothing, so there is no activity to read and the ELISA is what quantifies it.</li>
+          <li><b>Peptides.</b> BoPep4 is small enough that a standard Western blot does not resolve or reliably detect it, which leaves the ELISA as its only detection and quantification route here.</li>
+        </ul>
 
         <div class="rail rail--seg" data-rail data-rail-top>
           <div class="seg"><div class="rail__strip seg__track" role="tablist" aria-label="Protectant measurements">
@@ -1656,7 +1820,7 @@
             <p><b>Strain-specific electrocompetent cell protocols.</b> We wrote up separate preparation workflows for <i>B.&nbsp;subtilis</i>&nbsp;168, after the DTU-Denmark iGEM team (2015), and for WB800, after Lu et al. (2012). They differ in the OD<sub>600</sub> at harvest (0.85 to 0.95 for 168, against 2.2 for WB800), in the washing buffer (plain EP buffer against EP buffer with 1.5&nbsp;mol/L trehalose), in the number of washes (two against four) and in the resuspension volume (1/20 of the culture against 1/40). Those differences are the reason a protocol written for one strain does not transfer to the other.</p>
             <p><b>An optimal voltage for each strain and construct.</b> Comparing voltages at a fixed resistance and capacitance identified the settings that gave the highest colony yields. For strain 168, 2.1&nbsp;kV returned more colonies than 2.3&nbsp;kV. For WB800 carrying the CcaSR construct, 2.3&nbsp;kV gave the highest yield at 370 colonies, and 2.5&nbsp;kV reduced it.</p>
             <p><b>Evidence of where the voltage starts killing cells.</b> Colony counts fall at the top of each range, which is what excessive field strength and cell lysis look like, and sets an upper limit for these strains. A team can use it to avoid spending cells and plasmid on a pulse that destroys both.</p>
-            <p><b>Several constructs through the same protocol.</b> We introduced AcdS-based plasmids, both wild type and v2t1, and the CcaSR light-sensor circuit at over 10&nbsp;kbp, into <i>B.&nbsp;subtilis</i>. The protocol holds across plasmid sizes and selection markers.</p>
+            <p><b>Several constructs through the same protocol.</b> We introduced AcdS-based plasmids, both wild type and 2.1, and the CcaSR light-sensor circuit at over 10&nbsp;kbp, into <i>B.&nbsp;subtilis</i>. The protocol holds across plasmid sizes and selection markers.</p>
             <p><b>A documented, reproducible procedure.</b> The steps below cover cell preparation, the pulse, three hours of recovery, selective plating and colony counting, which is the baseline for transforming any plasmid expressing a stress-mitigating protein.</p>
 
             <div class="folds">
@@ -1754,15 +1918,15 @@
               <div class="charts charts--3">
                 <figure class="fig">
                   <img src="../assets/img/measurement/ep-168-2-3kv-2-1kv.webp" srcset="../assets/img/measurement/ep-168-2-3kv-2-1kv-w800.webp 800w, ../assets/img/measurement/ep-168-2-3kv-2-1kv.webp 1400w" sizes="(max-width: 52rem) 100vw, 30vw" alt="Two LBE plates photographed on a black bench. Both carry only scattered single colonies, several of them circled and numbered in marker." width="1400" height="1867" loading="lazy" decoding="async" />
-                  <figcaption><i>B.&nbsp;subtilis</i>&nbsp;168, Pveg-EEBD-RBS0-SamyQ-ACCD-v2t1-B0015 on LBE. Top plate 2.3&nbsp;kV, bottom plate 2.1&nbsp;kV.</figcaption>
+                  <figcaption><i>B.&nbsp;subtilis</i>&nbsp;168, Pveg-EEBD-RBS0-SamyQ-AcdS-2.1-B0015 on LBE. Top plate 2.3&nbsp;kV, bottom plate 2.1&nbsp;kV.</figcaption>
                 </figure>
                 <figure class="fig">
                   <img src="../assets/img/measurement/ep-wb800-v2t1-2-1kv.webp" srcset="../assets/img/measurement/ep-wb800-v2t1-2-1kv-w800.webp 800w, ../assets/img/measurement/ep-wb800-v2t1-2-1kv.webp 1400w" sizes="(max-width: 52rem) 100vw, 30vw" alt="An LBE plate with many round cream colonies spread across the agar." width="1400" height="1859" loading="lazy" decoding="async" />
-                  <figcaption><i>B.&nbsp;subtilis</i>&nbsp;WB800, Pveg-SamyQ:ACCD v2t1 on LBE, 2.1&nbsp;kV.</figcaption>
+                  <figcaption><i>B.&nbsp;subtilis</i>&nbsp;WB800, Pveg-SamyQ:AcdS 2.1 on LBE, 2.1&nbsp;kV.</figcaption>
                 </figure>
                 <figure class="fig">
                   <img src="../assets/img/measurement/ep-wb800-v2t1-2-5kv.webp" srcset="../assets/img/measurement/ep-wb800-v2t1-2-5kv-w800.webp 800w, ../assets/img/measurement/ep-wb800-v2t1-2-5kv.webp 1400w" sizes="(max-width: 52rem) 100vw, 30vw" alt="An LBE plate carrying colonies spread across the agar, fewer and more evenly spaced than the plate beside it." width="1400" height="1859" loading="lazy" decoding="async" />
-                  <figcaption><i>B.&nbsp;subtilis</i>&nbsp;WB800, Pveg-SamyQ:ACCD v2t1 on LBE, 2.5&nbsp;kV.</figcaption>
+                  <figcaption><i>B.&nbsp;subtilis</i>&nbsp;WB800, Pveg-SamyQ:AcdS 2.1 on LBE, 2.5&nbsp;kV.</figcaption>
                 </figure>
               </div>
             </div>
@@ -1770,36 +1934,36 @@
               <div class="charts charts--3">
                 <figure class="fig">
                   <img src="../assets/img/measurement/ep-wb800-v2t2-2-1kv.webp" srcset="../assets/img/measurement/ep-wb800-v2t2-2-1kv-w800.webp 800w, ../assets/img/measurement/ep-wb800-v2t2-2-1kv.webp 1400w" sizes="(max-width: 52rem) 100vw, 30vw" alt="An LBE plate densely covered with round cream colonies." width="1400" height="1859" loading="lazy" decoding="async" />
-                  <figcaption><i>B.&nbsp;subtilis</i>&nbsp;WB800, Pveg-SamyQ:ACCD v2t2 on LBE, 2.1&nbsp;kV.</figcaption>
+                  <figcaption><i>B.&nbsp;subtilis</i>&nbsp;WB800, Pveg-SamyQ:AcdS 2.2 on LBE, 2.1&nbsp;kV.</figcaption>
                 </figure>
                 <figure class="fig">
                   <img src="../assets/img/measurement/ep-wb800-v2t2-2-3kv.webp" srcset="../assets/img/measurement/ep-wb800-v2t2-2-3kv-w800.webp 800w, ../assets/img/measurement/ep-wb800-v2t2-2-3kv.webp 1400w" sizes="(max-width: 52rem) 100vw, 30vw" alt="An LBE plate covered edge to edge with round colonies, written on in red marker." width="1400" height="1859" loading="lazy" decoding="async" />
-                  <figcaption><i>B.&nbsp;subtilis</i>&nbsp;WB800, Pveg-SamyQ:ACCD v2t2 on LBE, 2.3&nbsp;kV.</figcaption>
+                  <figcaption><i>B.&nbsp;subtilis</i>&nbsp;WB800, Pveg-SamyQ:AcdS 2.2 on LBE, 2.3&nbsp;kV.</figcaption>
                 </figure>
                 <figure class="fig">
                   <img src="../assets/img/measurement/ep-wb800-v2t2-2-5kv.webp" srcset="../assets/img/measurement/ep-wb800-v2t2-2-5kv-w800.webp 800w, ../assets/img/measurement/ep-wb800-v2t2-2-5kv.webp 1400w" sizes="(max-width: 52rem) 100vw, 30vw" alt="An LBE plate with colonies spread over the agar surface." width="1400" height="1859" loading="lazy" decoding="async" />
-                  <figcaption><i>B.&nbsp;subtilis</i>&nbsp;WB800, Pveg-SamyQ:ACCD v2t2 on LBE, 2.5&nbsp;kV.</figcaption>
+                  <figcaption><i>B.&nbsp;subtilis</i>&nbsp;WB800, Pveg-SamyQ:AcdS 2.2 on LBE, 2.5&nbsp;kV.</figcaption>
                 </figure>
               </div>
             </div>
-            <p>One plate is shown per condition. Further repeat plates of the <i>B.&nbsp;subtilis</i>&nbsp;WB800 v2t2 conditions were taken, and the original plate lettering repeats, so the figures here are keyed to strain, construct and voltage instead of to those letters. The two strains are not close: strain 168 returns single colonies you can circle by hand at both voltages, while WB800 returns plates that have to be counted.</p>
+            <p>One plate is shown per condition. Further repeat plates of the <i>B.&nbsp;subtilis</i>&nbsp;WB800 AcdS 2.2 conditions were taken, and the original plate lettering repeats, so the figures here are keyed to strain, construct and voltage instead of to those letters. The two strains are not close: strain 168 returns single colonies you can circle by hand at both voltages, while WB800 returns plates that have to be counted.</p>
 
             <div class="tablewrap">
               <table class="data">
                 <caption>Colonies recovered, by strain, construct, voltage and plating condition. All pulses used a 0.2&nbsp;cm cuvette except the BoPep4 series, which used 0.1&nbsp;cm.</caption>
                 <thead><tr><th scope="col">Strain</th><th scope="col">Construct</th><th scope="col">Voltage</th><th scope="col">Plating</th><th scope="col">Colonies</th></tr></thead>
                 <tbody>
-                  <tr><th scope="row">168</th><td>Pveg-EEBD-RBS0-SamyQ-ACCD-v2t1-B0015</td><td>2.1&nbsp;kV</td><td>LBE</td><td>21</td></tr>
-                  <tr><th scope="row">168</th><td>Pveg-EEBD-RBS0-SamyQ-ACCD-v2t1-B0015</td><td>2.3&nbsp;kV</td><td>LBE</td><td>8</td></tr>
-                  <tr><th scope="row">WB800</th><td>Pveg-SamyQ:ACCD v2t1</td><td>2.1&nbsp;kV</td><td>LB, 1:2,000,000</td><td>434</td></tr>
-                  <tr><th scope="row">WB800</th><td>Pveg-SamyQ:ACCD v2t1</td><td>2.3&nbsp;kV</td><td>LB, 1:2,000,000</td><td>403</td></tr>
-                  <tr><th scope="row">WB800</th><td>Pveg-SamyQ:ACCD v2t1</td><td>2.5&nbsp;kV</td><td>LBE</td><td>15</td></tr>
-                  <tr><th scope="row">WB800</th><td>Pveg-SamyQ:ACCD v2t1</td><td>2.1&nbsp;kV</td><td>LBE, undiluted</td><td>16</td></tr>
-                  <tr><th scope="row">WB800</th><td>Pveg-SamyQ:ACCD v2t2</td><td>2.3&nbsp;kV</td><td>LBE, undiluted</td><td>16</td></tr>
-                  <tr><th scope="row">WB800</th><td>Pveg-SamyQ:ACCD v2t2</td><td>2.5&nbsp;kV</td><td>LBE, 1:2,000,000</td><td>337</td></tr>
-                  <tr><th scope="row">WB800</th><td>pSTK-EXP2-CcaSRv1-AcdS-v2t1</td><td>2.1&nbsp;kV</td><td>LB</td><td>268</td></tr>
-                  <tr><th scope="row">WB800</th><td>pSTK-EXP2-CcaSRv1-AcdS-v2t1</td><td>2.3&nbsp;kV</td><td>LB</td><td>370</td></tr>
-                  <tr><th scope="row">WB800</th><td>pSTK-EXP2-CcaSRv1-AcdS-v2t1</td><td>2.5&nbsp;kV</td><td>LB</td><td>233</td></tr>
+                  <tr><th scope="row">168</th><td>Pveg-EEBD-RBS0-SamyQ-AcdS-2.1-B0015</td><td>2.1&nbsp;kV</td><td>LBE</td><td>21</td></tr>
+                  <tr><th scope="row">168</th><td>Pveg-EEBD-RBS0-SamyQ-AcdS-2.1-B0015</td><td>2.3&nbsp;kV</td><td>LBE</td><td>8</td></tr>
+                  <tr><th scope="row">WB800</th><td>Pveg-SamyQ:AcdS 2.1</td><td>2.1&nbsp;kV</td><td>LB, 1:2,000,000</td><td>434</td></tr>
+                  <tr><th scope="row">WB800</th><td>Pveg-SamyQ:AcdS 2.1</td><td>2.3&nbsp;kV</td><td>LB, 1:2,000,000</td><td>403</td></tr>
+                  <tr><th scope="row">WB800</th><td>Pveg-SamyQ:AcdS 2.1</td><td>2.5&nbsp;kV</td><td>LBE</td><td>15</td></tr>
+                  <tr><th scope="row">WB800</th><td>Pveg-SamyQ:AcdS 2.1</td><td>2.1&nbsp;kV</td><td>LBE, undiluted</td><td>16</td></tr>
+                  <tr><th scope="row">WB800</th><td>Pveg-SamyQ:AcdS 2.2</td><td>2.3&nbsp;kV</td><td>LBE, undiluted</td><td>16</td></tr>
+                  <tr><th scope="row">WB800</th><td>Pveg-SamyQ:AcdS 2.2</td><td>2.5&nbsp;kV</td><td>LBE, 1:2,000,000</td><td>337</td></tr>
+                  <tr><th scope="row">WB800</th><td>pSTK-EXP2-CcaSRv1-AcdS-2.1</td><td>2.1&nbsp;kV</td><td>LB</td><td>268</td></tr>
+                  <tr><th scope="row">WB800</th><td>pSTK-EXP2-CcaSRv1-AcdS-2.1</td><td>2.3&nbsp;kV</td><td>LB</td><td>370</td></tr>
+                  <tr><th scope="row">WB800</th><td>pSTK-EXP2-CcaSRv1-AcdS-2.1</td><td>2.5&nbsp;kV</td><td>LB</td><td>233</td></tr>
                   <tr><th scope="row">WB800</th><td>Pveg-BoPep4_15-23</td><td>1.1&nbsp;kV</td><td>LBE</td><td>15</td></tr>
                   <tr><th scope="row">WB800</th><td>Pveg-BoPep4_15-23</td><td>1.5&nbsp;kV</td><td>LBE</td><td>6</td></tr>
                   <tr><th scope="row">WB800</th><td>NC4:Pveg-BoPep4_15-23 NHis</td><td>1.1&nbsp;kV</td><td>LBE</td><td>11</td></tr>
@@ -1834,7 +1998,7 @@
                     <table class="data">
                       <thead><tr><th scope="col">Item</th><th scope="col">Amount</th></tr></thead>
                       <tbody>
-                        <tr><th scope="row">SDS-PAGE sample gel</th><td>1 sheet</td></tr>
+                        <tr><th scope="row">TGX FastCast acrylamide solutions</th><td>Bio-Rad; 1 gel</td></tr>
                         <tr><th scope="row">Power supply</th><td>1 unit</td></tr>
                         <tr><th scope="row">Mini-PROTEAN vertical electrophoresis cell</th><td>1 unit</td></tr>
                         <tr><th scope="row">Shaker</th><td>1 unit</td></tr>
@@ -1844,7 +2008,8 @@
                         <tr><th scope="row">3M filter papers</th><td>2 sheets</td></tr>
                         <tr><th scope="row">Sponge pad</th><td>2</td></tr>
                         <tr><th scope="row">Cassette and gel holding cassette</th><td>1 each</td></tr>
-                        <tr><th scope="row">1&times; transfer buffer</th><td>as required</td></tr>
+                        <tr><th scope="row">1&times; transfer buffer</th><td>Omics Bio; as required</td></tr>
+                        <tr><th scope="row">6&times; Laemmli protein sample buffer</th><td>Omics Bio; as required</td></tr>
                         <tr><th scope="row">His-tag antibody AD1.1.10</th><td>Santa Cruz Biotechnology, sc-53073; as required</td></tr>
                         <tr><th scope="row">Peroxidase AffiniPure goat anti-mouse IgG (H+L)</th><td>Jackson ImmunoResearch; as required</td></tr>
                         <tr><th scope="row">T-Pro LumiDura chemiluminescent substrate (ECL) kit</th><td>T-Pro Biotech, 1 unit</td></tr>
@@ -1858,9 +2023,9 @@
                 <summary><span>Casting the gel</span> <span class="fold__sub">resolver, then stacker</span></summary>
                 <div class="fold__body">
                   <ol>
-                    <li>Assemble the holder, glass plates and comb.</li>
-                    <li>Prepare the resolver solution: resolver A 3&nbsp;mL, resolver B 3&nbsp;mL, 10% APS 30&nbsp;&micro;L, TEMED 3&nbsp;&micro;L.</li>
-                    <li>Fill with about 6&nbsp;mL of resolver solution, to 1 to 1.5&nbsp;cm below the bottom of the comb teeth.</li>
+                    <li>Assemble the holder, the 1.5&nbsp;mm glass plates and the comb.</li>
+                    <li>Using the TGX FastCast acrylamide solutions, prepare the resolver solution: resolver A 5&nbsp;mL, resolver B 5&nbsp;mL, 10% APS 50&nbsp;&micro;L, TEMED 5&nbsp;&micro;L.</li>
+                    <li>Fill with about 10&nbsp;mL of resolver solution, to 1 to 1.5&nbsp;cm below the bottom of the comb teeth.</li>
                     <li>Prepare the stacker solution: stacker A 1&nbsp;mL, stacker B 1&nbsp;mL, 10% APS 10&nbsp;&micro;L, TEMED 2&nbsp;&micro;L.</li>
                     <li>Fill to the top with about 2&nbsp;mL of stacker solution.</li>
                     <li>Insert the comb and allow the gel to polymerize for 10 to 15 minutes.</li>
@@ -1869,18 +2034,18 @@
               </details>
 
               <details class="fold">
-                <summary><span>Running and transferring</span> <span class="fold__sub">200&nbsp;V through the stack, then 100&nbsp;V for ninety minutes onto PVDF</span></summary>
+                <summary><span>Running and transferring</span> <span class="fold__sub">120&nbsp;V through the gel, then 100&nbsp;V for ninety minutes onto PVDF</span></summary>
                 <div class="fold__body">
-                  <h5>SDS-PAGE</h5>
+                  <h5>SDS-PAGE resolving</h5>
                   <ol>
                     <li>Remove the comb and mount the gel into the electrophoresis tank.</li>
-                    <li>Prepare protein samples in SDS loading buffer.</li>
+                    <li>Prepare the protein samples in 6&times; Laemmli protein sample buffer.</li>
                     <li>Heat samples at 95&nbsp;&deg;C for 5 minutes.</li>
-                    <li>Briefly centrifuge samples to collect condensation.</li>
+                    <li>Briefly spin the samples down.</li>
                     <li>Fill the inner and outer chambers of the tank with 1&times; running buffer.</li>
                     <li>Load the protein ladder in the first and last lane, and the samples into the remaining wells.</li>
                     <li>Close the lid and connect the electrodes.</li>
-                    <li>Run at a constant 200&nbsp;V for 10 minutes until the dye reaches the bottom of the stacking gel, then continue at a constant 100 to 150&nbsp;V for 40 minutes until the dye is near the bottom of the gel.</li>
+                    <li>Run at a constant 120&nbsp;V for 30 minutes until the dye reaches the bottom of the stacking gel, then continue at a constant 120&nbsp;V for 90 minutes until the dye is near the bottom of the gel.</li>
                     <li>Carefully disassemble the glass plates and collect the gel.</li>
                   </ol>
                   <h5>Transfer</h5>
@@ -1890,10 +2055,17 @@
                     <li>Wet the 3M papers in 1&times; transfer buffer.</li>
                     <li>Assemble the sandwich in the cassette in the order sponge pad, filter paper, gel, PVDF membrane, filter paper, sponge pad. Ensure there are no air bubbles between the gel and the membrane.</li>
                     <li>Place the cassette into the tank filled with cold 1&times; transfer buffer and an ice block.</li>
-                    <li>Transfer at 100&nbsp;V for 90 minutes.</li>
-                    <li>Block in 5% non-fat milk in TBST for 2 hours at room temperature.</li>
-                    <li>Replace the blocking solution with anti-His-tag mouse monoclonal antibody at 1:1000 in 5% milk.</li>
-                    <li>Incubate on the orbital shaker at 4&nbsp;&deg;C overnight.</li>
+                    <li>Transfer at 100&nbsp;V for 90 minutes, keeping the tank on ice.</li>
+                  </ol>
+                  <h5>Blotting and detection</h5>
+                  <ol>
+                    <li>Block in 5% non-fat milk in TBST for 1 hour at room temperature.</li>
+                    <li>Replace the blocking solution with anti-His-tag mouse monoclonal antibody at 1:1000 in 5% milk, and incubate on the orbital shaker at 4&nbsp;&deg;C overnight.</li>
+                    <li>Remove the primary antibody and wash the membrane in TBST on the shaker three times, 10 minutes each.</li>
+                    <li>Incubate the PVDF membrane in the secondary antibody for 1 hour at room temperature.</li>
+                    <li>Remove the secondary antibody and wash the membrane in TBST on the shaker six times, 10 minutes each.</li>
+                    <li>Incubate the membrane in chemiluminescent substrate for 2 minutes.</li>
+                    <li>Image the membrane on the chemiluminescence imaging system.</li>
                   </ol>
                 </div>
               </details>
@@ -1916,7 +2088,7 @@
             <header class="chap__hero">
               <h3 class="chap__title" id="elisa" data-toc="ELISA">Competitive His-tag ELISA</h3>
               <div class="chap__intro">
-                <p>To evaluate whether our <i>Bacillus subtilis</i> successfully secretes bioprotectants, the amount of protein in culture samples must be accurately measured. Total protein assays cannot distinguish the target from host proteins, and gel-based methods are only semi-quantitative.</p>
+                <p>To evaluate whether our <i>Bacillus subtilis</i> successfully secretes bioprotectants, the amount of protein in culture samples must be accurately measured. A total protein assay such as Bradford cannot separate the target from the host’s own proteins, and gel-based methods are only semi-quantitative.</p>
               </div>
             </header>
 
@@ -1931,6 +2103,7 @@
               <details class="fold">
                 <summary><span>Materials</span> <span class="fold__sub">the kit, the plate and the reader</span></summary>
                 <div class="fold__body">
+                  <p>The plate, antibody, tracer and standard are the commercial His-tag detection ELISA kit from Cayman Chemical, item number 10012445. Everything below is what that kit supplies, plus the reader and the glassware.</p>
                   <div class="tablewrap">
                     <table class="data">
                       <thead><tr><th scope="col">Material</th><th scope="col">Specification</th></tr></thead>
@@ -2099,21 +2272,21 @@
 
             <div class="tablewrap">
               <table class="data">
-                <caption>ACCD v2t1 over a bioreactor run, single wells, concentrations in &micro;g/mL. L is the lumen side and S the shell side.</caption>
-                <thead><tr><th scope="col">Sample</th><th scope="col">Time (h)</th><th scope="col">OD</th><th scope="col">%B/B&#8320;</th><th scope="col">In 20&ndash;80%</th><th scope="col">Apparent conc.</th></tr></thead>
+                <caption>AcdS 2.1 over a bioreactor run, single wells, concentrations in &micro;g/mL.</caption>
+                <thead><tr><th scope="col">Side</th><th scope="col">Time (h)</th><th scope="col">OD</th><th scope="col">%B/B&#8320;</th><th scope="col">In 20&ndash;80%</th><th scope="col">Apparent conc.</th></tr></thead>
                 <tbody>
-                  <tr><th scope="row">L</th><td>1</td><td>0.204</td><td>17.9</td><td>no</td><td>6.9</td></tr>
-                  <tr><th scope="row">L</th><td>16</td><td>0.190</td><td>16.7</td><td>no</td><td>7.6</td></tr>
-                  <tr><th scope="row">L</th><td>24</td><td>0.231</td><td>20.4</td><td>yes</td><td>5.7</td></tr>
-                  <tr><th scope="row">L</th><td>40</td><td>0.283</td><td>25.1</td><td>yes</td><td>4.2</td></tr>
-                  <tr><th scope="row">S</th><td>1</td><td>0.245</td><td>21.6</td><td>yes</td><td>5.3</td></tr>
-                  <tr><th scope="row">S</th><td>16</td><td>0.198</td><td>17.4</td><td>no</td><td>7.2</td></tr>
-                  <tr><th scope="row">S</th><td>24</td><td>0.225</td><td>19.8</td><td>no</td><td>6.0</td></tr>
-                  <tr><th scope="row">S</th><td>40</td><td>0.251</td><td>22.2</td><td>yes</td><td>5.1</td></tr>
+                  <tr><th scope="row">Lumen</th><td>1</td><td>0.204</td><td>17.9</td><td>no</td><td>6.9</td></tr>
+                  <tr><th scope="row">Lumen</th><td>16</td><td>0.190</td><td>16.7</td><td>no</td><td>7.6</td></tr>
+                  <tr><th scope="row">Lumen</th><td>24</td><td>0.231</td><td>20.4</td><td>yes</td><td>5.7</td></tr>
+                  <tr><th scope="row">Lumen</th><td>40</td><td>0.283</td><td>25.1</td><td>yes</td><td>4.2</td></tr>
+                  <tr><th scope="row">Shell</th><td>1</td><td>0.245</td><td>21.6</td><td>yes</td><td>5.3</td></tr>
+                  <tr><th scope="row">Shell</th><td>16</td><td>0.198</td><td>17.4</td><td>no</td><td>7.2</td></tr>
+                  <tr><th scope="row">Shell</th><td>24</td><td>0.225</td><td>19.8</td><td>no</td><td>6.0</td></tr>
+                  <tr><th scope="row">Shell</th><td>40</td><td>0.251</td><td>22.2</td><td>yes</td><td>5.1</td></tr>
                 </tbody>
               </table>
             </div>
-            <p>Both sides peak at 16&nbsp;hours and fall afterwards. That is a trend and not a result: each time point is one well with no technical replicate, and half the readings sit below the standard curve. The later anti-His runs on the October reactor batches, which do carry replicates, are reported on <a href="../results/#protein-over-time">Results</a>.</p>
+            <p>Samples were drawn from both the lumen and the shell compartment at matched times, so the pair at each point asks whether the protein is crossing the membrane wall rather than only accumulating where the cells are. Both sides peak at 16&nbsp;hours and fall afterwards. That is a trend and not a result: each time point is one well with no technical replicate, and half the readings sit below the standard curve. The later anti-His runs on the October reactor batches, which do carry replicates, are reported on <a href="../results/#protein-over-time">Results</a>.</p>
             <p>One thing this assay cannot do, whatever its precision: anti-His ELISA counts protein carrying a His tag. It says nothing about whether that protein folds or turns substrate over. Activity is what the Berthelot and DNPH assays in this section are for, and the two numbers should never be substituted for one another.</p>
           </div>
 
@@ -2317,7 +2490,7 @@
                     </tbody>
                   </table>
                 </div>
-            <p>Without added PLP, the Csn construct reads 0.499&nbsp;mM against the WB800 host's 0.513&nbsp;mM: the two are the same number, so whatever ACCD is present is turning over no faster than the host background. Adding the cofactor moves Csn to +13.7&nbsp;nmol over that baseline, which is the clearest statement this page can make that ACCD does not function without PLP, and it is why PLP is dosed alongside ACCD in every plant run. SamyQ with PLP reaches 89.7&nbsp;nmol, +30.0 over baseline, which is 2.19 times the net product of Csn with PLP, so the two secretion tags are not equivalent. Every value here is one well on one plate, so the ranking is a first result and not a measured fold difference.</p>
+            <p>Without added PLP, the Csn construct reads 0.499&nbsp;mM against the WB800 host's 0.513&nbsp;mM: the two are the same number, so whatever ACCD is present is turning over no faster than the host background. Adding the cofactor moves Csn to +13.7&nbsp;nmol over that baseline, which is the clearest statement this page can make that ACCD does not function without PLP. That is why PLP is dosed alongside ACCD in every plant run, and why the reactor has to supply it too if the enzyme is to work in the field. SamyQ with PLP reaches 89.7&nbsp;nmol, +30.0 over baseline, which is 2.19 times the net product of Csn with PLP, so the two secretion tags are not equivalent. Every value here is one well on one plate, so the ranking is a first result and not a measured fold difference.</p>
 
             <h4 class="blk__h">The standard curve the concentrations are read from</h4>
             <p>Every &alpha;-ketobutyrate value on this page is read off the curve below, measured on the same plate as the samples it calibrates. Over 0 to 2.049&nbsp;mM, after subtracting the reagent blank of 0.110&nbsp;AU, absorbance at 540&nbsp;nm is linear in &alpha;-ketobutyrate with a slope of 0.246&nbsp;AU&nbsp;mM<sup>&minus;1</sup>, an intercept of &minus;0.005&nbsp;AU and R&sup2;&nbsp;=&nbsp;0.9995.</p>
@@ -2336,10 +2509,22 @@
                 </tbody>
               </table>
             </div>
+            <p>The curve was also run twice, once in buffer and once in TB medium, because every sample on this page comes out of a TB culture and the medium itself absorbs.</p>
+
+            <div class="chartbox">
+              <div class="charts charts--1">
+                <figure class="fig">
+                  <img src="../assets/img/measurement/dnph-tb-standard-curves.webp" srcset="../assets/img/measurement/dnph-tb-standard-curves-w800.webp 800w, ../assets/img/measurement/dnph-tb-standard-curves.webp 1400w" sizes="(max-width: 52rem) 100vw, 56rem" alt="A scatter plot of absorbance at 540 nanometres against alpha-ketobutyrate concentration from 0 to 4 millimolar. Two fitted lines run almost parallel: the upper one with TB medium and the lower one without, separated by a roughly constant gap at every concentration." width="1400" height="638" loading="lazy" decoding="async" />
+                  <figcaption>&alpha;-ketobutyrate standard curves measured with and without TB medium in the well.</figcaption>
+                </figure>
+              </div>
+            </div>
+            <p>The two lines run parallel and offset. TB medium raises the absorbance at every point by about the same amount and leaves the slope, the response per millimolar, where it was. That is the behaviour of a constant background rather than an interference, so the correction is a blank made up in the same medium as the sample, and the calibration itself transfers. It is the check worth running before trusting any colorimetric assay on culture supernatant.</p>
+
             <p>Fitting all eight levels at once returns R&sup2;&nbsp;=&nbsp;0.950, which is the number to avoid quoting: it looks acceptable while hiding a curve that has stopped responding. The five levels at and below 2.049&nbsp;mM are what the samples are read against, and every sample value on this page falls inside that range. The point of showing this here is narrow and worth stating plainly: it establishes that the DNPH assay itself works and over what range, which is the precondition for anything the strain screen below says.</p>
 
             <h4 class="blk__h">ACC deaminase activity across a bioreactor run</h4>
-            <p>The assay was run again on supernatant drawn from the <code>v2t1</code> constitutive ACC deaminase bioreactor run, at seven points between 1 and 36&nbsp;hours. Activity is the &alpha;-ketobutyrate the sample produced divided by the length of the reaction, which was 12&nbsp;hours for every point, so the figures below are the concentrations in the right-hand column divided by twelve.</p>
+            <p>The assay was run again on supernatant drawn from the <code>AcdS 2.1</code> constitutive ACC deaminase bioreactor run, at seven points between 1 and 36&nbsp;hours. Activity is the &alpha;-ketobutyrate the sample produced divided by the length of the reaction, which was 12&nbsp;hours for every point, so the figures below are the concentrations in the right-hand column divided by twelve.</p>
 
             <div class="chartbox">
               <div class="charts charts--2">
@@ -2420,8 +2605,12 @@
         <ol>
           <li>Auverlot J, Reichheld J-P, Dard A. Assays to study plant response to high temperature in <i>Arabidopsis</i>: evidence in glutathione biosynthesis mutants. <i>Methods in Molecular Biology</i>. 2025:9-19. <a href="https://doi.org/10.1007/978-1-0716-4981-7_2" target="_blank" rel="noopener">doi:10.1007/978-1-0716-4981-7_2</a></li>
           <li>Azadeh M, Gorovits B, Kamerud J, MacMannis S, Safavi A, Sailstad J, Sondag P. Calibration curves in quantitative ligand binding assays: recommendations and best practices for preparation, design, and editing of calibration curves. <i>The AAPS Journal</i>. 2018;20(1):22. <a href="https://doi.org/10.1208/s12248-017-0159-4" target="_blank" rel="noopener">doi:10.1208/s12248-017-0159-4</a></li>
+          <li>Beyer HM, Juillot S, Herbst K, Samodelov SL, Mueller K, Schamel WW, Roemer W, Schaefer E, Timmer J, Z&uuml;rbriggen MD, Weber W. Red light-regulated reversible nuclear localization of proteins in mammalian cells and zebrafish. <i>ACS Synthetic Biology</i>. 2015;4(9):951-958. <a href="https://doi.org/10.1021/acssynbio.5b00004" target="_blank" rel="noopener">doi:10.1021/acssynbio.5b00004</a></li>
+          <li>Bird RB, Stewart WE, Lightfoot EN. <i>Transport Phenomena</i>. Revised 2nd ed. Wiley; 2007.</li>
+          <li>Bugaj LJ, Lim WA. High-throughput multicolor optogenetics in microwell plates. <i>Nature Protocols</i>. 2019;14(7):2205-2228. <a href="https://doi.org/10.1038/s41596-019-0178-y" target="_blank" rel="noopener">doi:10.1038/s41596-019-0178-y</a></li>
           <li>Castillo-Hair SM, Baerman EA, Fujita M, Igoshin OA, Tabor JJ. Optogenetic control of <i>Bacillus subtilis</i> gene expression. <i>Nature Communications</i>. 2019;10:3099. <a href="https://doi.org/10.1038/s41467-019-10906-6" target="_blank" rel="noopener">doi:10.1038/s41467-019-10906-6</a></li>
           <li>Ceusters J, Van De Poel B. Ethylene exerts species-specific and age-dependent control of photosynthesis. <i>Plant Physiology</i>. 2018;176(4):2601-2612. <a href="https://doi.org/10.1104/pp.17.01706" target="_blank" rel="noopener">doi:10.1104/pp.17.01706</a></li>
+          <li>Chatelle C, Ochoa-Fernandez R, Engesser R, Schneider N, Beyer HM, Jones AR, Timmer J, Z&uuml;rbriggen MD, Weber W. A green-light-responsive system for the control of transgene expression in mammalian and plant cells. <i>ACS Synthetic Biology</i>. 2018;7(5):1349-1358. <a href="https://doi.org/10.1021/acssynbio.7b00450" target="_blank" rel="noopener">doi:10.1021/acssynbio.7b00450</a></li>
           <li>Cheng M-C, Liao P-M, Kuo W-W, Lin T-P. The <i>Arabidopsis</i> ETHYLENE RESPONSE FACTOR1 regulates abiotic stress-responsive gene expression by binding to different cis-acting elements in response to different stress signals. <i>Plant Physiology</i>. 2013;162(3):1566-1582. <a href="https://doi.org/10.1104/pp.113.221911" target="_blank" rel="noopener">doi:10.1104/pp.113.221911</a></li>
           <li>Cort&eacute;s-Jim&eacute;nez D, G&oacute;mez-Guzm&aacute;n A, Iturriaga G, Su&aacute;rez R, Montero Alp&iacute;rez G, Escalante FME. Microorganisms associated to tomato seedlings growing in saline culture act as osmoprotectant. <i>Brazilian Journal of Microbiology</i>. 2014;45(2):613-620. <a href="https://doi.org/10.1590/S1517-83822014000200032" target="_blank" rel="noopener">doi:10.1590/S1517-83822014000200032</a></li>
           <li>Corrales A, Carrillo L, Nebauer S, Renau-Morata B, S&aacute;nchez-Perales M, Fern&aacute;ndez-Nohales P, Marqu&eacute;s J, Granell A, Pollmann S, Vicente-Carbajosa J, Molina R, Medina J. Salinity assay in <i>Arabidopsis</i>. <i>Bio-protocol</i>. 2014;4(16). <a href="https://doi.org/10.21769/bioprotoc.1216" target="_blank" rel="noopener">doi:10.21769/bioprotoc.1216</a></li>
@@ -2430,37 +2619,49 @@
           <li>Dubois M, Van Den Broeck L, Inz&eacute; D. The pivotal role of ethylene in plant growth. <i>Trends in Plant Science</i>. 2018;23(4):311-323. <a href="https://doi.org/10.1016/j.tplants.2018.01.003" target="_blank" rel="noopener">doi:10.1016/j.tplants.2018.01.003</a></li>
           <li>Duckert B, Fauvart M, Goos P, Stakenborg T, Lagae L, Braeken D. High-definition electroporation: precise and efficient transfection on a microelectrode array. <i>Journal of Controlled Release</i>. 2022;352:61-73. <a href="https://doi.org/10.1016/j.jconrel.2022.10.001" target="_blank" rel="noopener">doi:10.1016/j.jconrel.2022.10.001</a></li>
           <li>Fan Q, Jespersen D. Proteases and the ubiquitin-proteasome system: understanding protein degradation under heat stress in plants. <i>Environmental and Experimental Botany</i>. 2025;237:106174. <a href="https://doi.org/10.1016/j.envexpbot.2025.106174" target="_blank" rel="noopener">doi:10.1016/j.envexpbot.2025.106174</a></li>
+          <li>Field RW, Wu D, Howell JA, Gupta BB. Critical flux concept for microfiltration fouling. <i>Journal of Membrane Science</i>. 1995;100(3):259-272. <a href="https://doi.org/10.1016/0376-7388(94)00265-Z" target="_blank" rel="noopener">doi:10.1016/0376-7388(94)00265-Z</a></li>
           <li>Gerhardt KP, Olson EJ, Castillo-Hair SM, Hartsough LA, Landry BP, Ekness F, Yokoo R, Gomez EJ, Ramakrishnan P, Suh J, Savage DF, Tabor JJ. An open-hardware platform for optogenetics and photobiology. <i>Scientific Reports</i>. 2016;6:35363. <a href="https://doi.org/10.1038/srep35363" target="_blank" rel="noopener">doi:10.1038/srep35363</a></li>
           <li>Glick BR. Bacteria with ACC deaminase can promote plant growth and help to feed the world. <i>Microbiological Research</i>. 2014;169(1):30-39. <a href="https://doi.org/10.1016/j.micres.2013.09.009" target="_blank" rel="noopener">doi:10.1016/j.micres.2013.09.009</a></li>
           <li>Haller DJ, Castillo-Hair SM, Tabor JJ. Optogenetic control of <i>B. subtilis</i> gene expression using the CcaSR system. In: Baumschlager A, editor. <i>Optogenetics: Methods and Protocols</i>. Methods in Molecular Biology, vol 2840. New York: Humana; 2025. p. 1-17. <a href="https://doi.org/10.1007/978-1-0716-4047-0_1" target="_blank" rel="noopener">doi:10.1007/978-1-0716-4047-0_1</a></li>
+          <li>Hirose Y, Shimada T, Narikawa R, Katayama M, Ikeuchi M. Cyanobacteriochrome CcaS is the green light receptor that induces the expression of phycobilisome linker protein. <i>Proceedings of the National Academy of Sciences</i>. 2008;105(28):9528-9533. <a href="https://doi.org/10.1073/pnas.0801826105" target="_blank" rel="noopener">doi:10.1073/pnas.0801826105</a></li>
           <li>Honma M, Shimomura T. Metabolism of 1-aminocyclopropane-1-carboxylic acid. <i>Agricultural and Biological Chemistry</i>. 1978;42(10):1825-1831. <a href="https://doi.org/10.1271/bbb1961.42.1825" target="_blank" rel="noopener">doi:10.1271/bbb1961.42.1825</a></li>
           <li>Kandeler E, Gerber H. Short-term assay of soil urease activity using colorimetric determination of ammonium. <i>Biology and Fertility of Soils</i>. 1988;6(1). <a href="https://doi.org/10.1007/BF00257924" target="_blank" rel="noopener">doi:10.1007/BF00257924</a></li>
           <li>Kempers AJ, Zweers A. Ammonium determination in soil extracts by the salicylate method. <i>Communications in Soil Science and Plant Analysis</i>. 1986;17(7):715-723. <a href="https://doi.org/10.1080/00103628609367745" target="_blank" rel="noopener">doi:10.1080/00103628609367745</a></li>
+          <li>Kainrath S, Stadler M, Reichhart E, Distel M, Janovjak H. Green-light-induced inactivation of receptor signaling using cobalamin-binding domains. <i>Angewandte Chemie International Edition</i>. 2017;56(16):4608-4611. <a href="https://doi.org/10.1002/anie.201611998" target="_blank" rel="noopener">doi:10.1002/anie.201611998</a></li>
+          <li>Kennedy MJ, Hughes RM, Peteya LA, Schwartz JW, Ehlers MD, Tucker CL. Rapid blue-light-mediated induction of protein interactions in living cells. <i>Nature Methods</i>. 2010;7(12):973-975. <a href="https://doi.org/10.1038/nmeth.1524" target="_blank" rel="noopener">doi:10.1038/nmeth.1524</a></li>
           <li>Kim K, Kyaw EP, Ramasamy K, Walitang DI, Rajasekaran R. ACC deaminase producing <i>Methylobacterium oryzae</i> CBMB20 and exogenous trehalose application alleviate salinity stress in <i>Arabidopsis</i>. <i>Journal of Microbiology and Biotechnology</i>. 2025;35:e2501007. <a href="https://doi.org/10.4014/jmb.2501.01007" target="_blank" rel="noopener">doi:10.4014/jmb.2501.01007</a></li>
           <li>Kozaeva E, et al. DNPH quantification of &alpha;-ketobutyrate. 2022.</li>
+          <li>Kumari R, Ashraf S, Bagri GK, Bagdi DL. Extraction and estimation of chlorophyll content of seed treated lentil crop using DMSO and acetone. <i>Journal of Pharmacognosy and Phytochemistry</i>. 2018;7(5):249-250.</li>
           <li>Krom MD. Spectrophotometric determination of ammonia: a study of a modified Berthelot reaction using salicylate and dichloroisocyanurate. <i>The Analyst</i>. 1980;105(1249):305. <a href="https://doi.org/10.1039/an9800500305" target="_blank" rel="noopener">doi:10.1039/an9800500305</a></li>
           <li>Kumar Parida A, Das AB, Mitra B, Mohanty P. Salt-stress induced alterations in protein profile and protease activity in the mangrove <i>Bruguiera parviflora</i>. <i>Zeitschrift f&uuml;r Naturforschung C</i>. 2004;59c:408-414.</li>
-          <li>Lara AR, Galindo E, Ram&iacute;rez OT, Palomares LA. Living with heterogeneities in bioreactors: understanding the effects of environmental gradients on cells. <i>Molecular Biotechnology</i>. 2006;34(3):355-381. <a href="https://doi.org/10.1385/MB:34:3:355" target="_blank" rel="noopener">doi:10.1385/MB:34:3:355</a></li>
           <li>Lee JH, Burdick LH, Piatkowski B, Carrell AA, Doktycz MJ, Pelletier DA, Weston DJ. A rapid assay for assessing bacterial effects on <i>Arabidopsis</i> thermotolerance. <i>Plant Methods</i>. 2023;19(1):63. <a href="https://doi.org/10.1186/s13007-023-01022-0" target="_blank" rel="noopener">doi:10.1186/s13007-023-01022-0</a></li>
           <li>Li X, Zhang W, Niu D, Liu X. Effects of abiotic stress on chlorophyll metabolism. <i>Plant Science</i>. 2024;342:112030. <a href="https://doi.org/10.1016/j.plantsci.2024.112030" target="_blank" rel="noopener">doi:10.1016/j.plantsci.2024.112030</a></li>
+          <li>Levskaya A, Weiner OD, Lim WA, Voigt CA. Spatiotemporal control of cell signalling using a light-switchable protein interaction. <i>Nature</i>. 2009;461(7266):997-1001. <a href="https://doi.org/10.1038/nature08446" target="_blank" rel="noopener">doi:10.1038/nature08446</a></li>
+          <li>Li R, Liu M, Hu X, Li J, Pang Q, Yan X, Li J, Ji W. Broccoli plant elicitor peptide BoPep4 enhances plant salt tolerance by improving glucosinolate metabolism. <i>Plant Science</i>. 2026;364:112954. <a href="https://doi.org/10.1016/j.plantsci.2025.112954" target="_blank" rel="noopener">doi:10.1016/j.plantsci.2025.112954</a></li>
+          <li>Liu H, Chen G-H, Sun J-J, Chen S, Fang Y, Ren J-H. Isolation, characterization, and tea growth-promoting analysis of JW-CZ2, a bacterium with 1-aminocyclopropane-1-carboxylic acid deaminase activity isolated from the rhizosphere soils of tea plants. <i>Frontiers in Microbiology</i>. 2022;13:792876. <a href="https://doi.org/10.3389/fmicb.2022.792876" target="_blank" rel="noopener">doi:10.3389/fmicb.2022.792876</a></li>
           <li>Lu YP, Zhang C, Lv FX, Bie XM, Lu ZX. Study on the electro-transformation conditions of improving transformation efficiency for <i>Bacillus subtilis</i>. <i>Letters in Applied Microbiology</i>. 2012;55:9-14. <a href="https://doi.org/10.1111/j.1472-765X.2012.03249.x" target="_blank" rel="noopener">doi:10.1111/j.1472-765X.2012.03249.x</a></li>
           <li>Millipore Corporation. Protein concentration and diafiltration by tangential flow filtration. Technical Brief TB032, Rev. C. 2003.</li>
           <li>Morales M, Munn&eacute;-Bosch S. Malondialdehyde: facts and artifacts. <i>Plant Physiology</i>. 2019;180(3):1246-1250. <a href="https://doi.org/10.1104/pp.19.00405" target="_blank" rel="noopener">doi:10.1104/pp.19.00405</a></li>
+          <li>Motta-Mena LB, Reade A, Mallory MJ, Glantz S, Weiner OD, Lynch KW, Gardner KH. An optogenetic gene expression system with rapid activation and deactivation kinetics. <i>Nature Chemical Biology</i>. 2014;10(3):196-202. <a href="https://doi.org/10.1038/nchembio.1430" target="_blank" rel="noopener">doi:10.1038/nchembio.1430</a></li>
+          <li>Multam&auml;ki E, Garc&iacute;a de Fuentes A, Sieryi O, Bykov A, Gerken U, Ranzani AT, K&ouml;hler J, Meglinski I, M&ouml;glich A, Takala H. Optogenetic control of bacterial expression by red light. <i>ACS Synthetic Biology</i>. 2022;11(10):3354-3367. <a href="https://doi.org/10.1021/acssynbio.2c00259" target="_blank" rel="noopener">doi:10.1021/acssynbio.2c00259</a></li>
           <li>Murashige T, Skoog F. A revised medium for rapid growth and bio assays with tobacco tissue cultures. <i>Physiologia Plantarum</i>. 1962;15(3):473-497.</li>
           <li>Ngo TT, Phan APH, Yam CF, Lenhoff HM. Interference in determination of ammonia with the hypochlorite-alkaline phenol method of Berthelot. <i>Analytical Chemistry</i>. 1982;54(1):46-49. <a href="https://doi.org/10.1021/ac00238a015" target="_blank" rel="noopener">doi:10.1021/ac00238a015</a></li>
+          <li>Noya R, Murakoshi K, Ishida S, Tsuji Y, Kitani S, Nihira T, Arakawa K. Light inducible gene expression system for <i>Streptomyces</i>. <i>Scientific Reports</i>. 2024;14:25852. <a href="https://doi.org/10.1038/s41598-024-76860-6" target="_blank" rel="noopener">doi:10.1038/s41598-024-76860-6</a></li>
+          <li>Ohlendorf R, Vidavski RR, Eldar A, Moffat K, M&ouml;glich A. From dusk till dawn: one-plasmid systems for light-regulated gene expression. <i>Journal of Molecular Biology</i>. 2012;416(4):534-542. <a href="https://doi.org/10.1016/j.jmb.2012.01.001" target="_blank" rel="noopener">doi:10.1016/j.jmb.2012.01.001</a></li>
+          <li>Ong NT, Olson EJ, Tabor JJ. Engineering an <i>E. coli</i> near-infrared light sensor. <i>ACS Synthetic Biology</i>. 2017;6(11):2171-2175. <a href="https://doi.org/10.1021/acssynbio.7b00289" target="_blank" rel="noopener">doi:10.1021/acssynbio.7b00289</a></li>
           <li>Penrose DM, Glick BR. Methods for isolating and characterizing ACC deaminase-containing plant growth-promoting rhizobacteria. <i>Physiologia Plantarum</i>. 2003;118(1):10-15. <a href="https://doi.org/10.1034/j.1399-3054.2003.00086.x" target="_blank" rel="noopener">doi:10.1034/j.1399-3054.2003.00086.x</a></li>
+          <li>Ramakrishnan P, Tabor JJ. Repurposing <i>Synechocystis</i> PCC6803 UirS-UirR as a UV-violet/green photoreversible transcriptional regulatory tool in <i>E. coli</i>. <i>ACS Synthetic Biology</i>. 2016;5(7):733-740. <a href="https://doi.org/10.1021/acssynbio.6b00068" target="_blank" rel="noopener">doi:10.1021/acssynbio.6b00068</a></li>
           <li>Roberts J. The role of chlorophyll in photosynthesis and plant growth. <i>American Journal of Biological Sciences</i>. 2023;4(2):6-10. <a href="https://doi.org/10.71465/ajbs2191" target="_blank" rel="noopener">doi:10.71465/ajbs2191</a></li>
           <li>Rolly NK, Imran QM, Lee I-J, Yun B-W. Salinity stress-mediated suppression of expression of salt overly sensitive signaling pathway genes suggests negative regulation by AtbZIP62 transcription factor in <i>Arabidopsis thaliana</i>. <i>International Journal of Molecular Sciences</i>. 2020;21(5):1726. <a href="https://doi.org/10.3390/ijms21051726" target="_blank" rel="noopener">doi:10.3390/ijms21051726</a></li>
           <li>Sahoo S, Verma RK, Suresh AK, Rao KK, Bellare J, Suraishkumar GK. Macro-level and genetic-level responses of <i>Bacillus subtilis</i> to shear stress. <i>Biotechnology Progress</i>. 2003;19(6):1689-1696. <a href="https://doi.org/10.1021/bp034191w" target="_blank" rel="noopener">doi:10.1021/bp034191w</a></li>
           <li>R&#367;&#382;i&#269;ka K, Ljung K, Vanneste S, Podhorsk&aacute; R, Beeckman T, Friml J, Benkov&aacute; E. Ethylene regulates root growth through effects on auxin biosynthesis and transport-dependent auxin distribution. <i>The Plant Cell</i>. 2007;19(7):2197-2212. <a href="https://doi.org/10.1105/tpc.107.052126" target="_blank" rel="noopener">doi:10.1105/tpc.107.052126</a></li>
           <li>Schluepmann H, et al. Trehalose-6-phosphate and growth arrest in <i>Arabidopsis</i>. 2004.</li>
           <li>Searle PL. The Berthelot or indophenol reaction and its use in the analytical chemistry of nitrogen. A review. <i>The Analyst</i>. 1984;109(5):549. <a href="https://doi.org/10.1039/an9840900549" target="_blank" rel="noopener">doi:10.1039/an9840900549</a></li>
-          <li>Villadsen J. Mixing and mass transfer in industrial bioreactors. In: Villadsen J, editor. <i>Fundamental Bioengineering</i>. Wiley; 2015. p. 357-378. <a href="https://doi.org/10.1002/9783527697441.ch11" target="_blank" rel="noopener">doi:10.1002/9783527697441.ch11</a></li>
+          <li>Thibodeaux CJ, Liu H-W. Mechanistic studies of 1-aminocyclopropane-1-carboxylate deaminase: characterization of an unusual pyridoxal 5'-phosphate-dependent reaction. <i>Biochemistry</i>. 2011;50(11):1950-1962. <a href="https://doi.org/10.1021/bi101927s" target="_blank" rel="noopener">doi:10.1021/bi101927s</a></li>
           <li>Wittig C, Wagner M, Vallon R, Crouzier T, van der Wijngaart W, Horn H, Bagheri S. The role of fluid friction in streamer formation and biofilm growth. <i>npj Biofilms and Microbiomes</i>. 2025;11(1):17. <a href="https://doi.org/10.1038/s41522-024-00633-2" target="_blank" rel="noopener">doi:10.1038/s41522-024-00633-2</a></li>
           <li>Yu X, et al. The mechanism of the Berthelot assay for quantifying ammonia. 2021.</li>
           <li>Yuen P. The science of selection: choosing the right hollow fiber filter [white paper]. Repligen; 2025.</li>
           <li>Zhang Z, Huang R. Analysis of malondialdehyde, chlorophyll, proline, soluble sugar, and glutathione content in <i>Arabidopsis</i> seedling. <i>Bio-protocol</i>. 2013;3(14). <a href="https://doi.org/10.21769/bioprotoc.817" target="_blank" rel="noopener">doi:10.21769/bioprotoc.817</a></li>
-          <li>Zhao EM, Lalwani MA, Chen J-M, Orillac P, Toettcher JE, Avalos JL. Optogenetic amplification circuits for light-induced metabolic control. <i>ACS Synthetic Biology</i>. 2021;10(5):1143-1154. <a href="https://doi.org/10.1021/acssynbio.0c00642" target="_blank" rel="noopener">doi:10.1021/acssynbio.0c00642</a></li>
           <li>Zou Y, Zhang Y, Testerink C. Root dynamic growth strategies in response to salinity. <i>Plant, Cell &amp; Environment</i>. 2021;45(3):695-704. <a href="https://doi.org/10.1111/pce.14205" target="_blank" rel="noopener">doi:10.1111/pce.14205</a></li>
         </ol>
         <p>Three entries carry only the author and year: Kozaeva et al. (2022), Schluepmann et al. (2004) and Yu et al. (2021). Their full details are still to be filled in by the authors of each block.</p>
