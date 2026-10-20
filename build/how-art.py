@@ -33,8 +33,7 @@ who adds land enters it to see how many sensors and bioreactors it needs
 and what they cost. So nothing is piped to the crop any more: the permeate
 fills the harvest bottle, the farmer collects it (the bottle leaves the
 case and reappears tipped over the tank), the tank turns to the diluted
-mix, the wand sprays the crop, and a last beat draws the next field on the
-plain with its sensors and a bioreactor.
+mix, the wand sprays the crop.
 
 WHAT THE FILM MOVES (home-story.js reads <g data-k>): the flows, pulses,
 cells, protectant, drops, LEDs, beams, traces and labels, the same parts
@@ -686,24 +685,6 @@ for i in range(1, 9):
     out.append('<g data-k="sdrop%d" data-flow transform="translate(0 0)"><path class="rw-sdrop" d="%s" /></g>' % (i, dpath(rough(ell(0, 0, 3.4, 3.4, 10), 0.3, 2.5))))
 out.append('<g data-k="halo" transform="translate(236 448)"><ellipse class="rw-halo" rx="118" ry="132" filter="url(#rw-glow-l)" /></g>')
 
-# ===================================================================== PLAN --
-# the last beat: the farmer adds a field. The app draws it on the plain at
-# the left, then stands its sensors and a bioreactor on it.
-g('data-k="plan-line" data-draw transform="translate(0 0)"')
-out.append('<path class="rw-plan" pathLength="1" d="M-80 382 L140 382 L170 440 L-120 440 Z" />')
-end()
-g('data-k="plan-pins" transform="translate(0 0)"')
-for px, py in ((-40, 400), (100, 406), (30, 430)):
-    stroke([(px, py), (px, py - 14)], 3, INK, r=0.2, step=4)
-    poly(ell(px, py - 17, 3.6, 3.6, 8), LIME, r=0.3, step=3)
-end()
-g('data-k="plan-rx" transform="translate(0 0)"')
-shadow(135, 436, 12, 2.5, 0.7)
-poly(rrect(124, 410, 146, 434, 2), CASE, r=0.5, step=3)
-poly(rrect(127, 413, 143, 431, 1), CASE_IN, r=0.4, step=3)
-poly(rrect(128, 414, 131, 430, 1), LIME, r=0.2, step=3)
-end()
-
 # =================================================================== LABELS --
 LABELS = [
     ("lab-forecast", 150, 150, "middle", "", "forecast"),
@@ -724,8 +705,6 @@ LABELS = [
     ("lab-crop", 112, 404, "middle", "", "irrigation or spray"),
     ("lab-off", 662, 244, "start", "st-lab--red", "red light, 660 nm: off"),
     ("lab-app", 502, 428, "middle", "st-lab--green", "ReLEAF app"),
-    ("lab-newfield", 30, 372, "middle", "", "new field"),
-    ("lab-plan", -100, 460, "start", "", "sensors and bioreactors to add, and their cost"),
 ]
 for k, x, y, anc, cls, text in LABELS:
     out.append('<g data-k="%s" data-label transform="translate(%d %d)"><text class="st-lab%s" text-anchor="%s">%s</text></g>'
