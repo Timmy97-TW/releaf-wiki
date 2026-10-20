@@ -1,0 +1,77 @@
+/* "For judges" button and pop-up (20 Oct 2026, prototype). js/judge-pop.js builds both. The panel is glass: the page
+   shows through, softly blurred, and the type stays dark and crisp on a pale, mostly opaque tint. */
+
+.jp-btn {
+  position: fixed; left: clamp(14px, 2vw, 24px); bottom: clamp(14px, 2.4vh, 24px); z-index: 60;
+  display: inline-flex; align-items: center; gap: .5rem;
+  padding: .55rem 1rem .55rem .85rem; border-radius: 999px; cursor: pointer;
+  font: 600 .8125rem/1 var(--sans, system-ui, sans-serif); letter-spacing: .01em; color: #1d2a33;
+  background: rgba(255, 255, 255, .72);
+  -webkit-backdrop-filter: blur(14px) saturate(160%); backdrop-filter: blur(14px) saturate(160%);
+  border: 1px solid rgba(63, 90, 102, .22);
+  box-shadow: 0 6px 22px -10px rgba(14, 22, 28, .45);
+  transition: transform .2s ease, box-shadow .2s ease, background-color .2s ease;
+}
+.jp-btn i { font-style: normal; font-size: .7rem; color: #3f5a66; }
+.jp-btn:hover { transform: translateY(-1px); background: rgba(255, 255, 255, .88); box-shadow: 0 10px 26px -10px rgba(14, 22, 28, .5); }
+.jp-btn:focus-visible { outline: 2px solid #3f5a66; outline-offset: 3px; }
+html.jp-open .jp-btn { opacity: 0; pointer-events: none; }
+
+/* the dialog: a glass sheet over a lightly dimmed, blurred page */
+.jp {
+  width: min(880px, calc(100vw - 32px)); max-height: min(86vh, 860px); padding: 0; margin: auto;
+  border: 1px solid rgba(255, 255, 255, .6); border-radius: 22px; color: #16212a; overflow: auto;
+  background: linear-gradient(160deg, rgba(255, 255, 255, .74), rgba(240, 245, 248, .62));
+  -webkit-backdrop-filter: blur(22px) saturate(170%); backdrop-filter: blur(22px) saturate(170%);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, .8), 0 30px 80px -24px rgba(8, 14, 20, .55);
+}
+.jp::backdrop { background: rgba(12, 18, 24, .22); -webkit-backdrop-filter: blur(3px); backdrop-filter: blur(3px); }
+.jp[open] { animation: jp-in .28s cubic-bezier(.2, .8, .25, 1) both; }
+@keyframes jp-in { from { opacity: 0; transform: translateY(10px) scale(.985); } to { opacity: 1; transform: none; } }
+.jp-in { position: relative; padding: clamp(22px, 3.2vw, 36px) clamp(20px, 3.4vw, 40px) clamp(20px, 3vw, 32px); }
+.jp-x {
+  position: absolute; top: 14px; right: 14px; width: 34px; height: 34px; border-radius: 50%; cursor: pointer;
+  border: 1px solid rgba(22, 33, 42, .14); background: rgba(255, 255, 255, .55); color: #16212a; font-size: 1.3rem; line-height: 1;
+}
+.jp-x:hover { background: #fff; }
+.jp-k { margin: 0 0 .5rem; font: 600 .6875rem/1 var(--mono, ui-monospace, monospace); letter-spacing: .16em; text-transform: uppercase; color: #3f5a66; }
+.jp-t { margin: 0; font: 650 clamp(1.45rem, 1.1rem + 1.1vw, 1.9rem)/1.15 var(--sans, system-ui, sans-serif); letter-spacing: -.02em; }
+.jp-note { margin: .6rem 0 1.4rem; max-width: 60ch; font-size: .9375rem; line-height: 1.55; color: #3c4a55; }
+
+.jp-list { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; }
+.jp-c {
+  display: grid; grid-template-columns: auto minmax(0, 1fr); gap: .8rem; margin: 0; padding: 16px 16px 14px;
+  border-radius: 14px; background: rgba(255, 255, 255, .55); border: 1px solid rgba(255, 255, 255, .7);
+}
+.jp-n { display: grid; place-items: center; width: 1.7rem; height: 1.7rem; border-radius: 50%;
+  font: 650 .8125rem/1 var(--sans, system-ui, sans-serif); color: #fff; background: #3f5a66; }
+.jp-c h3 { margin: .15rem 0 .3rem; font: 650 1rem/1.25 var(--sans, system-ui, sans-serif); color: #16212a; }
+.jp-c p { margin: 0 0 .65rem; font-size: .875rem; line-height: 1.5; color: #2f3c46; }
+.jp-c ul { list-style: none; margin: 0; padding: 0; display: flex; flex-wrap: wrap; gap: .4rem; }
+.jp-c a {
+  display: inline-flex; align-items: center; gap: .4rem; padding: .3rem .65rem .3rem .4rem; border-radius: 999px;
+  font-size: .78rem; line-height: 1.2; color: #16212a; text-decoration: none;
+  background: rgba(255, 255, 255, .75); border: 1px solid rgba(22, 33, 42, .12); transition: background-color .15s ease, border-color .15s ease;
+}
+.jp-c a:hover { background: #fff; border-color: var(--c); }
+.jp-pg { display: inline-flex; align-items: center; gap: .3rem; padding: .12rem .4rem; border-radius: 999px;
+  font: 600 .625rem/1.2 var(--mono, ui-monospace, monospace); letter-spacing: .06em; text-transform: uppercase;
+  color: #16212a; background: color-mix(in srgb, var(--c) 28%, #fff); }
+
+@media (max-width: 700px) { .jp-list { grid-template-columns: minmax(0, 1fr); } }
+@media (prefers-reduced-motion: reduce) { .jp[open] { animation: none; } .jp-btn { transition: none; } }
+@media print { .jp-btn, .jp { display: none !important; } }
+
+/* the hub: a quiet pill under "Choose an instrument", on the dark bench */
+.jp-hub {
+  display: inline-flex; align-items: center; gap: .5rem; margin-top: clamp(.8rem, 1.6svh, 1.1rem);
+  padding: .5rem .95rem .5rem .8rem; border-radius: 999px; cursor: pointer; pointer-events: auto;
+  font: 600 .8125rem/1 var(--sans, system-ui, sans-serif); color: #eef2f6;
+  background: rgba(255, 255, 255, .08); border: 1px solid rgba(255, 255, 255, .22);
+  -webkit-backdrop-filter: blur(10px); backdrop-filter: blur(10px);
+  transition: background-color .2s ease, border-color .2s ease;
+}
+.jp-hub i { font-style: normal; font-size: .7rem; color: #3ddc8b; }
+.jp-hub:hover { background: rgba(255, 255, 255, .16); border-color: rgba(255, 255, 255, .4); }
+.jp-hub:focus-visible { outline: 2px solid #3ddc8b; outline-offset: 3px; }
+.sh .jp-hub { grid-column: 1 / -1; justify-self: start; width: auto; }

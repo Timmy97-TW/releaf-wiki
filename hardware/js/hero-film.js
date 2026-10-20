@@ -33,6 +33,13 @@
   function request() {
     if (requested) return;
     requested = true;
+    // (20 Oct 2026) the loading walk (js/hw-loader.js) waits for the film's first moving frame, up to its own limit,
+    // so the hero opens on the film already playing rather than on the poster with the film arriving late
+    const release = window.HWLoader ? HWLoader.hold() : function () {};
+    // through iGEM's player, "playing" also fires while it warms up out of sight; its first frame on screen is vuProgress 1
+    video.addEventListener("vuprogress", function () { if (video.vuProgress >= 1) release(); });
+    if (!(window.VUEmbed && VUEmbed.is(video.dataset.src))) video.addEventListener("playing", release, { once: true });
+    video.addEventListener("error", release, { once: true });
     video.muted = true;
     const px = window.innerWidth * (window.devicePixelRatio || 1);
     // a file that will not load (the mp4s are not in the repository: hardware/README.md,
@@ -47,6 +54,15 @@
     // to any other page since 16 Oct 2026. The player answers through this <video>.
     if (window.VUEmbed && VUEmbed.is(src)) VUEmbed.bind(video, src, { fit: "cover", loop: true });
     else { video.src = src; video.load(); }
+    // (set once the player stands in for the <video>)
+    // (20 Oct 2026, the owner: "is there a way to speed up the clip") data-rate on .hero-film plays the film faster
+    const RATE = parseFloat(wrap.dataset.rate) || 1;
+    if (RATE !== 1) { video.defaultPlaybackRate = RATE; video.playbackRate = RATE; }
+    // the film plays on under the loading walk; as the walk lifts it goes back to its first frame, so the reader
+    // sees it begin where the owner asked (the bottle), not a second or two further on (20 Oct 2026)
+    if (window.HWLoader && START > 0) HWLoader.onLift(function () {
+      if (video.__vu ? video.__vu.shown : ready) video.currentTime = START;
+    });
     // Play only once the browser expects to play through without stopping to buffer (HAVE_ENOUGH_DATA). Starting on
     // the first metadata let the opening move run, stall and catch up while the rest of the file was still arriving.
     function whenBuffered() {

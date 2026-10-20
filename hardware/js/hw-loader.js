@@ -240,6 +240,15 @@
   var start = performance.now() - since;
   var left = false;
   var loaded = false, fonts = !d.fonts, parsed = d.readyState !== "loading";
+  // (20 Oct 2026, the owner: the hub film back from Video Universe, "hoping the loading animation would help")
+  // A script can ask the walk to wait for something of its own, the hub film's first moving frame:
+  // HWLoader.hold() returns a release function. Holds only count until MAX, like everything else here.
+  var holds = 0;
+  // HWLoader.onLift(fn) runs fn as the black starts to lift (the hub film goes back to its first frame under it).
+  var lifts = [];
+  w.HWLoader = { hold: function () { if (left) return function () {}; holds++; var once = false;
+    return function () { if (!once) { once = true; holds--; } }; },
+    onLift: function (fn) { if (left) return; lifts.push(fn); } };
   w.addEventListener("load", function () { loaded = true; });
   d.addEventListener("DOMContentLoaded", function () { parsed = true; });
   if (d.fonts && d.fonts.ready) d.fonts.ready.then(function () { fonts = true; });
@@ -259,6 +268,7 @@
   function lift() {
     if (left) return;
     left = true;
+    lifts.forEach(function (fn) { try { fn(); } catch (err) {} });
     L.classList.remove("at");
     L.classList.remove("in");
     L.classList.add("out");
@@ -272,7 +282,7 @@
     var now = performance.now();
     var el = now - start;
     var late = el > MAX && (parsed || el > HARD);
-    var done = (loaded && fonts) || late;
+    var done = (loaded && fonts && holds <= 0) || late;
     var g = goal(el, done);
     p += (g - p) * ease(late ? .22 : .08, now - prev);
     prev = now;

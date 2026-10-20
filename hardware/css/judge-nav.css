@@ -1,0 +1,137 @@
+/* ---- The judging rail (20 Oct 2026) -------------------------------------------------------------------------------
+   The owner: "on the right side of the pages, a list similar to the structure of the contents list on the left, but
+   with only 4 sections, which match the judging criteria". The right grid column of .doc-wrap was empty; the rail
+   mirrors the contents rail on the left (sticky, its label, its pill on the item the reader is in). Each criterion
+   names where the page answers it; the one the reader is in unfolds its full question and links. Criterion 2, user
+   testing, carries a soft green glow: user feedback is what the owner wants seen. The same glow marks the feedback
+   entries in the left rail. js/judge-nav.js does the scroll spy; without it the links still work. */
+
+.judge-nav {
+  grid-column: 3; grid-row: 1;
+  position: sticky; top: 0; height: 100vh; align-self: start;
+  display: flex; flex-direction: column; justify-content: flex-start;
+  padding: calc(var(--nv-h, 68px) + 5.5rem) 0 2rem 2rem;
+  box-sizing: border-box; overflow-y: auto; scrollbar-width: none;
+}
+.judge-nav::-webkit-scrollbar { display: none; }
+.judge-nav__label {
+  margin: 0 0 1.1rem; font-family: var(--mono, ui-monospace, monospace); font-size: .6875rem;
+  letter-spacing: .2em; text-transform: uppercase; color: var(--w-ink-3, #7a8692);
+}
+.judge-nav ol { list-style: none; margin: 0; padding: 0; display: grid; gap: .12rem; }
+.judge-nav li { margin: 0; }
+.jn__h {
+  display: grid; grid-template-columns: 1.7rem minmax(0, 1fr); align-items: baseline; gap: .1rem;
+  padding: .45rem .6rem .45rem .45rem; border-radius: 10px; text-decoration: none;
+  font-size: .8125rem; font-weight: 500; line-height: 1.32; color: #6b7a85;
+  transition: background-color .22s ease, color .22s ease;
+}
+.jn__no {
+  display: inline-grid; place-items: center; width: 1.2rem; height: 1.2rem; border-radius: 50%;
+  font-size: .6875rem; font-weight: 650; color: #93a2ad; box-shadow: inset 0 0 0 1px #c9d3da;
+  font-variant-numeric: tabular-nums;
+}
+.jn__where { display: block; margin-top: .1rem; font-size: .6875rem; font-weight: 500; color: #93a2ad; }
+.jn__h:hover { color: var(--w-tab, #3f5a66); background: rgb(63 90 102 / .06); }
+.jn.is-here > .jn__h { color: var(--w-tab, #3f5a66); background: var(--w-tab-pill, #e3eef2); }
+.jn.is-here > .jn__h .jn__no { color: #fff; background: var(--w-tab, #3f5a66); box-shadow: none; }
+
+/* the question and its links, unfolded under the criterion the reader is in */
+.jn__more { overflow: hidden; max-height: 0; opacity: 0; transition: max-height .4s ease, opacity .3s ease; }
+.jn.is-here > .jn__more, .judge-nav:not(.js-on) .jn__more { max-height: 22rem; opacity: 1; }
+.jn__q { margin: .35rem .4rem .3rem 2.15rem; font-size: .75rem; line-height: 1.45; color: #5d6b76; font-style: italic; }
+.jn__links { list-style: none; margin: 0 0 .4rem 2.15rem; padding: 0; display: grid; gap: .1rem; }
+.jn__links a {
+  display: block; padding: .18rem 0; font-size: .75rem; line-height: 1.35; color: var(--w-tab, #3f5a66);
+  text-decoration: none; border-bottom: 1px dotted rgb(63 90 102 / .35); justify-self: start;
+}
+.jn__links a:hover { border-bottom-style: solid; }
+.jn__gap { margin: .35rem .4rem .4rem 2.15rem; font-size: .75rem; line-height: 1.45; color: #8a96a0; }
+
+/* criterion 2: user testing, glowing */
+.jn--users > .jn__h .jn__no {
+  color: #1d7a4f; box-shadow: inset 0 0 0 1px #3ddc8b, 0 0 0 3px rgb(61 220 139 / .18), 0 0 12px rgb(61 220 139 / .45);
+  animation: jn-glow 2.8s ease-in-out infinite;
+}
+.jn--users.is-here > .jn__h .jn__no { color: #fff; background: #1f9e63; }
+.jn--users > .jn__h .jn__lab::after {
+  content: "Outside users"; display: inline-block; margin-left: .4rem; padding: .02rem .4rem; border-radius: 999px;
+  font-size: .625rem; font-weight: 650; letter-spacing: .04em; color: #1d7a4f; background: rgb(61 220 139 / .16);
+  vertical-align: .08em;
+}
+@keyframes jn-glow { 50% { box-shadow: inset 0 0 0 1px #3ddc8b, 0 0 0 5px rgb(61 220 139 / .1), 0 0 18px rgb(61 220 139 / .55); } }
+
+/* the same glow on the user-feedback entries of the left contents rail */
+.hwtoc a[href="#feedback"] .hwtoc__no, .hwtoc a[href="#user-testing"]::before,
+.hwtoc a[href="#handover"]::before { color: #1f9e63; }
+.hwtoc a[href="#feedback"] {
+  box-shadow: inset 2px 0 0 #3ddc8b;
+}
+.hwtoc a[href="#feedback"] .hwtoc__lab::after,
+.hwtoc a[href="#user-testing"]::after, .hwtoc a[href="#handover"]::after {
+  content: ""; display: inline-block; width: .38rem; height: .38rem; margin-left: .4rem; border-radius: 50%;
+  background: #3ddc8b; box-shadow: 0 0 8px #3ddc8b; vertical-align: .1em; animation: jn-dot 2.8s ease-in-out infinite;
+}
+@keyframes jn-dot { 50% { opacity: .45; box-shadow: 0 0 2px #3ddc8b; } }
+
+@media (prefers-reduced-motion: reduce) {
+  .jn--users > .jn__h .jn__no, .hwtoc a::after, .hwtoc .hwtoc__lab::after { animation: none !important; }
+  .jn__more, .jn__h { transition: none; }
+}
+/* a luxury of a wide window, like the contents rail */
+@media (max-width: 1100px) { .judge-nav { display: none; } }
+@media print { .judge-nav { display: none; } }
+/* a criterion the page cannot answer yet: said plainly, no link, no glow */
+.jn--none > .jn__h { cursor: default; }
+.jn--none > .jn__h .jn__no { animation: none; box-shadow: inset 0 0 0 1px #c9d3da; color: #93a2ad; }
+.jn--none > .jn__h .jn__lab::after { content: none; }
+.jn--none > .jn__more { max-height: 22rem; opacity: 1; }
+/* a laptop window: the column is narrow, so the rail keeps its titles and links and drops the question and badge */
+@media (min-width: 1101px) and (max-width: 1340px) {
+  .judge-nav { padding-left: .9rem; }
+  .judge-nav__label { letter-spacing: .14em; }
+  .jn__q, .jn--users > .jn__h .jn__lab::after { display: none; }
+  .jn__links, .jn__gap { margin-left: 1.95rem; }
+  .jn__h { padding-right: .4rem; }
+}
+
+/* ---- 20 Oct 2026, the owner: "space it out more for the left margin, move right a little ... minimalistic, not too
+   attention-grabbing". Overrides the first cut above: more air from the record, no badge, no pulse, a lighter pill. */
+.judge-nav { padding-left: clamp(3.25rem, 4.6vw, 5rem); }
+.jn__h { color: #8794a0; font-weight: 450; }
+.jn__no { box-shadow: inset 0 0 0 1px #dbe2e7; color: #a3afb8; }
+.jn.is-here > .jn__h { background: transparent; color: var(--w-tab, #3f5a66); font-weight: 550; }
+.jn.is-here > .jn__h .jn__no { background: transparent; color: var(--w-tab, #3f5a66); box-shadow: inset 0 0 0 1.5px var(--w-tab, #3f5a66); }
+.jn__q { font-style: normal; font-size: .71875rem; color: #8794a0; }
+.jn__links a { border-bottom: 0; color: #6b7a85; }
+.jn__links a:hover { color: var(--w-tab, #3f5a66); text-decoration: underline; text-underline-offset: 2px; }
+/* criterion 2: only its number in green, still */
+.jn--users > .jn__h .jn__no { animation: none; color: #1f9e63; box-shadow: inset 0 0 0 1px #8fd9b4; }
+.jn--users.is-here > .jn__h .jn__no { background: transparent; color: #1f9e63; box-shadow: inset 0 0 0 1.5px #1f9e63; }
+.jn--users > .jn__h .jn__lab::after { content: none; }
+/* the left rail's feedback marks: a still dot, no bar */
+.hwtoc a[href="#feedback"] { box-shadow: none; }
+.hwtoc a[href="#feedback"] .hwtoc__lab::after, .hwtoc a[href="#user-testing"]::after, .hwtoc a[href="#handover"]::after {
+  animation: none; box-shadow: none; width: .32rem; height: .32rem; background: #3ddc8b;
+}
+@media (min-width: 1101px) and (max-width: 1340px) { .judge-nav { padding-left: 2.1rem; } }
+/* 20 Oct 2026, the owner: just the criterion's name, no subtitle; a little more room between them */
+.jn__where { display: none; }
+.judge-nav ol { gap: .55rem; }
+.jn__h { padding-top: .5rem; padding-bottom: .5rem; }
+/* 20 Oct 2026: forcing row 1 put the rail beside the summary sheet, and its 100vh height stretched that row (a
+   screen-tall gap between the animation and the summary). Auto-placed, it lands in the record's row, beside it. */
+.judge-nav { grid-row: auto; height: auto; max-height: 100vh; }
+/* ...auto-placed it took a row of its own between the sheet and the record. js/judge-nav.js now puts it in the
+   record's own row (whichever that is on the page); until it has, and without script, it is not shown. */
+.judge-nav { display: none; }
+.judge-nav.is-placed { display: flex; }
+@media (max-width: 1100px) { .judge-nav.is-placed { display: none; } }
+@media print { .judge-nav.is-placed { display: none; } }
+
+/* 20 Oct 2026, the owner: user testing like the rest, no green; the left rail's green dots go too */
+.jn--users > .jn__h .jn__no { color: #a3afb8; box-shadow: inset 0 0 0 1px #dbe2e7; }
+.jn--users.is-here > .jn__h .jn__no { color: var(--w-tab, #3f5a66); box-shadow: inset 0 0 0 1.5px var(--w-tab, #3f5a66); }
+.hwtoc a[href="#feedback"] .hwtoc__lab::after, .hwtoc a[href="#user-testing"]::after, .hwtoc a[href="#handover"]::after { content: none; }
+body.doc-light .hwtoc a[href="#feedback"] .hwtoc__no { color: #93a2ad; }
+body.doc-light .hwtoc__sec.is-here > a[href="#feedback"] .hwtoc__no { color: var(--w-tab); }

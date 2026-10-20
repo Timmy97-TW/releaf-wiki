@@ -106,7 +106,7 @@ window.HERO = (function () {
     // 0.175 -> 0.190 -> 0.145 of h. The hold is untouched.
     { win: [0.526, 0.602], drop: 0.190, bot: 0.270, dIn: [0.482, 0.526], dOut: [0.614, 0.662],
       n: "03", name: "Two sealed rails", role: "Why it floats",
-      body: "Each long side hides a sealed chamber 114.3&nbsp;mm long: a box section chamfered to a point underneath, a teardrop-like pentagon 20.3&nbsp;mm deep in 1.59&nbsp;mm walls. The pair holds 42.3&nbsp;cm&sup3; the water cannot get into. Nothing hangs below the middle of the plate." },
+      body: "Each long side hides a sealed chamber 114.3&nbsp;mm long, a box section chamfered to a point underneath, a teardrop-like pentagon 20.3&nbsp;mm deep in 1.59&nbsp;mm walls. The pair holds 42.3&nbsp;cm&sup3; the water cannot get into. Nothing hangs below the middle of the plate." },
     { win: [0.654, 0.758], drop: 0.145, bot: 0.382, handoff: "water", n: "04", name: "Handles", role: "Lifting out",
       body: "They clip into slots moulded into the plate, so the whole raft lifts clear of the reservoir without touching a plant." },
     // The raft is still coming down (0.800-0.868) as 05 arrives, and its handle

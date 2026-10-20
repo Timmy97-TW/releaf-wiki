@@ -127,7 +127,7 @@
     var i = 0, g = parseFloat(d.style.left) / 100 * X1, e = Infinity;
     for (var k = 0; k < pts.length; k++) { var x = Math.abs(pts[k][0] - g); if (x < e) { e = x; i = k; } }
     hit.setAttribute("aria-valuenow", pts[i][0].toFixed(1));
-    hit.setAttribute("aria-valuetext", pts[i][0].toFixed(1) + " grams afloat: freeboard " + pts[i][1].toFixed(1) + " millimetres");
+    hit.setAttribute("aria-valuetext", pts[i][0].toFixed(1) + " grams afloat, freeboard " + pts[i][1].toFixed(1) + " millimetres");
   })();
 
   function fmt(v) { return (Math.round(v * 10) / 10).toFixed(1); }
@@ -146,7 +146,7 @@
     if (lx + rw > pw) lx = xp - 10 - rw;
     read.style.left = Math.max(0, Math.min(pw - rw, lx)) + "px";
     hit.setAttribute("aria-valuenow", fmt(g));
-    hit.setAttribute("aria-valuetext", fmt(g) + " grams afloat: freeboard " + fmt(f) + " millimetres, draft " + fmt(HULL - f) + " millimetres");
+    hit.setAttribute("aria-valuetext", fmt(g) + " grams afloat, freeboard " + fmt(f) + " millimetres, draft " + fmt(HULL - f) + " millimetres");
   }
   function hide() { at = -1; hair.hidden = cur.hidden = read.hidden = true; }
   function nearest(g) {

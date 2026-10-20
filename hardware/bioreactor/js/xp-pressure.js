@@ -400,7 +400,7 @@
     } else if (kind === "drop") {
       M.aP = "drop"; M.stopAt = M.st + 0.9;
       addEvent("alarm");
-      say("<b>Pressure alarm (Layer&nbsp;1, planned).</b> TMP fell suddenly, from about " + b2(M.tmpRef) + " to " + b2(disp.tmp) + "&nbsp;bar: the two sides&rsquo; pressures met through the broken fiber. A sudden drop can mean the membrane has given way, so the run stops and a shell&#8209;side sample is plated to check (<a href=\"#sec61\">6.1</a>).", "alarm");
+      say("<b>Pressure alarm (Layer&nbsp;1, planned).</b> TMP fell suddenly, from about " + b2(M.tmpRef) + " to " + b2(disp.tmp) + "&nbsp;bar, as the two sides&rsquo; pressures met through the broken fiber. A sudden drop can mean the membrane has given way, so the run stops and a shell&#8209;side sample is plated to check (<a href=\"#sec61\">6.1</a>).", "alarm");
     } else if (kind === "wet") {
       M.aW = true; M.pumpT = 0;
       addEvent("alarm");
@@ -419,7 +419,7 @@
       if (sit === "clog") {
         M.ff = true; M.ffT0 = M.t; M.J0 = solve(M.c, M.Rw, 0, 0).jm;
         addEvent("mark", "fast-forward");
-        say("<b>Fast&#8209;forwarding a long run&hellip;</b> Cells and debris slowly build up on the fiber walls, so the culture side has to push harder to keep the harvest flowing: watch TMP climb toward the alarm level.");
+        say("<b>Fast&#8209;forwarding a long run&hellip;</b> Cells and debris slowly build up on the fiber walls, so the culture side has to push harder to keep the harvest flowing. Watch TMP climb toward the alarm level.");
       } else if (sit === "breach") {
         M.gbT = GB;
         addEvent("mark", "fiber breaks");

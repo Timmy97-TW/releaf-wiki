@@ -102,7 +102,7 @@
     // reach a screen reader as thirty-one consecutive bare links
     if (!dot.getAttribute("aria-label")) {
       dot.setAttribute("aria-label", "Week " + (dot.getAttribute("data-w") || "") +
-        (dot.getAttribute("data-t") ? " — " + dot.getAttribute("data-t") : ""));
+        (dot.getAttribute("data-t") ? ": " + dot.getAttribute("data-t") : ""));
     }
     dot.addEventListener("pointerenter", function () { say(dot); });
     dot.addEventListener("focus", function () { say(dot); });

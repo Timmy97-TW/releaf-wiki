@@ -671,9 +671,16 @@ body.doc-light { --dq-d: var(--w-leaf-900); --dq-b: var(--w-leaf-700); --dq-t: #
    ========================================================================== */
 
 @media (min-width: 1100px) {
-  .doc-wrap {
+  .doc-wrap:not(:has(> .judge-nav)) {
     grid-template-columns: minmax(15rem, 1fr) minmax(0, 1048px) minmax(2.5rem, .22fr);
   }
+  /* 20 Oct 2026: the four records carry Anton's judging rail in the third
+     column, which this width had left at 80px -- its labels ran off the
+     window. The rail is his, and keeps his layout: between 1100 and 1439px
+     there is not enough window for both a wide record and a usable rail, so
+     the selector above steps aside and his own 1fr/760px/1fr grid stands.
+     Above 1440px the record widens again, at the foot of this file. The hub
+     and the notebook carry no rail and read at 1048px throughout. */
   /* the measure every figure on these pages was drawn at */
   body.hwreveal .doc-wrap .doc { --w-media: 760px; }
 
@@ -722,14 +729,14 @@ body.doc-light { --dq-d: var(--w-leaf-900); --dq-b: var(--w-leaf-700); --dq-t: #
    the section. Below 1240px there is no room for the second column and
    everything goes back to caption-under-figure. */
 @media (min-width: 1240px) {
-  body.hwreveal .doc-wrap .doc section.sec > figure:not(.sy-figure):not(.xv):not(.xp):not(.bvc):not(.feature):not(.bsb) {
+  body.hwreveal .doc-wrap:not(:has(> .judge-nav)) .doc section.sec > figure:not(.sy-figure):not(.xv):not(.xp):not(.bvc):not(.feature):not(.bsb) {
     display: grid;
     grid-template-columns: minmax(0, var(--w-media)) minmax(13rem, 1fr);
     column-gap: 1.6rem;
     align-items: start;
   }
-  body.hwreveal .doc-wrap .doc section.sec > figure > * { grid-column: 1; }
-  body.hwreveal .doc-wrap .doc section.sec > figure > figcaption {
+  body.hwreveal .doc-wrap:not(:has(> .judge-nav)) .doc section.sec > figure > * { grid-column: 1; }
+  body.hwreveal .doc-wrap:not(:has(> .judge-nav)) .doc section.sec > figure > figcaption {
     grid-column: 2;
     grid-row: 1;
     margin: 0;
@@ -740,3 +747,26 @@ body.doc-light { --dq-d: var(--w-leaf-900); --dq-b: var(--w-leaf-700); --dq-t: #
     text-align: left;
   }
 }
+
+/* ===================================================== THE RAIL'S COLUMN ==
+   Above 1440px the record can be wider than the 760px it was drawn at and
+   still leave Anton's judging rail the ~336px it needs. Below that, the rule
+   in the 1100px block keeps his own 1fr/760px/1fr grid.
+   ========================================================================== */
+@media (min-width: 1440px) {
+  .doc-wrap:has(> .judge-nav) {
+    grid-template-columns: minmax(15rem, .8fr) minmax(0, 1048px) minmax(21rem, .85fr);
+  }
+}
+
+/* The caption does NOT move beside the figure on the four records.
+   That rule (19 Oct) assumed every standalone figure fills the column. Anton's
+   20 Oct pass lays several of them out for itself -- the photometer's right
+   floats (.pm-float), its photo strips, the Slim clip, the dashboards -- and a
+   figure that sizes itself was handed a column it could not fill, which split
+   it into a sliver beside its caption (the long-run rig measured 312px, some
+   floats 2px). His layout is the one these pages were written for, so on the
+   records the caption stays under the figure, as he set it. The hub and the
+   notebook keep the caption beside, in the 1240px block above.
+   The height the records lose by this they get back from the wider column and
+   from the right gutter no longer standing empty: it holds the rail. */

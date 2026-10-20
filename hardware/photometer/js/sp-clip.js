@@ -463,6 +463,28 @@
       if (near && !started) { started = true; load(portrait.matches ? "phone" : "desktop"); }
       if (near) kickLoop();
     }, { rootMargin: "150% 0px" }).observe(track);
+    // 20 Oct 2026, the owner: "load the video along with the starting animation, so there's no more loading that needs
+    // to be done after". Waiting until the reader was two screens away left the clip warming as they reached it. Now it
+    // starts as soon as the hero is ready (its own loading screen lifted, window.__story.ready()) and the page has
+    // loaded, a moment later so the two never compete for the network; the near-observer above stays as the fallback.
+    (function early() {
+      var t0 = performance.now();
+      function heroReady() {
+        var st = window.__story;
+        try { return !st || typeof st.ready !== "function" || !!st.ready(); } catch (e) { return true; }
+      }
+      (function wait() {
+        if (started) return;
+        var waited = performance.now() - t0;
+        if ((document.readyState === "complete" && heroReady()) || waited > 15000) {
+          setTimeout(function () {
+            if (!started) { started = true; load(portrait.matches ? "phone" : "desktop"); kickLoop(); }
+          }, 700);
+          return;
+        }
+        setTimeout(wait, 250);
+      })();
+    })();
     window.addEventListener("scroll", kickLoop, { passive: true });
     var lastVW = 0, lastVH = 0;
     function onResize() {

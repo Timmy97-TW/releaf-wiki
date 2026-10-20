@@ -30,17 +30,17 @@ window.HERO = (function () {
   // `n` when it is set and falls back to a number when it is empty, so a lone space prints nothing.
   const CAPS = [
     { win: [A0, A1], n: " ", role: "Sampling", name: "In the line",
-      body: "The culture never leaves the loop: it flows through a cuvette <b>2&nbsp;mm</b> thick and straight back to the reactor. Every reading is taken through the glass, on culture that is still moving." },
+      body: "The culture never leaves the loop. It flows through a cuvette <b>2&nbsp;mm</b> thick and straight back to the reactor, and every reading is taken through the glass, on culture that is still moving." },
     { win: [A1, A2], n: " ", role: "Amber LED", name: "One source",
-      body: "A single amber LED at <b>600&nbsp;nm</b>, the wavelength optical density is defined at, fires down the optical axis. Everything below is what happens to that one beam." },
+      body: "A single amber LED at <b>600&nbsp;nm</b>, the wavelength optical density is defined at, fires down the optical axis. The rest of the instrument works on that one beam." },
     { win: [A2, A3], n: " ", role: "Beam conditioning", name: "Gathered into a column",
       body: "The cone leaving the emitter is wider than the cuvette it has to cross. A focusing lens gathers it, and from here down the light is one tight column." },
     { win: [A3, A4], n: " ", role: "Beamsplitter", name: "Two paths",
-      body: "A 45° beamsplitter turns one beam into two. One crosses the culture. The other never meets it — it goes straight to a second sensor as a <em>reference</em>." },
-    { win: [A4, A5], n: " ", role: "The measurement", name: "The ratio, not the reading",
+      body: "A 45° beamsplitter turns one beam into two. One crosses the culture. The other never meets it and goes straight to a second sensor as a <em>reference</em>." },
+    { win: [A4, A5], n: " ", role: "The measurement", name: "The ratio",
       body: "The sample beam crosses <b>2&nbsp;mm</b> of flowing culture and lands on one sensor; the reference has already gone straight to the other. The instrument records the <em>ratio</em>, so anything that changes the lamp divides out of it." },
     { win: [A5, A6], n: " ", role: "The record", name: "434 hours, in line",
-      body: "<b>434</b> hours logged, no samples withdrawn. The first ~240 hours are clean; after that the reference channel failed, and the record says so." },
+      body: "<b>434</b> hours logged, no samples withdrawn. The first ~240 hours are clean; after that the reference channel failed, and the record marks it." },
   ];
 
   function ramp(p, a, b) { const t = (p - a) / (b - a); return t < 0 ? 0 : t > 1 ? 1 : t * t * (3 - 2 * t); }

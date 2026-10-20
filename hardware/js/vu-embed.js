@@ -286,6 +286,7 @@ window.VUEmbed = (function () {
       S.prevRep = { pos: pos, at: now };
       if (!playing || !prev) { S.steady = 0; return; }
       var dt = (now - prev.at) / 1000, r = dt > 0.15 ? (pos - prev.pos) / dt : 0;
+      r = r / (S.rate || 1);                         // (20 Oct 2026) a film may play faster than 1x (the hub's data-rate)
       S.steady = r > 0.6 && r < 1.6 ? S.steady + 1 : 0;
       if (S.warm === 0) {
         var resOk = S.resSet ? now - S.resAt > 400 : now - S.openedAt > WARM_MAX;

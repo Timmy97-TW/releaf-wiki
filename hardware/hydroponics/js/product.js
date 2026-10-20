@@ -190,7 +190,7 @@
       m.manifest.triangles.toLocaleString() + " triangles stored";
     render();
   }).catch(function (e) {
-    if (loader) loader.textContent = "Could not load the model — " + e.message;
+    if (loader) loader.textContent = "Could not load the model (" + e.message + ")";
   });
 
   function place() {

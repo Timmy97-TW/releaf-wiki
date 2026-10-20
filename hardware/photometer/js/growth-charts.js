@@ -121,7 +121,7 @@ window.GROWTH_TRACED = {
         // v5, DBTL 1, 1.3 Test: the same.
         // 17 Oct: the doc's DBTL 1 and 2 are one 22 °C cycle (the owner); the run's last point is at 27 h, when the
         // pump failed ("This test ran for a period of 27 total hours before the pump failed on us as well").
-        notes: [{ type: "end", k: 0, text: "Run ended at 27 h: the pump failed", short: ["Ended at 27 h:", "pump failed"] }]
+        notes: [{ type: "end", k: 0, text: "Run ended at 27 h when the pump failed", short: ["Ended at 27 h:", "pump failed"] }]
       };
     },
     "growth-c2": function () {
