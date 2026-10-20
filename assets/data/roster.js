@@ -105,7 +105,7 @@ const SECTIONS = [
         photo: "assets/img/members/chloe-wu.webp", workPhoto: "assets/img/members/work/chloe-wu.webp", goofyPhoto: "assets/img/members/goofy/chloe-wu.webp",
         grade: "Sophomore", school: "TAS", track: "Wet Lab",
         bio: "Hey, I'm Chloe! When people describe me in one word, they usually default to lazy. This is true, I am incredibly lazy. Being a part of this amazing team, building friendships and working on a project that I'm passionate about has taught me countless things. Turns out, I'm not incapable of hard work: I just needed to be truly driven by something I was dedicated to. At the beginning of my iGEM journey, I never expected to voluntarily trade my free time for endless cycles of colony PCR and golden gate assembly, but I now consider the lab my second home. Through failed transformations, unexpected contamination and troubleshooting protocols, I built a level of dedication I didn't know I had until I screamed out of excitement when we received our first successful sequencing results. Over the course of the summer and more than 300 hours spent in the lab, I went from having to double check every aspect of every procedure to being able to do miniprep from memory and claim the protocol on my labcoat. However, it was really the small acts of stepping out of the lab to interview small scale farmers alongside educating lower schoolers about the importance of rising climate change and how they affect agricultural resilience that really changed things for me, providing me a completely new level of motivation for our project. Our project ReLEAF isn't just relieving stress in plants, but rather, bringing relief to the farmers that rely on them, ensuring that every farmer can have their own bioreactor to combat plant stress step by step.",
-        own: ["Lab", "Cloning"], mem: ["Video", "Outreach", "Education", "Entrepreneurship", "Lab Notebook"]
+        own: ["Lab", "Cloning"], mem: ["Video", "Outreach", "Protectant", "Education", "Entrepreneurship", "Lab Notebook"]
       },
       {
         name: "Jacquelyn Inocencio", role: "Project Lead", roleFull: "Project Lead · Cross-Team Lead",
@@ -119,7 +119,7 @@ const SECTIONS = [
         photo: "assets/img/members/sophie-chen.webp", workPhoto: "assets/img/members/work/sophie-chen.webp", goofyPhoto: "assets/img/members/goofy/sophie-chen.webp",
         grade: "Sophomore", school: "TES", track: "Wet Lab",
         bio: "Hey, I'm Sophie Chen! I’ve always loved chemistry, art, and math, so I didn’t expect to get this invested in synthetic biology, spending hundreds of hours in the lab. I joined iGEM wanting to create a worldwide impact, and somehow ended up looking forward to colony PCRs and liquid cultures.\n\niGEM has really pushed my determination to chase results, not just for my own accomplishments, but for the team and everything we’ve worked on together. I mostly work in wetlab, but I’ve also enjoyed collaborating with drylab to understand the bigger picture and meeting with professors to hear different perspectives on our work. My favorite moments, though, are the messy ones: troubleshooting failed experiments, complaining about protocols, and interacting with teammates from completely different backgrounds. Somewhere along the way, iGEM made me realize that I don’t just like doing science: I really love being part of the process of figuring things out.",
-        own: ["Lab", "Cloning"], mem: []
+        own: ["Lab", "Cloning"], mem: ["Protectant"]
       }
     ]},
     ]
@@ -163,7 +163,7 @@ const SECTIONS = [
         photo: "assets/img/members/felix-yu.webp", workPhoto: "assets/img/members/work/felix-yu.webp", goofyPhoto: "assets/img/members/goofy/felix-yu.webp",
         grade: "Sophomore", school: "IBSH", track: "Dry Lab",
         bio: "Hey, I'm Felix. I'm interested in biochemistry and engineering, but overall, I just like the satisfaction of seeing systems work. In the team, I specialize in protein design and software, while occasionally helping out with the hardware. A challenge in this pipeline is understanding the methodology of complex systems. As you try different docking tools and modeling approaches, you may realize after hours of work, on paper, it was all for nothing, and the process needed to be scrapped and re-done. However, each failure taught me to question my past assumptions, helping me approach the problem from a new perspective. Looking back, the team is also a system where things may break down in seemingly insignificant, unexpected places. With one part of the project greatly impacting another, over time, I’ve experienced the hardships of connecting pipelines, data, and people together. But I know we can work together and finish the job. I also have a fat dog and cat.",
-        own: ["Peptide Design"], mem: ["Outreach", "Data Physicalization"]
+        own: ["Peptide Design"], mem: ["Outreach", "Protectant", "Data Physicalization"]
       },
       {
         name: "Joshua Hong", role: "Wet Lab Lead",
@@ -298,7 +298,7 @@ const SECTIONS = [
         photo: "assets/img/members/sara-chen.webp", workPhoto: "assets/img/members/work/sara-chen.webp", goofyPhoto: "assets/img/members/goofy/sara-chen.webp",
         grade: "Sophomore", school: "WEGO", track: "Dry Lab",
         bio: "Hi everyone, I am Sara. I initially joined iGEM to look for my passion in synthetic Biology. The experience of transferring from wet lab to dry lab changes me a lot. Although transferring between groups is not common, I manage to find the similarities between these two labs. Even though I have a pretty rough time to catch up in dry lab, I think making decisions from two different perspectives of conducting experiment and prediction helps a lot. For example, I was in charge in plants when I was in wet lab. The experience of taking care of plants allows me to look for research for modules that correlated more to the conditions in lab. Overall, I realized the importance of communication and collaboration between labs to win or achieve our goals together.",
-        own: [], mem: ["Lab", "Peptide Design"]
+        own: [], mem: ["Lab", "Peptide Design", "Protectant"]
       },
       {
         name: "Sarah Chou",
