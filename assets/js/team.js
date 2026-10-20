@@ -442,8 +442,11 @@
        "intensive weeks, on top of the required session hours. " +
        "Handles wet lab work without supervision."],
       ["Dry Lab · Major",
-       "Worked through research method, data analysis, R, wiki coding and " +
-       "molecular docking, and takes a dry lab task from brief to result."],
+       "Worked through dry lab training: literature review, research methods, " +
+       "data analysis, wiki coding, protein design, math modelling, economic " +
+       "analysis, geospatial analysis and scientific writing. Takes a task " +
+       "from design through experiment and data analysis to the presented " +
+       "result, without supervision."],
       ["Human Practices · Major",
        "Worked through outreach writing, education material planning, " +
        "entrepreneurship case studies and event hosting, and can run an event " +
@@ -477,9 +480,11 @@
       return item;
     };
     tasks.appendChild(task(true, "Task owner",
-      "keeps the task moving, does it well, and is our main line to the instructors."));
+      "keeps the task moving, beyond doing it well: the whole team and the " +
+      "instructors turn to this person when the task comes up, and the project " +
+      "relies on them to get it done."));
     tasks.appendChild(task(false, "Task member",
-      "contributed to this task."));
+      "contributed to this task, and made a difference to it."));
     if (SHOW_TASKS) wrap.appendChild(tasks);
 
     /* Every task on the board, in its own colour. The two pills above explain
