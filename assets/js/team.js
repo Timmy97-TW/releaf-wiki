@@ -19,10 +19,11 @@
 (function () {
   "use strict";
 
-  /* 20 Oct 2026: the task pills are off until the instructors settle who owns
-     which task. Off hides them under every name, in every profile, and the
-     task key and filter in the legend. Set back to true to bring them all back. */
-  const SHOW_TASKS = false;
+  /* The task pills. On shows them under every name, in every profile, and the
+     task key and filter in the legend; a team/#task- link filters the roster.
+     They were off for a few hours on 20 Oct while task ownership was in
+     question. Set to false to hide all of it again. */
+  const SHOW_TASKS = true;
 
   /* ---------------------------------------------------------- helpers ---- */
 
