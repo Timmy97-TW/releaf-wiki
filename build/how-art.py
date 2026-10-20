@@ -19,9 +19,22 @@ flat bands, her ridge, a patchwork plain in perspective with a river, and
 on the near field the whole system: the crop with the leaf sensor at the
 left, the forecast in the sky above it, the controller on a post in the
 middle, the machine standing at the right with its case open (LED strip on
-the inside wall, vessel, pump, hollow-fibre cartridge, photometer), and a
-cutaway of the soil along the foot of the picture where the permeate line
-runs back to a drip emitter at the crop.
+the inside wall, vessel, pump, hollow-fibre cartridge, photometer, and the
+harvest bottle the permeate fills), the farmer standing between the crop
+and the controller with the ReLEAF app in one hand and a sprayer wand in
+the other, the sprayer tank at their feet, and a cutaway of the soil along
+the foot of the picture.
+
+21 Oct (owner): THE FARMER IS IN THE LOOP. The wiki says the app is for
+farmers without laboratory skills: the forecast lets them prepare ahead,
+they collect the protectant the bioreactor makes, dilute it by the factor
+the app states and apply it through irrigation or spraying; and a farmer
+who adds land enters it to see how many sensors and bioreactors it needs
+and what they cost. So nothing is piped to the crop any more: the permeate
+fills the harvest bottle, the farmer collects it (the bottle leaves the
+case and reappears tipped over the tank), the tank turns to the diluted
+mix, the wand sprays the crop, and a last beat draws the next field on the
+plain with its sensors and a bioreactor.
 
 WHAT THE FILM MOVES (home-story.js reads <g data-k>): the flows, pulses,
 cells, protectant, drops, LEDs, beams, traces and labels, the same parts
@@ -89,6 +102,9 @@ CASE_IN_L = (128, 142, 154)
 CASE_FLOOR = (70, 84, 100)
 INK = (40, 48, 56)
 LIME = (166, 220, 120)
+SKIN = (222, 186, 150)
+STRAW = (217, 201, 68)
+STRAW_D = (176, 160, 52)
 SHADOW = "rgb(50 60 30 / .28)"
 
 out = []
@@ -401,7 +417,7 @@ stroke([(10, -9), (10, -24)], 3, INK, r=0.2, cls="rw-ant")
 end()
 end()
 out.append('<g data-k="blink" transform="translate(296 412)"><circle class="rw-led-glow" r="9" filter="url(#rw-glow-s)" /><circle class="rw-blink" r="3.5" /></g>')
-# the roots, in the soil cutaway, and the drip emitter beside them
+# the roots, in the soil cutaway
 g(wipe("roots", 150, 548, 320, 640, "y") + ' class="rw-roots"')
 for pts in ([(230, GROUND), (222, 584), (206, 606)], [(230, GROUND), (238, 590), (254, 612)], [(230, GROUND), (231, 582), (229, 618)], [(228, 572), (214, 590)], [(233, 586), (246, 600)]):
     stroke(pts, 4, ROOTC, r=0.5, step=4, taper=0.6)
@@ -452,6 +468,53 @@ out.append('<g data-k="idx" data-draw transform="translate(0 0)"><path class="rw
 out.append('<g data-k="thrdot" transform="translate(547 282)"><circle class="rw-led-glow" r="11" filter="url(#rw-glow-s)" /><circle class="rw-thrdot" r="4.5" /></g>')
 out.append('<g data-k="wire-lamp" data-draw transform="translate(0 0)"><path class="rw-wire" pathLength="1" d="M590 330 C612 330 618 320 626 300 C634 282 638 268 644 258" data-path="wire-lamp" /></g>')
 out.append('<g data-k="pulseB1" data-flow transform="translate(0 0)"><circle class="rw-pulse rw-pulse--g" r="4.5" /></g>')
+
+# =================================================================== FARMER --
+# 21 Oct (owner): the farmer is in the loop. They stand between the crop and
+# the controller, facing the crop, the ReLEAF app in the hand toward the
+# controller and the sprayer wand in the other; the sprayer tank stands at
+# their feet. The phone's screen (phone-on, phone-alert), the tank's mix
+# and the pour are the film's; the rest stands still.
+FX = 446.0
+g('class="rw-farmer"')
+shadow(FX + 8, GROUND + 2, 30, 4, 0.8)
+# the sprayer tank at their feet, and its hose running behind them to the wand
+poly([(466, 524), (494, 524), (491, GROUND), (469, GROUND)], STEEL_L, r=0.8, step=4)
+poly([(482, 525), (494, 524), (491, GROUND), (484, GROUND)], STEEL, r=0.6, step=4, alpha=0.45)
+poly(rrect(474, 518, 486, 526, 2), STEEL_D, r=0.4, step=3)
+end()
+out.append('<g data-k="tank-mix" transform="translate(0 0)"><path fill="%s" fill-opacity="0.8" d="%s" /></g>'
+           % (rgb(AMBER_L), dpath(rough([(467, 526), (493, 526), (491, GROUND - 1), (469, GROUND - 1)], 0.8, 4))))
+g('class="rw-farmer"')
+stroke([(480, 520), (484, 502), (462, 494), (438, 500), (424, 500)], 3, INK, r=0.2, step=5, alpha=0.8)
+# legs and boots
+stroke([(441, 504), (439, GROUND - 2)], 9, RIDGE_DK, r=0.4, step=5)
+stroke([(451, 504), (455, GROUND - 2)], 9, RIDGE_DK, r=0.4, step=5)
+poly(ell(438, GROUND - 1, 7, 3, 10), INK, r=0.4, step=3)
+poly(ell(456, GROUND - 1, 7, 3, 10), INK, r=0.4, step=3)
+# the shirt, its shaded side, and the arms: one hand up with the phone,
+# the other down on the wand
+poly([(433, 462), (459, 462), (465, 508), (427, 508)], SLATE_L, r=0.8, step=4)
+poly([(447, 462), (459, 462), (465, 508), (449, 508)], SLATE, r=0.6, step=4, alpha=0.45)
+stroke([(458, 469), (472, 459)], 7, SLATE_L, r=0.4, step=4)
+stroke([(434, 469), (428, 496)], 7, SLATE_L, r=0.4, step=4)
+# the wand, from that hand toward the crop
+stroke([(426, 499), (398, 488)], 3.5, INK, r=0.2, step=5)
+poly(ell(397, 488, 3.2, 3.2, 8), STEEL_D, r=0.3, step=3)
+poly(ell(474, 457, 4.2, 4.2, 8), SKIN, r=0.3, step=3)
+poly(ell(427, 498, 4.2, 4.2, 8), SKIN, r=0.3, step=3)
+# head and the straw hat
+poly(ell(446, 447, 9, 10, 14), SKIN, r=0.5, step=3)
+poly([(428, 441), (464, 441), (462, 436), (430, 436)], STRAW, r=0.6, step=3)
+poly([(437, 437), (455, 437), (453, 424), (439, 424)], STRAW, r=0.6, step=3)
+poly([(437, 437), (455, 437), (454, 433), (438, 433)], STRAW_D, r=0.4, step=3, alpha=0.8)
+# the phone in the raised hand
+poly(rrect(470, 444, 482, 466, 2.5), INK, r=0.3, step=3)
+poly(rrect(472, 446, 480, 464, 1), SCREEN, r=0.2, step=3)
+end()
+out.append('<g data-k="phone-on" transform="translate(476 455)"><path class="rw-phone-on" d="%s" /><path class="rw-phone-bar" d="M-2.5 -5 H2.5 V-3.5 H-2.5 Z M-2.5 -1 H1.5 V0.5 H-2.5 Z M-2.5 3 H2 V4.5 H-2.5 Z" /></g>'
+           % dpath(rrect(-4, -9, 4, 9, 1)))
+out.append('<g data-k="phone-alert" transform="translate(476 455)"><path class="rw-phone-alert" d="%s" /></g>' % dpath(rrect(-4, -9, 4, 9, 1)))
 
 # ================================================================== THE CASE --
 CX0, CY0, CX1, CY1 = 624.0, 160.0, 1140.0, GROUND
@@ -563,24 +626,83 @@ out.append('<path class="rw-tube" pathLength="1" d="M1064 420 H1096" />')
 end()
 out.append('<g data-k="pores" transform="translate(0 0)"><path class="rw-pores" d="M1064 332 V492" /></g>')
 
-# ================================================================= PERMEATE --
+# ================================================================== HARVEST --
+# 21 Oct: the permeate runs from the cartridge into the harvest bottle inside
+# the case (the real machine's "harvest" group); nothing is piped to the
+# crop. The bottle is three groups so the film can fill it, take it away
+# (collected) and bring it back empty.
+BX, BY0, BY1 = 1100.0, 468.0, 530.0
+PERM = "M1064 420 H1092 Q1100 420 1100 428 V450"
 g('data-k="grp-perm" data-draw transform="translate(0 0)"')
-out.append('<path class="rw-perm rw-perm--case" pathLength="1" d="M1096 420 Q1118 420 1118 442 V548" />')
-out.append('<path class="rw-perm" pathLength="1" d="M1118 548 V598 Q1118 620 1096 620 H228 Q206 620 206 598 V560" />')
+out.append('<path class="rw-perm rw-perm--case" pathLength="1" d="%s" />' % PERM)
 end()
-g(wipe("emit", 188, 536, 224, 566) + ' class="rw-emit"')
-poly(rrect(198, 546, 214, 560, 2), INK, r=0.4, step=3)
+g('data-k="bottle" transform="translate(0 0)"')
+shadow(BX, BY1 + 2, 26, 4, 0.7)
+poly(rrect(BX - 22, BY0, BX + 22, BY1, 7), GLASS, r=0.8, step=4)
 end()
-out.append('<g data-k="flow-perm" data-flow transform="translate(0 0)"><path class="rw-flow rw-flow--perm" data-flowel="perm" d="M1064 420 H1096 Q1118 420 1118 442 V598 Q1118 620 1096 620 H228 Q206 620 206 598 V560" /></g>')
-out.append('<g data-k="halo" transform="translate(236 448)"><ellipse class="rw-halo" rx="118" ry="132" filter="url(#rw-glow-l)" /></g>')
-for i in (1, 2, 3):
-    out.append('<g data-k="drop%d" data-flow transform="translate(206 562)"><path class="rw-drop" d="M0 -6 C3 -2 5 1 5 3 A5 5 0 0 1 -5 3 C-5 1 -3 -2 0 -6 Z" /></g>' % i)
+out.append('<g data-k="bottle-fill" data-draw transform="translate(0 0)"><path class="rw-fill" pathLength="1" d="M%d %d V%d" /></g>' % (BX, BY1 - 4, BY0 + 8))
+g('data-k="bottle2" transform="translate(0 0)"')
+poly([(BX + 10, BY0 + 5), (BX + 19, BY0 + 10), (BX + 19, BY1 - 8), (BX + 10, BY1 - 3)], GLASS_D, r=0.6, step=4, alpha=0.5)
+stroke([(BX - 15, BY0 + 10), (BX - 16, BY1 - 10)], 3, (248, 252, 250), r=0.4, step=5, alpha=0.7, taper=0.3)
+poly(rrect(BX - 8, BY0 - 12, BX + 8, BY0 + 2, 2), GLASS, r=0.5, step=3)
+poly(rrect(BX - 10, BY0 - 19, BX + 10, BY0 - 10, 2), STEEL_D, r=0.5, step=3)
+end()
+out.append('<path class="rw-none" data-path="perm" d="%s" />' % PERM)
+out.append('<g data-k="flow-perm" data-flow transform="translate(0 0)"><path class="rw-flow rw-flow--perm" data-flowel="perm" d="%s" /></g>' % PERM)
 for i in range(1, 6):
     out.append('<g data-k="frod%d" data-flow transform="translate(0 0)"><path class="rw-rod" d="%s" /><path class="rw-rod rw-rod--lit" d="%s" /></g>'
                % (i, dpath(rough(capsule(22, 8), 0.4, 2.5)), dpath(rough(capsule(13, 3.2), 0.25, 2.5))))
-for name, n in (("fdot", 6), ("pdot", 6)):
+for name, n in (("fdot", 6), ("pdot", 4)):
     for i in range(1, n + 1):
         out.append('<g data-k="%s%d" data-flow transform="translate(0 0)"><path class="rw-dot" d="%s" /></g>' % (name, i, dpath(rough(ell(0, 0, 4.4, 4.4, 12), 0.35, 2.5))))
+
+# ===================================================================== POUR --
+# the collected bottle, tipped over the sprayer tank, and what it pours:
+# the film brings it in once the bottle has left the case
+
+
+def rot(pts, deg):
+    a = np.radians(deg)
+    c, sn = np.cos(a), np.sin(a)
+    return [(x * c - y * sn, x * sn + y * c) for x, y in pts]
+
+
+g('data-k="pour" transform="translate(506 480)"')
+poly(rot(rrect(-10, -18, 10, 18, 4), -143), GLASS, r=0.6, step=3)
+poly(rot(rrect(-7, -15, 7, 15, 3), -143), AMBER, r=0.5, step=3, alpha=0.9)
+poly(rot(rrect(-4, -26, 4, -17, 1), -143), GLASS, r=0.4, step=3)
+poly(rot(rrect(-5, -31, 5, -25, 1), -143), STEEL_D, r=0.4, step=3)
+end()
+out.append('<g data-k="pour-stream" data-draw transform="translate(0 0)"><path class="rw-pour" pathLength="1" d="M488 504 Q484 514 481 524" /></g>')
+
+# ==================================================================== SPRAY --
+# the diluted mix from the wand over the crop: a haze, and drops that ride
+# an arc from the nozzle into the canopy (home-scenes.js)
+g('data-k="spray-mist" transform="translate(0 0)"')
+poly([(396, 486), (340, 436), (262, 428), (208, 470), (214, 512), (300, 518)], (255, 240, 200), r=2.0, step=6, alpha=0.4)
+end()
+out.append('<path class="rw-none" data-path="spray" d="M394 484 C356 434 290 432 244 492" />')
+for i in range(1, 9):
+    out.append('<g data-k="sdrop%d" data-flow transform="translate(0 0)"><path class="rw-sdrop" d="%s" /></g>' % (i, dpath(rough(ell(0, 0, 3.4, 3.4, 10), 0.3, 2.5))))
+out.append('<g data-k="halo" transform="translate(236 448)"><ellipse class="rw-halo" rx="118" ry="132" filter="url(#rw-glow-l)" /></g>')
+
+# ===================================================================== PLAN --
+# the last beat: the farmer adds a field. The app draws it on the plain at
+# the left, then stands its sensors and a bioreactor on it.
+g('data-k="plan-line" data-draw transform="translate(0 0)"')
+out.append('<path class="rw-plan" pathLength="1" d="M-80 382 L140 382 L170 440 L-120 440 Z" />')
+end()
+g('data-k="plan-pins" transform="translate(0 0)"')
+for px, py in ((-40, 400), (100, 406), (30, 430)):
+    stroke([(px, py), (px, py - 14)], 3, INK, r=0.2, step=4)
+    poly(ell(px, py - 17, 3.6, 3.6, 8), LIME, r=0.3, step=3)
+end()
+g('data-k="plan-rx" transform="translate(0 0)"')
+shadow(135, 436, 12, 2.5, 0.7)
+poly(rrect(124, 410, 146, 434, 2), CASE, r=0.5, step=3)
+poly(rrect(127, 413, 143, 431, 1), CASE_IN, r=0.4, step=3)
+poly(rrect(128, 414, 131, 430, 1), LIME, r=0.2, step=3)
+end()
 
 # =================================================================== LABELS --
 LABELS = [
@@ -596,9 +718,14 @@ LABELS = [
     ("lab-stay", 983, 262, "middle", "", "the cells stay in the loop"),
     ("lab-membrane", 1004, 338, "end", "", "hollow-fibre membrane"),
     ("lab-pores", 1004, 362, "end", "", "0.2 µm pores"),
-    ("lab-perm", 1128, 500, "start", "st-lab--prot", "permeate"),
-    ("lab-crop", 262, 606, "start", "", "to the crop"),
+    ("lab-perm", 1086, 408, "middle", "st-lab--prot", "permeate"),
+    ("lab-bottle", 1100, 441, "middle", "", "harvest bottle"),
+    ("lab-dilute", 482, 584, "middle", "st-lab--prot", "dilute as the app states"),
+    ("lab-crop", 112, 404, "middle", "", "irrigation or spray"),
     ("lab-off", 662, 244, "start", "st-lab--red", "red light, 660 nm: off"),
+    ("lab-app", 502, 428, "middle", "st-lab--green", "ReLEAF app"),
+    ("lab-newfield", 30, 372, "middle", "", "new field"),
+    ("lab-plan", -100, 460, "start", "", "sensors and bioreactors to add, and their cost"),
 ]
 for k, x, y, anc, cls, text in LABELS:
     out.append('<g data-k="%s" data-label transform="translate(%d %d)"><text class="st-lab%s" text-anchor="%s">%s</text></g>'

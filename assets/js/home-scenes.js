@@ -10,18 +10,22 @@
    cannot: things that flow along a path, the cells' green.
 
    THE REACTOR (18 Oct: a painting after the design team's valley, 1200 x
-   680, written by build/how-art.py; the crop on the left, the controller
-   in the middle, the machine standing on the near field at the right, the
-   permeate line running back through the soil). It stands whole from the
-   first frame and plays:
+   680, written by build/how-art.py; the crop on the left, the farmer and
+   the controller in the middle, the machine standing on the near field at
+   the right). It stands whole from the first frame and plays (21 Oct,
+   owner: the farmer is in the loop, the way the wiki says the app is used):
      0     the crop stands in the heat; the leaf sensor reads; its reading and
-           the forecast run to the model, and the index crosses the threshold
+           the forecast run to the model and to the app in the farmer's
+           hand, and the index crosses the threshold
      6     the call runs to the strip, which lights one LED after another, and
            the culture goes green at once
      11    the cells make the protectants; the photometer reads them
      16    the pump runs the loop; the cells go round, the protectant crosses
-     21    the permeate runs back along the ground and drips at the roots
+     21    the permeate fills the harvest bottle; the farmer collects it,
+           dilutes it in the sprayer tank and sprays the crop
      26.6  the whole machine; red light switches the cells off
+     29.6  the farmer adds a field; the app draws it with its sensors and
+           its bioreactor
    THE CELL (1200 x 760, the membrane across the top, the DNA low down):
      0     ho1 and pcyA make the pigment from heme
      5     the pigment docks in CcaS; green light switches it on
@@ -61,14 +65,21 @@
   }
 
   /* ------------------------------------------------------- THE REACTOR --- */
-  // One drawing, 1200 x 680, whole from the first frame, played:
+  // One drawing, 1200 x 680, whole from the first frame, played (21 Oct,
+  // owner: the farmer is in the loop, as the wiki says the app is used):
   //   0     the heat; the leaf sensor reads; the reading and the forecast run
-  //         to the model; the index crosses the threshold and the alert stands
+  //         to the model; the app lights in the farmer's hand; the index
+  //         crosses the threshold and the alert stands
   //   6     the call runs to the strip; the culture goes green at once
   //   11    the cells make the protectants; the photometer reads them
-  //   16    the pump runs the loop; the cells go round, the protectant crosses
-  //   21    the permeate runs back along the ground to the roots
+  //   16    the pump runs the loop; the cells go round, the protectant
+  //         crosses into the harvest bottle
+  //   21    the bottle fills; the farmer collects it: it leaves the case and
+  //         is tipped over the sprayer tank, the tank turns to the diluted
+  //         mix, the wand sprays the crop, the heat goes
   //   26.6  the whole machine; red light switches the cells off
+  //   29.6  the farmer adds a field: the app draws it on the plain and
+  //         stands its sensors and a bioreactor on it
   // the brush-clip paint-on (build/how-art.py WIPES_ON) is off: the film
   // opens on the whole scene. Name a group here, [t0, t1], to wipe it on.
   var WIPES = {};
@@ -77,54 +88,78 @@
     return tr([[0, { a: 0, d: 0 }], [t0, { a: 0, d: 0 }], [m, { a: 1, d: 0.6 }, "out"], [t1, { a: 1, d: 1 }, "out"]]);
   }
   var R = {
-    T0: 0, T1: 30,
-    beats: [6, 11, 16, 21, 26.6],
-    rests: [5.2, 9.2, 13.8, 18.8, 24.4, 29],
+    T0: 0, T1: 35,
+    beats: [6, 11, 16, 21, 26.6, 29.6],
+    rests: [5.2, 9.2, 13.8, 18.8, 25.2, 28.6, 33.4],
     cam: tr([
       [0, { x: 600, y: 360, w: 1240 }],
       [2.0, { x: 600, y: 360, w: 1240 }],
-      [3.2, { x: 270, y: 358, w: 720 }],
-      [4.6, { x: 330, y: 350, w: 740 }],
-      [5.8, { x: 470, y: 322, w: 660 }],
+      [3.2, { x: 300, y: 396, w: 780 }],
+      [4.6, { x: 360, y: 380, w: 760 }],
+      [5.8, { x: 480, y: 330, w: 660 }],
       [7.2, { x: 700, y: 360, w: 680 }],
       [9.6, { x: 700, y: 360, w: 680 }],
       [12.2, { x: 775, y: 400, w: 460 }],
       [15.4, { x: 790, y: 420, w: 480 }],
       [17.6, { x: 950, y: 362, w: 600 }],
       [20.4, { x: 990, y: 380, w: 580 }],
-      [22.4, { x: 1000, y: 500, w: 640 }],
-      [24.2, { x: 560, y: 540, w: 980 }, "sine"],
-      [25.8, { x: 250, y: 500, w: 600 }],
-      [27.4, { x: 600, y: 360, w: 1240 }],
-      [30, { x: 600, y: 360, w: 1240 }]
+      [22.4, { x: 1030, y: 450, w: 560 }],
+      [24.0, { x: 640, y: 470, w: 900 }, "sine"],
+      [25.2, { x: 340, y: 468, w: 640 }],
+      [26.6, { x: 320, y: 462, w: 660 }],
+      [28.0, { x: 600, y: 360, w: 1240 }],
+      [29.4, { x: 600, y: 360, w: 1240 }],
+      [30.8, { x: 236, y: 428, w: 740 }],
+      [33.6, { x: 236, y: 426, w: 750 }],
+      [35, { x: 236, y: 426, w: 750 }]
     ], { x: 0, y: 0, w: 1 }),
     parts: {
-      // 1  the heat, the reading, the prediction. 18 Oct (Jacquelyn): the
-      //    first step shows the heat the crop stands in and ends on the
-      //    alert, so the green light can come on the moment step 2 arrives
-      heat: tr([[0, { a: 0 }], [1, { a: 0 }], [2.6, { a: 1 }, "out"], [23.8, { a: 1 }], [26.2, { a: 0 }]]),
+      // 1  the heat, the reading, the prediction; the app in the farmer's
+      //    hand lights with the forecast and blinks at the alert. 18 Oct
+      //    (Jacquelyn): the first step ends on the alert, so the green light
+      //    can come on the moment step 2 arrives
+      heat: tr([[0, { a: 0 }], [1, { a: 0 }], [2.6, { a: 1 }, "out"], [25.4, { a: 1 }], [27.2, { a: 0 }]]),
       blink: tr([[0, { a: 0 }], [1.2, { a: 0 }], [1.4, { a: 1 }], [1.8, { a: 0.15 }], [2.2, { a: 1 }], [2.6, { a: 0.15 }], [3, { a: 1 }], [3.4, { a: 0.15 }], [3.8, { a: 1 }], [5.4, { a: 1 }], [6, { a: 0 }]]),
       "wire-sn": tr([[0, { d: 0, a: 1 }], [1.4, { d: 0 }], [2.6, { d: 1 }], [5.6, { d: 1, a: 1 }], [6.4, { a: 0.35 }]]),
       "wire-fc": tr([[0, { d: 0, a: 1 }], [1.9, { d: 0 }], [3.1, { d: 1 }], [5.6, { d: 1, a: 1 }], [6.4, { a: 0.35 }]]),
       idx: tr([[0, { d: 0 }], [3, { d: 0 }], [5, { d: 1 }, "io"]]),
       thrdot: tr([[0, { a: 0, s: 0.4 }], [4.6, { a: 0, s: 0.4 }], [5, { a: 1, s: 1 }, "out"], [26.8, { a: 1 }], [27.6, { a: 0 }]]),
       thr: tr([[0, { a: 0 }], [1.6, { a: 0 }], [2.1, { a: 1 }]]),
+      "phone-on": tr([[0, { a: 0 }], [1.0, { a: 0 }], [1.6, { a: 1 }], [8.6, { a: 1 }], [9.2, { a: 0 }], [29.6, { a: 0 }], [30.2, { a: 1 }]]),
+      "phone-alert": tr([[0, { a: 0 }], [5, { a: 0 }], [5.25, { a: 1 }], [5.6, { a: 0.25 }], [5.95, { a: 1 }], [6.3, { a: 0 }]]),
       // 2  switch on: the call and the green light, at the step's own moment
       "wire-lamp": tr([[0, { d: 0 }], [5.7, { d: 0 }], [6.2, { d: 1 }]]),
       beam: tr([[0, { a: 0 }], [6.1, { a: 0 }], [6.9, { a: 1 }], [26.9, { a: 1 }], [27.5, { a: 0 }]]),
       "beam-red": tr([[0, { a: 0 }], [27.2, { a: 0 }], [28, { a: 1 }]]),
       "broth-on": tr([[0, { a: 0 }], [6.4, { a: 0 }], [8.2, { a: 1 }], [27.4, { a: 1 }], [29, { a: 0.3 }]]),
       // 3  make
-      stir: tr([[0, { r: 0 }], [6.6, { r: 0 }], [30, { r: 6400 }, "lin"]]),
+      stir: tr([[0, { r: 0 }], [6.6, { r: 0 }], [35, { r: 7600 }, "lin"]]),
       pbeam: tr([[0, { a: 0 }], [13.6, { a: 0 }], [13.9, { a: 1 }], [14.3, { a: 0.25 }], [14.7, { a: 1 }], [15.1, { a: 0.25 }], [15.5, { a: 1 }], [16.2, { a: 0 }]]),
       // 4  separate
-      rotor: tr([[0, { r: 0 }], [15.8, { r: 0 }], [30, { r: 2400 }, "lin"]]),
+      rotor: tr([[0, { r: 0 }], [15.8, { r: 0 }], [35, { r: 2900 }, "lin"]]),
       "flow-loop": tr([[0, { a: 0 }], [16, { a: 0 }], [16.8, { a: 1 }], [21.4, { a: 1 }], [22.2, { a: 0 }]]),
       pores: tr([[0, { a: 0 }], [17.6, { a: 0 }], [18.4, { a: 1 }], [26.6, { a: 1 }], [27.6, { a: 0.35 }]]),
-      // 5  deliver
-      "flow-perm": tr([[0, { a: 0 }], [21, { a: 0 }], [21.8, { a: 1 }], [26.4, { a: 1 }], [27.2, { a: 0 }]]),
-      halo: tr([[0, { a: 0, s: 0.92 }], [24.6, { a: 0, s: 0.92 }], [26, { a: 1, s: 1 }, "out"]]),
+      // 5  collect, dilute, apply: the permeate fills the harvest bottle,
+      //    the bottle leaves the case (collected) and reappears tipped over
+      //    the tank; the tank takes the mix; the wand sprays; the bottle
+      //    comes back empty once the light is off
+      "flow-perm": tr([[0, { a: 0 }], [21, { a: 0 }], [21.6, { a: 1 }], [23, { a: 1 }], [23.5, { a: 0 }]]),
+      "bottle-fill": tr([[0, { d: 0, a: 1 }], [21.3, { d: 0 }], [23.3, { d: 1 }, "out"], [23.9, { a: 0 }], [27.4, { a: 0, d: 0 }]]),
+      bottle: tr([[0, { a: 1 }], [23.4, { a: 1 }], [23.9, { a: 0 }], [26.8, { a: 0 }], [27.6, { a: 1 }]]),
+      bottle2: tr([[0, { a: 1 }], [23.4, { a: 1 }], [23.9, { a: 0 }], [26.8, { a: 0 }], [27.6, { a: 1 }]]),
+      pour: tr([[0, { a: 0, y: -12 }], [23.9, { a: 0, y: -12 }], [24.4, { a: 1, y: 0 }, "out"], [25.5, { a: 1, y: 0 }], [26, { a: 0, y: -6 }]]),
+      "pour-stream": tr([[0, { d: 0, a: 1 }], [24.3, { d: 0 }], [24.7, { d: 1 }], [25.3, { d: 1, a: 1 }], [25.7, { a: 0 }]]),
+      "tank-mix": tr([[0, { a: 0 }], [24.6, { a: 0 }], [25.4, { a: 1 }]]),
+      "spray-mist": tr([[0, { a: 0 }], [25.6, { a: 0 }], [26.3, { a: 1 }], [27.4, { a: 1 }], [28.1, { a: 0 }]]),
+      halo: tr([[0, { a: 0, s: 0.92 }], [25.8, { a: 0, s: 0.92 }], [27, { a: 1, s: 1 }, "out"]]),
+      // 7  the plan: the new field is drawn on the plain, then its sensors
+      //    and its bioreactor stand on it
+      "plan-line": tr([[0, { d: 0 }], [30.3, { d: 0 }], [31.5, { d: 1 }, "io"]]),
+      "plan-pins": tr([[0, { a: 0, y: 6 }], [31.4, { a: 0, y: 6 }], [32.2, { a: 1, y: 0 }, "out"]]),
+      "plan-rx": tr([[0, { a: 0, y: 6 }], [32, { a: 0, y: 6 }], [32.7, { a: 1, y: 0 }, "out"]]),
       // the labels
+      "lab-app": tr([[0, { a: 0, y: 6 }], [1.0, { a: 0, y: 6 }], [1.5, { a: 1, y: 0 }, "out"], [5.4, { a: 1, y: 0 }], [5.8, { a: 0, y: -4 }],
+                     [29.8, { a: 0, y: 6 }], [30.3, { a: 1, y: 0 }, "out"], [34.2, { a: 1, y: 0 }], [34.6, { a: 0, y: -4 }]]),
       "lab-forecast": lab(1.6, 5.8),
       "lab-sensor": lab(1.2, 5.8),
       "lab-index": lab(3.2, 8.4),
@@ -137,9 +172,13 @@
       "lab-stay": lab(17.4, 21),
       "lab-membrane": lab(16.8, 21.2),
       "lab-pores": lab(17.6, 21.2),
-      "lab-perm": lab(21.2, 24.4),
-      "lab-crop": lab(23.6, 26.6),
-      "lab-off": tr([[0, { a: 0, y: 6, s: 1.3 }], [27.3, { a: 0, y: 6 }], [27.8, { a: 1, y: 0 }, "out"]])
+      "lab-perm": lab(21.2, 23.4),
+      "lab-bottle": lab(21.8, 23.6),
+      "lab-dilute": lab(24.6, 26.6),
+      "lab-crop": lab(26.2, 27.8),
+      "lab-off": tr([[0, { a: 0, y: 6, s: 1.3 }], [27.3, { a: 0, y: 6 }], [27.8, { a: 1, y: 0 }, "out"], [29.4, { a: 1, y: 0 }], [29.9, { a: 0, y: -4 }]]),
+      "lab-newfield": lab(30.6, 34.6),
+      "lab-plan": lab(32.2, 34.6)
     },
     setup: function (ctx) {
       // the brush-shaped clips the painted groups wipe on under: the clip
@@ -171,7 +210,7 @@
       // the section's name stands in the same light (home-story.css)
       if (ctx.sec) ctx.sec.style.setProperty("--st-lit", on.toFixed(3));
       // the strip lights one LED after another, top to bottom; red the same
-      var i, g, k, c;
+      var g, k, c;
       for (g = 0; g < ctx.leds.on.length; g++) {
         c = ctx.leds.on[g].children;
         for (k = 0; k < c.length; k++) {
@@ -187,16 +226,13 @@
       ride(ctx, T, "pulse", 1, "wire-sn", 1.8, 5.6, 0.62, false, true);
       ride(ctx, T, "pulseB", 1, "wire-lamp", 5.6, 6.4, 1.6, false, true);
       // what flows: dashes along the tubes, the cells round the loop, the
-      // protectant across the membrane and on to the roots
+      // protectant across the membrane and down into the harvest bottle,
+      // then the diluted mix from the wand into the canopy
       for (k in ctx.flows) ctx.flows[k].style.strokeDashoffset = (-(T * 46) % 400).toFixed(1);
       ride(ctx, T, "frod", 5, "loop", 16.2, 22, 0.1, true, true);
       ride(ctx, T, "fdot", 6, "toout", 16.6, 22.4, 0.15, false, true);
-      ride(ctx, T, "pdot", 6, "perm", 21.2, 27, 0.16, false, true);
-      var A = win(T, 23.4, 27, 0.5);
-      for (i = 1; i <= 3; i++) {
-        var f = frac((T - 23.4) * 0.9 + (i - 1) / 3);
-        ctx.place("drop" + i, { x: -2 * f, y: 40 * f * f, a: A * (1 - sm((f - 0.8) / 0.2)) * sm(f / 0.1) }, T);
-      }
+      ride(ctx, T, "pdot", 4, "perm", 21.2, 23.4, 0.55, false, true);
+      ride(ctx, T, "sdrop", 8, "spray", 25.6, 27.8, 0.5, false, true);
     }
   };
   // the cells drift once the light is on; three more come as the culture
@@ -217,8 +253,9 @@
        6.2   the strips come on green with the step, and the light is lit
        11.2  the vessel and the photometer beside it
        16.2  the pump and the hollow-fibre cartridge
-       21.2  the product line and bottle
+       21.2  the harvest bottle and the product line (the farmer collects)
        26.9  the strips go red, then everything goes dark
+       29.6  dark, while the app plans the next field
      Above the film (T at its start) the model is given back to its idle
      turn and to the demand cards. */
   var SHOT = { groups: null, yaw: 0, pitch: 0.16 };   // whole, square on, held
@@ -228,9 +265,10 @@
   ];
   // what the field monitor on the machine reads, step by step
   var SAYS = [
-    [0, "Watching the field", ""], [5, "Stress alert", "alert"], [6.2, "Green light, 520 nm", "green"],
+    [0, "Watching the field", ""], [5, "Stress alert: prepare", "alert"], [6.2, "Green light, 520 nm", "green"],
     [11, "Making protectant", "green"], [16, "Cells held, product out", "green"],
-    [21, "Delivering to the crop", "green"], [26.6, "Red light, 660 nm: off", "off"]
+    [21, "Collect, dilute, apply", "green"], [26.6, "Red light, 660 nm: off", "off"],
+    [29.6, "Planning the next field", ""]
   ];
   function pick(list, T) { var v = list[0]; for (var i = 0; i < list.length; i++) if (T >= list[i][0]) v = list[i]; return v; }
   var filmWas = { lit: null, strips: -1, on: false, said: "" };
@@ -251,7 +289,7 @@
     // falls back once the light is switched off again
     // and it goes with the card at the end, so the last frame is the
     // machine alone (home.js piece 7 takes the card and the name off there)
-    if (T >= 29.8) { rx.ui(null); return; }
+    if (T >= 34.8) { rx.ui(null); return; }
     var say = pick(SAYS, T), climb = sm((T - 1.2) / 4.4), drop = sm((T - 26.9) / 2.2);
     rx.ui({ index: 0.31 + 0.57 * climb - 0.44 * drop, draw: Math.max(0.05, climb * (1 - 0.7 * drop)),
             state: say[1], tone: say[2] });

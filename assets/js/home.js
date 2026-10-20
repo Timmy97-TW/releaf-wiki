@@ -433,12 +433,13 @@
                      sharp)
        3.45 to 3.90  How ReLEAF works (#how) comes in on the right, a dark
                      HUD beside the machine
-       3.90 to 6.60  the scroll plays its drawing (home-story.js, hosted on
-                     this runway from data-story-lead = 3.9)
-       6.60 to 6.95  the HUD and the section's name go, all of them
-       6.72 to 7.10  the machine comes back to the middle of the screen and
+       3.90 to 7.05  the scroll plays its drawing (home-story.js, hosted on
+                     this runway from data-story-lead = 3.9; 21 Oct: seven
+                     beats, 3.15 screens, so the runway is 7.80)
+       7.05 to 7.40  the HUD and the section's name go, all of them
+       7.17 to 7.55  the machine comes back to the middle of the screen and
                      takes the room the card leaves
-       7.10 to 7.35  the whole machine alone, held
+       7.55 to 7.80  the whole machine alone, held
      18 Oct (Jacquelyn): the last two are hers — the right-hand card and
      "How ReLEAF works" disappear entirely at the end, and the machine
      returns to the centre.
@@ -505,7 +506,7 @@
     if (reduced || !window.matchMedia) return;
     // the runway in screens: the same number as .dx__runway's height in
     // home-demands.css
-    var RUN = 7.35, LEAD = 3.9;
+    var RUN = 7.8, LEAD = 3.9;
     var fits = window.matchMedia("(min-width: 980px) and (min-height: 640px)");
     var live = false, geo = null, navH = 68, parked = null, printing = false;
     var moved = [title, kick, head, lede, model, sol, paper].concat(chips, sides);
@@ -646,11 +647,11 @@
       // and later glides to the room left of the HUD and grows, as the
       // cards, the line and the name make way and How ReLEAF works comes in
       // and at the end the card goes and it comes back to the middle
-      var go = inOut(span(s, 3.2, 3.85)), back = inOut(span(s, 6.72, 7.1));
+      var go = inOut(span(s, 3.2, 3.85)), back = inOut(span(s, 7.17, 7.55));
       var gx = (g.go.x + (g.go.cx - g.go.x) * back) * go, gy = g.go.y * go;
       var gk = 1 + (g.go.k + (g.go.k2 - g.go.k) * back - 1) * go;
       var out = easeOut(span(s, 3.15, 3.45)), hin = easeOut(span(s, 3.45, 3.9));
-      var hout = ease(span(s, 6.6, 6.95));
+      var hout = ease(span(s, 7.05, 7.4));
       put(model, "opacity", f3(r));
       put(model, "transform", go > 0 ? "translate(" + px(gx) + "," + px(gy) + ") scale(" + f3(gk) + ")"
                                      : r >= 1 ? "none" : "scale(" + f3(0.85 + 0.15 * r) + ")");
