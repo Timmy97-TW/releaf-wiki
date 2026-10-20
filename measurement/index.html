@@ -481,7 +481,7 @@
         <h2>Software algorithm calibration</h2>
         <p class="lede-c">An OD600 reading is not a measurement until you know what the arithmetic between the light and the number did to it. This assay opened our own photometer firmware, derived the bias of every step in it, and then measured those biases against a scatterer that does not grow.</p>
 
-        <p>The four other families on this page calibrate instruments against standards. This one calibrates the software that turns a sensor into an instrument. It began because our longest culture to date returned a curve we could not defend, and it ended with a configuration change to the bioreactor, a pre-registered decision rule, and a public data set another team can replay on their own photometer.</p>
+        <p>The four other families on this page calibrate instruments against standards. This one calibrates the software that turns a sensor into an instrument. It began because our longest culture to date returned a curve we could not defend, and it ended with a configuration change to the bioreactor, a pre-registered decision rule, and a raw data set complete enough for another team to replay on their own photometer.</p>
 
         <div class="rail rail--seg" data-rail data-rail-top>
           <div class="seg"><div class="rail__strip seg__track" role="tablist" aria-label="Algorithm calibration">
@@ -583,7 +583,7 @@
           </div>
 
           <h4 class="blk__h">The code</h4>
-          <p>Two scripts carry the analysis. <code>firmware_estimators.py</code> is a line-for-line port of the four estimators in firmware v3.10.9, including the scale floor, so the behaviour under test is the behaviour that ships, not a description of it. <code>replay_algorithms.py</code> runs one raw data set through all eleven, and its <code>--selftest</code> flag runs the whole chain on synthetic data with known answers, which is how we check the replay before pointing it at real measurements. Both are in the public repository with the raw CSVs and the pre-registration.</p>
+          <p>Two scripts carry the analysis. <code>firmware_estimators.py</code> is a line-for-line port of the four estimators in firmware v3.10.9, including the scale floor, so the behaviour under test is the behaviour that ships, not a description of it. <code>replay_algorithms.py</code> runs one raw data set through all eleven, and its <code>--selftest</code> flag runs the whole chain on synthetic data with known answers, which is how we check the replay before pointing it at real measurements. Both sit with the raw CSVs and the pre-registration in the team repository.</p>
 
           <div class="tablewrap">
             <table class="data">
@@ -715,11 +715,6 @@
 
           <h4 class="blk__h">What this calibration does not establish</h4>
           <p>Silica calibrates the instrument, not the organism. A 1&nbsp;&micro;m bead is a sphere of refractive index 1.46 and density 2.3&nbsp;g/cm&sup3;; a vegetative <i>B.&nbsp;subtilis</i> cell is a rod, often in chains, nearer 1.33 to 1.41 and 1.1&nbsp;g/cm&sup3;. The ladder therefore converts a reading into equivalent particle counts and not into cell mass, and a dilution series of washed cells is still owed before the two can be related. The gates have a stated limit of their own: when an air slug lasts longer than 90 seconds, three agreeing readings make the wrong level acceptable. That is why line 3 above raises an alarm instead of silently correcting: a growing culture does not move 0.05&nbsp;OD in 30 seconds, so any accepted step that large deserves a human look. On 10 October the real cause was an inlet tube that had fallen out of the beaker, and one alarm would have had someone put it back inside the first minute.</p>
-
-          <div class="blk">
-            <h4 class="blk__h">What another team gets</h4>
-            <p>The raw CSVs from both units, both bubble tests, the hand-written log sheet, the eleven-algorithm replay script, the line-for-line firmware ports and the pre-registration are public at <a href="https://timmy97-tw.github.io/od600-signal-processing/" target="_blank" rel="noopener">timmy97-tw.github.io/od600-signal-processing</a>. The protocol runs in four working days on any photometer that can be made to log its raw samples, and the one change that makes it possible, printing the individual samples inside a burst instead of only their summary, is a single flag in most firmware.</p>
-          </div>
         </div>
         </div>
       </section>
@@ -2368,7 +2363,7 @@
 
         <ul class="findings">
           <li><b>Audit your own signal chain before you calibrate it.</b> Our 434-hour culture had been recording the evidence of its own instrument bias for weeks. Any team logging a long time course can run the same check in an afternoon: plot the distribution of the reference channel and see whether readings land on whole sensor counts. If they do, the averaging step is not working and the curve carries steps that belong to the detector.</li>
-          <li><b>Replay algorithms instead of switching them.</b> Logging the individual samples inside a burst, and not only the value they reduce to, lets every reduction algorithm be compared on identical input. It is usually one flag in firmware. Our eleven-algorithm replay script and the line-for-line estimator ports are public and take any raw burst file.</li>
+          <li><b>Replay algorithms instead of switching them.</b> Logging the individual samples inside a burst, and not only the value they reduce to, lets every reduction algorithm be compared on identical input. It is usually one flag in firmware. Our eleven-algorithm replay script and the line-for-line estimator ports take any raw burst file.</li>
           <li><b>Gate the reading, not the estimator.</b> For any inline optical measurement in a circulating loop, the choice of robust estimator turned out to be worth under 0.004&nbsp;OD, while a spread gate and a jump gate took the worst bubble error from 2.44 to 0.016&nbsp;OD. Teams building flow-cell sensors can take the two gate rules directly.</li>
           <li><b>Calibrate turbidity against a particle that does not grow.</b> The withdraw-one, add-one silica ladder gives a concentration axis defined by pipetted volumes rather than by another instrument, and it separates instrument bias from biology. It runs on any photometer and costs about 100&nbsp;mg of 1&nbsp;&micro;m microspheres.</li>
           <li><b>Match cheap LEDs by measured output before trusting a light plate.</b> Internal resistor variance makes nominally identical single-bulb LEDs deliver different doses. Our grouping method turns a bag of mismatched LEDs into columns that differ by a measured amount, and it works for any optogenetic system, not only CcaSR.</li>

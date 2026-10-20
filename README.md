@@ -1,6 +1,7 @@
 # ReLeaf wiki
 
-https://timmy97-tw.github.io/releaf-wiki/
+The repository used to create this website is at
+https://gitlab.igem.org/2026/gems-taiwan
 
 The full wiki for **ReLeaf**, a stress-responsive optogenetic bioreactor for
 precision plant protection. GEMS Taiwan, iGEM 2026, Biomanufacturing Village.
@@ -136,8 +137,8 @@ whole argument: the wild type ends `C, O, OXT` and the tagged construct ends
 
 `md_traces.py` measures the Asn23-Arg487 closest approach in all 300 saved frames
 of each of the eight peptide-bearing runs, and counts how many separate times
-that contact reopens. All three builders need numpy and are safe to re-run. The nine report files beside it come from
-<https://github.com/Timmy97-TW/igem2026-bopep4-md> and are pinned to light and to
+that contact reopens. All three builders need numpy and are safe to re-run. The nine report files beside it come from the team's
+MD analysis repository and are pinned to light and to
 the ReLeaf palette by `build/md_reskin_reports.py`, which is safe to re-run.
 This is the only bilingual page on the wiki: the 中 button swaps every string and
 writes the choice to the `bp4lang` key the nine reports already read, so the

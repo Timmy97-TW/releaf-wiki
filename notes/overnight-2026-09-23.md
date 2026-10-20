@@ -6,9 +6,9 @@ was tested in headless Chrome (and the Safari fixes in WebKit) before it was
 committed, one commit per fix, so any one of them can be reverted on its own
 with `git revert <hash>`.
 
-Live demo: <https://timmy97-tw.github.io/releaf-wiki/>. If a page still looks
-like the old version, press Cmd+Shift+R once: GitHub Pages lets browsers keep
-scripts for 10 minutes.
+Live demo: the Pages build of whichever remote you are pushing to. If a page
+still looks like the old version, press Cmd+Shift+R once: Pages lets browsers
+keep scripts for 10 minutes.
 
 ---
 
@@ -102,8 +102,8 @@ the ported education website's own design, which was left alone.
 
 ## 3. Releaf-Actual: the iGEM-deployable draft
 
-<https://github.com/Timmy97-TW/Releaf-Actual> (preview:
-<https://timmy97-tw.github.io/Releaf-Actual/>, images blank until uploaded).
+The `Releaf-Actual` repository (its Pages preview has images blank until they
+are uploaded).
 
 iGEM's GitLab accepts at most **11 MiB per push** and **10 MiB per Pages
 build** (checked on gitlab.igem.org, 23 Sep). This wiki is about 150 MB,
