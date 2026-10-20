@@ -30,6 +30,7 @@ ap.add_argument("--downloads", default=str(pathlib.Path.home() / "Downloads"))
 ap.add_argument("--only-runs", action="store_true", help="redraw fig-runs-168.svg only")
 ap.add_argument("--only-r2", action="store_true", help="redraw the two R2 calibration figures only")
 ap.add_argument("--only-r6", action="store_true", help="redraw fig-r6-leafair.svg only")
+ap.add_argument("--only-forecast", action="store_true", help="recompute the R5 forecast comparison only")
 ap.add_argument("--growth", default=str(pathlib.Path.home() / "Downloads" / "B. Sub Growth Tests"),
                 help="folder holding one sub-folder per bioreactor run (round 1 .. round 7)")
 ap.add_argument("--leaf", default=str(pathlib.Path.home() / "Documents/Claude/Projects/Releaf_Wiki/drafts"
@@ -871,12 +872,80 @@ def fig_e4():
     f.save("fig-e4-closedloop.svg")
 
 
+
+# =================================== R5 · forecast skill, two runs ==========
+# Hourly medians; a forecast is made every hour from hour 12, using only the
+# data up to that point. Persistence predicts no change. The Kalman filter is a
+# local level and trend; its three settings are fixed here and are the ones that
+# reproduce the September column, so run 7 is scored without any retuning.
+KF_Q_LEVEL, KF_Q_TREND, KF_R_OBS = 1e-4, 1e-3, 1e-2
+
+
+def _kalman_level_trend(y):
+    x = np.array([y[0], 0.0]); P = np.eye(2)*0.1
+    F = np.array([[1.0, 1.0], [0.0, 1.0]]); H = np.array([1.0, 0.0])
+    Q = np.diag([KF_Q_LEVEL, KF_Q_TREND])
+    for z in y[1:]:
+        x = F @ x; P = F @ P @ F.T + Q
+        S = H @ P @ H + KF_R_OBS; K = (P @ H)/S
+        x = x + K*(z - H @ x); P = (np.eye(2) - np.outer(K, H)) @ P
+    return x[0], x[1]
+
+
+def _forecast_rmse(th, oh, start=12, horizons=(2, 4, 8, 12)):
+    out = {}
+    for hz in horizons:
+        ep, ek = [], []
+        for i in range(start, len(oh)-hz):
+            hist = oh[:i+1]
+            ep.append(oh[i+hz] - hist[-1])
+            lvl, trd = _kalman_level_trend(hist)
+            ek.append(oh[i+hz] - (lvl + trd*hz))
+        out[hz] = {"persistence": float(np.sqrt(np.mean(np.square(ep)))),
+                   "kalman": float(np.sqrt(np.mean(np.square(ek)))), "n": len(ep)}
+        out[hz]["improvement_pct"] = 100*(1 - out[hz]["kalman"]/out[hz]["persistence"])
+    return out
+
+
+def forecast_skill():
+    """Persistence against the Kalman filter on the September run and on run 7."""
+    def load(path, elapsed):
+        t, od = [], []
+        with open(path, newline="") as fh:
+            for r in csv.DictReader(fh):
+                if r["od600_valid"].strip().lower() != "true":
+                    continue
+                if float(r["od600_bubble_pct"] or 0) > 20:
+                    continue
+                v = r.get("od600_reported") or r["od600_au"]
+                if not v:
+                    continue
+                t.append(float(r["elapsed_s"])/3600 if elapsed else _iso(r["timestamp_start"]))
+                od.append(float(v))
+        if not elapsed:
+            t = [(x-t[0]).total_seconds()/3600 for x in t]
+        return _hourly(np.array(t), np.array(od), 1.0)
+
+    sep = _round_file(4, "20260906 test4 photometer.csv")
+    r7 = sorted(_round_dir(7).glob("record_*.csv"))[0]
+    a = _forecast_rmse(*load(sep, True))
+    b = _forecast_rmse(*load(r7, False))
+    rec("R5", f"{sep.name} and {r7.name}; hourly medians, forecast every hour from 12 h",
+        kalman_settings={"q_level": KF_Q_LEVEL, "q_trend": KF_Q_TREND, "r_obs": KF_R_OBS},
+        september={str(k): v for k, v in a.items()}, run7={str(k): v for k, v in b.items()})
+    for name, r in (("September", a), ("run 7", b)):
+        print("  " + name + ": " + ", ".join(
+            f"{h} h {v['persistence']:.3f}/{v['kalman']:.3f} ({v['improvement_pct']:+.0f}%)" for h, v in r.items()))
+
+
 if __name__ == "__main__":
-    if args.only_runs or args.only_r6 or args.only_r2:
+    if args.only_runs or args.only_r6 or args.only_r2 or args.only_forecast:
         out = WIKI / "software" / "figures" / "numbers.json"
         old = json.loads(out.read_text())
         if args.only_runs:
             fig_runs()
+        elif args.only_forecast:
+            forecast_skill()
         elif args.only_r2:
             fig_r2(); fig_r2_sio2()
         else:
@@ -885,7 +954,7 @@ if __name__ == "__main__":
         out.write_text(json.dumps(old, indent=1, ensure_ascii=False) + "\n", encoding="utf-8")
         print("wrote", out.relative_to(WIKI))
         raise SystemExit
-    fig_runs()
+    fig_runs(); forecast_skill()
     fig_r1(); fig_r2(); fig_r2_sio2(); fig_r3(); fig_r4(); fig_r6()
     fig_e1(); fig_e2(); fig_e3(); fig_e4()
     out = WIKI / "software" / "figures" / "numbers.json"
