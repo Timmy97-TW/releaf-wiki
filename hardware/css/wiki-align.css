@@ -680,7 +680,7 @@ body.doc-light { --dq-d: var(--w-leaf-900); --dq-b: var(--w-leaf-700); --dq-t: #
   body.hwreveal .doc-wrap .doc :is(figure, .chart-fig, .circuit, .asm-kit) > :is(
       .frame-img, .bsb-shot, .bc, .chart-wrap, picture, img, svg
   ) {
-    max-width: var(--fig-media, var(--w-media));
+    max-width: var(--w-media);
     margin-inline: auto;
   }
   /* figures that are a layout of their own (the scroll scene, the exploded
@@ -724,7 +724,7 @@ body.doc-light { --dq-d: var(--w-leaf-900); --dq-b: var(--w-leaf-700); --dq-t: #
 @media (min-width: 1240px) {
   body.hwreveal .doc-wrap .doc section.sec > figure:not(.sy-figure):not(.xv):not(.xp):not(.bvc):not(.feature):not(.bsb) {
     display: grid;
-    grid-template-columns: minmax(0, var(--fig-media, var(--w-media))) minmax(13rem, 1fr);
+    grid-template-columns: minmax(0, var(--w-media)) minmax(13rem, 1fr);
     column-gap: 1.6rem;
     align-items: start;
   }
@@ -740,160 +740,3 @@ body.doc-light { --dq-d: var(--w-leaf-900); --dq-b: var(--w-leaf-700); --dq-t: #
     text-align: left;
   }
 }
-
-
-/* ---- the figures the two-column rule got wrong ---------------------------
-   20 Oct 2026. The caption-beside rule above assumed every figure that stands
-   alone in a section fills the 1048px column. Two kinds do not, and both read
-   badly for it. Measured, not guessed: the scratchpad's `figs3.js` reports
-   every standalone figure's media box, caption box and the hole between them
-   at 1600px, with `doc-light` forced on -- the state the record reads in, and
-   the one a probe at scroll 0 does not see.
-
-   1. A figure its own stylesheet caps NARROWER than the column. The 22rem
-      build photographs (.pm-solo), the 430px hero frames, the 600px pairs and
-      the 400px TiO2 frame were being split into two tracks inside their own
-      cap, which left a 310px photograph beside a 208px caption on the
-      photometer's long-run rig and a 144px one on the LPA's enclosed
-      prototype. There is no second column to be had at that width, so the
-      caption goes back under the figure and the photograph takes all of it.
-      The :not() chain is repeated because the rule above carries six of them
-      and would otherwise outrank this one.
-
-   2. A figure whose media is PORTRAIT. A 760px drawing 1.4 times as tall as
-      it is wide runs a screen of scroll and leaves a 30-word caption floating
-      in 250px of white. Capping the width caps the height with it, and the
-      caption takes the width it gains: the board drawing goes 1168px -> 716,
-      the wiring 993 -> 665, the integrated-run traces 1080 -> 650.
-
-   3. The same rule, the other way round. Two drawings sat at 300px in a
-      1048px column: the buoyancy section because its SVG carries a viewBox
-      and no width, so it took the 300px every UA gives such an element, and
-      the growth chart because its script drew it narrow. The first is vector
-      and loses nothing at its own measure; the second keeps its size and the
-      column closes around it instead.                                        */
-@media (min-width: 1240px) {
-  body.hwreveal .doc-wrap .doc section.sec > figure:not(.sy-figure):not(.xv):not(.xp):not(.bvc):not(.feature):not(.bsb):is(.hero, .pm-solo, .pair, .tio2, .hp-plantfig, .asbuilt, .pcb-shot) {
-    display: block;
-  }
-  body.hwreveal .doc-wrap .doc section.sec > figure:not(.sy-figure):not(.xv):not(.xp):not(.bvc):not(.feature):not(.bsb):is(.hero, .pm-solo, .pair, .tio2, .hp-plantfig, .asbuilt, .pcb-shot) > figcaption {
-    margin: .7rem 0 0;
-    padding-left: 0;
-    border-left: 0;
-    max-width: 44rem;
-  }
-
-  /* a caption handed half the column does not run past a readable measure */
-  body.hwreveal .doc-wrap .doc section.sec > figure > figcaption { max-width: 34rem; }
-
-  /* portrait media: the width that puts the drawing at about 600px tall */
-  body.hwreveal .doc-wrap .doc #fig-pcb         { --fig-media: 440px; }  /* 360 x 508 drawn */
-  body.hwreveal .doc-wrap .doc #fig-wiring      { --fig-media: 480px; }  /* 360 x 422 drawn */
-  body.hwreveal .doc-wrap .doc #fig-int3-traces { --fig-media: 460px; }  /* 838 x 1172 photograph */
-
-  /* media narrower than the column: either widen it, or close the column
-     around it so its caption reads beside it instead of across a hole */
-  /* its wrap carries `margin: 0 auto`, which in a grid track means shrink to
-     max-content, and an SVG with a viewBox and no width attribute has a
-     max-content of the 300px every UA gives it. The wrap needs the measure. */
-  body.hwreveal .doc-wrap .doc #fig-buoyancy { --fig-media: 560px; }
-  body.hwreveal .doc-wrap .doc #fig-buoyancy .hp-buoy-wrap { width: 560px; max-width: 100%; }
-  body.hwreveal .doc-wrap .doc #fig-buoyancy .hp-buoy { width: 100%; height: auto; }
-  body.hwreveal .doc-wrap .doc #fig-growth,
-  body.hwreveal .doc-wrap .doc #fig-growth-c1   { --fig-media: 320px; }  /* charts drawn at 300 */
-  body.hwreveal .doc-wrap .doc #fig-fiber       { --fig-media: 560px; }  /* drawing is 560 wide */
-}
-
-
-/* ============================================ THE FOUR ANSWERS, IN THE RAIL ==
-   20 Oct 2026. A judge reading a Hardware record is looking for four things:
-   what problem the instrument answers, what its users changed about it, what
-   it was shown to do, and whether someone else could build one. All four are
-   on every record, but they sit at different numbers on each (user feedback
-   is part 6 on two of the records, 2.3 on the LPA and 2.4 on the hydroponics
-   plate), so the numbered contents alone do not route a reader to them.
-
-   This is a second group under the contents: four plain names, each a link to
-   the section on THIS page that answers it. No award wording, no criteria box
-   and nothing that grades the page -- the rule from 9 Oct stands, and this is
-   navigation, not scaffolding.
-
-   The user-feedback line carries the accent. It is the answer a reader is
-   least likely to guess the location of, and the one the section has the most
-   of that a reader would otherwise miss: three outside builders who rebuilt
-   the Slim photometer from the guide, two outside reviewers who changed the
-   bioreactor, a farm visit that redrew the hydroponic plate, and a box now
-   sitting in another laboratory.
-   ========================================================================== */
-.doc-nav .doc-nav-label--ans {
-  margin-top: 1.3rem;
-  padding-top: .95rem;
-  border-top: 1px solid rgb(127 127 127 / .22);
-}
-.doc-nav .doc-nav-ans {
-  list-style: none;
-  margin: .55rem 0 0;
-  padding: 0;
-  display: grid;
-  gap: .1rem;
-}
-.doc-nav .doc-nav-ans li { margin: 0; }
-.doc-nav .doc-nav-ans a {
-  display: flex;
-  align-items: center;
-  gap: .45rem;
-  /* the rail's own links hang .8rem left on a transparent border and pad it
-     back; matching that keeps these rows on the contents' left edge */
-  padding: .32rem .5rem .32rem .8rem;
-  border-radius: 9px;
-  font: 500 .8125rem/1.35 var(--sans, inherit);
-  letter-spacing: .005em;
-  text-decoration: none;
-  color: #8b949c;
-  transition: color .16s ease, background-color .16s ease;
-}
-/* each record's own style.css makes every .doc-nav a::before an absolutely
-   positioned amber tick at left: -.8rem; this one is a mark in the row, so it
-   takes the flow back and stands in the numbered list's number column, which
-   lines these labels up with the contents labels above them. */
-.doc-nav .doc-nav-ans a::before {
-  content: "";
-  position: static;
-  flex: none;
-  width: 1.3rem;
-  height: .4rem;
-  border-radius: 0;
-  background: radial-gradient(circle at .2rem 50%, currentColor 0 .2rem, transparent .2rem);
-  opacity: .55;
-}
-.doc-nav .doc-nav-ans a:hover { color: #dfe4e8; background: rgb(255 255 255 / .06); }
-body.doc-light .doc-nav .doc-nav-ans a { color: #5f6b74; }
-body.doc-light .doc-nav .doc-nav-ans a:hover {
-  color: var(--w-leaf-900, #14402b);
-  background: rgb(20 64 43 / .05);
-}
-
-/* the users' line, lit */
-.doc-nav .doc-nav-ans a[data-ans="users"] {
-  color: #e8b765;
-  background: rgb(214 150 46 / .14);
-  box-shadow: 0 0 0 1px rgb(214 150 46 / .3), 0 2px 12px rgb(214 150 46 / .22);
-}
-.doc-nav .doc-nav-ans a[data-ans="users"]::before {
-  background: radial-gradient(circle at .2rem 50%, #e8b765 0 .2rem, transparent .2rem);
-  opacity: 1;
-}
-.doc-nav .doc-nav-ans a[data-ans="users"]:hover { color: #f3d49e; background: rgb(214 150 46 / .2); }
-body.doc-light .doc-nav .doc-nav-ans a[data-ans="users"] {
-  color: #7d5310;
-  background: rgb(199 134 29 / .11);
-  box-shadow: 0 0 0 1px rgb(199 134 29 / .26), 0 2px 12px rgb(199 134 29 / .16);
-}
-body.doc-light .doc-nav .doc-nav-ans a[data-ans="users"]::before {
-  background: radial-gradient(circle at .2rem 50%, #c7861d 0 .2rem, transparent .2rem);
-}
-body.doc-light .doc-nav .doc-nav-ans a[data-ans="users"]:hover {
-  color: #5c3c0b;
-  background: rgb(199 134 29 / .17);
-}
-@media (prefers-reduced-motion: reduce) { .doc-nav .doc-nav-ans a { transition: none; } }
