@@ -8,15 +8,21 @@ Needs pypdf and the poppler command line tools (pdftotext, pdfinfo, pdftoppm).
 The team writes each notebook as a Google Doc, one tab a day, and the export
 puts the day's date on a page of its own before the day's records, with empty
 pages between tabs. On the wiki those pages are dead weight, so this takes
-them out and one day's records run straight into the next. It also drops the
-two-page reference format template at the front, which is a blank form rather
-than a record.
+them out and one day's records run straight into the next.
 
 A page comes out when it has no text, or its only text is a date
 ("2026/8/30"), or a tab marker ("Tab 34"). Before dropping one the page is
 rendered: a few of the notebooks hold a photograph with no text at all beside
-it, and those pages stay. Nothing else is touched, so the records themselves
-are still the team's own export.
+it, and those pages stay.
+
+Two pages that are not records come out by what they say, never by where they
+sit: the reference format template, a blank form headed "Font format: Arial,
+Front size:11" (April and October open on one), and the copy-editing checklist
+headed "Common mistakes." that opens the July file. Only those two strings. An
+earlier version of this script dropped pages 1 and 2 of every file instead,
+which cost May its 1 and 2 May records and June, July, August and September
+the first page of their first entry. Never trim by page number: the files do
+not share a front.
 """
 import re
 import subprocess
@@ -31,7 +37,8 @@ PDFS = sorted((ROOT / "notebook" / "pdf").glob("wetlab-notebook-*.pdf"))
 
 DATEONLY = re.compile(r"^(\(Only 1 task\)\s*)?\d{4}[/.]\d{1,2}[/.]\d{1,2}$")
 TABONLY = re.compile(r"^(Tab|分頁)\s*\d+$")
-REFERENCE_FORMAT = 2        # the template at the front of every file
+REFERENCE = "Font format: Arial, Front size:11"   # the blank form, April and October
+EDITORIAL = "Common mistakes."                    # July's copy-editing checklist
 INK = 0.02                  # a date stub inks under 0.008, a photograph over 0.17
 
 
@@ -56,10 +63,13 @@ def keepers(pdf):
     n = len(PdfReader(str(pdf)).pages)
     keep, drop = [], []
     for page in range(1, n + 1):
-        if page <= REFERENCE_FORMAT:
+        s = text(pdf, page)
+        if s.startswith(REFERENCE):
             drop.append((page, "reference format"))
             continue
-        s = text(pdf, page)
+        if page == 1 and s.startswith(EDITORIAL):
+            drop.append((page, "copy-editing checklist"))
+            continue
         if (s == "" or DATEONLY.match(s) or TABONLY.match(s)) and ink(pdf, page) < INK:
             drop.append((page, s or "blank"))
             continue
