@@ -10,19 +10,19 @@
    cannot: things that flow along a path, the cells' green.
 
    THE REACTOR (18 Oct: a painting after the design team's valley, 1200 x
-   680, written by build/how-art.py; the crop on the left, the farmer and
+   680, written by build/how-art.py; the crop on the left, the sprayer and
    the controller in the middle, the machine standing on the near field at
    the right). It stands whole from the first frame and plays (21 Oct,
-   owner: the farmer is in the loop, the way the wiki says the app is used):
+   owner: the farmer's part is in the loop, the way the wiki says the app is used;
+   the farmer figure itself came out the same day, out of scale with the case):
      0     the crop stands in the heat; the leaf sensor reads; its reading and
-           the forecast run to the model and to the app in the farmer's
-           hand, and the index crosses the threshold
+           the forecast run to the model, and the index crosses the threshold
      6     the call runs to the strip, which lights one LED after another, and
            the culture goes green at once
      11    the cells make the protectants; the photometer reads them
      16    the pump runs the loop; the cells go round, the protectant crosses
-     21    the permeate fills the harvest bottle; the farmer collects it,
-           dilutes it in the sprayer tank and sprays the crop
+     21    the permeate fills the harvest bottle; it is collected,
+           diluted in the sprayer tank and sprays the crop
      26.6  the whole machine; red light switches the cells off
    THE CELL (1200 x 760, the membrane across the top, the DNA low down):
      0     ho1 and pcyA make the pigment from heme
@@ -64,17 +64,17 @@
 
   /* ------------------------------------------------------- THE REACTOR --- */
   // One drawing, 1200 x 680, whole from the first frame, played (21 Oct,
-  // owner: the farmer is in the loop, as the wiki says the app is used):
+  // owner: the farmer's part is in the loop, as the wiki says the app is used):
   //   0     the heat; the leaf sensor reads; the reading and the forecast run
-  //         to the model; the app lights in the farmer's hand; the index
+  //         to the model; the index
   //         crosses the threshold and the alert stands
   //   6     the call runs to the strip; the culture goes green at once
   //   11    the cells make the protectants; the photometer reads them
   //   16    the pump runs the loop; the cells go round, the protectant
   //         crosses into the harvest bottle
-  //   21    the bottle fills; the farmer collects it: it leaves the case and
+  //   21    the bottle fills; it is collected: it leaves the case and
   //         is tipped over the sprayer tank, the tank turns to the diluted
-  //         mix, the wand sprays the crop, the heat goes
+  //         mix, the lance sprays the crop, the heat goes
   //   26.6  the whole machine; red light switches the cells off
   // the brush-clip paint-on (build/how-art.py WIPES_ON) is off: the film
   // opens on the whole scene. Name a group here, [t0, t1], to wipe it on.
@@ -107,8 +107,7 @@
       [30, { x: 600, y: 360, w: 1240 }]
     ], { x: 0, y: 0, w: 1 }),
     parts: {
-      // 1  the heat, the reading, the prediction; the app in the farmer's
-      //    hand lights with the forecast and blinks at the alert. 18 Oct
+      // 1  the heat, the reading, the prediction. 18 Oct
       //    (Jacquelyn): the first step ends on the alert, so the green light
       //    can come on the moment step 2 arrives
       heat: tr([[0, { a: 0 }], [1, { a: 0 }], [2.6, { a: 1 }, "out"], [25.4, { a: 1 }], [27.2, { a: 0 }]]),
@@ -118,8 +117,6 @@
       idx: tr([[0, { d: 0 }], [3, { d: 0 }], [5, { d: 1 }, "io"]]),
       thrdot: tr([[0, { a: 0, s: 0.4 }], [4.6, { a: 0, s: 0.4 }], [5, { a: 1, s: 1 }, "out"], [26.8, { a: 1 }], [27.6, { a: 0 }]]),
       thr: tr([[0, { a: 0 }], [1.6, { a: 0 }], [2.1, { a: 1 }]]),
-      "phone-on": tr([[0, { a: 0 }], [1.0, { a: 0 }], [1.6, { a: 1 }], [8.6, { a: 1 }], [9.2, { a: 0 }]]),
-      "phone-alert": tr([[0, { a: 0 }], [5, { a: 0 }], [5.25, { a: 1 }], [5.6, { a: 0.25 }], [5.95, { a: 1 }], [6.3, { a: 0 }]]),
       // 2  switch on: the call and the green light, at the step's own moment
       "wire-lamp": tr([[0, { d: 0 }], [5.7, { d: 0 }], [6.2, { d: 1 }]]),
       beam: tr([[0, { a: 0 }], [6.1, { a: 0 }], [6.9, { a: 1 }], [26.9, { a: 1 }], [27.5, { a: 0 }]]),
@@ -238,7 +235,7 @@
        6.2   the strips come on green with the step, and the light is lit
        11.2  the vessel and the photometer beside it
        16.2  the pump and the hollow-fibre cartridge
-       21.2  the harvest bottle and the product line (the farmer collects)
+       21.2  the harvest bottle and the product line (collected)
        26.9  the strips go red, then everything goes dark
      Above the film (T at its start) the model is given back to its idle
      turn and to the demand cards. */

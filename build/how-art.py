@@ -20,10 +20,11 @@ on the near field the whole system: the crop with the leaf sensor at the
 left, the forecast in the sky above it, the controller on a post in the
 middle, the machine standing at the right with its case open (LED strip on
 the inside wall, vessel, pump, hollow-fibre cartridge, photometer, and the
-harvest bottle the permeate fills), the farmer standing between the crop
-and the controller with the ReLEAF app in one hand and a sprayer wand in
-the other, the sprayer tank at their feet, and a cutaway of the soil along
-the foot of the picture.
+harvest bottle the permeate fills), the sprayer tank and its lance between
+the crop and the controller, and a cutaway of the soil along the foot of
+the picture. (The farmer figure drawn on 21 Oct was taken out the same day:
+on the near field beside the suitcase-sized case it read a third of the
+case's height, and there is no room for one at true scale.)
 
 21 Oct (owner): THE FARMER IS IN THE LOOP. The wiki says the app is for
 farmers without laboratory skills: the forecast lets them prepare ahead,
@@ -31,9 +32,9 @@ they collect the protectant the bioreactor makes, dilute it by the factor
 the app states and spray it on the crop by hand; and a farmer
 who adds land enters it to see how many sensors and bioreactors it needs
 and what they cost. So nothing is piped to the crop any more: the permeate
-fills the harvest bottle, the farmer collects it (the bottle leaves the
-case and reappears tipped over the tank), the tank turns to the diluted
-mix, the wand sprays the crop.
+fills the harvest bottle, it is collected (the bottle leaves the case and
+reappears tipped over the tank), the tank turns to the diluted mix, the
+lance sprays the crop.
 
 WHAT THE FILM MOVES (home-story.js reads <g data-k>): the flows, pulses,
 cells, protectant, drops, LEDs, beams, traces and labels, the same parts
@@ -468,52 +469,28 @@ out.append('<g data-k="thrdot" transform="translate(547 282)"><circle class="rw-
 out.append('<g data-k="wire-lamp" data-draw transform="translate(0 0)"><path class="rw-wire" pathLength="1" d="M590 330 C612 330 618 320 626 300 C634 282 638 268 644 258" data-path="wire-lamp" /></g>')
 out.append('<g data-k="pulseB1" data-flow transform="translate(0 0)"><circle class="rw-pulse rw-pulse--g" r="4.5" /></g>')
 
-# =================================================================== FARMER --
-# 21 Oct (owner): the farmer is in the loop. They stand between the crop and
-# the controller, facing the crop, the ReLEAF app in the hand toward the
-# controller and the sprayer wand in the other; the sprayer tank stands at
-# their feet. The phone's screen (phone-on, phone-alert), the tank's mix
+# ================================================================== SPRAYER --
+# 21 Oct (owner): the farmer figure is gone. Drawn standing on the near field
+# they read a third of the case's height, and the case is suitcase-sized; a
+# figure at true scale would stand over the controller. What stays is their
+# equipment: the sprayer tank between the crop and the controller post, the
+# lance resting against it with the nozzle toward the crop. The tank's mix
 # and the pour are the film's; the rest stands still.
-FX = 446.0
-g('class="rw-farmer"')
-shadow(FX + 8, GROUND + 2, 30, 4, 0.8)
-# the sprayer tank at their feet, and its hose running behind them to the wand
+g('class="rw-sprayer"')
+shadow(480, GROUND + 2, 30, 4, 0.8)
 poly([(466, 524), (494, 524), (491, GROUND), (469, GROUND)], STEEL_L, r=0.8, step=4)
 poly([(482, 525), (494, 524), (491, GROUND), (484, GROUND)], STEEL, r=0.6, step=4, alpha=0.45)
 poly(rrect(474, 518, 486, 526, 2), STEEL_D, r=0.4, step=3)
 end()
 out.append('<g data-k="tank-mix" transform="translate(0 0)"><path fill="%s" fill-opacity="0.8" d="%s" /></g>'
            % (rgb(AMBER_L), dpath(rough([(467, 526), (493, 526), (491, GROUND - 1), (469, GROUND - 1)], 0.8, 4))))
-g('class="rw-farmer"')
-stroke([(480, 520), (484, 502), (462, 494), (438, 500), (424, 500)], 3, INK, r=0.2, step=5, alpha=0.8)
-# legs and boots
-stroke([(441, 504), (439, GROUND - 2)], 9, RIDGE_DK, r=0.4, step=5)
-stroke([(451, 504), (455, GROUND - 2)], 9, RIDGE_DK, r=0.4, step=5)
-poly(ell(438, GROUND - 1, 7, 3, 10), INK, r=0.4, step=3)
-poly(ell(456, GROUND - 1, 7, 3, 10), INK, r=0.4, step=3)
-# the shirt, its shaded side, and the arms: one hand up with the phone,
-# the other down on the wand
-poly([(433, 462), (459, 462), (465, 508), (427, 508)], SLATE_L, r=0.8, step=4)
-poly([(447, 462), (459, 462), (465, 508), (449, 508)], SLATE, r=0.6, step=4, alpha=0.45)
-stroke([(458, 469), (472, 459)], 7, SLATE_L, r=0.4, step=4)
-stroke([(434, 469), (428, 496)], 7, SLATE_L, r=0.4, step=4)
-# the wand, from that hand toward the crop
-stroke([(426, 499), (398, 488)], 3.5, INK, r=0.2, step=5)
+g('class="rw-sprayer"')
+# the hose from the tank's top to the lance, and the lance leaning on the
+# tank with its nozzle toward the crop
+stroke([(480, 520), (478, 508), (464, 502), (446, 504), (430, 498)], 3, INK, r=0.2, step=5, alpha=0.8)
+stroke([(468, 540), (398, 488)], 3.5, INK, r=0.2, step=5)
 poly(ell(397, 488, 3.2, 3.2, 8), STEEL_D, r=0.3, step=3)
-poly(ell(474, 457, 4.2, 4.2, 8), SKIN, r=0.3, step=3)
-poly(ell(427, 498, 4.2, 4.2, 8), SKIN, r=0.3, step=3)
-# head and the straw hat
-poly(ell(446, 447, 9, 10, 14), SKIN, r=0.5, step=3)
-poly([(428, 441), (464, 441), (462, 436), (430, 436)], STRAW, r=0.6, step=3)
-poly([(437, 437), (455, 437), (453, 424), (439, 424)], STRAW, r=0.6, step=3)
-poly([(437, 437), (455, 437), (454, 433), (438, 433)], STRAW_D, r=0.4, step=3, alpha=0.8)
-# the phone in the raised hand
-poly(rrect(470, 444, 482, 466, 2.5), INK, r=0.3, step=3)
-poly(rrect(472, 446, 480, 464, 1), SCREEN, r=0.2, step=3)
 end()
-out.append('<g data-k="phone-on" transform="translate(476 455)"><path class="rw-phone-on" d="%s" /><path class="rw-phone-bar" d="M-2.5 -5 H2.5 V-3.5 H-2.5 Z M-2.5 -1 H1.5 V0.5 H-2.5 Z M-2.5 3 H2 V4.5 H-2.5 Z" /></g>'
-           % dpath(rrect(-4, -9, 4, 9, 1)))
-out.append('<g data-k="phone-alert" transform="translate(476 455)"><path class="rw-phone-alert" d="%s" /></g>' % dpath(rrect(-4, -9, 4, 9, 1)))
 
 # ================================================================== THE CASE --
 CX0, CY0, CX1, CY1 = 624.0, 160.0, 1140.0, GROUND
