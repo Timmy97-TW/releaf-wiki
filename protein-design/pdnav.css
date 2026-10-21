@@ -1,0 +1,135 @@
+/* ===========================================================================
+   Protein Design section navigation.
+   21 October 2026.
+
+   One bar, the same markup and the same look on all four pages of the
+   section. It sticks directly under the site nav card, so the hub and the
+   three subpages stay one click away from any point in a page: the reader
+   never has to scroll back to the top to move between them.
+
+   What it replaces: the hairline .relnav strip on the methodology page and
+   the .pagenav previous/next pair at the foot of the other three, which were
+   the only way across and were only reachable at the very top or the very
+   bottom.
+
+   It is loaded by all four pages. The methodology page does not load
+   page.css, so everything here is written against tokens.css alone.
+   ========================================================================= */
+
+/* The measured height of the bar. Every page that stacks something under
+   it reads this, so the stack cannot drift out of step with the padding. */
+:root { --pdnav-h: 3rem; }
+
+.pdnav {
+  position: sticky;
+  top: var(--nv-h, 68px);
+  z-index: 45;
+  background: color-mix(in oklab, var(--gray-50, #fafaf9) 92%, transparent);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border-bottom: 1px solid var(--gray-200, #e7e5e4);
+}
+
+.pdnav__wrap {
+  max-width: 1320px;
+  margin: 0 auto;
+  padding: .34rem clamp(1rem, 3vw, 1.6rem);
+  display: flex;
+  align-items: center;
+  gap: .55rem;
+  overflow-x: auto;
+  scrollbar-width: none;
+}
+.pdnav__wrap::-webkit-scrollbar { display: none; }
+
+/* the hub, set apart from the three subpages by the arrow and the rule */
+.pdnav__home {
+  flex: none;
+  display: inline-flex;
+  align-items: center;
+  gap: .45rem;
+  padding: .42rem .85rem .42rem .6rem;
+  border-radius: 999px;
+  font-family: var(--font-display, inherit);
+  font-size: .82rem;
+  font-weight: 650;
+  letter-spacing: -.006em;
+  color: var(--gray-700, #44403c);
+  text-decoration: none;
+  white-space: nowrap;
+  transition: background .18s ease, color .18s ease;
+}
+.pdnav__home svg { width: 1rem; height: 1rem; flex: none; }
+.pdnav__home:hover { background: var(--gray-100, #f5f5f4); color: var(--black, #1c1917); }
+.pdnav__home[aria-current="page"] {
+  background: var(--leaf-700, #3f6212);
+  color: #fff;
+}
+
+.pdnav__rule {
+  flex: none;
+  width: 1px;
+  height: 1.35rem;
+  background: var(--gray-200, #e7e5e4);
+  margin: 0 .25rem;
+}
+
+.pdnav__list {
+  display: flex;
+  align-items: center;
+  gap: .3rem;
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  flex: none;
+}
+
+.pdnav__list a {
+  display: inline-flex;
+  align-items: baseline;
+  gap: .5rem;
+  padding: .42rem .95rem;
+  border-radius: 999px;
+  border: 1px solid transparent;
+  font-family: var(--font-display, inherit);
+  font-size: .82rem;
+  font-weight: 550;
+  letter-spacing: -.006em;
+  color: var(--gray-600, #57534e);
+  text-decoration: none;
+  white-space: nowrap;
+  transition: background .18s ease, color .18s ease, border-color .18s ease;
+}
+.pdnav__list a .n {
+  font-family: var(--font-mono, ui-monospace, monospace);
+  font-size: .62rem;
+  font-weight: 600;
+  opacity: .62;
+}
+.pdnav__list a:hover {
+  background: var(--gray-100, #f5f5f4);
+  color: var(--black, #1c1917);
+  border-color: var(--gray-200, #e7e5e4);
+}
+.pdnav__list a[aria-current="page"] {
+  background: var(--black, #1c1917);
+  color: #fff;
+  border-color: var(--black, #1c1917);
+  font-weight: 650;
+}
+.pdnav__list a[aria-current="page"] .n { opacity: .72; }
+
+/* Phones: the bar scrolls sideways and the labels shorten, so the current
+   page and its neighbours are all still on screen. */
+@media (max-width: 760px) {
+  .pdnav__wrap { padding-left: 1rem; padding-right: 1rem; gap: .4rem; }
+  .pdnav__home span { display: none; }
+  .pdnav__home { padding: .42rem .6rem; }
+  .pdnav__list a { padding: .42rem .75rem; font-size: .78rem; }
+  .pdnav__list a .full { display: none; }
+}
+@media (min-width: 761px) {
+  .pdnav__list a .short { display: none; }
+}
+
+@media print { .pdnav { display: none !important; } }
