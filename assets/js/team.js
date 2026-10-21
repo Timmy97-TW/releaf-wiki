@@ -419,21 +419,6 @@
     main.appendChild(legend());
     main.appendChild(holder);
     paintCounts();
-    evenCards();
-    window.addEventListener("resize", evenCards);
-    if (document.fonts) document.fonts.ready.then(evenCards);
-  }
-
-  /* Every card the same height: the tallest one sets it, separately for the
-     roster grids and for the one-row Project Leads, whose cards are a
-     different width. Re-measured on resize and once the fonts are in. */
-  function evenCards() {
-    [".grid .card"].forEach((sel) => {
-      const cards = [...document.querySelectorAll(sel)];
-      cards.forEach((c) => { c.style.minHeight = ""; });
-      const h = Math.max(0, ...cards.map((c) => c.offsetHeight));
-      if (h) cards.forEach((c) => { c.style.minHeight = h + "px"; });
-    });
   }
 
   /* the small number beside a section title: how many people are showing */

@@ -27,8 +27,9 @@
      mem      the tasks this person worked on: the same colour washed back.
               `tasks: [...]` still reads as a list of member tasks
 
-   Every card on the page is the same size, Project Leads included; the
-   tallest card sets the height (assets/js/team.js, evenCards).
+   A section's `across: n` puts its people in one row of n equal cards on a
+   wide screen, instead of the roster's four; the Project Leads are five
+   across, margin to margin.
 
    A section's `note` renders under its title; `noteAI: true` marks a note
    the students did not write. Like bioAI it is a record only: every word on
@@ -81,6 +82,7 @@ const SECTIONS = [
   {
     id: "project-leads",
     title: "Project Leads",
+    across: 5,
     note: "This group pitched the idea before anyone knew it would become a project, became the gravity that pulled the team together when it was 32 strangers from seven schools, drove our cloning progress without needing instructors to walk them through it step by step, strung our project results together toward a larger synbio vision, and brought our bioreactor in front of academic experts and field farmers. ReLEAF is relieved to have them.",
     groups: [
     { title: "", members: [
