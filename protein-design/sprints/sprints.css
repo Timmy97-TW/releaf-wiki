@@ -1,0 +1,172 @@
+/* ===========================================================================
+   Sprints and Results: the house fit.
+   21 October 2026.
+
+   Everything above this file is the students' own stylesheet for the export
+   and is untouched. This block only does what joining the wiki requires:
+
+   · TYPE. The three Google families are gone, because an iGEM wiki may not
+     fetch anything from another host. The page draws in the wiki's own
+     self-hosted Inter through the same two variables every other page reads.
+   · NEUTRALS. Paper, ink, rules and the protectant colours point at
+     tokens.css, so the page sits in the same greys and the same leaf green
+     as its three sibling pages. All Protein Design pages are on a white
+     ground, so --paper is white here, not the export's off-white.
+   · ROOM FOR THE NAV. The site nav card is 68px of fixed furniture and the
+     section bar sits under it, so the sticky contents rail and the scroll
+     padding clear both.
+   · ONE ATLAS RULE OFF. atlas.css underlines every h2 inside <main>, which
+     is the methodology page's write-up rule. This page's <main> holds the
+     run records, whose headings carry their own number instead, so the rule
+     is turned off here.
+   · THE CODON SECTION. The fourth band takes a fifth colour of its own, and
+     the four result tables get a figure frame and a lightbox.
+   ========================================================================= */
+
+:root {
+  --f-display: var(--font-display);
+  --f-body:    var(--font-body);
+  --f-mono:    var(--font-mono);
+
+  --paper:   var(--white);
+  --surface: var(--white);
+  --sunk:    var(--gray-100);
+  --ink:     var(--black);
+  --ink-2:   var(--gray-600);
+  --ink-3:   var(--gray-500);
+  --line:    var(--gray-200);
+  --line-2:  var(--gray-300);
+
+  /* the same five the section map uses, so a protectant keeps its colour
+     across the four Protein Design pages */
+  --bopep4: var(--amber-700);
+  --lea14:  var(--leaf-700);
+  --accd:   #3a4f8f;
+  --codon:  #8a3a63;
+
+  --good: var(--leaf-700);
+  --warn: var(--amber-700);
+}
+
+/* Inter has no width axis, so heading tracking is set by letter-spacing.
+   atlas.css already does this for .pd-graft; repeated here only for the
+   masthead, which sits outside <main>. */
+h1 { letter-spacing: -.024em; }
+
+/* --------------------------------------------------------- the sticky stack
+   Top down: the site nav card (fixed, --nv-h), then the section bar from
+   pdnav.css. --pdnav-h is the height of the section bar.                   */
+:root { --pdnav-h: 2.9rem; }
+html,
+html:has(body.pd-graft) {
+  scroll-padding-top: calc(var(--nv-h, 68px) + var(--pdnav-h) + 1.6rem);
+}
+.run,
+.band,
+.caveat { scroll-margin-top: calc(var(--nv-h, 68px) + var(--pdnav-h) + 1.6rem); }
+.toc { top: calc(var(--nv-h, 68px) + var(--pdnav-h) + 1.2rem) !important; }
+.tocin { max-height: calc(100vh - var(--nv-h, 68px) - var(--pdnav-h) - 2.6rem); }
+body > footer,
+.footer2 { position: relative; z-index: 1; }
+#site-nav .sitenav { z-index: 60; }
+
+/* atlas.css rules the write-up h2 on the methodology page. Here every h2 in
+   <main> is a run heading that already carries its own number. */
+.pd-graft main h2:not(.abs-kicker):not(.visually-hidden) {
+  padding-bottom: 0;
+  border-bottom: 0;
+}
+
+/* The export's own stylesheet sets .wrap to 1180px; the band and the run
+   records read better against the wiki's measure on a wide screen. */
+.wrap { padding-block-end: 1rem; }
+
+.visually-hidden {
+  position: absolute; width: 1px; height: 1px; margin: -1px;
+  padding: 0; overflow: hidden; clip: rect(0 0 0 0);
+  white-space: nowrap; border: 0;
+}
+:focus-visible { outline: 2px solid var(--leaf-700); outline-offset: 3px; border-radius: 2px; }
+
+/* ------------------------------------------------------ codon optimisation
+   The fourth band mirrors the three protectant bands and takes the fifth
+   colour of the section palette.                                          */
+.band[data-p="codon"] {
+  --c: var(--codon);
+  background: color-mix(in oklab, var(--codon) 7%, var(--surface));
+}
+.run[data-p="codon"] .rno { color: var(--codon); }
+
+/* The four result tables. One frame, white ground, legend under the plate. */
+.rsfig {
+  margin: 1.4rem 0 0;
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: 1.2rem;
+  overflow: hidden;
+}
+.rsfig img {
+  display: block;
+  width: 100%;
+  height: auto;
+  cursor: zoom-in;
+  background: var(--surface);
+}
+.rsfig figcaption {
+  padding: .75rem .95rem;
+  border-top: 1px solid var(--line);
+  font-size: .86rem;
+  line-height: 1.5;
+  color: var(--ink-2);
+  max-width: none;
+}
+.rsfig figcaption b { color: var(--ink); font-weight: 600; }
+
+.lbox {
+  position: fixed; inset: 0; z-index: 90;
+  display: grid; place-items: center;
+  padding: clamp(.75rem, 3vw, 2.5rem);
+  background: color-mix(in oklab, var(--black) 78%, transparent);
+  cursor: zoom-out;
+}
+.lbox[hidden] { display: none; }
+.lbox img {
+  max-width: 100%; max-height: 100%;
+  background: var(--white);
+  border-radius: .6rem;
+}
+
+/* ------------------------------------------------------------- the footer
+   page.css is not loaded on this page, because it styles .fig and .src,
+   which the export uses for its own components. The footer band is the only
+   part of it the page needs, so it is copied.                             */
+.footer2 { border-top: 1px solid var(--gray-200); background: var(--gray-50); }
+.footer2__inner {
+  max-width: var(--max); margin: 0 auto; padding: var(--sp-7) var(--sp-5);
+  display: grid; gap: var(--sp-6);
+  grid-template-columns: repeat(auto-fit, minmax(13rem, 1fr));
+  font-size: var(--text-sm); color: var(--gray-600);
+  font-family: var(--font-body);
+}
+@media (min-width: 640px) {
+  .footer2__inner { padding-left: var(--sp-6); padding-right: var(--sp-6); }
+}
+.footer2 h3 {
+  margin: 0 0 var(--sp-3); font-size: .6875rem; font-weight: 700;
+  letter-spacing: .1em; text-transform: uppercase; color: var(--gray-450);
+}
+.footer2 ul { margin: 0; padding: 0; list-style: none; }
+.footer2 li + li { margin-top: .35rem; }
+.footer2 a { color: var(--gray-700); text-decoration: none; }
+.footer2 a:hover { color: var(--leaf-700); text-decoration: underline; }
+.footer2__legal {
+  grid-column: 1 / -1; padding-top: var(--sp-5);
+  border-top: 1px solid var(--gray-200);
+  font-size: var(--text-xs); color: var(--gray-500);
+}
+.footer2__legal p { margin: 0 0 var(--sp-2); }
+.footer2__legal a { text-decoration: underline; text-underline-offset: 2px; }
+
+@media print {
+  .sitenav, .sitenav-spacer, .pdnav, .toc { display: none !important; }
+}

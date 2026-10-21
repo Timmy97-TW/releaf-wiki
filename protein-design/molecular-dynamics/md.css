@@ -17,6 +17,54 @@
         sentence outside a figure read-out.
    ========================================================================== */
 
+/* ================================================= THE METHODOLOGY FORMAT ==
+   21 October 2026. The three pages of the section have to read as one piece
+   of work. atlas.css already carries the methodology page's neutrals, display
+   tracking, mono micro-labels and panel shapes across; what it deliberately
+   does not touch is the type scale and the width of the column, which are the
+   two things a reader feels first. Those are set here.
+
+   The methodology page's write-up is 1.02rem on a 1.62 line, in a column
+   capped at 72ch. This page was on page.css's 1.0625rem, a 1.68 line and a
+   68ch column. The headings already agree: --text-h2 and --text-h3 in
+   tokens.css land on the same clamp endpoints as that page's h2 and h3, so
+   they are left alone.
+
+   The ground is white, as it is everywhere else on the wiki, so --paper is
+   pinned to --white and not to the neutral atlas.css inherits from the
+   methodology page's own canvas.                                            */
+
+body.pd-graft {
+  --paper: var(--white);
+  --gr-paper: var(--white);
+  --measure: 72ch;
+  --text-base: 1.02rem;
+  font-size: var(--text-base);
+  line-height: 1.62;
+  background: var(--paper);
+}
+
+/* A run chapter's deeper analysis carries the argument, so inside a case fold
+   it reads at the body size, the way the write-up's own disclosures do. The
+   four key-finding boxes are that page's .resultbox and keep its smaller
+   size, because a result box is read as a block and not as prose.           */
+.engage.pd .fold--case > .fold__body p,
+.engage.pd .fold--case > .fold__body li {
+  max-width: var(--measure);
+  font-size: var(--text-base);
+  line-height: 1.62;
+}
+.engage.pd .fold--res > .fold__body p,
+.engage.pd .fold--res > .fold__body li {
+  font-size: .93rem;
+  line-height: 1.6;
+}
+/* the disclosure row itself: the write-up's summary size and display face */
+.engage.pd .fold > summary {
+  font-family: var(--font-display);
+  font-size: .95rem;
+}
+
 /* ============================================== THE PLOTS: THEIR ONE CLASS ==
    The six inline plots are written with the page's sans face on the <svg>
    itself and inherit it, so only the numbers inside them carry a class. One
@@ -45,7 +93,7 @@
 }
 .pd .nine th,
 .pd .nine td {
-  padding: var(--sp-2) var(--sp-3);
+  padding: var(--sp-2) var(--sp-2) var(--sp-2) 0;
   border-bottom: 1px solid var(--gray-200);
   text-align: left;
   vertical-align: middle;
@@ -68,7 +116,9 @@
 }
 .pd .nine tbody th small {
   display: block;
+  max-width: 11.5rem;
   margin-top: .1rem;
+  white-space: normal;
   font-family: var(--font-body);
   font-weight: 500;
   font-size: var(--text-xs);
@@ -84,14 +134,9 @@
 .pd .nine tbody tr[data-fam="pH 5.5"] th { box-shadow: inset 3px 0 0 color-mix(in srgb, var(--leaf-700) 30%, #fff); }
 .pd .nine tbody tr[data-fail] { background: color-mix(in srgb, var(--rust-700) 4%, #fff); }
 
-/* the C-terminus a tag has taken over is the whole histidine-tag finding, so
-   it is the one word in the table set apart */
-.pd .nine td.is-blocked { color: var(--rust-700); font-weight: 650; }
-.pd .nine td.nine__hip { font-family: var(--font-mono); color: var(--gray-500); }
-
 /* the residue span, drawn on a 1-to-29 scale so the rungs of the ladder are
    a shape and not four numbers to hold in the head */
-.pd .nine__len { width: 7.5rem; }
+.pd .nine__len { width: 5.4rem; }
 .pd .nine__span {
   position: relative;
   display: block;
@@ -115,7 +160,7 @@
 }
 
 /* the two contact metrics */
-.pd .nine__m { width: 7.5rem; }
+.pd .nine__m { width: 5.4rem; }
 .pd .nine__bar {
   display: block;
   height: .4rem;
@@ -135,12 +180,69 @@
   color: var(--gray-600);
 }
 .pd .nine__r { font-family: var(--font-mono); font-weight: 650; color: var(--gray-600); }
+.pd .nine__r small { font-weight: 500; color: var(--gray-400); }
 .pd .nine__na { color: var(--gray-300); }
+
+/* The pre-registered verdict is a word, not a badge: the wiki does not set
+   status pills, and the two verdicts that are not "pass" are the whole point
+   of the column, so they take the warning ink and the rest stay quiet. */
+.pd .nine td.nine__g {
+  font-family: var(--font-mono);
+  font-size: var(--text-xs);
+  letter-spacing: .04em;
+  color: var(--gray-500);
+}
+.pd .nine td.nine__g.is-off { color: var(--rust-700); font-weight: 650; }
+
+/* the one footnote marker in the table, on the cell where the criterion is
+   not measuring the same atoms as it is on every other row */
+.pd .nine__fn { margin-left: .15rem; font-size: .62rem; color: var(--rust-700); font-weight: 700; }
+
+/* the students' own two notes on their overview table, kept with it */
+.pd .ninenote {
+  margin: var(--sp-3) 0 0;
+  max-width: none;
+  font-size: var(--text-xs);
+  line-height: 1.55;
+  color: var(--gray-500);
+}
+.pd .ninenote sup { color: var(--rust-700); font-weight: 700; }
+
+/* ==================================== WHAT EACH TRAJECTORY ANSWERED ========
+   Nine rows, the run on the left and its one reading on the right. A table
+   would be two columns of one cell each, so it is a description list.      */
+
+.pd .runlines { display: grid; gap: .55rem; margin: 0; }
+.pd .runlines > div {
+  display: grid;
+  grid-template-columns: 11.5rem minmax(0, 1fr);
+  gap: .2rem 1.1rem;
+  padding-bottom: .55rem;
+  border-bottom: 1px solid var(--gray-200);
+}
+.pd .runlines > div:last-child { padding-bottom: 0; border-bottom: 0; }
+.pd .runlines dt {
+  font-family: var(--font-mono);
+  font-size: var(--text-xs);
+  font-weight: 650;
+  line-height: 1.5;
+  color: var(--ink);
+}
+.engage.pd .runlines dd {
+  margin: 0;
+  max-width: 68ch;
+  font-size: var(--text-sm);
+  line-height: 1.6;
+  color: var(--gray-600);
+}
+@media (max-width: 40rem) {
+  .pd .runlines > div { grid-template-columns: 1fr; }
+}
 
 /* a nine-column table does not fit a phone, so it scrolls inside its own
    frame, the same way the plots beside it do */
 @media (max-width: 62rem) {
-  .pd .figwrap--nine .nine { min-width: 44rem; }
+  .pd .figwrap--nine .nine { min-width: 40rem; }
 }
 
 /* ======================================================== NO USAGE HINTS ===

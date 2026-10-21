@@ -48,6 +48,25 @@ RUNS = {
   "t923l": ("bopep4-9-23-lowph",
             "BoPEP4 9-23, pH 5.5",
             "The only run that failed its gate: His22 folds back onto the peptide's own C-terminus."),
+
+  # 21 October. The page covers all nine runs, so the four trajectories that
+  # had no payload get one. A stem written "file:A" reads the sub-report under
+  # that key, which is how the benchmark is stored: the AtPEP1 report holds the
+  # pilot run as A and the wild type it is compared against as B, and only A
+  # carries an `anim` block. The apo receptor has no `anim` block anywhere in
+  # md-simulations/data, so it has no payload and no player on the page.
+  "ref": ("atpep1-benchmark-vs-bopep4:A",
+          "AtPEP1 7-23 benchmark, pH 7",
+          "The one system with an experimental structure to check against."),
+  "t723": ("bopep4-7-23",
+           "BoPEP4 7-23, pH 7",
+           "Lys7 grips Asp129 for the whole trajectory and the clamp comes back."),
+  "t923": ("bopep4-9-23-vs-wt",
+           "BoPEP4 9-23, pH 7",
+           "The clamp flickers open 94 times in 30 ns without the peptide leaving the groove."),
+  "t1523": ("bopep4-15-23-vs-wt",
+            "BoPEP4 15-23, pH 7",
+            "Nine residues hold the C-terminal anchor; the negative control was not negative."),
 }
 
 
@@ -56,8 +75,14 @@ def b64u16(a):
 
 
 def build(key, stem):
+    stem, _, sub = stem.partition(":")
     with open(os.path.join(SRC, stem + ".json")) as fh:
         D = json.load(fh)
+    if sub:
+        D = D[sub]
+    if "anim" not in D:
+        print(f"{key:7} skipped: {stem}{':' + sub if sub else ''} has no anim block")
+        return
     A, S = D["anim"], D["surf"]
     nCa, nPep, nCl = A["n_ca"], A["n_pep"], A["n_clamp"]
     NP, NF = A["natoms"], A["nframes"]
