@@ -639,12 +639,8 @@
     var order = ORDER.slice().sort(function (a, b) { return POS[a][1] - POS[b][1]; });
     var s = '<svg class="nma-svg" viewBox="0 0 ' + W + ' ' + H + '" role="group" aria-label="Every page of ReLEAF as a place in one valley. Arrow keys move between places.">' + defs(id);
     s += '<g class="nma-ground">' + valley(id) + '</g>';
-    s += '<g class="nma-zones">';
-    ZONES.forEach(function (z) {
-      var sec = SEC[z[0]];
-      s += '<line x1="' + (z[2] + 10) + '" y1="1180" x2="' + (z[3] - 10) + '" y2="1180" stroke="' + sec.line + '" stroke-width="4" stroke-linecap="round" opacity=".7"/>';
-    });
-    s += '</g>';
+    /* 21 October 2026: the coloured zone rule along the foot of the valley is
+       gone. It read as a key to something, and there is nothing to key. */
     s += '<g class="nma-places" filter="url(#' + id + '-brush)">';
     order.forEach(function (slug) {
       var p = POS[slug];
