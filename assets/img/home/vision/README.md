@@ -40,6 +40,13 @@ show more sky rather than less valley. The horizon is at y 1170.
 | `sun.webp` | her sun, lifted out of the sky so it can rise from behind the ridge |
 | `reactor.webp` | her bioreactor, cut out of the close-up, its lime turned to `--sig-green` |
 
+`reactor.webp` is her drawing at her size, which stands about as tall as the farmer
+beside it. The real machine is 400 x 240 x 620 mm, so the page shows it at `RXS` in
+`home-vision.js` (0.38, about two fifths of a farmer), on the same centre line and the
+same foot as her rect in `home-vision-data.js`. Rebuilding the art does not change that:
+`RXS` is the only place the size is set, and the resting rect written on the `reactor`
+layer in `index.html` carries the same numbers.
+
 ## The farm details
 
 The houses, trees, palms, farmers, furrows, seedlings, paddies, orchards, haystacks,

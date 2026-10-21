@@ -67,7 +67,20 @@
   if (!run || !stage || !art || !words || !line || !gloss) return;
   var mq = window.matchMedia ? window.matchMedia("(prefers-reduced-motion: reduce)") : { matches: false };
 
-  var RECT = { "sky-night": D.sky, "sky-dawn": D.sky, sun: D.sun, land: D.land, close: D.close, reactor: D.reactor };
+  /* HER REACTOR AT ITS REAL SIZE (21 Oct, owner). She drew it about as tall as
+     the farmer beside it; the machine is 400 x 240 x 620 mm, a case you carry,
+     so it stands at RXS of her drawing — about two fifths of a farmer. It keeps
+     its own patch of ground: same centre line, same foot, so the field, the
+     light and the camera are untouched. Her file is not re-cut for this.
+     The halo under it is brought in with it, less far, because the pool of
+     light it throws does not shrink as fast as the thing throwing it. */
+  var RXS = 0.38, HALO_S = 0.62;
+  var RX = [D.reactor[0] + D.reactor[2] * (1 - RXS) / 2,
+            D.reactor[1] + D.reactor[3] * (1 - RXS),
+            D.reactor[2] * RXS, D.reactor[3] * RXS];
+  var RXC = [RX[0] + RX[2] / 2, RX[1] + RX[3] / 2];          // the middle of it now
+
+  var RECT = { "sky-night": D.sky, "sky-dawn": D.sky, sun: D.sun, land: D.land, close: D.close, reactor: RX };
   var imgs = [].slice.call(sec.querySelectorAll(".vl-layer"));
   var L = {};
   imgs.forEach(function (el) { L[el.getAttribute("data-layer")] = el; });
@@ -277,7 +290,7 @@
     cv.width = Math.round(M.sw * M.gd); cv.height = Math.round(M.sh * M.gd);
     art.style.width = AW + "px"; art.style.height = AH + "px";
     imgs.forEach(function (e) { place(e, RECT[e.getAttribute("data-layer")]); });
-    place(halo, [FOCAL[0] - 34, FOCAL[1] - 26, 68, 52]);
+    place(halo, [RXC[0] - 34 * HALO_S, RXC[1] - 26 * HALO_S, 68 * HALO_S, 52 * HALO_S]);
   }
 
   /* ---- read: measure, and work out where the camera should be ---- */
@@ -323,6 +336,8 @@
       // enlargement behind it: take it out of the frame rather than raster it
       L.land.style.visibility = closeA > 0.995 ? "hidden" : "visible";
       var rxA = clamp01((D.reactor[3] * k - 34) / 30);      // her reactor is big enough to read
+                                                            // (read off her own size, so the
+                                                            // crossover is the same camera)
       halo.style.opacity = (rxA * (1 - 0.6 * dawn)).toFixed(3);
 
       var va = 1 - smooth(e / 0.3);                         // the dark around the first field
