@@ -36,8 +36,32 @@
 .meas .chap > ul:not(.findings) { max-width: 44rem; margin-inline: auto; }
 
 /* Numbers read better right-aligned, but only where the whole column is
-   numeric: the flow, pressure and OD600 tables.                               */
+   numeric: the flow, pressure and OD600 tables. 21 OCTOBER 2026, at the
+   students' request, that is now actually implemented. build/tag_numeric.py
+   walks every table on the page and puts .n on the header and the cells of a
+   column whose body is numbers end to end; a column that mixes a number with
+   a word is left alone, because ragging one of those right reads worse than
+   leaving it. Text categories stay left-aligned, which is the default.      */
 .meas table.data td { vertical-align: top; }
+.meas table.data :is(thead th, tbody th, td).n {
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+}
+/* A number must never break across two lines. engage.css lets any cell break
+   anywhere so that no table scrolls sideways, and in a nine-column table that
+   turned 20.3 into "20." over "3". The VALUES opt out of breaking; the header
+   above them must still wrap, or a long one like "Dilution-corrected
+   concentration (µg/mL)" holds its column open and pushes the table off the
+   page.                                                                    */
+.meas table.data :is(tbody th, td).n {
+  white-space: nowrap;
+  overflow-wrap: normal;
+  word-break: keep-all;
+  hyphens: none;
+}
+/* Short all-caps sample names (ACCD, BoPep4, LEA14, WB800) were breaking
+   mid-word for the same reason. A row label is never long enough to need it. */
+.meas table.data tbody th[scope="row"] { overflow-wrap: break-word; hyphens: none; }
 .meas table.data caption {
   margin-bottom: .55rem;
   font-size: .8125rem;
@@ -61,7 +85,12 @@
    page if a future table still does not fit.                                 */
 .meas table.data { width: 100%; table-layout: auto; }
 .meas table.data :is(thead th, tbody th, td) { white-space: normal; }
-.meas table.data :is(th, td) { overflow-wrap: anywhere; word-break: normal; hyphens: auto; }
+/* 21 OCTOBER 2026: "anywhere" broke short tokens mid-way once the tables
+   grew a status column - 20.3 became "20." over "3", ACCD became "ACC"
+   over "D". break-word only breaks a token that cannot fit a line on its
+   own, which no number or sample name on this page ever is; .tablewrap
+   keeps overflow:auto as the backstop it always was.                   */
+.meas table.data :is(th, td) { overflow-wrap: break-word; word-break: normal; hyphens: none; }
 
 /* Procedure lists inside a fold are long; tighten them so a twelve-step
    protocol does not push the fold past a screen.                              */
@@ -212,3 +241,27 @@
 @media (prefers-reduced-motion: reduce) {
   .meas .mchain__shot { transition: none; }
 }
+
+/* ---------------------------------------------------------------------------
+   SECTION RHYTHM. 21 OCTOBER 2026, from the students' formatting notes: the
+   gap between two major sections was reading as crowded, and the gap above a
+   heading was not the same everywhere on the page. One value for each, both
+   scoped to this page so the shared engage.css rhythm is untouched on every
+   other page that uses it. Prose must never fake either gap with an empty
+   paragraph, a <br> or a stray &nbsp; — that is what these rules replace.
+   --------------------------------------------------------------------------- */
+.meas { --sp-9: clamp(4rem, 2rem + 6vw, 7rem); }
+.meas .sec + .sec { margin-top: var(--sp-9); }
+.meas .sec > h3 { margin-top: var(--sp-8); }
+.meas .sec__head { margin-bottom: var(--sp-5); }
+.meas .refs { margin-top: var(--sp-9); }
+
+/* "Add a line space after pressure", from the same notes. A .blk__h that is a
+   bare heading between two blocks inherited margin-top:0 from engage.css, so
+   RESULTS sat hard against the end of the block above it. It gets the same gap
+   a heading gets everywhere else on the page now. A .blk__h inside a .blk card
+   is untouched: engage.css reaches it with a more specific selector, and a
+   card's own title should sit at its top edge.                              */
+.meas .blk__h { margin-top: var(--sp-7); }
+.meas :is(.chap, .chap__body, .sec) > .blk__h:first-child { margin-top: 0; }
+.meas .blk + .blk { margin-top: var(--sp-5); }
