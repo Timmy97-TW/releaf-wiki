@@ -290,7 +290,13 @@ window.VUEmbed = (function () {
       S.steady = r > 0.6 && r < 1.6 ? S.steady + 1 : 0;
       if (S.warm === 0) {
         var resOk = S.resSet ? now - S.resAt > 400 : now - S.openedAt > WARM_MAX;
-        if (resOk && S.steady >= 2) { S.warm = 1; call("pause"); S.rewindId = call("seek", S.startT); }
+        var noRewind = typeof opt.rewind === "function" && !opt.rewind();
+        if (resOk && S.steady >= (noRewind ? 1 : 2)) {
+          // (20 Oct 2026) a caller that puts the film back at its start itself (the hub, as the loading walk lifts)
+          // passes rewind: a function answering false, and the film shows as soon as it plays steadily
+          if (noRewind) { S.warm = 3; if (S.wantPlay) { fire(video, "playing"); show(); } return; }
+          S.warm = 1; call("pause"); S.rewindId = call("seek", S.startT);
+        }
       } else if (S.warm === 2) {
         if (pos > S.startT + 0.02 && pos < S.startT + 3) {   // moving again from its start, by the poster's frame
           S.warm = 3;

@@ -48,7 +48,19 @@
         }).join("") + '</ul></div></li>';
     }).join("") + '</ol></div>';
 
-  if (own) document.body.appendChild(btn);
+  if (own) {
+    // (21 Oct 2026, the owner: "add the 'for judges' button on bottom right of the hardware pages after the animation")
+    // On an instrument page the button waits in the bottom-right corner until the hero animation has been scrolled past.
+    document.body.appendChild(btn);
+    var story = document.getElementById("story");
+    if (story && "IntersectionObserver" in window) {
+      btn.classList.add("jp-wait");
+      new IntersectionObserver(function (es) {
+        var e = es[0];
+        btn.classList.toggle("is-on", !e.isIntersecting && e.boundingClientRect.top < 0);
+      }, { threshold: 0 }).observe(story);
+    }
+  }
   document.body.appendChild(dlg);
 
   function open() { if (dlg.showModal) dlg.showModal(); else dlg.setAttribute("open", ""); document.documentElement.classList.add("jp-open"); }

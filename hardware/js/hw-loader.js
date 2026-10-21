@@ -71,6 +71,8 @@
   if (!here) return;
 
   var MIN = 1400, MAX = 6000, HARD = 15000, LIFT = 700;
+  // (21 Oct 2026) while something holds the walk (a page's own hero loader, the hub film) it may run past MAX, up to this
+  var HOLDMAX = 12000;
   var MW = 0.26;                                               // the mascot's width, a share of the row
   var LETTERS = [[.0032, .2024], [.2069, .3306], [.3363, .5148], [.5278, .6515], [.6564, .8292], [.8414, .9594]];
   var AT = LETTERS.map(function (lr) {                         // how far he must have walked to stand under each
@@ -246,9 +248,11 @@
   var holds = 0;
   // HWLoader.onLift(fn) runs fn as the black starts to lift (the hub film goes back to its first frame under it).
   var lifts = [];
-  w.HWLoader = { hold: function () { if (left) return function () {}; holds++; var once = false;
+  w.HWLoader = { hold: function () { if (left) return function () {}; holds++; heldOnce = true; var once = false;
     return function () { if (!once) { once = true; holds--; } }; },
-    onLift: function (fn) { if (left) return; lifts.push(fn); } };
+    onLift: function (fn) { if (left) return; lifts.push(fn); },
+    lifted: function () { return left; } };
+  var heldOnce = false;                                        // a hold was the last thing waited for: finish briskly
   w.addEventListener("load", function () { loaded = true; });
   d.addEventListener("DOMContentLoaded", function () { parsed = true; });
   if (d.fonts && d.fonts.ready) d.fonts.ready.then(function () { fonts = true; });
@@ -264,6 +268,28 @@
     mo.observe(root, { childList: true });
   }
   drawings();
+
+  // (21 Oct 2026, the owner: "make sure the loading animation covers all the original loading animation, right now
+  // bioreactor loading animation still shows after") A component page's hero has its own "Loading animation" cover
+  // (#loader in .story-stage, story-core / hero.js), which goes when the clip or model is ready (class "gone" or
+  // "hide"). The walk now waits for it, so the reader never sees a second loading screen after this one.
+  function holdForPageLoader() {
+    var ld = d.querySelector(".story-stage > .loader, #loader");
+    if (!ld) return;
+    var done = function () {
+      if (!ld.isConnected || /\b(gone|hide)\b/.test(ld.className)) return true;
+      // (not visibility: the whole page is visibility-hidden under the walk, the loader with it)
+      return w.getComputedStyle(ld).display === "none";
+    };
+    if (done()) return;
+    var release = w.HWLoader.hold(), iv = 0;
+    var mo = new MutationObserver(check);
+    function check() { if (done()) { mo.disconnect(); w.clearInterval(iv); release(); } }
+    mo.observe(ld, { attributes: true, attributeFilter: ["class", "style", "hidden"] });
+    iv = w.setInterval(check, 250);
+  }
+  if (d.readyState === "loading") d.addEventListener("DOMContentLoaded", holdForPageLoader);
+  else holdForPageLoader();
 
   function lift() {
     if (left) return;
@@ -281,14 +307,15 @@
     if (left || p >= 1) return;
     var now = performance.now();
     var el = now - start;
-    var late = el > MAX && (parsed || el > HARD);
+    var late = el > (holds > 0 ? HOLDMAX : MAX) && (parsed || el > HARD);
     var done = (loaded && fonts && holds <= 0) || late;
     var g = goal(el, done);
-    p += (g - p) * ease(late ? .22 : .08, now - prev);
+    var brisk = late || (done && heldOnce);                    // (20 Oct 2026) the hub film was the wait: no slow tail
+    p += (g - p) * ease(brisk ? .22 : .08, now - prev);
     prev = now;
     if (done && el >= MIN && 1 - p < .01) p = 1;
     paint();
-    if (p >= 1) w.setTimeout(lift, 380);
+    if (p >= 1) w.setTimeout(lift, heldOnce ? 120 : 380);
   }
   (function frame() { if (left || p >= 1) return; step(); w.requestAnimationFrame(frame); })();
   // A tab that is not on screen is given no frames at all -- a page opened in

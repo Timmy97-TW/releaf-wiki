@@ -1,0 +1,134 @@
+/* 21 Oct 2026 (tried in dev/hub-try, then made the main version): the owner's "less AI" pass on the hub and the notebook page.
+   1. Chamfers: every rectangle-ish control loses its rounding for cut corners. A bordered one keeps its border on the
+      cut: the element's own border goes transparent and a pseudo-element draws it again (four straight edges from its
+      border, four diagonals from corner gradients), clipped to the same shape.
+   2. The guides: heading on the left, flat cards, no sheen on hover, no coloured flash on click.
+   3. The notebook section: the build timeline in place of the month index. */
+
+:root { --ch: 9px; }
+
+/* ---- the shape --------------------------------------------------------------------------------------------- */
+.pb-list a, .hg-feat, .hg-key, .hg-doc, .hg-feat-img, .jp-hub, .nx .pn-open, .nx .pn-dl, .nx-a .nx-view, .nx-a .pn-cover,
+.hw-back, .pb-card, .pb-c-go, .pb-pin b, .pb-b-name, .pb-n, .hg-ic, .film-toggle, .lanes-panel, .jp, .jp-c,
+.jp-c a, .jp-pg, .jp-x, .pb-next {
+  border-radius: 0 !important;
+  clip-path: polygon(var(--ch) 0, calc(100% - var(--ch)) 0, 100% var(--ch), 100% calc(100% - var(--ch)),
+                     calc(100% - var(--ch)) 100%, var(--ch) 100%, 0 calc(100% - var(--ch)), 0 var(--ch));
+}
+.pb-n, .jp-pg, .pb-pin b, .pb-b-name, .pb-c-go, .hg-ic, .jp-x { --ch: 5px; }
+.nx-a .nx-view, .hg-feat, .lanes-panel, .jp { --ch: 14px; }
+/* the photo tags: no ring, glow, scale or blur behind the cut (they read as an outline round the shape) */
+.pb-pin b, .pb-b-name, .pb-pin.pb-on b, .pb-pin b:hover, .pb-bubble.pb-on .pb-b-name, .pb-bubble:hover .pb-b-name {
+  box-shadow: none !important; outline: 0 !important; filter: none !important; }
+.pb-pin.pb-on b, .pb-pin b:hover { transform: none !important; }
+
+/* the redrawn border: ::before on most, ::after where ::before is taken (none here) or ::after is free (.hg-key) */
+.pb-list a, .hg-feat, .hg-doc, .hg-feat-img, .jp-hub, .nx .pn-open, .nx .pn-dl, .nx-a .nx-view, .nx-a .pn-cover, .hw-back,
+.pb-card, .hg-key, .lanes-panel, .jp-c, .jp-c a, .hg-ic { position: relative; }
+.pb-list a::before, .hg-feat::before, .hg-doc::before, .hg-feat-img::before, .jp-hub::before, .nx .pn-open::before,
+.nx .pn-dl::before, .nx-a .nx-view::before, .nx-a .pn-cover::before, .hw-back::before, .pb-card::before, .hg-key::after,
+.lanes-panel::before, .jp-c::before, .jp-c a::before, .hg-ic::before {
+  content: ""; position: absolute; inset: -1px; z-index: 3; pointer-events: none; border: 0 !important;
+  transform: none !important; opacity: 1; width: auto !important; height: auto !important;
+  background: var(--bc, rgba(255, 255, 255, .14)) !important; transition: background-color .2s ease;
+  /* a 1px ring: the chamfered outline, and the same shape 1px in (its cut 0.41px smaller), cut out of it */
+  --c2: calc(var(--ch) - .414px);
+  clip-path: polygon(evenodd,
+    var(--ch) 0, calc(100% - var(--ch)) 0, 100% var(--ch), 100% calc(100% - var(--ch)), calc(100% - var(--ch)) 100%,
+    var(--ch) 100%, 0 calc(100% - var(--ch)), 0 var(--ch), var(--ch) 0,
+    calc(1px + var(--c2)) 1px, calc(1px + var(--c2)) 1px,
+    1px calc(1px + var(--c2)), 1px calc(100% - 1px - var(--c2)), calc(1px + var(--c2)) calc(100% - 1px),
+    calc(100% - 1px - var(--c2)) calc(100% - 1px), calc(100% - 1px) calc(100% - 1px - var(--c2)),
+    calc(100% - 1px) calc(1px + var(--c2)), calc(100% - 1px - var(--c2)) 1px, calc(1px + var(--c2)) 1px);
+}
+.pb-list a, .hg-feat, .hg-doc, .hg-feat-img, .jp-hub, .nx .pn-open, .nx .pn-dl, .nx-a .nx-view, .nx-a .pn-cover, .hw-back,
+.pb-card, .hg-key, .jp-c, .jp-c a, .hg-ic { border-color: transparent !important; }
+.pb-list a { --bc: rgba(255, 255, 255, .13); }
+.pb-list a:hover, .pb-list a:focus-visible, .pb-list a.pb-on { --bc: color-mix(in srgb, var(--c) 70%, transparent); }
+.hg-feat, .hg-key { --bc: color-mix(in srgb, var(--c) 32%, rgba(255, 255, 255, .08)); }
+.hg-key:hover, .hg-key:focus-visible { --bc: color-mix(in srgb, var(--c) 70%, transparent); }
+.hg-doc, .hg-feat-img { --bc: rgba(255, 255, 255, .09); }
+.hg-doc:hover, .hg-doc:focus-visible { --bc: color-mix(in srgb, var(--c) 60%, transparent); }
+.jp-hub { --bc: rgba(255, 255, 255, .24); }
+.jp-hub:hover { --bc: rgba(255, 255, 255, .42); }
+.nx .pn-open { --bc: rgba(61, 220, 139, .45); }
+.nx .pn-open:hover { --bc: rgba(61, 220, 139, .75); }
+.nx .pn-dl { --bc: rgba(255, 255, 255, .16); }
+.nx-a .nx-view, .lanes-panel { --bc: rgba(255, 255, 255, .12); }
+.nx-a .pn-cover { --bc: rgba(61, 220, 139, .34); }
+.hw-back { --bc: rgba(255, 255, 255, .2); }
+.pb-card { --bc: rgba(255, 255, 255, .14); }
+.jp-c { --bc: rgba(255, 255, 255, .7); } .jp-c a { --bc: rgba(22, 33, 42, .14); } .jp-c a:hover { --bc: var(--c); }
+/* focus stays visible, neutral and square to the cut */
+:is(.pb-list a, .hg-key, .hg-doc, .jp-hub, .nx .pn-open, .nx .pn-dl, .hw-back):focus-visible { outline: none; --bc: #eef2f6; }
+
+/* ---- the guides ---------------------------------------------------------------------------------------------- */
+.hg .hg-k { display: none; }                                  /* the "Guides / Open hardware, free to build" tags */
+.hg .hg-head { text-align: left; width: var(--hub-col, min(1280px, 100%)); max-width: 100%; margin-inline: auto; }
+.hg .hg-sub { margin-left: 0; margin-right: 0; }
+.hg .hg-t { background: none; color: #eef2f6; }               /* the title's metallic gradient goes too */
+.hg-feat, .hg-key { background: rgba(255, 255, 255, .03) !important; box-shadow: none !important; }
+.hg-feat-img { background: rgba(255, 255, 255, .02) !important; }
+.hg-key::after { transform: none !important; transition: border-color .2s ease !important; }   /* no sheen sweep */
+.hg-key:hover, .hg-key:focus-visible { transform: none; box-shadow: none !important; }
+.hg-key:hover .hg-thumb, .hg-doc:hover .hg-thumb { transform: none; }
+.hg-doc:hover, .hg-doc:focus-visible { transform: none; background: rgba(255, 255, 255, .045); }
+/* no coloured flash on the download keys: hover, focus and press stay neutral */
+.hg-key:hover .hg-ic, .hg-key:focus-visible .hg-ic, .hg-doc:hover .hg-ic, .hg-doc:focus-visible .hg-ic,
+.hg-key:active .hg-ic, .hg-doc:active .hg-ic { background: rgba(255, 255, 255, .14); color: #eef2f6; transform: none; }
+.hg-key:active, .hg-doc:active, .hg-feat-img:active { background: rgba(255, 255, 255, .05) !important; }
+.hg-key, .hg-doc, .hg-feat-img { -webkit-tap-highlight-color: transparent; }
+.hg-kind::before { box-shadow: none; }
+
+/* ---- the notebook section: the month index, chamfered (21 Oct: the build timeline trial went back) ------------ */
+.nx-a .nx-tab, .nx-a .pn-e { border-radius: 0 !important;
+  clip-path: polygon(7px 0, calc(100% - 7px) 0, 100% 7px, 100% calc(100% - 7px), calc(100% - 7px) 100%, 7px 100%, 0 calc(100% - 7px), 0 7px); }
+.nx-a .nx-tab-d i { border-radius: 0; }
+
+/* the notebook page: the search box and the page frames cut too */
+#nbr-q { border-radius: 0 !important; clip-path: polygon(9px 0, calc(100% - 9px) 0, 100% 9px, 100% calc(100% - 9px), calc(100% - 9px) 100%, 9px 100%, 0 calc(100% - 9px), 0 9px); }
+/* the month tabs keep their border on the cut too (the same 1px ring as the cards) */
+.nx-a .nx-tab { position: relative; --bc: transparent; border-color: transparent !important; }
+.nx-a .nx-tab::after { content: ""; position: absolute; inset: -1px; pointer-events: none; background: var(--bc); --ch: 7px; --c2: calc(7px - .414px);
+  clip-path: polygon(evenodd, 7px 0, calc(100% - 7px) 0, 100% 7px, 100% calc(100% - 7px), calc(100% - 7px) 100%, 7px 100%, 0 calc(100% - 7px), 0 7px, 7px 0,
+    calc(1px + var(--c2)) 1px, 1px calc(1px + var(--c2)), 1px calc(100% - 1px - var(--c2)), calc(1px + var(--c2)) calc(100% - 1px),
+    calc(100% - 1px - var(--c2)) calc(100% - 1px), calc(100% - 1px) calc(100% - 1px - var(--c2)), calc(100% - 1px) calc(1px + var(--c2)),
+    calc(100% - 1px - var(--c2)) 1px, calc(1px + var(--c2)) 1px); }
+.nx-a .nx-tab[aria-selected="true"] { --bc: rgba(255, 255, 255, .22); }
+.nx-a .nx-tab:hover:not([aria-selected="true"]) { --bc: rgba(255, 255, 255, .12); }
+.hg-ic { --bc: color-mix(in srgb, var(--c) 55%, transparent); }
+.hg-key:hover .hg-ic, .hg-doc:hover .hg-ic { --bc: rgba(255, 255, 255, .4); }
+/* short controls (about 32-36px tall) take a small cut, so they read as cut rectangles, not hexagons */
+.nx .pn-open, .nx .pn-dl, .jp-hub, .hw-back, .film-toggle, .pb-next, .jp-c a { --ch: 5px; }
+
+/* 21 Oct 2026, the owner: the photo tags keep their old dark outline (a 3px ring of rgba(5,6,10,.38)), now on the cut.
+   The tag's fill and the ring are two chamfered shapes behind its text, since a box-shadow would be clipped away. */
+.pb-pin b, .pb-b-name { clip-path: none !important; background: transparent !important; position: relative; isolation: isolate; }
+.pb-b-name { position: absolute; }
+.pb-pin b::before, .pb-b-name::before {
+  content: ""; position: absolute; inset: 0; z-index: -1; background: var(--c);
+  clip-path: polygon(5px 0, calc(100% - 5px) 0, 100% 5px, 100% calc(100% - 5px), calc(100% - 5px) 100%, 5px 100%, 0 calc(100% - 5px), 0 5px); }
+.pb-pin b::after, .pb-b-name::after {
+  content: ""; position: absolute; inset: -3px; z-index: -1; background: rgba(5, 6, 10, .38);
+  clip-path: polygon(evenodd, 6.24px 0, calc(100% - 6.24px) 0, 100% 6.24px, 100% calc(100% - 6.24px), calc(100% - 6.24px) 100%,
+    6.24px 100%, 0 calc(100% - 6.24px), 0 6.24px, 6.24px 0,
+    8px 3px, 3px 8px, 3px calc(100% - 8px), 8px calc(100% - 3px), calc(100% - 8px) calc(100% - 3px), calc(100% - 3px) calc(100% - 8px),
+    calc(100% - 3px) 8px, calc(100% - 8px) 3px, 8px 3px); }
+
+/* 21 Oct 2026, the owner: the section titles bigger (Choose an instrument, Guides and Manuals, Our Hardware Notebook);
+   the landing title is set elsewhere and stays */
+:root { --hub-h2: calc(clamp(2.2rem, 1.15rem + 2.35vw, 3.35rem) * var(--hub-k, 1)); }
+@media (min-width: 761px) and (max-height: 800px) { :root { --hub-h2: clamp(2.05rem, 1.05rem + 2.1vw, 2.85rem); } }
+/* the tags' outline a little lighter */
+.pb-pin b::after, .pb-b-name::after { background: rgba(5, 6, 10, .24); }
+/* the instruments' subtitle a little further from its title (owner: "a little too cramped") */
+.pb-sec .sh-sub { margin-top: clamp(.6rem, 1.4svh, .95rem); }
+.pb-sec .sh .jp-hub { margin-top: clamp(1rem, 2.2svh, 1.4rem); }
+/* the instruments' heading a little lower (owner: "move everything down a little bit"); phones unchanged */
+.pb-sec > .pb:not(.pb-stack) { --pb-head-top: clamp(86px, 11.5svh, 122px); }
+@media (min-width: 761px) and (max-height: 768px) { .pb-sec > .pb:not(.pb-stack) { --pb-head-top: 104px; } }
+@media (max-height: 500px) and (orientation: landscape) { .pb-sec > .pb:not(.pb-stack) { --pb-head-top: 60px; } }
+/* no tilt, scale or lift on the guides' covers and thumbnails when hovered (owner) */
+.hg-key .hg-thumb, .hg-doc .hg-thumb, .hg-key:hover .hg-thumb, .hg-doc:hover .hg-thumb, .hg-key:focus-visible .hg-thumb,
+.hg-doc:focus-visible .hg-thumb, .hg-feat:hover .hg-feat-img img, .hg-feat-img img { transform: none !important; }
+.hg-key:hover, .hg-key:focus-visible, .hg-doc:hover, .hg-doc:focus-visible { transform: none !important; }

@@ -52,12 +52,38 @@
     const src = px < 1200 && video.dataset.srcSmall ? video.dataset.srcSmall : video.dataset.src;
     // A Video Universe film plays in iGEM's own player (js/vu-embed.js): its files answer 403
     // to any other page since 16 Oct 2026. The player answers through this <video>.
-    if (window.VUEmbed && VUEmbed.is(src)) VUEmbed.bind(video, src, { fit: "cover", loop: true });
+    // (20 Oct 2026) under the loading walk the warm-up need not rewind: the walk's lift puts the film back at START
+    const rewind = function () { return !(window.HWLoader && START > 0) || HWLoader.lifted(); };
+    if (window.VUEmbed && VUEmbed.is(src)) VUEmbed.bind(video, src, { fit: "cover", loop: true, rewind: rewind });
     else { video.src = src; video.load(); }
     // (set once the player stands in for the <video>)
     // (20 Oct 2026, the owner: "is there a way to speed up the clip") data-rate on .hero-film plays the film faster
     const RATE = parseFloat(wrap.dataset.rate) || 1;
     if (RATE !== 1) { video.defaultPlaybackRate = RATE; video.playbackRate = RATE; }
+    // (20 Oct 2026, the owner: "slow down seconds 3-4 and gradually speed up", "0.9") data-slow="from to rate ramp":
+    // between from and to (film seconds) it plays at rate, then eases back to data-rate over ramp seconds
+    const SLOW = (wrap.dataset.slow || "").split(/\s+/).map(parseFloat);
+    if (SLOW.length === 4 && SLOW.every(isFinite)) {
+      const [A, B, R, RAMP] = SLOW;
+      const want = function (t) {
+        if (t >= A && t < B) return R;
+        if (t >= B && t < B + RAMP) { const k = (t - B) / RAMP; return R + (RATE - R) * (k * k * (3 - 2 * k)); }
+        return RATE;
+      };
+      // where the film is now: the player reports every 0.5 s, so carry its last report forward
+      const now = function () {
+        const S = video.__vu;
+        if (S && S.rep) return S.rep.pos + (S.rep.playing ? (performance.now() - S.rep.at) / 1000 * S.rate : 0);
+        return video.currentTime;
+      };
+      const first = want(START);
+      if (first !== RATE) { video.defaultPlaybackRate = first; video.playbackRate = first; }
+      setInterval(function () {
+        if (video.paused === true && !video.__vu) return;
+        const r = Math.round(want(now()) * 100) / 100;
+        if (Math.abs(r - video.playbackRate) >= 0.01) video.playbackRate = r;
+      }, 200);
+    }
     // the film plays on under the loading walk; as the walk lifts it goes back to its first frame, so the reader
     // sees it begin where the owner asked (the bottle), not a second or two further on (20 Oct 2026)
     if (window.HWLoader && START > 0) HWLoader.onLift(function () {
