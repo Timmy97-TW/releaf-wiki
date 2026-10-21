@@ -367,6 +367,10 @@
 
       (sec.groups || []).forEach((g) => {
         const shown = (g.members || []).filter((m) => !m.hidden);
+        /* `leadsFirst`: leads A to Z, then the vice leads A to Z */
+        if (sec.leadsFirst) shown.sort((a, b) =>
+          (/vice/i.test(a.role || "") - /vice/i.test(b.role || "")) ||
+          a.name.localeCompare(b.name));
         if (!shown.length) return;
         count += shown.length;
         if (g.title) s.appendChild(el("h3", "group__title", g.title));
@@ -484,7 +488,7 @@
     tasks.appendChild(task(true, "Task owner",
       "Main contributor to the task, showed ownership beyond helping."));
     tasks.appendChild(task(false, "Task member",
-      "Contributed to helping."));
+      "Contributed to helping, made a difference."));
     if (SHOW_TASKS) wrap.appendChild(tasks);
 
     /* Every task on the board, in its own colour. The two pills above explain

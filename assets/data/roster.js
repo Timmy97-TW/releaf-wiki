@@ -127,7 +127,8 @@ const SECTIONS = [
   {
     id: "student-leaders",
     title: "Student Leaders",
-    note: "",
+    leadsFirst: true,
+    note: "Each subteam has a lead, and some have a vice lead beside them. They planned the week's work, kept the lab, the model and the outreach moving at the same time, and were the first people the rest of us asked when something went wrong.",
     groups: [
     { title: "", members: [
       {
@@ -220,7 +221,7 @@ const SECTIONS = [
   {
     id: "student-members",
     title: "Student Members",
-    note: "",
+    note: "Most of the work on ReLEAF was done here: the cloning runs, the plant trials, the interviews, the lesson plans and the code. Each card lists the tasks a member owned and the ones they helped on.",
     groups: [
     { title: "", members: [
       {
