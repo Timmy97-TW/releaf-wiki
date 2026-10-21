@@ -3,7 +3,7 @@
 
    TWO JOBS.
 
-   1. THE TABLE. One table of thirty-three rows in seven groups, and three
+   1. THE TABLE. One table of thirty-five rows in seven groups, and three
       ways of cutting it down: the search field and the chips in the left rail,
       and four sortable columns. All of it is progressive. The HTML ships every
       row written out, in module order, with the function sentence in a row of
