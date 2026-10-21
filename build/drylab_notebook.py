@@ -180,6 +180,49 @@ KW = {
 }
 
 
+# ---------------------------------------------------------- board summaries
+# 21 October: the board's one-line summaries are read from the August board
+# in git, so a cut cannot be made at the source. These replace a summary on
+# the way out: the same facts with the editorial tail off, and the "rather
+# than" shape down from sixteen to four across the board.
+SUMMARY_FIX = {
+ ('chamber',0): "Opened on the first day the whole dry lab met. The question was whether a homemade controlled-environment chamber could match a commercial one closely enough to run stress experiments in.",
+ ('hydro',0): "The second pipeline to open on 28 March. Reproducible plant stress data needs a hydroponic system where nutrient, salinity and osmotic conditions can be controlled.",
+ ('circuit',1): "Opened on the premise that Cello could compile a truth table into a working genetic circuit instead of designing one by hand.",
+ ('fluor',1): "If the project claims engineered bacteria protect plants under stress, Fv/Fm is the standard way plant physiologists quantify that, and a commercial meter is out of reach.",
+ ('circuit',2): "Felix got Cello running after a long install fight, including patching the authors' own code. The tool ran; what we needed was not in it, and the pipeline closed on that.",
+ ('reactor',3): "The pipeline opened with a lecture, not a build. Dr. Pak laid out the standard reactor families and told the team not to try to be revolutionary.",
+ ('hydro',4): "There is no agreed baseline protocol for stress experiments in controlled hydroponic environments, which is why results are hard to compare between labs. Hydroponics became a deliverable of its own.",
+ ('math',4): "The 22 April meeting settled what the model is a model of. Everything after this elaborates that chain.",
+ ('math',5): "A steady-state Hill-function model of target output against stress, the first thing the team ran end to end for numbers.",
+ ('math',6): "The model was pushed hard enough to expose where it holds and where it does not, residual analysis included.",
+ ('reactor',7): "The bioreactor was too big for one person and had produced two separate instrument problems. Both were promoted to their own pipelines while the bioreactor continued.",
+ ('fluor',7): "Closed on capacity, not feasibility. With three instruments already in flight, a fourth would have weakened all of them.",
+ ('hydro',9): "Consistent plant photographs need a fixed camera geometry, so the dry lab built the rig instead of buying one. It is what makes the phenotype scoring comparable between trials.",
+ ('lpa',9): "The build carried on past step 15 through the end of May, with advisor Neo on the bench beside the students.",
+ ('photo',11): "The first build was documented as a failure with named causes, which is what iteration 2 was built from.",
+ ('lpa',11): "The optogenetics literature specifies photon flux; a cheap light meter reports illuminance. They are not interchangeable.",
+ ('reactor',11): "The direct response to the flat lumen curve: the design changed, not the interpretation.",
+ ('wiki',13): "Started early and small: learn the platform before there is anything at stake.",
+ ('reactor',13): "Fabrication week. Parts were reprinted, not patched.",
+ ('lpa',13): "Uniformity across wells measured and corrected, not assumed.",
+ ('codon',13): "The team mapped the field first instead of picking a tool by popularity.",
+ ('gis',14): "The team was asked for two complete narratives first, then to choose between them.",
+ ('codon',14): "LinearFold was rejected on a technical argument: our sequences are short, so its beam pruning costs accuracy without buying speed.",
+ ('math',16): "Framed as a validation instrument, not a prediction: when WetLab data arrives it goes in and the model either matches or does not.",
+ ('gis',16): "The first spatial product: a national stress surface built from public forecast data.",
+ ('photo',16): "The instrument went from producing numbers to producing numbers that can be checked against a reference.",
+ ('reactor',17): "Documentation became a deliverable in its own right.",
+ ('photo',17): "Positioning the instrument in the field instead of presenting it alone.",
+ ('protect',17): "The team rebuilt its protocol from the papers written by HADDOCK's own author instead of trusting the tool's defaults, then assigned people to own parts of it.",
+ ('wiki',18): "A planning decision that decided whether the notebook would be finished at all.",
+ ('lpa',18): "Bulbs that had failed since assembly were tracked down and fixed.",
+ ('protect',18): "Verification week, and a compute budget that would not stretch to a molecular dynamics run.",
+ ('photo',20): "The instrument came off the breadboard. A soldered board is the point at which a prototype stops changing between runs.",
+ ('photo',21): "The four-fold error from 19 July was chased with a titanium dioxide standard, picked because it scatters light the way a bacterial suspension does where a dye would absorb it.",
+}
+
+
 def kw_score(title, lane):
     t = title.lower()
     return sum(len(k) for k in KW[lane] if k in t)
@@ -279,7 +322,8 @@ def read_board():
     rx = re.compile(r"\{p:'(\w+)',\s*w:(\d+),\s*k:'(\w+)',\s*h:(\d),\s*t:'((?:[^'\\]|\\.)*)',\s*s:'((?:[^'\\]|\\.)*)'")
     entries = {}
     for p, w, k, h, t, s in rx.findall(body):
-        entries[(p, int(w))] = {'k': k, 'h': int(h), 't': undash(js_str(t)), 's': undash(js_str(s))}
+        sm = SUMMARY_FIX.get((p, int(w)), undash(js_str(s)))
+        entries[(p, int(w))] = {'k': k, 'h': int(h), 't': undash(js_str(t)), 's': sm}
     hsrc = src[src.index('const HANDOFFS'):src.index('const BRANCHES')]
     handoffs = []
     for blk in re.findall(r"\{p:'(\w+)',\s*w:(\d+),\s*t:'((?:[^'\\]|\\.)*)',(.*?back:'(?:[^'\\]|\\.)*')\}", hsrc, re.S):
@@ -363,19 +407,19 @@ NODES = {
 # Handoffs after Felix's board, in his shape.
 EXTRA_HANDOFFS = [
     dict(p='reactor', w=22, t='the whole rig, with cells in it',
-         d='The first time every subsystem ran at once on engineered cells: the reactor in its case, the photometer in line, pressure logged, in the 37 °C incubator.',
+         d='Every subsystem running at once on engineered cells for the first time: the reactor in its case, the photometer in line, pressure logged, in the 37 °C incubator.',
          sent='The instrumented reactor with the constitutive Csn:ACCD strain in the loop.',
          did=['Ran it from 2 to 4 September in the 37 °C incubator',
               'Sampled lumen lysate, lumen medium and shell medium at nine time points to 44 h',
               'Ran a Western blot on the samples'],
          back='OD600 rose from 0.83 to 2.45 over 53 h 22 min and 6,387 logged samples, with transmembrane pressure flat at -0.0005 bar after 1,132 L. The team\'s own documents read the 44 h blot three ways (not detectable, low but present, a faint band near 42 kDa), so the run counts as proof that the rig works with cells in it until the blot is read once, properly.'),
     dict(p='lpa', w=25, t='DiOPAL, for a light-control run',
-         d='The light plate apparatus went to the wet lab for its first culture run under defined light.',
+         d='The light plate went to the wet lab for its first culture run under defined light.',
          sent='DiOPAL, six light conditions with four matched LEDs each.',
          did=['Pipetted the cultures under a safelight on 19 September',
               'Ran them on DiOPAL on a shaker in the incubator, lit green and red',
               'Read OD600 on the plate reader'],
-         back='Growth came back: a logistic fit gives r = 0.299 per hour and K = 1.005 with 1.9 % error, the same growth rate in all six light arms. It was a growth readout: nothing measured the circuit\'s output, which is the next run.'),
+         back='A logistic fit gives r = 0.299 per hour and K = 1.005 with 1.9 % error, the same growth rate in all six light arms. Nothing in the run measured the circuit\'s output, which is the next run.'),
 ]
 # September photographs: lane, star, team, kind, and m = 1 for the frames
 # that go into the DRY LAB mosaic although another subteam took them.
