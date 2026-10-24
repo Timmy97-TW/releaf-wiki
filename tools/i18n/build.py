@@ -75,21 +75,27 @@ def key(s: str) -> str:
 
 
 def ui() -> tuple[dict, dict]:
-    """The shared strings: nav, footer, and the labels JavaScript writes."""
-    f = SRC / "_ui.json"
-    if not f.exists():
-        return {}, {}
-    d = json.loads(f.read_text(encoding="utf-8"))
+    """The shared strings: nav, footer, and the copy that lives in JavaScript.
+
+    Every _ui*.json is merged, so a component whose text sits in a JS data
+    file (the bioreactor scroll scene, the notebook's tag list, the roster)
+    can have its own file and be translated without fighting over one.
+    """
     b, a = {}, {}
+    for f in sorted(SRC.glob("_ui*.json")):
+        _merge_ui(json.loads(f.read_text(encoding="utf-8")), b, a)
+    return b, a
+
+
+def _merge_ui(d, b, a):
     for e in d.get("blocks", []):
         if e.get("zh"):
-            b[key(norm(e["en"])) + ":0"] = resolve(e["zh"])
+            b.setdefault(key(norm(e["en"])) + ":0", resolve(e["zh"]))
     for e in d.get("attrs", []):
         if e.get("zh"):
-            a[e["attr"] + "|" + key(norm(e["en"])) + ":0"] = e["zh"]
+            a.setdefault(e["attr"] + "|" + key(norm(e["en"])) + ":0", e["zh"])
             if e["attr"] in MIRROR:
                 b.setdefault(key(norm(e["en"])) + ":0", e["zh"])
-    return b, a
 
 
 def main(argv):
