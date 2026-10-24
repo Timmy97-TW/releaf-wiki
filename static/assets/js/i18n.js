@@ -1,0 +1,314 @@
+/* =============================================================================
+   ReLEAF: English / 中文
+   -----------------------------------------------------------------------------
+   The pages are written in English. A Chinese reading of each one lives beside
+   it in static/i18n/<page>.zh.json, and this file swaps one for the other in
+   place: no second copy of the page, no reload, no change to the English
+   markup beyond the two tags that load this script and its stylesheet.
+
+   HOW AN ENTRY FINDS ITS ELEMENT. Every entry is keyed by a hash of the
+   NORMALISED TEXT the element holds, not by an id and not by its markup. The
+   walk below is the same walk tools/i18n/extract.py makes over the source, in
+   the same order, so the nth element holding a given string here is the nth
+   one there. Nothing is written into the pages, a paragraph that moves keeps
+   its translation, and an untranslated or changed paragraph simply stays in
+   English.
+
+   WHAT IS SWAPPED. The innerHTML of each prose unit (so a translation can
+   carry its own <b>, <a> or <sup>), loose text nodes, the alt / title /
+   aria-label attributes, <title>, and the meta description. The original
+   English is kept in memory, so switching back is exact.
+
+   The reader's choice is remembered in localStorage and applies across pages.
+   Everything here is local: one fetch of one JSON file under static/.
+   ========================================================================== */
+
+(function () {
+  "use strict";
+
+  var STORE = "releaf-lang";
+  var LANGS = { en: "English", zh: "中文" };
+
+  /* ---- the shared normalisation (tools/i18n/extract.py: norm) ------------- */
+  var SPACE = /[\s     ]+/g;
+  function norm(s) { return String(s).replace(SPACE, " ").trim(); }
+
+  /* FNV-1a, 64-bit, hex. The same sixteen characters Python produces. */
+  var FNV_PRIME = BigInt("0x100000001b3");
+  var FNV_MASK = BigInt("0xffffffffffffffff");
+  function hash(s) {
+    var h = BigInt("0xcbf29ce484222325");
+    var bytes = new TextEncoder().encode(s);
+    for (var i = 0; i < bytes.length; i++) {
+      h = (h ^ BigInt(bytes[i])) * FNV_PRIME & FNV_MASK;
+    }
+    return h.toString(16).padStart(16, "0");
+  }
+
+  /* ---- the walk (tools/i18n/extract.py: collect) -------------------------- */
+  var SKIP = { SCRIPT: 1, STYLE: 1, SVG: 1, NOSCRIPT: 1, TEMPLATE: 1,
+               CANVAS: 1, IFRAME: 1, CODE: 1, PRE: 1, MATH: 1, SELECT: 1,
+               HEAD: 1, TITLE: 1 };
+
+  var CAND = { P: 1, LI: 1, H1: 1, H2: 1, H3: 1, H4: 1, H5: 1, H6: 1,
+               FIGCAPTION: 1, CAPTION: 1, TH: 1, TD: 1, DT: 1, DD: 1,
+               BLOCKQUOTE: 1, SUMMARY: 1, BUTTON: 1, LABEL: 1, LEGEND: 1,
+               OPTION: 1, A: 1, SPAN: 1, STRONG: 1, EM: 1, B: 1, I: 1,
+               SMALL: 1, ABBR: 1, TIME: 1, CITE: 1, Q: 1, DIV: 1,
+               ADDRESS: 1, OUTPUT: 1, MARK: 1 };
+
+  /* Block-level for our purpose: CONTAINER plus every prose candidate that is
+     not inline. This is exactly BLOCK_LEVEL in tools/i18n/extract.py, and the
+     two must stay in step or a key here will not match a key there. */
+  var BLOCKY = { HTML: 1, BODY: 1, HEAD: 1, DIV: 1, SECTION: 1, ARTICLE: 1,
+                 MAIN: 1, HEADER: 1, FOOTER: 1, ASIDE: 1, NAV: 1, UL: 1,
+                 OL: 1, DL: 1, TABLE: 1, THEAD: 1, TBODY: 1, TFOOT: 1,
+                 TR: 1, FIGURE: 1, DETAILS: 1, FORM: 1, FIELDSET: 1,
+                 PICTURE: 1, VIDEO: 1, AUDIO: 1, MAP: 1, COLGROUP: 1,
+                 P: 1, LI: 1, H1: 1, H2: 1, H3: 1, H4: 1, H5: 1, H6: 1,
+                 FIGCAPTION: 1, CAPTION: 1, TH: 1, TD: 1, DT: 1, DD: 1,
+                 BLOCKQUOTE: 1, SUMMARY: 1, BUTTON: 1, LABEL: 1, LEGEND: 1,
+                 OPTION: 1, ADDRESS: 1 };
+
+  var ATTRS = ["alt", "title", "aria-label", "aria-description",
+               "placeholder", "aria-roledescription"];
+
+  /* Regions JavaScript draws after the page is parsed: the nav card, the skip
+     link, the contents rail and the lightbox. None of them exists in the
+     source the extractor read, so counting their strings would shift every
+     later occurrence index out of step. They are walked separately below and
+     matched on the hash alone. */
+  var DYN = "#site-nav, .sitenav-skip, .toc__list, .lightbox";
+
+  var HAS_LETTER = /[A-Za-z]/;
+  var JINJA = /\{[{%]/;
+  var URLISH = /^(?:https?:\/\/|\/|\.\/|\.\.\/|[\w./-]+\.(?:html|webp|png|jpe?g|svg|json|csv|css|js|pdf|mp4|glb|woff2?))$/;
+  function prose(t) {
+    return t.length > 1 && HAS_LETTER.test(t) && !JINJA.test(t) && !URLISH.test(t);
+  }
+
+  /* An element is one unit of prose when nothing block-level sits inside it:
+     the same test as has_block_kid() on the Python side. */
+  function blockInside(el) {
+    var kids = el.children;
+    for (var i = 0; i < kids.length; i++) {
+      var k = kids[i], t = k.tagName;
+      if (SKIP[t] || BLOCKY[t]) return true;
+      if (blockInside(k)) return true;
+    }
+    return false;
+  }
+
+  /* Collect the units in document order. Returns a flat list; `kind` says how
+     to put a translation back. */
+  function units(root, honourDyn, dynOut) {
+    var out = [];
+    (function walk(node) {
+      var kids = node.childNodes;
+      for (var i = 0; i < kids.length; i++) {
+        var k = kids[i];
+        if (k.nodeType === 3) {                       /* text node */
+          var t = norm(k.nodeValue);
+          if (prose(t)) out.push({ kind: "text", node: k, text: t });
+          continue;
+        }
+        if (k.nodeType !== 1) continue;               /* comment, etc. */
+        if (SKIP[k.tagName]) continue;
+        if (honourDyn && k.matches && k.matches(DYN)) {
+          if (dynOut) dynOut.push(k);
+          continue;
+        }
+        for (var a = 0; a < ATTRS.length; a++) {
+          var name = ATTRS[a];
+          if (k.hasAttribute(name)) {
+            var v = norm(k.getAttribute(name));
+            if (prose(v)) out.push({ kind: "attr", el: k, attr: name, text: v });
+          }
+        }
+        if (CAND[k.tagName] && !blockInside(k)) {
+          var bt = norm(k.textContent);
+          if (prose(bt)) { out.push({ kind: "block", el: k, text: bt }); continue; }
+        }
+        walk(k);
+      }
+    })(root);
+    return out;
+  }
+
+  /* ---- the dictionary ----------------------------------------------------- */
+  /* static/i18n/<page>.zh.json is written by tools/i18n/build.py:
+     { "v": 1, "b": { "<hash>:<n>": "<zh html>" },
+                "a": { "<attr>|<hash>:<n>": "<zh text>" },
+                "t": "<zh title>", "d": "<zh meta description>" }        */
+
+  var dict = null;       /* null until the fetch lands */
+  var plan = null;       /* the units, with their English kept */
+  var dynPlan = [];      /* the same for the JS-drawn regions */
+  var lang = "en";
+  var btn = null;
+  var enTitle = document.title;
+
+  function base() {
+    /* this script is loaded as "static/assets/js/i18n.js" from the page, at
+       whatever depth the page sits: read its own src rather than guessing. */
+    var me = document.currentScript;
+    if (!me) {
+      var all = document.getElementsByTagName("script");
+      for (var i = all.length - 1; i >= 0; i--) {
+        if ((all[i].src || "").indexOf("i18n.js") > -1) { me = all[i]; break; }
+      }
+    }
+    var src = (me && me.getAttribute("src")) || "";
+    return { dir: src.replace(/assets\/js\/i18n\.js.*$/, ""),
+             page: (me && me.dataset.page) || "home" };
+  }
+
+  function dictionary(cb) {
+    if (dict) { cb(dict); return; }
+    var b = base();
+    fetch(b.dir + "i18n/" + b.page + ".zh.json", { cache: "default" })
+      .then(function (r) { return r.ok ? r.json() : null; })
+      .then(function (j) { dict = j || { b: {}, a: {} }; cb(dict); })
+      .catch(function () { dict = { b: {}, a: {} }; cb(dict); });
+  }
+
+  /* ---- applying ----------------------------------------------------------- */
+
+  function index(list) {
+    var seen = {}, aseen = {};
+    for (var i = 0; i < list.length; i++) {
+      var u = list[i], k = hash(u.text);
+      if (u.kind === "attr") {
+        var ai = u.attr + "|" + k;
+        u.id = ai + ":" + (aseen[ai] = (aseen[ai] === undefined ? 0 : aseen[ai] + 1));
+        u.en = u.el.getAttribute(u.attr);
+      } else {
+        u.id = k + ":" + (seen[k] = (seen[k] === undefined ? 0 : seen[k] + 1));
+        u.en = u.kind === "block" ? u.el.innerHTML : u.node.nodeValue;
+      }
+      u.key = k;
+    }
+    return list;
+  }
+
+  function build() {
+    var dynRoots = [];
+    var list = index(units(document.body, true, dynRoots));
+    dynPlan = [];
+    for (var i = 0; i < dynRoots.length; i++) {
+      dynPlan = dynPlan.concat(index(units(dynRoots[i], false, null)));
+    }
+    return list;
+  }
+
+  function put(u, zh) {
+    if (u.kind === "block") u.el.innerHTML = zh;
+    else if (u.kind === "text") u.node.nodeValue = zh;
+    else u.el.setAttribute(u.attr, zh);
+  }
+
+  function toZh() {
+    if (!plan) plan = build();
+    var b = dict.b || {}, a = dict.a || {};
+    for (var i = 0; i < plan.length; i++) {
+      var u = plan[i];
+      var zh = u.kind === "attr" ? a[u.id] : b[u.id];
+      /* a string that moved inside the page still matches on its hash alone */
+      if (zh === undefined && u.kind !== "attr") zh = b[u.key + ":0"];
+      if (zh === undefined && u.kind === "attr") zh = a[u.attr + "|" + u.key + ":0"];
+      if (zh) put(u, zh);
+    }
+    /* the JS-drawn regions: nav labels, the contents rail, the skip link.
+       A string there is a copy of one in the page or a label from the shared
+       dictionary, so the first translation of that text is the right one. */
+    for (var j = 0; j < dynPlan.length; j++) {
+      var d = dynPlan[j];
+      var dz = d.kind === "attr" ? (a[d.attr + "|" + d.key + ":0"] || a[d.id])
+                                 : (b[d.key + ":0"] || b[d.id]);
+      if (dz) put(d, dz);
+    }
+    if (dict.t) document.title = dict.t;
+    if (dict.d) {
+      var m = document.querySelector('meta[name="description"]');
+      if (m) { m.dataset.en = m.content; m.content = dict.d; }
+    }
+    document.documentElement.lang = "zh-Hant";
+    document.documentElement.setAttribute("data-lang", "zh");
+  }
+
+  function toEn() {
+    if (plan) {
+      for (var i = 0; i < plan.length; i++) put(plan[i], plan[i].en);
+      for (var j = 0; j < dynPlan.length; j++) put(dynPlan[j], dynPlan[j].en);
+    }
+    document.title = enTitle;
+    var m = document.querySelector('meta[name="description"]');
+    if (m && m.dataset.en) { m.content = m.dataset.en; delete m.dataset.en; }
+    document.documentElement.lang = "en";
+    document.documentElement.setAttribute("data-lang", "en");
+  }
+
+  function label() {
+    if (!btn) return;
+    var other = lang === "zh" ? "en" : "zh";
+    btn.textContent = LANGS[other];
+    btn.setAttribute("lang", other === "zh" ? "zh-Hant" : "en");
+    btn.setAttribute("aria-label", other === "zh"
+      ? "切換為中文 · Read this page in Chinese"
+      : "Read this page in English · 切換為英文");
+    btn.setAttribute("aria-pressed", lang === "zh" ? "true" : "false");
+  }
+
+  function set(next, remember) {
+    if (next === "zh") {
+      dictionary(function () { lang = "zh"; toZh(); label(); });
+    } else {
+      lang = "en"; toEn(); label();
+    }
+    if (remember) {
+      try { localStorage.setItem(STORE, next); } catch (e) {}
+    }
+  }
+
+  /* ---- the button --------------------------------------------------------- */
+
+  function mount() {
+    var host = document.querySelector("#site-nav .sitenav__inner");
+    if (!host) return false;
+    if (host.querySelector(".sitenav__lang")) return true;
+    btn = document.createElement("button");
+    btn.type = "button";
+    btn.className = "sitenav__lang";
+    var burger = host.querySelector(".sitenav__burger");
+    host.insertBefore(btn, burger || null);
+    btn.addEventListener("click", function () {
+      set(lang === "zh" ? "en" : "zh", true);
+    });
+    label();
+    return true;
+  }
+
+  function start() {
+    var saved = "en";
+    try { saved = localStorage.getItem(STORE) || "en"; } catch (e) {}
+    /* The nav draws itself on DOMContentLoaded too, and nav.js is loaded
+       first, so its listener has already run by the time this one does. If a
+       page carries no nav, the toggle has nowhere to go but the swap still
+       works for anything that asks for it. */
+    if (!mount()) {
+      var tries = 0;
+      var t = setInterval(function () {
+        if (mount() || ++tries > 20) clearInterval(t);
+      }, 50);
+    }
+    if (saved === "zh") set("zh", false);
+  }
+
+  if (document.readyState === "loading") {
+    document.addEventListener("DOMContentLoaded", start);
+  } else {
+    start();
+  }
+
+  window.ReleafI18n = { set: set, get: function () { return lang; } };
+})();
