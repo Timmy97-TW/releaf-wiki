@@ -281,6 +281,7 @@
   var plan = null;       /* the units, with their English kept */
   var dynPlan = [];      /* the same for the JS-drawn regions */
   var subPlan = null;    /* units found inside an element nothing matched */
+  var svgPlan = [];      /* the accessible names of the drawings */
   var lang = "en";
   var btn = null;
   var enTitle = document.title;
@@ -335,6 +336,19 @@
     for (var i = 0; i < dynRoots.length; i++) {
       dynPlan = dynPlan.concat(index(units(dynRoots[i], false, null, true)));
     }
+    /* A drawing's <title> and <desc> are what a screen reader reads out, and
+       they are the one piece of prose the extractor cannot see: TITLE is in
+       its SKIP set, because of the one in the document head. Collect them
+       here, in a pass of their own, and match them on the hash alone -- doing
+       it in the main walk would count strings the source never offered and
+       put every later occurrence index out of step. */
+    svgPlan = [];
+    var names = document.querySelectorAll("svg title, svg desc");
+    for (i = 0; i < names.length; i++) {
+      var t = norm(names[i].textContent);
+      if (prose(t)) svgPlan.push({ kind: "block", el: names[i], text: t });
+    }
+    svgPlan = index(svgPlan);
     return list;
   }
 
@@ -454,6 +468,10 @@
                                  : (b[d.key + ":0"] || b[d.id]);
       if (dz) put(d, dz);
     }
+    for (var n = 0; n < svgPlan.length; n++) {
+      var sv = svgPlan[n], svz = b[sv.key + ":0"] || b[sv.id];
+      if (svz) put(sv, svz);
+    }
     citations(rewritten);
     if (dict.t) document.title = dict.t;
     if (dict.d) {
@@ -472,6 +490,7 @@
       if (subPlan) {
         for (var k = 0; k < subPlan.length; k++) put(subPlan[k], subPlan[k].en);
       }
+      for (var n = 0; n < svgPlan.length; n++) put(svgPlan[n], svgPlan[n].en);
       citations(rewritten);
     }
     document.title = enTitle;

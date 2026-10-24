@@ -632,6 +632,11 @@
     $$("[data-cycles]").forEach(cycles);
     buildToc();
 
+    /* The rail is the record's own headings, copied out of the page. i18n.js
+       rewrites those headings afterwards, so the rail would keep the language
+       the page was built in: read them again once they have changed. */
+    document.addEventListener("releaf:lang", function () { buildToc(); });
+
     /* A page opened straight at #cycle2 lands twice. The stage above the
        record is a sticky scene inside a tall scroll track whose height is
        settled late -- by the hero scripts, by the fonts, by the figures
