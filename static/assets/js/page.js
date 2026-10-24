@@ -378,10 +378,21 @@
         fitCaption();
         $(".lightbox__close", box).focus();
     };
+    /* The name this control answers to is built from the figure's own alt,
+       which i18n.js replaces after we have run: build it again when the page
+       changes language, or the label keeps the English description. */
+    const zoomLabel = (img) =>
+      (document.documentElement.getAttribute("data-lang") === "zh"
+        ? "\u653e\u5927\u5716" : "Enlarge figure") +
+      (img.alt ? (document.documentElement.getAttribute("data-lang") === "zh"
+        ? "\uff1a" : ": ") + img.alt : "");
+    document.addEventListener("releaf:lang", () => {
+      imgs.forEach((img) => img.setAttribute("aria-label", zoomLabel(img)));
+    });
     imgs.forEach((img) => {
       img.tabIndex = 0;
       img.setAttribute("role", "button");
-      img.setAttribute("aria-label", "Enlarge figure" + (img.alt ? ": " + img.alt : ""));
+      img.setAttribute("aria-label", zoomLabel(img));
       img.addEventListener("click", () => open(img));
       img.addEventListener("keydown", (e) => {
         if (e.key === "Enter" || e.key === " ") { e.preventDefault(); open(img); }

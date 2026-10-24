@@ -280,6 +280,7 @@
   var dict = null;       /* null until the fetch lands */
   var plan = null;       /* the units, with their English kept */
   var dynPlan = [];      /* the same for the JS-drawn regions */
+  var subPlan = null;    /* units found inside an element nothing matched */
   var lang = "en";
   var btn = null;
   var enTitle = document.title;
@@ -413,13 +414,36 @@
   function toZh() {
     if (!plan) plan = build();
     var b = dict.b || {}, a = dict.a || {};
+    var missed = [];
     for (var i = 0; i < plan.length; i++) {
       var u = plan[i];
       var zh = u.kind === "attr" ? a[u.id] : b[u.id];
       /* a string that moved inside the page still matches on its hash alone */
       if (zh === undefined && u.kind !== "attr") zh = b[u.key + ":0"];
       if (zh === undefined && u.kind === "attr") zh = a[u.attr + "|" + u.key + ":0"];
-      if (zh) put(u, zh);
+      if (zh) { put(u, zh); continue; }
+      /* Nothing answers to this element's text, and it has elements inside:
+         very often a script has glued two strings into one. The hero label
+         holds "Next stop" and "Output" in two spans, a caption chip holds a
+         number and a role, a judging link holds a page name and a title --
+         none of which the extractor ever saw as one string, because none of
+         them exists in the source. Go in and match what IS in there. This is
+         the same treatment the JS-drawn regions get, and it is safe here
+         precisely because the element as a whole matched nothing, so nothing
+         inside it has been written to. */
+      if (u.kind === "block" && u.el.children.length) missed.push(u.el);
+    }
+    if (subPlan === null) {
+      subPlan = [];
+      for (i = 0; i < missed.length; i++) {
+        subPlan = subPlan.concat(index(units(missed[i], false, null, true)));
+      }
+    }
+    for (i = 0; i < subPlan.length; i++) {
+      var sp = subPlan[i];
+      var sz = sp.kind === "attr" ? (a[sp.attr + "|" + sp.key + ":0"] || a[sp.id])
+                                  : (b[sp.key + ":0"] || b[sp.id]);
+      if (sz) put(sp, sz);
     }
     /* the JS-drawn regions: nav labels, the contents rail, the skip link.
        A string there is a copy of one in the page or a label from the shared
@@ -445,6 +469,9 @@
     if (plan) {
       for (var i = 0; i < plan.length; i++) put(plan[i], plan[i].en);
       for (var j = 0; j < dynPlan.length; j++) put(dynPlan[j], dynPlan[j].en);
+      if (subPlan) {
+        for (var k = 0; k < subPlan.length; k++) put(subPlan[k], subPlan[k].en);
+      }
       citations(rewritten);
     }
     document.title = enTitle;

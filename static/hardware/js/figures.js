@@ -100,12 +100,25 @@
     });
   }
 
+  /* Built from the figure's alt, which i18n.js replaces after we have run:
+     build it again on a language change. */
+  function zoomLabel(img) {
+    var zh = document.documentElement.getAttribute("data-lang") === "zh";
+    return (zh ? "\u653e\u5927\uff1a" : "Enlarge: ")
+      + (img.alt || (zh ? "\u5716" : "figure"));
+  }
+  document.addEventListener("releaf:lang", function () {
+    shots.forEach(function (img) {
+      img.parentElement.setAttribute("aria-label", zoomLabel(img));
+    });
+  });
+
   shots.forEach(function (img) {
     const wrap = img.parentElement;
     wrap.classList.add("zoomable");
     wrap.setAttribute("role", "button");
     wrap.setAttribute("tabindex", "0");
-    wrap.setAttribute("aria-label", "Enlarge: " + (img.alt || "figure"));
+    wrap.setAttribute("aria-label", zoomLabel(img));
     wrap.addEventListener("click", function () { open(img); });
     wrap.addEventListener("keydown", function (e) {
       if (e.key === "Enter" || e.key === " ") { e.preventDefault(); open(img); }

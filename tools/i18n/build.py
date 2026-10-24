@@ -22,6 +22,7 @@ page's runtime file, so one fetch covers the whole page.
 
 from __future__ import annotations
 
+import html
 import json
 import re
 import sys
@@ -66,6 +67,18 @@ def resolve(html: str) -> str:
     return URLFOR_STATIC.sub(lambda m: "static/" + m.group(1), html)
 
 
+# A string in a _ui*.json came out of a JavaScript literal, and the script
+# puts it into the page as MARKUP: the browser then holds its text with the
+# tags gone and the entities decoded, which is what i18n.js hashes. Key such a
+# string on that text as well as on the literal itself, or a caption carrying
+# an <i> or a &nbsp; can never be found.
+TAG = re.compile(r"<[^>]+>")
+
+
+def as_text(s: str) -> str:
+    return norm(html.unescape(TAG.sub("", s)))
+
+
 def key(s: str) -> str:
     h = 0xCBF29CE484222325
     for b in s.encode("utf-8"):
@@ -90,12 +103,14 @@ def ui() -> tuple[dict, dict]:
 def _merge_ui(d, b, a):
     for e in d.get("blocks", []):
         if e.get("zh"):
-            b.setdefault(key(norm(e["en"])) + ":0", resolve(e["zh"]))
+            for t in {norm(e["en"]), as_text(e["en"])}:
+                b.setdefault(key(t) + ":0", resolve(e["zh"]))
     for e in d.get("attrs", []):
         if e.get("zh"):
-            a.setdefault(e["attr"] + "|" + key(norm(e["en"])) + ":0", e["zh"])
-            if e["attr"] in MIRROR:
-                b.setdefault(key(norm(e["en"])) + ":0", e["zh"])
+            for t in {norm(e["en"]), as_text(e["en"])}:
+                a.setdefault(e["attr"] + "|" + key(t) + ":0", e["zh"])
+                if e["attr"] in MIRROR:
+                    b.setdefault(key(t) + ":0", e["zh"])
 
 
 def main(argv):
