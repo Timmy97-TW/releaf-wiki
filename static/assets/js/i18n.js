@@ -571,5 +571,26 @@
     start();
   }
 
-  window.ReleafI18n = { set: set, get: function () { return lang; } };
+  /* For a script that builds a string of its own out of pieces the page
+     already holds -- a photograph's name plus its date, a label with a count
+     in it. Ask for each piece by its English and put the sentence together;
+     off the English page, or for a string no dictionary knows, you get back
+     what you passed in. Pair it with the releaf:lang event: that is when to
+     write the sentence again. */
+  function t(en) {
+    if (lang !== "zh" || !dict) return en;
+    var k = norm(en);
+    var b = dict.b || {}, a = dict.a || {};
+    var z = b[hash(k) + ":0"];
+    if (z === undefined) {
+      /* some of these only ever existed as an attribute */
+      for (var i = 0; i < ATTRS.length; i++) {
+        z = a[ATTRS[i] + "|" + hash(k) + ":0"];
+        if (z !== undefined) break;
+      }
+    }
+    return z === undefined ? en : z;
+  }
+
+  window.ReleafI18n = { set: set, get: function () { return lang; }, t: t };
 })();

@@ -12,6 +12,13 @@
    from the written record at the foot of this page). The written record is
    plain markup and reads without any of this.
    ========================================================================== */
+
+/* A label this file builds out of pieces -- a caption with its date, a
+   caption behind a verb -- has no entry of its own to look up, because no
+   such string exists in the page. Ask i18n.js for the caption, which it does
+   know, and join the rest in the language being read. */
+const isZh = () => document.documentElement.getAttribute('data-lang') === 'zh';
+const capOf = (c) => (window.ReleafI18n ? window.ReleafI18n.t(c) : c);
 (function () {
 "use strict";
 const NB = window.NB;
@@ -922,7 +929,7 @@ function buildGallery(){
       const who = p ? p.short : (ph.hf!==null&&ph.hf!==undefined ? 'Wet Lab' : (ph.team==='Wetlab' ? 'Wet Lab' : ph.team==='HP' ? 'Human Practices' : 'Team'));
       const ct  = p ? p.ct : (who==='Wet Lab' ? 'var(--wet)' : 'var(--ink-3)');
       h+=`<figure class="galitem" style="--ct:${ct}">
-        <button type="button" class="shot-btn${ph.k==='figure'?' fig':''}" data-pix="${ph.i}" aria-label="Enlarge: ${attr(ph.c)}">
+        <button type="button" class="shot-btn${ph.k==='figure'?' fig':''}" data-pix="${ph.i}" aria-label="${attr((isZh()?'放大：':'Enlarge: ')+capOf(ph.c))}">
           <img src="${ph.t}" alt="${attr(ph.c)}" loading="lazy">${ph.s?STARSVG:''}</button>
         <figcaption class="meta"><span class="cap">${esc(ph.c)}</span>
           <span class="sub"><span class="pd">${esc(who)}</span><span>${esc(ph.d)}</span>${ph.s?'<span>team pick</span>':''}</span></figcaption></figure>`;
@@ -1182,7 +1189,7 @@ const reduce=()=>matchMedia('(prefers-reduced-motion: reduce)').matches;
       const ph=dealt[i];
       const fx=((jitter('fx',i)-.5)*260).toFixed(0)+'px', fy=((jitter('fy',i)-.5)*160).toFixed(0)+'px', fr=((jitter('fr',i)-.5)*50).toFixed(0)+'deg';
       const d=Math.round(cl.c*28+jitter('d',i)*160);
-      return `<button type="button" class="tile" data-t="${i}" style="--r:${cl.r+1};--c:${cl.c+1};--fx:${fx};--fy:${fy};--fr:${fr};--d:${d}ms" aria-label="${attr(ph.c)}, ${attr(ph.d)}"><img src="${ph.t}" alt="" decoding="async"></button>`;
+      return `<button type="button" class="tile" data-t="${i}" style="--r:${cl.r+1};--c:${cl.c+1};--fx:${fx};--fy:${fy};--fr:${fr};--d:${d}ms" aria-label="${attr(nameOf(ph))}"><img src="${ph.t}" alt="" decoding="async"></button>`;
     }).join('');
     sheet.innerHTML=h;
     tiles=[...sheet.querySelectorAll('.tile')];
@@ -1200,15 +1207,31 @@ const reduce=()=>matchMedia('(prefers-reduced-motion: reduce)').matches;
     e.stopPropagation();
     openLB(dealt,+t.dataset.t,t);
   });
+  /* "Aug 23" is written by hand here, so it has no entry to look up: say it
+     the way the page says every other date. */
+  const MON = {Jan:1,Feb:2,Mar:3,Apr:4,May:5,Jun:6,Jul:7,Aug:8,Sep:9,Oct:10,Nov:11,Dec:12};
+  /* the caption and the date, joined the way the language joins them */
+  const nameOf = (ph) => plain(capOf(ph.c)) + (isZh() ? '，' : ', ') + sayDay(ph.d);
+  function sayDay(d){
+    if(!isZh()) return d;
+    const m=/^([A-Z][a-z]{2})\s+(\d{1,2})$/.exec(String(d).trim());
+    return m && MON[m[1]] ? `${MON[m[1]]} 月 ${m[2]} 日` : d;
+  }
+
   function turn(i,ph,delay){
     const t=tiles[i]; if(!t) return;
     setTimeout(()=>{
-      if(reduce()){ dealt[i]=ph; t.querySelector('img').src=ph.t; t.setAttribute('aria-label',`${plain(ph.c)}, ${ph.d}`); return; }
+      if(reduce()){ dealt[i]=ph; t.querySelector('img').src=ph.t; t.setAttribute('aria-label',nameOf(ph)); return; }
       t.classList.remove('flip'); void t.offsetWidth; t.classList.add('flip');
-      setTimeout(()=>{ dealt[i]=ph; t.querySelector('img').src=ph.t; t.setAttribute('aria-label',`${plain(ph.c)}, ${ph.d}`); },250);
+      setTimeout(()=>{ dealt[i]=ph; t.querySelector('img').src=ph.t; t.setAttribute('aria-label',nameOf(ph)); },250);
       setTimeout(()=>t.classList.remove('flip'),560);
     },delay);
   }
+  document.addEventListener('releaf:lang',()=>{
+    tiles.forEach((t,i)=>{ const ph=dealt[i];
+      if(ph) t.setAttribute('aria-label',nameOf(ph)); });
+  });
+
   document.getElementById('shuffle').addEventListener('click',()=>{
     const next=shuffled(POOL).slice(0,cells.length);
     cells.forEach((cl,i)=>turn(i,next[i],Math.round(cl.c*22+jitter('s'+Date.now(),i)*120)));
