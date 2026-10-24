@@ -87,34 +87,51 @@ def key(s: str) -> str:
     return format(h, "016x")
 
 
-def ui() -> tuple[dict, dict]:
+def ui() -> tuple[dict, dict, dict]:
     """The shared strings: nav, footer, and the copy that lives in JavaScript.
 
     Every _ui*.json is merged, so a component whose text sits in a JS data
     file (the bioreactor scroll scene, the notebook's tag list, the roster)
     can have its own file and be translated without fighting over one.
+
+    A string harvested off the rendered pages records where it was found, and
+    is merged into THOSE pages only: it is one component's label, the reader
+    fetches one dictionary per page, and a page should not carry the team
+    board's chips to read the bioreactor. Where the record lists four pages it
+    may have been cut short, so such a string stays shared, as does one with
+    no record at all.
     """
     b, a = {}, {}
+    per: dict[str, tuple[dict, dict]] = {}
     for f in sorted(SRC.glob("_ui*.json")):
-        _merge_ui(json.loads(f.read_text(encoding="utf-8")), b, a)
-    return b, a
+        _merge_ui(json.loads(f.read_text(encoding="utf-8")), b, a, per)
+    return b, a, per
 
 
-def _merge_ui(d, b, a):
+def _where(e, b, a, per):
+    pages = (e.get("pages") or "").split()
+    if not pages or len(pages) >= 4:
+        return [(b, a)]
+    return [per.setdefault(p, ({}, {})) for p in pages]
+
+
+def _merge_ui(d, b, a, per):
     for e in d.get("blocks", []):
         if e.get("zh"):
-            for t in {norm(e["en"]), as_text(e["en"])}:
-                b.setdefault(key(t) + ":0", resolve(e["zh"]))
+            for tb, _ in _where(e, b, a, per):
+                for t in {norm(e["en"]), as_text(e["en"])}:
+                    tb.setdefault(key(t) + ":0", resolve(e["zh"]))
     for e in d.get("attrs", []):
         if e.get("zh"):
-            for t in {norm(e["en"]), as_text(e["en"])}:
-                a.setdefault(e["attr"] + "|" + key(t) + ":0", e["zh"])
-                if e["attr"] in MIRROR:
-                    b.setdefault(key(t) + ":0", e["zh"])
+            for tb, ta in _where(e, b, a, per):
+                for t in {norm(e["en"]), as_text(e["en"])}:
+                    ta.setdefault(e["attr"] + "|" + key(t) + ":0", e["zh"])
+                    if e["attr"] in MIRROR:
+                        tb.setdefault(key(t) + ":0", e["zh"])
 
 
 def main(argv):
-    ub, ua = ui()
+    ub, ua, uper = ui()
     OUT.mkdir(parents=True, exist_ok=True)
     names = argv or sorted(p.stem for p in SRC.glob("*.json")
                            if not p.name.startswith("_"))
@@ -126,6 +143,9 @@ def main(argv):
             continue
         d = json.loads(src.read_text(encoding="utf-8"))
         b, a = dict(ub), dict(ua)
+        pb, pa = uper.get(name, ({}, {}))
+        b.update(pb)
+        a.update(pa)
         t = dd = ""
         n = m = 0
         for e in d.get("blocks", []):
