@@ -1,0 +1,175 @@
+/* =============================================================================
+   RESULTS · wet lab and dry lab
+   -----------------------------------------------------------------------------
+   Two columns, the stages running down them, in the Wet Lab and Dry Lab header
+   colours. A stage is a full-width name, then the bench box, the exchange, and
+   the dry-lab box; a hairline spine runs down the centre so the stages read as
+   one sequence rather than six unrelated pairs. Only stage one has no exchange.
+
+   Every box carries an icon and a keyword before its sentence, so the two boxes
+   of a stage can be paired at a glance: DNA built against DNA designed, the
+   reactor run against the reactor read. The icons are inline MDI paths in the
+   HTML, drawn in the box's own colour; there is no icon font and no script.
+
+   Also here: the overview drawing sits on white at the width of the prose,
+   rather than in the grey chart box the rest of the page uses for its plots.
+   ========================================================================== */
+
+.engage.res .fig--plain,
+.rflow, .rflow__title {
+  --wet-ink:  #3d6a4b;          /* bannerhead wetlab: label, deep, fill */
+  --wet-deep: #4a7c59;
+  --wet-band: #eef3e9;
+  --dry-ink:  #3f5a66;          /* bannerhead drylab */
+  --dry-deep: #516c77;
+  --dry-band: #eaf1f4;
+  --rf-line:  #e2e5ea;
+}
+
+/* ── the overview drawing, on white ───────────────────────────────────── */
+.engage.res .fig--plain { margin: 1.2rem 0; background: #fff; padding: 0; }
+.engage.res .fig--plain img {
+  display: block;
+  width: 100%;
+  height: auto;
+  background: #fff;
+  border: 0;                     /* page.css boxes every figure; this one is */
+  border-radius: 0;              /* a drawing, so it sits straight on white  */
+}
+.engage.res .fig--plain figcaption {
+  margin-top: .7rem;
+  font-size: .86rem;
+  line-height: 1.5;
+  color: var(--ink-3, #6e6e73);
+}
+
+/* ── the figure ───────────────────────────────────────────────────────── */
+.rflow {
+  position: relative;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 3.4rem minmax(0, 1fr);
+  align-items: stretch;
+  gap: .4rem 0;
+  margin: 1.2rem 0 0;
+}
+/* the spine: six stages, one sequence, read top to bottom */
+.rflow::before {
+  content: "";
+  position: absolute;
+  top: .9rem; bottom: .6rem; left: 50%;
+  width: 1.5px;
+  margin-left: -.75px;
+  background: var(--rf-line);
+}
+
+/* one title over both columns; its two halves carry the columns' colours */
+.engage.res h3.rflow__title {
+  margin: 1.6rem 0 0;
+  text-align: center;
+}
+.rflow__title .is-wet { color: var(--wet-ink); }
+.rflow__title .is-dry { color: var(--dry-ink); }
+
+.rflow p.rflow__stage {
+  grid-column: 1 / -1;
+  position: relative;
+  margin: .8rem 0 .15rem;
+  padding-bottom: .3rem;
+  font-size: .8rem;
+  font-weight: 700;
+  color: var(--ink, #1d1d1f);
+  border-bottom: 1px solid var(--rf-line);
+  background: #fff;
+}
+.rflow__stage b {
+  margin-right: .5rem;
+  font-size: .72rem;
+  font-weight: 700;
+  letter-spacing: .08em;
+  color: #a6abb3;
+}
+
+.rflow p.rflow__cell { margin: 0; }   /* page.css margins would break the rows */
+.rflow__cell {
+  align-self: stretch;
+  padding: .7rem .8rem;
+  border-radius: 12px;
+  font-size: .78rem;
+  line-height: 1.45;
+  font-weight: 500;
+}
+.rflow__cell--wet { grid-column: 1 / 2; color: var(--wet-ink); background: var(--wet-band); }
+.rflow__cell--dry { grid-column: 3 / 4; color: var(--dry-ink); background: var(--dry-band); }
+.rflow__cell--none { background: #f7f8f9; color: #9aa0a8; }
+.rflow__cell--none .rflow__ico { opacity: .8; }
+.rflow__cell i { font-style: italic; }
+.rflow__key {
+  display: flex;
+  align-items: center;
+  gap: .4rem;
+  margin-bottom: .25rem;
+  font-size: .76rem;
+  font-weight: 700;
+  letter-spacing: -.005em;
+}
+/* one glyph per box, in the box's own ink: the bench icons name the thing that
+   was made or grown, the dry-lab ones the instrument or model that read it */
+.rflow__ico {
+  flex: none;
+  width: 1.05rem;
+  height: 1.05rem;
+  fill: currentColor;
+}
+
+/* ── the exchange, between the two boxes ──────────────────────────────── */
+.rflow__xch {
+  grid-column: 2 / 3;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: .5rem;
+  padding: 0 .3rem;
+}
+.rflow__arrow { position: relative; height: 1.5px; background: currentColor; }
+.rflow__arrow::after {
+  content: "";
+  position: absolute;
+  top: -3.2px;
+  width: 7px; height: 7px;
+  border-top: 1.5px solid currentColor;
+  border-right: 1.5px solid currentColor;
+}
+.rflow__arrow--right { color: var(--wet-deep); }        /* the bench hands over */
+.rflow__arrow--right::after { right: 0; transform: rotate(45deg); }
+.rflow__arrow--left { color: var(--dry-deep); }         /* and gets it back */
+.rflow__arrow--left::after { left: 0; transform: rotate(-135deg); }
+
+/* ── stacked: the exchange turns to point down and up ─────────────────── */
+@media (max-width: 52rem) {
+  .rflow { grid-template-columns: minmax(0, 1fr); }
+  .rflow::before { display: none; }
+  .rflow__cell--wet, .rflow__cell--dry { grid-column: 1 / -1; }
+  .rflow__cell--wet::before, .rflow__cell--dry::before {
+    content: "Wet lab";
+    display: block;
+    margin-bottom: .25rem;
+    font-size: .64rem;
+    font-weight: 700;
+    letter-spacing: .1em;
+    text-transform: uppercase;
+    opacity: .75;
+  }
+  .rflow__cell--dry::before { content: "Dry lab"; }
+  .rflow__xch {
+    grid-column: 1 / -1;
+    flex-direction: row;
+    justify-content: flex-start;
+    gap: .9rem;
+    padding: .15rem 0 .15rem .9rem;
+  }
+  .rflow__arrow { width: 1.5px; height: 1.1rem; }
+  .rflow__arrow::after { top: auto; right: auto; left: -3.2px; }
+  .rflow__arrow--right::after { bottom: 0; transform: rotate(135deg); }
+  .rflow__arrow--left::after { top: 0; transform: rotate(-45deg); }
+}
+

@@ -1,0 +1,125 @@
+<!doctype html><html><head><meta charset=utf8><meta name=viewport content="width=device-width,initial-scale=1,viewport-fit=cover"><style>:root{color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px)}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#fff;color:#000}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}</style></head><body>
+<title>Releaf Gantt Overview</title>
+<style>
+/* Layout: heading and one summary figure, then a single static Gantt table (name, done, start, end, date-scaled bars). Phase colors follow the source chart. No scripts. */
+:root{
+  --bg:#F3F6F4; --surface:#FFFFFF; --surface-2:#E7EEEA;
+  --ink:#10261F; --ink-2:#4A5E56; --ink-3:#6E8078;
+  --line:#E1E8E4; --line-strong:#C2CEC7;
+  --c1:#7C4DDB; --c2:#D6309F; --c3:#1E8E5A; --c4:#B98300; --c5:#2B6CC4;
+  --on-c4:#2B1F00;
+  --b1:#B79CFF; --b2:#FF8AD2; --b3:#5DD6A0; --b4:#F2C14B; --b5:#7FB2FF;
+  --band:#16322A; --on-band:#F1F7F4; --band-line:rgba(255,255,255,.14); --band-track:rgba(255,255,255,.2);
+  --sans:'Schibsted Grotesk',system-ui,-apple-system,'Segoe UI',sans-serif;
+  --mono:'IBM Plex Mono',ui-monospace,SFMono-Regular,Menlo,monospace;
+  --nq:27; --cols:250px 52px 70px 70px minmax(702px,1fr);
+}
+
+*{box-sizing:border-box}
+body{background:var(--bg);color:var(--ink);font:400 14px/1.45 var(--sans)}
+.p1{--pc:var(--c1);--pb:var(--b1)}
+.p2{--pc:var(--c2);--pb:var(--b2)}
+.p3{--pc:var(--c3);--pb:var(--b3)}
+.p4{--pc:var(--c4);--pb:var(--b4)}
+.p5{--pc:var(--c5);--pb:var(--b5)}
+
+.page{max-width:1240px;margin:0 auto;padding-inline:clamp(16px,3vw,32px);padding-block:28px 44px}
+.top{display:flex;flex-wrap:wrap;gap:20px 40px;align-items:flex-end;justify-content:space-between;margin-bottom:22px}
+.titles{flex:1 1 380px;min-width:0}
+.eyebrow{margin:0 0 8px;font:500 11.5px/1.3 var(--mono);letter-spacing:.08em;text-transform:uppercase;color:var(--ink-2)}
+h1{margin:0;font:700 clamp(26px,4.2vw,40px)/1.05 var(--sans);letter-spacing:-.025em;text-wrap:balance}
+.sub{margin:10px 0 0;color:var(--ink-2);max-width:62ch}
+.prog{flex:0 1 320px;min-width:0;width:100%}
+.prog-row{display:flex;align-items:baseline;gap:8px;flex-wrap:wrap}
+.prog-n{font:600 26px/1 var(--sans);font-variant-numeric:tabular-nums}
+.prog-l{color:var(--ink-2)}
+.meter{display:flex;height:8px;border-radius:4px;background:var(--surface-2);overflow:hidden;margin:10px 0 8px}
+.meter i{display:block;height:100%}
+.m-done{background:var(--ink)}
+.m-prog{background:var(--ink-3)}
+.prog-s{margin:0;font:400 12px/1.4 var(--mono);color:var(--ink-2)}
+
+.legend{display:flex;flex-wrap:wrap;gap:8px 18px;align-items:center;margin-bottom:10px;font-size:12.5px;color:var(--ink-2)}
+.legend span{display:inline-flex;align-items:center;gap:7px}
+.legend .note{margin-left:auto;color:var(--ink-3)}
+.sw{display:inline-block;width:22px;height:10px;border-radius:3px}
+.sw.fill{background:var(--c1)}
+.sw.rest{background:color-mix(in srgb,var(--c1) 22%,var(--surface));box-shadow:inset 0 0 0 1px color-mix(in srgb,var(--c1) 55%,var(--surface))}
+
+.scroller{overflow-x:auto;border:1px solid var(--line);border-radius:10px;background:var(--surface)}
+.sheet{min-width:1146px}
+.head{display:grid;grid-template-columns:var(--cols);background:var(--surface);border-bottom:1px solid var(--line-strong)}
+.hc{grid-row:1 / 3;display:flex;align-items:flex-end;padding:10px 8px;font:500 11px/1.3 var(--mono);text-transform:uppercase;letter-spacing:.06em;color:var(--ink-2)}
+.hc.first{padding-left:12px}
+.hc.mid{justify-content:center}
+.htrk{grid-column:5;grid-row:1 / 3;display:grid;grid-template-rows:auto auto;min-width:0}
+.hrow{display:grid;grid-template-columns:repeat(var(--nq),minmax(0,1fr))}
+.yr{padding:8px 0 3px;text-align:center;border-left:1px solid var(--line-strong);font:500 11.5px var(--mono);color:var(--ink)}
+.qh{padding:1px 0 6px;text-align:center;border-left:1px solid var(--line);font:400 10px var(--mono);color:var(--ink-3)}
+.qh.y{border-left-color:var(--line-strong)}
+
+.row{display:grid;grid-template-columns:var(--cols);min-height:36px;border-bottom:1px solid var(--line);background:var(--surface)}
+.row:last-child{border-bottom:0}
+.nm{padding:8px 8px 8px 12px;font:400 13px/1.35 var(--sans);overflow-wrap:anywhere;align-self:center}
+.pcol,.dcol{align-self:center;text-align:center;font:400 12px/1.2 var(--mono);color:var(--ink-2);font-variant-numeric:tabular-nums}
+.pcol{color:var(--ink);font-weight:500}
+.trk{position:relative;min-width:0;background-image:linear-gradient(to right,var(--line) 1px,transparent 1px);background-size:calc(100% / var(--nq)) 100%}
+.trk::before{content:"";position:absolute;top:0;bottom:0;left:calc(100% / var(--nq));width:calc(100% * (var(--nq) - 1) / var(--nq));background-image:linear-gradient(to right,var(--line-strong) 1px,transparent 1px);background-size:calc(100% * 4 / (var(--nq) - 1)) 100%}
+.bar{position:absolute;z-index:1;top:50%;height:18px;margin-top:-9px;border-radius:4px;overflow:hidden;background:color-mix(in srgb,var(--pc) 22%,var(--surface));box-shadow:inset 0 0 0 1px color-mix(in srgb,var(--pc) 55%,var(--surface))}
+.bar i{display:block;height:100%;background:var(--pc)}
+
+.band{background:var(--band);color:var(--on-band);border-bottom-color:var(--band-line);min-height:46px}
+.bl{grid-column:1 / 5;display:flex;align-items:center;gap:10px;padding:9px 12px}
+.num{flex:none;display:grid;place-items:center;min-width:26px;height:24px;padding:0 5px;border-radius:6px;background:var(--pb);color:#0B1A14;font:600 12px var(--mono)}
+.bt{display:flex;flex-direction:column;gap:2px;min-width:0}
+.pt{font:600 13px/1.3 var(--sans)}
+.pw{font:400 11px/1.35 var(--mono);opacity:.8}
+.band .trk{background-image:linear-gradient(to right,var(--band-line) 1px,transparent 1px)}
+.band .trk::before{background-image:linear-gradient(to right,rgba(255,255,255,.26) 1px,transparent 1px)}
+.span{position:absolute;z-index:1;top:50%;height:10px;margin-top:-5px;border-radius:3px;background:var(--band-track);overflow:hidden}
+.span i{display:block;height:100%;background:var(--pb)}
+.foot{margin:12px 0 0;font-size:12px;color:var(--ink-3)}
+em{font-style:italic}
+
+@media (max-width:700px){ .legend .note{margin-left:0;flex-basis:100%} }
+</style>
+
+<div class="page">
+  <header class="top">
+    <div class="titles">
+      <p class="eyebrow">Gantt overview &middot; Project start 12/13/25</p>
+      <h1>Releaf Product Development</h1>
+      <p class="sub">Five phases from concept validation to global expansion, ending April 2032. Each bar runs from its start date to its end date, and the solid part shows how much is complete.</p>
+    </div>
+    <div class="prog">
+      <div class="prog-row"><span class="prog-n">6 of 19</span><span class="prog-l">activities complete</span></div>
+      <div class="meter" role="img" aria-label="6 of 19 activities complete, 4 in progress"><i class="m-done" style="width:31.58%"></i><i class="m-prog" style="width:21.05%"></i></div>
+      <p class="prog-s">4 in progress &middot; 9 not started</p>
+    </div>
+  </header>
+
+  <div class="legend">
+    <span><i class="sw fill"></i>Completed share</span>
+    <span><i class="sw rest"></i>Remaining</span>
+    <span class="note">Dates are month/day/year.</span>
+  </div>
+
+  <div class="scroller">
+    <div class="sheet" role="table" aria-label="Releaf Product Development Gantt chart">
+      <div class="head" role="row">
+        <div class="hc first" role="columnheader">Activity</div>
+        <div class="hc mid" role="columnheader">Done</div>
+        <div class="hc mid" role="columnheader">Start</div>
+        <div class="hc mid" role="columnheader">End</div>
+        <div class="htrk" role="columnheader" aria-label="Timeline by quarter, Q4 2025 to Q2 2032">
+          <div class="hrow"><div class="yr" style="grid-column:1 / span 1">2025</div><div class="yr" style="grid-column:2 / span 4">2026</div><div class="yr" style="grid-column:6 / span 4">2027</div><div class="yr" style="grid-column:10 / span 4">2028</div><div class="yr" style="grid-column:14 / span 4">2029</div><div class="yr" style="grid-column:18 / span 4">2030</div><div class="yr" style="grid-column:22 / span 4">2031</div><div class="yr" style="grid-column:26 / span 2">2032</div></div>
+          <div class="hrow"><div class="qh">Q4</div><div class="qh y">Q1</div><div class="qh">Q2</div><div class="qh">Q3</div><div class="qh">Q4</div><div class="qh y">Q1</div><div class="qh">Q2</div><div class="qh">Q3</div><div class="qh">Q4</div><div class="qh y">Q1</div><div class="qh">Q2</div><div class="qh">Q3</div><div class="qh">Q4</div><div class="qh y">Q1</div><div class="qh">Q2</div><div class="qh">Q3</div><div class="qh">Q4</div><div class="qh y">Q1</div><div class="qh">Q2</div><div class="qh">Q3</div><div class="qh">Q4</div><div class="qh y">Q1</div><div class="qh">Q2</div><div class="qh">Q3</div><div class="qh">Q4</div><div class="qh y">Q1</div><div class="qh">Q2</div></div>
+        </div>
+      </div>
+      <div class="row band p1" role="row"><div class="bl" role="rowheader"><span class="num">1</span><span class="bt"><span class="pt">Concept Validation &amp; SynBio Proof-of-Concept</span><span class="pw">12/13/25 to 11/13/26 · 6 of 6 done · 100% average</span></span></div><div class="trk" role="presentation"><div class="span" style="left:2.939%;width:13.607%"><i style="width:100%"></i></div></div></div><div class="row task p1" role="row"><div class="nm" role="rowheader">Jamboree</div><div class="pcol" role="cell">100%</div><div class="dcol" role="cell">12/13/25</div><div class="dcol" role="cell">11/13/26</div><div class="trk" role="cell"><div class="bar" role="img" aria-label="Jamboree, 12/13/25 to 11/13/26, 100% complete" style="left:2.939%;width:max(13.607%,5px)"><i style="width:100%"></i></div></div></div><div class="row task p1" role="row"><div class="nm" role="rowheader">Target Crop Research &amp; IP on strains/circuits</div><div class="pcol" role="cell">100%</div><div class="dcol" role="cell">12/13/25</div><div class="dcol" role="cell">2/11/26</div><div class="trk" role="cell"><div class="bar" role="img" aria-label="Target Crop Research &amp; IP on strains/circuits, 12/13/25 to 2/11/26, 100% complete" style="left:2.939%;width:max(2.452%,5px)"><i style="width:100%"></i></div></div></div><div class="row task p1" role="row"><div class="nm" role="rowheader"><em>Arabidopsis thaliana</em> Hydroponic Salinity Testing</div><div class="pcol" role="cell">100%</div><div class="dcol" role="cell">2/11/26</div><div class="dcol" role="cell">11/2/26</div><div class="trk" role="cell"><div class="bar" role="img" aria-label="Arabidopsis thaliana Hydroponic Salinity Testing, 2/11/26 to 11/2/26, 100% complete" style="left:5.391%;width:max(10.712%,5px)"><i style="width:100%"></i></div></div></div><div class="row task p1" role="row"><div class="nm" role="rowheader">Vector &amp; Optogenetic Module Construction</div><div class="pcol" role="cell">100%</div><div class="dcol" role="cell">5/11/26</div><div class="dcol" role="cell">11/2/26</div><div class="trk" role="cell"><div class="bar" role="img" aria-label="Vector &amp; Optogenetic Module Construction, 5/11/26 to 11/2/26, 100% complete" style="left:9.035%;width:max(7.068%,5px)"><i style="width:100%"></i></div></div></div><div class="row task p1" role="row"><div class="nm" role="rowheader">Electroporation &amp; Expression Benchmarking</div><div class="pcol" role="cell">100%</div><div class="dcol" role="cell">5/11/26</div><div class="dcol" role="cell">11/2/26</div><div class="trk" role="cell"><div class="bar" role="img" aria-label="Electroporation &amp; Expression Benchmarking, 5/11/26 to 11/2/26, 100% complete" style="left:9.035%;width:max(7.068%,5px)"><i style="width:100%"></i></div></div></div><div class="row task p1" role="row"><div class="nm" role="rowheader">Machine-Microbe Interface (MMI) Integration</div><div class="pcol" role="cell">100%</div><div class="dcol" role="cell">5/11/26</div><div class="dcol" role="cell">11/2/26</div><div class="trk" role="cell"><div class="bar" role="img" aria-label="Machine-Microbe Interface (MMI) Integration, 5/11/26 to 11/2/26, 100% complete" style="left:9.035%;width:max(7.068%,5px)"><i style="width:100%"></i></div></div></div><div class="row band p2" role="row"><div class="bl" role="rowheader"><span class="num">2</span><span class="bt"><span class="pt">Soil Testing, Safety &amp; SOP Navigation</span><span class="pw">11/2/26 to 10/30/27 · 0 of 4 done · 15% average</span></span></div><div class="trk" role="presentation"><div class="span" style="left:16.103%;width:14.694%"><i style="width:15%"></i></div></div></div><div class="row task p2" role="row"><div class="nm" role="rowheader">Soil-Based Lab &amp; Protectant Diffusion Testing</div><div class="pcol" role="cell">30%</div><div class="dcol" role="cell">11/2/26</div><div class="dcol" role="cell">5/1/27</div><div class="trk" role="cell"><div class="bar" role="img" aria-label="Soil-Based Lab &amp; Protectant Diffusion Testing, 11/2/26 to 5/1/27, 30% complete" style="left:16.103%;width:max(7.340%,5px)"><i style="width:30%"></i></div></div></div><div class="row task p2" role="row"><div class="nm" role="rowheader">Protectant Mixing Ratios &amp; Crop Water Ratios</div><div class="pcol" role="cell">10%</div><div class="dcol" role="cell">11/2/26</div><div class="dcol" role="cell">3/2/27</div><div class="trk" role="cell"><div class="bar" role="img" aria-label="Protectant Mixing Ratios &amp; Crop Water Ratios, 11/2/26 to 3/2/27, 10% complete" style="left:16.103%;width:max(4.885%,5px)"><i style="width:10%"></i></div></div></div><div class="row task p2" role="row"><div class="nm" role="rowheader">Biosecurity Verification &amp; Genetic Killswitches</div><div class="pcol" role="cell">10%</div><div class="dcol" role="cell">5/3/27</div><div class="dcol" role="cell">10/30/27</div><div class="trk" role="cell"><div class="bar" role="img" aria-label="Biosecurity Verification &amp; Genetic Killswitches, 5/3/27 to 10/30/27, 10% complete" style="left:23.525%;width:max(7.272%,5px)"><i style="width:10%"></i></div></div></div><div class="row task p2" role="row"><div class="nm" role="rowheader">Regulatory Filing &amp; Institutional Consultations</div><div class="pcol" role="cell">10%</div><div class="dcol" role="cell">3/2/27</div><div class="dcol" role="cell">10/28/27</div><div class="trk" role="cell"><div class="bar" role="img" aria-label="Regulatory Filing &amp; Institutional Consultations, 3/2/27 to 10/28/27, 10% complete" style="left:20.988%;width:max(9.729%,5px)"><i style="width:10%"></i></div></div></div><div class="row band p3" role="row"><div class="bl" role="rowheader"><span class="num">3</span><span class="bt"><span class="pt">Taiwan Pilot Field Trials &amp; Industrial Readiness</span><span class="pw">10/28/27 to 4/20/29 · 0 of 4 done · 0% average</span></span></div><div class="trk" role="presentation"><div class="span" style="left:30.717%;width:21.909%"><i style="width:0%"></i></div></div></div><div class="row task p3" role="row"><div class="nm" role="rowheader">Pilot Field Trials with smallholder farmers in Taiwan</div><div class="pcol" role="cell">0%</div><div class="dcol" role="cell">10/28/27</div><div class="dcol" role="cell">6/24/28</div><div class="trk" role="cell"><div class="bar" role="img" aria-label="Pilot Field Trials with smallholder farmers in Taiwan, 10/28/27 to 6/24/28, 0% complete" style="left:30.717%;width:max(9.739%,5px)"><i style="width:0%"></i></div></div></div><div class="row task p3" role="row"><div class="nm" role="rowheader">Bioreactor Redesign for Industrial Scaling</div><div class="pcol" role="cell">0%</div><div class="dcol" role="cell">6/24/28</div><div class="dcol" role="cell">12/21/28</div><div class="trk" role="cell"><div class="bar" role="img" aria-label="Bioreactor Redesign for Industrial Scaling, 6/24/28 to 12/21/28, 0% complete" style="left:40.456%;width:max(7.249%,5px)"><i style="width:0%"></i></div></div></div><div class="row task p3" role="row"><div class="nm" role="rowheader">Data Monetization Model Setup</div><div class="pcol" role="cell">0%</div><div class="dcol" role="cell">6/24/28</div><div class="dcol" role="cell">10/22/28</div><div class="trk" role="cell"><div class="bar" role="img" aria-label="Data Monetization Model Setup, 6/24/28 to 10/22/28, 0% complete" style="left:40.456%;width:max(4.834%,5px)"><i style="width:0%"></i></div></div></div><div class="row task p3" role="row"><div class="nm" role="rowheader">Regional Expansion: Philippine &amp; Vietnam Preparation</div><div class="pcol" role="cell">0%</div><div class="dcol" role="cell">10/22/28</div><div class="dcol" role="cell">4/20/29</div><div class="trk" role="cell"><div class="bar" role="img" aria-label="Regional Expansion: Philippine &amp; Vietnam Preparation, 10/22/28 to 4/20/29, 0% complete" style="left:45.290%;width:max(7.335%,5px)"><i style="width:0%"></i></div></div></div><div class="row band p4" role="row"><div class="bl" role="rowheader"><span class="num">4</span><span class="bt"><span class="pt">Multi-Market International Expansion</span><span class="pw">4/20/29 to 4/15/31 · 0 of 3 done · 0% average</span></span></div><div class="trk" role="presentation"><div class="span" style="left:52.625%;width:29.426%"><i style="width:0%"></i></div></div></div><div class="row task p4" role="row"><div class="nm" role="rowheader">Regional Stress &amp; Weather Customization</div><div class="pcol" role="cell">0%</div><div class="dcol" role="cell">4/20/29</div><div class="dcol" role="cell">10/17/29</div><div class="trk" role="cell"><div class="bar" role="img" aria-label="Regional Stress &amp; Weather Customization, 4/20/29 to 10/17/29, 0% complete" style="left:52.625%;width:max(7.278%,5px)"><i style="width:0%"></i></div></div></div><div class="row task p4" role="row"><div class="nm" role="rowheader">International Field Deployment</div><div class="pcol" role="cell">0%</div><div class="dcol" role="cell">10/17/29</div><div class="dcol" role="cell">10/17/30</div><div class="trk" role="cell"><div class="bar" role="img" aria-label="International Field Deployment, 10/17/29 to 10/17/30, 0% complete" style="left:59.903%;width:max(14.815%,5px)"><i style="width:0%"></i></div></div></div><div class="row task p4" role="row"><div class="nm" role="rowheader">ESG &amp; Sustainable Agri-NGO Partnership</div><div class="pcol" role="cell">0%</div><div class="dcol" role="cell">10/17/30</div><div class="dcol" role="cell">4/15/31</div><div class="trk" role="cell"><div class="bar" role="img" aria-label="ESG &amp; Sustainable Agri-NGO Partnership, 10/17/30 to 4/15/31, 0% complete" style="left:74.718%;width:max(7.333%,5px)"><i style="width:0%"></i></div></div></div><div class="row band p5" role="row"><div class="bl" role="rowheader"><span class="num">5</span><span class="bt"><span class="pt">Global Leadership &amp; Product Diversification</span><span class="pw">4/15/31 to 4/19/32 · 0 of 2 done · 0% average</span></span></div><div class="trk" role="presentation"><div class="span" style="left:82.051%;width:14.978%"><i style="width:0%"></i></div></div></div><div class="row task p5" role="row"><div class="nm" role="rowheader">SEA Multi-Country Expansion (Thailand/Indonesia)</div><div class="pcol" role="cell">0%</div><div class="dcol" role="cell">4/15/31</div><div class="dcol" role="cell">4/14/32</div><div class="trk" role="cell"><div class="bar" role="img" aria-label="SEA Multi-Country Expansion (Thailand/Indonesia), 4/15/31 to 4/14/32, 0% complete" style="left:82.051%;width:max(14.774%,5px)"><i style="width:0%"></i></div></div></div><div class="row task p5" role="row"><div class="nm" role="rowheader">Technology Licensing &amp; Product Diversification</div><div class="pcol" role="cell">0%</div><div class="dcol" role="cell">4/15/31</div><div class="dcol" role="cell">4/19/32</div><div class="trk" role="cell"><div class="bar" role="img" aria-label="Technology Licensing &amp; Product Diversification, 4/15/31 to 4/19/32, 0% complete" style="left:82.051%;width:max(14.978%,5px)"><i style="width:0%"></i></div></div></div>
+    </div>
+  </div>
+  <p class="foot">Dates and completion come from the Releaf Product Development Gantt chart. A phase's percentage is the average of its activities.</p>
+</div>
+
+</body></html>

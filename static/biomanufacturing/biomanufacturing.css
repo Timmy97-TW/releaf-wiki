@@ -1,0 +1,184 @@
+/* =============================================================================
+   Biomanufacturing: the few things page.css and engage.css do not do.
+
+   The page reads as a zig-zag. Every figure sits beside the prose that argues
+   it, alternating left and right down the page, so a reader never has to hold
+   a picture in their head while reading about it. The chassis is engage.css's
+   own `.ev` / `.ev__text` pair, which eight other pages already use; here it
+   loses its pale card so the page stays white and the figure frames are the
+   only panels on it.
+
+   Every frame is the same size and shape: a 4:3 mount on a pale ground, the
+   image contained inside it rather than cropped, so a portrait photograph, a
+   landscape diagram and a Venn chart all occupy one standard block and the
+   column keeps an even rhythm. The image is still the lightbox's, so a click
+   opens it full size — which is where a dense diagram is meant to be read.
+   ========================================================================== */
+
+/* ---------- 1 · prose runs the full column ------------------------------- */
+/* engage.css holds a section's own paragraphs to --measure (76ch), which left
+   a gutter beside every line while the figures and tables ran wider. Here the
+   measure comes from the grid instead: prose beside a figure gets half the
+   column, and the few paragraphs that stand alone get all of it.            */
+.engage.biomfg .pagebody .sec > p,
+.engage.biomfg .pagebody .sec > ul:not([class]),
+.engage.biomfg .pagebody .sec > ol:not([class]),
+.engage.biomfg .pagebody .sec > h3,
+.engage.biomfg .pagebody .sec > h4,
+.engage.biomfg .pagebody .sec > blockquote { max-width: none; }
+
+/* ---------- 2 · the zig-zag --------------------------------------------- */
+.engage.biomfg .ev {
+  background: transparent;
+  padding: 0;
+  gap: 1.25rem 3rem;
+  align-items: start;
+  margin: var(--sp-6) 0;
+}
+.engage.biomfg .ev__text p { max-width: none; font-size: 1rem; }
+
+@media (min-width: 62rem) {
+  /* the text takes a little more than half; the figure column is the steady one */
+  .engage.biomfg .ev,
+  .engage.biomfg .ev--figleft { grid-template-columns: minmax(0, 1.06fr) minmax(0, 1fr); }
+
+  /* the prose stays first in the source on every block, so a narrow screen
+     always reads argument then picture; only the wide layout swaps sides */
+  .engage.biomfg .ev--figleft > .zfig { order: -1; }
+
+  /* a figure holds its place while the reader works down the paragraphs */
+  .engage.biomfg .zfig { position: sticky; top: calc(var(--nav-h) + 1.5rem); }
+  .engage.biomfg .zfig--pair { position: static; }
+}
+
+/* ---------- 3 · one frame, one size ------------------------------------- */
+.engage.biomfg .zfig .fig { margin: 0; }
+.engage.biomfg .zfig .fig + .fig { margin-top: 1.25rem; }
+
+.engage.biomfg .zframe {
+  position: relative;
+  aspect-ratio: 4 / 3;
+  display: grid;
+  place-items: center;
+  padding: .875rem;
+  border-radius: 22px;
+  background: #fff;
+  overflow: hidden;
+}
+.engage.biomfg .zframe > img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  border-radius: 10px;
+  background: transparent;
+}
+/* a photograph has no white page behind it to lose, so it fills the frame */
+.engage.biomfg .zframe--photo > img { object-fit: cover; border-radius: 12px; }
+
+.engage.biomfg .zfig figcaption {
+  margin-top: .7rem;
+  padding: 0 .25rem;
+}
+
+/* ---------- 4 · the model in the first frame ----------------------------- */
+/* Anton's B2 case, the same file and the same gentle rock as the homepage
+   (assets/js/home-reactor.js, started from the page's own observer). The
+   still stands in the frame until the model is built, and stays there for a
+   reader with no WebGL, so the frame is never empty.                        */
+.engage.biomfg #rx { position: absolute; inset: 0; }
+.engage.biomfg #rx canvas {
+  position: absolute; inset: 0;
+  width: 100%; height: 100%;
+  display: block;
+  opacity: 0;
+  transition: opacity .6s ease;
+  touch-action: pan-y;
+}
+.engage.biomfg #rx.is-ready canvas { opacity: 1; cursor: grab; }
+.engage.biomfg #rx.is-ready canvas:active { cursor: grabbing; }
+.engage.biomfg #rx .rx-still {
+  position: absolute; inset: .875rem;
+  width: calc(100% - 1.75rem); height: calc(100% - 1.75rem);
+  object-fit: contain;
+  transition: opacity .6s ease;
+}
+.engage.biomfg #rx.is-ready .rx-still { opacity: 0; pointer-events: none; }
+.engage.biomfg #rx.no-gl canvas { display: none; }
+.engage.biomfg .rx-load {
+  position: absolute; left: 50%; bottom: .9rem; transform: translateX(-50%);
+  margin: 0; padding: .3rem .75rem;
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--ink) 72%, transparent);
+  color: #fff;
+  font-size: .75rem; font-variant-numeric: tabular-nums;
+}
+@media (prefers-reduced-motion: reduce) {
+  .engage.biomfg #rx canvas { transition: none; }
+  .engage.biomfg #rx .rx-still { transition: none; }
+}
+
+/* ---------- 5 · the full-width furniture --------------------------------- */
+.engage.biomfg .chartbox { padding: 1rem; }
+.engage.biomfg .sec > .chartbox { background: #fff; }
+.engage.biomfg .chartbox .charts--1 { max-width: 58rem; }
+
+/* the four fact cards and the three regulatory objects read as a row of
+   three or four where there is room for one                                */
+@media (min-width: 64rem) {
+  .engage.biomfg #synthetic-biology-in-biomanufacturing .cards--2 { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+  .engage.biomfg #regulation-and-biosafety .cards--2 { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+}
+@media (min-width: 52rem) {
+  .engage.biomfg #field-deployment .cards--2 { grid-template-columns: repeat(2, minmax(0, 1fr)); max-width: 44rem; }
+}
+
+/* a figure for a money or count headline inside a card */
+.engage.biomfg .card > .voice__big { font-size: clamp(1.5rem, 1.2rem + 1vw, 2rem); }
+.engage.biomfg .card > .voice__big + h4 { margin-top: .15rem; }
+
+/* KaTeX display maths sits on a pale card so it reads as a statement */
+.engage.biomfg .katex-display {
+  margin: 1.25rem 0;
+  padding: 1.25rem 1rem;
+  border-radius: 20px;
+  background: var(--well);
+  overflow-x: auto;
+}
+
+/* the engineering tables are wide; keep them scrollable inside the soft frame */
+.engage.biomfg .tablewrap { overflow-x: auto; }
+
+/* the route line that closes each section, set apart from the argument */
+.engage.biomfg .sec > p.route {
+  margin-top: var(--sp-5);
+  padding-top: .9rem;
+  border-top: 1px solid color-mix(in srgb, var(--ink) 11%, transparent);
+  font-size: .9375rem;
+  color: var(--ink-2, inherit);
+}
+
+/* ---------- 6 · the reference list -------------------------------------- */
+/* APA 7 since 21 October: the prose carries author and date, so the list is
+   unnumbered and alphabetical. page.css only dresses `.refs ol`, so the
+   number column becomes a hanging indent here.                             */
+.engage.biomfg .refs ul {
+  margin: 0; padding-left: 0;
+  list-style: none;
+  font-size: var(--text-sm);
+  color: var(--gray-600);
+}
+.engage.biomfg .refs ul > li { padding-left: 2.1em; text-indent: -2.1em; }
+
+/* Every figure sits on white: page.css grounds an image in --gray-50, which
+   shows as a tint behind a contained render or a transparent drawing.      */
+.engage.biomfg .fig img, .engage.biomfg .fig svg { background: #fff; }
+
+/* ---------- 7 · the production chain reads at full size ------------------ */
+/* 21 October: the chain diagram carries the whole argument of section one and
+   was the smallest thing on the page. Its block gives the figure the larger
+   column and drops the 4:3 mount for the drawing's own proportions, so the
+   stage labels can be read without opening the lightbox.                   */
+.engage.biomfg .ev--figbig .zframe { aspect-ratio: 1600 / 919; }
+@media (min-width: 62rem) {
+  .engage.biomfg .ev--figbig { grid-template-columns: minmax(0, 1.55fr) minmax(0, 1fr); }
+}

@@ -1,0 +1,786 @@
+<!DOCTYPE html>
+<!-- Ported onto the wiki from the Plant-Stress-Ultrasonic page Oscar Huang
+     built and kept on his own account (commit e0fe0b0, 22 Aug 2026) so that it can be judged: iGEM does not score content
+     kept on other sites. The page is unchanged apart from the back link at the
+     top, the wiki licence footer at the bottom, the rule-check script, and (20 Oct) the
+     play/hover instruction lines, taken off under the wiki's no-usage-hints rule. -->
+<html data-repo-dir="data-physicalization/listening" lang="en">
+<head>
+  <script src="static/cdn-map.js?v=1021b"></script>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Can you hear a plant scream?</title>
+<link rel="icon" href="https://static.igem.wiki/teams/6072/wiki/site/logo-site.webp">
+<style>
+  * { box-sizing:border-box; }
+  body { font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Helvetica,Arial,sans-serif;
+    background:#FBFAF6; color:#2C2C2A; max-width:860px; margin:0 auto; padding:3rem 1.5rem 4rem; line-height:1.65; }
+  h1 { font-size:clamp(28px,5vw,38px); font-weight:600; margin:0 0 .6rem; line-height:1.15; letter-spacing:-.02em; }
+  h2 { font-size:20px; font-weight:600; margin:0 0 .4rem; letter-spacing:-.01em; }
+  .lede { color:#5F5E5A; font-size:17px; margin:0 0 .5rem; max-width:620px; }
+  .section { margin-top:3.25rem; }
+  .section > p { font-size:15px; margin:0 0 .9rem; max-width:660px; }
+  .eyebrow { font-size:11.5px; font-weight:600; letter-spacing:.09em; text-transform:uppercase;
+    color:#A8A69C; margin:0 0 .5rem; }
+  .note { font-size:13.5px; color:#5F5E5A; max-width:660px; margin:0 0 1.25rem; }
+  .hint { display:inline-flex; align-items:center; gap:7px; font-size:12.5px; color:#7A6A52;
+    background:#FBF3E2; border-radius:20px; padding:5px 13px; margin:0 0 1.1rem; }
+  .hint svg { flex-shrink:0; }
+
+  .hero-stats { display:flex; gap:1px; background:#E5E3DA; border:.5px solid #D3D1C7;
+    border-radius:14px; overflow:hidden; margin-top:1.75rem; }
+  .hstat { background:#fff; padding:1.1rem 1.2rem; flex:1; min-width:0; }
+  .hstat-num { font-size:clamp(20px,3.4vw,27px); font-weight:600; letter-spacing:-.02em; line-height:1.1; }
+  .hstat-label { font-size:12px; color:#5F5E5A; margin-top:4px; line-height:1.35; }
+
+  .steps { display:flex; flex-direction:column; gap:9px; margin-top:1.1rem; }
+  .step { display:flex; gap:11px; font-size:14.5px; }
+  .step-n { flex-shrink:0; width:21px; height:21px; border-radius:50%; background:#EEEDFE; color:#26215C;
+    font-weight:600; font-size:11px; display:flex; align-items:center; justify-content:center; margin-top:2px; }
+  .step span:last-child { color:#444441; }
+
+  .featured { background:#fff; border:.5px solid #CFCBF2; border-left:4px solid #7F77DD;
+    border-radius:12px; padding:1.1rem 1.25rem; margin-bottom:1.5rem; display:flex; gap:14px; align-items:flex-start; }
+  .featured .playbtn { border-color:#7F77DD; color:#7F77DD; }
+  .featured-badge { display:inline-block; font-size:11px; font-weight:600; letter-spacing:.05em;
+    text-transform:uppercase; padding:3px 9px; border-radius:20px; background:#EEEDFE; color:#26215C; margin-bottom:.45rem; }
+
+  .grid { display:grid; grid-template-columns:1fr; gap:14px; }
+  .card { background:#fff; border:.5px solid #D3D1C7; border-radius:12px; padding:1.1rem 1.2rem;
+    transition:box-shadow .25s ease, border-color .25s ease; }
+  .card.active { box-shadow:0 3px 22px rgba(44,44,42,.10); border-color:#B4B2A9; }
+  .card:hover { border-color:#C4C1B7; }
+  .card-head { display:flex; align-items:center; gap:12px; margin-bottom:.55rem; }
+  .card-title { flex:1; min-width:0; }
+  .card-species { font-size:12px; color:#888780; margin:0; line-height:1.2; }
+  .card-stress { font-size:16px; font-weight:600; margin:0; line-height:1.25; }
+  .counter { text-align:right; line-height:1.2; }
+  .counter-n { font-size:17px; font-weight:600; color:#2C2C2A; font-variant-numeric:tabular-nums; }
+  .counter-n span { font-size:12px; font-weight:400; color:#A8A69C; }
+  .counter-l { font-size:10.5px; color:#A8A69C; letter-spacing:.03em; }
+  .card-desc { font-size:13px; color:#5F5E5A; margin:0 0 .8rem; }
+  .playbtn { width:38px; height:38px; border-radius:50%; border:1.5px solid #B4B2A9; background:transparent;
+    display:flex; align-items:center; justify-content:center; cursor:pointer; flex-shrink:0; transition:all .18s ease; }
+  .playbtn:hover { background:#F6F4EE; transform:scale(1.06); }
+  .playbtn:focus-visible { outline:2px solid #7F77DD; outline-offset:2px; }
+  .playbtn::after { content:''; position:absolute; width:38px; height:38px; border-radius:50%;
+    border:2px solid currentColor; opacity:0; }
+  .playbtn.playing::after { animation:halo 1.6s ease-out infinite; }
+  @keyframes halo { 0%{opacity:.5;transform:scale(1)} 100%{opacity:0;transform:scale(1.75)} }
+  .playbtn.playing { background:currentColor; }
+  .playbtn.playing svg { stroke:#fff; }
+
+  .plot-wrap { background:#FBFAF6; border-radius:8px; padding:10px 8px 4px; position:relative; }
+  .tip { position:absolute; pointer-events:none; opacity:0; transform:translate(-50%,-118%);
+    background:#2C2C2A; color:#fff; font-size:11.5px; line-height:1.45; padding:6px 9px; border-radius:7px;
+    white-space:nowrap; transition:opacity .12s ease; z-index:5; font-variant-numeric:tabular-nums; }
+  .tip.on { opacity:1; }
+  .tip b { font-weight:600; }
+  .tip-sub { color:#B4B2A9; }
+  .size-key { display:flex; align-items:center; gap:7px; font-size:11px; color:#A8A69C; }
+  .size-key i { display:inline-block; border-radius:50%; background:#C6C4BA; }
+  canvas { display:block; width:100%; }
+  canvas:focus-visible { outline:2px solid #26215C; outline-offset:3px; border-radius:4px; }
+  .plot-foot { font-size:12px; color:#888780; margin-top:8px; min-height:18px; font-variant-numeric:tabular-nums;
+    display:flex; justify-content:space-between; align-items:center; gap:12px; flex-wrap:wrap; }
+
+  .sr-only { position:absolute; width:1px; height:1px; padding:0; margin:-1px; overflow:hidden;
+    clip:rect(0,0,0,0); white-space:nowrap; border:0; }
+  .data-table { margin-top:10px; font-size:12px; }
+  .data-table summary { cursor:pointer; color:#5F5E5A; padding:4px 0; }
+  .data-table summary:focus-visible { outline:2px solid #7F77DD; outline-offset:2px; }
+  .data-table table { width:100%; border-collapse:collapse; margin-top:6px; font-variant-numeric:tabular-nums; }
+  .data-table th, .data-table td { text-align:right; padding:4px 8px; border-bottom:0.5px solid #E7E4DA; }
+  .data-table th:first-child, .data-table td:first-child { text-align:left; }
+  .data-table th { color:#888780; font-weight:600; font-size:10.5px; }
+  .data-table tbody { display:block; max-height:180px; overflow-y:auto; }
+  .data-table thead, .data-table tbody tr { display:table; width:100%; table-layout:fixed; }
+
+  @keyframes nudge { 0%,100%{transform:translateX(0)} 30%{transform:translateX(-1.5px)} 70%{transform:translateX(1.5px)} }
+  .card.nudge { animation:nudge .16s ease; }
+
+  .panel { background:#fff; border:.5px solid #D3D1C7; border-radius:12px; padding:1.25rem 1.3rem; }
+  .legend { display:flex; flex-wrap:wrap; gap:14px; margin-top:.9rem; font-size:12.5px; color:#5F5E5A; }
+  .legend-item { display:flex; align-items:center; gap:6px; }
+  .swatch { width:11px; height:11px; border-radius:3px; flex-shrink:0; }
+
+  .chart-key { display:flex; flex-wrap:wrap; gap:12px 26px; margin-bottom:1rem; padding-bottom:1rem;
+    border-bottom:.5px solid #E7E4DA; }
+  .chart-key-item { display:flex; align-items:center; gap:10px; font-size:12.5px; color:#5F5E5A; max-width:280px; }
+  .chart-key-item strong { color:#2C2C2A; }
+  .chart-key-icon { flex-shrink:0; }
+
+  .takeaway { background:#F6F4EE; border-radius:10px; padding:.9rem 1.1rem; margin-top:1.1rem;
+    font-size:13.5px; color:#444441; }
+  .takeaway strong { color:#2C2C2A; }
+
+  .auc-scale { margin-top:1rem; }
+  .auc-row { margin-bottom:.65rem; }
+  .auc-row-label { display:block; font-size:11.5px; color:#5F5E5A; margin-bottom:4px; }
+  .auc-track-wrap { display:flex; align-items:center; gap:9px; }
+  .auc-track { position:relative; flex:1; height:8px; background:#E7E4DA; border-radius:4px; overflow:hidden; }
+  .auc-fill { position:absolute; top:0; left:0; height:100%; border-radius:4px; background:#26215C; }
+  .auc-fill-range { background:#B4B2A9; }
+  .auc-row-value { font-size:12px; font-weight:600; color:#2C2C2A; font-variant-numeric:tabular-nums; min-width:58px; text-align:right; flex-shrink:0; }
+  .auc-scale-ends { display:flex; justify-content:space-between; font-size:10.5px; color:#A8A69C; margin-top:3px; }
+
+  .sim-buttons { display:flex; flex-wrap:wrap; gap:7px; margin-bottom:1.1rem; }
+  .sim-btn { font-size:12.5px; padding:6px 13px; border-radius:20px; border:.5px solid #B4B2A9;
+    background:#FBFAF6; cursor:pointer; color:#2C2C2A; transition:all .15s ease; }
+  .sim-btn:hover { background:#F1EFE8; }
+  .sim-btn.active { background:#2C2C2A; color:#fff; border-color:#2C2C2A; }
+  .sim-track { position:relative; height:66px; background:#F6F4EE; border-radius:8px; overflow:hidden;
+    margin-bottom:.7rem; transition:box-shadow .4s ease; }
+  .sim-dot { position:absolute; top:50%; width:10px; height:10px; margin-top:-5px; border-radius:50%;
+    opacity:0; transform:scale(0); }
+  .sim-dot.show { animation:pop .45s cubic-bezier(.2,1.6,.4,1) forwards; }
+  @keyframes pop { 0%{opacity:0;transform:scale(0)} 45%{opacity:1;transform:scale(1.9)} 100%{opacity:1;transform:scale(1)} }
+  .sim-readout { font-size:13px; color:#5F5E5A; display:flex; align-items:center; gap:13px; flex-wrap:wrap; }
+  .sim-readout strong { color:#2C2C2A; font-variant-numeric:tabular-nums; }
+  .meter { flex:1; min-width:110px; max-width:190px; height:7px; background:#F1EFE8; border-radius:4px; overflow:hidden; }
+  .meter-fill { height:100%; width:0%; border-radius:4px; transition:width .35s ease, background .35s ease; }
+
+  footer { margin-top:3rem; font-size:12px; color:#888780; border-top:.5px solid #D3D1C7; padding-top:1.1rem; }
+  footer a { color:#5F5E5A; }
+  footer p { margin:.45rem 0; max-width:700px; }
+  @media (max-width:560px) { .hero-stats { flex-direction:column; } .grid { grid-template-columns:1fr; } }
+  @media (prefers-reduced-motion:reduce) {
+    .playbtn.playing::after { animation:none; opacity:.35; }
+    .card.nudge { animation:none; }
+    .sim-dot.show { animation:none; opacity:1; transform:scale(1); }
+    * { transition-duration:.001ms !important; }
+  }
+</style>
+</head>
+<body>
+<nav style="font:600 13px/1.3 -apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;margin:-1.5rem 0 2rem"><a href="{{ url_for('pages', page='data-physicalization') }}" style="color:#23684a;text-decoration:none">&larr; ReLEAF wiki &middot; Data Physicalization</a></nav>
+
+<h1>Can you hear a plant scream?</h1>
+<p class="lede">Not metaphorically. A stressed plant emits real sound: short ultrasonic pops made by its own
+internal plumbing tearing itself apart. Here's the mechanism, how it was proven, and what it actually sounds like.</p>
+
+<div class="hero-stats">
+  <div class="hstat"><div class="hstat-num" style="color:#888780">&lt;1</div><div class="hstat-label">click per hour from a healthy, watered plant</div></div>
+  <div class="hstat"><div class="hstat-num" style="color:#D85A30">35</div><div class="hstat-label">clicks per hour once that tomato goes thirsty</div></div>
+  <div class="hstat"><div class="hstat-num" style="color:#26215C">20 to 150<span style="font-size:15px"> kHz</span></div><div class="hstat-label">pitch of those clicks; human hearing stops near 20 kHz</div></div>
+</div>
+
+<div class="section">
+  <p class="eyebrow">The mechanism</p>
+  <h2>Why a thirsty plant pops</h2>
+  <p>Water climbs a stem under tension, pulled upward by evaporation at the leaves, the same physics that lets
+  you draw water up a straw. Drought pushes that tension past a breaking point: air is sucked into a water-carrying
+  channel and the column snaps from liquid into a gas-filled void. That rupture, called <em>cavitation</em>, releases
+  a burst of sound. Cutting a stem causes the same failure faster, by exposing the tensioned water straight to open air.</p>
+
+  <p class="eyebrow" style="margin-top:1.75rem">The evidence</p>
+  <h2>How researchers captured it</h2>
+  <div class="steps">
+    <div class="step"><div class="step-n">1</div><span><strong>Ultrasonic microphones.</strong> The pops sit far above human hearing, so Khait, Hadany et al. (Tel Aviv University) recorded across 20 to 250 kHz, about 10 cm from each plant.</span></div>
+    <div class="step"><div class="step-n">2</div><span><strong>A soundproofed chamber first.</strong> Tomato and tobacco recorded three ways: untouched, five days without water, and freshly cut.</span></div>
+    <div class="step"><div class="step-n">3</div><span><strong>Then a working greenhouse.</strong> Repeated amid ordinary background noise to prove it wasn't a laboratory artifact.</span></div>
+    <div class="step"><div class="step-n">4</div><span><strong>Machine learning.</strong> A classifier trained on many acoustic features (not one number) separated stressed from healthy, drought from cutting, and tomato from tobacco.</span></div>
+  </div>
+</div>
+
+<div class="section">
+  <p class="eyebrow">Listen</p>
+  <h2>The recordings</h2>
+  <p class="note">Pitch-shifted down into audible range, with irregular gaps so each pop stands alone. Every dot on
+  a graph is one real click: height is its pitch, size is how loud it was, and it appears as you hear it.</p>
+  <p class="note"><strong>The seconds on each graph are just how far you are into this short recording</strong>,
+  not how long the plant was stressed. Drought played out over five days and a cut stem ruptures within moments;
+  either way, what you're hearing is only a short excerpt of that.</p>
+
+  <div class="featured">
+    <button class="playbtn" onclick="togglePlay('official', this)" aria-label="Play official researcher clip"><svg class="icon-play" width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><polygon points="6 3 20 12 6 21 6 3"></polygon></svg><svg class="icon-pause" width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" style="display:none;"><rect x="6" y="4" width="4" height="16"></rect><rect x="14" y="4" width="4" height="16"></rect></svg></button>
+    <div>
+      <span class="featured-badge">From the paper itself</span>
+      <p class="card-stress" style="color:#26215C;margin-bottom:2px">Tomato, continuous recording</p>
+      <p class="card-desc" style="margin:0">36 seconds of supplementary audio released by the research team with the
+      <em>Cell</em> paper. No graph: we don't have verified per-click measurements for this file.</p>
+      <!-- The five clips are the audio-only files of the Video Universe uploads (iGEM: audio comes from video.igem.org).
+           Each upload is the original clip with silence added: data-lead is the seconds of silence before it, data-len
+           the original clip's length. Playback starts at data-lead and stops at data-lead + data-len, and the plots read
+           the time from data-lead, so DATA's click times are unchanged. -->
+      <audio id="audio-official" preload="none" data-lead="1.69" data-len="36.15"><source src="https://static.igem.org/peertube/streaming-playlists/hls/8d482bbe-5003-4303-856f-a0a9803720df/7a6a53c0-c2c3-4bd3-a349-47f952d21560-0-fragmented.mp4" type="audio/mp4"></audio>
+    </div>
+  </div>
+
+  <div class="grid">
+      <div class="card" id="card-tomato_drought">
+        <audio id="audio-tomato_drought" preload="none" data-lead="1.83" data-len="38.10"><source src="https://static.igem.org/peertube/streaming-playlists/hls/dfc56ddb-8a05-4f96-80dc-f09c88107e1d/84c85156-5d2f-441a-b19d-fe1d4d3b5de1-0-fragmented.mp4" type="audio/mp4"></audio>
+        <div class="card-head">
+          <button class="playbtn" style="border-color:#D85A30;color:#D85A30" data-accent="#D85A30" onclick="togglePlay('tomato_drought', this)" aria-label="Play Tomato Drought"><svg class="icon-play" width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><polygon points="6 3 20 12 6 21 6 3"></polygon></svg><svg class="icon-pause" width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" style="display:none;"><rect x="6" y="4" width="4" height="16"></rect><rect x="14" y="4" width="4" height="16"></rect></svg></button>
+          <div class="card-title">
+            <p class="card-species">Tomato</p>
+            <p class="card-stress" style="color:#D85A30">Drought</p>
+          </div>
+          <div class="counter"><div class="counter-n" id="count-tomato_drought">0<span>/30</span></div><div class="counter-l">clicks played</div></div>
+        </div>
+        <p class="card-desc">Five days without water. Tension in the water column climbs until it snaps.</p>
+        <div class="plot-wrap"><canvas id="plot-tomato_drought" tabindex="0" role="img" aria-label="Scatter chart plotting pitch against time for 30 clicks recorded from a tomato plant under drought stress. Dot size shows loudness. Use arrow keys to move between points, or open the table below for exact values."></canvas><div class="tip" id="tip-tomato_drought" role="status" aria-live="polite" aria-atomic="true"></div></div>
+        <div class="plot-foot"><span id="stat-tomato_drought"></span>
+          <span class="size-key"><i style="width:5px;height:5px"></i><i style="width:9px;height:9px"></i><i style="width:13px;height:13px"></i> bigger dot = louder click</span>
+        </div>
+        <details class="data-table"><summary>View 30 clicks as a table</summary><table><caption class="sr-only">Pitch, loudness and timing of every click in the Tomato Drought clip</caption><thead><tr><th scope="col">Click #</th><th scope="col">Pitch (kHz)</th><th scope="col">Loudness (%)</th><th scope="col">Time (s)</th></tr></thead><tbody><tr><td>1</td><td>77</td><td>100</td><td>0.3</td></tr><tr><td>2</td><td>46</td><td>55</td><td>1.4</td></tr><tr><td>3</td><td>26</td><td>17</td><td>2.8</td></tr><tr><td>4</td><td>53</td><td>56</td><td>3.8</td></tr><tr><td>5</td><td>81</td><td>50</td><td>5.0</td></tr><tr><td>6</td><td>32</td><td>14</td><td>5.7</td></tr><tr><td>7</td><td>62</td><td>54</td><td>8.9</td></tr><tr><td>8</td><td>39</td><td>19</td><td>9.4</td></tr><tr><td>9</td><td>30</td><td>48</td><td>12.2</td></tr><tr><td>10</td><td>60</td><td>19</td><td>13.2</td></tr><tr><td>11</td><td>74</td><td>44</td><td>14.0</td></tr><tr><td>12</td><td>42</td><td>21</td><td>14.9</td></tr><tr><td>13</td><td>74</td><td>38</td><td>15.7</td></tr><tr><td>14</td><td>50</td><td>40</td><td>16.9</td></tr><tr><td>15</td><td>32</td><td>20</td><td>18.3</td></tr><tr><td>16</td><td>33</td><td>23</td><td>20.3</td></tr><tr><td>17</td><td>68</td><td>39</td><td>21.0</td></tr><tr><td>18</td><td>34</td><td>15</td><td>24.1</td></tr><tr><td>19</td><td>64</td><td>27</td><td>25.2</td></tr><tr><td>20</td><td>40</td><td>22</td><td>26.0</td></tr><tr><td>21</td><td>26</td><td>17</td><td>27.2</td></tr><tr><td>22</td><td>36</td><td>29</td><td>27.8</td></tr><tr><td>23</td><td>42</td><td>18</td><td>28.4</td></tr><tr><td>24</td><td>30</td><td>25</td><td>29.9</td></tr><tr><td>25</td><td>40</td><td>17</td><td>31.0</td></tr><tr><td>26</td><td>34</td><td>42</td><td>33.3</td></tr><tr><td>27</td><td>44</td><td>54</td><td>34.2</td></tr><tr><td>28</td><td>33</td><td>18</td><td>35.1</td></tr><tr><td>29</td><td>39</td><td>28</td><td>36.6</td></tr><tr><td>30</td><td>26</td><td>31</td><td>37.6</td></tr></tbody></table></details>
+      </div>
+      <div class="card" id="card-tomato_cut">
+        <audio id="audio-tomato_cut" preload="none" data-lead="2.72" data-len="40.18"><source src="https://static.igem.org/peertube/streaming-playlists/hls/de07bf24-b3ea-4745-9179-464273dca3f1/030f18c7-b034-4a34-b991-8a501b170c15-0-fragmented.mp4" type="audio/mp4"></audio>
+        <div class="card-head">
+          <button class="playbtn" style="border-color:#B3441F;color:#B3441F" data-accent="#B3441F" onclick="togglePlay('tomato_cut', this)" aria-label="Play Tomato Cut stem"><svg class="icon-play" width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><polygon points="6 3 20 12 6 21 6 3"></polygon></svg><svg class="icon-pause" width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" style="display:none;"><rect x="6" y="4" width="4" height="16"></rect><rect x="14" y="4" width="4" height="16"></rect></svg></button>
+          <div class="card-title">
+            <p class="card-species">Tomato</p>
+            <p class="card-stress" style="color:#B3441F">Cut stem</p>
+          </div>
+          <div class="counter"><div class="counter-n" id="count-tomato_cut">0<span>/30</span></div><div class="counter-l">clicks played</div></div>
+        </div>
+        <p class="card-desc">Stem severed, exposing the tensioned water column straight to open air.</p>
+        <div class="plot-wrap"><canvas id="plot-tomato_cut" tabindex="0" role="img" aria-label="Scatter chart plotting pitch against time for 30 clicks recorded from a tomato plant under cut stem stress. Dot size shows loudness. Use arrow keys to move between points, or open the table below for exact values."></canvas><div class="tip" id="tip-tomato_cut" role="status" aria-live="polite" aria-atomic="true"></div></div>
+        <div class="plot-foot"><span id="stat-tomato_cut"></span>
+          <span class="size-key"><i style="width:5px;height:5px"></i><i style="width:9px;height:9px"></i><i style="width:13px;height:13px"></i> bigger dot = louder click</span>
+        </div>
+        <details class="data-table"><summary>View 30 clicks as a table</summary><table><caption class="sr-only">Pitch, loudness and timing of every click in the Tomato Cut stem clip</caption><thead><tr><th scope="col">Click #</th><th scope="col">Pitch (kHz)</th><th scope="col">Loudness (%)</th><th scope="col">Time (s)</th></tr></thead><tbody><tr><td>1</td><td>58</td><td>25</td><td>0.3</td></tr><tr><td>2</td><td>58</td><td>14</td><td>1.1</td></tr><tr><td>3</td><td>48</td><td>24</td><td>2.4</td></tr><tr><td>4</td><td>51</td><td>38</td><td>3.5</td></tr><tr><td>5</td><td>90</td><td>16</td><td>5.1</td></tr><tr><td>6</td><td>42</td><td>56</td><td>5.6</td></tr><tr><td>7</td><td>48</td><td>18</td><td>6.9</td></tr><tr><td>8</td><td>43</td><td>26</td><td>7.6</td></tr><tr><td>9</td><td>84</td><td>12</td><td>8.4</td></tr><tr><td>10</td><td>41</td><td>19</td><td>11.4</td></tr><tr><td>11</td><td>48</td><td>64</td><td>13.0</td></tr><tr><td>12</td><td>50</td><td>38</td><td>16.6</td></tr><tr><td>13</td><td>53</td><td>56</td><td>18.5</td></tr><tr><td>14</td><td>35</td><td>13</td><td>20.8</td></tr><tr><td>15</td><td>53</td><td>23</td><td>21.5</td></tr><tr><td>16</td><td>80</td><td>13</td><td>22.2</td></tr><tr><td>17</td><td>48</td><td>59</td><td>23.0</td></tr><tr><td>18</td><td>50</td><td>88</td><td>24.4</td></tr><tr><td>19</td><td>50</td><td>54</td><td>25.9</td></tr><tr><td>20</td><td>48</td><td>99</td><td>26.5</td></tr><tr><td>21</td><td>71</td><td>34</td><td>27.4</td></tr><tr><td>22</td><td>69</td><td>65</td><td>28.7</td></tr><tr><td>23</td><td>56</td><td>100</td><td>29.3</td></tr><tr><td>24</td><td>67</td><td>16</td><td>29.9</td></tr><tr><td>25</td><td>40</td><td>35</td><td>31.1</td></tr><tr><td>26</td><td>42</td><td>98</td><td>33.2</td></tr><tr><td>27</td><td>50</td><td>12</td><td>35.8</td></tr><tr><td>28</td><td>53</td><td>15</td><td>36.9</td></tr><tr><td>29</td><td>54</td><td>29</td><td>38.5</td></tr><tr><td>30</td><td>73</td><td>52</td><td>39.6</td></tr></tbody></table></details>
+      </div>
+      <div class="card" id="card-tobacco_drought">
+        <audio id="audio-tobacco_drought" preload="none" data-lead="2.25" data-len="34.49"><source src="https://static.igem.org/peertube/streaming-playlists/hls/de722eac-1c57-4573-acad-2013e09ec6eb/81c22830-7828-4321-b3f5-04ef8969aa6e-0-fragmented.mp4" type="audio/mp4"></audio>
+        <div class="card-head">
+          <button class="playbtn" style="border-color:#BA7517;color:#BA7517" data-accent="#BA7517" onclick="togglePlay('tobacco_drought', this)" aria-label="Play Tobacco Drought"><svg class="icon-play" width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><polygon points="6 3 20 12 6 21 6 3"></polygon></svg><svg class="icon-pause" width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" style="display:none;"><rect x="6" y="4" width="4" height="16"></rect><rect x="14" y="4" width="4" height="16"></rect></svg></button>
+          <div class="card-title">
+            <p class="card-species">Tobacco</p>
+            <p class="card-stress" style="color:#BA7517">Drought</p>
+          </div>
+          <div class="counter"><div class="counter-n" id="count-tobacco_drought">0<span>/27</span></div><div class="counter-l">clicks played</div></div>
+        </div>
+        <p class="card-desc">Same drought treatment, different species and vascular anatomy.</p>
+        <div class="plot-wrap"><canvas id="plot-tobacco_drought" tabindex="0" role="img" aria-label="Scatter chart plotting pitch against time for 27 clicks recorded from a tobacco plant under drought stress. Dot size shows loudness. Use arrow keys to move between points, or open the table below for exact values."></canvas><div class="tip" id="tip-tobacco_drought" role="status" aria-live="polite" aria-atomic="true"></div></div>
+        <div class="plot-foot"><span id="stat-tobacco_drought"></span>
+          <span class="size-key"><i style="width:5px;height:5px"></i><i style="width:9px;height:9px"></i><i style="width:13px;height:13px"></i> bigger dot = louder click</span>
+        </div>
+        <details class="data-table"><summary>View 27 clicks as a table</summary><table><caption class="sr-only">Pitch, loudness and timing of every click in the Tobacco Drought clip</caption><thead><tr><th scope="col">Click #</th><th scope="col">Pitch (kHz)</th><th scope="col">Loudness (%)</th><th scope="col">Time (s)</th></tr></thead><tbody><tr><td>1</td><td>39</td><td>57</td><td>0.3</td></tr><tr><td>2</td><td>55</td><td>44</td><td>1.0</td></tr><tr><td>3</td><td>44</td><td>98</td><td>3.5</td></tr><tr><td>4</td><td>58</td><td>46</td><td>4.7</td></tr><tr><td>5</td><td>56</td><td>71</td><td>6.0</td></tr><tr><td>6</td><td>53</td><td>74</td><td>6.5</td></tr><tr><td>7</td><td>58</td><td>98</td><td>7.9</td></tr><tr><td>8</td><td>80</td><td>31</td><td>9.3</td></tr><tr><td>9</td><td>54</td><td>17</td><td>10.6</td></tr><tr><td>10</td><td>75</td><td>31</td><td>11.6</td></tr><tr><td>11</td><td>43</td><td>41</td><td>13.2</td></tr><tr><td>12</td><td>42</td><td>11</td><td>15.0</td></tr><tr><td>13</td><td>53</td><td>20</td><td>16.1</td></tr><tr><td>14</td><td>59</td><td>58</td><td>16.9</td></tr><tr><td>15</td><td>44</td><td>100</td><td>18.7</td></tr><tr><td>16</td><td>44</td><td>23</td><td>19.8</td></tr><tr><td>17</td><td>58</td><td>25</td><td>20.9</td></tr><tr><td>18</td><td>61</td><td>59</td><td>21.5</td></tr><tr><td>19</td><td>40</td><td>39</td><td>22.3</td></tr><tr><td>20</td><td>41</td><td>57</td><td>24.4</td></tr><tr><td>21</td><td>46</td><td>15</td><td>25.5</td></tr><tr><td>22</td><td>43</td><td>93</td><td>26.1</td></tr><tr><td>23</td><td>46</td><td>25</td><td>27.6</td></tr><tr><td>24</td><td>59</td><td>71</td><td>28.6</td></tr><tr><td>25</td><td>42</td><td>97</td><td>31.4</td></tr><tr><td>26</td><td>52</td><td>36</td><td>32.6</td></tr><tr><td>27</td><td>58</td><td>45</td><td>33.9</td></tr></tbody></table></details>
+      </div>
+      <div class="card" id="card-tobacco_cut">
+        <audio id="audio-tobacco_cut" preload="none" data-lead="1.83" data-len="45.18"><source src="https://static.igem.org/peertube/streaming-playlists/hls/5f4e1cda-9b6a-4c38-9e73-60c2fc772c1d/a36808eb-4c86-4d83-9d2d-93bbc9662b72-0-fragmented.mp4" type="audio/mp4"></audio>
+        <div class="card-head">
+          <button class="playbtn" style="border-color:#8F5810;color:#8F5810" data-accent="#8F5810" onclick="togglePlay('tobacco_cut', this)" aria-label="Play Tobacco Cut stem"><svg class="icon-play" width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><polygon points="6 3 20 12 6 21 6 3"></polygon></svg><svg class="icon-pause" width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" style="display:none;"><rect x="6" y="4" width="4" height="16"></rect><rect x="14" y="4" width="4" height="16"></rect></svg></button>
+          <div class="card-title">
+            <p class="card-species">Tobacco</p>
+            <p class="card-stress" style="color:#8F5810">Cut stem</p>
+          </div>
+          <div class="counter"><div class="counter-n" id="count-tobacco_cut">0<span>/30</span></div><div class="counter-l">clicks played</div></div>
+        </div>
+        <p class="card-desc">Same cut treatment, different species and vascular anatomy.</p>
+        <div class="plot-wrap"><canvas id="plot-tobacco_cut" tabindex="0" role="img" aria-label="Scatter chart plotting pitch against time for 30 clicks recorded from a tobacco plant under cut stem stress. Dot size shows loudness. Use arrow keys to move between points, or open the table below for exact values."></canvas><div class="tip" id="tip-tobacco_cut" role="status" aria-live="polite" aria-atomic="true"></div></div>
+        <div class="plot-foot"><span id="stat-tobacco_cut"></span>
+          <span class="size-key"><i style="width:5px;height:5px"></i><i style="width:9px;height:9px"></i><i style="width:13px;height:13px"></i> bigger dot = louder click</span>
+        </div>
+        <details class="data-table"><summary>View 30 clicks as a table</summary><table><caption class="sr-only">Pitch, loudness and timing of every click in the Tobacco Cut stem clip</caption><thead><tr><th scope="col">Click #</th><th scope="col">Pitch (kHz)</th><th scope="col">Loudness (%)</th><th scope="col">Time (s)</th></tr></thead><tbody><tr><td>1</td><td>55</td><td>51</td><td>0.3</td></tr><tr><td>2</td><td>63</td><td>33</td><td>0.9</td></tr><tr><td>3</td><td>79</td><td>30</td><td>5.7</td></tr><tr><td>4</td><td>52</td><td>29</td><td>6.6</td></tr><tr><td>5</td><td>57</td><td>16</td><td>8.8</td></tr><tr><td>6</td><td>65</td><td>17</td><td>9.4</td></tr><tr><td>7</td><td>63</td><td>30</td><td>12.2</td></tr><tr><td>8</td><td>69</td><td>16</td><td>12.7</td></tr><tr><td>9</td><td>58</td><td>51</td><td>13.9</td></tr><tr><td>10</td><td>52</td><td>30</td><td>14.5</td></tr><tr><td>11</td><td>54</td><td>56</td><td>15.2</td></tr><tr><td>12</td><td>48</td><td>25</td><td>17.0</td></tr><tr><td>13</td><td>66</td><td>25</td><td>19.6</td></tr><tr><td>14</td><td>53</td><td>19</td><td>20.7</td></tr><tr><td>15</td><td>56</td><td>72</td><td>22.4</td></tr><tr><td>16</td><td>44</td><td>41</td><td>23.7</td></tr><tr><td>17</td><td>62</td><td>41</td><td>24.6</td></tr><tr><td>18</td><td>56</td><td>49</td><td>27.0</td></tr><tr><td>19</td><td>56</td><td>47</td><td>28.9</td></tr><tr><td>20</td><td>68</td><td>25</td><td>29.7</td></tr><tr><td>21</td><td>69</td><td>39</td><td>30.8</td></tr><tr><td>22</td><td>95</td><td>44</td><td>32.3</td></tr><tr><td>23</td><td>42</td><td>40</td><td>33.7</td></tr><tr><td>24</td><td>48</td><td>27</td><td>34.3</td></tr><tr><td>25</td><td>65</td><td>14</td><td>39.1</td></tr><tr><td>26</td><td>69</td><td>56</td><td>39.6</td></tr><tr><td>27</td><td>63</td><td>35</td><td>41.2</td></tr><tr><td>28</td><td>65</td><td>31</td><td>42.8</td></tr><tr><td>29</td><td>76</td><td>100</td><td>43.5</td></tr><tr><td>30</td><td>38</td><td>18</td><td>44.6</td></tr></tbody></table></details>
+      </div></div>
+</div>
+
+<div class="section">
+  <p class="eyebrow">The honest comparison</p>
+  <h2>Can you tell the stresses apart?</h2>
+  <p class="note">Peak frequency of ~2500 clicks measured straight from the original recordings, grouped into five
+  conditions. Look at the two shaded zones below: a healthy plant's clicks stay low and separate (gray), while
+  every stressed plant (drought or cut, tomato or tobacco) clicks noticeably higher (orange). Telling those two
+  zones apart is easy. Telling the four stressed conditions apart from <em>each other</em> is the hard part.</p>
+  <div class="panel">
+    <div class="chart-key">
+      <span class="chart-key-item"><svg class="chart-key-icon" width="18" height="14" viewBox="0 0 18 14" aria-hidden="true"><path d="M1 13 Q9 1 17 13 Z" fill="#C6C4BA"></path></svg>
+        <span><strong>Shape</strong> = how that condition's clicks are spread across pitch. A taller point means more clicks landed near that pitch.</span></span>
+      <span class="chart-key-item"><svg class="chart-key-icon" width="14" height="14" viewBox="0 0 14 14" aria-hidden="true"><circle cx="7" cy="7" r="5.5" fill="#2C2C2A"></circle></svg>
+        <span><strong>Dot</strong> = the median: the "typical" click. Exactly half of that condition's clicks were higher-pitched than this, half were lower.</span></span>
+    </div>
+    <p class="note" style="margin:0 0 1rem">The gray and orange zones barely touch, but the four orange shapes sit almost on top of each other.</p>
+    <canvas id="dist" role="img" aria-label="Chart comparing click pitch for background noise and four plant stress conditions, in two shaded zones. The regular zone, about 23 to 38 kHz, holds only healthy-plant clicks and sits clearly apart. The stressed zone, roughly 37 to 67 kHz, holds all four stress conditions overlapping heavily, with medians between 46 and 57 kHz. Full statistics are in the paragraph below the chart."></canvas>
+    <div class="legend">
+      <span class="legend-item"><span class="swatch" style="background:#9A988E"></span>Greenhouse background</span>
+      <span class="legend-item"><span class="swatch" style="background:#D85A30"></span>Tomato, drought</span>
+      <span class="legend-item"><span class="swatch" style="background:#B3441F"></span>Tomato, cut</span>
+      <span class="legend-item"><span class="swatch" style="background:#BA7517"></span>Tobacco, drought</span>
+      <span class="legend-item"><span class="swatch" style="background:#8F5810"></span>Tobacco, cut</span>
+    </div>
+    <div class="takeaway">
+      <strong>That overlap is the point.</strong> Scored for separability, background noise splits from plant clicks
+      cleanly (AUC 0.88), while the four stress conditions score just 0.53 to 0.65 against each other, barely
+      above the 0.50 of a coin flip. That is exactly why the study needed a machine-learning model trained on many
+      features at once, not a threshold on one number. What gives a stressed plant away isn't the sound of any single
+      pop. It's how often they come.
+
+      <div class="auc-scale" role="img" aria-label="Separability scale from 0.50, a coin flip, to 1.00, perfectly separable. Plant clicks versus background noise scores 0.88. Any two stress conditions against each other score only 0.53 to 0.65.">
+        <div class="auc-row">
+          <span class="auc-row-label">Plant clicks vs. background noise</span>
+          <div class="auc-track-wrap">
+            <div class="auc-track"><div class="auc-fill" style="width:76%"></div></div>
+            <span class="auc-row-value">0.88</span>
+          </div>
+        </div>
+        <div class="auc-row">
+          <span class="auc-row-label">Any two stress conditions vs. each other</span>
+          <div class="auc-track-wrap">
+            <div class="auc-track"><div class="auc-fill auc-fill-range" style="left:6%;width:24%"></div></div>
+            <span class="auc-row-value">0.53 to 0.65</span>
+          </div>
+        </div>
+        <div class="auc-scale-ends"><span>0.50 &middot; coin flip</span><span>1.00 &middot; perfectly separable</span></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="section">
+  <p class="eyebrow">The real signal</p>
+  <h2>Watch an hour go by</h2>
+  <p class="note">Every clip above holds click count constant so they're comparable by ear. In life, rate is what
+  gives stress away. Each button runs one simulated hour at that condition's published rate.</p>
+  <div class="panel" id="sim-panel">
+    <div class="sim-buttons">
+      <button class="sim-btn" onclick="runSim(1,'#888780',this)">Healthy &middot; 1/hr</button>
+      <button class="sim-btn" onclick="runSim(11,'#BA7517',this)">Tobacco, drought &middot; 11/hr</button>
+      <button class="sim-btn" onclick="runSim(15,'#8F5810',this)">Tobacco, cut &middot; 15/hr</button>
+      <button class="sim-btn" onclick="runSim(25,'#B3441F',this)">Tomato, cut &middot; 25/hr</button>
+      <button class="sim-btn" onclick="runSim(35,'#D85A30',this)">Tomato, drought &middot; 35/hr</button>
+    </div>
+    <div class="sim-track" id="sim-track"></div>
+    <div class="sim-readout">
+      <span><strong id="sim-count">0</strong> clicks appeared; published rate: <strong id="sim-rate">none</strong></span>
+      <div class="meter"><div class="meter-fill" id="meter-fill"></div></div>
+    </div>
+  </div>
+</div>
+
+<footer>
+  <p>Source: Khait, I., Lewin-Epstein, O., Sharon, R., et al. (2023). Sounds emitted by plants under stress are
+  airborne and informative. <em>Cell</em>, 186(7), 1328 to 1336.
+  <a href="https://doi.org/10.1016/j.cell.2023.03.009">doi:10.1016/j.cell.2023.03.009</a>. Recordings via
+  <a href="https://datadryad.org/dataset/doi:10.5061/dryad.jwstqjqf7">Dryad</a> (CC0).</p>
+  <p>Every frequency shown is the peak frequency of a single click, computed by FFT directly from the original
+  500 kHz recordings (275 to 600 clicks per condition in the comparison chart). As a check, 98% of measured clicks
+  fall inside the 20 to 100 kHz range the paper reports, and 71% inside the 40 to 80 kHz band its authors
+  described, but the per-click values are our own measurements, not figures published in the paper.
+  Pitch-shifting, click spacing and the hour simulation were produced for this page: true gaps between clicks run to
+  minutes, so spacing here is compressed while keeping its irregular character.</p>
+</footer>
+
+<script>
+var DATA = {"tomato_drought":{"dur":37.98,"clicks":[{"t":0.35,"f":76.9,"a":15988},{"t":1.439,"f":46.0,"a":8860},{"t":2.781,"f":26.5,"a":2686},{"t":3.759,"f":52.9,"a":8910},{"t":4.998,"f":80.9,"a":8044},{"t":5.685,"f":32.5,"a":2167},{"t":8.915,"f":62.4,"a":8596},{"t":9.445,"f":39.0,"a":3069},{"t":12.215,"f":30.0,"a":7726},{"t":13.198,"f":60.4,"a":3000},{"t":13.961,"f":73.9,"a":7110},{"t":14.917,"f":42.0,"a":3420},{"t":15.689,"f":74.4,"a":6117},{"t":16.932,"f":49.5,"a":6318},{"t":18.313,"f":32.0,"a":3237},{"t":20.343,"f":33.0,"a":3647},{"t":21.044,"f":67.9,"a":6283},{"t":24.082,"f":34.0,"a":2372},{"t":25.193,"f":63.9,"a":4237},{"t":25.995,"f":40.5,"a":3453},{"t":27.224,"f":26.5,"a":2786},{"t":27.807,"f":35.5,"a":4610},{"t":28.377,"f":42.0,"a":2957},{"t":29.879,"f":30.0,"a":4020},{"t":31.02,"f":40.0,"a":2727},{"t":33.299,"f":34.5,"a":6733},{"t":34.202,"f":44.5,"a":8655},{"t":35.142,"f":33.0,"a":2948},{"t":36.609,"f":39.0,"a":4418},{"t":37.553,"f":26.5,"a":4926}]},"tomato_cut":{"dur":40.04,"clicks":[{"t":0.35,"f":58.4,"a":8142},{"t":1.107,"f":58.4,"a":4486},{"t":2.441,"f":48.5,"a":7826},{"t":3.472,"f":51.4,"a":12538},{"t":5.112,"f":89.9,"a":5113},{"t":5.641,"f":42.5,"a":18399},{"t":6.887,"f":47.5,"a":6040},{"t":7.609,"f":43.0,"a":8405},{"t":8.417,"f":84.4,"a":3858},{"t":11.399,"f":41.0,"a":6085},{"t":13.045,"f":48.0,"a":20936},{"t":16.604,"f":49.5,"a":12305},{"t":18.525,"f":53.4,"a":18433},{"t":20.842,"f":35.0,"a":4109},{"t":21.481,"f":52.9,"a":7424},{"t":22.246,"f":80.4,"a":4281},{"t":22.959,"f":48.5,"a":19169},{"t":24.4,"f":50.0,"a":28887},{"t":25.902,"f":49.5,"a":17716},{"t":26.526,"f":48.0,"a":32408},{"t":27.356,"f":70.9,"a":11209},{"t":28.733,"f":68.9,"a":21159},{"t":29.31,"f":55.9,"a":32744},{"t":29.911,"f":67.4,"a":5212},{"t":31.131,"f":39.5,"a":11572},{"t":33.153,"f":42.5,"a":32222},{"t":35.833,"f":50.4,"a":4035},{"t":36.92,"f":52.9,"a":4987},{"t":38.488,"f":53.9,"a":9620},{"t":39.621,"f":72.9,"a":17167}]},"tobacco_drought":{"dur":34.37,"clicks":[{"t":0.35,"f":39.0,"a":18455},{"t":0.989,"f":54.9,"a":14415},{"t":3.507,"f":43.5,"a":31954},{"t":4.737,"f":58.4,"a":14853},{"t":5.96,"f":56.4,"a":22953},{"t":6.504,"f":53.4,"a":24040},{"t":7.894,"f":57.9,"a":31820},{"t":9.266,"f":80.4,"a":10004},{"t":10.64,"f":54.4,"a":5385},{"t":11.618,"f":74.9,"a":10126},{"t":13.232,"f":43.0,"a":13426},{"t":15.013,"f":42.5,"a":3521},{"t":16.056,"f":52.9,"a":6517},{"t":16.859,"f":59.4,"a":18780},{"t":18.742,"f":44.0,"a":32518},{"t":19.803,"f":44.0,"a":7364},{"t":20.926,"f":57.9,"a":8150},{"t":21.538,"f":60.9,"a":19029},{"t":22.256,"f":40.5,"a":12727},{"t":24.417,"f":41.0,"a":18515},{"t":25.522,"f":46.0,"a":4860},{"t":26.064,"f":43.0,"a":30140},{"t":27.648,"f":45.5,"a":8001},{"t":28.564,"f":59.4,"a":23227},{"t":31.448,"f":42.0,"a":31664},{"t":32.645,"f":52.4,"a":11846},{"t":33.949,"f":58.4,"a":14572}]},"tobacco_cut":{"dur":45.03,"clicks":[{"t":0.35,"f":54.9,"a":16329},{"t":0.888,"f":62.9,"a":10461},{"t":5.718,"f":78.9,"a":9556},{"t":6.616,"f":52.4,"a":9167},{"t":8.794,"f":57.4,"a":5032},{"t":9.434,"f":64.9,"a":5394},{"t":12.15,"f":62.9,"a":9523},{"t":12.685,"f":69.4,"a":5128},{"t":13.894,"f":57.9,"a":16367},{"t":14.49,"f":52.4,"a":9628},{"t":15.161,"f":54.4,"a":17813},{"t":16.957,"f":47.5,"a":8064},{"t":19.599,"f":66.4,"a":7968},{"t":20.665,"f":53.4,"a":6204},{"t":22.351,"f":55.9,"a":22909},{"t":23.74,"f":44.5,"a":12990},{"t":24.644,"f":61.9,"a":13014},{"t":26.951,"f":56.4,"a":15635},{"t":28.945,"f":55.9,"a":15045},{"t":29.74,"f":68.4,"a":8084},{"t":30.843,"f":69.4,"a":12373},{"t":32.284,"f":94.9,"a":13893},{"t":33.725,"f":42.0,"a":12732},{"t":34.314,"f":48.0,"a":8719},{"t":39.068,"f":65.4,"a":4415},{"t":39.594,"f":68.9,"a":17853},{"t":41.241,"f":63.4,"a":11069},{"t":42.79,"f":65.4,"a":9898},{"t":43.541,"f":75.9,"a":31873},{"t":44.606,"f":38.0,"a":5703}]}};
+var DIST = {"tomato_drought":{"hist":[0.214,0.505,0.731,0.908,1.0,0.875,0.673,0.514,0.474,0.474,0.364,0.196,0.092,0.067,0.046,0.024],"median":46.0,"q1":37.0,"q3":60.9,"n":600},"tomato_cut":{"hist":[0.069,0.238,0.516,0.798,0.949,1.0,0.935,0.892,0.848,0.653,0.466,0.357,0.274,0.195,0.108,0.047],"median":54.4,"q1":43.5,"q3":65.9,"n":600},"tobacco_drought":{"hist":[0.034,0.19,0.51,0.857,1.0,0.905,0.782,0.694,0.551,0.49,0.476,0.34,0.218,0.143,0.095,0.082],"median":51.4,"q1":42.0,"q3":65.9,"n":275},"tobacco_cut":{"hist":[0.038,0.129,0.321,0.575,0.846,0.992,0.988,1.0,0.992,0.879,0.688,0.442,0.204,0.1,0.092,0.05],"median":57.4,"q1":46.5,"q3":67.4,"n":506},"background":{"hist":[0.747,1.0,0.952,0.759,0.542,0.292,0.137,0.135,0.087,0.022,0.005,0.005,0.002,0.0,0.0,0.0],"median":31.0,"q1":22.9,"q3":38.1,"n":600},"_bins":[20,25,30,35,40,45,50,55,60,65,70,75,80,85,90,95,100]};
+var ACCENT = {tomato_drought:'#D85A30',tomato_cut:'#B3441F',tobacco_drought:'#BA7517',tobacco_cut:'#8F5810'};
+var FMIN = 20, FMAX = 100;
+var playing = null, animId = null;
+
+function setupCanvas(cv, cssH) {
+  var dpr = window.devicePixelRatio || 1;
+  var w = cv.parentElement.clientWidth - 12;
+  cv.style.height = cssH + 'px';
+  cv.width = Math.max(220, Math.round(w * dpr));
+  cv.height = Math.round(cssH * dpr);
+  var ctx = cv.getContext('2d');
+  ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+  return { ctx: ctx, w: Math.max(220, w), h: cssH };
+}
+
+var GEO = {};
+
+function drawPlot(key, upto, headT) {
+  var cv = document.getElementById('plot-' + key);
+  if (!cv) return;
+  var s = setupCanvas(cv, 212), ctx = s.ctx;
+  var d = DATA[key];
+  var L = 46, R = 12, T = 28, B = 34, PAD = 17;
+  var PH = s.h - T - B;
+  var maxA = 0;
+  d.clicks.forEach(function(c) { if (c.a > maxA) maxA = c.a; });
+  GEO[key] = { L: L, R: R, T: T, B: B, PAD: PAD, w: s.w, h: s.h, PH: PH, maxA: maxA, dur: d.dur };
+  ctx.clearRect(0, 0, s.w, s.h);
+
+  function yf(f) {
+    var v = Math.max(FMIN, Math.min(FMAX, f));
+    return T + (1 - (v - FMIN) / (FMAX - FMIN)) * PH;
+  }
+  function xf(t) { return (L + PAD) + (t / d.dur) * (s.w - L - R - 2 * PAD); }
+
+  ctx.fillStyle = '#F0EDE3';
+  ctx.fillRect(L, yf(80), s.w - L - R, yf(40) - yf(80));
+  ctx.fillStyle = '#BDBAAF';
+  ctx.font = '9.5px -apple-system,sans-serif'; ctx.textAlign = 'left';
+  ctx.fillText('40 to 80 kHz: typical range', L + 6, yf(80) + 12);
+
+  ctx.font = '10px -apple-system,sans-serif'; ctx.textAlign = 'right';
+  [20, 60, 100].forEach(function(f) {
+    var y = yf(f);
+    ctx.strokeStyle = '#E7E4DA'; ctx.lineWidth = 1;
+    ctx.beginPath(); ctx.moveTo(L, y); ctx.lineTo(s.w - R, y); ctx.stroke();
+    ctx.fillStyle = '#9A988E'; ctx.fillText(f, L - 7, y + 3.5);
+  });
+
+  ctx.textAlign = 'left'; ctx.fillStyle = '#888780'; ctx.font = '10.5px -apple-system,sans-serif';
+  ctx.fillText('pitch (kHz)', 2, 12);
+
+  ctx.strokeStyle = '#E0DDD3'; ctx.lineWidth = 1;
+  ctx.beginPath(); ctx.moveTo(L, s.h - B); ctx.lineTo(s.w - R, s.h - B); ctx.stroke();
+  ctx.textAlign = 'center'; ctx.font = '10px -apple-system,sans-serif';
+  var step = d.dur > 40 ? 10 : 5;
+  for (var t = 0; t <= d.dur; t += step) {
+    var x = xf(t);
+    ctx.strokeStyle = '#E7E4DA';
+    ctx.beginPath(); ctx.moveTo(x, s.h - B); ctx.lineTo(x, s.h - B + 4); ctx.stroke();
+    ctx.fillStyle = '#A8A69C'; ctx.fillText(t, x, s.h - B + 16);
+  }
+  ctx.textAlign = 'right'; ctx.fillStyle = '#B4B2A9'; ctx.font = '10px -apple-system,sans-serif';
+  ctx.fillText('seconds into this recording →', s.w - R, s.h - B + 28);
+
+  if (headT != null) {
+    var hx = xf(headT);
+    ctx.beginPath(); ctx.moveTo(hx, T - 4); ctx.lineTo(hx, s.h - B);
+    ctx.strokeStyle = ACCENT[key]; ctx.globalAlpha = 0.35; ctx.lineWidth = 1.5;
+    ctx.stroke(); ctx.globalAlpha = 1;
+  }
+
+  d.clicks.forEach(function(c, i) {
+    var x = xf(c.t), y = yf(c.f);
+    var r = 3.2 + (c.a / maxA) * 7.5;
+    var on = upto >= 0 && i <= upto;
+    if (on) {
+      ctx.beginPath(); ctx.moveTo(x, y); ctx.lineTo(x, s.h - B);
+      ctx.strokeStyle = ACCENT[key]; ctx.globalAlpha = 0.13; ctx.lineWidth = 1.5;
+      ctx.stroke(); ctx.globalAlpha = 1;
+    }
+    ctx.beginPath(); ctx.arc(x, y, r, 0, Math.PI * 2);
+    ctx.fillStyle = on ? ACCENT[key] : '#DEDCD3';
+    ctx.globalAlpha = on ? 0.88 : 1; ctx.fill(); ctx.globalAlpha = 1;
+    if (i === upto) {
+      ctx.beginPath(); ctx.arc(x, y, r + 6, 0, Math.PI * 2);
+      ctx.strokeStyle = ACCENT[key]; ctx.lineWidth = 2; ctx.stroke();
+    }
+  });
+}
+
+function hitTest(key, mx, my) {
+  var g = GEO[key], d = DATA[key];
+  if (!g) return -1;
+  var best = -1, bestD = 15;
+  for (var i = 0; i < d.clicks.length; i++) {
+    var c = d.clicks[i];
+    var x = (g.L + g.PAD) + (c.t / g.dur) * (g.w - g.L - g.R - 2 * g.PAD);
+    var v = Math.max(FMIN, Math.min(FMAX, c.f));
+    var y = g.T + (1 - (v - FMIN) / (FMAX - FMIN)) * g.PH;
+    var dist = Math.sqrt((mx - x) * (mx - x) + (my - y) * (my - y));
+    if (dist < bestD) { bestD = dist; best = i; }
+  }
+  return best;
+}
+
+var FOCUS = {};
+
+function showTip(key, i) {
+  var tip = document.getElementById('tip-' + key);
+  var c = DATA[key].clicks[i], g = GEO[key];
+  if (!tip || !c || !g) return;
+  var loud = Math.round((c.a / g.maxA) * 100);
+  tip.innerHTML = '<b>' + c.f.toFixed(0) + ' kHz</b> <span class="tip-sub">pitch</span><br>' +
+                  '<b>' + loud + '%</b> <span class="tip-sub">of loudest click</span><br>' +
+                  '<span class="tip-sub">click ' + (i + 1) + ' of ' + DATA[key].clicks.length + ', ' + c.t.toFixed(1) + 's into the clip</span>';
+  var x = (g.L + g.PAD) + (c.t / g.dur) * (g.w - g.L - g.R - 2 * g.PAD);
+  var v = Math.max(FMIN, Math.min(FMAX, c.f));
+  var y = g.T + (1 - (v - FMIN) / (FMAX - FMIN)) * g.PH;
+  tip.style.left = (x + 8) + 'px'; tip.style.top = (y + 10) + 'px';
+  tip.classList.add('on');
+}
+
+function hideTip(key) {
+  var tip = document.getElementById('tip-' + key);
+  if (tip) tip.classList.remove('on');
+}
+
+function ringAt(key, i) {
+  var g = GEO[key], c = DATA[key].clicks[i];
+  var cv = document.getElementById('plot-' + key);
+  if (!g || !c || !cv) return;
+  var ctx = cv.getContext('2d');
+  var x = (g.L + g.PAD) + (c.t / g.dur) * (g.w - g.L - g.R - 2 * g.PAD);
+  var v = Math.max(FMIN, Math.min(FMAX, c.f));
+  var y = g.T + (1 - (v - FMIN) / (FMAX - FMIN)) * g.PH;
+  ctx.beginPath(); ctx.arc(x, y, 10, 0, Math.PI * 2);
+  ctx.strokeStyle = '#26215C'; ctx.lineWidth = 2.5; ctx.stroke();
+}
+
+function bindHover(key) {
+  var cv = document.getElementById('plot-' + key);
+  var tip = document.getElementById('tip-' + key);
+  if (!cv || !tip) return;
+  cv.addEventListener('mousemove', function(e) {
+    var rect = cv.getBoundingClientRect();
+    var mx = e.clientX - rect.left, my = e.clientY - rect.top;
+    var i = hitTest(key, mx, my);
+    if (i < 0) { hideTip(key); cv.style.cursor = 'default'; return; }
+    showTip(key, i); cv.style.cursor = 'pointer';
+  });
+  cv.addEventListener('mouseleave', function() {
+    hideTip(key); cv.style.cursor = 'default';
+  });
+  cv.addEventListener('touchstart', function(e) {
+    var t = e.touches[0]; if (!t) return;
+    var rect = cv.getBoundingClientRect();
+    var mx = t.clientX - rect.left, my = t.clientY - rect.top;
+    var i = hitTest(key, mx, my);
+    if (i < 0) return;
+    FOCUS[key] = i; showTip(key, i);
+  }, { passive: true });
+  cv.addEventListener('keydown', function(e) {
+    if (['ArrowRight', 'ArrowLeft', 'Home', 'End'].indexOf(e.key) === -1) return;
+    e.preventDefault();
+    var n = DATA[key].clicks.length;
+    var i = FOCUS[key] != null ? FOCUS[key] : -1;
+    if (e.key === 'ArrowRight') i = Math.min(n - 1, i + 1);
+    else if (e.key === 'ArrowLeft') i = Math.max(0, i - 1);
+    else if (e.key === 'Home') i = 0;
+    else if (e.key === 'End') i = n - 1;
+    FOCUS[key] = i;
+    drawPlot(key, -1, null);
+    ringAt(key, i);
+    showTip(key, i);
+  });
+  cv.addEventListener('focus', function() {
+    if (FOCUS[key] == null) { FOCUS[key] = 0; drawPlot(key, -1, null); ringAt(key, 0); showTip(key, 0); }
+    else { ringAt(key, FOCUS[key]); showTip(key, FOCUS[key]); }
+  });
+  cv.addEventListener('blur', function() { hideTip(key); });
+}
+
+function stat(key, i) {
+  var el = document.getElementById('stat-' + key), d = DATA[key];
+  if (!el) return;
+  if (i < 0) {
+    var fs = d.clicks.map(function(c) { return c.f; }).sort(function(a, b) { return a - b; });
+    el.textContent = 'this clip spans ' + fs[0].toFixed(0) + ' to ' + fs[fs.length - 1].toFixed(0) + ' kHz';
+  } else {
+    el.textContent = 'now playing click ' + (i + 1) + ' \u00b7 ' + d.clicks[i].f.toFixed(0) + ' kHz';
+  }
+  var c = document.getElementById('count-' + key);
+  if (c) c.firstChild.textContent = (i + 1);
+}
+
+function drawDist() {
+  var cv = document.getElementById('dist');
+  if (!cv) return;
+  var rows = [
+    { k: 'background', c: '#888780', label: 'Greenhouse background' },
+    { k: 'tomato_drought', c: '#D85A30', label: 'Tomato, drought' },
+    { k: 'tomato_cut', c: '#B3441F', label: 'Tomato, cut' },
+    { k: 'tobacco_drought', c: '#BA7517', label: 'Tobacco, drought' },
+    { k: 'tobacco_cut', c: '#8F5810', label: 'Tobacco, cut' }
+  ];
+  var bins = DIST._bins;
+  var RH = 50, TOP = 54, BOT = 34, LAB = 160, R = 54;
+  var s = setupCanvas(cv, TOP + rows.length * RH + BOT), ctx = s.ctx;
+  var PW = s.w - LAB - R;
+  var chartBottom = TOP + rows.length * RH;
+  ctx.clearRect(0, 0, s.w, s.h);
+
+  function xf(f) { return LAB + ((f - 20) / 80) * PW; }
+
+  var bg = DIST.background;
+var q1s = [], q3s = [];
+
+rows.forEach(function(r) {
+  if (r.k !== 'background') {
+    q1s.push(DIST[r.k].q1);
+    q3s.push(DIST[r.k].q3);
+  }
+});
+
+var lo = Math.min.apply(null, q1s);
+var hi = Math.max.apply(null, q3s);
+
+// Only shade the FOUR stressed-condition rows.
+// Leave the greenhouse background row completely plain.
+var stressTop = TOP + RH;
+var stressBottom = chartBottom;
+
+ctx.fillStyle = 'rgba(136,135,128,.12)';
+ctx.fillRect(
+  xf(bg.q1) - 3,
+  stressTop - 6,
+  (xf(bg.q3) - xf(bg.q1)) + 6,
+  stressBottom - stressTop + 6
+);
+
+ctx.fillStyle = 'rgba(216,90,48,.09)';
+ctx.fillRect(
+  xf(lo) - 3,
+  stressTop - 6,
+  (xf(hi) - xf(lo)) + 6,
+  stressBottom - stressTop + 6
+);
+
+  ctx.textAlign = 'left';
+  ctx.font = 'bold 11px -apple-system,sans-serif'; ctx.fillStyle = '#6B6A5D';
+  ctx.fillText('REGULAR', xf(bg.q1), TOP - 36);
+  ctx.font = '9.5px -apple-system,sans-serif'; ctx.fillStyle = '#888780';
+  ctx.fillText('healthy, watered plant', xf(bg.q1), TOP - 23);
+
+  ctx.font = 'bold 11px -apple-system,sans-serif'; ctx.fillStyle = '#B3441F';
+  ctx.fillText('STRESSED', xf(lo), TOP - 36);
+  ctx.font = '9.5px -apple-system,sans-serif'; ctx.fillStyle = '#B3441F';
+  ctx.fillText('any of the four conditions below', xf(lo), TOP - 23);
+
+  ctx.font = '10px -apple-system,sans-serif'; ctx.textAlign = 'center';
+  for (var f = 20; f <= 100; f += 20) {
+    ctx.strokeStyle = '#EAE8DF'; ctx.lineWidth = 1;
+    ctx.beginPath(); ctx.moveTo(xf(f), TOP - 6); ctx.lineTo(xf(f), chartBottom); ctx.stroke();
+    ctx.fillStyle = '#9A988E'; ctx.fillText(f, xf(f), chartBottom + 16);
+  }
+  ctx.fillStyle = '#888780'; ctx.font = '10.5px -apple-system,sans-serif';
+  ctx.fillText('pitch of a click (kHz)', LAB + PW / 2, chartBottom + 31);
+
+  rows.forEach(function(r, ri) {
+    var base = TOP + ri * RH + RH - 10;
+    var h = DIST[r.k].hist, d = DIST[r.k];
+    ctx.beginPath(); ctx.moveTo(xf(bins[0] + 2.5), base);
+    for (var i = 0; i < h.length; i++) ctx.lineTo(xf(bins[i] + 2.5), base - h[i] * (RH - 18));
+    ctx.lineTo(xf(bins[h.length - 1] + 2.5), base); ctx.closePath();
+    ctx.globalAlpha = 0.32; ctx.fillStyle = r.c; ctx.fill(); ctx.globalAlpha = 1;
+    ctx.strokeStyle = r.c; ctx.lineWidth = 1.8; ctx.stroke();
+
+    ctx.beginPath(); ctx.arc(xf(d.median), base, 4.5, 0, Math.PI * 2);
+    ctx.fillStyle = r.c; ctx.fill();
+    ctx.lineWidth = 1.5; ctx.strokeStyle = '#FBFAF6'; ctx.stroke();
+
+    ctx.textAlign = 'right'; ctx.fillStyle = '#444441'; ctx.font = '11.5px -apple-system,sans-serif';
+    ctx.fillText(r.label, LAB - 12, base - 12);
+    ctx.textAlign = 'left'; ctx.fillStyle = r.c; ctx.font = '11px -apple-system,sans-serif';
+    ctx.fillText(d.median + ' kHz', s.w - R + 6, base - 12);
+  });
+}
+
+Object.keys(DATA).forEach(function(k) { drawPlot(k, -1); stat(k, -1); bindHover(k); });
+drawDist();
+var rt;
+window.addEventListener('resize', function() {
+  clearTimeout(rt);
+  rt = setTimeout(function() {
+    Object.keys(DATA).forEach(function(k) { drawPlot(k, -1); });
+    drawDist();
+  }, 180);
+});
+
+function lead(audio) { return parseFloat(audio.dataset.lead) || 0; }
+
+function watch(key, audio) {
+  var d = DATA[key], last = -1;
+  function frame() {
+    if (audio.paused || audio.ended) { animId = null; return; }
+    var t = audio.currentTime - lead(audio), idx = -1;
+    for (var i = 0; i < d.clicks.length; i++) {
+      if (d.clicks[i].t <= t) idx = i; else break;
+    }
+    if (idx !== last) {
+      drawPlot(key, idx, t); stat(key, idx);
+      if (idx > last) {
+        var card = document.getElementById('card-' + key);
+        if (card) { card.classList.remove('nudge'); void card.offsetWidth; card.classList.add('nudge'); }
+      }
+      last = idx;
+    } else {
+      drawPlot(key, idx, t);
+    }
+    animId = requestAnimationFrame(frame);
+  }
+  frame();
+}
+
+function reset(key) {
+  if (!DATA[key]) return;
+  drawPlot(key, -1); stat(key, -1);
+  var c = document.getElementById('count-' + key);
+  if (c) c.firstChild.textContent = '0';
+  var card = document.getElementById('card-' + key);
+  if (card) card.classList.remove('active');
+}
+
+function togglePlay(id, btn) {
+  var audio = document.getElementById('audio-' + id);
+  var pi = btn.querySelector('.icon-play'), pa = btn.querySelector('.icon-pause');
+  if (playing && playing.audio !== audio) {
+    var p = playing;
+    p.audio.pause(); p.audio.currentTime = 0;
+    p.btn.classList.remove('playing');
+    p.btn.querySelector('.icon-play').style.display = 'block';
+    p.btn.querySelector('.icon-pause').style.display = 'none';
+    reset(p.id);
+  }
+  if (audio.paused) {
+    if (audio.readyState >= 1) audio.currentTime = lead(audio);
+    else audio.addEventListener('loadedmetadata', function() { audio.currentTime = lead(audio); }, { once: true });
+    audio.play();
+    btn.classList.add('playing'); pi.style.display = 'none'; pa.style.display = 'block';
+    playing = { audio: audio, btn: btn, id: id };
+    var card = document.getElementById('card-' + id);
+    if (card) card.classList.add('active');
+    if (animId) cancelAnimationFrame(animId);
+    if (DATA[id]) { drawPlot(id, -1); watch(id, audio); }
+  } else {
+    audio.pause(); audio.currentTime = 0;
+    btn.classList.remove('playing'); pi.style.display = 'block'; pa.style.display = 'none';
+    playing = null; reset(id);
+  }
+  audio.onended = function() {
+    btn.classList.remove('playing'); pi.style.display = 'block'; pa.style.display = 'none';
+    playing = null;
+    var card = document.getElementById('card-' + id);
+    if (card) card.classList.remove('active');
+    if (DATA[id]) { drawPlot(id, DATA[id].clicks.length - 1); stat(id, -1); }
+  };
+  audio.ontimeupdate = function() {
+    var len = parseFloat(audio.dataset.len);
+    if (len && !audio.paused && audio.currentTime >= lead(audio) + len) {
+      audio.pause(); audio.currentTime = 0; audio.onended();
+    }
+  };
+}
+
+var simT = [];
+window.addEventListener('load', function() {
+  var b = document.querySelectorAll('.sim-btn');
+  if (b.length >= 5) runSim(35, '#D85A30', b[4]);
+});
+function runSim(rate, color, btn) {
+  var btns = document.querySelectorAll('.sim-btn');
+  for (var i = 0; i < btns.length; i++) btns[i].classList.remove('active');
+  btn.classList.add('active');
+  simT.forEach(clearTimeout); simT = [];
+  var track = document.getElementById('sim-track');
+  track.innerHTML = '';
+  document.getElementById('sim-count').textContent = '0';
+  document.getElementById('sim-rate').textContent = rate + '/hour';
+  var it = rate / 35;
+  var fill = document.getElementById('meter-fill');
+  fill.style.width = Math.round(it * 100) + '%'; fill.style.background = color;
+  track.style.boxShadow = 'inset 0 0 ' + Math.round(it * 42) + 'px ' + color + '30';
+  var count = 0;
+  for (var j = 0; j < rate; j++) {
+    (function() {
+      var dot = document.createElement('div');
+      dot.className = 'sim-dot';
+      dot.style.left = (3 + Math.random() * 92) + '%';
+      dot.style.background = color;
+      track.appendChild(dot);
+      simT.push(setTimeout(function() {
+        dot.classList.add('show');
+        count++;
+        document.getElementById('sim-count').textContent = count;
+      }, Math.random() * 4200));
+    })();
+  }
+}
+</script>
+
+<div style="margin-top:3rem;padding-top:1rem;border-top:1px solid #e5e3dc;font-size:12.5px;color:#5F5E5A">
+  <p style="margin:0 0 .3rem">&copy; 2026 &middot; Content on this wiki is licensed under a <a href="https://creativecommons.org/licenses/by/4.0/" rel="license">Creative Commons Attribution 4.0 International license</a>.</p>
+  <p style="margin:0">The repository used to create this website is available at <a href="https://gitlab.igem.org/2026/gems-taiwan">gitlab.igem.org/2026/gems-taiwan</a>.</p>
+</div>
+<script src="static/assets/data/site-nav.js" fetchpriority="high"></script>
+</body>
+</html>

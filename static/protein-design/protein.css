@@ -1,0 +1,1380 @@
+/* =============================================================================
+   Protein Design: the hub and its three subpages share this file.
+
+   28 September 2026. The section was eight pages built along the letters of
+   GRAFT; the students' layout document replaces that with a homepage and three
+   subpages (Methodology, Sprints and Results, Molecular Dynamics). The old
+   URLs still resolve, as redirect stubs, so nothing outside the section broke.
+   The GRAFT letters survive as the spine of the Methodology page, which is
+   where they describe something real.
+
+   HOUSE RULES THIS FILE OBEYS
+   1. One white ground on every page. Boxed notes are white with a hairline and
+      a 3px left edge in the colour of what they are.
+   2. Figures are one component with a fixed set of frames, and every one opens
+      full-window (page.js wires the lightbox; the frames are set here).
+   3. Nothing important is behind a click.
+   4. Any numbered rail agrees with the section numbers page.js writes.
+
+   TWO THINGS ARE DELIBERATELY UNSCOPED. `.stepnav` and its parts sit outside
+   the `.pd` body class, because the strip also has to work on
+   /md-simulations/ and /peptide-design/, which are part of this section but
+   keep their own page classes and their own URLs. Nothing else in this file
+   leaks: every other rule is under `.pd`.
+   ========================================================================== */
+
+/* ========================================================== SECTION STRIP ===
+   Six pages, one wiki nav entry between them, so moving from Restraints to
+   Triage meant going back to the hub. This strip does that job. It is plain
+   markup in each page rather than generated, so a student can add a step by
+   copying a line. The idea is the hardware section's `.hwnav`; the styling is
+   not, because these pages are white.                                       */
+
+.stepnav {
+  max-width: var(--max);
+  margin: 0 auto;
+  padding: 0 var(--sp-5);
+}
+@media (min-width: 640px) { .stepnav { padding: 0 var(--sp-6); } }
+
+.stepnav__inner {
+  display: flex;
+  align-items: baseline;
+  gap: var(--sp-3) var(--sp-5);
+  overflow-x: auto;
+  scrollbar-width: none;
+  padding: var(--sp-3) 0;
+  border-bottom: 1px solid var(--gray-200);
+  font-size: var(--text-xs);
+}
+.stepnav__inner::-webkit-scrollbar { display: none; }
+
+.stepnav__home {
+  flex: none;
+  margin-right: var(--sp-2);
+  font-size: .6875rem; font-weight: 700;
+  letter-spacing: .1em; text-transform: uppercase;
+  color: var(--gray-400);
+  text-decoration: none;
+}
+.stepnav__home:hover { color: var(--leaf-700); }
+
+.stepnav a.step {
+  flex: none;
+  display: inline-flex; align-items: baseline; gap: .45em;
+  padding: .25rem 0 .4rem;
+  border-bottom: 2px solid transparent;
+  color: var(--gray-600);
+  text-decoration: none;
+  white-space: nowrap;
+  transition: color .15s, border-color .15s;
+}
+.stepnav a.step:hover { color: var(--leaf-900); }
+.stepnav a.step[aria-current="page"] {
+  color: var(--leaf-900);
+  font-weight: 650;
+  border-bottom-color: var(--leaf-700);
+}
+
+/* The letter that spells the pipeline. It is the mnemonic, so it is set apart
+   from the word rather than run into it. Packaging is not a GRAFT letter and
+   carries a middot instead, which is the honest thing to show. */
+.stepnav .step__k {
+  font-family: var(--font-mono);
+  font-size: .95em; font-weight: 700;
+  color: var(--leaf-500);
+}
+.stepnav a.step[aria-current="page"] .step__k { color: var(--leaf-700); }
+.stepnav .step__k[data-off] { color: var(--gray-300); }
+
+/* Links out of the section's two older pages keep the strip readable on a
+   page whose own stylesheet sets a different body font. */
+.stepnav, .stepnav * { font-family: var(--font-body); }
+
+/* ============================================================== STEP INDEX ==
+   The hub's card index: six steps, and one line each saying what the step
+   decides. The deciding line is the useful part, so it is in the card and not
+   only in the page it points at. Built on the shape `sus.css` uses for
+   `.goals`.                                                                  */
+
+.pd .steps {
+  display: grid;
+  gap: var(--sp-4);
+  margin: var(--sp-6) 0;
+  grid-template-columns: 1fr;
+}
+@media (min-width: 40rem) { .pd .steps { grid-template-columns: 1fr 1fr; } }
+@media (min-width: 62rem) { .pd .steps { grid-template-columns: repeat(3, 1fr); } }
+
+.pd a.stepcard {
+  display: grid;
+  grid-template-rows: auto auto 1fr auto;
+  gap: var(--sp-2);
+  padding: var(--sp-4) var(--sp-4) var(--sp-4) calc(var(--sp-4) - 3px);
+  border: 1px solid var(--gray-200);
+  border-left: 3px solid var(--leaf-500);
+  border-radius: var(--radius-sm);
+  background: var(--white);
+  color: inherit;
+  text-decoration: none;
+  transition: border-color .15s, box-shadow .15s, transform .15s;
+}
+.pd a.stepcard:hover,
+.pd a.stepcard:focus-visible {
+  border-color: var(--gray-300);
+  border-left-color: var(--leaf-700);
+  box-shadow: var(--shadow-md);
+  transform: translateY(-2px);
+}
+.pd .stepcard__k {
+  display: inline-grid; place-items: center;
+  width: 2.25rem; height: 2.25rem;
+  border-radius: var(--radius-sm);
+  background: var(--leaf-700);
+  color: var(--white);
+  font-family: var(--font-mono);
+  font-weight: 700; font-size: 1.0625rem;
+}
+.pd .stepcard--aside { border-left-color: var(--slate-700); }
+.pd .stepcard--aside .stepcard__k { background: var(--slate-700); font-size: .8125rem; }
+.pd .stepcard__name { font-weight: 650; line-height: 1.3; }
+.pd .stepcard__what { margin: 0; font-size: var(--text-sm); line-height: 1.5; color: var(--gray-600); }
+.pd .stepcard__state {
+  justify-self: start;
+  padding: .15rem .5rem;
+  border: 1px solid var(--gray-300);
+  border-radius: 100px;
+  font-size: var(--text-xs); font-weight: 650;
+  letter-spacing: .04em; text-transform: uppercase;
+  color: var(--gray-600);
+}
+.pd .stepcard__state[data-state="written"] { border-color: var(--leaf-500); color: var(--leaf-700); }
+.pd .stepcard__state[data-state="framework"] { border-color: var(--amber-700); color: var(--amber-700); }
+
+/* ================================================================== GAP =====
+   A section the team has not written yet, stated where the section belongs,
+   with what would close it. The Engineering page does the same thing; this is
+   the boxed version of it, because these pages have more gaps than prose and
+   a reader needs to see at a glance which is which.                         */
+
+.pd .gap {
+  margin: var(--sp-5) 0;
+  padding: var(--sp-3) var(--sp-5);
+  border: 1px solid var(--gray-200);
+  border-left: 3px solid var(--slate-700);
+  border-radius: var(--radius-sm);
+  background: var(--white);
+  font-size: var(--text-sm);
+  color: var(--gray-700);
+}
+.pd .gap > :first-child { margin-top: 0; }
+.pd .gap > :last-child  { margin-bottom: 0; }
+.pd .gap__label {
+  display: block; margin-bottom: var(--sp-1);
+  font-size: .6875rem; font-weight: 700; letter-spacing: .09em;
+  text-transform: uppercase; color: var(--slate-700);
+}
+.pd .gap ul { margin: var(--sp-2) 0 0; padding-left: 1.2em; }
+
+/* ================================================================= FIX ======
+   An editorial marker: two sources that disagree, both named, neither quietly
+   picked. Numbered P1, P2... across the whole section, so the list in each
+   page's status box and the ledger on the hub all point at the same thing.  */
+
+.pd .fix {
+  margin: var(--sp-5) 0;
+  padding: var(--sp-3) var(--sp-5);
+  border: 1px solid var(--gray-200);
+  border-left: 3px solid var(--amber-700);
+  border-radius: var(--radius-sm);
+  background: var(--white);
+  font-size: var(--text-sm);
+  color: var(--gray-700);
+}
+.pd .fix > :first-child { margin-top: 0; }
+.pd .fix > :last-child  { margin-bottom: 0; }
+.pd .fix__label {
+  display: block; margin-bottom: var(--sp-1);
+  font-size: .6875rem; font-weight: 700; letter-spacing: .09em;
+  text-transform: uppercase; color: var(--amber-700);
+}
+.pd .fix ul { margin: var(--sp-2) 0 0; padding-left: 1.2em; }
+
+/* Callouts keep the white ground the rest of the page has. */
+.pd .pagebody .callout,
+.pd .pagebody .callout--unproven,
+.pd .pagebody .callout--borrowed,
+.pd .pagebody .callout--medal {
+  background: var(--white);
+  border-left-width: 3px;
+}
+
+/* ============================================================== FIGURES =====
+   Two frames and nothing sized by hand, copied from `sus.css`.
+
+     .fig           a plate: a 4:3 box, white mat, hairline.
+     .fig--chart    a chart, a table image or a folding diagram. Contained,
+                    never cropped, because cropping cuts the labels off.
+     .fig--strip    a 7:2 strip for a construct map or a wide flow chart.
+     .fig--meet     a 49:20 frame for a meeting photograph.
+
+   Nothing is upscaled except an SVG, which loses nothing by it.             */
+
+.pd .fig { margin: 0 0 var(--sp-6); max-width: 34rem; }
+.pd .fig.wide, .pd .figs .fig { max-width: none; }
+
+.pd .fig__frame {
+  position: relative;
+  aspect-ratio: var(--fr, 4 / 3);
+  display: grid; place-items: center;
+  overflow: hidden;
+  padding: var(--sp-3);
+  background: var(--white);
+  border: 1px solid var(--gray-200);
+  border-radius: var(--radius-sm);
+}
+.pd .fig__frame img {
+  max-width: 100%; max-height: 100%;
+  width: auto; height: auto;
+  object-fit: contain;
+  border: 0; border-radius: 0; background: none;
+  cursor: zoom-in;
+}
+
+.pd .fig--chart { --fr: 3 / 2; }
+.pd .fig--chart .fig__frame { padding: 0; }
+.pd .fig--chart .fig__frame img {
+  position: absolute; inset: 0;
+  width: 100%; height: 100%;
+  max-width: none; max-height: none;
+  padding: var(--sp-3); box-sizing: border-box;
+  object-fit: contain;
+}
+.pd .fig--strip { --fr: 7 / 2; }
+/* a meeting photograph. Both of the ones we hold, the 18 April Brophy call
+   and the Chen call, are 2.45:1, which falls between the chart frame and
+   the strip: in either one the mat is wider than the picture.         */
+.pd .fig--meet { --fr: 49 / 20; }
+.pd .fig--tall  { --fr: 3 / 2; }
+
+.pd .fig figcaption {
+  margin-top: var(--sp-3);
+  padding-left: var(--sp-4);
+  border-left: 3px solid var(--leaf-500);
+  font-size: var(--text-sm); line-height: 1.6;
+  color: var(--gray-600);
+}
+.pd .fig figcaption b { color: var(--gray-700); font-weight: 650; }
+.pd .fig .prov { display: block; margin-top: var(--sp-2); color: var(--gray-500); font-size: var(--text-xs); }
+
+/* A row of figures: equal columns, so equal frames. Captions are not equal
+   length, so the row puts every frame on one grid row and every caption on the
+   next, which lands the images on a shared floor. */
+.pd .figs { display: grid; gap: var(--sp-5); margin: var(--sp-6) 0; align-items: start; }
+@media (min-width: 46rem) {
+  .pd .figs--2 { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
+.pd .figs .fig { margin-bottom: 0; }
+@supports (grid-template-rows: subgrid) {
+  @media (min-width: 46rem) {
+    .pd .figs[class*="figs--"] { grid-template-rows: auto auto; }
+    .pd .figs[class*="figs--"] .fig {
+      display: grid; grid-row: span 2; grid-template-rows: subgrid;
+    }
+  }
+}
+
+/* A pointer under the hub's short reference list: the section's real
+   bibliography is distributed across the step pages, and a reader looking for
+   a paper needs to be told where it lives. */
+.pd .refs__note {
+  margin: var(--sp-4) 0 0;
+  font-size: var(--text-sm);
+  line-height: 1.6;
+  color: var(--gray-500);
+}
+
+/* ================================================================ TABLES ==== */
+
+.pd table.data { border-collapse: collapse; width: 100%; font-size: var(--text-sm); }
+.pd table.data th, .pd table.data td {
+  padding: var(--sp-3) var(--sp-4);
+  border-bottom: 1px solid var(--gray-200);
+  text-align: left; vertical-align: top;
+}
+.pd table.data thead th {
+  border-bottom: 1px solid var(--gray-400);
+  font-size: var(--text-xs); font-weight: 700;
+  letter-spacing: .07em; text-transform: uppercase;
+  color: var(--gray-600);
+}
+.pd table.data tbody tr:last-child td { border-bottom: 1px solid var(--gray-400); }
+.pd table.data code { font-family: var(--font-mono); font-size: .92em; }
+.pd table.data td.open { color: var(--rust-700); }
+
+/* ============================================================== HUB CARDS ===
+   The section homepage is a banner, a summary and three doors, so the doors
+   are the page. They take the soft language of the Engagement pages: a pale
+   rounded well, the artwork inset and rounded inside it, and a chapter colour
+   carried by the rule over the name and by the arrow. Hovering lifts the card
+   onto white, the way the IHP cards do.                                      */
+
+.pd .doors {
+  display: grid;
+  gap: var(--sp-5);
+  margin: 0;
+  grid-template-columns: 1fr;
+}
+@media (min-width: 58rem) { .pd .doors { grid-template-columns: repeat(3, 1fr); } }
+
+.pd a.door {
+  --door-pl: var(--pl, var(--leaf-700));
+  position: relative;
+  display: grid;
+  grid-template-rows: auto auto auto 1fr auto;
+  padding: var(--sp-4);
+  border: 0;
+  border-radius: 28px;
+  background: var(--well, #f5f5f7);
+  color: inherit;
+  text-decoration: none;
+  transition: background .3s var(--ease, ease), box-shadow .3s var(--ease, ease),
+              transform .3s var(--ease, ease);
+}
+.pd a.door:hover,
+.pd a.door:focus-visible {
+  background: #fff;
+  box-shadow: 0 18px 44px -18px rgba(0, 0, 0, .22), 0 2px 8px -4px rgba(0, 0, 0, .1);
+  transform: translateY(-3px);
+}
+.pd a.door:focus-visible { outline: 2px solid var(--door-pl); outline-offset: 3px; }
+
+.pd .door__shot {
+  aspect-ratio: 16 / 9;
+  overflow: hidden;
+  border-radius: 18px;
+  background: var(--leaf-900);
+}
+.pd .door__shot img { width: 100%; height: 100%; object-fit: cover; display: block; }
+.pd .door__shot img.is-fit { object-fit: contain; background: #fff; }
+
+.pd .door__name {
+  display: block;
+  margin-top: var(--sp-4);
+  padding-top: var(--sp-3);
+  border-top: 2px solid var(--door-pl);
+  font-size: 1.3rem; font-weight: 700; line-height: 1.2;
+  letter-spacing: -.015em;
+  color: var(--ink, var(--leaf-900));
+}
+.pd .door__what {
+  margin: var(--sp-2) 0 0;
+  padding: 0;
+  font-size: var(--text-sm); line-height: 1.6;
+  color: var(--ink-3, var(--gray-600));
+}
+.pd .door__in {
+  margin: var(--sp-4) 0 0;
+  padding: 0;
+  list-style: none;
+  align-self: end;
+  font-size: var(--text-xs); line-height: 1.5;
+  color: var(--ink-3, var(--gray-500));
+}
+.pd .door__in li { padding: .25rem 0 .25rem 1.1em; text-indent: -1.1em; }
+.pd .door__in li::before {
+  content: "";
+  display: inline-block;
+  width: .4em; height: .4em; margin-right: .7em; vertical-align: .14em;
+  border-radius: 50%;
+  background: var(--door-pl);
+}
+.pd .door__go {
+  display: block;
+  margin-top: var(--sp-4);
+  color: var(--door-pl);
+  transition: transform .3s var(--ease, ease);
+}
+.pd .door__go svg { display: block; width: 1.6rem; height: 1.6rem; }
+.pd a.door:hover .door__go,
+.pd a.door:focus-visible .door__go { transform: translateX(5px); }
+
+@media (prefers-reduced-motion: reduce) {
+  .pd a.door, .pd .door__go { transition: none; }
+  .pd a.door:hover, .pd a.door:focus-visible { transform: none; }
+  .pd a.door:hover .door__go { transform: none; }
+}
+
+/* ============================================================ KEY RESULTS ===
+   Four claims at the top of the homepage, each with the number that carries
+   it. Not a stat strip for its own sake: every tile links to the page that
+   shows the working.                                                        */
+
+.pd .finds {
+  display: grid;
+  gap: var(--sp-4);
+  margin: var(--sp-5) 0;
+  grid-template-columns: 1fr;
+}
+@media (min-width: 40rem) { .pd .finds { grid-template-columns: 1fr 1fr; } }
+
+.pd .find {
+  padding: var(--sp-4) var(--sp-4) var(--sp-4) calc(var(--sp-4) - 3px);
+  border: 1px solid var(--gray-200);
+  border-left: 3px solid var(--leaf-500);
+  border-radius: var(--radius-sm);
+  background: var(--white);
+}
+.pd .find__n {
+  display: block;
+  font-family: var(--font-mono);
+  font-size: 1.5rem; font-weight: 700; line-height: 1.1;
+  color: var(--leaf-700);
+}
+.pd .find__t {
+  display: block; margin-top: var(--sp-2);
+  font-size: var(--text-sm); font-weight: 650; color: var(--gray-700);
+}
+.pd .find p { margin: var(--sp-2) 0 0; font-size: var(--text-sm); line-height: 1.55; color: var(--gray-600); }
+
+/* ============================================================== RUN CARDS ===
+   The molecular dynamics roster, and the sprint roster, share one shape: a
+   name, a role, a state, and a line of what came out. The state colour is the
+   only decoration, and it repeats the word, so colour is never the only
+   carrier of the meaning.                                                    */
+
+.pd .runs { display: grid; gap: var(--sp-4); margin: var(--sp-5) 0; grid-template-columns: 1fr; list-style: none; padding: 0; }
+@media (min-width: 46rem) { .pd .runs { grid-template-columns: 1fr 1fr; } }
+
+.pd .run {
+  display: grid; gap: var(--sp-2);
+  padding: var(--sp-4) var(--sp-4) var(--sp-4) calc(var(--sp-4) - 3px);
+  border: 1px solid var(--gray-200);
+  border-left: 3px solid var(--gray-300);
+  border-radius: var(--radius-sm);
+  background: var(--white);
+}
+.pd .run[data-state="good"]    { border-left-color: var(--leaf-500); }
+.pd .run[data-state="warn"]    { border-left-color: var(--amber-700); }
+.pd .run[data-state="bad"]     { border-left-color: var(--rust-700); }
+.pd .run[data-state="pending"] { border-left-color: var(--gray-300); }
+
+.pd .run__top { display: flex; flex-wrap: wrap; align-items: baseline; gap: var(--sp-2) var(--sp-3); }
+.pd .run__name { font-weight: 650; color: var(--leaf-900); }
+.pd .run__name a { color: inherit; }
+.pd .run__seq { font-family: var(--font-mono); font-size: var(--text-xs); color: var(--gray-500); }
+.pd .run__role {
+  padding: .15rem .5rem;
+  border: 1px solid var(--gray-300); border-radius: 100px;
+  font-size: var(--text-xs); font-weight: 650;
+  letter-spacing: .04em; text-transform: uppercase; color: var(--gray-600);
+}
+.pd .run[data-state="good"] .run__role { border-color: var(--leaf-500); color: var(--leaf-700); }
+.pd .run[data-state="warn"] .run__role { border-color: var(--amber-700); color: var(--amber-700); }
+.pd .run[data-state="bad"]  .run__role { border-color: var(--rust-700); color: var(--rust-700); }
+.pd .run p { margin: 0; font-size: var(--text-sm); line-height: 1.55; color: var(--gray-600); }
+
+/* ============================================================== SEQUENCE ====
+   A peptide written out so a reader can count to residue 7 without doing it in
+   their head. Plain monospace chips; the shaded ones are the region under
+   discussion wherever it appears.                                            */
+
+.pd .seq {
+  display: flex; flex-wrap: wrap; gap: 2px;
+  margin: var(--sp-4) 0;
+  font-family: var(--font-mono);
+}
+.pd .seq span {
+  display: grid; place-items: center;
+  width: 1.55rem; padding: .3rem 0;
+  border: 1px solid var(--gray-200);
+  border-radius: var(--radius-sm);
+  font-size: var(--text-sm); font-weight: 650;
+  color: var(--gray-600); background: var(--white);
+}
+.pd .seq span[data-on] { border-color: var(--leaf-500); color: var(--leaf-900); background: var(--leaf-50); }
+.pd .seq span[data-motif] { border-color: var(--leaf-700); color: var(--white); background: var(--leaf-700); }
+.pd .seq__cap { margin: calc(var(--sp-2) * -1) 0 var(--sp-5); font-size: var(--text-xs); color: var(--gray-500); }
+
+/* Two peptides over one another, position by position. Twenty-three chips do
+   not fit a phone, so the block scrolls sideways inside itself rather than
+   taking the page with it. */
+.pd .aln {
+  margin: var(--sp-4) 0 var(--sp-2);
+  overflow-x: auto;
+  scrollbar-width: thin;
+  padding-bottom: var(--sp-2);
+}
+.pd .aln__row { display: flex; align-items: center; gap: var(--sp-3); }
+.pd .aln__lab {
+  flex: none; width: 5.2rem;
+  font-size: var(--text-xs); font-weight: 650; color: var(--gray-600);
+  text-align: right;
+}
+.pd .aln .seq { margin: 1px 0; flex-wrap: nowrap; }
+.pd .aln .seq span { width: 1.45rem; }
+.pd .aln .seq--tick span {
+  border-color: transparent; background: none;
+  padding: 0; font-size: .625rem; color: var(--leaf-700);
+}
+.pd .aln .seq--no span {
+  border-color: transparent; background: none;
+  padding: .15rem 0; font-size: .5625rem; font-weight: 500; color: var(--gray-400);
+}
+
+/* ================================================================ PRINT ==== */
+
+@media print {
+  .pd .steps, .pd .doors, .pd .finds, .pd .runs { grid-template-columns: 1fr 1fr; }
+  .pd a.door, .pd .run, .pd .find { break-inside: avoid; }
+  .pd .fig, .pd .fix, .pd .gap { break-inside: avoid; }
+  .stepnav, .pd .lightbox { display: none !important; }
+}
+
+/* ============================================================= LIGHTBOX ====
+   page.css gives the overlay a backdrop at 88% opacity, which lets body text
+   show through under a pale chart and leaves the caption on a muddy ground.
+   Engineering and Sustainability both solved this already; same treatment. */
+
+.pd .lightbox {
+  display: none;
+  place-items: initial;
+  flex-direction: column;
+  align-items: center; justify-content: center;
+  padding: 3vh 3vw;
+  background: rgb(8 20 15 / .97);
+}
+.pd .lightbox.is-open { display: flex; }
+.pd .lightbox figure { margin: 0; width: 88vw; display: grid; justify-items: center; }
+.pd .lightbox img {
+  max-width: 88vw; max-height: 78vh;
+  width: auto; height: auto;
+  object-fit: contain;
+  background: var(--white);
+}
+.pd .lightbox figcaption {
+  width: 88vw; max-width: 88vw;
+  margin: var(--sp-4) 0 0;
+  text-align: left;
+  color: var(--gray-200);
+  font-size: var(--text-sm); line-height: 1.6;
+}
+.pd .lightbox figcaption b { color: var(--white); }
+
+/* ================================================================= DEFS ====
+   A short definition list: a metric name and what it measures. page.css's
+   `.dl` is the downloads component, so the term list gets its own rule.     */
+
+.pd .defs {
+  display: grid;
+  gap: var(--sp-2) var(--sp-4);
+  margin: var(--sp-4) 0 var(--sp-5);
+  padding: var(--sp-4);
+  border: 1px solid var(--gray-200);
+  border-radius: var(--radius-sm);
+  background: var(--white);
+  font-size: var(--text-sm);
+}
+@media (min-width: 40rem) { .pd .defs { grid-template-columns: 11rem 1fr; } }
+.pd .defs dt {
+  font-family: var(--font-mono); font-weight: 700;
+  color: var(--leaf-900);
+}
+.pd .defs dd { margin: 0; color: var(--gray-600); line-height: 1.6; }
+@media (max-width: 39.99rem) { .pd .defs dd { margin-bottom: var(--sp-2); } }
+
+/* ---------------------------------------------------------------------------
+   The soft shell (assets/css/engage.css)
+   ---------------------------------------------------------------------------
+   Methodology, Sprints and Molecular Dynamics carry `engage` beside `pd` so
+   they use the pale cards and folds the Engagement pages and Integrated
+   Human Practices share.
+
+   They used to use the segmented control too: the GRAFT steps, the three
+   sprints and the five runs were each a strip of tabs with one panel on
+   screen at a time. On 10 October 2026 Timmy asked for all three pages to be
+   one vertical stack with no horizontal tabs anywhere, so every panel is now
+   an ordinary section in document order and the contents rail is the only
+   switch. The joins those controls needed went with them; what is left is
+   the scroll clearance, which a stacked page still wants because the site
+   nav is fixed.                                                            */
+
+.pd .pagebody :is(h2, h3, h4, h5, figure[id], li[id], details[id]) {
+  scroll-margin-top: calc(var(--nav-h) + var(--sp-4));
+}
+
+/* A sprint is a numbered subsection of "Three sprints in full", not a section
+   of its own, so it is spaced like one and keeps the step's colour for the
+   toggles inside it.                                                       */
+.pd .sprint + .sprint { margin-top: var(--sp-7); }
+
+/* The run list is this section's own component and predates engage.css; it
+   sits inside a chapter end, which is already tinted.                      */
+.pd .chap__end > .runs { margin-bottom: 0; }
+.pd .chap__end > .runs .run { background: #fff; }
+
+/* ======================================================= MD FIGURES, INLINE ==
+   9 October 2026. Timmy asked for the molecular dynamics analysis and its
+   plots to live on the Molecular Dynamics page rather than only inside the
+   nine reports under /md-simulations/. The plots are inline SVG written by
+   build/md_page_figs.py out of the same JSON the reports draw, so they stay
+   sharp, they print, and a student editing the page can read the labels.
+
+   They are not photographs, so they do not take the lightbox: everything in
+   them is legible at the width they are given.                             */
+
+.pd .mdfig {
+  display: block;
+  width: 100%; height: auto;
+  margin: 0;
+  border-radius: 14px;
+  background: var(--white);
+}
+.pd .figwrap {
+  max-width: 100%; min-width: 0;
+  margin: var(--sp-5) 0;
+  padding: var(--sp-4) var(--sp-4) var(--sp-3);
+  border-radius: 20px;
+  background: var(--white);
+  box-shadow: 0 0 0 1px rgb(0 0 0 / .07);
+}
+/* a grid or flex child is `min-width: auto` by default, so a wide figure
+   would push the whole page sideways instead of scrolling inside its own
+   frame. These three are the ancestors a figure can land in.              */
+.pd .rail--seg > .rail__panel, .engage.pd .card, .engage.pd .blk { min-width: 0; }
+.pd .figwrap__pan { max-width: 100%; overflow-x: auto; overscroll-behavior-x: contain; }
+.engage.pd .blk .figwrap, .engage.pd .card .figwrap { box-shadow: 0 0 0 1px rgb(0 0 0 / .06); }
+.pd .figwrap > figcaption {
+  margin: var(--sp-3) var(--sp-1) 0;
+  font-size: var(--text-xs); line-height: 1.5; color: var(--gray-600);
+}
+@media (max-width: 46rem) {
+  /* a wide plot stops being a plot on a phone, so it keeps its own width and
+     scrolls inside the frame rather than shrinking its type to nothing */
+  .pd .figwrap { padding: var(--sp-3); }
+  .pd .figwrap__pan .mdfig { min-width: 32rem; }
+  .pd .figwrap__pan { cursor: grab; }
+}
+
+/* ===================================================== THE TRAJECTORY VIEWER =
+   assets/js/md-viewer.js, against the compact payloads build/md_page_anim.py
+   writes. One figure per chapter that has an animation worth showing; the
+   nine full viewers stay on the reports.                                    */
+
+.pd .mdv { margin: var(--sp-5) 0; }
+.pd .mdv__box {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  border-radius: 20px 20px 0 0;
+  background: var(--white);
+  box-shadow: 0 0 0 1px rgb(0 0 0 / .07);
+  overflow: hidden;
+}
+@media (min-width: 56rem) { .pd .mdv__box { grid-template-columns: minmax(0, 1fr) 16rem; } }
+
+.pd .mdv__stage {
+  position: relative;
+  aspect-ratio: 16 / 10;
+  background: radial-gradient(120% 120% at 30% 15%, #fbfbfc, #eef0f2);
+  cursor: grab; touch-action: pan-y;
+}
+.pd .mdv__stage.is-drag { cursor: grabbing; }
+.pd .mdv__cv { position: absolute; inset: 0; width: 100%; height: 100%; }
+
+.pd .mdv__badge, .pd .mdv__hint, .pd .mdv__wait {
+  position: absolute; margin: 0;
+  font-size: var(--text-xs); color: var(--gray-500);
+}
+.pd .mdv__badge {
+  top: var(--sp-3); left: var(--sp-4);
+  font-family: var(--font-mono); font-weight: 650; color: var(--gray-600);
+}
+.pd .mdv__hint { bottom: var(--sp-3); left: var(--sp-4); color: var(--gray-400); }
+.pd .mdv__wait { bottom: var(--sp-3); right: var(--sp-4); }
+
+.pd .mdv__start {
+  position: absolute; inset: 0; margin: auto;
+  width: max-content; height: max-content;
+  padding: .7rem 1.25rem;
+  border: 0; border-radius: 999px;
+  background: var(--leaf-700); color: #fff;
+  font: inherit; font-size: var(--text-sm); font-weight: 650;
+  cursor: pointer;
+}
+.pd .mdv__start:hover { background: var(--leaf-900); }
+
+.pd .mdv__rail {
+  display: grid; align-content: start; gap: var(--sp-4);
+  padding: var(--sp-4);
+  border-top: 1px solid var(--gray-200);
+  background: var(--gray-50);
+}
+@media (min-width: 56rem) {
+  .pd .mdv__rail { border-top: 0; border-left: 1px solid var(--gray-200); }
+}
+.pd .mdv__runs { display: flex; flex-wrap: wrap; gap: var(--sp-2); }
+.pd .mdv__run {
+  padding: .3rem .7rem;
+  border: 1px solid var(--gray-300); border-radius: 999px;
+  background: var(--white); color: var(--gray-600);
+  font: inherit; font-size: var(--text-xs); font-weight: 650;
+  cursor: pointer;
+}
+.pd .mdv__run[aria-pressed="true"] {
+  border-color: var(--leaf-700); background: var(--leaf-700); color: #fff;
+}
+.pd .mdv__only {
+  margin: 0; font-family: var(--font-mono);
+  font-size: var(--text-xs); font-weight: 650; color: var(--gray-600);
+}
+
+.pd .mdv__read { display: grid; gap: var(--sp-3); margin: 0; }
+.pd .mdv__read > div { display: grid; gap: .15rem; }
+.pd .mdv__read dt {
+  font-size: .6875rem; font-weight: 650;
+  letter-spacing: .08em; text-transform: uppercase; color: var(--gray-400);
+}
+.pd .mdv__read dd {
+  margin: 0;
+  font-family: var(--font-mono); font-size: 1.375rem; font-weight: 700;
+  line-height: 1.1; color: var(--leaf-900);
+}
+.pd .mdv__read dd small { font-size: .75rem; font-weight: 500; color: var(--gray-500); }
+.pd .mdv__d.is-on  { color: var(--leaf-700); }
+.pd .mdv__d.is-off { color: var(--rust-700); }
+.pd .mdv__say {
+  margin: 0; padding-top: var(--sp-3);
+  border-top: 1px solid var(--gray-200);
+  font-size: var(--text-xs); line-height: 1.5; color: var(--gray-600);
+}
+
+.pd .mdv__bar {
+  display: flex; flex-wrap: wrap; align-items: center; gap: var(--sp-3);
+  padding: var(--sp-3) var(--sp-4);
+  border-radius: 0 0 20px 20px;
+  background: var(--white);
+  box-shadow: 0 0 0 1px rgb(0 0 0 / .07);
+}
+.pd .mdv__bar button {
+  padding: .3rem .75rem;
+  border: 1px solid var(--gray-300); border-radius: 999px;
+  background: var(--white); color: var(--gray-600);
+  font: inherit; font-size: var(--text-xs); font-weight: 650; cursor: pointer;
+}
+.pd .mdv__bar button:hover { border-color: var(--leaf-500); color: var(--leaf-700); }
+.pd .mdv__bar button[aria-pressed="true"] { border-color: var(--leaf-700); color: var(--leaf-700); }
+.pd .mdv__play { min-width: 4.5rem; }
+.pd .mdv__scrub { flex: 1 1 10rem; min-width: 8rem; accent-color: var(--leaf-700); }
+.pd .mdv__fr { font-family: var(--font-mono); font-size: var(--text-xs); color: var(--gray-400); }
+.pd .mdv__modes { display: inline-flex; gap: var(--sp-2); }
+.pd .mdv > figcaption {
+  margin: var(--sp-3) var(--sp-1) 0;
+  font-size: var(--text-xs); line-height: 1.5; color: var(--gray-600);
+}
+
+/* ========================================================= THE SCOPE TABLE ==
+   What the section did to each of the three protectants. The point of the
+   table is the empty cells, so they are marked rather than left blank.     */
+
+.pd .scope { width: 100%; border-collapse: collapse; font-size: var(--text-sm); }
+.pd .scope th, .pd .scope td {
+  padding: var(--sp-3) var(--sp-3);
+  border-bottom: 1px solid var(--gray-200);
+  text-align: left; vertical-align: top;
+}
+.pd .scope thead th {
+  font-size: .6875rem; font-weight: 700;
+  letter-spacing: .08em; text-transform: uppercase; color: var(--gray-500);
+}
+.pd .scope tbody th { font-weight: 650; color: var(--leaf-900); white-space: nowrap; }
+.pd .scope tbody th small { display: block; font-weight: 400; color: var(--gray-500); }
+.pd .scope td { color: var(--gray-600); }
+.pd .scope .is-yes { color: var(--leaf-700); font-weight: 650; }
+.pd .scope .is-no  { color: var(--gray-400); }
+.pd .scope .is-only { background: color-mix(in srgb, var(--leaf-700) 6%, #fff); }
+.pd .scope tr:last-child th, .pd .scope tr:last-child td { border-bottom: 0; }
+@media (max-width: 46rem) { .pd .scope { font-size: var(--text-xs); } }
+
+/* The run-card blurbs are drafted, not student writing, so they take the
+   page's orange like every other .ai line. `.pd .run p` set a grey that
+   outranked the engage.css rule, which left Claude's wording unmarked on
+   three pages of this section.                                             */
+html:not(.ai-off) .pd .run p.ai { color: var(--ai-ink); }
+
+/* ================================================================ HUB WRAP ===
+   The section homepage has no contents rail to sit beside, so it does not use
+   the two-column .pagewrap. One centred measure, the same gutters.           */
+
+.pd .hubwrap {
+  max-width: var(--max);
+  margin: 0 auto;
+  padding: var(--sp-7) var(--sp-5) var(--sp-8);
+}
+@media (min-width: 640px) {
+  .pd .hubwrap { padding-left: var(--sp-6); padding-right: var(--sp-6); }
+}
+
+/* ================================================================= RUN MAP ===
+   Every design run in one window. Three lanes, one per protectant, each run a
+   chip whose mark says what state it is in: written up on this page, run, or
+   not run. The legend is also the filter, so the question a judge actually has
+   ("what is still outstanding?") is one press away, and the counts answer it
+   in words as well as in colour.                                             */
+
+.pd .runmap {
+  display: grid;
+  gap: var(--sp-5);
+  margin: var(--sp-5) 0 0;
+  padding: var(--sp-5);
+  border-radius: 28px;
+  background: var(--well, #f5f5f7);
+}
+.pd .runmap__lanes { display: grid; gap: var(--sp-4); }
+
+.pd .runmap__lane {
+  display: grid;
+  gap: var(--sp-3);
+  padding: var(--sp-4);
+  border-radius: 20px;
+  background: #fff;
+}
+.pd .runmap__who {
+  display: flex; flex-wrap: wrap; align-items: baseline;
+  gap: var(--sp-2) var(--sp-3);
+  padding-bottom: var(--sp-2);
+  border-bottom: 1px solid rgba(0, 0, 0, .07);
+}
+.pd .runmap__name {
+  font-size: 1.05rem; font-weight: 700; letter-spacing: -.01em;
+  color: var(--ink, var(--leaf-900));
+}
+.pd .runmap__tally {
+  font-size: var(--text-xs); font-variant-numeric: tabular-nums;
+  color: var(--ink-3, var(--gray-500));
+}
+.pd .runmap__chips { display: flex; flex-wrap: wrap; gap: .45rem; }
+
+.pd .rchip {
+  --chip: var(--gray-500);
+  display: inline-flex; align-items: center; gap: .45em;
+  padding: .36rem .72rem .36rem .6rem;
+  border: 1px solid transparent;
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--chip) 9%, #fff);
+  font-size: var(--text-xs); font-weight: 550; line-height: 1.3;
+  color: color-mix(in srgb, var(--chip) 72%, #11161a);
+  text-decoration: none;
+  transition: background .2s, border-color .2s, opacity .2s, transform .2s;
+}
+.pd .rchip::before {
+  content: "";
+  width: .5em; height: .5em; border-radius: 50%;
+  background: var(--chip);
+}
+.pd .rchip[data-state="done"] { --chip: var(--leaf-700); font-weight: 650; }
+.pd .rchip[data-state="ran"]  { --chip: #3f5468; }
+.pd .rchip[data-state="open"] {
+  --chip: #9aa3ab;
+  background: transparent;
+  border-color: color-mix(in srgb, var(--chip) 42%, #fff);
+  border-style: dashed;
+}
+.pd .rchip[data-state="open"]::before { background: transparent; box-shadow: inset 0 0 0 1.5px var(--chip); }
+
+.pd a.rchip:hover,
+.pd a.rchip:focus-visible {
+  background: color-mix(in srgb, var(--chip) 17%, #fff);
+  border-color: color-mix(in srgb, var(--chip) 38%, #fff);
+  transform: translateY(-1px);
+}
+.pd .runmap.is-filtered .rchip { opacity: .22; }
+.pd .runmap.is-filtered .rchip.is-on { opacity: 1; }
+
+/* the legend doubles as the filter */
+.pd .runmap__key {
+  display: flex; flex-wrap: wrap; gap: var(--sp-2) var(--sp-4);
+  align-items: center;
+}
+.pd .runmap__key button {
+  --chip: var(--gray-500);
+  display: inline-flex; align-items: center; gap: .5em;
+  padding: .34rem .7rem;
+  border: 1px solid transparent;
+  border-radius: 999px;
+  background: transparent;
+  font: inherit; font-size: var(--text-xs); font-weight: 550;
+  color: var(--ink-2, var(--gray-700));
+  cursor: pointer;
+  transition: background .2s, border-color .2s;
+}
+.pd .runmap__key button::before {
+  content: "";
+  width: .55em; height: .55em; border-radius: 50%;
+  background: var(--chip);
+}
+.pd .runmap__key button[data-filter="done"] { --chip: var(--leaf-700); }
+.pd .runmap__key button[data-filter="ran"]  { --chip: #3f5468; }
+.pd .runmap__key button[data-filter="open"] { --chip: transparent; box-shadow: none; }
+.pd .runmap__key button[data-filter="open"]::before { box-shadow: inset 0 0 0 1.5px #9aa3ab; }
+.pd .runmap__key button:hover { background: rgba(0, 0, 0, .04); }
+.pd .runmap__key button[aria-pressed="true"] {
+  background: #fff;
+  border-color: rgba(0, 0, 0, .1);
+  color: var(--ink, var(--leaf-900));
+}
+.pd .runmap__n { font-variant-numeric: tabular-nums; color: var(--ink-3, var(--gray-500)); }
+.pd .runmap__key button[aria-pressed="true"] .runmap__n { color: inherit; }
+
+@media (min-width: 62rem) {
+  .pd .runmap__lane { grid-template-columns: 11.5rem minmax(0, 1fr); align-items: start; gap: var(--sp-4); }
+  .pd .runmap__who { display: grid; gap: .2rem; padding: 0; border-bottom: 0; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .pd .rchip { transition: none; }
+  .pd a.rchip:hover, .pd a.rchip:focus-visible { transform: none; }
+}
+
+/* ============================================================ SECTION NAV ===
+   The three subpages dropped the step nav across the top on 10 October, and
+   with it the only way back to the section homepage. It returns in the rail
+   instead, where a reader already looks for navigation and where it costs the
+   page no vertical space: the section name as a back row, then the three
+   subpages with the current one marked, pinned together with the contents.
+
+   The rail is one sticky column now, .railcol, holding the section nav and
+   the contents list. On a narrow screen it is simply the first thing in the
+   page, above the folded contents, so the way back is still one tap.        */
+
+.pd .railcol { display: grid; gap: var(--sp-4); order: -1; min-width: 0; }
+/* page.css gives .toc order:-1 so it leads the grid; inside the column the
+   way back has to come first instead */
+.pd .railcol .toc { order: 0; }
+
+@media (min-width: 1040px) {
+  .pd .railcol {
+    position: sticky;
+    top: calc(var(--nav-h) + var(--sp-5));
+    align-self: start;
+  }
+  /* the contents no longer sticks on its own: the column does it for both */
+  .pd .railcol .toc { position: static; top: auto; }
+}
+
+.pd .secnav {
+  --pl: var(--leaf-700);
+  padding: var(--sp-3);
+  border-radius: 20px;
+  background: var(--well, #f5f5f7);
+  font-size: var(--text-sm);
+  line-height: 1.35;
+}
+
+.pd .secnav__home {
+  display: flex; align-items: center; gap: .45rem;
+  padding: .45rem .5rem;
+  border-radius: 13px;
+  font-weight: 700; letter-spacing: -.012em;
+  color: var(--ink, var(--leaf-900));
+  text-decoration: none;
+  transition: background .2s var(--ease, ease), color .2s;
+}
+.pd .secnav__home svg {
+  width: 1.1em; height: 1.1em; flex: none;
+  transition: transform .2s var(--ease, ease);
+}
+.pd .secnav__home:hover,
+.pd .secnav__home:focus-visible { background: #fff; color: var(--pl); }
+.pd .secnav__home:hover svg { transform: translateX(-2px); }
+
+.pd .secnav__list { list-style: none; margin: .15rem 0 0; padding: 0; }
+.pd .secnav__list a {
+  display: flex; align-items: baseline; gap: .55rem;
+  padding: .38rem .5rem;
+  border-radius: 13px;
+  color: var(--ink-2, var(--gray-600));
+  text-decoration: none;
+  transition: background .2s var(--ease, ease), color .2s;
+}
+.pd .secnav__list a::before {
+  content: "";
+  flex: none;
+  width: .42em; height: .42em; margin-left: .62em;
+  border-radius: 50%;
+  box-shadow: inset 0 0 0 1.5px currentColor;
+  opacity: .5;
+  transform: translateY(-.1em);
+}
+.pd .secnav__list a:hover { background: #fff; color: var(--ink, var(--leaf-900)); }
+.pd .secnav__list a[aria-current="page"] {
+  background: #fff;
+  font-weight: 650;
+  color: var(--pl);
+}
+.pd .secnav__list a[aria-current="page"]::before {
+  background: currentColor;
+  box-shadow: none;
+  opacity: 1;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .pd .secnav__home, .pd .secnav__home svg, .pd .secnav__list a { transition: none; }
+  .pd .secnav__home:hover svg { transform: none; }
+}
+
+/* ========================================================= GRAFT LETTERS ===
+   The methodology spells GRAFT, and the segmented control is where a reader
+   meets the five steps in order, so each button carries its letter in place
+   of a step icon: the pipeline reads G, R, A, F, T straight across. Codon
+   optimisation is not a GRAFT letter and carries a middot instead, which is
+   the same honest mark the old section strip used.                         */
+
+.pd .seg__k {
+  flex: none;
+  display: inline-flex; align-items: center; justify-content: center;
+  width: 1.375rem; height: 1.375rem;
+  border-radius: 7px;
+  background: color-mix(in srgb, var(--pl) 13%, #fff);
+  font-family: var(--font-mono);
+  font-size: .8125rem; font-weight: 700; line-height: 1;
+  color: var(--pl);
+  transition: background .25s ease, color .25s ease;
+}
+.pd .seg__btn[aria-selected="true"] .seg__k { background: var(--pl); color: #fff; }
+.pd .seg__k[data-off] { background: var(--gray-100); color: var(--gray-400); }
+.pd .seg__btn[aria-selected="true"] .seg__k[data-off] { background: var(--gray-200); color: var(--gray-600); }
+
+/* ====================================================== RESULTS DROP-DOWN ===
+   Across the three subpages the division is the same: the steps of the
+   method, with every precaution and note that belongs to them, stay open on
+   the page, and what a step returned when it was run on our own protectants
+   opens from a row. So the method can be read straight through and the
+   numbers are one move away.
+
+   It is engage.css's .fold underneath, so a link into a shut one still opens
+   it (engage.js) and it works with no JavaScript. The modifier has one job:
+   make the row read as a control and not as a heading. That is the tinted
+   ground, the word Results set in the step's own colour, and a filled round
+   chevron at the right rather than the bare tick the plain fold uses.      */
+
+/* One colour for every toggle on these pages, not the colour of the step it
+   sits in. The folds took their chapter's --pl, so a reader scrolling down
+   Methodology met a slate row, then a green one, then amber, then purple,
+   and the control looked like four different controls. --tg is the accent
+   the section numbers and the GRAFT letters already use, so the toggles now
+   read as one thing wherever they appear. The step colours stay where they
+   belong: the headings, the run map and the section marks.               */
+.pd { --tg: var(--leaf-700); }
+
+/* engage.css draws the focus ring in --pl, which would put the step colour
+   back on the one part of the control that has to be unmistakable. */
+.pd .fold--res > summary:focus-visible,
+.pd .fold--case > summary:focus-visible { outline-color: var(--tg); }
+
+.pd .fold--res {
+  background: #fff;
+  box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--tg) 26%, #fff);
+}
+.pd .fold--res > summary {
+  gap: .7rem;
+  padding: .9rem 3.6rem .9rem 1.1rem;
+  border-radius: 20px;
+  background: color-mix(in srgb, var(--tg) 7%, #fff);
+  font-size: 1.0625rem; font-weight: 650;
+  transition: background .25s ease;
+}
+.pd .fold--res > summary:hover { background: color-mix(in srgb, var(--tg) 12%, #fff); color: var(--ink); }
+.pd .fold--res[open] > summary {
+  border-radius: 20px 20px 0 0;
+  box-shadow: inset 0 -1px 0 color-mix(in srgb, var(--tg) 20%, #fff);
+}
+
+/* the label that says what kind of block this is */
+.pd .fold__k {
+  flex: none;
+  padding: .26rem .6rem;
+  border-radius: 999px;
+  background: var(--tg);
+  font-size: .75rem; font-weight: 650; letter-spacing: .01em;
+  color: #fff;
+}
+
+/* the chevron, as a control */
+.pd .fold--res > summary::after {
+  right: 1.1rem;
+  width: 1.75rem; height: 1.75rem;
+  margin-top: -.875rem;
+  border: 0;
+  border-radius: 50%;
+  background:
+    linear-gradient(currentColor, currentColor) center / .5625rem 1.6px no-repeat,
+    linear-gradient(currentColor, currentColor) center / 1.6px .5625rem no-repeat,
+    color-mix(in srgb, var(--tg) 14%, #fff);
+  color: var(--tg);
+  transform: none;
+}
+.pd .fold--res[open] > summary::after {
+  margin-top: -.875rem;
+  background:
+    linear-gradient(currentColor, currentColor) center / .5625rem 1.6px no-repeat,
+    color-mix(in srgb, var(--tg) 14%, #fff);
+  transform: none;
+}
+.pd .fold--res > summary:hover::after { background-color: color-mix(in srgb, var(--tg) 24%, #fff); }
+
+.pd .fold--res > .fold__body { padding: 1.1rem 1.1rem 1.25rem; }
+.pd .fold--res .fold__sub { font-size: .8125rem; color: var(--ink-3, var(--gray-500)); }
+
+/* a fold holding one figure should not also pad it */
+.pd .fold--res > .fold__body > .figwrap:only-child,
+.pd .fold--res > .fold__body > figure:only-child { margin: 0; }
+.pd .fold--res > .fold__body > .card:first-child { margin-top: 0; }
+
+@media (max-width: 40rem) {
+  .pd .fold--res > summary { padding-right: 3.1rem; font-size: 1rem; }
+  .pd .fold--res > summary::after { right: .75rem; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .pd .seg__k, .pd .fold--res > summary { transition: none; }
+}
+
+/* ---------------------------------------------------------------------------
+   The Methodology door lists the five GRAFT steps, so the letter does the job
+   the bullet does on the other doors. The third door carries no list at all,
+   which leaves the arrow in the row the list would have filled, so it holds
+   itself to the bottom of the card either way.                             */
+
+.pd .door__in--graft li { padding-left: 0; text-indent: 0; }
+.pd .door__in--graft li::before { display: none; }
+/* the letter sits inside its own word, so it keeps the word's typeface and
+   is marked by weight and colour only; a mono capital next to proportional
+   lowercase reads as a typo. */
+.pd .door__in--graft b { font-weight: 700; color: var(--door-pl); }
+.pd .door__go { align-self: end; }
+
+/* Unfolding the literature and restraint-mapping steps onto the page gave
+   Methodology a fourth heading level: the tool, and then the two probes it
+   supplied. page.css styles .sec h4 and stops there, and the engage.css h5
+   rules are all scoped inside a card or a fold, so a bare one in a chapter
+   would fall back to the browser's own. */
+.pd .chap > h5 {
+  margin: var(--sp-4) 0 var(--sp-2);
+  font-size: .9688rem; font-weight: 650; line-height: 1.35;
+  letter-spacing: -.008em;
+  color: var(--gray-700);
+  text-transform: none;
+}
+
+/* A results fold carries findings a judge is meant to read, not a protocol
+   appendix, so the prose inside it keeps the size it has on the page.
+   engage.css sets .fold__body prose a step down, which is right for the
+   plain fold and wrong here. */
+.pd .fold--res > .fold__body p,
+.pd .fold--res > .fold__body li {
+  max-width: 72ch;
+  font-size: var(--text-base);
+  line-height: 1.68;
+}
+
+/* ======================================================== A CASE, AS A ROW ==
+   10 October 2026. Timmy asked for the three subpages to be one vertical
+   stack with no horizontal tab strips anywhere, and for more of the
+   supplementary material to sit behind a toggle so the page reads lighter.
+
+   Every tab strip on these pages was the same shape: one panel per case, a
+   protectant, a construct, a cargo sequence, a run. So each strip became a
+   stacked list of these, one row per case, all shut. Nothing is hidden that
+   a tab was not already hiding, and the cases are now readable one after
+   another instead of only one at a time.
+
+   This is the quieter sibling of .fold--res: no pill, a white ground and a
+   hairline, because a case is a place to look rather than a result to read.
+   Same round chevron, so the two read as the same control.                 */
+
+.pd .folds--stack { display: grid; gap: .55rem; margin: var(--sp-4) 0 var(--sp-5); }
+
+.pd .fold--case {
+  background: #fff;
+  box-shadow: inset 0 0 0 1px var(--gray-200);
+}
+.pd .fold--case > summary {
+  gap: .7rem;
+  padding: .85rem 3.4rem .85rem 1.1rem;
+  border-radius: 20px;
+  font-size: 1.0625rem; font-weight: 620;
+  transition: background .25s ease;
+}
+.pd .fold--case > summary:hover { background: color-mix(in srgb, var(--tg) 7%, #fff); color: var(--ink); }
+.pd .fold--case[open] > summary {
+  border-radius: 20px 20px 0 0;
+  box-shadow: inset 0 -1px 0 var(--gray-200);
+}
+.pd .fold--case > summary::after {
+  right: 1.1rem;
+  width: 1.625rem; height: 1.625rem;
+  margin-top: -.8125rem;
+  border: 0;
+  border-radius: 50%;
+  background:
+    linear-gradient(currentColor, currentColor) center / .5rem 1.6px no-repeat,
+    linear-gradient(currentColor, currentColor) center / 1.6px .5rem no-repeat,
+    var(--gray-100);
+  color: var(--tg);
+  transform: none;
+}
+.pd .fold--case[open] > summary::after {
+  margin-top: -.8125rem;
+  background:
+    linear-gradient(currentColor, currentColor) center / .5rem 1.6px no-repeat,
+    color-mix(in srgb, var(--tg) 14%, #fff);
+  transform: none;
+}
+.pd .fold--case > summary:hover::after { background-color: color-mix(in srgb, var(--tg) 20%, #fff); }
+.pd .fold--case > .fold__body { padding: 1.1rem 1.1rem 1.25rem; }
+.pd .fold--case > .fold__body p,
+.pd .fold--case > .fold__body li {
+  max-width: 72ch;
+  font-size: var(--text-base);
+  line-height: 1.68;
+}
+.pd .fold--case > .fold__body > h4:first-child,
+.pd .fold--case > .fold__body > figure:first-child { margin-top: 0; }
+
+@media (max-width: 40rem) {
+  .pd .fold--case > summary { padding-right: 3rem; font-size: 1rem; }
+  .pd .fold--case > summary::after { right: .75rem; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .pd .fold--case > summary { transition: none; }
+}
+
+/* ===================================================== GRAFT IN THE RAIL ====
+   The pipeline is five steps that spell a word, and with the segmented
+   control gone the contents rail is where a reader meets them in order. So
+   the rail prints the initial of each of the five in the step's own colour.
+   graft.js (inline on the Methodology page) does the wrapping, because the
+   rail's labels are built by page.js from text alone.
+
+   The number stays the section's own number, per the rail rule: the letter
+   is a mark inside the label, not a replacement for the count.
+
+   One colour for all five, not each step's own. The first pass gave each
+   letter its chapter colour and two of them, the slate G and the blue T,
+   were too near the body ink to read as marked at all, so the five did not
+   look like a set. In one accent green they spell the word down the rail.  */
+
+.pd .toc__label .gk {
+  font-weight: 800;
+  color: var(--leaf-700);
+}
+.pd .toc__sec.is-here .toc__label .gk { color: var(--leaf-800); }
+
+
+/* ---------------------------------------------------------------------------
+   What went to the wet lab (21 October 2026). The students' own "Protectant
+   Sends" sheet, three lanes on the section's front page under the three doors:
+   what was ordered and why, and what was considered and ruled out. Their
+   stylesheet, scoped to .sends and reading this wiki's tokens, so it sits in
+   the same greys and the same type as the rest of the hub.
+   ------------------------------------------------------------------------- */
+.sends { --sends-bopep4:#9A5A24; --sends-accd:#4B50A0; --sends-lea14:#256A55;
+         margin: 3.4rem 0 0; }
+.sends .lanes, .sends .gloss, .sends .foot, .sends h2, .sends .lede { max-width: none; }
+/* Three lanes, one per protectant, each keyed to the colour that protectant
+   already carries on the methodology and sprints pages. The students' sheet
+   wrote its own palette and type on :root; on the wiki that block has to live
+   on .sends itself, or it never applies and the lanes lose every background,
+   border and rule. Greys and type come from the wiki's own tokens. */
+.sends {
+  --paper:var(--white); --surface:var(--white); --sunk:var(--gray-100);
+  --ink:#15201A; --ink-2:#3C4A42; --ink-3:var(--gray-500);
+  --line:var(--gray-200);
+  --bopep4:#9A5A24; --accd:#4B50A0; --lea14:#256A55;
+  --f-display:var(--font-display);
+  --f-body:var(--font-body);
+  --f-mono:var(--font-mono);
+}
+.sends h2 {
+  font-family:var(--f-display);font-variation-settings:"wdth" 112;
+  font-size:clamp(1.3rem,3vw,1.7rem);font-weight:700;letter-spacing:-.02em;
+  margin:0 0 .4rem;text-wrap:balance;
+}
+.sends .lede {margin:0 0 1.5rem;color:var(--ink-2);max-width:68ch;font-size:.98rem}
+.sends .lanes {display:grid;grid-template-columns:repeat(3,1fr);gap:1rem;align-items:start}
+.sends .lane {
+  --c:var(--ink-3);
+  background:var(--surface);border:1px solid var(--line);
+  border-top:3px solid var(--c);border-radius:.4rem 1rem 1rem .4rem;
+  padding:1rem 1.1rem 1.1rem;min-width:0;
+}
+.sends .lane[data-p="bopep4"] {--c:var(--sends-bopep4)}
+.sends .lane[data-p="accd"] {--c:var(--sends-accd)}
+.sends .lane[data-p="lea14"] {--c:var(--sends-lea14)}
+.sends .lane h3 {
+  font-family:var(--f-display);font-size:1rem;font-weight:700;margin:0 0 .15rem;
+  letter-spacing:-.01em;color:var(--ink);
+}
+.sends .lane .sub {
+  font-family:var(--f-mono);font-size:.62rem;letter-spacing:.11em;
+  text-transform:uppercase;color:var(--c);margin:0 0 .6rem;
+}
+.sends .what {
+  margin:0 0 .95rem;padding:.6rem .75rem;border-radius:.6rem;background:var(--sunk);
+  font-size:.86rem;line-height:1.45;color:var(--ink-2);
+}
+.sends .what b {color:var(--ink);font-weight:600}
+.sends ul {list-style:none;margin:0;padding:0;display:grid;gap:.75rem}
+.sends li {display:grid;gap:.22rem;min-width:0}
+.sends li+li {border-top:1px solid var(--line);padding-top:.75rem}
+.sends .seq {
+  font-family:var(--f-mono);font-size:.82rem;font-weight:500;color:var(--ink);
+  display:flex;flex-wrap:wrap;gap:.4rem;align-items:baseline;
+}
+.sends .seq .id {
+  font-size:.6rem;letter-spacing:.08em;color:var(--c);
+  background:color-mix(in oklab,var(--c) 14%,transparent);
+  padding:.12rem .4rem;border-radius:999px;flex:none;
+}
+.sends .why {margin:0;font-size:.88rem;line-height:1.48;color:var(--ink-2)}
+.sends a.src {
+  font-family:var(--f-mono);font-size:.62rem;letter-spacing:.04em;
+  color:var(--c);text-decoration:none;justify-self:start;
+  border-bottom:1px solid color-mix(in oklab,var(--c) 35%,transparent);
+  padding-bottom:1px;
+}
+.sends a.src:hover {border-bottom-color:var(--c)}
+.sends a.src:focus-visible {outline:2px solid var(--c);outline-offset:3px}
+.sends .grouphd {
+  font-family:var(--f-mono);font-size:.6rem;letter-spacing:.11em;text-transform:uppercase;
+  margin:0 0 .6rem;display:flex;align-items:center;gap:.45rem;
+}
+.sends .grouphd:before {content:"";width:.45rem;height:.45rem;border-radius:50%;background:var(--c);flex:none}
+.sends .grouphd.sent {color:var(--c)}
+/* rejected designs get an outlined, unfilled box: same column, clearly not a send */
+.sends .rejbox {
+  margin:1.15rem 0 0;padding:.8rem .9rem .85rem;
+  border:1px dashed color-mix(in oklab,var(--c) 42%,transparent);
+  border-radius:.7rem;background:transparent;
+}
+.sends .grouphd.rej {color:var(--ink-3)}
+.sends .grouphd.rej:before {background:transparent;border:1.5px dashed var(--ink-3)}
+.sends ul.rej {display:grid;gap:.55rem}
+.sends ul.rej li {display:grid;gap:.16rem;border:none;padding:0}
+.sends ul.rej li+li {border-top:1px dashed var(--line);padding-top:.55rem}
+.sends ul.rej .seq {font-size:.78rem;color:var(--ink-2);font-weight:400}
+.sends ul.rej .why {font-size:.81rem;line-height:1.42;color:var(--ink-3)}
+.sends .gloss {
+  margin:1.3rem 0 0;display:grid;grid-template-columns:repeat(auto-fit,minmax(16rem,1fr));
+  gap:.5rem 1.6rem;padding:.9rem 1.1rem;background:var(--sunk);border-radius:.8rem;
+}
+.sends .gloss div {min-width:0}
+.sends .gloss dt {
+  font-family:var(--f-mono);font-size:.64rem;letter-spacing:.08em;text-transform:uppercase;
+  color:var(--ink-3);margin-bottom:.15rem;
+}
+.sends .gloss dd {margin:0;font-size:.85rem;line-height:1.45;color:var(--ink-2)}
+.sends .foot {
+  margin:1rem 0 0;font-family:var(--f-mono);font-size:.68rem;line-height:1.6;
+  color:var(--ink-3);
+}
+.sends .foot a {color:var(--ink-2)}
+@media (max-width:880px){ .sends .lanes{grid-template-columns:1fr}}

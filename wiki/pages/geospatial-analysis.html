@@ -1,0 +1,756 @@
+<!DOCTYPE html>
+<html data-repo-dir="geospatial-analysis" lang="en">
+<head>
+  <script src="static/cdn-map.js?v=1021b"></script>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Geospatial Analysis | ReLEAF &middot; iGEM 2026</title>
+  <meta name="description" content="Where warming, nighttime heat, small and ageing farms and a centralized fertilizer supply overlap in Taiwan, how many bioreactors each soil type needs, and whether the protection pays for itself." />
+  <link rel="icon" href="https://static.igem.wiki/teams/6072/wiki/site/logo-site.webp" />
+  <link rel="stylesheet" href="static/assets/css/tokens.css" />
+  <link rel="stylesheet" href="static/assets/css/nav.css" />
+  <link rel="stylesheet" href="static/assets/css/page.css" />
+  <link rel="stylesheet" href="static/assets/vendor/katex/katex.min.css" />
+  <link rel="stylesheet" href="static/assets/css/engage.css?v=1020proj" />
+  <link rel="stylesheet" href="static/geospatial-analysis/gis.css?v=1010g" />
+  <link rel="stylesheet" href="static/assets/css/bannerhead.css?v=20261021a" />
+<link rel="stylesheet" href="static/assets/css/fulllines.css?v=1014" />
+<link rel="stylesheet" href="static/assets/navmap/navmap.css?v=1018stk" />
+</head>
+<body class="engage gis fignums flatcap">
+<!--
+  SOURCE. The 10 Oct 2026 "10:10 HP pages updates" delivery: "GIS Wiki_.docx"
+  (9 Oct) and the "GIS Figures" folder. Student text only, verbatim from the
+  docx, plus Olivia's 9 Oct writing-coach revisions where the docx passage is
+  unchanged; no AI-written text on this page. The farm calculator comes from
+  the students' HTML build ("ReLeaf_GIS_Wiki 3.zip", 12 Sep), the routing map
+  from "Routing wiki.zip" (9 Oct). 17 Oct night delivery carried as deltas:
+  business-plan voices, Back to GIS, the tomato part of Impact (new
+  Figures 9 and 10), two guide fixes, nine new references. The 20 Oct
+  delivery ("GIS Wiki .docx" + "GIS Figures") is carried the same way: the
+  numbering is now the docx's own (the two tables are Table 1 and Table 2,
+  the fertilizer pair runs Taiwan then world), Figure 9 is the new 2024
+  production map, and the farm calculator is off the page at Timmy's word.
+  Every figure was checked against the docx embeds; 2, 4, 5, 7 and 10 to 13
+  are the files already live.
+-->
+
+  <div id="site-nav" data-base="" data-tab="engagement" data-page="geospatial-analysis"></div>
+  <div class="sitenav-spacer"></div>
+
+  <header class="bannerhead bannerhead--rest" data-tab="engagement">
+    <h1 class="visually-hidden">Geospatial Analysis</h1>
+    <div class="bannerhead__art">
+      <img crossorigin="anonymous" src="https://static.igem.wiki/teams/6072/wiki/site/banners/geospatial-analysis-banner-v2.webp"
+           srcset="https://static.igem.wiki/teams/6072/wiki/site/banners/geospatial-analysis-w1200-banner-v2.webp 1200w, https://static.igem.wiki/teams/6072/wiki/site/banners/geospatial-analysis-banner-v2.webp 2400w"
+           sizes="(max-width: 1280px) 100vw, 1280px"
+           alt="Geospatial Analysis. A team member points at a projected map of Taiwan&#x27;s 2025 rice harvest by county."
+           width="2400" height="839" fetchpriority="high" />
+    </div>
+  </header>
+
+  <section class="abstract abstract--sheet bannerhead" data-tab="engagement" aria-label="Summary">
+    <div class="abstract__inner">
+      <div class="abstract__story">
+        <h2 class="abs-kicker">Abstract</h2>
+        <p class="abstract__lead">The farmers with the least land, the least capital buffer, and often the least physical capacity to adapt are disproportionately the ones farming in Taiwan’s most volatile microclimates.</p>
+        <p class="abstract__body">In Taiwan, 99.2% of farms are small-scale (under 2 hectares), together managing 85.3% of the island's agricultural land, yet many of these farmers face growing climate challenges with limited resources to respond. Through geospatial analysis, we mapped climate patterns, farmland distribution, and socioeconomic conditions to understand where these challenges are most severe. We also connected our findings with farmer interviews and field visits to better understand the people behind the data. By identifying communities where climate risks and limited resources overlap, our analysis helps us understand where ReLEAF could make the greatest difference, bringing plant protection closer to the farmers who need it most.</p>
+      </div>
+      <div class="abstract__outcomes">
+        <h2 class="abs-kicker">Findings</h2>
+        <ul class="abs-ledger">
+          <li><a href="#global-climate-stress"><span class="abs-ledger__name">Night-time heat</span><span class="abs-ledger__text">A 1&deg;C rise at night costs about 10 percent of yield</span></a></li>
+          <li><a href="#taiwan-climate-stress"><span class="abs-ledger__name">Taiwan warming</span><span class="abs-ledger__text">Hottest year on record; 63 days above 35&deg;C in Taipei</span></a></li>
+          <li><a href="#centralized-vs-decentralized"><span class="abs-ledger__name">Fertilizer routing</span><span class="abs-ledger__text">2 792 536 individual parcels; 346 demand nodes</span></a></li>
+          <li><a href="#problem-validation"><span class="abs-ledger__name">Farmer interviews</span><span class="abs-ledger__text">Not directly, farmers do not manage it [soil]</span></a></li>
+          <li><a href="#back-to-gis"><span class="abs-ledger__name">Soil classification</span><span class="abs-ledger__text">The most volatile class is also the most broadly assigned</span></a></li>
+        </ul>
+      </div>
+    </div>
+  </section>
+
+  <div class="pagewrap">
+    <details class="toc" open>
+      <summary>Contents</summary>
+      <div class="toc__inner"><p class="toc__title">On this page</p></div>
+    </details>
+
+    <main class="pagebody">
+
+      <section class="sec" id="introduction">
+        <h2>Introduction</h2>
+        <div class="blk">
+        <p>In Taiwan, 99.2% of farms are small-scale (under 2 hectares), yet together they work 85.3% of the island's farmed land, on terrain where a single region can span a temperature range rivaling the distance between Miami and Anchorage. ReLEAF is built for the shape Taiwan actually has.</p>
+        </div>
+        <div class="blks blks--2">
+          <div class="blk">
+        <p>Single interviews cannot establish whether what one farmer describes is an isolated hardship or a structural pattern. Answering this requires working at a different scale entirely: parcel-level land records, station-level climate data, and demographic surveys, aggregated across all counties rather than gathered farm by farm. This is where the role of geospatial analysis comes in, complementary to case studies.</p>
+          </div>
+          <div class="blk">
+        <p>Existing geospatial studies of Taiwanese agriculture tend to treat variables in isolation: climate-trend analyses map warming or rainfall change without reference to who farms the affected land, while agricultural demographic surveys report vulnerability without a spatial climate layer to test it against. None, to our knowledge, overlay farmland fragmentation, climate volatility, and a documented crop-stress yield effect at the parcel or township level simultaneously. This page presents our method and findings.</p>
+          </div>
+        </div>
+        <div class="blk">
+        <p>Beyond layering maps, geospatial analysis feeds the <a href="{{ url_for('pages', page='model') }}">math model</a>&rsquo;s simulations for the business plan; it is checked against wet lab's own stress-response data, so the map's "who needs this" and the bench's "does this work" can answer each other; and it's cross-referenced against Human Practices' direct farmer interviews, so the pattern in the data is tested against what people are actually living through.</p>
+        </div>
+      </section>
+
+      <!-- ========================================== PROBLEM STATEMENT ===== -->
+      <section class="sec" id="problem-statement">
+        <h2>Problem statement</h2>
+        <div class="rail rail--seg" data-rail data-rail-top>
+          <div class="seg"><div class="rail__strip seg__track" role="tablist" aria-label="Problem statement">
+            <button class="rail__btn seg__btn pl-1" role="tab" type="button" id="pt-global" aria-controls="pp-global" aria-selected="true"><svg class="seg__ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><circle cx="12" cy="12" r="8.5"/><path d="M3.5 12h17"/><path d="M12 3.5c2.5 2.6 3.7 5.4 3.7 8.5s-1.2 5.9-3.7 8.5c-2.5-2.6-3.7-5.4-3.7-8.5s1.2-5.9 3.7-8.5z"/></svg>Global climate stress</button>
+            <button class="rail__btn seg__btn pl-3" role="tab" type="button" id="pt-taiwan" aria-controls="pp-taiwan" aria-selected="false"><svg class="seg__ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="M10 14.2V5.5a2 2 0 0 1 4 0v8.7a4 4 0 1 1-4 0z"/><path d="M12 9.5v6.5"/></svg>Revealing climate stress and farmland</button>
+            <button class="rail__btn seg__btn pl-4" role="tab" type="button" id="pt-demo" aria-controls="pp-demo" aria-selected="false"><svg class="seg__ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><circle cx="9" cy="8" r="3"/><path d="M3.5 19.5c.6-3.3 2.8-5.2 5.5-5.2s4.9 1.9 5.5 5.2"/><circle cx="17" cy="9" r="2.3"/><path d="M16 14.4c2.3-.2 4 1.4 4.6 4.4"/></svg>Agricultural demographics</button>
+            <button class="rail__btn seg__btn pl-5" role="tab" type="button" id="pt-central" aria-controls="pp-central" aria-selected="false"><svg class="seg__ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><circle cx="12" cy="12" r="2.6"/><circle cx="4.8" cy="5.5" r="1.7"/><circle cx="19.2" cy="5.5" r="1.7"/><circle cx="4.8" cy="18.5" r="1.7"/><circle cx="19.2" cy="18.5" r="1.7"/><path d="M6.2 6.8l3.8 3.4M17.8 6.8L14 10.2M6.2 17.2l3.8-3.4M17.8 17.2L14 13.8"/></svg>Centralized vs. decentralized</button>
+          </div></div>
+          <div class="rail__panel chap pl-1" role="tabpanel" id="pp-global" aria-labelledby="pt-global">
+            <header class="chap__hero">
+        <h3 class="chap__title" data-no-toc id="global-climate-stress">Global climate stress</h3>
+            </header>
+            <div class="evs">
+              <article class="ev">
+                <div class="ev__text">
+        <p>Rice is the primary calorie source for more than half the world's population (FAO, 2004), and across Asia it is grown at every scale — from smallholder plots to industrial acreage — as both a staple food and an economic backbone. The most dangerous part of this dependency is not the stress a farmer can see coming; it is the stress that arrives when no one is in the field to see it—during night time.</p>
+        <p>Farming has always been a practice of response: a farmer notices wilting, discoloration, or dry soil, and intervenes. That model assumes stress leaves a visible trace in time to act on. Rising nighttime temperatures break that assumption. A 25-year record from the International Rice Research Institute’s farm in the Philippines (Peng et al., 2004) showed that from 1979 to 2003, nighttime minimum temperatures rose roughly three times faster than daytime maximums, and that dry-season grain yield fell by about 10% for every 1°C rise in nighttime temperature, while daytime heat alone had no significant effect. The leading explanation is that warm nights keep the plant’s metabolism running in the dark, burning through the sugars it stored during the day before they can be committed to grain.</p>
+        <p>What matters most here is not the size of that loss but its timing. The damage happens overnight, leaves the canopy looking entirely healthy by sunrise, and only becomes visible weeks later as a lighter harvest. A run of warm nights during grain filling can cost a season’s yield one year and miss the critical window entirely the next, so there is no reliable signal to watch for and no point at which a farmer could have stepped in. Even an attentive, experienced farmer cannot respond to stress that happens on the plant’s schedule rather than their own. As warming makes these events more frequent and less predictable, protection that waits for symptoms will increasingly arrive too late.</p>
+                </div>
+        <figure class="fig">
+          <img crossorigin="anonymous" src="https://static.igem.wiki/teams/6072/wiki/geospatial-analysis/anim-forecast-rice-yield-geospatial-analysis.webp"
+               alt="Animated world map of projected irrigated rice yield from 2006 to 2098, green for high yield and red for low, with the high-yield belt shrinking over the century."
+               width="800" height="428" loading="lazy" />
+          <figcaption><span class="fignum">Figure 1</span> <span class="figlegend">Global rice Yield Documentation to Forecasting: Year 2006 to 2100</span></figcaption>
+        </figure>
+              </article>
+            </div>
+            <div class="chap__end">
+        <p>Referring to Figure 1, the global yield projection shows the scale of what is at stake: much of the world’s high-yield rice belt sits inside a temperature band that is now shifting. Zoomed out, this looks like a distant problem. Zoomed into any single country with a rice-dependent food system, the problem is urgent — and Taiwan is one of the clearest cases of that shift already underway.</p>
+            </div>
+          </div>
+          <div class="rail__panel chap pl-3" role="tabpanel" id="pp-taiwan" aria-labelledby="pt-taiwan">
+            <header class="chap__hero">
+        <h3 class="chap__title" data-no-toc id="taiwan-climate-stress">Revealing climate stress and farmland</h3>
+              <div class="chap__intro">
+        <p>Taiwan’s geographical and climate variability arguably makes the island’s farmers more vulnerable to agricultural stress. Taiwan is barely 400 kilometers long, yet it holds both a tropical and a subtropical climate. A three-hour drive crosses a temperature range of roughly 19ºC.</p>
+              </div>
+            </header>
+            <div class="evs">
+              <article class="ev">
+                <div class="ev__text">
+        <p>This compression extends underground as well. Ms. Chen, who has run a natural farm in northwest Taiwan for 25 years, put it simply in our field visit:</p>
+        <blockquote class="quote">
+          <p>&ldquo;Even the world&rsquo;s top soil microbiology PhD doesn&rsquo;t fully understand Taiwan&rsquo;s soil&hellip; Earth has about 12 soil classification types, and Taiwan alone has 11 of them.&rdquo;</p>
+        </blockquote>
+        <p>All variability stacked together, rather than one broad agricultural tradition, Taiwan&rsquo;s farming knowledge has evolved into thousands of hyper-local, inherited practices, each tuned to a single slope or valley.</p>
+                </div>
+        <figure class="fig">
+            <img crossorigin="anonymous" src="https://static.igem.wiki/teams/6072/wiki/geospatial-analysis/chen-farm-soil-geospatial-analysis.webp"
+                 alt="Ms. Chen crouching in a sunlit field beside a harvest basket, talking to two ReLEAF students who are crouched on either side of her, all three looking down at a patch of bare dark soil between them."
+                 width="1200" height="675" loading="lazy" />
+          </figure>
+              </article>
+              <article class="ev ev--flip">
+        <figure class="fig fig--tall">
+            <img crossorigin="anonymous" src="https://static.igem.wiki/teams/6072/wiki/geospatial-analysis/soil-variability-geospatial-analysis.webp"
+                 alt="Map of Taiwan titled High Soil Variability: there are 12 USDA soil orders, Taiwan has 11. Soil series are coloured over satellite imagery, from clay loam through loam, sandy loam and silt loam to silty clay, changing colour every few kilometres down the western plain."
+                 width="1061" height="1500" loading="lazy" />
+            <figcaption><span class="fignum">Figure 2</span> <span class="figlegend">Soil variability.</span></figcaption>
+          </figure>
+                <div class="ev__text">
+        <p>Figure 2 is the visual argument behind Ms. Chen&rsquo;s quote: soil type shifts block by block along the western plain, from alluvium to schist to mudstone. Thus, being in the same county doesn&rsquo;t assure similar planting methods.</p>
+                </div>
+              </article>
+              <article class="ev ev--media">
+                <div class="ev__text">
+        <p>The underlying fragmentation innate to Taiwan is now colliding with a warming rate that continues to outpace tradition’s ability to adapt. For nearly a century, Taiwan’s average temperature crept upward by around 0.11ºC per decade – slow enough that a farmer could spend a lifetime farming and barely notice. Since 1991, that rate has nearly tripled to 0.29ºC per decade, with 2024 becoming Taiwan’s hottest year on record, with Taipei logging 63 days above 35ºC. Refer to Figure 3 for visualized crop yield changes in response to increasing heat stress.</p>
+                </div>
+        <figure class="fig">
+          <img crossorigin="anonymous" src="https://static.igem.wiki/teams/6072/wiki/geospatial-analysis/anim-heat-stress-rice-area-1980-2026-geospatial-analysis.webp"
+               alt="Two animated county maps of Taiwan side by side, year by year from 1980 to 2026: warming at each weather station since 1980 on the left, change in rice-growing area relative to 2005 on the right."
+               width="2040" height="1140" loading="lazy" />
+          <figcaption><span class="fignum">Figure 3</span> <span class="figlegend">Increased Heat Stress Reduces Rice Crop Yield (1980-2026).</span></figcaption>
+        </figure>
+              </article>
+            </div>
+            <div class="chap__end">
+        <p>When asked how she prepares for the dry season, Ms. Chen described layering dried weeds across her soil so morning dew soaked slowly into the ground, carrying her plants up to three weeks between checks. It is a schedule calibrated over decades on one plot of land, and it assumes stress will build at the pace it always has. Contrary to the certainty, a 2022 global study led by Hong Kong Polytechnic University found roughly 34-46% of flash droughts reached drought conditions within five days, with that share rising over 2000–2020 while frequency mostly held steady. Farmers’ knowledge hasn’t changed, but the window it was built for has shrunk. Closing that gap means protection already in place before stress arrives.</p>
+            </div>
+          </div>
+          <div class="rail__panel chap pl-4" role="tabpanel" id="pp-demo" aria-labelledby="pt-demo">
+            <header class="chap__hero">
+        <h3 class="chap__title" data-no-toc id="agricultural-demographics">Taiwan agricultural demographics</h3>
+              <div class="chap__intro">
+        <p>In Taiwan, 99.2% of farmers are small-scale farmers (&lt;&nbsp;2 hectares of land). Their average farm holds just 0.9 to 1.1 hectares. Yet, together, small-scale farmers hold up to 85.3% of Taiwan&rsquo;s arable land.</p>
+        <p>The average Taiwanese farmer is 63.5 years old, and more than half of all farmers are over 65. Accurate, early response to crop stress has traditionally depended on someone who can walk a field and read it; yet, that skill is disappearing as the farming population ages.</p>
+              </div>
+            </header>
+            <div class="evs">
+              <article class="ev ev--media">
+                <div class="ev__text">
+        <p>Overlaying county-level farmer age against temperature increase from 1999 to 2020 (refer to Figure 4) shows these two burdens are not independent: several of the counties with the oldest farming populations are also seeing among the sharpest rises in heat stress. This means the demographic least equipped to respond quickly is concentrated in the places where conditions are changing fastest.</p>
+                </div>
+        <figure class="fig">
+            <img crossorigin="anonymous" src="https://static.igem.wiki/teams/6072/wiki/geospatial-analysis/farmer-age-heat-v2-geospatial-analysis.webp"
+                 alt="Map of Taiwan titled Correlation Between Average Age of Farmers in Taiwan and Amount of Heat Stress Experienced. Counties are shaded by average farmer age in 2016, from 55 years in pale yellow to 61 and over in dark blue, overlaid with dark red circles at weather stations sized by temperature change from 1991 to 2020."
+                 width="1796" height="1295" loading="lazy" />
+            <figcaption><span class="fignum">Figure 4</span> <span class="figlegend">Average Age of Farmers vs. Heat Stress Intensity.</span></figcaption>
+          </figure>
+              </article>
+              <article class="ev ev--flip">
+        <figure class="fig fig--tall">
+            <img crossorigin="anonymous" src="https://static.igem.wiki/teams/6072/wiki/geospatial-analysis/farmland-volatility-v2-geospatial-analysis.webp"
+                 alt="Portrait map of Taiwan titled Taiwan Farmland Distribution x Climate Volatility, with counties shaded by climate volatility index from dark blue at 0.38 to yellow at 0.93, overprinted with farmland parcels in red where under 2 hectares and blue where above. Red parcels dominate the western plain."
+                 width="1207" height="1920" loading="lazy" />
+            <figcaption><span class="fignum">Figure 5</span> <span class="figlegend">Taiwan Parcel Farmlands x Climate Volatility.</span></figcaption>
+          </figure>
+                <div class="ev__text">
+        <p>Figure 5 shapes the picture further. Small-scale farmland (red, under 2 hectares) clusters heavily along the western plain and southern regions – the same areas that overlap with higher climate volatility index bands (computed through mean diurnal temperature range, seasonal temperature range, precipitation coefficient of variation, etc.). The farmers with the least land, the least capital buffer, and often the least physical capacity to adapt quickly happen to be the ones farming in Taiwan’s most volatile microclimates.</p>
+                </div>
+              </article>
+            </div>
+          </div>
+          <div class="rail__panel chap pl-5" role="tabpanel" id="pp-central" aria-labelledby="pt-central">
+            <header class="chap__hero">
+        <h3 class="chap__title" data-no-toc id="centralized-vs-decentralized">Centralized vs. decentralized agriculture</h3>
+              <div class="chap__intro">
+        <p>Taiwan, at just 36 200 square kilometers, consumes more than 300 kilograms of fertilizer per hectare – compared to roughly 128 kilograms per hectare in the United States, a country 9.83 million square kilometers in size (Refer to Figure 6 and Figure 7). Part of this gap comes down to spatial pressure: only about a quarter of Taiwan’s land is viable for agriculture, versus roughly two-fifths in the US. But fertilizer use scaled to compensate for land scarcity comes at a cost. While fertilizer has propped up yields, excessive application strains underground soil biology and degrades soil quality over time.</p>
+              </div>
+            </header>
+            <div class="folds">
+              <details class="fold">
+                <summary>Taiwan&rsquo;s Annual Fertilizer Consumption Breakdown</summary>
+                <div class="fold__body">
+        <figure class="fig">
+          <div class="tablewrap">
+            <table class="data">
+              <thead><tr><th scope="col">Year</th><th scope="col">Fertilizer applied (tonnes, product weight)</th><th scope="col">Nutrient intensity (kg N+P+K/ha)</th><th scope="col">Nitrogen (t)</th><th scope="col">Phosphorus (t)</th><th scope="col">Potassium (t)</th><th scope="col">Value (NT$ million)</th></tr></thead>
+              <tbody>
+                <tr><td>2011</td><td class="num">1 105 732</td><td class="num">581</td><td class="num">179 562</td><td class="num">63 968</td><td class="num">98 531</td><td class="num">11 666</td></tr>
+                <tr><td>2012</td><td class="num">1 111 123</td><td class="num">589</td><td class="num">182 412</td><td class="num">65 039</td><td class="num">99 587</td><td class="num">12 737</td></tr>
+                <tr><td>2013</td><td class="num">1 048 134</td><td class="num">591</td><td class="num">177 578</td><td class="num">66 558</td><td class="num">104 124</td><td class="num">11 382</td></tr>
+                <tr><td>2014</td><td class="num">1 075 700</td><td class="num"><i>flagged&dagger;</i></td><td class="num"><i>flagged&dagger;</i></td><td class="num"><i>flagged&dagger;</i></td><td class="num"><i>flagged&dagger;</i></td><td class="num">9670</td></tr>
+                <tr><td>2015</td><td class="num">1 001 517</td><td class="num">555</td><td class="num">169 206</td><td class="num">62 654</td><td class="num">95 175</td><td class="num">10 165</td></tr>
+                <tr><td>2016</td><td class="num">1 009 286</td><td class="num">571</td><td class="num">171 896</td><td class="num">65 210</td><td class="num">99 078</td><td class="num">9024</td></tr>
+                <tr><td>2017</td><td class="num">939 829</td><td class="num">531</td><td class="num">161 988</td><td class="num">60 233</td><td class="num">90 311</td><td class="num">8840</td></tr>
+                <tr><td>2018</td><td class="num">955 406</td><td class="num">530</td><td class="num">159 478</td><td class="num">59 737</td><td class="num">92 879</td><td class="num">8238</td></tr>
+                <tr><td>2019</td><td class="num">878 520</td><td class="num"><i>flagged&dagger;</i></td><td class="num"><i>flagged&dagger;</i></td><td class="num">55 952</td><td class="num">87 952</td><td class="num">7969</td></tr>
+                <tr><td>2020</td><td class="num">926 444</td><td class="num">531</td><td class="num">158 339</td><td class="num">58 825</td><td class="num">95 728</td><td class="num">8330</td></tr>
+                <tr><td>2021</td><td class="num">839 365</td><td class="num">474</td><td class="num">142 818</td><td class="num">52 337</td><td class="num">84 171</td><td class="num">7480</td></tr>
+                <tr><td>2022</td><td class="num">818 736</td><td class="num">463</td><td class="num">138 476</td><td class="num">52 385</td><td class="num">82 018</td><td class="num">7854</td></tr>
+                <tr><td>2023</td><td class="num">772 084</td><td class="num">441</td><td class="num">131 310</td><td class="num">50 095</td><td class="num">78 528</td><td class="num">7581</td></tr>
+                <tr><td>2024</td><td class="num">800 434</td><td class="num">453</td><td class="num">134 365</td><td class="num">51 101</td><td class="num">81 393</td><td class="num">7597</td></tr>
+                <tr><td>2025</td><td class="num">792 963</td><td class="num">449</td><td class="num">133 041</td><td class="num">50 742</td><td class="num">80 586</td><td class="num">7994</td></tr>
+              </tbody>
+            </table>
+          </div>
+          <figcaption><span class="fignum">Figure 6</span> <span class="figlegend">Taiwan&rsquo;s Annual Fertilizer Consumption Breakdown.</span></figcaption>
+        </figure>
+                </div>
+              </details>
+            </div>
+            <div class="evs">
+              <article class="ev ev--media">
+                <div class="ev__text">
+        <p>With the socio-geographic combinations of Taiwan demonstrated through visualized location-based data, there is a mismatch. A blanket fertilizer strategy is, by definition, poorly matched to a landscape this fragmented—a prominent example being Taiwan—it overcorrects in some regions and undershoots in others, because it was never built to respond to hyper-local variation in the first place.</p>
+                </div>
+        <figure class="fig">
+          <img crossorigin="anonymous" src="https://static.igem.wiki/teams/6072/wiki/geospatial-analysis/fertilizer-global-geospatial-analysis.webp"
+               alt="World choropleth of fertilizer consumption in kilograms per hectare, pale pink to near-black, with an inset circle enlarging Taiwan in the darkest class alongside China, Japan and Malaysia."
+               width="1600" height="869" loading="lazy" />
+          <figcaption><span class="fignum">Figure 7</span> <span class="figlegend">Global Comparative Fertilizer Consumption (Unit: Kilograms per Hectare).</span></figcaption>
+        </figure>
+              </article>
+            </div>
+            <div class="lede-c">
+        <p>That centralization problem isn't just chemical — it's logistical. To quantify it, we built a nationwide GIS routing model connecting every one of Taiwan's 613 registered fertilizer companies to real farmland (Refer to Figure 8): 2 792 536 individual parcels, aggregated by township into 346 demand nodes covering roughly 743 500 hectares of arable land. Each company is routed only to farmland inside its own county, using road-network distance rather than straight-line distance — the model won't let a company shortcut to a closer field across a county line, because that's not how actual distribution works.</p>
+            </div>
+        <figure class="fig fig--live fig--dark">
+          <div class="fig__load" data-slot style="background-image:url(https://static.igem.wiki/teams/6072/wiki/geospatial-analysis/routing-still-v2-geospatial-analysis.webp)">
+            </div>
+          <figcaption><span class="fignum">Figure 8</span> <span class="figlegend">Fertilizer and Agrochemical Footprint from Corporation to Farms. Open it full screen</span></figcaption>
+        </figure>
+            <div class="chap__end">
+        <p>Even under this best-case, same-county assumption, the model shows that centralized fertilizer production still has to travel: every kilogram makes a real trip along real roads before it reaches a real field, adding cost for time and emissions that a farm averaging under 1.1 hectares absorbs disproportionately relative to its output. A production model that instead manufactures the protectant on-site — at the scale of a single farm or a shared township reactor — removes that shipping step entirely.</p>
+            </div>
+          </div>
+        </div>
+        <div class="end">
+        <p>Through the tool of Geographic Information Systems and conversations with farmers, we understood closely that farmers have persevered so far by drawing on generations of accumulated, hyper-local expertise. But climate unpredictability has opened a gap between how fast that tradition can adapt and how fast the climate is now changing — and centralized, one-size-fits-all interventions, whether chemical or logistical, aren't built to close it.</p>
+        </div>
+      </section>
+
+      <!-- ============================================== EXECUTION ===== -->
+      <section class="sec" id="execution">
+        <h2>Execution</h2>
+        <div class="rail rail--seg" data-rail data-rail-top>
+          <div class="seg"><div class="rail__strip seg__track" role="tablist" aria-label="Execution">
+            <button class="rail__btn seg__btn pl-2" role="tab" type="button" id="xt-wet" aria-controls="wet-lab" aria-selected="true"><svg class="seg__ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="M9.5 3.5h5"/><path d="M10.5 3.5v5.3L5.3 18a1.8 1.8 0 0 0 1.6 2.6h10.2a1.8 1.8 0 0 0 1.6-2.6l-5.2-9.2V3.5"/><path d="M7.6 14.5h8.8"/></svg>Wet Lab</button>
+            <button class="rail__btn seg__btn pl-5" role="tab" type="button" id="xt-dry" aria-controls="dry-lab" aria-selected="false"><svg class="seg__ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="M4 4v16h16"/><path d="M7 16c2.4 0 3-8 6-8s3.2 5 6 5"/></svg>Dry Lab</button>
+            <button class="rail__btn seg__btn pl-4" role="tab" type="button" id="xt-hp" aria-controls="human-practices" aria-selected="false"><svg class="seg__ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="M4.5 5h10a1.5 1.5 0 0 1 1.5 1.5v6a1.5 1.5 0 0 1-1.5 1.5H9.5L6 17v-3H4.5A1.5 1.5 0 0 1 3 12.5v-6A1.5 1.5 0 0 1 4.5 5z"/><path d="M19 9h.5A1.5 1.5 0 0 1 21 10.5v6a1.5 1.5 0 0 1-1.5 1.5H18v3l-3.5-3H11"/></svg>Human Practices</button>
+          </div></div>
+          <div class="rail__panel chap pl-2" role="tabpanel" id="wet-lab" aria-labelledby="xt-wet">
+            <header class="chap__hero">
+        <h3 class="chap__title" data-no-toc>Execution: GIS and Wet Lab</h3>
+              <div class="chap__intro">
+        <p>By incorporating GIS into ReLEAF—from LPA measurement and plant assays—the team is able to analyze lab-scale efficacy test results to quantify and predict real-field spatial deployment.</p>
+              </div>
+            </header>
+            <ol class="chain">
+              <li class="node"><article class="card">
+        <h3 class="card__name" id="light-physical-activity">Light plate apparatus</h3>
+        <p class="golink-row"><a class="golink" href="{{ url_for('pages', page='hardware-diopal') }}">The light plate apparatus page, for complementary inputs</a></p>
+                <div class="card__cols">
+                  <div>
+        <p><i>In consideration to confirming and quantitatively measuring on-site on-demand deployment in fields, a highly important factor to consider is how well our engineered bacteria responds to light, how quickly is the response, and how much protectant is ultimately produced. The light plate apparatus (LPA) allows for quantitative analysis and accurate measurement rather than blindly answering these concerns qualitatively.</i></p>
+        <p>The LPA is a 24-tube LED array that holds engineered <i>Bacillus subtilis</i> WB800 (CcaS/CcaR system) under six defined light conditions at once: green light (~535 nm) induces protectant production, and red light (~670 nm) halts it. Each condition is one column of four resistance-matched LEDs lighting four tubes. Intensity is set by Arduino PWM through three MOSFETs, one per tier (low, mid, high), and held constant for the whole run. Rather than a single endpoint reading, we sample each condition over time and track protectant output across the full period.</p>
+                  </div>
+                  <div>
+        <p><b>What we are measuring:</b></p>
+        <ul>
+          <li><b>Production Timeline</b>
+            <ul><li>How long after induction the protectant becomes detectable, and how that timing shifts with light intensity (low, mid, high) and wavelength (green vs. red).</li></ul>
+          </li>
+          <li><b>Total Yield</b>
+            <ul><li>This depicts how much protectant a culture is able to produce under a given light threshold, the following allows for a direct comparison of the yields across varying light intensity conditions.</li></ul>
+          </li>
+        </ul>
+        <p>The LED characterization, build details, and results as they become available are documented on the <a href="{{ url_for('pages', page='hardware-diopal') }}">LPA hardware page</a>.</p>
+                  </div>
+                </div>
+        <h4>Contribution to the math model</h4>
+        <p>The production rate from the LPA is a direct input to Stage 2 of the Math Modeling sector (DryLab × GIS). There, it converts specific enzyme activities into a volumetric production rate. That rate is what the model needs to calculate coverage radius, deployment density, and units per hectare. Production rate depends on the light regimen, so it is carried into the model as a range across conditions rather than a single value. This ties the light each unit receives in the field to how much protectant it delivers per hectare.</p>
+              </article></li>
+              <li class="node"><article class="card">
+        <h3 class="card__name" id="plant-assays">Plant assays</h3>
+        <p class="golink-row"><a class="golink" href="{{ url_for('pages', page='plant') }}">The Plant assay page, for complementary inputs</a></p>
+                <div class="card__cols">
+                  <div>
+        <h4>Functional assay validation</h4>
+        <p>Confirming the efficacy of ACCD is not equivalent nor similar to confirming that ACCD has reached the plant. The project is deemed useless if the protectant never reaches the root zone. Functional Assay Validations account for this flaw, it measures whether treated plants actually perform better under stress than untreated ones, using physiological readouts rather than assumptions. By evaluating these factors functional assay validation runs in four linked stages, each stage's output narrowing the confidence with which ACCD efficacy data can be used elsewhere in the pipeline:</p>
+        <ol>
+          <li><b>Physiological readout selection</b> &mdash; chlorophyll a+b content as a quantifiable proxy for salt-stress damage</li>
+          <li><b>Timing conditions</b> &mdash; testing protectant delivery before, during, and after stress onset</li>
+          <li><b>Salinity gradient</b> &mdash; testing across 0, 75, and 100 mM NaCl to capture dose-dependent response</li>
+          <li><b>Cross-system validation</b> &mdash; repeating the same assay across agar, hydroponics, and soil to test whether efficacy holds as the growth environment moves from idealized to field-realistic</li>
+        </ol>
+                  </div>
+                  <div>
+        <h4>Chlorophyll content as a physiological readout</h4>
+        <p>Chlorophyll degradation is one of the earliest and most reliable indicators of salt stress in plants. Sodium accumulation disrupts chloroplast structure, accelerates chlorophyll breakdown, and suppresses photosynthetic capacity well before visible wilting occurs. Thus, chlorophyll content serves as a quantitative proxy for stress damage, and by extension, for protectant efficacy. A plant that retains more chlorophyll under identical salt exposure is a plant that is better protected.</p>
+        <p>We quantified chlorophyll a+b content spectrophotometrically, using absorbance readings at 645&nbsp;nm and 663&nbsp;nm following extraction in 80% acetone. Chlorophyll a+b content was quantified spectrophotometrically (OD645, OD663) following extraction in 80% acetone, using the standard formula</p>
+        <p>\[ \text{Chl}_{a+b} = \frac{\big[\,8.02\,(OD_{663}-\text{Blank}_{663}) + 20.20\,(OD_{645}-\text{Blank}_{645})\,\big]\times V}{1000} \]</p>
+        <p>Meanwhile the results were reported both as raw concentration and normalized against fresh tissue weight. The two factors were both recorded to avoid misinterpreting the result.</p>
+                  </div>
+                </div>
+                <div class="card__cols">
+                  <div>
+        <h4>Results</h4>
+        <p>Untreated controls showed low chlorophyll content across all salinity levels, which suggests baseline chlorophyll extraction or growth conditions in this experiment were conservative rather than optimal, a detail worth accounting for when comparing absolute values across experiments. Every ACCD-treated group, regardless of timing, showed higher chlorophyll retention than its corresponding control at matched salinity.</p>
+                  </div>
+                  <div>
+        <h4>Cross-system validation</h4>
+        <p>Displayed in Table 1, the chlorophyll data above were collected on agar, including a controlled environment isolating ACCD&rsquo;s biological effect on its transport variability. While agar does establish its existence and effect, it does not confirm its effect in real root-zone or external delivery.</p>
+        <figure class="fig">
+        <div class="tablewrap">
+          <table class="data">
+            <thead><tr><th scope="col">System</th><th scope="col">What it tests</th><th scope="col">Validation Sector</th></tr></thead>
+            <tbody>
+              <tr><td><b>Agar</b></td><td>Direct physiological effect, no transport confound</td><td>Baseline efficacy</td></tr>
+              <tr><td><b>Hydroponics</b></td><td>Liquid-phase delivery through root-zone water</td><td>Transport-dependent efficacy</td></tr>
+              <tr><td><b>Soil</b></td><td>Adsorption, degradation, heterogeneous flow through real soil matrix</td><td>Real-field testing</td></tr>
+            </tbody>
+          </table>
+        </div>
+          <figcaption><span class="fignum">Table 1</span> <span class="figlegend">Tested Systems for <i>Arabidopsis</i> and their purpose</span></figcaption>
+        </figure>
+                  </div>
+                </div>
+              </article></li>
+            </ol>
+            <div class="chap__end">
+        <h4 class="chap__eyebrow">From functional assay to GIS</h4>
+        <p>Soil-validated efficacy data, which we are still developing, is what allows the five FVM soil-type coverage estimates covering the Math Modeling sector to be treated as measured results rather than untested projections. Without a plant-level confirmation that ACCD actually protects roots once delivered through soil rather than agar or liquid media, the coverage radius, deployment density, and unit-per-hectare figures downstream would all rest on a modeling assumption instead of a physiological result. This is the correlation between Wet Lab and GIS: the chlorophyll data is the evidence that the coverage radius GIS maps onto Taiwan's counties is protecting something real, something farmers can come to recognize as theirs.</p>
+            </div>
+          </div>
+          <div class="rail__panel chap pl-5" role="tabpanel" id="dry-lab" aria-labelledby="xt-dry">
+            <header class="chap__hero">
+        <h3 class="chap__title" data-no-toc>Execution: GIS and Dry Lab</h3>
+              <div class="chap__intro">
+        <p>Next, utilizing geospatial analysis’ ability to link computations, simulations, and deployment plans to specific locations, we connected ReLEAF’s business plan and the math modeling powering it with GIS, using a calculator that computes the yield in which farmers are able to save alongside the implementation of our bioreactor.</p>
+              </div>
+            </header>
+            <ol class="chain">
+              <li class="node"><article class="card">
+        <h3 class="card__name" id="math-modeling">Math modeling on business plan</h3>
+        <p class="golink-row"><a class="golink" href="{{ url_for('pages', page='model') }}">The Math Modeling page, for results</a></p>
+        <p class="golink-row"><a class="golink" href="{{ url_for('pages', page='entrepreneurship') }}">The Business Plans page, for results</a></p>
+              </article></li>
+            </ol>
+          </div>
+          <div class="rail__panel chap pl-4" role="tabpanel" id="human-practices" aria-labelledby="xt-hp">
+            <header class="chap__hero">
+        <h3 class="chap__title" data-no-toc>Execution: GIS and Human Practices</h3>
+              <div class="chap__intro">
+        <p>The GIS page ends with a number: what percentage of farmers’ yield can we retrieve from the effect of heat and salinity stresses. Human Practices asks the four questions that decide whether that number ever becomes hardware standing in a field: is it legal, who holds the capital, what does it cost against what the crop is worth, and is it actually better than what the farmer does/ has today. Answering them requires two kinds of work in tandem: stakeholder engagement tells us what farmers, farmers' associations, and forum audiences will and won't accept, while desk analysis of Taiwan's statutes, farm economics, and the competing product landscape tells us what is permissible and affordable. Together they turn a deployment count into a deployable product.</p>
+              </div>
+            </header>
+            <ol class="chain">
+              <li class="node"><article class="card">
+        <h3 class="card__name" id="business-plan">Business plan</h3>
+        <p class="golink-row"><a class="golink" href="{{ url_for('pages', page='entrepreneurship') }}">The Business Plan page, for complementary inputs</a></p>
+                <div class="voices">
+                  <div class="voice">
+        <p><b>Ownership model.</b> Applying unit cost (US$937.50 per 20-liter unit, NT$30 000) to the deployment consideration: Since 99% of Taiwanese farmers work under 2 hectares, individual ownership is arithmetically out of reach for nearly the entire target sector. A shared-asset model through Taiwan's farmers' associations isn't a preference — it's the only ownership structure the numbers permit.</p>
+                  </div>
+                  <div class="voice">
+        <p><b>Organic regulation.</b> Taiwan's Organic Agriculture Promotion Act excludes any product that is genetically modified from certified organic production, regardless of containment. Since ACC deaminase is produced by an engineered strain, this excludes ReLEAF from organic and friendly-environment farming; as about 3.7% of cultivated land, yet still a significant one, since these are the fastest-growing segments in Taiwanese agriculture and the audience most predisposed to adopt a biological input.</p>
+                  </div>
+                  <div class="voice">
+        <p><b>Cost.</b> Depicted under the shared-ownership model, the number that is the most significant to a farmer isn’t necessarily the capital cost; rather the cost per hectare per season. This figure depends on the refill cartridge cost and hardware service life, while the rice-straw-return mechanism provides an incentive for farmers to use our product, as they are able to exchange straw waste for reduced-price protectant, lowering cost without a subsidy.</p>
+                  </div>
+                  <div class="voice">
+        <p><b>Carbon footprint.</b> Compared to decentralized fertilizers and market protectants, our on-site production removes the emissions tied to industrial synthesis, packaging, and shipping, and in return, introduces the drive of continuous electricity and hardware emissions instead. Although the decentralization isn't automatically lower carbon, as it depends on the cycle; a unit that only activates on a predicted or detected stress event is more effective than running continuously, making the agronomically precise deployment favorable.</p>
+                  </div>
+                  <div class="voice voice--wide">
+        <p><b>Competitive position.</b> Different from centralized biostimulants and live engineered microbial inoculants, ReLEAF’s bioreactor presents a distinct position as it is delivering an engineered biological function to the plant without releasing the engineered organism into the environment, all alongside remaining adjustable based on the different crops. Despite these benefits, the product still poses as a competitive risk as it may be a relatively more rational choice for a farmer under seasonal cash constraints with doubt towards a newly presented project to choose an on-the-shelf product.</p>
+                  </div>
+                </div>
+              </article></li>
+            </ol>
+            <div class="chap__end">
+        <h3 class="chap__eyebrow" id="back-to-gis">Back to GIS</h3>
+        <p>Derived from the math modeling indications, the soil type with the highest volatility is sandy loam, while it also is the coastal soil class this project's current geomorphology-based classification heuristic assigns most broadly. That means that the soil classification accuracy not only affects the map but also determines whether the ownership model above is financially viable in a given township.</p>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ============================================== VALIDATION ===== -->
+      <section class="sec" id="validation">
+        <h2>Validation</h2>
+        <div class="blks">
+          <div class="blk">
+        <h3 class="blk__h" id="problem-validation">Problem validation</h3>
+        <p>Through a public forum held with farmers across agricultural regions in Taiwan, namely Nantou, Hualien, Hsinchu, Yilan, etc., we collected interview data from farmers planting various plants—like cocoa, rice, coffee beans, and mixed grains. Spanning across crops and farm scales, we identified a consistent pattern that has emerged within the last 5 years: soil management is conducted based on habit, as they perceive it as extra money spent on seemingly useless data.</p>
+        <blockquote class="quote">
+          <p>&ldquo;Not directly, farmers do not manage it [soil]&rdquo;</p>
+          <cite>Cocoa Farmer from Nantou</cite>
+        </blockquote>
+        <p>This statement demonstrates the evident validation of IHP, establishing the gap coverage that the problems identified are not limited to rice cultivation, but relevant to all smallholder agriculture in Taiwan, relating to soil management.</p>
+          </div>
+          <div class="blk">
+        <h3 class="blk__h" id="soil-testing">Inconsistent soil testing</h3>
+        <p>After visiting numerous booths, most of the interviewed farmers applied organic fertilizers based on a fixed annual schedule, not based on current soil deficiencies or environmental changes. At farms where soil testing does occur, it has a tendency to be limited in frequency: a mixed grain farmer in BaoZhong receives one free test from the government per year, and so do farmers in Miaoli; while they stated, in addition to the free one, they wouldn’t go out of their way and pay more for calculated numerics. Meanwhile, the cocoa farmer quoted above consults no expert whatsoever.</p>
+        <p>Contrastingly, there are notable exceptions, as different farmers with varying crops tend to have different perspectives and priorities in order to maximize their yield, and what they value: money, yield, the joy of it. For example, on the contradictory to people who don’t test, pear and peach growers from Hualien mandates soil testing and treats calcium deficiency as disqualifying for certification, while a persimmon farmer in Hsinchu independently targets a substrate pH of 5.6 to 6.2, having begun from an initial pH of 3. These two cases demonstrate that data-driven soil correction is effective when implemented, but they also represent exceptions rather than common practice. This finding indicates a gap that a passively deployed bioreactor is designed to address, as it delivers a corrective response without requiring the farmer to first acquire diagnostic capability that most currently lack and do not actively pursue.</p>
+          </div>
+          <div class="blk">
+        <h3 class="blk__h" id="organic-certification">Organic certification requirements constrain adoption</h3>
+        <p>The Nantou farmer&rsquo;s response to any proposed treatment was specific and immediate: a natural protectant would be acceptable, provided its compatibility with organic certification requirements could be confirmed. This farm is in the process of transitioning to certified organic status, and any input under consideration must remain compatible with that transition. This has direct implications for product positioning: a biological, GMO-derived treatment from our engineered bacteria such as ACC-deaminase is not merely acceptable to this segment of farmers but may represent the only category of input such farmers are willing to consider. This also identifies a concrete requirement for market entry, as confirming compatibility with organic certification standards is not a clean line, rather a gray area, making farmers in their trial stage of the organic transition unwilling to risk it and try out the product.</p>
+          </div>
+          <div class="blk blk--wide">
+        <h3 class="blk__h" id="economic-conditions">Growing economic conditions motivate adoption and inheriting farms</h3>
+        <p>Documented within Table 2, the highlights in red indicate that the temperature of the farm has already exceeded the optimal growth temperature for their harvested crop. Throughout the conversation with a Nantou farmer, they present a clear illustration and will to turn small farming into a business as time progresses. He expresses that the farm was originally cultivated solely to supply food to the farmer's family, with no intent towards expansion. This was until the responsibility of maintaining the growing land of previously owned aging parents, combined with the increasing food demand, prompted their agriculture to shift towards commercial production. They’ve established that the agricultural labor force is aging, as profit margins remain narrow with pest control left unattained, and the farmers are nonetheless actively working to establish a product following organic regulations. This represents the customer profile most relevant to IHP: small-scale farmers seeking to optimize profits while reducing manual labor.</p>
+        <figure class="fig">
+        <div class="tablewrap">
+          <table class="data">
+            <thead><tr><th scope="col">Farmer&rsquo;s Main Crop</th><th scope="col">Farmer Location</th><th scope="col">Farmer Location&rsquo;s Average Temperature (ºC)</th></tr></thead>
+            <tbody>
+              <tr><td>Cacao</td><td>Nantou</td><td class="num">24.3</td></tr>
+              <tr><td>Peaches and Pears</td><td>Hualien Zhonghe</td><td class="num hot">24.2</td></tr>
+              <tr><td>Cacao</td><td>Pingtung</td><td class="num">25.9</td></tr>
+              <tr><td>Coffee Beans</td><td>Guanxi Mawudu</td><td class="num hot">24.5</td></tr>
+              <tr><td>Fruit Trees</td><td>Xingzhu</td><td class="num">24</td></tr>
+              <tr><td>Rice and Fruits</td><td>Yilan</td><td class="num">23.4</td></tr>
+              <tr><td>Mixed Grains</td><td>Chiayi</td><td class="num">24.3</td></tr>
+              <tr><td>Fruit Trees</td><td>Miaoli</td><td class="num">23.3</td></tr>
+              <tr><td>Vegetables</td><td>Hsinzhu</td><td class="num hot">24.5</td></tr>
+              <tr><td>Fruits &amp; Vegetable</td><td>Yilan and Taichung</td><td class="num">23.4</td></tr>
+              <tr><td>Fruits &amp; Vegetable</td><td>Taichung</td><td class="num">24.5</td></tr>
+            </tbody>
+          </table>
+        </div>
+          <figcaption><span class="fignum">Table 2</span> <span class="figlegend">The average temperature of the Farm location relative to the crop harvested.</span></figcaption>
+        </figure>
+          </div>
+        </div>
+      </section>
+
+      <!-- ================================================== IMPACT ===== -->
+      <section class="sec" id="impact">
+        <h2>Impact: current reach and future prospect</h2>
+        <p>Wanting a more vulnerable and high economical value crop, we looked at crops where heat stress is costing farmers the most, proving the investment and profit worth paying for. That led us to tomatoes - breeds like Beef Tomatoes can sell for all the way up to NT$201 per kilogram, and averages NT$152.9 per kilogram, making it a very high value crop (Taiwan Ministry of Agriculture, 2026).</p>
+        <p>Taiwan’s tomato industry covers over 4000 hectares of farmland in Taiwan and is concentrated within a few counties. According to the Agricultural Knowledge Retrieval Platform, farmers harvested across 3627.94 hectares, yielding approximately 83.27 million kilograms in total, averaging 22 953 kg per hectare. Chiayi alone planted on 830.68 hectares of land and produced over 17.18 million kg, followed by Yunlin County, which produced 12.24 million kg; Kaohsiung City with 11.36 million kg, and Tainan City with 10.06 million kg (Refer to Figure 9).</p>
+        <figure class="fig">
+          <img crossorigin="anonymous" src="https://static.igem.wiki/teams/6072/wiki/geospatial-analysis/tomato-production-county-geospatial-analysis.webp"
+               alt="Map of Taiwan titled 2024 Tomato Production in Taiwan Counties (kg), counties shaded from near white at 0 to 23,263 kg to near black at 10,714,006 to 17,185,322 kg. Chiayi is darkest, with Yunlin, Tainan and Kaohsiung labelled and nearly as dark down the south-west; the north and east are pale."
+               width="1180" height="838" loading="lazy" />
+          <figcaption><span class="fignum">Figure 9</span> <span class="figlegend">Tomato Production by County, Taiwan, 2024.</span></figcaption>
+        </figure>
+        <p>As demonstrated through Figure 10, the amount of increase in average November–December lowest nighttime temperatures in each county between 1961–1990 and 2015–2024, using ERA5 reanalysis data. November and December are when Taiwan’s main tomato crops flower and grow fruit, and they need cool nights. Every county warmed by between 0.9 °C and 2.0 °C. The largest increase, 1.9–2.0 °C, runs down the west-central spine of the island from Miaoli through Taichung and Nantou to Chiayi, Tainan and Kaohsiung. Together with Yunlin and Changhua, these counties grow 85% of Taiwan’s tomatoes. The east coast and the north warmed less, and Penghu the least, because the surrounding sea buffers night temperatures.</p>
+        <figure class="fig">
+          <img crossorigin="anonymous" src="https://static.igem.wiki/teams/6072/wiki/geospatial-analysis/tomato-night-warming-geospatial-analysis.webp"
+               alt="Map of Taiwan titled Change in Nov–Dec minimum temperature (°C), counties shaded from pale yellow at 0 to 1.0 °C warmer to dark red at 1.9 to 2.05 °C. Miaoli, Taichung, Nantou, Chiayi, Tainan and Kaohsiung are dark red; Yunlin, Changhua, Yilan, Hsinchu and Kinmen are red; the east coast, Pingtung and New Taipei are orange; Penghu is lightest."
+               width="2000" height="1126" loading="lazy" />
+          <figcaption><span class="fignum">Figure 10</span> <span class="figlegend">Night-Time Warming During Tomato Flowering, 1961–1990 to 2015–2024.</span></figcaption>
+        </figure>
+        <p>Understanding the impact of recent fluctuations in climate on tomato yields shows that the crop can potentially be one of the crops that we target for the business plan, as the map proves that temperature has increased significantly in recent years, which makes it so that Taiwan’s tomatoes have become one of the crops that are most susceptible to heat stress. While rice is still a crop that’s susceptible to heat stress, tomatoes present a more viable option, as Taiwan is actually currently overproducing rice. That was confirmed by Director Wu, Tzu-Hsien, compounded by the fact that she also stated that tomatoes are also one of the most economically valuable crops in Taiwan, which means that tomato farmers will also be more willing to spend money to maintain and protect the quality of their crops. Through this, we can conclude that tomato farmers are a better target demographic than rice farmers in Taiwan.</p>
+      </section>
+
+      <!-- ===================================== TOOLS AND REFERENCES ===== -->
+      <section class="sec" id="tools">
+        <h2>Contribution and tools</h2>
+
+        <h3 id="guide">Guide</h3>
+        <p>This guide is for teams new to GIS, as this tutorial covers 2 core fundamentals; switching between raster and vector data, and how to import data through three main data formats commonly accepted by GIS: GeoJSON, CSV, and Shapefiles (.shp). If the researched data sets are not in these three formats (eg., tables) or contain variances among the data (eg., different coordinate systems, unwanted data), you can reference the LLM broad prompt below, providing high efficiency when dealing with these issues.</p>
+        <p>To allow non-professionals or people interested in utilizing geospatial analysis/ GIS in their projects, we put together a practical guide covering how to distinguish and navigate through raster vs. vector data; additionally, how to import the three files into the aforementioned formats.</p>
+        <div class="rail rail--app" data-rail>
+          <div class="rail__strip app__list" role="tablist" aria-label="Guide" aria-orientation="vertical">
+            <button class="rail__btn app__btn" role="tab" type="button" id="gt-raster" aria-controls="gp-raster" aria-selected="true"><svg class="app__ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><rect x="4" y="4" width="16" height="16" rx="2.5"/><path d="M4 9.3h16M4 14.7h16M9.3 4v16M14.7 4v16"/></svg><span class="app__txt"><b>Rasters vs. vectors</b></span></button>
+            <button class="rail__btn app__btn" role="tab" type="button" id="gt-csv" aria-controls="gp-csv" aria-selected="false"><svg class="app__ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="M6.5 3.5h7.5l4 4v13h-11.5z"/><path d="M14 3.5v4h4"/><path d="M9.5 12h5M9.5 15.5h5"/></svg><span class="app__txt"><b>Importing CSV files</b></span></button>
+            <button class="rail__btn app__btn" role="tab" type="button" id="gt-geojson" aria-controls="gp-geojson" aria-selected="false"><svg class="app__ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="M9 4.5c-1.8 0-2.5.9-2.5 2.4v2.6c0 1.2-.7 2-2 2.5 1.3.5 2 1.3 2 2.5v2.6c0 1.5.7 2.4 2.5 2.4"/><path d="M15 4.5c1.8 0 2.5.9 2.5 2.4v2.6c0 1.2.7 2 2 2.5-1.3.5-2 1.3-2 2.5v2.6c0 1.5-.7 2.4-2.5 2.4"/></svg><span class="app__txt"><b>Importing GeoJSON</b></span></button>
+            <button class="rail__btn app__btn" role="tab" type="button" id="gt-shp" aria-controls="gp-shp" aria-selected="false"><svg class="app__ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="M12 4l8.5 4.5L12 13 3.5 8.5z"/><path d="M3.5 12.5L12 17l8.5-4.5"/><path d="M3.5 16.2L12 20.7l8.5-4.5"/></svg><span class="app__txt"><b>Importing shapefiles (.shp)</b></span></button>
+          </div>
+          <div class="rail__panel app__panel" role="tabpanel" id="gp-raster" aria-labelledby="gt-raster" tabindex="0">
+        <h4>Rasters vs. vectors</h4>
+        <p>As previously mentioned, Raster data and vector data are the most common and fundamental data types utilized within QGIS, one covering pixels, and the other utilizing lines/ points. Raster data sets are discrete and continuous cells (pixels) that represent data that gradually varies across space, also classifying them into different categories. Oftentimes, Raster data is used to present temperature or elevation maps as they can be visualized as continuous and gradient-like. Conversely, Vector data are scalable values that only depict discrete features like data points or lines; they are most commonly used to establish borders or outlines of files.</p>
+          </div>
+          <div class="rail__panel app__panel" role="tabpanel" id="gp-csv" aria-labelledby="gt-csv" tabindex="0">
+            <h4>Importing CSV files</h4>
+            <ul>
+              <li>CSVs are the most common way to present data (eg., farm locations, sensor readings)
+                <ul>
+                  <li>Has to include longitude and latitude within the 2 separate columns</li>
+                  <li>Can only be imported to GIS through <i>delimited text file</i>
+                    <ul><li>Unable to be picked directly from the browser window</li></ul>
+                  </li>
+                  <li>Make sure to clearly define the Coordinate Reference System (CRS)
+                    <ul><li>(eg., EPSG:4326 / WGS 84)</li></ul>
+                  </li>
+                </ul>
+              </li>
+            </ul>
+          </div>
+          <div class="rail__panel app__panel" role="tabpanel" id="gp-geojson" aria-labelledby="gt-geojson" tabindex="0">
+            <h4>Importing GeoJSON</h4>
+            <ul>
+              <li>GeoJSON is a readable format for vector types, commonly found for web-based mapping</li>
+              <li>Import directly via Layer &rarr; Add Layer &rarr; Add Vector Layer, or by dragging the file into the Layers panel.</li>
+              <li>GeoJSON typically embeds its CRS in the file itself, but confirm it matches your project CRS before combining it with other layers
+                <ul><li>Mismatches here cause layers to silently misalign rather than error out.</li></ul>
+              </li>
+            </ul>
+          </div>
+          <div class="rail__panel app__panel" role="tabpanel" id="gp-shp" aria-labelledby="gt-shp" tabindex="0">
+            <h4>Importing shapefiles (.shp)</h4>
+            <ul>
+              <li>Shapefiles are the standard vector format
+                <ul><li><i>Can be easily imported by finding the file within the Browser tab, and dragging the following onto the Layers tab.</i></li></ul>
+              </li>
+            </ul>
+          </div>
+        </div>
+
+        <h3 id="llm-broad-prompt">LLM broad prompt</h3>
+        <p>When researching global geospatial data, running into data sets with hundreds to thousands of numerics is inevitable. Oftentimes, these data sets are unorganized and condensed with tons of information, and they come in formats QGIS does not support, with field types that are inconsistent from row to row, no geometry column, or a non-standard text encoding, so QGIS cannot read them directly. Moreover with varying coordinate systems, data from different sources may have varying coordinates, unaligning in the software. Manually reconstructing thousands of numerics is time-consuming and could contain operator error, especially for students unfamiliar or non-professionals of the GIS field.</p>
+        <p>To address the following, we developed a broad, reusable prompt that generates data files in formats that QGIS is able to properly analyze (GeoJSON, CSV, SHP) from arbitrary raw input data. The following prompt, rather than being hard-wired to only analyze data sets beneficial to our project (Taiwan Farmland and Climate Volatility), the prompt is generalized so that any team desirable of use Geospatial Analyses can adapt it to develop their own geographic data set.</p>
+        <p>We designed the following prompt as a contribution other future iGEM teams can utilize and incorporate into their own project. As aforementioned, when integrating spatial analysis into desired projects, regardless of the specific data sets, it is bound to run into similar data overload problems, utilizing this prompt allows for easier data organization experiences.</p>
+        <div class="cards cards--2">
+          <div class="card">
+        <p>The prompt mainly consists of the following components:</p>
+        <ul>
+          <li>Takes numerous complicated or inconsistent data sets and formats them as GIS-readable data</li>
+          <li>Locates and extracts existing coordinate fields (latitude/longitude, X/Y, or combined location fields) from the raw data, even when inconsistently labeled</li>
+          <li>Detects or infers the coordinate reference system (CRS) of the source data and states it explicitly before proceeding</li>
+          <li>Standardizes the coordinate system to the convention required by the destination software (e.g., WGS84/EPSG:4326 for GeoJSON, valid geometry types, .prj requirements for shapefiles)</li>
+          <li>Outputs a clean CSV, SHP, or GeoJSON file with consistent columns, ready to import directly into GIS software (QGIS)</li>
+        </ul>
+          </div>
+          <div class="card">
+        <p>Rules that the prompt follows</p>
+        <ul>
+          <li>Only utilizes data provided; extracting or reformatting an existing coordinate (splitting a combined field, converting units, reprojecting a stated CRS) is allowed, but it never invents, estimates, or geocodes a coordinate or value that isn't derivable from the file itself</li>
+          <li>If a coordinate's CRS is not stated and cannot be reasonably inferred, it says so explicitly and asks rather than defaulting to an assumption</li>
+          <li>If the data set contains empty or ambiguous data, it flags this explicitly rather than filling it in or leaving it silently blank</li>
+          <li>If fulfilling the author's request requires calculations (distance, filter, percentages), the logic is transparently shown, not just the final result</li>
+          <li>If a coordinate or value looks unusable (out of valid range, inconsistent format, mismatched CRS across records), it flags this before using it</li>
+          <li>The output format is exactly what the author requests (GeoJSON, SHP, CSV), with the CRS of the output stated explicitly</li>
+        </ul>
+          </div>
+        </div>
+        <div class="card card--fig">
+          <div class="card__cols">
+            <div>
+        <p>Our prompt, presented in Text 1, demonstrates that rules are grounded in established prompt engineering research rather than built ad hoc. Restricting the model to only use provided data reflects grounding research, shown to reduce hallucination (Addlesee, 2024). Flagging missing, ambiguous, or unusable values instead of guessing reflects calibration and abstention research, addressing a known tendency of LLMs to answer confidently rather than admit uncertainty. Requiring transparent calculation logic follows chain-of-thought prompting, shown to improve accuracy on multi-step tasks (Wei et al., 2022). Detecting and stating the coordinate reference system before use follows self-verification prompting, where an assumption is externalized so it can be checked rather than embedded silently in the output. Finally, requiring the output to exactly match the requested format (CSV, SHP, or GeoJSON) reflects structured output practices common to established frameworks such as CO-STAR and RTF, which produce more consistent, usable results than open-ended formatting instructions.</p>
+        <p>Depicted within Figure&nbsp;11, the system architecture is organized into three interconnected layers: Input, Interface, and Backend, collectively supporting the operational deployment of the broad prompt.</p>
+            </div>
+        <figure class="fig">
+          <img crossorigin="anonymous" src="https://static.igem.wiki/teams/6072/wiki/geospatial-analysis/prompt-architecture-v2-geospatial-analysis.webp"
+               alt="Diagram in three columns. Input: user prompt or question, spatial file (CSV, SHP, GeoJSON), desired file formatting, desired file inclusion, destination platform. Interface: chat box, upload, table or chart display. Backend: data fabrication prevention, coordinate extraction and CRS detection, explicit uncertainty flagging, prioritize data validity, calculation logic exhibition, format matching."
+               width="1800" height="1006" loading="lazy" />
+          <figcaption><span class="fignum">Figure 11</span> <span class="figlegend">System Architecture and Implementation Layers of the Broad Prompt.</span></figcaption>
+        </figure>
+          </div>
+        </div>
+
+        <div class="folds">
+        <details class="fold">
+          <summary>Text 1. Sample of the broad prompt</summary>
+          <div class="fold__body">
+<pre class="prompt no-math">I'm working with spatial data that I need prepared for use in QGIS.
+
+Current data format: [CSV / GeoJSON / Shapefile]
+Desired fields in output: [e.g. site_id, latitude, longitude, organism, soil_type, ph, collection_date]
+Desired output format: [CSV / GeoJSON / .shp]
+Destination: This output will be loaded directly into QGIS for spatial analysis.
+My question: [e.g. "convert this into a clean GeoJSON with only the fields I need"]
+
+Step 1 — Locate the coordinates.
+Before answering my question, find the fields in my data that represent location
+(e.g. latitude/longitude, lat/lon, X/Y, easting/northing, or a combined
+"coordinates" field). Tell me which columns you identified and what you believe
+their coordinate reference system (CRS) is, based on the values and any metadata
+in the file (e.g. values in the range -180 to 180 / -90 to 90 suggest WGS84;
+large 6-7 digit values suggest a projected CRS like UTM). If the CRS is not
+stated and cannot be reasonably inferred, say so explicitly and ask me rather
+than assuming WGS84 by default.
+
+Step 2 — Prepare for QGIS.
+- Reproject/report coordinates so the final output is usable in QGIS. For
+  GeoJSON, use WGS84 (EPSG:4326) with [longitude, latitude] order, per spec.
+- If the source data is already in a projected CRS and I haven't asked for
+  reprojection, keep the original values but state the CRS explicitly in your
+  answer so it can be set correctly in QGIS.
+- For shapefile output, note that a .prj file defining the CRS is required —
+  tell me what it should contain.
+
+Rules for your answer:
+1. Only use values that are actually present in the file. Extracting or
+   reformatting an existing coordinate (splitting a combined field, converting
+   units, reprojecting a stated CRS) is allowed and expected. Inventing,
+   estimating, or geocoding a coordinate that is not derivable from the file's
+   own data is not allowed — flag those records as "missing coordinates" instead.
+2. If a field is missing, empty, or ambiguous for a record, say so explicitly
+   rather than guessing — flag it as "uncertain" rather than filling it in.
+3. If my question requires a calculation (distance, area, count, filter), show
+   your work or the logic you used, not just the final number.
+4. If a coordinate or value looks unusable (out of valid range, inconsistent
+   format, mismatched CRS across rows), point it out before using it.
+5. Give me output in exactly the format I requested, ready to copy or download,
+   and state the CRS of that output explicitly in your reply.</pre>
+          </div>
+        </details>
+        </div>
+
+        <h4>Validation</h4>
+        <div class="chartbox"><div class="charts charts--2">
+          <figure class="fig">
+            <img crossorigin="anonymous" src="https://static.igem.wiki/teams/6072/wiki/geospatial-analysis/prompt-validation-flow-v2-geospatial-analysis.webp"
+                 alt="Flow chart. The same data set of 15,138 rows and the same question go to a structured prompt and to a plain-language prompt. The structured prompt checks coordinate range and CRS, flags a coordinate precision issue (only 3,739 unique points), applies the filter and returns 2,502 rows. The plain-language prompt only checks for missing values, applies no filter and returns all 15,138 rows."
+                 width="1800" height="1284" loading="lazy" />
+            <figcaption><span class="fignum">Figure 12</span> <span class="figlegend">Comparison Between the Structured Broad Prompt and the Plain Language Prompt.</span></figcaption>
+          </figure>
+          <figure class="fig">
+            <img crossorigin="anonymous" src="https://static.igem.wiki/teams/6072/wiki/geospatial-analysis/prompt-validation-output-v2-geospatial-analysis.webp"
+                 alt="Two spreadsheet excerpts side by side, headed Structured Broad Prompt and Plain Language Prompt, with columns latitude, longitude, pH, app richness, two-class vegetation and EX kg/ha."
+                 width="1800" height="989" loading="lazy" />
+            <figcaption><span class="fignum">Figure 13</span> <span class="figlegend">Visual Demonstration of Prompt Efficiency Through Difference Between Number of Rows.</span></figcaption>
+          </figure>
+        </div></div>
+      </section>
+
+      <!-- ================================================ REFERENCES ===== -->
+      <section class="refs" id="references">
+        <h2 data-no-toc>References</h2>
+        <div class="blk">
+        <ul>
+          <li>Addlesee, A. (2024). Grounding LLMs to in-prompt instructions: Reducing hallucinations caused by static pre-training knowledge. In T. Dinkar, G. Attanasio, A. C. Curry, I. Konstas, D. Hovy, &amp; V. Rieser (Eds.), <i>Proceedings of Safety4ConvAI: The Third Workshop on Safety for Conversational AI @ LREC-COLING 2024</i> (pp. 1&ndash;7). ELRA and ICCL. <a href="https://aclanthology.org/2024.safety4convai-1.1" rel="noopener">https://aclanthology.org/2024.safety4convai-1.1</a></li>
+          <li>Central Weather Administration. (n.d.-a). <i>CODiS climate observation data inquiry service</i> [臺灣氣候觀測資料查詢服務; Data set]. Ministry of Transportation and Communications. Retrieved October 10, 2026, from <a href="https://codis.cwa.gov.tw" rel="noopener">https://codis.cwa.gov.tw</a></li>
+          <li>Central Weather Administration. (n.d.-b). <i>臺灣氣候</i> [Taiwan climate]. Ministry of Transportation and Communications. Retrieved October 10, 2026, from <a href="https://www.cwa.gov.tw" rel="noopener">https://www.cwa.gov.tw</a></li>
+          <li>Central Weather Administration. (2021). <i>Monthly mean temperature in Taiwan, 1991–2020</i> [Data set]. Ministry of Transportation and Communications. <a href="https://www.cwa.gov.tw/V8/E/C/Statistics/monthlymean.html" rel="noopener">https://www.cwa.gov.tw/V8/E/C/Statistics/monthlymean.html</a></li>
+          <li>Chen, Li-Xing. (2026). <i>臺灣極端氣候對糧食作物的影響：以稻米、玉米及甘藷為例</i> [The impact of extreme climate on food crops in Taiwan: Rice, corn, and sweet potato] [Master's thesis, National Taiwan University]. NTU Theses and Dissertations Repository. <a href="https://doi.org/10.6342/NTU202601266" rel="noopener">https://doi.org/10.6342/NTU202601266</a></li>
+          <li>Council of Agriculture, Executive Yuan. (2013, July 19). 102年度施肥達人表揚活動 [2013 Fertilization Expert Awards]. <a href="https://www.moa.gov.tw/ws.php?id=2448067" rel="noopener">https://www.moa.gov.tw/ws.php?id=2448067</a></li>
+          <li>Central Weather Administration. (n.d.). Monthly mean climate statistics [Data set]. Retrieved October 17, 2026, from <a href="https://www.cwa.gov.tw/V8/C/C/Statistics/monthlymean.html" rel="noopener">https://www.cwa.gov.tw/V8/C/C/Statistics/monthlymean.html</a></li>
+          <li>Directorate-General of Budget, Accounting and Statistics, Executive Yuan. (2020). <i>2020 census of agriculture, forestry, fishery and animal husbandry</i>. <a href="https://eng.stat.gov.tw/News_Content.aspx?n=2406&amp;s=214666" rel="noopener">https://eng.stat.gov.tw/News_Content.aspx?n=2406&amp;s=214666</a></li>
+          <li>Food and Agriculture Organization of the United Nations [FAO]. (2004). <i>The international year of rice: Background</i>. <a href="https://www.fao.org/4/Y5167E/y5167e02.htm" rel="noopener">https://www.fao.org/4/Y5167E/y5167e02.htm</a></li>
+          <li>Hersbach, H., Bell, B., Berrisford, P., Hirahara, S., Horányi, A., Muñoz‐Sabater, J., Nicolas, J., Peubey, C., Radu, R., Schepers, D., Simmons, A., Soci, C., Abdalla, S., Abellan, X., Balsamo, G., Bechtold, P., Biavati, G., Bidlot, J., Bonavita, M., … Thépaut, J.-N. (2020). The ERA5 global reanalysis. <i>Quarterly Journal of the Royal Meteorological Society, 146</i>(730), 1999–2049. <a href="https://doi.org/10.1002/qj.3803" rel="noopener">https://doi.org/10.1002/qj.3803</a></li>
+          <li>Leslie, A., &amp; Murray, D. (2026). <i>Analysis of the operational costs of trucking: 2026 update</i>. American Transportation Research Institute. <a href="https://truckingresearch.org/2026/07/analysis-of-the-operational-costs-of-trucking-2026-update/" rel="noopener">https://truckingresearch.org/2026/07/analysis-of-the-operational-costs-of-trucking-2026-update/</a></li>
+          <li>Ministry of Agriculture. (n.d.-a). [Data set]. Agriculture Open Data Platform. <a href="https://data.moa.gov.tw/open_detail.aspx?id=I75" rel="noopener">https://data.moa.gov.tw/open_detail.aspx?id=I75</a></li>
+          <li>Ministry of Agriculture. (n.d.-b). [Data set]. Agriculture Open Data Platform. <a href="https://data.moa.gov.tw/open_search.aspx?id=139" rel="noopener">https://data.moa.gov.tw/open_search.aspx?id=139</a></li>
+          <li>Ministry of Agriculture. (2024). <i>Number of persons engaged in on-farm agricultural and livestock activities in agricultural and livestock households, by sex and age</i> [Data set]. Taiwan Government Open Data Platform. <a href="https://data.gov.tw/dataset/80661" rel="noopener">https://data.gov.tw/dataset/80661</a></li>
+          <li>Ministry of Agriculture. (2025a). <i>Detailed soil map</i> [詳測土壤圖; Data set]. Taiwan Government Open Data Platform. <a href="https://data.gov.tw/en/datasets/55747" rel="noopener">https://data.gov.tw/en/datasets/55747</a></li>
+          <li>Ministry of Agriculture. (2025b). <i>Taiwan's rice production per hectare for each county and city – rice (annual)</i> [Data set]. Taiwan Government Open Data Platform. <a href="https://data.gov.tw/en/datasets/95738" rel="noopener">https://data.gov.tw/en/datasets/95738</a></li>
+          <li>Ministry of Agriculture. (2026a). <i>Fertilizer management integrated information</i>. Taiwan Government Open Data Platform. <a href="https://data.gov.tw/en/datasets/7304" rel="noopener">https://data.gov.tw/en/datasets/7304</a></li>
+          <li>農業部. (2026b). <i>臺灣地區肥料產銷量值</i> [Taiwan area fertilizer production and sales volume and value] [Data set]. 政府資料開放平臺. <a href="https://data.gov.tw/dataset/9690" rel="noopener">https://data.gov.tw/dataset/9690</a></li>
+          <li>Ministry of Environment. (n.d.). <i>Taiwan soil information system</i>. Environmental Management Administration. Retrieved September 26, 2026, from <a href="https://sqbs.moenv.gov.tw/public/English" rel="noopener">https://sqbs.moenv.gov.tw/public/English</a></li>
+          <li>Ministry of Environment. (2026). [Carbon footprint emission factors dataset (CFP_P_02)] [Data set]. Ministry of Environment Open Data Platform</li>
+          <li>Ministry of Transportation and Communications, Institute of Transportation. (2017). <i>公路貨運服務碳足跡公用係數建置計畫(2/2) [Establishment of general emission factors for carbon footprint of road freight transport services (2/2)]</i>. <a href="https://www.iot.gov.tw/zh_tw/archive/pub/reports/-15034574" rel="noopener">https://www.iot.gov.tw/zh_tw/archive/pub/reports/-15034574</a></li>
+          <li>Ministry of Agriculture. (2026). 農業統計年報 114年 [Agricultural statistics yearbook 2025]. <a href="https://agrstat.moa.gov.tw/moasdweb/book/Book.aspx" rel="noopener">https://agrstat.moa.gov.tw/moasdweb/book/Book.aspx</a></li>
+          <li>National Science and Technology Center for Disaster Reduction. (n.d.). <i>臺灣氣候變遷推估資訊與調適知識平台</i> [Taiwan Climate Change Projection Information and Adaptation Knowledge Platform]. Retrieved October 10, 2026, from <a href="https://tccip.ncdr.nat.gov.tw" rel="noopener">https://tccip.ncdr.nat.gov.tw</a></li>
+          <li>Peng, S., Huang, J., Sheehy, J. E., Laza, R. C., Visperas, R. M., Zhong, X., Centeno, G. S., Khush, G. S., &amp; Cassman, K. G. (2004). Rice yields decline with higher night temperature from global warming. <i>Proceedings of the National Academy of Sciences, 101</i>(27), 9971–9975. <a href="https://doi.org/10.1073/pnas.0403720101" rel="noopener">https://doi.org/10.1073/pnas.0403720101</a></li>
+          <li>QGIS Development Team. (2025). <i>QGIS geographic information system</i> (Version 3.44 LTR) [Computer software]. Open Source Geospatial Foundation. <a href="https://qgis.org" rel="noopener">https://qgis.org</a></li>
+          <li>Qing, Y., Wang, S., Ancell, B. C., &amp; Yang, Z.-L. (2022). Accelerating flash droughts induced by the joint influence of soil moisture depletion and atmospheric aridity. <i>Nature Communications, 13</i>, Article 1139. <a href="https://doi.org/10.1038/s41467-022-28752-4" rel="noopener">https://doi.org/10.1038/s41467-022-28752-4</a></li>
+          <li>Tsai, J. (2026, June 3). How Taiwan's 'Vegetable Silicon Valley' Is Feeding the World. <i>CommonWealth Magazine</i>. Retrieved October 17, 2026, from <a href="https://english.cw.com.tw/article/article.action?id=4807" rel="noopener">https://english.cw.com.tw/article/article.action?id=4807</a></li>
+          <li>taiwan-atlas (Version 2021.9.20) [Computer software]. (2021). npm. <a href="https://www.npmjs.com/package/taiwan-atlas" rel="noopener">https://www.npmjs.com/package/taiwan-atlas</a></li>
+          <li>Wei, J., Wang, X., Schuurmans, D., Bosma, M., Ichter, B., Xia, F., Chi, E., Le, Q., &amp; Zhou, D. (2022). Chain-of-thought prompting elicits reasoning in large language models. <i>Advances in Neural Information Processing Systems, 35</i>, 24824&ndash;24837. <a href="https://arxiv.org/abs/2201.11903" rel="noopener">https://arxiv.org/abs/2201.11903</a></li>
+          <li>Wolfe, J. (2026, July 22). <i>Trucking operational costs hit record $2.336 per mile, ATRI reports</i>. FleetOwner. <a href="https://www.fleetowner.com/operations/article/55392569/atri-report-breaks-down-class-8-truck-operating-costs-by-region-and-expense-category" rel="noopener">https://www.fleetowner.com/operations/article/55392569/atri-report-breaks-down-class-8-truck-operating-costs-by-region-and-expense-category</a></li>
+          <li>World Bank. (2026). <i>Fertilizer consumption (kilograms per hectare of arable land)</i> [Data set]. World Development Indicators. Retrieved October 17, 2026, from <a href="https://data.worldbank.org/indicator/AG.CON.FERT.ZS" rel="noopener">https://data.worldbank.org/indicator/AG.CON.FERT.ZS</a></li>
+          <li>World Bank. (2026). <i>Fertilizer consumption (kilograms per hectare of arable land) – United States</i> World Bank Group. Retrieved September 26, 2026, from <a href="https://data.worldbank.org/indicator/AG.CON.FERT.ZS" rel="noopener">https://data.worldbank.org/indicator/AG.CON.FERT.ZS</a></li>
+          <li>Zippenfenig, P. (2023). Open-Meteo.com weather API [Computer software]. Zenodo. <a href="https://doi.org/10.5281/zenodo.7970649" rel="noopener">https://doi.org/10.5281/zenodo.7970649</a></li>
+          <li>番茄主題館. (2026). Moa.Gov.Tw. <a href="https://kmweb.moa.gov.tw/subject/subject.php?id=61256&amp;print=Y" rel="noopener">https://kmweb.moa.gov.tw/subject/subject.php?id=61256&amp;print=Y</a></li>
+          <li>周佳霖, 王亭今, &amp; 郭宏遠. (n.d.). 番茄耐熱韌性調適技術. 農業部種苗改良繁殖場. <a href="https://www.moa.gov.tw/ws.php?id=2517247" rel="noopener">https://www.moa.gov.tw/ws.php?id=2517247</a></li>
+          <li>劉依昌. (2014, January 3). 設施小果番茄栽培管理. 行政院農業委員會台南區農業改良場. <a href="https://kmweb.moa.gov.tw/subject/subject.php?id=32589" rel="noopener">https://kmweb.moa.gov.tw/subject/subject.php?id=32589</a></li>
+          <li>陳正次. (2012, February 17). 番茄新品種及栽培管理 [Workshop presentation]. 雲林縣政府番茄栽培管理講習會, Yunlin, Taiwan. <a href="https://kmweb.moa.gov.tw/subject/subject.php?id=32596" rel="noopener">https://kmweb.moa.gov.tw/subject/subject.php?id=32596</a></li>
+        </ul>
+        </div>
+      </section>
+    </main>
+  </div>
+
+<!-- THE NAVIGATION PICTURE (17 October 2026). Jacquelyn's valley, prototype 18,
+     taken from her own files: this page's scene, with the page itself and the
+     five or six pages it links to drawn as stickers you can click, the mascot
+     standing beside the page you are on. The scenes, the plates and the layout
+     are hers (assets/navmap/); most of the stickers are the students' own
+     drawings (18 October), the few left over still on the first design. The
+     Description page keeps the painted whole valley instead (assets/navmap-art/). -->
+<section class="navmap" data-here="geospatial-analysis"></section>
+
+  <footer class="footer2">
+    <div class="footer2__inner footer2__inner--legal">
+      <div class="footer2__legal">
+        <p><b>ReLEAF</b> &middot; GEMS Taiwan &middot; iGEM 2026 &middot; Biomanufacturing Village</p>
+        <p>&copy; 2026 &middot; Content on this wiki is licensed under a <a href="https://creativecommons.org/licenses/by/4.0/" rel="license">Creative Commons Attribution 4.0 International license</a>.</p>
+        <p>The repository used to create this website is available at <a href="https://gitlab.igem.org/2026/gems-taiwan">gitlab.igem.org/2026/gems-taiwan</a>.</p>
+      </div>
+    </div>
+  </footer>
+
+  <script>
+    /* Click-to-load for the routing map. Everything else on this page is
+       static; that map is an application and pulls 13 MB, so it does not
+       start until somebody asks for it. */
+    document.querySelectorAll("[data-slot]").forEach(function (slot) {
+      slot.addEventListener("click", function (e) {
+        var btn = e.target.closest("button[data-src]");
+        if (!btn) return;
+        var frame = document.createElement("iframe");
+        frame.src = btn.dataset.src;
+        frame.title = btn.dataset.title || "";
+        slot.replaceWith(frame);
+        frame.focus();
+      });
+    });
+  </script>
+
+  <script defer src="static/assets/vendor/katex/katex.min.js"></script>
+  <script defer src="static/assets/js/math.js"></script>
+  <script src="static/assets/data/site-nav.js" fetchpriority="high"></script>
+  <script src="static/assets/js/nav.js" fetchpriority="high"></script>
+  <script src="static/assets/js/page.js" fetchpriority="high"></script>
+  <script src="static/assets/js/engage.js?v=1007s"></script>
+<script src="static/assets/navmap/layout-world.js?v=1021b"></script>
+<script src="static/assets/navmap/layout-pages.js?v=1021b"></script>
+<script src="static/assets/navmap/navmap.js?v=1021b"></script>
+</body>
+</html>
