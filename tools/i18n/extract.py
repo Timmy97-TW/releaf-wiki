@@ -215,8 +215,26 @@ def collect(n: Node, blocks: list, attrs: list, seen: dict, aseen: dict):
             t = norm(text_of(k))
             if prose(t):
                 add(blocks, seen, k.tag, t, norm(inner_html(k)))
-                continue          # do not descend: this is the unit
+                # The unit's own words are now accounted for, but an element
+                # INSIDE it can still carry words of its own: the alt on an
+                # image in a paragraph, a data-* a script prints. Read those
+                # before moving on, and do not look for more blocks in here.
+                attrs_within(k, attrs, aseen)
+                continue
         collect(k, blocks, attrs, seen, aseen)
+
+
+def attrs_within(n, attrs, aseen):
+    """Collect translatable attributes from everything under a prose unit."""
+    for k in n.kids:
+        if k.tag is None or k.tag in SKIP:
+            continue
+        for name, val in k.attrs:
+            if name in ATTRS and val:
+                t = norm(val)
+                if prose(t):
+                    aadd(attrs, aseen, name, t)
+        attrs_within(k, attrs, aseen)
 
 
 def add(blocks, seen, tag, text, en_html):

@@ -190,6 +190,23 @@
     return false;
   }
 
+  /* Everything under a prose unit that carries words in an attribute. */
+  function attrsWithin(root, out) {
+    var kids = root.children;
+    for (var i = 0; i < kids.length; i++) {
+      var k = kids[i];
+      if (SKIP[tagOf(k)]) continue;
+      for (var a = 0; a < ATTRS.length; a++) {
+        var name = ATTRS[a];
+        if (k.hasAttribute(name)) {
+          var v = norm(k.getAttribute(name));
+          if (prose(v)) out.push({ kind: "attr", el: k, attr: name, text: v });
+        }
+      }
+      attrsWithin(k, out);
+    }
+  }
+
   /* Collect the units in document order. Returns a flat list; `kind` says how
      to put a translation back. */
   /* leafOnly: in a region a script drew, take the innermost element that
@@ -240,7 +257,13 @@
                             : (CAND[T] && !blockInside(k));
         if (unit) {
           var bt = norm(textOf(k));
-          if (prose(bt)) { out.push({ kind: "block", el: k, text: bt }); continue; }
+          if (prose(bt)) {
+            out.push({ kind: "block", el: k, text: bt });
+            /* an element inside the unit can still carry words of its own:
+               see the note in tools/i18n/extract.py */
+            attrsWithin(k, out);
+            continue;
+          }
         }
         walk(k);
       }
