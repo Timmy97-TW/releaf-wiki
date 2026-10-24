@@ -46,6 +46,26 @@ def norm(s: str) -> str:
     return SPACE.sub(" ", s).strip()
 
 
+# A translation is written against the page SOURCE, so a link in it still
+# carries the Jinja the source carries. The browser gets the translation as
+# markup long after Flask has rendered the page, so the Jinja has to be
+# resolved here or the href lands in the DOM as literal text and the link
+# breaks. Pages are flat, and the English renders as "./<page>", so this
+# produces exactly what the server produced.
+Q = r"(?:&#x27;|'|&quot;|\")"
+URLFOR_PAGE = re.compile(
+    r"\{\{\s*url_for\(\s*" + Q + r"pages" + Q + r"\s*,\s*page\s*=\s*"
+    + Q + r"([A-Za-z0-9_-]+)" + Q + r"\s*\)\s*\}\}")
+URLFOR_STATIC = re.compile(
+    r"\{\{\s*url_for\(\s*" + Q + r"static" + Q + r"\s*,\s*filename\s*=\s*"
+    + Q + r"([^'\"&]+)" + Q + r"\s*\)\s*\}\}")
+
+
+def resolve(html: str) -> str:
+    html = URLFOR_PAGE.sub(lambda m: "./" + m.group(1), html)
+    return URLFOR_STATIC.sub(lambda m: "static/" + m.group(1), html)
+
+
 def key(s: str) -> str:
     h = 0xCBF29CE484222325
     for b in s.encode("utf-8"):
@@ -63,7 +83,7 @@ def ui() -> tuple[dict, dict]:
     b, a = {}, {}
     for e in d.get("blocks", []):
         if e.get("zh"):
-            b[key(norm(e["en"])) + ":0"] = e["zh"]
+            b[key(norm(e["en"])) + ":0"] = resolve(e["zh"])
     for e in d.get("attrs", []):
         if e.get("zh"):
             a[e["attr"] + "|" + key(norm(e["en"])) + ":0"] = e["zh"]
@@ -97,7 +117,7 @@ def main(argv):
             elif e["tag"] == "#description":
                 dd = e["zh"]
             else:
-                b[e["k"] + ":" + str(e["n"])] = e["zh"]
+                b[e["k"] + ":" + str(e["n"])] = resolve(e["zh"])
         for e in d.get("attrs", []):
             m += 1
             if e.get("zh"):
