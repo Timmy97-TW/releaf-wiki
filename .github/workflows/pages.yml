@@ -1,0 +1,49 @@
+# Builds the wiki and publishes it on GitHub Pages, the way .gitlab-ci.yml
+# does on iGEM's GitLab: install the pinned dependencies, freeze, publish.
+#
+# One step GitLab does not need: Frozen-Flask writes each page as a file with
+# no extension, which GitLab Pages serves as HTML and GitHub Pages does not.
+# tools/name_pages_for_github.py gives each one a .html name; GitHub then
+# serves /description from description.html, so no link has to change.
+
+name: Pages
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: pages
+  cancel-in-progress: true
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - run: pip install --no-cache-dir -r dependencies.txt
+      - run: FLASK_APP=app.py flask freeze
+      - run: python tools/name_pages_for_github.py public
+      - uses: actions/configure-pages@v5
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: public
+
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - id: deployment
+        uses: actions/deploy-pages@v4
