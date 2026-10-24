@@ -82,9 +82,14 @@
 
       if (none) none.hidden = shown !== 0;
       if (count) {
+        /* The reader may be in Chinese: assets/js/i18n.js translated the count
+           that shipped in the HTML, but this line rewrites it on every search
+           keystroke and every chip, so it has to know both wordings. */
+        var zh = document.documentElement.lang === "zh-Hant";
         count.textContent = shown === total
-          ? total + " parts"
-          : shown + " of " + total + " parts";
+          ? (zh ? total + " 個元件" : total + " parts")
+          : (zh ? total + " 個元件中的 " + shown + " 個"
+                : shown + " of " + total + " parts");
       }
     }
 

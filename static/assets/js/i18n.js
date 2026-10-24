@@ -415,6 +415,7 @@
     }
     document.documentElement.lang = "zh-Hant";
     document.documentElement.setAttribute("data-lang", "zh");
+    announce("zh");
   }
 
   function toEn() {
@@ -428,6 +429,15 @@
     if (m && m.dataset.en) { m.content = m.dataset.en; delete m.dataset.en; }
     document.documentElement.lang = "en";
     document.documentElement.setAttribute("data-lang", "en");
+    announce("en");
+  }
+
+  /* A page that writes its own text at runtime (a chart label, a counter)
+     cannot be reached through the dictionary. It listens for this instead. */
+  function announce(which) {
+    try {
+      document.dispatchEvent(new CustomEvent("releaf:lang", { detail: { lang: which } }));
+    } catch (e) {}
   }
 
   function label() {
