@@ -71,14 +71,46 @@
                  OPTION: 1, ADDRESS: 1 };
 
   var ATTRS = ["alt", "title", "aria-label", "aria-description",
-               "placeholder", "aria-roledescription"];
+               "placeholder", "aria-roledescription",
+               "data-toc", "data-label", "data-cap", "data-name",
+               "data-title", "data-role", "data-en"];
 
   /* Regions JavaScript draws after the page is parsed: the nav card, the skip
      link, the contents rail and the lightbox. None of them exists in the
      source the extractor read, so counting their strings would shift every
      later occurrence index out of step. They are walked separately below and
      matched on the hash alone. */
-  var DYN = "#site-nav, .sitenav-skip, .toc__list, .lightbox";
+  var DYN = "#site-nav, .sitenav-skip, .toc__list, .lightbox, section.navmap";
+
+  /* Marks page.js puts INSIDE an element we key on: the section number it
+     prepends to a heading, the number in a contents row, and the ↩ it appends
+     to a reference. The extractor never saw them, so they are left out of the
+     text a key is made from, and carried across untouched when the element is
+     rewritten. */
+  var ARTIFACT = ".sec__no, .toc__no, a[href^='#cite-']";
+
+  /* textContent, minus the marks above and minus anything we never read. */
+  function textOf(el) {
+    var out = "";
+    var kids = el.childNodes;
+    for (var i = 0; i < kids.length; i++) {
+      var k = kids[i];
+      if (k.nodeType === 3) { out += k.nodeValue; continue; }
+      if (k.nodeType !== 1) continue;
+      if (SKIP[k.tagName]) continue;
+      if (k.matches && k.matches(ARTIFACT)) continue;
+      out += textOf(k);
+    }
+    return out;
+  }
+
+  /* innerHTML, minus those marks: what we keep to put the English back. */
+  function htmlOf(el) {
+    var c = el.cloneNode(true);
+    var marks = c.querySelectorAll(ARTIFACT);
+    for (var i = 0; i < marks.length; i++) marks[i].remove();
+    return c.innerHTML;
+  }
 
   var HAS_LETTER = /[A-Za-z]/;
   var JINJA = /\{[{%]/;
@@ -101,7 +133,10 @@
 
   /* Collect the units in document order. Returns a flat list; `kind` says how
      to put a translation back. */
-  function units(root, honourDyn, dynOut) {
+  /* leafOnly: in a region a script drew, take the innermost element that
+     holds text. The nav's entry wraps a title and a caption in one <span>,
+     and the wrapper's text is the two run together, which matches nothing. */
+  function units(root, honourDyn, dynOut, leafOnly) {
     var out = [];
     (function walk(node) {
       var kids = node.childNodes;
@@ -113,7 +148,13 @@
           continue;
         }
         if (k.nodeType !== 1) continue;               /* comment, etc. */
-        if (SKIP[k.tagName]) continue;
+        if (SKIP[k.tagName]) {
+          /* into a drawing for its labels, but never treat the element that
+             holds it as a unit: see the note in tools/i18n/extract.py */
+          if (k.tagName === "svg" || k.tagName === "SVG") walk(k);
+          continue;
+        }
+        if (k.matches && k.matches(ARTIFACT)) continue;
         if (honourDyn && k.matches && k.matches(DYN)) {
           if (dynOut) dynOut.push(k);
           continue;
@@ -125,8 +166,10 @@
             if (prose(v)) out.push({ kind: "attr", el: k, attr: name, text: v });
           }
         }
-        if (CAND[k.tagName] && !blockInside(k)) {
-          var bt = norm(k.textContent);
+        var unit = leafOnly ? k.children.length === 0
+                            : (CAND[k.tagName] && !blockInside(k));
+        if (unit) {
+          var bt = norm(textOf(k));
           if (prose(bt)) { out.push({ kind: "block", el: k, text: bt }); continue; }
         }
         walk(k);
@@ -184,7 +227,7 @@
         u.en = u.el.getAttribute(u.attr);
       } else {
         u.id = k + ":" + (seen[k] = (seen[k] === undefined ? 0 : seen[k] + 1));
-        u.en = u.kind === "block" ? u.el.innerHTML : u.node.nodeValue;
+        u.en = u.kind === "block" ? htmlOf(u.el) : u.node.nodeValue;
       }
       u.key = k;
     }
@@ -196,15 +239,81 @@
     var list = index(units(document.body, true, dynRoots));
     dynPlan = [];
     for (var i = 0; i < dynRoots.length; i++) {
-      dynPlan = dynPlan.concat(index(units(dynRoots[i], false, null)));
+      dynPlan = dynPlan.concat(index(units(dynRoots[i], false, null, true)));
     }
     return list;
   }
 
+  var rewritten = [];
+
   function put(u, zh) {
-    if (u.kind === "block") u.el.innerHTML = zh;
-    else if (u.kind === "text") u.node.nodeValue = zh;
-    else u.el.setAttribute(u.attr, zh);
+    if (u.kind === "text") { u.node.nodeValue = zh; return; }
+    if (u.kind === "attr") { u.el.setAttribute(u.attr, zh); return; }
+    var el = u.el;
+    /* lift page.js's marks out, write the new words, put the marks back where
+       they were: a number stays at the head of its heading, a ↩ at the end of
+       its reference. */
+    var head = [], tail = [], kids = el.children, i;
+    for (i = 0; i < kids.length; i++) {
+      if (kids[i].matches && kids[i].matches(ARTIFACT)) {
+        (i === 0 ? head : tail).push(kids[i]);
+      }
+    }
+    for (i = 0; i < head.length; i++) head[i].remove();
+    for (i = 0; i < tail.length; i++) tail[i].remove();
+    el.innerHTML = zh;
+    for (i = head.length - 1; i >= 0; i--) el.insertBefore(head[i], el.firstChild);
+    for (i = 0; i < tail.length; i++) el.appendChild(tail[i]);
+    rewritten.push(el);
+  }
+
+  /* Rewriting a paragraph turns its [1] back into plain text, so link the
+     markers again the way page.js does: only where a reference with that
+     number exists, and only taking the cite-N anchor when it is free. */
+  function citations(els) {
+    for (var i = 0; i < els.length; i++) {
+      var el = els[i];
+      if (!el.isConnected || el.closest(".refs, .toc")) continue;
+      var walker = document.createTreeWalker(el, NodeFilter.SHOW_TEXT, {
+        acceptNode: function (n) {
+          return n.parentElement.closest("a, code, pre")
+            ? NodeFilter.FILTER_REJECT
+            : /\[\d+(\s*,\s*\d+)*\]/.test(n.nodeValue)
+              ? NodeFilter.FILTER_ACCEPT
+              : NodeFilter.FILTER_REJECT;
+        }
+      });
+      var texts = [];
+      while (walker.nextNode()) texts.push(walker.currentNode);
+      texts.forEach(function (node) {
+        var frag = document.createDocumentFragment();
+        var last = 0;
+        node.nodeValue.replace(/\[(\d+(?:\s*,\s*\d+)*)\]/g, function (match, nums, at) {
+          frag.append(node.nodeValue.slice(last, at));
+          frag.append("[");
+          nums.split(",").map(function (n) { return n.trim(); }).forEach(function (n, k, arr) {
+            var idx = parseInt(n, 10);
+            if (document.getElementById("ref-" + idx)) {
+              var a = document.createElement("a");
+              a.className = "cite";
+              a.href = "#ref-" + idx;
+              if (!document.getElementById("cite-" + idx)) a.id = "cite-" + idx;
+              a.textContent = n;
+              frag.append(a);
+            } else {
+              frag.append(n);
+            }
+            if (k < arr.length - 1) frag.append(", ");
+          });
+          frag.append("]");
+          last = at + match.length;
+          return match;
+        });
+        frag.append(node.nodeValue.slice(last));
+        node.replaceWith(frag);
+      });
+    }
+    els.length = 0;
   }
 
   function toZh() {
@@ -227,6 +336,7 @@
                                  : (b[d.key + ":0"] || b[d.id]);
       if (dz) put(d, dz);
     }
+    citations(rewritten);
     if (dict.t) document.title = dict.t;
     if (dict.d) {
       var m = document.querySelector('meta[name="description"]');
@@ -240,6 +350,7 @@
     if (plan) {
       for (var i = 0; i < plan.length; i++) put(plan[i], plan[i].en);
       for (var j = 0; j < dynPlan.length; j++) put(dynPlan[j], dynPlan[j].en);
+      citations(rewritten);
     }
     document.title = enTitle;
     var m = document.querySelector('meta[name="description"]');

@@ -33,6 +33,14 @@ OUT = ROOT / "static" / "i18n"
 
 SPACE = re.compile(r"[\s     ]+")
 
+# A data-* string is read by a page's own script and written into the page as
+# text. That script runs before i18n.js, so the words are already on screen by
+# the time we look: put the translation in the text dictionary too, where the
+# pass over the script-drawn regions will find it by hash.
+MIRROR = ("data-toc", "data-label", "data-cap", "data-name", "data-title",
+          "data-role", "data-en")
+
+
 
 def norm(s: str) -> str:
     return SPACE.sub(" ", s).strip()
@@ -59,6 +67,8 @@ def ui() -> tuple[dict, dict]:
     for e in d.get("attrs", []):
         if e.get("zh"):
             a[e["attr"] + "|" + key(norm(e["en"])) + ":0"] = e["zh"]
+            if e["attr"] in MIRROR:
+                b.setdefault(key(norm(e["en"])) + ":0", e["zh"])
     return b, a
 
 
@@ -93,6 +103,8 @@ def main(argv):
             if e.get("zh"):
                 n += 1
                 a[e["attr"] + "|" + e["k"] + ":" + str(e["n"])] = e["zh"]
+                if e["attr"] in MIRROR:
+                    b.setdefault(e["k"] + ":0", e["zh"])
         out = {"v": 1, "b": b, "a": a, "n": n, "m": m}
         if t:
             out["t"] = t

@@ -66,7 +66,13 @@ BLOCK_LEVEL = CONTAINER | (CAND - {"a", "span", "strong", "em", "b", "i",
                                    "mark", "output"})
 
 ATTRS = ("alt", "title", "aria-label", "aria-description", "placeholder",
-         "aria-roledescription")
+         "aria-roledescription",
+         # data-* a page's own script renders as visible text: a short label
+         # for the contents rail, a photo caption, a column head, a person's
+         # role. build.py mirrors these into the text dictionary as well, so
+         # the words the script has already written are matched too.
+         "data-toc", "data-label", "data-cap", "data-name", "data-title",
+         "data-role", "data-en")
 
 SPACE = re.compile(r"[\s     ]+")
 HAS_LETTER = re.compile(r"[A-Za-z]")
@@ -190,6 +196,13 @@ def collect(n: Node, blocks: list, attrs: list, seen: dict, aseen: dict):
                 add(blocks, seen, "#text", t, esc(k.data.strip()))
             continue
         if k.tag in SKIP:
+            # A diagram's own labels are translated, but an element holding an
+            # <svg> is never itself a unit: a paragraph with an inline icon
+            # would otherwise have to carry the icon's paths in its
+            # translation. So walk into the drawing, and leave the ancestors
+            # to has_block_kid(), which counts svg as block-level.
+            if k.tag == "svg":
+                collect(k, blocks, attrs, seen, aseen)
             continue
         for name, val in k.attrs:
             if name in ATTRS and val:
