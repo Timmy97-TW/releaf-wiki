@@ -195,6 +195,13 @@ def collect(n: Node, blocks: list, attrs: list, seen: dict, aseen: dict):
             if prose(t):
                 add(blocks, seen, "#text", t, esc(k.data.strip()))
             continue
+        # attributes first: an <svg> is skipped below but carries the
+        # aria-label that names the drawing
+        for name, val in k.attrs:
+            if name in ATTRS and val:
+                t = norm(val)
+                if prose(t):
+                    aadd(attrs, aseen, name, t)
         if k.tag in SKIP:
             # A diagram's own labels are translated, but an element holding an
             # <svg> is never itself a unit: a paragraph with an inline icon
@@ -204,11 +211,6 @@ def collect(n: Node, blocks: list, attrs: list, seen: dict, aseen: dict):
             if k.tag == "svg":
                 collect(k, blocks, attrs, seen, aseen)
             continue
-        for name, val in k.attrs:
-            if name in ATTRS and val:
-                t = norm(val)
-                if prose(t):
-                    aadd(attrs, aseen, name, t)
         if k.tag in CAND and not has_block_kid(k):
             t = norm(text_of(k))
             if prose(t):

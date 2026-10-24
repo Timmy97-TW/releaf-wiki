@@ -89,7 +89,62 @@
      rewritten. */
   var ARTIFACT = ".sec__no, .toc__no, a[href^='#cite-']";
 
+  /* assets/js/math.js has already turned every \( … \) and \[ … \] into
+     KaTeX markup by the time we look, so the text an element holds is no
+     longer the text the extractor read. A .math element is therefore read
+     back as the TeX it was built from, and written back as TeX and rendered
+     again. The wiki uses no $$ delimiters; display is \[ \], inline \( \). */
+  var MATHSEL = ".math";
+
+  function texOf(el) {
+    var a = el.querySelector('annotation[encoding="application/x-tex"]');
+    var tex = a ? a.textContent : el.textContent;
+    return el.classList.contains("math--display")
+      ? "\\[" + tex + "\\]"
+      : "\\(" + tex + "\\)";
+  }
+
+  /* Re-render the formulas in an element we have just rewritten. Same regex
+     and the same two element shapes as assets/js/math.js. */
+  function renderMath(el) {
+    if (!window.katex || !/\$\$|\\\[|\\\(/.test(el.textContent)) return;
+    var re = /\$\$([\s\S]+?)\$\$|\\\[([\s\S]+?)\\\]|\\\(([\s\S]+?)\\\)/g;
+    var walker = document.createTreeWalker(el, NodeFilter.SHOW_TEXT, {
+      acceptNode: function (n) {
+        return n.parentElement.closest(".katex, .math, code, pre")
+          ? NodeFilter.FILTER_REJECT
+          : /\$\$|\\\[|\\\(/.test(n.nodeValue)
+            ? NodeFilter.FILTER_ACCEPT : NodeFilter.FILTER_SKIP;
+      }
+    });
+    var nodes = [];
+    while (walker.nextNode()) nodes.push(walker.currentNode);
+    nodes.forEach(function (node) {
+      var text = node.nodeValue, frag = document.createDocumentFragment();
+      var last = 0, m;
+      re.lastIndex = 0;
+      while ((m = re.exec(text))) {
+        if (m.index > last) frag.appendChild(document.createTextNode(text.slice(last, m.index)));
+        var display = m[3] === undefined;
+        var tex = m[1] !== undefined ? m[1] : m[2] !== undefined ? m[2] : m[3];
+        var box = document.createElement(display ? "div" : "span");
+        box.className = display ? "math math--display" : "math";
+        try { window.katex.render(tex, box, { displayMode: display, throwOnError: false }); }
+        catch (e) { box.textContent = m[0]; }
+        frag.appendChild(box);
+        last = re.lastIndex;
+      }
+      if (last < text.length) frag.appendChild(document.createTextNode(text.slice(last)));
+      node.parentNode.replaceChild(frag, node);
+    });
+  }
+
   /* textContent, minus the marks above and minus anything we never read. */
+  /* An SVG element reports its tagName in lower case; an HTML one in upper.
+     Every lookup below goes through this, or an inline icon is missed and the
+     element holding it stops matching its entry. */
+  function tagOf(el) { return el.tagName.toUpperCase(); }
+
   function textOf(el) {
     var out = "";
     var kids = el.childNodes;
@@ -97,8 +152,9 @@
       var k = kids[i];
       if (k.nodeType === 3) { out += k.nodeValue; continue; }
       if (k.nodeType !== 1) continue;
-      if (SKIP[k.tagName]) continue;
+      if (SKIP[tagOf(k)]) continue;
       if (k.matches && k.matches(ARTIFACT)) continue;
+      if (k.matches && k.matches(MATHSEL)) { out += texOf(k); continue; }
       out += textOf(k);
     }
     return out;
@@ -124,7 +180,10 @@
   function blockInside(el) {
     var kids = el.children;
     for (var i = 0; i < kids.length; i++) {
-      var k = kids[i], t = k.tagName;
+      var k = kids[i], t = tagOf(k);
+      /* a rendered formula is inline for our purpose, whatever element
+         KaTeX put it in */
+      if (k.matches && k.matches(MATHSEL)) continue;
       if (SKIP[t] || BLOCKY[t]) return true;
       if (blockInside(k)) return true;
     }
@@ -148,10 +207,21 @@
           continue;
         }
         if (k.nodeType !== 1) continue;               /* comment, etc. */
-        if (SKIP[k.tagName]) {
+        var T = tagOf(k);
+        /* the attributes first: an <svg> carries aria-label and is skipped
+           below, so reading them afterwards would miss every drawing's name */
+        for (var a = 0; a < ATTRS.length; a++) {
+          var nameA = ATTRS[a];
+          if (k.hasAttribute(nameA)) {
+            var vA = norm(k.getAttribute(nameA));
+            if (prose(vA)) out.push({ kind: "attr", el: k, attr: nameA, text: vA });
+          }
+        }
+        if (k.matches && k.matches(MATHSEL)) continue;
+        if (SKIP[T]) {
           /* into a drawing for its labels, but never treat the element that
              holds it as a unit: see the note in tools/i18n/extract.py */
-          if (k.tagName === "svg" || k.tagName === "SVG") walk(k);
+          if (T === "SVG") walk(k);
           continue;
         }
         if (k.matches && k.matches(ARTIFACT)) continue;
@@ -167,7 +237,7 @@
           }
         }
         var unit = leafOnly ? k.children.length === 0
-                            : (CAND[k.tagName] && !blockInside(k));
+                            : (CAND[T] && !blockInside(k));
         if (unit) {
           var bt = norm(textOf(k));
           if (prose(bt)) { out.push({ kind: "block", el: k, text: bt }); continue; }
@@ -264,6 +334,7 @@
     el.innerHTML = zh;
     for (i = head.length - 1; i >= 0; i--) el.insertBefore(head[i], el.firstChild);
     for (i = 0; i < tail.length; i++) el.appendChild(tail[i]);
+    renderMath(el);
     rewritten.push(el);
   }
 
