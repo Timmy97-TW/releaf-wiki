@@ -92,3 +92,45 @@ Rules that hold on every page:
 | Abstract | 摘要 | |
 | References | 參考文獻 | |
 | Contents / On this page | 目錄 / 本頁內容 | |
+
+## Settled while translating the wiki
+
+These were decided page by page and then made to agree across pages. Follow
+them rather than re-deciding.
+
+| English | 中文 | where it was settled |
+| --- | --- | --- |
+| ACC deaminase | ACC 去胺酶 | twenty pages; ACCD stays ACCD |
+| lumen / shell side | 管腔（側）／殼側 | Biomanufacturing, Bioreactor, Results |
+| permeate / retentate / feed | 透過液／濃縮液／進料 | Bioreactor |
+| transmembrane pressure | 跨膜壓差（TMP） | Biomanufacturing |
+| fouling | 積垢 | Biomanufacturing |
+| critical flux | 臨界通量 | Biomanufacturing |
+| wall shear rate | 壁面剪切率 | Biomanufacturing |
+| perfusion | 灌流 | Bioreactor |
+| cross-flow | 錯流 | Biomanufacturing |
+| flow cell / cuvette | 流通池 | Photometer |
+| in-line | 線上 | Photometer, Digital Twin |
+| acceptance gate | 驗收門檻 | Digital Twin, Photometer |
+| persistence (baseline) | 持續性基準 | Digital Twin |
+| horizon (forecast) | 預看時間 | Digital Twin |
+| registered / pre-registered | 登錄／預先登錄 | Digital Twin, Math Model |
+| autoencoder / Kalman filter | 自編碼器／卡爾曼濾波器 | Digital Twin |
+| rosette | 蓮座葉叢 | Plants |
+| stratification / vernalization | 層積／春化 | Plants, Contribution |
+| thermo-priming | 熱馴化 | Plants, Results |
+| chlorosis / bleaching | 黃化／白化 (kept apart) | Results, Plants |
+| halotropism | 避鹽性 | Plants |
+| pre / co / post-treatment | 前處理／同時處理／後處理 | Plants, Development |
+| freeboard / draft / pontoon | 乾舷／吃水／浮筒 | Hydroponics |
+| gyroid infill | 陀螺形填充 | Hydroponics, Contribution |
+| mesh / STL file | 網格檔 | Contribution, Hydroponics |
+| trajectory / frame | 軌跡／影格 | MD simulations |
+| occupancy (contact) | 佔有率 | MD simulations |
+| salt bridge | 鹽橋 | MD simulations |
+| docking score | 對接分數 | Protein Design |
+| scale-up / scale-out | 放大／擴機 | Biomanufacturing |
+| break-even | 損益兩平 | Entrepreneurship |
+| contained use (GMM) | 封閉使用 | Biomanufacturing, Laws |
+| 肥料管理法 / 農藥管理法 | the real Taiwanese statutes | Laws |
+| Wetlab / Drylab / HP | left in Latin | the team's own education pages |
