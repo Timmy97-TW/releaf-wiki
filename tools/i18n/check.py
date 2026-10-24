@@ -38,7 +38,10 @@ def tags(s):
         # a translation is right to translate a title/aria-label/alt it
         # carries inside its own markup, so compare the structure without
         # those values
-        t = re.sub(r'\b(title|aria-label|alt|placeholder)="[^"]*"',
+        # The same goes for a data-* a script reads and prints: the evolution
+        # map's hover card is built from data-when, data-role, data-dest and
+        # data-hook, so translating them is right too.
+        t = re.sub(r'\b(title|aria-label|alt|placeholder|data-[a-z-]+)="[^"]*"',
                    r"\1=…", t)
         out.append(re.sub(r"\s+", " ", t))
     return out
