@@ -33,7 +33,15 @@ def tags(s):
     the same link.
     """
     s = s.replace("&#x27;", "'").replace("&quot;", '"')
-    return [re.sub(r"\s+", " ", t) for t in TAG.findall(s)]
+    out = []
+    for t in TAG.findall(s):
+        # a translation is right to translate a title/aria-label/alt it
+        # carries inside its own markup, so compare the structure without
+        # those values
+        t = re.sub(r'\b(title|aria-label|alt|placeholder)="[^"]*"',
+                   r"\1=…", t)
+        out.append(re.sub(r"\s+", " ", t))
+    return out
 
 
 def check(page):
@@ -45,7 +53,10 @@ def check(page):
         if not zh:
             continue
         en = b["en"]
-        if tags(en) != tags(zh):
+        # Chinese word order legitimately moves an inline span — 「12.5 h⁻¹ 的
+        # k_L a」 for "a k_L a of 12.5 h⁻¹" — so what matters is that no tag
+        # was dropped or invented, not the order they come in.
+        if sorted(tags(en)) != sorted(tags(zh)):
             out.append((i, "tags", tags(en), tags(zh)))
         elif [j.replace("&#x27;", "'") for j in JINJA.findall(en)] != \
                 [j.replace("&#x27;", "'") for j in JINJA.findall(zh)]:
